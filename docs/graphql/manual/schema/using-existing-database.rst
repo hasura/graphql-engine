@@ -1,14 +1,19 @@
 Setting up GraphQL schema using an existing database
 ====================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 When you have an existing database with a schema already present, you don't need to create tables or views or run
 DDL queries through the Hasura console.
 
 All you need to do is indicate to Hasura GraphQL engine which tables and views you want to expose over GraphQL and
 how they are connected to each other so that you can query them as a "graph".
 
-1) Track tables/views
----------------------
+Step 1: Track tables/views
+--------------------------
 
 Tracking a table or a view means telling Hasura GraphQL engine that you want to expose that table/view over GraphQL.
 
@@ -24,8 +29,8 @@ To track all tables and views present in the database:
 #. Head to the ``Data -> Schema`` section of the console.
 #. Under the heading ``Untracked Tables/Views``, click the ``Add all`` button.
 
-2) Track foreign-keys
----------------------
+Step 2: Track foreign-keys
+--------------------------
 
 Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the
 foreign-key.

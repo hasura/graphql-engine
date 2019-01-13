@@ -5,6 +5,7 @@
      window.__env = {
        consoleMode: "server",
        urlPrefix: "/console",
+       consolePath: "{{consolePath}}",
        isAccessKeySet: {{isAccessKeySet}}
      };
     </script>
@@ -43,8 +44,8 @@
     </div>
     <div id="content" class="mainContent"></div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="https://storage.googleapis.com/hasura-graphql-engine/console/{{version}}/main.css" charset="UTF-8"/>
-    <script src="https://storage.googleapis.com/hasura-graphql-engine/console/{{version}}/vendor.js" charset="UTF-8"></script>
-    <script src="https://storage.googleapis.com/hasura-graphql-engine/console/{{version}}/main.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="{{consoleAssetsLoc}}/main.css" charset="UTF-8"/>
+    <script src="{{consoleAssetsLoc}}/vendor.js" charset="UTF-8"></script>
+    <script src="{{consoleAssetsLoc}}/main.js" charset="UTF-8"></script>
   </body>
 </html>

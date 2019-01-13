@@ -124,7 +124,6 @@ class ViewTable extends Component {
       activePath,
       migrationMode,
       ongoingRequest,
-      isProgressing,
       lastError,
       lastSuccess,
       dispatch,
@@ -152,7 +151,6 @@ class ViewTable extends Component {
         parentTableName={null}
         activePath={activePath}
         ongoingRequest={ongoingRequest}
-        isProgressing={isProgressing}
         lastError={lastError}
         lastSuccess={lastSuccess}
         triggerList={triggerList}
@@ -191,7 +189,6 @@ ViewTable.propTypes = {
   curFilter: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
-  isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
   count: PropTypes.number,

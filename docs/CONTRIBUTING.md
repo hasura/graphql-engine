@@ -58,6 +58,8 @@ docs tree. A user can land on a page via search as well. e.g. Say you are adding
 `Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
 Hasura GraphQL engine`. It's fine to alias it to just `AWS` in the sidebar as there the user has the context of the 
 page hierarchy.
+- Ensure every new added page has a ``Table of contents`` section with the right depth. You can see any existing
+page for reference on how to do this.
 - When referring to an external link using `` `....`_``, add an extra underscore to the link. ie. `` `...`__``. A 
 single underscore creates a global link which can then be referred from any page in the docs and hence might cause 
 some conflicts with other links sometimes (a conflict will show up as a Warning though while building).   
@@ -75,5 +77,5 @@ this.
 
 **Notes:** 
 - Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
-- The search is powered by [Algolia](https://www.algolia.com/) and is updated on every deployment. Your local changes 
+- The search is powered by [Algolia](https://www.algolia.com/) and is updated everyday. Your local changes 
 will not be reflected in search results.        

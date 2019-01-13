@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-12.13
+resolver: lts-12.22
 compiler: ghc-8.4.4
 
 # Local packages, usually specified by relative directory name
@@ -20,12 +20,16 @@ extra-deps:
   commit: 47b168d252d4adc800137a8b2cd3fc977cb3468d
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: 75782ae894cce05ed31e5b87fd696fc10e88baf9
-- ginger-0.8.0.1
+- ginger-0.8.1.0
 
 # for text-builder
 - text-builder-0.6.4
 - deferred-folds-0.9.9
 - primitive-0.6.4.0
+
+# jose for the x5t bugfix (0.8.0.0)
+- git: https://github.com/frasertweedale/hs-jose.git
+  commit: d47572fb0650ac6cc2c9e00711c7f99132d897cb
 
 
 # Override default flag values for local packages and extra-deps

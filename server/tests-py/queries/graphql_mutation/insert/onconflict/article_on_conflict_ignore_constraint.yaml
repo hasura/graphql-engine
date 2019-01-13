@@ -22,7 +22,7 @@ query:
           ],
         on_conflict: {
           constraint: article_pkey,
-          action: ignore
+          update_columns: []
         }
       ) {
         returning {

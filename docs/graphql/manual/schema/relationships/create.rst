@@ -1,17 +1,17 @@
 Creating relationships
 ======================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 A relationship from one table/view to another can be created by defining a link between a column of the table/view to a
 column of the other table/view.
 
 Typically, relationships are defined using foreign-key constraints. But in some cases, it might not be possible to
 use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
-
-Here are examples to create relationships using the two methods:
-
-- :ref:`relationships-using-fkey`
-- :ref:`relationships-without-fkey`
 
 .. _relationships-using-fkey:
 
@@ -172,8 +172,8 @@ Fetch a list of authors and a nested list of each author's articles:
 
 .. _relationships-without-fkey:
 
-Without Foreign Keys
---------------------
+Using Manual Relationships
+--------------------------
 
 Let's say you have a table ``author(id, name)`` and a view ``author_avg_rating(id, avg)`` which has the
 average rating of articles for each author.

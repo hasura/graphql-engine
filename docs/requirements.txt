@@ -17,7 +17,7 @@ pathtools==0.1.2
 port-for==0.3.1
 Pygments==2.2.0
 pytz==2017.2
-PyYAML==3.13
+PyYAML==4.2b1
 requests-file==1.4.2
 requests==2.20.0
 six==1.11.0
@@ -30,5 +30,5 @@ sphinxcontrib-httpdomain==1.7.0
 sphinxcontrib-swaggerdoc==0.1.7
 sphinxcontrib-websupport==1.0.1
 tornado==4.5.2
-urllib3==1.22
+urllib3==1.23
 watchdog==0.8.3

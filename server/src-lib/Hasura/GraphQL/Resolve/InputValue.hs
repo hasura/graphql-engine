@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
-
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
@@ -14,6 +7,7 @@ module Hasura.GraphQL.Resolve.InputValue
   , withObject
   , asObject
   , withObjectM
+  , asObjectM
   , withArray
   , asArray
   , withArrayM
@@ -59,7 +53,7 @@ asPGColVal
 asPGColVal = \case
   AGScalar colTy (Just val) -> return (colTy, val)
   AGScalar colTy Nothing ->
-    throw500 $ "unexpected null for ty"
+    throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   v            -> tyMismatch "pgvalue" v
 
@@ -93,6 +87,11 @@ withObjectM
 withObjectM fn v = case v of
   AGObject nt objM -> fn nt objM
   _                -> tyMismatch "object" v
+
+asObjectM
+  :: (MonadError QErr m)
+  => AnnGValue -> m (Maybe AnnGObject)
+asObjectM = withObjectM (\_ o -> return o)
 
 withArrayM
   :: (MonadError QErr m)

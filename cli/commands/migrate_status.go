@@ -55,7 +55,7 @@ type migrateStatusOptions struct {
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
 	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create migrate instance")
+		return nil, err
 	}
 	status, err := executeStatus(migrateDrv)
 	if err != nil {

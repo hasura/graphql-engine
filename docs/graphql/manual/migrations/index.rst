@@ -3,13 +3,25 @@
 Migrations
 ==========
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 By default, when you run the GraphQL engine you can use the Hasura console served by the GraphQL engine to make
 changes to your schema. However, if you have different environments or are adding GraphQL to an existing application
 or database, you'll need migrations to make sure that your iteration and CI/CD process is smooth.
 
+
+Using Hasura migrations
+-----------------------
+
 Hasura GraphQL engine comes with powerful Rails-inspired migration tooling to help you keep track of the changes
 you make to your schema. As you use the Hasura console, the Hasura CLI will spit out migration files for
 you that you can put in version control and even edit manually.
+
+Setup guides
+------------
 
 Follow the guide that best fits your scenario:
 
@@ -19,9 +31,10 @@ Follow the guide that best fits your scenario:
 - :doc:`Migrations with a database with an existing migration system <database-with-migrations>`: Use Hasura only
   for GraphQL schema changes and not database migrations.
 
-Advanced:
+Advanced
+--------
 
-- :doc:`Auto-apply migrations when server starts <auto-apply-migrations>`
+- :doc:`Auto-apply migrations or metadata when server starts <auto-apply-migrations>`
 
 .. toctree::
    :hidden:
@@ -29,4 +42,4 @@ Advanced:
    For new project <new-project>
    For existing project <existing-project>
    With a database with an existing migration system <database-with-migrations>
-   Auto-apply migrations when server starts <auto-apply-migrations>
+   Auto-apply migrations or metadata when server starts <auto-apply-migrations>

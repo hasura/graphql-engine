@@ -45,6 +45,7 @@ query:
 
 response:
   errors:
-  - path: $.selectionSet.insert_article.args.objects[0].author
-    error: "cannot insert object relation ship \"author\" as author_id column values are already determined"
-    code: validation-failed
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.insert_article.args.objects[0].author
+    message: "cannot insert object relation ship \"author\" as \"author_id\" column values are already determined"

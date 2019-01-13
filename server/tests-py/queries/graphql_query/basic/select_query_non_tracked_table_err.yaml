@@ -3,10 +3,11 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - path: $.selectionSet.random
-    error: |-
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.random
+    message: |-
       field "random" not found in type: 'query_root'
-    code: validation-failed
 query:
   query: |
     query {

@@ -25,6 +25,9 @@ import {
   toggleOldAvailable,
   toggleNewAvailable,
 } from './LogActions';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { convertDateTimeToLocale } from '../utils';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -65,7 +68,7 @@ class StreamingLogs extends Component {
         this.setState({ ...this.state, showRedeliver: false });
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       this.setState({ ...this.state, showRedeliver: false });
     }
   }
@@ -130,8 +133,8 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
+      tableSchemas,
       count,
-      allSchemas,
       dispatch,
     } = this.props;
 
@@ -219,7 +222,7 @@ class StreamingLogs extends Component {
             return <div className={conditionalClassname}>{r.id}</div>;
           }
           if (col === 'created_at') {
-            const formattedDate = new Date(r.created_at).toUTCString();
+            const formattedDate = convertDateTimeToLocale(r.created_at);
             return <div className={conditionalClassname}>{formattedDate}</div>;
           }
           if (col === 'operation') {
@@ -231,8 +234,10 @@ class StreamingLogs extends Component {
           }
           if (col === 'primary_key') {
             const tableName = requestData[i].data.table.name;
-            const tableData = allSchemas.filter(
-              row => row.table_name === tableName
+            const tableSchema = requestData[i].data.table.schema;
+            const tableData = tableSchemas.filter(
+              row =>
+                row.table_name === tableName && row.table_schema === tableSchema
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
@@ -409,7 +414,54 @@ class StreamingLogs extends Component {
                           </div>
                         ) : null}
                         <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Response</div>
+                          <div
+                            className={
+                              styles.subheading_text +
+                              ' col-md-6 ' +
+                              styles.padd_remove
+                            }
+                          >
+                            {finalResponse.status_code ? 'Payload' : 'Error'}
+                          </div>
+                          <div
+                            className={
+                              styles.status_code_right +
+                              ' col-md-6 ' +
+                              styles.padd_remove
+                            }
+                          >
+                            {finalResponse.status_code
+                              ? [
+                                  'Status Code: ',
+                                  finalResponse.status_code === 200 ? (
+                                    <i
+                                      className={
+                                        styles.invocationSuccess +
+                                        ' fa fa-check'
+                                      }
+                                    />
+                                  ) : (
+                                    <i
+                                      className={
+                                        styles.invocationFailure +
+                                        ' fa fa-times'
+                                      }
+                                    />
+                                  ),
+                                  finalResponse.status_code,
+                                  ' ',
+                                  <OverlayTrigger
+                                    placement="top"
+                                    overlay={tooltip.statusCodeDescription}
+                                  >
+                                    <i
+                                      className="fa fa-question-circle"
+                                      aria-hidden="true"
+                                    />
+                                  </OverlayTrigger>,
+                                ]
+                              : null}
+                          </div>
                           <AceEditor
                             mode="json"
                             theme="github"
@@ -462,6 +514,7 @@ class StreamingLogs extends Component {
 
 StreamingLogs.propTypes = {
   log: PropTypes.object,
+  currentTableSchema: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,

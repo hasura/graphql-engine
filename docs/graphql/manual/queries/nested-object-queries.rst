@@ -1,13 +1,18 @@
 Nested object queries
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
 
-Query using an object relationship
-----------------------------------
-The following is an example of a nested object query using the ``object relationship`` between an article and an
+Fetch nested object using an object relationship
+------------------------------------------------
+The following is an example of a nested object query using the **object relationship** between an article and an
 author.
 
 Fetch a list of articles and the name of each article’s author:
@@ -53,9 +58,9 @@ Fetch a list of articles and the name of each article’s author:
       }
     }
 
-Query using an array relationship
----------------------------------
-The following is an example of a nested object query using the ``array relationship`` between an author and
+Fetch nested objects using an array relationship
+------------------------------------------------
+The following is an example of a nested object query using the **array relationship** between an author and
 articles.
 
 Fetch a list of authors and a nested list of each author’s articles:
@@ -133,12 +138,12 @@ Fetch a list of authors and a nested list of each author’s articles:
     The name of the nested object is the same as the name of the object or array relationship configured in the
     console.
 
-Query with aggregations on an array relationship
-------------------------------------------------
-The following is an example of a nested object query with aggregations on array relationship between author and
-articles.
+Fetch aggregated data on nested objects
+---------------------------------------
+The following is an example of a nested object query with aggregations on the **array relationship** between an author
+and articles.
 
-Fetch an author whose id is ``1`` and a nested list of articles with aggregated data:
+Fetch an author whose id is ``1`` and a nested list of articles with aggregated rating data:
 
 .. graphiql::
   :view_only:
@@ -199,3 +204,7 @@ Fetch an author whose id is ``1`` and a nested list of articles with aggregated 
         ]
       }
     }
+
+.. note::
+
+    The name of the :ref:`aggregate field <aggregate_object>` is of the form ``field-name + _aggregate``

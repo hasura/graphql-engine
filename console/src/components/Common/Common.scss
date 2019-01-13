@@ -86,6 +86,7 @@ table thead tr th
         padding: 15px 0px;
         padding-left: 20px;
         background-color: #FFF3D5;
+        display: inline-block;
       }
     }
    }
@@ -736,6 +737,7 @@ code
 .yellow_button:focus
 {
   outline: none;
+  background-color: #F2B130;
 }
 .default_button
 {
@@ -753,6 +755,7 @@ code
 .default_button:focus
 {
   outline: none;
+  background-color: #efefef;
 }
 .danger_button
 {
@@ -781,6 +784,10 @@ code
     background-color: #F2B130;
     color: #fff;
   }
+  &:focus
+  {
+    background-color: #F2B130;
+  }
 }
 .docsButton
 {
@@ -793,6 +800,10 @@ code
   padding: 5px 10px;
   line-height: 1.5;
   &:hover {
+    background-color: #efefef;
+  }
+  &:focus
+  {
     background-color: #efefef;
   }
 }
