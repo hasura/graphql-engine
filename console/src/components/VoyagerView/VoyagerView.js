@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Voyager } from 'graphql-voyager';
+import ReactDOM from 'react-dom';
 import fetch from 'isomorphic-fetch';
 import Endpoints from '../../Endpoints';
 import '../../../node_modules/graphql-voyager/dist/voyager.css';
@@ -19,14 +20,15 @@ class VoyagerView extends Component {
 
   render() {
     const rootType = this.props.params.root;
-    return (
+    return ReactDOM.createPortal(
       <Voyager
         introspection={this.introspectionProvider}
         displayOptions={{ rootType: rootType }}
         workerURI={
           'https://storage.googleapis.com/hasura-graphql-engine/console/assets/voyager.worker.js'
         }
-      />
+      />,
+      document.getElementById('voyager-root')
     );
   }
 }

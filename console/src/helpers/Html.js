@@ -92,6 +92,7 @@ export default class Html extends Component {
           />
 
           <div id="content" className="content" />
+          <div id="voyager-root" className="voyager-root" />
           <script src={assets.javascript.main} charSet="UTF-8" />
           {/*
           <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
