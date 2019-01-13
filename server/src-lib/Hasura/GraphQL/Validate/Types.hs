@@ -7,6 +7,7 @@ module Hasura.GraphQL.Validate.Types
   , mkObjTyInfo
   , IFaceTyInfo(..)
   , IFacesSet
+  , UnionTyInfo(..)
   , FragDef(..)
   , FragDefMap
   , AnnVarVals
@@ -61,7 +62,6 @@ import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
 
 -- | Typeclass for equating relevant properties of various GraphQL types
 -- | defined below
@@ -223,6 +223,31 @@ fromIFaceDef (G.InterfaceTypeDefinition descM n _ flds) loc =
   where
     fldMap =  Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
 
+type MemberTypes = Set.HashSet G.NamedType
+
+data UnionTyInfo
+  = UnionTyInfo
+  { _utiDesc        :: !(Maybe G.Description)
+  , _utiName        :: !(G.NamedType)
+  , _utiMemberTypes :: !MemberTypes
+  } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType UnionTyInfo where
+  type EqProps UnionTyInfo =
+    (G.NamedType, Set.HashSet G.NamedType)
+  getEqProps a = (,) (_utiName a) (_utiMemberTypes a)
+
+instance Monoid UnionTyInfo where
+  mempty = UnionTyInfo Nothing (G.NamedType "") Set.empty
+
+instance Semigroup UnionTyInfo where
+  objA <> objB =
+    objA { _utiMemberTypes = Set.union (_utiMemberTypes objA) (_utiMemberTypes objB)
+         }
+
+fromUnionTyDef :: G.UnionTypeDefinition -> UnionTyInfo
+fromUnionTyDef (G.UnionTypeDefinition descM n _ mt) = UnionTyInfo descM (G.NamedType n) $ Set.fromList mt
+
 type InpObjFldMap = Map.HashMap G.Name InpValInfo
 
 data InpObjTyInfo
@@ -278,20 +303,27 @@ data TypeInfo
   | TIEnum !EnumTyInfo
   | TIInpObj !InpObjTyInfo
   | TIIFace !IFaceTyInfo
+  | TIUnion !UnionTyInfo
   deriving (Show, Eq, TH.Lift)
 
 data AsObjType
   = AOTObj ObjTyInfo
   | AOTIFace IFaceTyInfo
+  | AOTUnion UnionTyInfo
 
-getPossibleObjTypes' :: [TypeInfo] -> AsObjType -> [ObjTyInfo]
-getPossibleObjTypes' _ (AOTObj obj) = [obj]
-getPossibleObjTypes' allTy (AOTIFace i) = mapMaybe getImplTypeM allTy
+getPossibleObjTypes' :: TypeMap -> AsObjType -> Map.HashMap G.NamedType ObjTyInfo
+getPossibleObjTypes' _ (AOTObj obj) = toObjMap [obj]
+getPossibleObjTypes' tyMap (AOTIFace i) = toObjMap $ mapMaybe previewImplTypeM $ Map.elems tyMap
   where
-    getImplTypeM = \case
+    previewImplTypeM = \case
       TIObj objTyInfo -> bool Nothing (Just objTyInfo) $
          _ifName i `elem` _otiImplIFaces objTyInfo
       _               -> Nothing
+getPossibleObjTypes' tyMap (AOTUnion u) = toObjMap $ mapMaybe (extrObjTyInfoM tyMap) $ Set.toList $ _utiMemberTypes u
+
+toObjMap :: [ObjTyInfo] -> Map.HashMap G.NamedType ObjTyInfo
+toObjMap objs = foldr (\o -> Map.insert (_otiName o) o) Map.empty objs
+
 
 isObjTy :: TypeInfo -> Bool
 isObjTy = \case
@@ -301,6 +333,11 @@ isObjTy = \case
 getObjTyM :: TypeInfo -> Maybe ObjTyInfo
 getObjTyM = \case
   (TIObj t) -> return t
+  _         -> Nothing
+
+getUnionTyM :: TypeInfo -> Maybe UnionTyInfo
+getUnionTyM = \case
+  (TIUnion u) -> return u
   _         -> Nothing
 
 isIFaceTy :: TypeInfo -> Bool
@@ -337,6 +374,16 @@ showSPTxt' (SchemaPath _ f a t)  = maybe "" (<> " "<> fld) t
 
 showSPTxt :: SchemaPath -> Text
 showSPTxt p = showSPTxt' p <> showSP p
+
+validateUnion :: MonadError Text m => TypeMap -> UnionTyInfo -> m ()
+validateUnion tyMap (UnionTyInfo _ un mt) = do
+  when (Set.null mt) $ throwError $ "Unique member types cannot be empty for union type " <> showNamedTy un
+  mapM_ valIsObjTy $ Set.toList mt
+  where
+    valIsObjTy mn = case Map.lookup mn tyMap of
+      Just (TIObj t) -> return t
+      Nothing -> throwError $ "Could not find type " <> showNamedTy mn <> ", which is defined as a member type of Union " <> showNamedTy un
+      _ -> throwError $ "Union type " <> showNamedTy un <> " can only include object types. It cannot include " <> showNamedTy mn
 
 implmntsIFace :: TypeMap -> ObjTyInfo -> IFaceTyInfo -> Either Text ()
 implmntsIFace tyMap objTyInfo iFaceTyInfo = do
@@ -396,6 +443,11 @@ extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
   Just (TIIFace i) -> return i
   _ -> throwError $ "Could not find interface with name " <> showNamedTy tn
 
+extrObjTyInfoM :: TypeMap -> G.NamedType -> Maybe ObjTyInfo
+extrObjTyInfoM tyMap tn = case Map.lookup tn tyMap of
+  Just (TIObj o) -> return o
+  _ -> Nothing
+
 validateIsSubType :: Map.HashMap G.NamedType TypeInfo -> G.GType -> G.GType -> Either Text ()
 validateIsSubType tyMap subFldTy supFldTy = do
   checkNullMismatch subFldTy supFldTy
@@ -445,6 +497,7 @@ getNamedTy = \case
   TIIFace i -> _ifName i
   TIEnum t -> _etiName t
   TIInpObj t -> _iotiName t
+  TIUnion u -> _utiName u
 
 mkTyInfoMap :: [TypeInfo] -> TypeMap
 mkTyInfoMap tyInfos =
@@ -456,8 +509,7 @@ fromTyDef tyDef loc = case tyDef of
   G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t loc
   G.TypeDefinitionInterface t ->
     return $ TIIFace $ fromIFaceDef t loc
-  G.TypeDefinitionUnion t ->
-    throwError $ "unexpected union: " <> showName (G._utdName t)
+  G.TypeDefinitionUnion t -> return $ TIUnion $ fromUnionTyDef t
   G.TypeDefinitionEnum t -> return $ TIEnum $ fromEnumTyDef t loc
   G.TypeDefinitionInputObject t -> return $ TIInpObj $ fromInpObjTyDef t loc
 
@@ -465,6 +517,7 @@ fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
   tyMap <- fmap mkTyInfoMap $ mapM (flip fromTyDef loc) tyDefs
   mapM_ (validateAllIFaceImpls tyMap) $ mapMaybe getObjTyM $ Map.elems tyMap
+  mapM_ (validateUnion tyMap) $ mapMaybe getUnionTyM $ Map.elems tyMap
   return tyMap
   where
     validateAllIFaceImpls tyMap objTyInfo = mapM_ (extrIFaceTyInfo tyMap >=> validateIFaceImpl objTyInfo) $ _otiImplIFaces objTyInfo

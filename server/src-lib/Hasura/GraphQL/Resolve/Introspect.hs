@@ -94,8 +94,24 @@ notBuiltinFld f =
   where
     fldName = _fiName f
 
--- 4.5.2.4
+getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
+getImplTypes aot = do
+   tyInfo :: TypeMap <- asks getter
+   return $ sortBy (comparing _otiName) $ Map.elems $ getPossibleObjTypes' tyInfo $ aot
 
+-- 4.5.2.3
+unionR :: (MonadReader t m, MonadError QErr m, Has TypeMap t) => UnionTyInfo -> Field -> m J.Object
+unionR u@(UnionTyInfo descM n _) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Field"
+    "kind"          -> retJ TKUNION
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
+    _               -> return J.Null
+
+-- 4.5.2.4
 ifaceR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
@@ -124,12 +140,8 @@ ifaceR' i@(IFaceTyInfo descM n flds) fld =
     "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
                       sortBy (comparing _fiName) $
                       filter notBuiltinFld $ Map.elems flds
-    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes (AOTIFace i)
     _               -> return J.Null
-    where
-      getImplTypes = do
-        tyInfo :: TypeMap <- asks getter
-        return $ getPossibleObjTypes' (Map.elems tyInfo) $ AOTIFace i
 
 -- 4.5.2.5
 enumTypeR
@@ -217,6 +229,7 @@ namedTypeR' fld = \case
   TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
   TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
   TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
+  TIUnion unionTyInfo   -> unionR unionTyInfo fld
 
 -- 4.5.3
 fieldR

@@ -219,11 +219,11 @@ validateNamedTypeVal inpValParser nt val = do
   case tyInfo of
     -- this should never happen
     TIObj _ ->
-      throw500 $ "unexpected object type info for: "
-      <> showNamedTy nt
+      throwUnexpTypeErr "object"
     TIIFace _ ->
-      throw500 $ "unexpected interface type info for: "
-      <> showNamedTy nt
+      throwUnexpTypeErr "interface"
+    TIUnion _ ->
+      throwUnexpTypeErr "union"
     TIInpObj ioti ->
       withParsed (getObject inpValParser) val $
       fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
@@ -234,6 +234,8 @@ validateNamedTypeVal inpValParser nt val = do
       withParsed (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where
+    throwUnexpTypeErr ty = throw500 $ "unexpected " <> ty <> " type info for: "
+      <> showNamedTy nt
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)
       then return enumVal
