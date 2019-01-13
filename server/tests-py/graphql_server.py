@@ -197,12 +197,21 @@ class Droid(graphene.ObjectType):
     def resolve_primary_function(self, info):
         return self.primary_function
 
+class CharacterSearchResult(graphene.Union):
+    class Meta:
+        types = (Human,Droid)
+
 all_characters = {
  4: Droid("Astromech", Character(1,'R2-D2')),
  5: Human("Tatooine", Character(2, "Luke Skywalker")),
 }
 
-class CharacterQuery(graphene.ObjectType):
+character_search_results = {
+ 1: Droid("Astromech", Character(6,'R2-D2')),
+ 2: Human("Tatooine", Character(7, "Luke Skywalker")),
+}
+
+class CharacterIFaceQuery(graphene.ObjectType):
     hero = graphene.Field(
         Character,
         required=False,
@@ -212,9 +221,9 @@ class CharacterQuery(graphene.ObjectType):
     def resolve_hero(_, info, episode):
         return all_characters.get(episode)
 
-schema = graphene.Schema(query=CharacterQuery, types=[Human, Droid])
+schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
 
-character_interface_schema = graphene.Schema(query=CharacterQuery, types=[Human, Droid])
+character_interface_schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
 
 class CharacterInterfaceGraphQL(RequestHandler):
     def get(self, req):
@@ -225,6 +234,26 @@ class CharacterInterfaceGraphQL(RequestHandler):
         res = character_interface_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+class UnionQuery(graphene.ObjectType):
+    search = graphene.Field(
+        CharacterSearchResult,
+        required=False,
+        episode=graphene.Int(required=True)
+    )
+
+    def resolve_search(_, info, episode):
+        return character_search_results.get(episode)
+
+union_schema = graphene.Schema(query=UnionQuery, types=[Human, Droid])
+
+class UnionGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        return mkJSONResp(res)
 
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
@@ -232,6 +261,7 @@ handlers = MkHandlers({
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,
     '/character-iface-graphql' : CharacterInterfaceGraphQL,
+    '/union-graphql' : UnionGraphQL,
     '/person-graphql': PersonGraphQL
 })
 

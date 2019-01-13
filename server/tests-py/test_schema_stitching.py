@@ -84,6 +84,15 @@ class TestRemoteSchemaBasic:
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote interface one"}})
         assert st_code == 200, resp
 
+    def test_add_remote_schema_with_union(self, hge_ctx):
+        """add a remote schema with interfaces in it"""
+        q = mk_add_remote_q('my remote union one', 'http://localhost:5000/union-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir + '/search_union_type_query.yaml')
+        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote union one"}})
+        assert st_code == 200, resp
+
     def test_bulk_remove_add_remote_schema(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')
         assert st_code == 200, resp
