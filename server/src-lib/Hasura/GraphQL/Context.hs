@@ -161,8 +161,8 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
-stDWithinTy :: G.NamedType
-stDWithinTy = G.NamedType "st_d_within_val"
+stDWithinInpTy :: G.NamedType
+stDWithinInpTy = G.NamedType "st_d_within_input"
 
 --- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
@@ -229,7 +229,7 @@ mkCompExpInp colTy =
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "st_d_within" $ G.toGT stDWithinTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within in the given distance from given geometry value"
 
@@ -241,32 +241,32 @@ mkCompExpInp colTy =
       InpValInfo (Just desc) op $ G.toGT $ mkScalarTy PGGeometry
     geomOps =
       [
-        ( "st_contains"
+        ( "_st_contains"
         , "does the column contain given geometry value"
         )
       ,
-        ( "st_contains_in"
+        ( "_st_contains_in"
         , "is the column contained in given geometry value"
         )
-      , ( "st_crosses"
+      , ( "_st_crosses"
         , "does the column crosses given geometry value"
         )
-      , ( "st_disjoint"
+      , ( "_st_disjoint"
         , "does the column don't spatially intersect the given geometry value"
         )
-      , ( "st_equals"
+      , ( "_st_equals"
         , "is the column equal to given geometry value. Directionality is ignored"
         )
-      , ( "st_intersects"
+      , ( "_st_intersects"
         , "does the column spatially intersect the given geometry value"
         )
-      , ( "st_overlaps"
+      , ( "_st_overlaps"
         , "does the column overlaps given geometry value"
         )
-      , ( "st_touches"
+      , ( "_st_touches"
         , "does the column have atleast one point in common with given geometry value"
         )
-      , ( "st_within"
+      , ( "_st_within"
         , "does the column completely inside given geometry value"
         )
       ]
@@ -350,9 +350,9 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
 
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
     stDWithinInp =
-      mkHsraInpTyInfo Nothing stDWithinTy $ fromInpValL
+      mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
       [ InpValInfo Nothing "from" $ G.toGT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGDouble
+      , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGFloat
       ]
 
 emptyGCtx :: GCtx
