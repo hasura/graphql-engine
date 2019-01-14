@@ -165,14 +165,13 @@ The top level of your JSON database should be a JSON object with keys being the 
 5. The types of the columns/fields are inferred from the data in the columns
 json2graphql treats top-level objects as tables, and their keys as columns. If it encounters a column name of the form `<ENTITY_NAME>_id`, json2graphql will consider it a foreign key the the entity with name `<ENTITY_NAME>`.
 
-+-+-+-+-+
-Javascript type (object.constructor.name) | Postgres column type | GraphQL field type | Example data
-+-+-+-+-+
-number | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
-string | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
-bool | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
-date | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
-Object or Array | JSONB | JSONB | `{...}`
+| JavaScript type (constructor.name) | Postgres column type         | GraphQL field type | Example data |
+| ---------------------------------- | ---------------------------- | ------------------ | ------------ |
+| Number                             | `parseInt()` ? int : numeric | Integer OR Float   | `12.34`      |
+| String                             | text                         | String             | `Hello world`       | 
+| Boolean                | bool                    | Boolean            | true                     |
+| Date                   | timestamptz                  | timestamptz        | `new Date("Jan 24, 2010 00:00:00")`      |
+| Object or Array                    | jsonb                        | jsonb              | { ... }      |
 
 ### Foreign keys and relationships
 
@@ -259,7 +258,7 @@ The response will contain the data from your JSON:
 
 ## Credits and related projects
 
-- [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Back](https://fredibach.ch)
+- [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Bach](https://fredibach.ch)
 - [Firebase2GraphQL](https://firebase2graphql.com/): A tool to import data from firebase to a realtime GraphQL API on Postgres
 - [json-graphql-server](https://github.com/marmelab/json-graphql-server)
 
