@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import FormGroup from 'react-bootstrap/lib/FormGroup';
 
 import {
   removeHeader,
@@ -20,7 +21,7 @@ import {
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
-  UPDATE_WEBHOOK_URL_TYPE,
+  UPDATE_WEBHOOK_URL_TYPE
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
@@ -38,7 +39,7 @@ class AddTrigger extends Component {
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
-      supportWebhookEnv: false,
+      supportWebhookEnv: false
     };
   }
   componentDidMount() {
@@ -89,7 +90,7 @@ class AddTrigger extends Component {
   updateSupportColumnChangeFeature(val) {
     this.setState({
       ...this.state,
-      supportColumnChangeFeature: val,
+      supportColumnChangeFeature: val
     });
   }
 
@@ -173,7 +174,7 @@ class AddTrigger extends Component {
     } else {
       this.props.dispatch(
         showErrorNotification('Error creating trigger!', errorMsg, '', {
-          custom: customMsg,
+          custom: customMsg
         })
       );
     }
@@ -196,7 +197,7 @@ class AddTrigger extends Component {
       internalError,
       headers,
       webhookURL,
-      webhookUrlType,
+      webhookUrlType
     } = this.props;
 
     const { supportColumnChangeFeature } = this.state;
@@ -265,10 +266,7 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div
-              key={i}
-              className={styles.noPadd + ' col-md-4'}
-            >
+            <div key={i} className={styles.noPadd + ' col-md-4'}>
               <div className={'checkbox '}>
                 <label>
                   {inputHtml}
@@ -295,14 +293,17 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}> {getColumnList('update')} </div>
+          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+            {' '}
+            {getColumnList('update')}{' '}
+          </div>
         ) : (
           <div>
             <div
               className={styles.display_inline + ' ' + styles.add_mar_right}
               style={{
                 marginTop: '10px',
-                marginBottom: '10px',
+                marginBottom: '10px'
               }}
             >
               Applicable to update operation only.
@@ -401,7 +402,7 @@ class AddTrigger extends Component {
             <DropdownButton
               dropdownOptions={[
                 { display_text: 'Value', value: 'static' },
-                { display_text: 'From env var', value: 'env' },
+                { display_text: 'From env var', value: 'env' }
               ]}
               title={
                 (header.type === 'static' && 'Value') ||
@@ -605,12 +606,18 @@ class AddTrigger extends Component {
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
                 </h4>
+                <small>
+                  Note : Specifying the webhook URL via an environmental
+                  variable is recommended if you have different URLs for
+                  multiple environments.
+                </small>
+                <FormGroup />
                 {this.state.supportWebhookEnv ? (
                   <div className={styles.dropdown_wrapper}>
                     <DropdownButton
                       dropdownOptions={[
                         { display_text: 'URL', value: 'url' },
-                        { display_text: 'From env var', value: 'env' },
+                        { display_text: 'From env var', value: 'env' }
                       ]}
                       title={
                         (webhookUrlType === 'url' && 'URL') ||
@@ -638,16 +645,18 @@ class AddTrigger extends Component {
                     />
                   </div>
                 ) : (
-                  <input
-                    type="url"
-                    required
-                    data-test="webhook"
-                    placeholder="webhook url"
-                    className={`${styles.tableNameInput} form-control`}
-                    onChange={e => {
-                      dispatch(setWebhookURL(e.target.value));
-                    }}
-                  />
+                  <div>
+                    <input
+                      type="url"
+                      required
+                      data-test="webhook"
+                      placeholder="webhook url"
+                      className={`${styles.tableNameInput} form-control`}
+                      onChange={e => {
+                        dispatch(setWebhookURL(e.target.value));
+                      }}
+                    />
+                  </div>
                 )}
               </div>
               <hr />
@@ -671,12 +680,20 @@ class AddTrigger extends Component {
                     ' ' +
                     styles.add_mar_bottom +
                     ' ' +
-                    styles.add_mar_top + ' ' + styles.wd100
+                    styles.add_mar_top +
+                    ' ' +
+                    styles.wd100
                   }
                 >
                   {tableName ? advancedColumnSection : null}
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div
@@ -725,7 +742,13 @@ class AddTrigger extends Component {
                     </div>
                   </div>
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
@@ -760,14 +783,14 @@ AddTrigger.propTypes = {
   lastError: PropTypes.object,
   internalError: PropTypes.string,
   lastSuccess: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
   };
 };
 
