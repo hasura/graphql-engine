@@ -258,7 +258,7 @@ The response will contain the data from your JSON:
 
 ## Credits and related projects
 
-- [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Back](https://fredibach.ch)
+- [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Bach](https://fredibach.ch)
 - [Firebase2GraphQL](https://firebase2graphql.com/): A tool to import data from firebase to a realtime GraphQL API on Postgres
 - [json-graphql-server](https://github.com/marmelab/json-graphql-server)
 
