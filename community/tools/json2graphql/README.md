@@ -23,23 +23,23 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
 
 1. **Create a JSON file** Create a JSON file, say, `db.json` as:
 
-```
-{
-    "post": [
-        { "id": 1, "title": "Lorem Ipsum", "views": 254, "user_id": 123 },
-        { "id": 2, "title": "Sic Dolor amet", "views": 65, "user_id": 456 }
-    ],
-    "user": [
-        { "id": 123, "name": "John Doe" },
-        { "id": 456, "name": "Alison Craus" }
-    ],
-    "comment": [
-        { "id": 987, "post_id": 1, "body": "Consectetur adipiscing elit", "user_id": 123 },
-        { "id": 995, "post_id": 2, "body": "Nam molestie pellentesque dui", "user_id": 456 },
-        { "id": 999, "post_id": 1, "body": "quid agis", "user_id": 456 }
-    ]
-}
-```
+   ```
+   {
+       "post": [
+           { "id": 1, "title": "Lorem Ipsum", "views": 254, "user_id": 123 },
+           { "id": 2, "title": "Sic Dolor amet", "views": 65, "user_id": 456 }
+       ],
+       "user": [
+           { "id": 123, "name": "John Doe" },
+           { "id": 456, "name": "Alison Craus" }
+       ],
+       "comment": [
+           { "id": 987, "post_id": 1, "body": "Consectetur adipiscing elit", "user_id": 123 },
+           { "id": 995, "post_id": 2, "body": "Nam molestie pellentesque dui", "user_id": 456 },
+           { "id": 999, "post_id": 1, "body": "quid agis", "user_id": 456 }
+       ]
+   }
+   ```
 
 2. **Run Hasura + Postgres**: Run the Hasura GraphQL Engine and Postgres on Heroku's free tier by clicking this button:
 
@@ -56,58 +56,60 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
     $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json 
     ```
 
-4. **Run GraphQL queries**:
-You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
+4. **Run GraphQL queries**: You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
 
-```graphql
-query {
-  user {
-    postsByUserId {
-      id
-      title
-      commentsByPostId {
-        body
-        id
-      }
-    }
-    id
-  }
-}
-```
+   ```graphql
+   query {
+     user {
+       postsByUserId {
+         id
+         title
+         commentsByPostId {
+           body
+           id
+         }
+       }
+       id
+     }
+   }
+   ```
 
 5. **Behind the scenes**: The tables created in Postgres are:
 
-```sql
+   ```sql
 
-user (
-  id integer not null primary key,
-  name text
-)
+   user (
+     id integer not null primary key,
+     name text
+   )
 
-post (
-  id integer not null primary key,
-  title text,
-  views integer,
-  user_id integer foreign key references user(id)
-)
+   post (
+     id integer not null primary key,
+     title text,
+     views integer,
+     user_id integer foreign key references user(id)
+   )
 
-comment (
-  id integer not null primary key,
-  body text,
-  post_id integer foreign key references post(id),
-  user_id integer foreign key references user(id)
-)
+   comment (
+     id integer not null primary key,
+     body text,
+     post_id integer foreign key references post(id),
+     user_id integer foreign key references user(id)
+   )
 
-```
+   ```
 
 ## Installation
 
 ```bash
+## Install globally
 npm install -g json2graphql
+
+## Or run as a one-off command
+npx json2graphql <hasura-url> -d ./path/to/db.json
 ```
 
 ## CLI Usage
-
 
 ```bash
 # Running against a hasura without an access key
@@ -139,7 +141,7 @@ $ json2graphql URL [flags]
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
-## JSON Structure
+## JSON structure
 
 The top level of your JSON database should be a JSON object with keys being the name of entities and values being list of entities. For example:
 
@@ -156,9 +158,21 @@ The top level of your JSON database should be a JSON object with keys being the 
 }
 ```
 
-The CLI will treat the entities as tables and the fields in the entities as columns. If some column name is of the form `<ENTITY_NAME>_id`, the CLI will consider it a foreign key the the entity with name `<ENTITY_NAME>`.
+1. The JSON structure is a "normalised" set of objects
+2. Top level objects are mapped to tables in postgres and root fields in the GraphQL schema
+3. Keys in the objects are mapped to columns of the tables in postgres, and as fields in the GraphQL schema
+4. Keys in the object with the column name of the form `<ENTITY_NAME>_id`, are considered to indicate foreign-key constraints on postgres, and connections in the GraphQL schema
+5. The types of the columns/fields are inferred from the data in the columns
+json2graphql treats top-level objects as tables, and their keys as columns. If it encounters a column name of the form `<ENTITY_NAME>_id`, json2graphql will consider it a foreign key the the entity with name `<ENTITY_NAME>`.
 
-The types of the columns will be inferred from the data in the columns. If the data in the columns is not consistent, the data insertion would fail.
++-+-+-+-+
+Javascript type (object.constructor.name) | Postgres column type | GraphQL field type | Example data
++-+-+-+-+
+number | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
+string | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
+bool | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
+date | `parseInt()` ? Int : Numeric | Integer OR Float | `12.34`
+Object or Array | JSONB | JSONB | `{...}`
 
 ### Foreign keys and relationships
 
