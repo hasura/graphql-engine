@@ -1,6 +1,8 @@
 # JSON database to GraphQL
 
-This is A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API. The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine) and `json2graphql` creates the Postgres schema, imports data into Postgres and applies Hasura configuration so that you can move from your sample JSON data to a postgres-backed GraphQL API instantly.
+This is A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API. The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine) and `json2graphql` imports data into Postgres and applies Hasura configuration so that you can move from your sample JSON data to a postgres-backed GraphQL API instantly.
+
+> `json2graphql` is especially useful for using an existing JSON dataset to bootstrap a GraphQL API. Try some from [awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets). You might have to wrangle the dataset a teeny bit as per [#json-structure](#json-structure).
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
@@ -74,7 +76,7 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
    }
    ```
 
-5. **Behind the scenes**: The tables created in Postgres are:
+5. **Behind the scenes**: The following schema is created in Postgres::
 
    ```sql
 
@@ -143,6 +145,8 @@ $ json2graphql URL [flags]
 
 ## JSON structure
 
+![json2graphql - From JSON to GraphQL on Postgres](https://graphql-engine-cdn.hasura.io/assets/json2graphql/json2postgres-graphql.png)
+
 The top level of your JSON database should be a JSON object with keys being the name of entities and values being list of entities. For example:
 
 ```json
@@ -167,94 +171,31 @@ json2graphql treats top-level objects as tables, and their keys as columns. If i
 
 | JavaScript type (constructor.name) | Postgres column type         | GraphQL field type | Example data |
 | ---------------------------------- | ---------------------------- | ------------------ | ------------ |
-| Number                             | `parseInt()` ? int : numeric | Integer OR Float   | `12.34`      |
-| String                             | text                         | String             | `Hello world`       | 
-| Boolean                | bool                    | Boolean            | true                     |
-| Date                   | timestamptz                  | timestamptz        | `new Date("Jan 24, 2010 00:00:00")`      |
-| Object or Array                    | jsonb                        | jsonb              | { ... }      |
+| Number | `parseInt()` ? int : numeric | Integer OR Float | `12.34` |
+| String | text | String | `Hello world` |
+| Boolean | bool | Boolean | true                     |
+| Date | timestamptz | timestamptz | `new Date("Jan 24, 2010 00:00:00")` |
+| Object or Array | jsonb | jsonb | { ... } |
 
-### Foreign keys and relationships
+### Generating data - importing with `.js` files
 
-You can also define foreign keys and relationships in your JSON sample data. The CLI infers foreign keys and relationships from column names and table names.
-
-For example, in the following data set, the `post` table has a field called `user_id` which is a foreign key to the `id`  column of table `user`. Also, the `comment` table has a field called `post_id` which is a foreign key to the `id`  column of table `post`.
+You can also use Javascript `.js` files. This allows you to:
+- Write some generation logic for sample data
+- Use `date` types
 
 ```js
 module.exports = {
-    post: [
-        { id: 1, title: "Lorem Ipsum", views: 254, user_id: 123 },
-        { id: 2, title: "Sic Dolor amet", views: 65, user_id: 456 },
-    ],
-    user: [
-        { id: 123, name: "John Doe" },
-        { id: 456, name: "Jane Doe" }
-    ],
-    comment: [
-        { id: 987, post_id: 1, body: "Consectetur adipiscing elit" },
-        { id: 995, post_id: 1, body: "Nam molestie pellentesque dui" }
-    ]
+    user: [1,2,3,4,5].map(i => ({
+      id: i,
+      name: `user-${i}`,
+      created: new Date()
+    }))
 };
 ```
 
-Once you import this JSON `json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json` you can now make queries like:
+### Examples
 
-```graphql
-query {
-  post {
-    id
-    title
-    views
-    userByUserId {
-      id
-      name
-    }
-    commentsByPostId {
-      id
-      body
-    }
-  }
-}
-```
-
-The response will contain the data from your JSON:
-
-```json
-{
-  "data": {
-    "post": [
-      {
-        "userByUserId": {
-          "name": "John Doe",
-          "id": 123
-        },
-        "views": 254,
-        "id": 1,
-        "title": "Lorem Ipsum",
-        "commentsByPostId": [
-          {
-            "body": "Consectetur adipiscing elit",
-            "id": 987
-          },
-          {
-            "body": "Nam molestie pellentesque dui",
-            "id": 995
-          }
-        ]
-      },
-      {
-        "userByUserId": {
-          "name": "Jane Doe",
-          "id": 456
-        },
-        "views": 65,
-        "id": 2,
-        "title": "Sic Dolor amet",
-        "commentsByPostId": []
-      }
-    ]
-  }
-}
-```
+For more examples, check out the [./example-datasets](./example-datasets) directory.
 
 ## Credits and related projects
 
