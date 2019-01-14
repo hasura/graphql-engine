@@ -169,7 +169,7 @@ json2graphql treats top-level objects as tables, and their keys as columns. If i
 | ---------------------------------- | ---------------------------- | ------------------ | ------------ |
 | Number                             | `parseInt()` ? int : numeric | Integer OR Float   | `12.34`      |
 | String                             | text                         | String             | `Hello world`       | 
-| Boolean                | boolean                      | Boolean            | true                     |
+| Boolean                | bool                    | Boolean            | true                     |
 | Date                   | timestamptz                  | timestamptz        | `new Date("Jan 24, 2010 00:00:00")`      |
 | Object or Array                    | jsonb                        | jsonb              | { ... }      |
 
