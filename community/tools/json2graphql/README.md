@@ -3,11 +3,11 @@
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
 
-This is A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API. 
+A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API.
 
 The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine) and `json2graphql` imports data into Postgres and applies Hasura configuration so that you can move from your sample JSON data to a postgres-backed GraphQL API instantly.
 
-> `json2graphql` is especially useful for using an existing JSON dataset to bootstrap a GraphQL API. Try some from [awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets). You might have to wrangle the dataset a teeny bit as per [#json-structure](#json-structure).
+`json2graphql` is especially useful for using an existing JSON dataset to bootstrap a GraphQL API. Try some from [awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets). You might have to wrangle the dataset a teeny bit as per [#json-structure](#json-structure).
 
 - [Basic example](#basic-example)
 - [Quick start](#quick-start)
