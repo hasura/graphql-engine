@@ -1,5 +1,3 @@
-.. _graphql_manual:
-
 .. title:: Hasura GraphQL Engine Documentation
 
 Hasura GraphQL Engine documentation
