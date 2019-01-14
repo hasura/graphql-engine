@@ -1,8 +1,6 @@
 # JSON database to GraphQL
 
-This is A CLI tool to import a schema and data to Postgres using JSON data ([of an opinionated structure](#json-structure)). You can then leverage all the features of Hasura GraphQL Engine to query the Postgres data over GraphQL.
-
-> [Hasura GraphQL Engine](https://hasura.io) gives instant realtime GraphQL APIs over Postgres.
+This is A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API. The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine) and `json2graphql` creates the Postgres schema, imports data into Postgres and applies Hasura configuration so that you can move from your sample JSON data to a postgres-backed GraphQL API instantly.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
@@ -15,11 +13,15 @@ This is A CLI tool to import a schema and data to Postgres using JSON data ([of 
 - [More features](#more-features)
 - [Credits and related projects](#credits-and-related-projects)
 
-## Basic example
+## Demo
 
 ![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
 
-In the above GIF, we are importing a schema and data from a JSON database. The Hasura GraphQL Engine is running at `https://j2gtest.herokuapp.com` The JSON database (`db.json`) is:
+In the above GIF, we are importing a schema and data from a JSON database. The Hasura GraphQL Engine is running at `https://j2gtest.herokuapp.com`
+
+## Quickstart
+
+1. **Create a JSON file** Create a JSON file, say, `db.json` as:
 
 ```
 {
@@ -39,13 +41,41 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
 }
 ```
 
-We import the database using the command:
+2. **Run Hasura + Postgres**: Run the Hasura GraphQL Engine and Postgres on Heroku's free tier by clicking this button:
 
-```
-json2graphql https://j2gtest.herokuapp.com -d ./db.json
+   [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+
+   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`. Let's say it's `j2gtest.herokuapp.com`.
+   For instructions on how to deploy Hasura in other environments, head to the [docs](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+
+
+3. **json2graphql**: We import schema, data and create Hasura configuration in one command:
+
+    ```
+    $ npm install -g json2graphql
+    $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json 
+    ```
+
+4. **Run GraphQL queries**:
+You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
+
+```graphql
+query {
+  user {
+    postsByUserId {
+      id
+      title
+      commentsByPostId {
+        body
+        id
+      }
+    }
+    id
+  }
+}
 ```
 
-Once this is imported, the tables created in Postgres are:
+5. **Behind the scenes**: The tables created in Postgres are:
 
 ```sql
 
@@ -70,73 +100,6 @@ comment (
 
 ```
 
-You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
-
-```graphql
-query {
-  user {
-    postsByUserId {
-      id
-      title
-      commentsByPostId {
-        body
-        id
-      }
-    }
-    id
-  }
-}
-```
-
-
-## Quick start
-
-1. Quickly get the GraphQL Engine running by clicking this button:
-
-   [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
-
-   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`
-
-2. Create a `db.js` file. Your data file should export an object where the keys are the entity types. The values should be the lists of entities, i.e. arrays of value objects with at least an id key. For instance:
-
-    ```js
-    module.exports = {
-        user: [
-            { id: 123, name: "John Doe" },
-            { id: 456, name: "Jane Doe" }
-        ],
-        city: [
-            { id: 987, name: "Stockholm", country: "Sweden" },
-            { id: 995, name: "Sydney", country: "Australia" }
-        ]
-    }
-    ```
-
-3. Use the CLI to import the data:
-
-    ```
-    $ npm install -g json2graphql
-    $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js 
-    ```
-
-4. That's it. You can go to your HGE URL `https://<app-name>.herokuapp.com` and start querying this data over GraphQL:
-
-    ```graphql
-    query {
-      user {
-        id
-        name
-      }
-      city {
-        id
-        name
-        country
-      }
-    }
-    ```
-
-Check [this section](#foreign-keys-and-relationships) for knowing about foreign keys and relationships.
-
 ## Installation
 
 ```bash
@@ -145,22 +108,24 @@ npm install -g json2graphql
 
 ## CLI Usage
 
-#### Without access key
-
-```
-$ json2graphql https://hge.herokuapp.com -d ./path/to/db.js
-```
-
-#### With access key
-
-```
-$ json2graphql https://hge.herokuapp.com -k <access-key> -d ./path/to/db.js
-```
-
-### Command
 
 ```bash
-$ gq URL [flags]
+# Running against a hasura without an access key
+$ json2graphql https://j2gtest.herokuapp.com -d ./path/to/db.json
+
+# Running against a hasura with an access key
+$ json2graphql https://j2gtest.herokuapp.com -k <access-key> -d ./path/to/db.json
+
+# Reset configuration, schema & data and import
+# Useful for updating schema structure or working against an existing Hasura setup
+# WARNING: This will remove all existing schema/data before applying
+$ json2graphql https://j2gtest.herokuapp.com --overwrite -d ./path/to/db.json
+```
+
+#### Command
+
+```bash
+$ json2graphql URL [flags]
 ```
 
 #### Args
@@ -170,7 +135,7 @@ $ gq URL [flags]
 #### Options
 
 - `-d --db`: path to the JS file that exports your sample JSON database
-- `-o --overwrite`: Overwrite tables if they already exist in database
+- `-o --overwrite`: DANGER: Overwrite tables if they already exist in database
 - `-v --version`: show CLI version
 - `-h, --help`: show CLI help
 
@@ -195,8 +160,6 @@ The CLI will treat the entities as tables and the fields in the entities as colu
 
 The types of the columns will be inferred from the data in the columns. If the data in the columns is not consistent, the data insertion would fail.
 
-## More features
-
 ### Foreign keys and relationships
 
 You can also define foreign keys and relationships in your JSON sample data. The CLI infers foreign keys and relationships from column names and table names.
@@ -220,13 +183,7 @@ module.exports = {
 };
 ```
 
-Import the database:
-
-```
-$ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.js
-```
-
-Now you can make complicated queries like:
+Once you import this JSON `json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json` you can now make queries like:
 
 ```graphql
 query {
@@ -246,7 +203,7 @@ query {
 }
 ```
 
-The response would be:
+The response will contain the data from your JSON:
 
 ```json
 {
@@ -286,18 +243,9 @@ The response would be:
 }
 ```
 
-### Overwrite
-
-If your Postgres already contains tables that you are trying to import using `json2graphql`, the command will fail.
-
-If you want to overwrite the existing tables in the database with the new tables from your sample JSON database, you must provide a flag `-o` or `--overwrite`
-
 ## Credits and related projects
 
-- [Fredi Bach](https://fredibach.ch)
+- [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Back](https://fredibach.ch)
+- [Firebase2GraphQL](https://firebase2graphql.com/): A tool to import data from firebase to a realtime GraphQL API on Postgres
 - [json-graphql-server](https://github.com/marmelab/json-graphql-server)
-- [Blowson](https://www.blowson.com/docs/)
-- [Firebase2GraphQL](https://firebase2graphql.com/)
 
----
-Maintained with :heart: by <a href="https://hasura.io">Hasura</a>
