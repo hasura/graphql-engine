@@ -357,6 +357,45 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
+PostGIS related operators on GEOMETRY columns:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_contains_in``
+     - ``ST_Contains`` (with reversed arguments)
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_disjoint``
+     - ``ST_Disjoint``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersects``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     - ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
+
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+
+.. Note::
+   Input value for ``_st_d_within`` operator is an object:-
+
+   .. parsed-literal::
+
+       {
+         field-name : {_st_d_within: {distance: Float, from: Value} }
+       }
+
 Checking for ``null`` values :
 
 - ``_is_null`` (takes true/false as values)
