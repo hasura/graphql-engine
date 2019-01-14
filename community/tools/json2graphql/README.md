@@ -9,12 +9,13 @@ The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine
 
 `json2graphql` is especially useful for using an existing JSON dataset to bootstrap a GraphQL API. Try some from [awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets). You might have to wrangle the dataset a teeny bit as per [#json-structure](#json-structure).
 
-- [Basic example](#basic-example)
-- [Quick start](#quick-start)
+
+------------------------------------------
+
+- [Quickstart](#quickstart)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
 - [JSON Structure](#json-structure)
-- [More features](#more-features)
 - [Credits and related projects](#credits-and-related-projects)
 
 ## Demo
