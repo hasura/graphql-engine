@@ -174,7 +174,7 @@ json2graphql treats top-level objects as tables, and their keys as columns. If i
 
 | JavaScript type (constructor.name) | Postgres column type         | GraphQL field type | Example data |
 | ---------------------------------- | ---------------------------- | ------------------ | ------------ |
-| Number | `parseInt()` ? int : numeric | Integer OR Float | `12.34` |
+| Number | numeric | numeric | `12.34` or `1223` |
 | String | text | String | `Hello world` |
 | Boolean | bool | Boolean | true                     |
 | Date | timestamptz | timestamptz | `new Date("Jan 24, 2010 00:00:00")` |
