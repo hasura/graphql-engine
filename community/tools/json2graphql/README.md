@@ -10,10 +10,19 @@
 [Hasura](https://hasura.io) is used to expose a realtime GraphQL API on Postgres. Once your schema and data is imported, you can instantly start running powerful queries with filters, pagination, sorting, fetching relations, insert/update/delete mutations and subscriptions too.
 
 **Use-cases**:
+
 `json2graphql` is ideal for:
 - **Bootstrapping a GraphQL backend**: Try out this example of initialising a GraphQL chat backend using a messages/groups/users chat JSON file. [Try it out](#quickly-bootstrap-a-graphql-backend)
 - **Play with a mongo dataset in Postgres & GraphQL**: Export a mongo JSON dump, import it to Postgres and start querying it with GraphQL. [Try it out](#play-with-graphql-on-your-mongodb-data)
 - **Query existing JSON datasets over GraphQL**: Pick up a JSON dataset, import to your new or existing Hasura/Postgres instance and start querying it. Try using [jdorfman/awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets).
+
+------------------------------------------
+
+## Demo
+
+![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
+
+In the GIF above, we are importing a schema and data from a JSON database. The Hasura GraphQL Engine is running at `https://j2gtest.herokuapp.com`
 
 ------------------------------------------
 
@@ -23,12 +32,6 @@
 - [JSON Structure](#json-structure)
 - [Use Cases](#use-cases)
 - [Credits and related projects](#credits-and-related-projects)
-
-## Demo
-
-![demo-gif](https://graphql-engine-cdn.hasura.io/assets/json2graphql/j2g.gif)
-
-In the above GIF, we are importing a schema and data from a JSON database. The Hasura GraphQL Engine is running at `https://j2gtest.herokuapp.com`
 
 ## Quickstart
 
