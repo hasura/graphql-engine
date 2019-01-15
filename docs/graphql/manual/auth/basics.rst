@@ -9,18 +9,17 @@ Access control basics
 In this section, we're going to set up a simple access control rule for restricting querying on a table.
 We're working with a simple ``author`` table where users have some information stored about themselves.
 
-Create an author table
-----------------------
+Create a table
+--------------
 
-Head to your console and create an ``author`` table with the following columns:
+Head to your console and :ref:`create a table <create-tables>` called ``author`` with the following schema:
 
-+----------+--------+
-|      id  | integer|
-+----------+--------+
-| name     | text   |
-+----------+--------+
+.. code-block:: sql
 
-.. image:: ../../../img/graphql/manual/auth/author-table.png
+  author (
+    id INT PRIMARY KEY,
+    name TEXT
+  )
 
 Insert some sample data into the table:
 
@@ -39,6 +38,8 @@ Insert some sample data into the table:
 Try out a query
 ---------------
 
+Head to the ``GraphiQL`` tab in your console and try out the below query:
+
 .. code-block:: graphql
 
   query {
@@ -49,7 +50,7 @@ Try out a query
   }
 
 You'll see that this results in a response that contains all the authors because by default the GraphQL query is
-accepted with admin permissions.
+accepted with **admin** permissions.
 
 .. image:: ../../../img/graphql/manual/auth/fetch-authors.png
 
@@ -59,9 +60,13 @@ Add a simple access control rule for a logged in user
 
 Let's say that for our app, logged in users are only allowed to fetch their own data.
 
+Head to the ``Permissions`` tab of the ``author`` table.
+
 Let's add a **select** permission for the **user** role on the ``author`` table:
 
 .. image:: ../../../img/graphql/manual/auth/author-select-perms.png
+
+This reads as:
 
 .. list-table::
    :header-rows: 1
@@ -84,12 +89,26 @@ Let's add a **select** permission for the **user** role on the ``author`` table:
             }
           }
 
-Now, let's make the same query as above but also include two dynamic authorization variables via request headers.
-``X-Hasura-Role`` and ``X-Hasura-User-Id`` will automatically get used according to the permission rule we set up.
+Now, let's make the same query as above but also include two dynamic authorization variables ``X-Hasura-Role`` and
+``X-Hasura-User-Id`` via request headers. These will automatically get used according to the permission rule we set up.
 
 .. image:: ../../../img/graphql/manual/auth/query-with-perms.png
 
 You can notice above how the same query now only includes the right slice of data.
+
+.. admonition:: Permission rules can also use nested object's fields
+
+  For example, for an ``article`` table with nested ``author`` table, we can define the select permission as:
+
+  .. code-block:: json
+
+    {
+      "author" : {
+        "id": {
+          "_eq": "X-Hasura-User-Id"
+        }
+      }
+    }
 
 .. _restrict_columns:
 
