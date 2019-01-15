@@ -8,7 +8,7 @@
       "minLength": 5,
       "maxLength": 63,
       "metadata": {
-        "description": "Unique name for the deployment, used as the DNS label also."
+        "description": "Unique name for the deployment, used for Postgres Server, Hasura and DNS label."
       }
     },
     "postgresVersion": {
@@ -23,7 +23,7 @@
         "description": "Version of PostgreSQL Server to be provisioned."
       }
     },
-    "databaseSKUTier": {
+    "postgresPricingTier": {
       "type": "string",
       "allowedValues": [
         "Basic",
@@ -32,10 +32,10 @@
       ],
       "defaultValue": "GeneralPurpose",
       "metadata": {
-        "description": "Azure database for PostgreSQL pricing SKU tier."
+        "description": "Azure database for PostgreSQL pricing tier."
       }
     },
-    "databaseSKUCapacity": {
+    "numberOfCoresForPostgres": {
       "type": "int",
       "allowedValues": [
         2,
@@ -49,7 +49,7 @@
         "description": "Azure database for PostgreSQL SKU capacity - number of cores."
       }
     },
-    "databaseSKUSizeInMB": {
+    "storageSizeInMBForPostgres": {
       "type": "int",
       "minValue": 5210,
       "maxValue": 4096000,
@@ -58,7 +58,16 @@
         "description": "Azure database for PostgreSQL SKU storage size."
       }
     },
-    "administratorLoginPassword": {
+    "postgresAdminUsername": {
+      "type": "string",
+      "defaultValue": "hasura",
+      "minLength": 8,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Administrator username for Postgres."
+      }
+    },
+    "postgresAdminPassword": {
       "type": "securestring",
       "defaultValue": null,
       "minLength": 8,
@@ -67,20 +76,24 @@
         "description": "Administrator password for Postgres. Must be at least 8 characters in length, must contain characters from three of the following categories – English uppercase letters, English lowercase letters, numbers (0-9), and non-alphanumeric characters (!, $, #, %, etc.)."
       }
     },
-    "urlEncodedAdminPassword": {
-      "type": "securestring",
-      "defaultValue": null,
+    "defaultDatabaseName": {
+      "type": "string",
+      "defaultValue": "hasura",
       "minLength": 8,
       "maxLength": 128,
       "metadata": {
-        "description": "If you have special characters in the password (!, $, #, %, etc.), URL encode and paste it here. Otherwise, just re-type the password."
+        "description": "Name of the database to be created."
       }
     }
   },
   "variables": {
     "serverName": "[concat(parameters('name'), '-pg-server')]",
-    "adminUser": "hasura",
-    "dbName": "hasura",
+    "adminUser": "[parameters('postgresAdminUsername')]",
+    "adminPassword": "[parameters('postgresAdminPassword')]",
+    "dbName": "[parameters('defaultDatabaseName')]",
+    "dbSKUTier": "[parameters('postgresPricingTier')]",
+    "dbSKUCapacity": "[parameters('numberOfCoresForPostgres')]",
+    "dbSKUSizeInMB": "[parameters('storageSizeInMBForPostgres')]",
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
@@ -96,16 +109,16 @@
         "createMode": "Default",
         "version": "[parameters('postgresVersion')]",
         "administratorLogin": "hasura",
-        "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+        "administratorLoginPassword": "[variables('adminPassword')]",
         "storageProfile": {
-          "storageMB": "[parameters('databaseSKUSizeInMB')]"
+          "storageMB": "[variables('dbSKUSizeInMB')]"
         }
       },
       "sku": {
-        "name": "[concat(if(equals(parameters('databaseSKUTier'), 'Basic'), 'B', if(equals(parameters('databaseSKUTier'), 'GeneralPurpose'), 'GP', if(equals(parameters('databaseSKUTier'), 'MemoryOptimized'), 'MO', 'X'))), '_Gen5_', parameters('databaseSKUCapacity') )]",
-        "tier": "[parameters('databaseSKUTier')]",
-        "capacity": "[parameters('databaseSKUCapacity')]",
-        "size": "[parameters('databaseSKUSizeInMB')]",
+        "name": "[concat(if(equals(variables('dbSKUTier'), 'Basic'), 'B', if(equals(variables('dbSKUTier'), 'GeneralPurpose'), 'GP', if(equals(variables('dbSKUTier'), 'MemoryOptimized'), 'MO', 'X'))), '_Gen5_', variables('dbSKUCapacity') )]",
+        "tier": "[variables('dbSKUTier')]",
+        "capacity": "[variables('dbSKUCapacity')]",
+        "size": "[variables('dbSKUSizeInMB')]",
         "family": "Gen5"
       },
       "resources": [
@@ -139,7 +152,7 @@
     {
       "type": "Microsoft.ContainerInstance/containerGroups",
       "name": "[variables('containerGroupName')]",
-      "apiVersion": "2018-06-01",
+      "apiVersion": "2018-10-01",
       "location": "[resourceGroup().location]",
       "properties": {
         "containers": [
@@ -153,19 +166,22 @@
                   "port": 80
                 }
               ],
-              "environmentVariables": [
-                {
-                  "name": "HASURA_GRAPHQL_DATABASE_URL",
-                  "secureValue": "[concat('postgres://', variables('adminUser'), '%40', variables('serverName'), ':', parameters('urlEncodedAdminPassword'), '@', reference(resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))).fullyQualifiedDomainName, ':5432/', variables('dbName'))]"
-                },
-                {
-                  "name": "HASURA_GRAPHQL_ENABLE_CONSOLE",
-                  "value": "true"
-                },
-                {
-                  "name": "HASURA_GRAPHQL_SERVER_PORT",
-                  "value": "80"
-                }
+              "command": [
+                "graphql-engine",
+                "--host",
+                "[reference(resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))).fullyQualifiedDomainName]",
+                "--port",
+                "5432",
+                "--user",
+                "[concat(variables('adminUser'), '@', variables('serverName'))]",
+                "--password",
+                "[variables('adminPassword')]",
+                "--dbname",
+                "[variables('dbName')]",
+                "serve",
+                "--server-port",
+                "80",
+                "--enable-console"
               ],
               "resources": {
                 "requests": {
