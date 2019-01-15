@@ -42,7 +42,7 @@ app users to the GraphQL APIs that are auto-generated via Hasura, head to
 .. admonition:: Nomenclature
 
    Top-level node names need to be unique across all merged schemas (*case-sensitive match*).
-   Types with the *exact same name and structure* will be merged. But types with *same name but different structure* will result in type conflicts.
+    Types with the *exact same name and structure* will be merged. But types with the *same name but different structure* will result in type conflicts.
 
 
 How to add a remote schema
