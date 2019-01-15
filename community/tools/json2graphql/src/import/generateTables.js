@@ -2,7 +2,7 @@ const throwError = require('./error');
 
 const getDataType = (data, column) => {
   if (typeof data === 'number') {
-    return (data === parseInt(data, 10)) ? 'int' : 'numeric';
+    return 'numeric';
   }
   if (typeof data === 'string' || data === null) {
     return 'text';
@@ -33,17 +33,13 @@ const isForeign = (name, db) => {
 };
 
 const getColumnData = (dataArray, db) => {
-  const refRow = {
-    numOfCols: 0,
-    index: 0,
-  };
-  dataArray.forEach((row, i) => {
-    if (Object.keys(row).length > refRow.numOfCols) {
-      refRow.numOfCols = Object.keys(row).length;
-      refRow.index = i;
-    }
+  let refColumns = {};
+  dataArray.forEach(row => {
+    refColumns = {
+      ...refColumns,
+      ...row,
+    };
   });
-  const refColumns = dataArray[refRow.index];
   const columnData = [];
   Object.keys(refColumns).forEach(column => {
     const columnMetadata = {};
