@@ -36,16 +36,15 @@ the screenshot that follows:
 - **Name**: enter a unique name for the deployment, this name is used for
   provisioning a DNS label for the container, so it needs to be globally unique.
 - **Postgres Version**: choose a version.
-- **Database SKU Tier**: choose the SKU tier for the PostgreSQL service.
-- **Database SKU Capacity**: choose the number of cores for the database.
-- **Database SKU Size in MB**: choose the storage size for database (in MB).
-- **Administrator Login Password**: enter a password for the database - minimum 8
+- **Postgres Pricing Tier**: choose the SKU pricing tier for the PostgreSQL service.
+- **Postgres CPU Cores**: choose the number of cores for the database (SKU capacity).
+- **Postgres Disk Size in MB**: choose the storage size for database (in MB) (SKU Storage Size).
+- **Postgres Admin Username**: Administrator username for Postgres.
+- **Postgres Admin Password**: enter a password for the database - minimum 8
   characters, must include lowercase, uppercase and numbers.
-- **URL Encoded Admin Password**: if the admin password contains special
-  characters (like `#`, `%`, `$` etc.), URL encode them (like `%40` for `@`) and
-  enter here. If there are no special characters, just re-type the password.
+- **Postgres Database Name**: Name for the database.
 
-![Azure Portal screenshot](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_template.png)
+![Azure Portal screenshot](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_template_wide.png)
 
 Once all entries are filled, agree to the terms and click the `Purchase` button.
 
