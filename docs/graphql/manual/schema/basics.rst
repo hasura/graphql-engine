@@ -29,6 +29,8 @@ Let's say we want to create two simple tables for an article/author schema:
     author_id INT
   )
 
+.. _create-tables:
+
 Create tables
 -------------
 
