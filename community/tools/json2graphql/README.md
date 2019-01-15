@@ -170,7 +170,7 @@ The top level of your JSON database should be a JSON object with keys being the 
 3. Keys in the objects are mapped to columns of the tables in postgres, and as fields in the GraphQL schema
 4. Keys in the object with the column name of the form `<ENTITY_NAME>_id`, are considered to indicate foreign-key constraints on postgres, and connections in the GraphQL schema
 5. The types of the columns/fields are inferred from the data in the columns
-json2graphql treats top-level objects as tables, and their keys as columns. If it encounters a column name of the form `<ENTITY_NAME>_id`, json2graphql will consider it a foreign key the the entity with name `<ENTITY_NAME>`.
+json2graphql treats top-level objects as tables, and their keys as columns. If it encounters a column name of the form `<ENTITY_NAME>_id`, json2graphql will consider it a foreign key to the entity with name `<ENTITY_NAME>`.
 
 | JavaScript type (constructor.name) | Postgres column type         | GraphQL field type | Example data |
 | ---------------------------------- | ---------------------------- | ------------------ | ------------ |
