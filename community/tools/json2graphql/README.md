@@ -1,14 +1,19 @@
-# JSON database to GraphQL
+# json2graphql: From a JSON file to postgres-backed GraphQL
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
 
-A CLI tool to import [JSON data](#json-structure) into Postgres and get a GraphQL API.
+`json2graphql` tool to that imports [a JSON file](#json-structure) to initialise schema and data in Postgres and then allows you to start querying it with GraphQL.
 
-The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine) and `json2graphql` imports data into Postgres and applies Hasura configuration so that you can move from your sample JSON data to a postgres-backed GraphQL API instantly.
+![json2graphql - From JSON to GraphQL on Postgres](https://graphql-engine-cdn.hasura.io/assets/json2graphql/json2postgres-graphql.png)
 
-`json2graphql` is especially useful for using an existing JSON dataset to bootstrap a GraphQL API. Try some from [mongodb-json-files](https://github.com/ozlerhakan/mongodb-json-files). You might have to wrangle the dataset a teeny bit as per [this json-structure](#json-structure).
+[Hasura](https://hasura.io) is used to expose a realtime GraphQL API on Postgres. Once your schema and data is imported, you can instantly start running powerful queries with filters, pagination, sorting, fetching relations, insert/update/delete mutations and subscriptions too.
 
+**Use-cases**:
+`json2graphql` is ideal for:
+- **Bootstrapping a GraphQL backend**: Try out this example of initialising a GraphQL chat backend using a messages/groups/users chat JSON file. [Try it out](#quickly-bootstrap-a-graphql-backend)
+- **Play with a mongo dataset in Postgres & GraphQL**: Export a mongo JSON dump, import it to Postgres and start querying it with GraphQL. [Try it out](#play-with-graphql-on-your-mongodb-data)
+- **Query existing JSON datasets over GraphQL**: Pick up a JSON dataset, import to your new or existing Hasura/Postgres instance and start querying it. Try using [jdorfman/awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets).
 
 ------------------------------------------
 
@@ -149,8 +154,6 @@ json2graphql URL [flags]
 
 ## JSON structure
 
-![json2graphql - From JSON to GraphQL on Postgres](https://graphql-engine-cdn.hasura.io/assets/json2graphql/json2postgres-graphql.png)
-
 The top level of your JSON database should be a JSON object with keys being the name of entities and values being list of entities. For example:
 
 ```json
@@ -200,6 +203,8 @@ module.exports = {
 ## Use cases
 
 ### Play with GraphQL on your MongoDB data
+
+**Note:** This assumes that you've already run through the [quickstart](#quickstart)!
 
 You can migrate your data from MongoDB and explore Realtime GraphQL over it.
 
@@ -263,6 +268,8 @@ Consider [this MongoDB doc](https://github.com/ozlerhakan/mongodb-json-files/blo
     ```
 
 ### Quickly bootstrap a GraphQL Backend
+
+**Note:** This assumes that you've already run through the [quickstart](#quickstart)!
 
 You can write your schema and data in JSON format to quickly get a Realtime GraphQL API.
 
