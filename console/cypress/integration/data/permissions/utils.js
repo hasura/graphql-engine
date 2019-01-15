@@ -45,9 +45,11 @@ export const permCustomCheck = (tableName, query) => {
   // check the without checks textbox
   cy.get(getElementFromAlias('custom-check')).click();
   // Select column
-  cy.get('select').select(getColName(0));
+  cy.get(getElementFromAlias('qb-select'))
+    .first()
+    .select(getColName(0));
   // Select operator
-  cy.get('select')
+  cy.get(getElementFromAlias('qb-select'))
     .last()
     .select(`${getColName(0)}._eq`);
   // Set filter to 1

@@ -62,6 +62,7 @@ parseHGECommand =
   where
     serveOpts = RawServeOptions
                 <$> parseServerPort
+                <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
                 <*> parseAccessKey
@@ -99,8 +100,8 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port cp isoL mAccessKey mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole) -> do
+    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook
+             mJwtSecret mUnAuthRole corsCfg enableConsole) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -123,8 +124,8 @@ main =  do
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
                          am corsCfg enableConsole
-      let warpSettings = Warp.setPort port Warp.defaultSettings
-                         -- Warp.setHost "*" Warp.defaultSettings
+
+      let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
