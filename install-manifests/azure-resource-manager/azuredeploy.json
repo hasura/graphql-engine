@@ -76,7 +76,7 @@
         "description": "Administrator password for Postgres. Must be at least 8 characters in length, must contain characters from three of the following categories – English uppercase letters, English lowercase letters, numbers (0-9), and non-alphanumeric characters (!, $, #, %, etc.)."
       }
     },
-    "defaultDatabaseName": {
+    "postgresDatabaseName": {
       "type": "string",
       "defaultValue": "hasura",
       "minLength": 4,
@@ -90,7 +90,7 @@
     "serverName": "[concat(parameters('name'), '-pg-server')]",
     "adminUser": "[parameters('postgresAdminUsername')]",
     "adminPassword": "[parameters('postgresAdminPassword')]",
-    "dbName": "[parameters('defaultDatabaseName')]",
+    "dbName": "[parameters('postgresDatabaseName')]",
     "dbSKUTier": "[parameters('postgresPricingTier')]",
     "dbSKUCapacity": "[parameters('postgresCPUCores')]",
     "dbSKUSizeInMB": "[parameters('postgresDiskSizeInMB')]",
