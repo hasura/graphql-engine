@@ -337,6 +337,5 @@ For more examples, check out the [./example-datasets](./example-datasets) direct
 ## Credits and related projects
 
 - [Blowson](https://www.blowson.com/docs/) and its creator [Fredi Bach](https://fredibach.ch)
-- [Firebase2GraphQL](https://firebase2graphql.com/): A tool to import data from firebase to a realtime GraphQL API on Postgres
+- [firebase2graphql](https://firebase2graphql.com/): A tool to import data from firebase to a realtime GraphQL API on Postgres
 - [json-graphql-server](https://github.com/marmelab/json-graphql-server)
-
