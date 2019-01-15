@@ -11,7 +11,6 @@
 
 **Use-cases**:
 
-`json2graphql` is ideal for:
 - **Bootstrapping a GraphQL backend**: Try out this example of initialising a GraphQL chat backend using a messages/groups/users chat JSON file. [Try it out](#quickly-bootstrap-a-graphql-backend)
 - **Play with a mongo dataset in Postgres & GraphQL**: Export a mongo JSON dump, import it to Postgres and start querying it with GraphQL. [Try it out](#play-with-graphql-on-your-mongodb-data)
 - **Query existing JSON datasets over GraphQL**: Pick up a JSON dataset, import to your new or existing Hasura/Postgres instance and start querying it. Try using [jdorfman/awesome-json-datasets](https://github.com/jdorfman/awesome-json-datasets).
