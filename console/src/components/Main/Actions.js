@@ -137,10 +137,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: true });
       console.error('Failed to validate access key ' + JSON.stringify(error));
-      if (
-        error.code !== 'access-denied' &&
-        error.code !== 'permission-denied'
-      ) {
+      if (error.code !== 'access-denied') {
         alert(JSON.stringify(error));
       }
     }

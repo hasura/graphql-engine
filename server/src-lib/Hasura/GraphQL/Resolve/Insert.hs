@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
+import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 import           Hasura.Server.Utils
@@ -94,7 +95,7 @@ traverseInsObj
   -> (G.Name, AnnGValue)
   -> AnnInsObj
   -> m AnnInsObj
-traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
+traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case annVal of
     AGScalar colty mColVal -> do
       let col = PGCol $ G.unName gName
@@ -102,35 +103,42 @@ traverseInsObj rim (gName, annVal) (AnnInsObj cols objRels arrRels) =
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
 
     _ -> do
-      obj <- asObject annVal
-      let relName = RelName $ G.unName gName
-          onConflictM = OMap.lookup "on_conflict" obj
-      dataVal <- onNothing (OMap.lookup "data" obj) $
-                 throw500 "\"data\" object not found"
-      relInfo <- onNothing (Map.lookup relName rim) $
-                 throw500 $ "relation " <> relName <<> " not found"
+      objM <- asObjectM annVal
+      -- if relational insert input is 'null' then ignore
+      -- return default value
+      fmap (fromMaybe defVal) $ forM objM $ \obj -> do
+        let relName = RelName $ G.unName gName
+            onConflictM = OMap.lookup "on_conflict" obj
+        dataVal <- onNothing (OMap.lookup "data" obj) $
+                   throw500 "\"data\" object not found"
+        relInfo <- onNothing (Map.lookup relName rim) $
+                   throw500 $ "relation " <> relName <<> " not found"
 
-      let rTable = riRTable relInfo
-      InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
+        let rTable = riRTable relInfo
+        InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
 
-      withPathK (G.unName gName) $ case riType relInfo of
-        ObjRel -> do
-          dataObj <- asObject dataVal
-          annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
-          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-          let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
-              objRelIns = RelIns singleObjIns relInfo
-          return (AnnInsObj cols (objRelIns:objRels) arrRels)
+        withPathK (G.unName gName) $ case riType relInfo of
+          ObjRel -> do
+            dataObj <- asObject dataVal
+            annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
+            ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
+            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
+                objRelIns = RelIns singleObjIns relInfo
+            return (AnnInsObj cols (objRelIns:objRels) arrRels)
 
-        ArrRel -> do
-          arrDataVals <- asArray dataVal
-          annDataObjs <- forM arrDataVals $ \arrDataVal -> do
-            dataObj <- asObject arrDataVal
-            mkAnnInsObj rtRelInfoMap dataObj
-          ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-          let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
-              arrRelIns = RelIns multiObjIns relInfo
-          return (AnnInsObj cols objRels (arrRelIns:arrRels))
+          ArrRel -> do
+            arrDataVals <- asArray dataVal
+            let withNonEmptyArrData = do
+                  annDataObjs <- forM arrDataVals $ \arrDataVal -> do
+                    dataObj <- asObject arrDataVal
+                    mkAnnInsObj rtRelInfoMap dataObj
+                  ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
+                  let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
+                      arrRelIns = RelIns multiObjIns relInfo
+                  return (AnnInsObj cols objRels (arrRelIns:arrRels))
+            -- if array relation insert input data has empty objects
+            -- then ignore and return default value
+            bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
   :: (MonadError QErr m)
@@ -437,6 +445,17 @@ insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
 
+-- | build mutation response for empty objects
+withEmptyObjs :: RR.MutFlds -> Convert RespTx
+withEmptyObjs = return . mkTx
+  where
+    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
+    -- generate empty mutation response
+    convMutFld = \case
+      RR.MCount -> J.toJSON (0 :: Int)
+      RR.MExp e -> J.toJSON e
+      RR.MRet _ -> J.toJSON ([] :: [J.Value])
+
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
@@ -447,16 +466,21 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
-  annVals <- withArg arguments "objects" asArray
-  annObjs <- mapM asObject annVals
-  annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
-  conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
-  let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
-  return $ prefixErrPath fld $ insertMultipleObjects role tn
-    multiObjIns [] mutFlds "objects"
+  annVals <- withArg arguments "objects" asArray
+  -- if insert input objects is empty array then
+  -- do not perform insert and return mutation response
+  bool (withNonEmptyObjs annVals mutFlds) (withEmptyObjs mutFlds) $ null annVals
   where
+    withNonEmptyObjs annVals mutFlds = do
+      InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
+      annObjs <- mapM asObject annVals
+      annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
+      conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
+      let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
+      return $ prefixErrPath fld $ insertMultipleObjects role tn
+        multiObjIns [] mutFlds "objects"
+
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
 

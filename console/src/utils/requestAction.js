@@ -58,10 +58,7 @@ const requestAction = (
                   statusCode: response.status,
                 });
               }
-              if (
-                (msg.code && msg.code === 'access-denied') ||
-                msg.code === 'permission-denied'
-              ) {
+              if (msg.code && msg.code === 'access-denied') {
                 dispatch({
                   type: UPDATE_DATA_HEADERS,
                   data: {
