@@ -61,7 +61,7 @@
     "postgresAdminUsername": {
       "type": "string",
       "defaultValue": "hasura",
-      "minLength": 8,
+      "minLength": 4,
       "maxLength": 128,
       "metadata": {
         "description": "Administrator username for Postgres."
@@ -79,7 +79,7 @@
     "defaultDatabaseName": {
       "type": "string",
       "defaultValue": "hasura",
-      "minLength": 8,
+      "minLength": 4,
       "maxLength": 128,
       "metadata": {
         "description": "Name of the database to be created."
@@ -108,6 +108,7 @@
       "properties": {
         "createMode": "Default",
         "version": "[parameters('postgresVersion')]",
+        "sslEnforcement": "Disabled",
         "administratorLogin": "hasura",
         "administratorLoginPassword": "[variables('adminPassword')]",
         "storageProfile": {
