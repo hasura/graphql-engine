@@ -16,6 +16,7 @@ The GraphQL API is provided by [Hasura](https://github.com/hasura/graphql-engine
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
 - [JSON Structure](#json-structure)
+- [Use Cases](#use-cases)
 - [Credits and related projects](#credits-and-related-projects)
 
 ## Demo
@@ -196,7 +197,118 @@ module.exports = {
 };
 ```
 
-### Examples
+## Use cases
+
+### Play with GraphQL on your MongoDB data
+
+You can migrate your data from MongoDB and explore Realtime GraphQL over it.
+
+1. Tweak the MongoDB doc to fit the required [JSON structure](#json-structure).
+2. Use json2graphql to import the data from the JSON
+3. Make realtime GraphQL queries
+
+Consider [this MongoDB doc](https://github.com/ozlerhakan/mongodb-json-files/blob/master/datasets/country.json):
+
+1. Tweak the doc to fit the required JSON structure.
+
+    The doc originally looks something like this:
+
+    ```js
+    {"_id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+    {"_id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+    {"_id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+    .
+    .
+    .
+    ```
+
+    You must wrap it in an array and make the array a value of a top level key of your choice, say, `country`. You must also field name `_id` to `id` because the CLI expects an `id` field.
+
+2. Use json2graphql to import the data from the JSON to Postgres using Hasura GraphQL Engine:
+
+    ```
+    json2graphql https://j2gtest.herokuapp.com -d ./db.js
+    ```
+
+3. Try realtime GraphQL. Go to your GraphQL Engine console and try making GraphQL queries like so:
+
+    ```gql
+    query {
+      country (
+        order_by: { name: asc }
+        limit: 10
+        where: { capital: { _is_null: false }}
+      ){
+        id
+        name
+        area
+        currency
+        callingCode
+        capital
+      }
+    }
+    ```
+
+### Quickly bootstrap a GraphQL Backend
+
+You can write your schema and data in JSON format to quickly get a Realtime GraphQL API.
+
+For example, to start with a group chat backend:
+
+```
+{
+  "user": [
+    { "id": 1, "name": "John Doe", "username": "johndoe", "last_seen": new Date() },
+    { "id": 2, "name": "Alice Wan", "username": "alisson", "last_seen": new Date() },
+    { "id": 3, "name": "Natalie Jackson", "username": "nats", "last_seen": new Date() },
+    { "id": 4, "name": "George Walsh", "username": "georgee", "last_seen": new Date() }
+  ],
+  "group": [
+    { "id": 1, "name": "Engineering", is_active: true },
+    { "id": 2, "name": "Marketting", is_active: false }
+  ],
+  "message": [
+    { "id": 1, group_id: 1, "body": "Message 1", "sent_at": new Date(), "user_id": 1 },
+    { "id": 2, group_id: 1, "body": "Message 2", "sent_at": new Date(), "user_id": 2 },
+    { "id": 3, group_id: 2, "body": "Message 3", "sent_at": new Date(), "user_id": 3 },
+    { "id": 4, group_id: 2, "body": "Message 4", "sent_at": new Date(), "user_id": 4 }
+  ]
+}
+```
+
+You can import the above JSON dataset and make queries like:
+
+```gql
+# fetch all the active groups
+query fetch_groups {
+  group (
+    where: {is_active: { _eq: true }}
+    order_by: { name: asc }
+  ){
+    id
+    is_active
+    name
+  }
+}
+
+# fetch all messages from a group
+query fetch_messeges_from_a_group {
+  message(
+    where: { group_id: { _eq: 1 }}
+    order_by: { sent_at: asc }
+  ) {
+    id
+    body
+    sent_at
+    sent_by: userByUserId {
+      id
+      username
+    }
+  }
+}
+```
+
+## Examples
 
 For more examples, check out the [./example-datasets](./example-datasets) directory.
 
