@@ -3,7 +3,7 @@
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/json2graphql.svg)](https://npmjs.org/package/json2graphql)
 
-`json2graphql` tool to that imports [a JSON file](#json-structure) to initialise schema and data in Postgres and then allows you to start querying it with GraphQL.
+`json2graphql` is a tool that imports [a JSON file](#json-structure) to initialise schema and data in Postgres and then allows you to start querying it with GraphQL.
 
 ![json2graphql - From JSON to GraphQL on Postgres](https://graphql-engine-cdn.hasura.io/assets/json2graphql/json2postgres-graphql.png)
 
