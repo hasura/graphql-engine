@@ -35,7 +35,7 @@
         "description": "Azure database for PostgreSQL pricing tier."
       }
     },
-    "numberOfCoresForPostgres": {
+    "postgresCPUCores": {
       "type": "int",
       "allowedValues": [
         2,
@@ -49,7 +49,7 @@
         "description": "Azure database for PostgreSQL SKU capacity - number of cores."
       }
     },
-    "storageSizeInMBForPostgres": {
+    "postgresDiskSizeInMB": {
       "type": "int",
       "minValue": 5210,
       "maxValue": 4096000,
@@ -92,8 +92,8 @@
     "adminPassword": "[parameters('postgresAdminPassword')]",
     "dbName": "[parameters('defaultDatabaseName')]",
     "dbSKUTier": "[parameters('postgresPricingTier')]",
-    "dbSKUCapacity": "[parameters('numberOfCoresForPostgres')]",
-    "dbSKUSizeInMB": "[parameters('storageSizeInMBForPostgres')]",
+    "dbSKUCapacity": "[parameters('postgresCPUCores')]",
+    "dbSKUSizeInMB": "[parameters('postgresDiskSizeInMB')]",
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
