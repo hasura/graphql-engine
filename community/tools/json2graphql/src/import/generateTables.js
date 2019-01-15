@@ -88,7 +88,7 @@ const generate = db => {
   Object.keys(db).forEach(rootField => {
     const tableMetadata = {};
     if (!hasPrimaryKey(db[rootField], rootField)) {
-      throwError(`message: a unique column with name "id" and type integer must present in table "${rootField}"`);
+      throwError(`message: a unique column with name "id" must present in table "${rootField}"`);
     }
     tableMetadata.name = rootField;
     tableMetadata.columns = getColumnData(db[rootField], db);
