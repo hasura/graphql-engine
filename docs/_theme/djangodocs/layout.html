@@ -440,6 +440,13 @@
         }
       };
 
+      const resizeGraphiQLVariableEditors = function() {
+        const graphiQLVariableEditors = $('.graphiql .variable-editor');
+        for (let i = 0; i < graphiQLVariableEditors.length; i++) {
+          graphiQLVariableEditors[i].style.height = '120px';
+        }
+      };
+
       // if graphiql elements present, load react/graphiql js files and setup graphiql
       if ($('.graphiql').length > 0) {
         const loadingStatus = {'react': false, 'reactDom': false, 'graphiQL': false};
@@ -456,6 +463,8 @@
             }
 
             setupGraphiQL();
+
+            resizeGraphiQLVariableEditors();
           }
         };
 
