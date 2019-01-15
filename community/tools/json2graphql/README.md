@@ -222,7 +222,20 @@ Consider [this MongoDB doc](https://github.com/ozlerhakan/mongodb-json-files/blo
     .
     ```
 
-    You must wrap it in an array and make the array a value of a top level key of your choice, say, `country`. You must also field name `_id` to `id` because the CLI expects an `id` field.
+    You should wrap it in an array and make the array a value of a top level key of your choice, say, `country`. You should also field name `_id` to `id` because the CLI expects an `id` field. It should look something like this:
+
+    ```js
+    {
+      "country": [
+        {"id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+        {"id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+        {"id":{"$oid":"55a0f42f20a4d760b5fc305e"},"altSpellings":["AI"],"area":91, ... }
+        .
+        .
+        .
+      ]
+    }
+    ```
 
 2. Use json2graphql to import the data from the JSON to Postgres using Hasura GraphQL Engine:
 
