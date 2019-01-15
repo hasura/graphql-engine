@@ -28,7 +28,7 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
 
 1. **Create a JSON file** Create a JSON file, say, `db.json` as:
 
-   ```
+   ```json
    {
        "post": [
            { "id": 1, "title": "Lorem Ipsum", "views": 254, "user_id": 123 },
@@ -56,9 +56,9 @@ In the above GIF, we are importing a schema and data from a JSON database. The H
 
 3. **json2graphql**: We import schema, data and create Hasura configuration in one command:
 
-    ```
-    $ npm install -g json2graphql
-    $ json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json 
+    ```bash
+    npm install -g json2graphql
+    json2graphql https://<app-name>.herokuapp.com --db=./path/to/db.json 
     ```
 
 4. **Run GraphQL queries**: You can query the data in Postgres tables over GraphQL using Hasura GraphQL Engine. You can make complicated queries like:
@@ -118,21 +118,21 @@ npx json2graphql <hasura-url> -d ./path/to/db.json
 
 ```bash
 # Running against a hasura without an access key
-$ json2graphql https://j2gtest.herokuapp.com -d ./path/to/db.json
+json2graphql https://j2gtest.herokuapp.com -d ./path/to/db.json
 
 # Running against a hasura with an access key
-$ json2graphql https://j2gtest.herokuapp.com -k <access-key> -d ./path/to/db.json
+json2graphql https://j2gtest.herokuapp.com -k <access-key> -d ./path/to/db.json
 
 # Reset configuration, schema & data and import
 # Useful for updating schema structure or working against an existing Hasura setup
 # WARNING: This will remove all existing schema/data before applying
-$ json2graphql https://j2gtest.herokuapp.com --overwrite -d ./path/to/db.json
+json2graphql https://j2gtest.herokuapp.com --overwrite -d ./path/to/db.json
 ```
 
 #### Command
 
 ```bash
-$ json2graphql URL [flags]
+json2graphql URL [flags]
 ```
 
 #### Args
