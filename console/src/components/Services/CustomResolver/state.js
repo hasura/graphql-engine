@@ -14,8 +14,8 @@ const listState = {
 };
 
 const addState = {
-  manualUrl: null,
-  envName: '',
+  manualUrl: '',
+  envName: null,
   headers: [],
   name: '',
   forwardClientHeaders: false,
