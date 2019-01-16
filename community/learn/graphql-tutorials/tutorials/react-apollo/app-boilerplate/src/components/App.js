@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Navbar, Button } from "react-bootstrap";
+import { Nav, Navbar, Button, NavItem } from "react-bootstrap";
 import "../styles/App.css";
 
 import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
@@ -48,7 +48,15 @@ class App extends Component {
 
     const loginOverlay = (
       <div className="overlay">
-        { loginButton }
+        <div className="overlay-content">
+          <h3 className="m-bottom-20">
+            Welcome to GraphQL tutorial app
+          </h3>
+          <div className="m-bottom-10">
+            Please login to continue
+          </div>
+          { loginButton }
+        </div>
       </div>
     );
 
@@ -62,22 +70,25 @@ class App extends Component {
               GraphQL Tutorial App
             </Navbar.Brand>
 
-            {isAuthenticated() ? logoutButton : loginButton}
-
+            <Nav pullRight>
+              <NavItem>
+                {isAuthenticated() ? logoutButton : loginButton}
+              </NavItem>
+            </Nav>
           </Navbar.Header>
         </Navbar>
 
         <div className="container-fluid p-left-right-0">
           <div className="col-xs-12 col-md-9 p-left-right-0">
-            <div className="col-xs-12 col-md-6 p-top-bottom-30">
+            <div className="col-xs-12 col-md-6 p-30">
               <TodoPrivateWrapper />
             </div>
-            <div className="col-xs-12 col-md-6 sliderMenu bg-gray p-top-bottom-30 border-right">
+            <div className="col-xs-12 col-md-6 sliderMenu bg-gray p-30 border-right">
               <TodoPublicWrapper />
             </div>
           </div>
           <div className="col-xs-12 col-md-3 p-left-right-0">
-            <div className="col-xs-12 col-md-12 sliderMenu bg-gray p-top-bottom-30">
+            <div className="col-xs-12 col-md-12 sliderMenu bg-gray p-30">
               <OnlineUsersWrapper />
             </div>
           </div>

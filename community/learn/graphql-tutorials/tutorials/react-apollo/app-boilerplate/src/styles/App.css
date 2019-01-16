@@ -23,6 +23,10 @@ body {
   padding-right: 0;
 }
 
+.p-30 {
+  padding: 30px;
+}
+
 .p-top-bottom-30 {
   padding-top: 30px;
   padding-bottom: 30px;
@@ -44,6 +48,14 @@ body {
   margin-bottom: 0;
 }
 
+.m-bottom-10 {
+  margin-bottom: 10px;
+}
+
+.m-bottom-20 {
+  margin-bottom: 20px;
+}
+
 .navHeader {
   width: 100%;
 }
@@ -53,23 +65,12 @@ body {
   font-size: 14px;
 }
 
-.navBar {
-  padding: 5px 10px;
-}
-
 .breakWord {
   word-wrap: break-word;
 }
 
 .navBrand {
   font-size: 14px;
-  margin-right: 10px;
-  padding: 14px 15px 3.125px;
-}
-
-.logoutBtn, .loginBtn {
-  margin-top: 12px;
-  float: right;
 }
 
 .todoWrapper {
@@ -366,11 +367,12 @@ body {
   z-index: 2;
 }
 
-.overlay button {
+.overlay .overlay-content {
   position: absolute;
   top: 40%;
   left: 50%;
   font-size: 18px;
+  text-align: center;
   transform: translate(-50%,-50%);
   -ms-transform: translate(-50%,-50%);
 }
