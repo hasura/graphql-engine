@@ -1,17 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { push } from 'react-router-redux';
+import _push from './push';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 import globals from '../../../Globals';
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  loadUntrackedRelations,
-  UPDATE_CURRENT_SCHEMA,
-} from './DataActions';
 
-const appPrefix = '/data';
+const sectionPrefix = '/data';
 
 const DataHeader = ({
   schema,
@@ -34,7 +28,7 @@ const DataHeader = ({
       >
         <Link
           className={styles.sidebarMigration}
-          to={appPrefix + '/migrations'}
+          to={sectionPrefix + '/migrations'}
         >
           Migrations
         </Link>
@@ -44,13 +38,7 @@ const DataHeader = ({
 
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
-    dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
-    Promise.all([
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-      dispatch(loadSchema()),
-      dispatch(loadUntrackedSchema()),
-      dispatch(loadUntrackedRelations()),
-    ]);
+    dispatch(_push(`/schema/${updatedSchema}`));
   };
   return (
     <div>
@@ -74,7 +62,7 @@ const DataHeader = ({
                   >
                     <Link
                       className={styles.schemaBorder}
-                      to={appPrefix + '/schema'}
+                      to={sectionPrefix + '/schema'}
                     >
                       Schema:
                     </Link>
@@ -108,7 +96,7 @@ const DataHeader = ({
               >
                 <Link
                   className={styles.wd100}
-                  to={appPrefix + '/sql'}
+                  to={sectionPrefix + '/sql'}
                   data-test="sql-link"
                 >
                   SQL
