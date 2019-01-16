@@ -5,6 +5,13 @@ import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 import globals from '../../../Globals';
 
+import {
+  loadSchema,
+  loadUntrackedSchema,
+  loadUntrackedRelations,
+  UPDATE_CURRENT_SCHEMA,
+} from './DataActions';
+
 const sectionPrefix = '/data';
 
 const DataHeader = ({
@@ -38,7 +45,14 @@ const DataHeader = ({
 
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
-    dispatch(_push(`/schema/${updatedSchema}`));
+    Promise.all([
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+      dispatch(loadSchema()),
+      dispatch(loadUntrackedSchema()),
+      dispatch(loadUntrackedRelations()),
+    ]).then(() => {
+      dispatch(_push(`/schema/${updatedSchema}`));
+    });
   };
   return (
     <div>
