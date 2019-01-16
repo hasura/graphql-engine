@@ -605,6 +605,7 @@ class AddTrigger extends Component {
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
                   <br />
+                  <br />
                   <small>
                     Note: Specifying the webhook URL via an environmental
                     variable is recommended if you have different URLs for

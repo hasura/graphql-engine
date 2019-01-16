@@ -91,6 +91,7 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
           <br />
+          <br />
           <small>
             Note: Specifying the server URL via an environmental variable is
             recommended if you have different URLs for multiple environments.
