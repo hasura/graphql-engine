@@ -4,12 +4,6 @@
   "parameters": {
     "name": {
       "value": ""
-    },
-    "administratorLoginPassword": {
-      "value": ""
-    },
-    "urlEncodedAdminPassword": {
-      "value": ""
     }
   }
 }
