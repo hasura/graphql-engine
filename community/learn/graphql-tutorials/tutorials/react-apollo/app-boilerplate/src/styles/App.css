@@ -363,7 +363,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(193,192,192, 1);
+  background-color: #ddd;
   z-index: 2;
 }
 
@@ -375,6 +375,21 @@ body {
   text-align: center;
   transform: translate(-50%,-50%);
   -ms-transform: translate(-50%,-50%);
+}
+
+.overlay .overlay-heading {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.overlay .overlay-message {
+  color: #5f5f5f;
+}
+
+.overlay .overlay-action {
+  margin-top: 10px;
 }
 
 @media (max-width: 991px) {

@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import OnlineUser from "./OnlineUser";
 
 class OnlineUsersWrapper extends Component {
   render() {
@@ -9,25 +10,21 @@ class OnlineUsersWrapper extends Component {
       ]
     };
 
-    const usersList = [];
+    const onlineUsersList = [];
     data.online_users.forEach((user, index) => {
-      usersList.push(
-        <div key={user.name} className="userInfo">
-          <div className="userImg">
-            <i className="far fa-user" />
-          </div>
-          <div data-test={index + "_" + user.name} className="userName">
-            {user.name}
-          </div>
-        </div>
-      );
+      onlineUsersList.push(
+        <OnlineUser
+          key={index}
+          index={index}
+          user={user}
+        />);
     });
 
     return (
       <div className="onlineUsersWrapper">
         <div className="sliderHeader">Online users - {data.online_users.length}</div>
 
-        { usersList }
+        { onlineUsersList }
       </div>
     );
   }
