@@ -57,9 +57,7 @@ parseOpExps annVal = do
 
       -- geometry type related operators
       "_st_contains"    -> fmap ASTContains <$> asPGColValM v
-      "_st_contains_in" -> fmap ASTContainsIn <$> asPGColValM v
       "_st_crosses"     -> fmap ASTCrosses <$> asPGColValM v
-      "_st_disjoint"    -> fmap ASTDisjoint <$> asPGColValM v
       "_st_d_within"    -> parseAsStDWithinObj v
       "_st_equals"      -> fmap ASTEquals <$> asPGColValM v
       "_st_intersects"  -> fmap ASTIntersects <$> asPGColValM v

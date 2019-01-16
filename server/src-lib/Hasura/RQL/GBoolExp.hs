@@ -278,9 +278,7 @@ mkColCompExp qual lhsCol = \case
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
 
   ASTContains val   -> mkGeomOpBe "ST_Contains" val
-  ASTContainsIn val -> S.BEFunc "ST_Contains" [val, lhs]
   ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
-  ASTDisjoint val   -> mkGeomOpBe "ST_Disjoint" val
   ASTDWithin r val  -> S.BEFunc "ST_DWithin" [lhs, val, r]
   ASTEquals val     -> mkGeomOpBe "ST_Equals" val
   ASTIntersects val -> mkGeomOpBe "ST_Intersects" val

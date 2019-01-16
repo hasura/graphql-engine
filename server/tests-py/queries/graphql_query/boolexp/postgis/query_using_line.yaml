@@ -91,12 +91,7 @@ query:
         type
         geom_col
       }
-      st_crosses: geom_table(where: {geom_col: {_st_crosses: $line}}){
-        id
-        type
-        geom_col
-      }
-      st_disjoint: geom_table(where: {geom_col: {_st_disjoint: $line}}){
+      st_disjoint: geom_table(where: {_not: {geom_col: {_st_intersects: $line}}}){
         id
         type
         geom_col

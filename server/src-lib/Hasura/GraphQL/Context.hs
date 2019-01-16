@@ -231,7 +231,7 @@ mkCompExpInp colTy =
     stDWithinOpInpVal =
       InpValInfo (Just stDWithinDesc) "_st_d_within" $ G.toGT stDWithinInpTy
     stDWithinDesc =
-      "is the column within in the given distance from given geometry value"
+      "is the column within in a distance from a geometry value"
 
     isGeometryTy = case colTy of
       PGGeometry -> True
@@ -242,17 +242,10 @@ mkCompExpInp colTy =
     geomOps =
       [
         ( "_st_contains"
-        , "does the column contain given geometry value"
-        )
-      ,
-        ( "_st_contains_in"
-        , "is the column contained in given geometry value"
+        , "does the column contain the given geometry value"
         )
       , ( "_st_crosses"
-        , "does the column crosses given geometry value"
-        )
-      , ( "_st_disjoint"
-        , "does the column don't spatially intersect the given geometry value"
+        , "does the column crosses the given geometry value"
         )
       , ( "_st_equals"
         , "is the column equal to given geometry value. Directionality is ignored"
@@ -261,10 +254,10 @@ mkCompExpInp colTy =
         , "does the column spatially intersect the given geometry value"
         )
       , ( "_st_overlaps"
-        , "does the column overlaps given geometry value"
+        , "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value"
         )
       , ( "_st_touches"
-        , "does the column have atleast one point in common with given geometry value"
+        , "does the column have atleast one point in common with the given geometry value"
         )
       , ( "_st_within"
         , "does the column completely inside given geometry value"
