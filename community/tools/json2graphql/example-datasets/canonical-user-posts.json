@@ -1,0 +1,12 @@
+{
+  "user": [
+    { "id": 456, "name": "Sita K", "address": {"country": "India"}},
+    { "id": 123, "name": "John Doe", "address":{"street": "Sesame street", "city":"Timbuktoo", "country": "Mali" }}
+  ],
+  "post": [
+    { "id": 1, "title": "My first article - user 123", "views": 254, "user_id": 123, "is_published": true },
+    { "id": 2, "title": "My first article - user 456", "views": 54, "user_id": 456, "is_published": true},
+    { "id": 3, "title": "My second article - user 123", "views": 65, "user_id": 123, "is_published": false},
+    { "id": 4, "title": "My second article - user 456", "views": 565, "user_id": 456, "is_published": false}
+  ]
+}

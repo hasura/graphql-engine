@@ -9,13 +9,15 @@ import qualified Data.Aeson                   as J
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
-
+import qualified Data.String                  as DataString
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Network.Wai.Handler.Warp
+
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -36,6 +38,7 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 data RawServeOptions
   = RawServeOptions
   { rsoPort          :: !(Maybe Int)
+  , rsoHost          :: !(Maybe HostPreference)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
   , rsoAccessKey     :: !(Maybe AccessKey)
@@ -58,6 +61,7 @@ type CorsConfig = CorsConfigG T.Text
 data ServeOptions
   = ServeOptions
   { soPort          :: !Int
+  , soHost          :: !HostPreference
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soAccessKey     :: !(Maybe AccessKey)
@@ -106,6 +110,9 @@ class FromEnv a where
 
 instance FromEnv String where
   fromEnv = Right
+
+instance FromEnv HostPreference where
+  fromEnv = Right . DataString.fromString
 
 instance FromEnv Text where
   fromEnv = Right . T.pack
@@ -202,6 +209,9 @@ mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$>
           withEnv (rsoPort rso) (fst servePortEnv)
+  host <- fromMaybe "*" <$>
+          withEnv (rsoHost rso) (fst serveHostEnv)
+
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
@@ -212,7 +222,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port connParams txIso accKey authHook
+  return $ ServeOptions port host connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
     mkConnParams (RawConnParams s c i) = do
@@ -308,7 +318,7 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
@@ -326,6 +336,12 @@ servePortEnv :: (String, String)
 servePortEnv =
   ( "HASURA_GRAPHQL_SERVER_PORT"
   , "Port on which graphql-engine should be served (default: 8080)"
+  )
+
+serveHostEnv :: (String, String)
+serveHostEnv =
+  ( "HASURA_GRAPHQL_SERVER_HOST"
+  , "Host on which graphql-engine will listen (default: *)"
   )
 
 pgConnsEnv :: (String, String)
@@ -500,6 +516,12 @@ parseServerPort = optional $
          metavar "PORT" <>
          help (snd servePortEnv)
        )
+
+parseServerHost :: Parser (Maybe HostPreference)
+parseServerHost = optional $ strOption ( long "server-host" <>
+                metavar "HOST" <>
+                help "Host on which graphql-engine will listen (default: *)"
+              )
 
 parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =

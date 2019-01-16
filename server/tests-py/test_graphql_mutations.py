@@ -205,6 +205,12 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_author_with_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
 
+    def test_author_with_articles_empty(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_empty.yaml")
+
+    def test_author_with_articles_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_null.yaml")
+
     def test_author_with_articles_author_id_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_author_id_fail.yaml")
 
