@@ -18,6 +18,7 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
+import Button from '../../../Interface/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -81,13 +82,14 @@ const relationshipView = (
   return (
     <td>
       <div>
-        <button
-          className="btn btn-sm btn-danger"
+        <Button
+          color="red"
+          size="sm"
           onClick={onDelete}
-          data-test={`remove-button-${relName}`}
+          dataTest={`remove-button-${relName}`}
         >
           Remove
-        </button>
+        </Button>
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
@@ -140,22 +142,22 @@ const addRelationshipCellView = (
     }
     dispatch(addRelNewFromStateMigrate());
   };
-  const styles = require('../TableModify/Modify.scss');
   return (
     <td>
       <div>
         {selectedRelationship === rel ? null : (
-          <button
-            className={`${styles.exploreButton} btn btn-xs`}
+          <Button
+            size="xs"
+            color="yellow"
             onClick={onAdd}
-            data-test={
+            dataTest={
               relMetaData[0] === 'object'
                 ? `obj-rel-add-${relMetaData[1]}`
                 : `arr-rel-add-${relMetaData[1]}`
             }
           >
             Add
-          </button>
+          </Button>
         )}
         {getRelationshipLine(rel.isObjRel, rel.lcol, rel.rcol, rel.rTable)}{' '}
         &nbsp;
@@ -172,17 +174,18 @@ const addRelationshipCellView = (
               data-test="suggested-rel-name"
             />{' '}
             &nbsp;
-            <button
+            <Button
               type="submit"
-              className={`${styles.exploreButton} btn btn-sm`}
-              data-test={
+              color="yellow"
+              size="sm"
+              dataTest={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
                   : `arr-rel-save-${relMetaData[1]}`
               }
             >
               Save
-            </button>
+            </Button>
           </div>
         </form>
       ) : null}
@@ -343,8 +346,10 @@ const AddRelationship = ({
           </tbody>
         </table>
       </div>
-      <button
-        className="btn btn-sm btn-default hide"
+      <Button
+        className="hide"
+        color="white"
+        size="sm"
         onClick={e => {
           e.preventDefault();
           dispatch(resetRelationshipForm());
@@ -352,7 +357,7 @@ const AddRelationship = ({
       >
         {' '}
         Cancel{' '}
-      </button>
+      </Button>
     </div>
   );
 };
