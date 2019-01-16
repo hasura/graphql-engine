@@ -494,7 +494,7 @@ const deleteTrigger = triggerName => {
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
-      dispatch(loadTriggers()).then(() => dispatch(push('/manage/triggers')));
+      dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
       return;
     };
     const customOnError = () => {
