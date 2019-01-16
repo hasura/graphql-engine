@@ -18,14 +18,32 @@ One-click deploy using ARM Template
 
 All resources mentioned in this guide can be deployed using the one-click button below.
 
-.. image:: http://azuredeploy.net/deploybutton.png
-  :width: 200px
-  :alt: azure_deploy_button
-  :class: no-shadow
-  :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-resource-manager%2fazuredeploy.json
 
-(This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
-open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-resource-manager>`__.)
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: With a new Postgres Server
+
+     .. image:: http://azuredeploy.net/deploybutton.png
+       :width: 200px
+       :alt: azure_deploy_button_new_pg
+       :class: no-shadow
+       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json
+     
+     (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container-with-pg>`__.)
+
+  .. tab:: With an existing Postgres Server
+
+     .. image:: http://azuredeploy.net/deploybutton.png
+       :width: 200px
+       :alt: azure_deploy_button_existing_pg
+       :class: no-shadow
+       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container%2fazuredeploy.json
+     
+     (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container>`__.)
+
 
 Pre-requisites
 --------------
@@ -143,6 +161,8 @@ Launch Hasura using a container instance:
 .. code-block:: bash
 
    postgres://hasura%40<server_name>:<server_admin_password>@<hostname>:5432/hasura
+
+If you'd like to connect to an existing database, use that server's database url.
 
 .. note::
 
