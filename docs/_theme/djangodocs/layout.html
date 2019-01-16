@@ -426,15 +426,24 @@
           const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
           const query = target.getElementsByClassName("query")[0].innerHTML.trim();
           const response = target.getElementsByClassName("response")[0].innerHTML.trim();
+          const variables = target.getElementsByClassName("variables")[0].innerHTML.trim();
 
           const graphiQLElement = React.createElement(GraphiQL, {
             fetcher: graphQLFetcher(endpoint),
             schema: null, // TODO: pass undefined if introspection supported
             query: query,
-            response: response
+            response: response,
+            variables: variables
           });
 
           ReactDOM.render(graphiQLElement, target);
+        }
+      };
+
+      const resizeGraphiQLVariableEditors = function() {
+        const graphiQLVariableEditors = $('.graphiql .variable-editor');
+        for (let i = 0; i < graphiQLVariableEditors.length; i++) {
+          graphiQLVariableEditors[i].style.height = '120px';
         }
       };
 
@@ -454,6 +463,8 @@
             }
 
             setupGraphiQL();
+
+            resizeGraphiQLVariableEditors();
           }
         };
 

@@ -20,8 +20,8 @@ This is what Hasura running with "Remote schemas" looks like:
 
 .. note::
 
-  Note that is a new feature in active development. Please do give us feedback, bug-reports and ask
-  us questions on our `discord <https://discord.gg/vBPpJkS>`__ or on `github <https://github.com/hasura/graphql-engine>`__.
+  This is a new feature in active development. Please do give us feedback, bug-reports and ask us questions on
+  our `discord <https://discord.gg/vBPpJkS>`__ or on `github <https://github.com/hasura/graphql-engine>`__.
 
 Use-cases
 ---------
@@ -39,12 +39,10 @@ Note that if you are looking for adding authorization & access control for your
 app users to the GraphQL APIs that are auto-generated via Hasura, head to
 :doc:`Authorization / Access control <../auth/index>`
 
-.. note::
-
-   **Nomenclature**:
+.. admonition:: Nomenclature
 
    Top-level node names need to be unique across all merged schemas (*case-sensitive match*).
-   Types with the *exact same name and structure* will be merged. But types with *same name but different structure* will result in type conflicts.
+    Types with the *exact same name and structure* will be merged. But types with the *same name but different structure* will result in type conflicts.
 
 
 How to add a remote schema
@@ -64,9 +62,7 @@ is to use one of our boilerplates:
 - `Serverless boilerplates <https://github.com/hasura/graphql-serverless>`__
 
 
-.. note::
-
-  **Current limitations**:
+.. admonition:: Current limitations
 
   - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
   - Subscriptions on remote GraphQL server are not supported.

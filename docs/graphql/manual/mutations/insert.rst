@@ -95,21 +95,17 @@ OR
         }
       }
     }
-
-with variables:
-
-.. code-block:: json
-
-  {
-    "objects": [
-      {
-        "id": 21,
-        "title": "Article 1",
-        "content": "Sample article content",
-        "author_id": 3
-      }
-    ]
-  }
+  :variables:
+    {
+      "objects": [
+        {
+          "id": 21,
+          "title": "Article 1",
+          "content": "Sample article content",
+          "author_id": 3
+        }
+      ]
+    }
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
