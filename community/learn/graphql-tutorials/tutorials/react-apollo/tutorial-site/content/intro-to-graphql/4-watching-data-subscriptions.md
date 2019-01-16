@@ -2,9 +2,15 @@
 title: Watching data - Subscriptions
 ---
 
-The GraphQL specification allows for something called subscriptions that are essentially like GraphQL queries but instead of giving you data in one read, you get data pushed from the server, as it happens.
+The GraphQL specification allows for something called subscriptions that are like GraphQL queries
+but instead of returning data in one read, you get data pushed from the server.
 
-This makes building realtime apps easy, because GraphQL clients support subscriptions and handle the irritating work of dealing with websockets underneath.
+This is useful for your app to subscribe to "events" or "live results" from the backend, but
+while allowing you to control the "shape" of the event from your app.
+
+GraphQL subscriptions are a critical component of adding realtime or reactive features
+to your apps easily. GraphQL clients and servers that support subscriptions are great because
+they allow you to build great experiences without having to deal with websocket code!
 
 ## Make your first GraphQL subscription
 
@@ -13,13 +19,18 @@ This makes building realtime apps easy, because GraphQL clients support subscrip
 
 ```
 subscription {
-  onlineUsers {
-    count
+  online_users {
+    id
+    last_seen
+    user {
+      name
+    }
   }
 }
 ```
 
-3. Every time the number of onlineUsers change, you'll see a new response on the response window.
+3. Every time the set of online users change, you'll see the latest set on
+the response window on the right
 
 ## How do GraphQL subscriptions work?
 
@@ -27,6 +38,9 @@ GraphQL queries and mutations are strings sent to a POST endpoint. What is a Gra
 
 A GraphQL subscription is a subscription query string sent to a websocket endpoint. And whenever data changes on the backend, new data is pushed over websockets from the server to the client.
 
----
+## Summary
 
-Next, let's look at the UI app that we're going to integrate a GraphQL API with!
+- You know how to make GraphQL subscriptions
+
+Now that you're comfortable with the basics of using GraphQL, let's start
+integrating GraphQL APIs with an app!
