@@ -42,6 +42,8 @@ use a tool like GraphiQL to explore and test your GraphQL queries.
 3. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
 4. On the right, you should see a list of users by their names that are in the system!
 
+__Try it out in GraphiQL__
+
 Recall that there is no magic here! The hosted GraphiQL app is sending a GraphQL query string
 to the server at the given endpoint with the HTTP headers. The server then sends the response
 that you see on the right hand side.
@@ -72,6 +74,8 @@ This GraphQL query will fetch all the users and their publicly visible todos:
  }
  ```
 
+__Try it out in GraphiQL__
+
 
 ### Fetch online users and their profile information
 
@@ -88,6 +92,8 @@ and their profile information (which is just their name for now):
    }
  }
  ```
+
+__Try it out in GraphiQL__
 
 
 ## Adding parameters (arguments) to GraphQL queries
@@ -134,6 +140,8 @@ query {
 Notice that we are passing arguments to different fields. This GraphQL query reads as:
 > Fetch users (with limit 1), and their todos (ordered by descending creation time, and limited to 5).
 
+__Try it out in GraphiQL__
+
 ## GraphQL variables: Passing arguments to your queries dynamically
 
 This is great, but we still have a problem. If we want to create a query
@@ -179,7 +187,7 @@ Let's try this out in GraphiQL:
 3. Scroll to the bottom of the page, where you see a smaller panel "Query Variables"
 4. Add the query variable as a JSON object
 
-__<insert-graphiql-gif-here>__
+__Try it out in GraphiQL__
 
 ## Summary
 
