@@ -108,8 +108,7 @@
       "properties": {
         "createMode": "Default",
         "version": "[parameters('postgresVersion')]",
-        "sslEnforcement": "Disabled",
-        "administratorLogin": "hasura",
+        "administratorLogin": "[variables('adminUser')]",
         "administratorLoginPassword": "[variables('adminPassword')]",
         "storageProfile": {
           "storageMB": "[variables('dbSKUSizeInMB')]"
