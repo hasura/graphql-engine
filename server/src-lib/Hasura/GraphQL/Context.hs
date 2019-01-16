@@ -161,8 +161,16 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
+{-
+input st_d_within_input {
+  distance: Float!
+  from: geometry!
+}
+-}
+
 stDWithinInpTy :: G.NamedType
 stDWithinInpTy = G.NamedType "st_d_within_input"
+
 
 --- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
@@ -344,7 +352,7 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" $ G.toGT $ mkScalarTy PGGeometry
+      [ InpValInfo Nothing "from" $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
       , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGFloat
       ]
 

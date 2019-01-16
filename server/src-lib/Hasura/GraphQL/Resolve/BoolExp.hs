@@ -58,12 +58,12 @@ parseOpExps annVal = do
       -- geometry type related operators
       "_st_contains"    -> fmap ASTContains <$> asPGColValM v
       "_st_crosses"     -> fmap ASTCrosses <$> asPGColValM v
-      "_st_d_within"    -> parseAsStDWithinObj v
       "_st_equals"      -> fmap ASTEquals <$> asPGColValM v
       "_st_intersects"  -> fmap ASTIntersects <$> asPGColValM v
       "_st_overlaps"    -> fmap ASTOverlaps <$> asPGColValM v
       "_st_touches"     -> fmap ASTTouches <$> asPGColValM v
       "_st_within"      -> fmap ASTWithin <$> asPGColValM v
+      "_st_d_within"    -> asObjectM v >>= mapM parseAsSTDWithinObj
 
       _ ->
         throw500
@@ -80,18 +80,13 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
-    mkSTDWithinOp obj = do
+    parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
                  throw500 "expected \"distance\" input field in st_d_within_input ty"
       distSQL <- uncurry toTxtValue <$> asPGColVal distanceVal
-      fromVal <- onJustDo asPGColValM $ OMap.lookup "from" obj
-      return $ fmap (ASTDWithin distSQL) fromVal
-
-    parseAsStDWithinObj v = do
-      objM <- asObjectM v
-      onJustDo mkSTDWithinOp objM
-
-    onJustDo = maybe (return Nothing)
+      fromVal <- onNothing (OMap.lookup "from" obj) $
+                 throw500 "expected \"from\" input field in st_d_within_input ty"
+      ASTDWithin distSQL <$> asPGColVal fromVal
 
 parseAsEqOp
   :: (MonadError QErr m)
