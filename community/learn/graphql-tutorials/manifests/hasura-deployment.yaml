@@ -26,6 +26,10 @@ spec:
           value: postgres://postgres:@postgres.default:5432/postgres
         - name: HASURA_GRAPHQL_ENABLE_CONSOLE
           value: "true"
+        - name: HASURA_GRAPHQL_ACCESS_KEY
+          value: "veryverysecret"
+        - name: HASURA_GRAPHQL_JWT_SECRET
+          value: '{"type": "RS512", "key": "-----BEGIN CERTIFICATE-----\nMIIDETCCAfmgAwIBAgIJRm9QMdXfG9kCMA0GCSqGSIb3DQEBCwUAMCYxJDAiBgNV\nBAMTG2dyYXBocWwtdHV0b3JpYWxzLmF1dGgwLmNvbTAeFw0xODEyMTkwOTA5MTFa\nFw0zMjA4MjcwOTA5MTFaMCYxJDAiBgNVBAMTG2dyYXBocWwtdHV0b3JpYWxzLmF1\ndGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALGNHXIK6XDD\nhMcXavrUjjSX9NKm7u23iKekyBjQ5pq4DGShgdtHSDLwsz64lvAxA5O7oNsEg5Fb\nZU1YB5IdrrhoWXwFUMMaUW9sskDtbDG5kSf07AO/TseVGkdAo+sz/V72LIIVthJT\nOo/W4etRVY4bmGns/ry3UADJWHhQN8G7dSfktLlCtE2i8/E4ZTDagSm3ibHTg2QQ\nJBeVLuk5jqrN9z6BkwMtWrQMmViQPurhjbvwsfH0mKr56yc+TUumpKdJxB65hgiY\nY6nLRsV1+SeX96cLPR8Tk2KkcOMxEr16BiI9p5UlM/UdT3mxKmU/A2xhxNnlAKcl\nO3Gb8ZOOi5cCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU/24f\nPokGU2LE5ZHmM5B1wmY9maEwDgYDVR0PAQH/BAQDAgKEMA0GCSqGSIb3DQEBCwUA\nA4IBAQBy4YT5IqMU1mDwCXj8d3YsKuL/wuJ5TGxAbTJhiDxXXV8HssmoVYtTj7J4\ni7p0Db/fEYTSCn/5fSOUmddcdy/gQbqpkSE7Fp2MmYfmlVjAh6BMfXTbigpq8E1K\n/KWH9kw72OHoiYBXfSHuclW16MMnhph5TIJ4A3ZKksFH4X7Q2fMS2CBlyiQc3KCj\nh7xQVEcBDUHxQrSJzNvD1lMAKocRBDFpc0eVxdndwtCV3CeiGjTCLnIrXaIGaftJ\nfW/gdmjy6bjoH03g/leJM+Ek7YE0ZtopnWZJEJO2Jht8+5cy//0qi0WcnFgRPkBY\nQp9VDr2gac3Shz2Xr8sXFfYxa+Pi\n-----END CERTIFICATE-----\n"}'
         ports:
         - containerPort: 8080
           protocol: TCP
