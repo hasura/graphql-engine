@@ -11,7 +11,7 @@
         "description": "Unique name for the deployment, used for Hasura and DNS label."
       }
     },
-    "postgresHost-serverName": {
+    "postgresHost (ServerName)": {
       "type": "string",
       "defaultValue": null,
       "metadata": {
@@ -25,7 +25,7 @@
         "description": "Port for the Postgres server."
       }
     },
-    "postgresUsername-ServerAdminLoginName": {
+    "postgresUsername (ServerAdminLoginName)": {
       "type": "string",
       "defaultValue": null,
       "metadata": {
@@ -48,9 +48,9 @@
     }
   },
   "variables": {
-    "pgHost": "[parameters('postgresHost-serverName')]",
+    "pgHost": "[parameters('postgresHost (ServerName)')]",
     "pgPort": "[parameters('postgresPort')]",
-    "pgUser": "[parameters('postgresUsername-ServerAdminLoginName')]",
+    "pgUser": "[parameters('postgresUsername (ServerAdminLoginName)')]",
     "pgPassword": "[parameters('postgresPassword')]",
     "dbName": "[parameters('postgresDatabaseName')]",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
