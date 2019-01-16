@@ -63,6 +63,7 @@
 
 .ReactTable .rt-tbody {
   overflow-x: hidden !important;
+  min-width: fit-content !important;
 }
 
 .ReactTable .rt-thead [role='columnheader'] {

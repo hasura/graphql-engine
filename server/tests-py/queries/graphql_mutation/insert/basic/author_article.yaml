@@ -28,7 +28,30 @@
             name
           }
         }
-      } 
+      }
+
+#Inserting empty objects
+- description: Inserts empty objects via GraphQL mutation
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_author:
+        affected_rows: 0
+        returning: []
+  query:
+    query: |
+      mutation insert_empty_objects {
+        insert_author(
+          objects: []
+        ){
+          affected_rows
+          returning{
+            id
+            name
+          }
+        }
+      }
 
 #Inserting article data
 - description: Inserts article data via GraphQL mutation

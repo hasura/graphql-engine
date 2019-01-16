@@ -103,7 +103,6 @@ class Schema extends Component {
     };
 
     const styles = require('../PageContainer/PageContainer.scss');
-
     let relationships = 0;
     schema.map(t => (relationships += t.relationships.length));
 

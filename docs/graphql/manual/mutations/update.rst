@@ -201,14 +201,10 @@ Since the input is a json value, it should be provided through a variable.
         }
       }
     }
-
-with variables:
-
-.. code-block:: json
-
-   {
-     "value": { "key1": "value1" }
-   }
+  :variables:
+    {
+      "value": { "key1": "value1" }
+    }
 
 Prepend a json to a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,7 +212,7 @@ You can prepend any ``jsonb`` column with another json value by using the ``_pre
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Prepend the json ``{"key0": "value0}``to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Prepend the json ``{"key0": "value0}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -249,14 +245,10 @@ Since the input is a json value, it should be provided through a variable.
         }
       }
     }
-
-with variables:
-
-.. code-block:: json
-
-   {
-     "value": { "key0": "value0" }
-   }
+  :variables:
+    {
+      "value": { "key0": "value0" }
+    }
 
 Delete a top-level key from a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
