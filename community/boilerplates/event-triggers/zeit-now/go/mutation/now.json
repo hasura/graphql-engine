@@ -1,6 +1,5 @@
 {
-  "name": "zeit-mutation",
-  "features": {
-    "cloud": "v2"
-  }
+  "project": "zeit-mutation",
+  "version": 2,
+  "builds": [{ "src": "*.go", "use": "@now/go" }]
 }
