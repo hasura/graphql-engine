@@ -5,7 +5,7 @@ import "../styles/App.css";
 
 import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
 import TodoPrivateWrapper from "./Todo/TodoPrivateWrapper";
-import OnlineUsers from "./OnlineUsers/OnlineUsers";
+import OnlineUsersWrapper from "./OnlineUsers/OnlineUsersWrapper";
 
 
 class App extends Component {
@@ -28,7 +28,7 @@ class App extends Component {
       <Button
         id="qsLoginBtn"
         bsStyle="primary"
-        className="btn-margin logoutBtn"
+        className="btn-margin loginBtn"
         onClick={this.login.bind(this)}
       >
         Log In
@@ -46,32 +46,18 @@ class App extends Component {
       </Button>
     );
 
-    const bodyContent = (
-      <div className="container-fluid noPadd">
-        <div className="col-xs-12 col-md-12 col-lg-9 col-sm-12 noPadd">
-          <div className="col-md-6 col-sm-12">
-            <div className="wd95 addPaddTopBottom">
-              <div className="sectionHeader">Personal todos</div>
-              <TodoPrivateWrapper />
-            </div>
-          </div>
-          <div className="col-xs-12 col-md-6 col-sm-12 grayBgColor todoMainWrapper commonBorRight">
-            <div className="wd95 addPaddTopBottom">
-              <div className="sectionHeader">Public todos</div>
-              <TodoPublicWrapper />
-            </div>
-          </div>
-        </div>
-        <div className="col-xs-12 col-lg-3 col-md-12 col-sm-12 noPadd">
-          <OnlineUsers />
-        </div>
+    const loginOverlay = (
+      <div className="overlay">
+        { loginButton }
       </div>
     );
 
     return (
       <div>
-        <Navbar fluid className="removeMarBottom">
-          <Navbar.Header className="navheader">
+        { isAuthenticated() || loginOverlay }
+
+        <Navbar fluid className="m-bottom-0">
+          <Navbar.Header className="navHeader">
             <Navbar.Brand className="navBrand">
               GraphQL Tutorial App
             </Navbar.Brand>
@@ -81,7 +67,21 @@ class App extends Component {
           </Navbar.Header>
         </Navbar>
 
-        {isAuthenticated() ? bodyContent : ''}
+        <div className="container-fluid p-left-right-0">
+          <div className="col-xs-12 col-md-9 p-left-right-0">
+            <div className="col-xs-12 col-md-6 p-top-bottom-30">
+              <TodoPrivateWrapper />
+            </div>
+            <div className="col-xs-12 col-md-6 sliderMenu bg-gray p-top-bottom-30 border-right">
+              <TodoPublicWrapper />
+            </div>
+          </div>
+          <div className="col-xs-12 col-md-3 p-left-right-0">
+            <div className="col-xs-12 col-md-12 sliderMenu bg-gray p-top-bottom-30">
+              <OnlineUsersWrapper />
+            </div>
+          </div>
+        </div>
 
       </div>
     );
