@@ -1,80 +1,89 @@
 @import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
+
 body {
   background-color: #f7f7f7;
-  font-size: "Open Sans";
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-family: sans-serif;
   font-size: 14px;
 }
-.wd95 {
+
+.wd-95 {
   width: 95%;
   margin: 0 auto;
 }
-.navheader {
-  width: 100%;
+
+.p-left-0 {
+  padding-left: 0;
 }
-.navbar
-{
-  padding: 5px 10px;
-}
-.breakWord
-{
-  word-wrap: break-word;
-}
-.navBrand {
-  padding-top: 14px;
-  font-size: 14px;
-  margin-right: 10px;
-  padding-bottom: 3.125px;
-  padding-left: 15px;
-  padding-right: 15px;
-}
-.logoutBtn {
-  margin-top: 12px;
-  float: right;
-  font-size: 14px;
-  padding: 3.75px 7.5px;
-}
-.header {
-  background-color: #4f5050;
-  padding: 20px;
-  font-size: 20px;
-  text-align: left;
-  font-weight: 600;
-  color: #cbcbcb;
-  max-height: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-}
-.noPadd {
+
+.p-left-right-0 {
   padding-left: 0;
   padding-right: 0;
 }
-.grayBgColor {
+
+.p-30 {
+  padding: 30px;
+}
+
+.p-top-bottom-30 {
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+.border-right {
+  border-right: 1px solid #ccc;
+}
+
+.bg-gray {
   background-color: #efeded;
 }
-.removePaddRight {
-  padding-right: 0;
+
+.display-block {
+  display: block;
 }
-.todoWrapper {
+
+.m-bottom-0 {
+  margin-bottom: 0;
+}
+
+.m-bottom-10 {
+  margin-bottom: 10px;
+}
+
+.m-bottom-20 {
+  margin-bottom: 20px;
+}
+
+.navHeader {
   width: 100%;
-  position: relative;
 }
+
+.navHeader button {
+  padding: 3.75px 7.5px;
+  font-size: 14px;
+}
+
+.breakWord {
+  word-wrap: break-word;
+}
+
+.navBrand {
+  font-size: 14px;
+}
+
+.todoWrapper {
+  position: relative;
+  width: 100%;
+}
+
 .sectionHeader {
   font-size: 18px;
   font-weight: 400;
   padding-bottom: 20px;
 }
-.addPaddTopBottom {
-  padding: 30px 0;
-}
-.commonBorRight {
-  border-right: 1px solid #ccc;
-}
+
 .formInput input {
   height: 60px;
   padding: 16px 16px 16px 60px;
@@ -87,32 +96,38 @@ body {
   opacity: 0.6;
   font-size: 14px;
 }
+
 .formInput input:focus {
   outline: none;
 }
+
 .formInput {
   position: relative;
   display: flex;
   align-items: center;
 }
+
 .downArrow {
   position: absolute;
   left: 15px;
   font-size: 25px;
   opacity: 0.6;
 }
-.todoListwrapper {
+
+.todoListWrapper {
   border-top: 1px solid #e6e6e6;
   -webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
   -moz-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
 }
-.todoListwrapper ul {
+
+.todoListWrapper ul {
   -webkit-padding-start: 0px;
   -moz-padding-start: 0px;
   margin-bottom: 0;
 }
-.todoListwrapper ul li {
+
+.todoListWrapper ul li {
   list-style-type: none;
   min-height: 60px;
   max-height: 60px;
@@ -124,6 +139,7 @@ body {
   background-color: #fff;
   position: relative;
 }
+
 .closeBtn {
   background-color: transparent;
   border: none;
@@ -133,15 +149,19 @@ body {
   padding: 0;
   font-size: 25px;
 }
+
 .closeBtn i {
   font-size: 20px;
 }
+
 .closeBtn:hover {
   color: #af5b5e;
 }
+
 .closeBtn:focus {
   outline: none;
 }
+
 .labelContent {
   padding-left: 1px;
   color: #777;
@@ -151,11 +171,13 @@ body {
   display: flex;
   align-items: center;
 }
+
 .view {
   width: 28px;
   height: 28px;
   margin: 0 15px;
 }
+
 .footerList {
   height: 60px;
   background-color: #fff;
@@ -165,6 +187,7 @@ body {
   padding: 0 15px;
   margin-bottom: 30px;
 }
+
 .footerList:before {
   content: "";
   position: absolute;
@@ -183,6 +206,7 @@ body {
     0 9px 1px -3px rgba(0, 0, 0, 0.2), 0 16px 0 -6px #f6f6f6,
     0 17px 2px -6px rgba(0, 0, 0, 0.2);
 }
+
 .footerList ul {
   -webkit-padding-start: 0px;
   -moz-padding-start: 0px;
@@ -190,10 +214,12 @@ body {
   padding-left: 20px;
   z-index: 1;
 }
+
 .footerList ul li {
   list-style-type: none;
   display: inline-block;
 }
+
 .footerList ul li a {
   padding: 3px 7px;
   border: 1px solid transparent;
@@ -201,9 +227,11 @@ body {
   color: #777;
   cursor: pointer;
 }
+
 .footerList ul li a.selected {
   border-color: rgba(175, 47, 47, 0.2);
 }
+
 .clearComp {
   background-color: transparent;
   border: none;
@@ -212,49 +240,46 @@ body {
   right: 15px;
   padding: 0;
 }
+
 .clearComp:focus {
   outline: none;
 }
-.todoMainWrapper {
-  height: calc(100vh - 50px);
-  overflow-y: auto;
-}
-.displayBlock {
-  display: block;
-}
-.removeMarBottom {
-  margin-bottom: 0;
-}
+
 .sliderMenu {
   height: calc(100vh - 50px);
   overflow-y: auto;
 }
+
 .sliderHeader {
-  padding-left: 15px;
   padding-bottom: 20px;
   text-transform: uppercase;
   font-weight: 600;
 }
+
 .userInfo {
-  padding: 10px 0;
-  padding-left: 15px;
+  padding: 10px 0 10px 15px;
   display: flex;
   align-items: center;
   cursor: pointer;
 }
+
 .userInfo:hover {
   background-color: #d1d0d0;
 }
+
 .userImg {
   text-align: center;
   padding-right: 10px;
 }
+
 .userImg i {
   font-size: 20px;
 }
+
 .userImg img {
   width: 30px;
 }
+
 /*Custom  Checkbox */
 .round {
   position: relative;
@@ -295,14 +320,11 @@ body {
   background-color: #fff;
   border-color: #66bb6a;
 }
-.removePaddLeft {
-  padding-left: 0;
-}
-.removePaddLeft {
-}
+
 .round input[type="checkbox"]:checked + label:after {
   opacity: 1;
 }
+
 .loadMoreSection {
   list-style-type: none;
   height: 30px;
@@ -317,6 +339,7 @@ body {
   justify-content: center;
   cursor: pointer;
 }
+
 .userInfoPublic {
   width: 28px;
   min-width: 28px;
@@ -332,19 +355,34 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+
+.overlay {
+  position: fixed;
+  display: block;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(193,192,192, 1);
+  z-index: 2;
+}
+
+.overlay .overlay-content {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  font-size: 18px;
+  text-align: center;
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+}
+
 @media (max-width: 991px) {
   .sliderMenu {
     height: auto;
   }
-  .labelContent
-  {
+
+  .labelContent {
     display: block;
-  }
-  .addPaddTopBottom {
-    padding: 0px 0;
-  }
-  .sliderHeader, .userInfo {
-    width: 95%;
-    margin: 0 auto;
   }
 }

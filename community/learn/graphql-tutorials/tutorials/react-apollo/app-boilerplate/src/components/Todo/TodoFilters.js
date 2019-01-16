@@ -21,8 +21,8 @@ const TodoFilters = ({
           <a
             className={
               currentFilter === "active"
-                ? "selected removePaddLeft"
-                : "removePaddLeft"
+                ? "selected p-left-0"
+                : "p-left-0"
             }
           >
             Active
@@ -32,8 +32,8 @@ const TodoFilters = ({
           <a
             className={
               currentFilter === "completed"
-                ? "selected removePaddLeft"
-                : "removePaddLeft"
+                ? "selected p-left-0"
+                : "p-left-0"
             }
           >
             Completed

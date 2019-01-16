@@ -77,7 +77,7 @@ class TodoPublicList extends Component {
 
     return (
       <Fragment>
-        <div className="todoListwrapper">
+        <div className="todoListWrapper">
           {showNewTodos}
           <ul>
             {finalTodos.map((todo, index) => {

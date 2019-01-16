@@ -36,7 +36,7 @@ class TodoPrivateList extends Component {
     }
     return (
       <Fragment>
-        <div className="todoListwrapper">
+        <div className="todoListWrapper">
           <ul>
             {finalData.map((todo, index) => {
               return (
