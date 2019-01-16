@@ -44,6 +44,9 @@ the screenshot that follows:
 - **Postgres Password**: enter the password for Postgres user.
 - **Postgres Database Name**: enter the name of database that Hasura should connect to.
 
+
+_(Note: Make sure you’ve allowed access for Azure services to the Postgres Server. This setting can be found under the connection security tab on Azure Portal. Also, disable SSL Enforcement till a [bug](https://github.com/hasura/graphql-engine/issues/1381) is fixed on GraphQL Engine.)_
+
 ![Azure Portal screenshot](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_standalone_template.png)
 
 Once all entries are filled, agree to the terms and click the `Purchase` button.
