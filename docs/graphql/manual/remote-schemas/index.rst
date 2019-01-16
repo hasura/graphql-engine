@@ -45,12 +45,21 @@ app users to the GraphQL APIs that are auto-generated via Hasura, head to
     Types with the *exact same name and structure* will be merged. But types with the *same name but different structure* will result in type conflicts.
 
 
+.. admonition:: Current limitations
+
+  - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
+  - Subscriptions on remote GraphQL server are not supported.
+  - Interfaces_ and Unions_ are not supported - if a remote schema has interfaces/unions, an error will be thrown if you try to merge it.
+
+  These limitations will be addressed in upcoming versions.
+
+
 How to add a remote schema
 --------------------------
 
 Follow the steps below to add your "remote schema" to hasura.
 
-Step-1: Write a custom GraphQL server
+Step 1: Write a custom GraphQL server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You need to create a custom GraphQL server with a schema and corresponding resolvers that solve your use case
@@ -62,15 +71,7 @@ is to use one of our boilerplates:
 - `Serverless boilerplates <https://github.com/hasura/graphql-serverless>`__
 
 
-.. admonition:: Current limitations
-
-  - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
-  - Subscriptions on remote GraphQL server are not supported.
-  - Interfaces_ and Unions_ are not supported - if a remote schema has interfaces/unions, an error will be thrown if you try to merge it.
-
-  These limitations will be addressed in upcoming versions.
-
-Step-2: Merge remote schema
+Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Head to the console to merge your remote schema with GraphQL Engine's auto-generated schema. In a top level tab,
@@ -107,12 +108,11 @@ You need to enter the following information:
 Click on the ``Add Remote Schema`` button to merge the remote schema.
 
 
-Step-3: Make queries to the remote server from Hasura
+Step 3: Make queries to the remote server from Hasura
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Now you can head to *GraphiQL* and make queries to your remote server from Hasura.
 
 Query your remote server by making requests to the Hasura graphql endpoint (``/v1alpha1/graphql``).
-
 
 .. note::
 
@@ -127,3 +127,59 @@ Query your remote server by making requests to the Hasura graphql endpoint (``/v
 
 .. _Interfaces: https://graphql.github.io/learn/schema/#interfaces
 .. _Unions: https://graphql.github.io/learn/schema/#union-types
+
+
+Bypassing Hasura's authorization system for remote schema queries
+-----------------------------------------------------------------
+
+It might be necessary sometimes to bypass Hasura's authorization system (calling
+the configured webhook, or validating the JWT), for queries that are for a
+remote GraphQL server.
+
+**For example**, you have a remote GraphQL server which does authentication,
+i.e. signup and login, and you have added it as a remote schema. In this case,
+you would not want to perform Hasura's authorization when the user is making a
+login/signup request.
+
+There is no first-class option to currently do this via any configuration in
+Hasura. However a similar solution can achieved by the following workarounds:
+
+Bypassing webhook authorization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you have a :doc:`webhook authorization setup <../auth/webhook>`, in the
+normal scenario, your authorization webhook should return ``200`` on success and
+``401`` if it is unable to authorize the current request or authorization
+information is absent (like cookie, authorization header etc.)
+
+In the workaround, the webhook should respond with ``200`` and ``x-hasura-role:
+anonymous`` instead of a ``401`` when the authorization information is absent or
+it fails to resolve it. And, when adding the remote schema, the ``Forward all
+headers from client`` option is checked. So the remote server will get the
+relevant cookie/header (from the client) and the role anonymous.
+
+Bypassing JWT authorization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Your authentication server should generate a static JWT token for
+anonymous/unauthenticated users. And, when adding the remote schema, the
+``Forward all headers from client`` option is checked.
+
+For example, it can generate:
+
+.. code-block:: json
+
+  {
+    "sub": "0000000000",
+    "iat": 1516239022,
+    "role": "anonymous",
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["anonymous"],
+      "x-hasura-default-role": "anonymous"
+    }
+  }
+
+
+Hasura will get this JWT and successfully validate it. When your remote server
+receives this JWT, it should specifically validate JWT and, for example, check
+for ``role`` key in the JWT. If it's set to ``anonymous`` then it should
+consider the request as unauthenticated.
