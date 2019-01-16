@@ -2,13 +2,16 @@
 title: Fetching data - Queries
 ---
 
+<a name="graphiql"></a>
 ## Try out GraphQL queries
 For this tutorial we've set up a GraphQL API for you. The most common
 way to browse a GraphQL API is to use GraphiQL. GraphiQL is a tool
 built by Facebook, (pronounced "graphical") that makes it easy to explore
-any GraphQL API. When you connect GraphiQL to a GraphQL endpoint, it
-queries the server for its schema and gives you a UI to browse
-and test queries, including autocomplete goodness!
+any GraphQL API.
+
+When you connect GraphiQL to a GraphQL endpoint, it
+queries the server for its GraphQL schema and gives you a UI to browse
+and test queries, and that powers its amazing autocomplete!
 
 ![GraphiQL demo](./graphiql.gif)
 
@@ -93,6 +96,7 @@ and their profile information (which is just their name for now):
  }
  ```
 
+<!-- [//]: # TODO: -->
 __Try it out in GraphiQL__
 
 
@@ -117,6 +121,9 @@ query {
 }
  ```
 
+<!-- [//]: # TODO: -->
+__Try it out in GraphiQL__
+
 The most important bit to check here is `limit: 10`. GraphQL servers will provide a list of
 arguments that can be used in `()` next to specific fields. In our case, we are using
 Hasura for creating the GraphQL backend which provides filter, sort and pagination arguments.
@@ -140,8 +147,10 @@ query {
 Notice that we are passing arguments to different fields. This GraphQL query reads as:
 > Fetch users (with limit 1), and their todos (ordered by descending creation time, and limited to 5).
 
+<!-- [//]: # TODO: -->
 __Try it out in GraphiQL__
 
+<a name="query-variables"></a>
 ## GraphQL variables: Passing arguments to your queries dynamically
 
 This is great, but we still have a problem. If we want to create a query
@@ -187,6 +196,7 @@ Let's try this out in GraphiQL:
 3. Scroll to the bottom of the page, where you see a smaller panel "Query Variables"
 4. Add the query variable as a JSON object
 
+<!-- [//]: # TODO: -->
 __Try it out in GraphiQL__
 
 ## Summary
