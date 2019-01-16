@@ -49,13 +49,15 @@ class App extends Component {
     const loginOverlay = (
       <div className="overlay">
         <div className="overlay-content">
-          <h3 className="m-bottom-20">
+          <div className="overlay-heading">
             Welcome to GraphQL tutorial app
-          </h3>
-          <div className="m-bottom-10">
+          </div>
+          <div className="overlay-message">
             Please login to continue
           </div>
-          { loginButton }
+          <div className="overlay-action">
+            { loginButton }
+          </div>
         </div>
       </div>
     );
