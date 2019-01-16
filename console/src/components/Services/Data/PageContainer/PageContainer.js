@@ -4,6 +4,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
+import Button from '../../../Interface/Button';
 
 import { LISTING_SCHEMA } from '../DataActions';
 
@@ -145,12 +146,14 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/data/schema/' + schemaName + '/table/add'}
               >
-                <button
-                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
-                  data-test="sidebar-add-table"
+                <Button
+                  className={styles.add_mar_right}
+                  size="xs"
+                  color="white"
+                  dataTest="sidebar-add-table"
                 >
                   Add Table
-                </button>
+                </Button>
               </Link>
             </div>
           ) : null}

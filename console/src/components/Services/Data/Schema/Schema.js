@@ -9,6 +9,7 @@ import { push } from 'react-router-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import { untrackedTip, untrackedRelTip } from './Tooltips';
+import Button from '../../../Interface/Button';
 import {
   setTableName,
   addExistingTableSql,
@@ -93,9 +94,11 @@ class Schema extends Component {
       untrackedHtml.push(
         <div className={styles.padd_bottom} key={`${i}untracked`}>
           <div className={`${styles.display_inline} ${styles.padd_right}`}>
-            <button
-              data-test={`add-track-table-${untrackedTables[i].table_name}`}
-              className={`${styles.display_inline} btn btn-xs btn-default`}
+            <Button
+              dataTest={`add-track-table-${untrackedTables[i].table_name}`}
+              className={`${styles.display_inline}`}
+              color="white"
+              size="xs"
               onClick={e => {
                 e.preventDefault();
                 dispatch(setTableName(untrackedTables[i].table_name));
@@ -103,7 +106,7 @@ class Schema extends Component {
               }}
             >
               Add
-            </button>
+            </Button>
           </div>
           <div className={`${styles.padd_right} ${styles.inline_block}`}>
             {untrackedTables[i].table_name}
@@ -131,9 +134,9 @@ class Schema extends Component {
               Schema{' '}
             </h2>
             {migrationMode ? (
-              <button
-                data-test="data-create-table"
-                className={styles.yellow_button}
+              <Button
+                dataTest="data-create-table"
+                color="yellow"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(
@@ -142,7 +145,7 @@ class Schema extends Component {
                 }}
               >
                 Create Table
-              </button>
+              </Button>
             ) : null}
           </div>
           <hr />
@@ -159,17 +162,17 @@ class Schema extends Component {
                 <i className="fa fa-info-circle" aria-hidden="true" />
               </OverlayTrigger>
               {untrackedTables.length > 0 ? (
-                <button
-                  className={`${styles.display_inline} ${
-                    styles.addAllBtn
-                  } btn btn-xs btn-default`}
+                <Button
+                  className={`${styles.display_inline} ${styles.addAllBtn}`}
+                  color="white"
+                  size="xs"
                   onClick={e => {
                     e.preventDefault();
                     dispatch(addAllUntrackedTablesSql(untrackedTables));
                   }}
                 >
                   Add all
-                </button>
+                </Button>
               ) : null}
             </div>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
