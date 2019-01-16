@@ -7,6 +7,7 @@ module Hasura.GraphQL.Resolve.InputValue
   , withObject
   , asObject
   , withObjectM
+  , asObjectM
   , withArray
   , asArray
   , withArrayM
@@ -86,6 +87,11 @@ withObjectM
 withObjectM fn v = case v of
   AGObject nt objM -> fn nt objM
   _                -> tyMismatch "object" v
+
+asObjectM
+  :: (MonadError QErr m)
+  => AnnGValue -> m (Maybe AnnGObject)
+asObjectM = withObjectM (\_ o -> return o)
 
 withArrayM
   :: (MonadError QErr m)
