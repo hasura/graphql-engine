@@ -279,7 +279,7 @@ mkColCompExp qual lhsCol = \case
 
   ASTContains val   -> mkGeomOpBe "ST_Contains" val
   ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
-  ASTDWithin r val  -> S.BEFunc "ST_DWithin" [lhs, val, r]
+  ASTDWithin r val  -> applySQLFn "ST_DWithin" [lhs, val, r]
   ASTEquals val     -> mkGeomOpBe "ST_Equals" val
   ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
   ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
@@ -301,7 +301,9 @@ mkColCompExp qual lhsCol = \case
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
 
-    mkGeomOpBe fn v = S.BEFunc fn [lhs, v]
+    mkGeomOpBe fn v = applySQLFn fn [lhs, v]
+
+    applySQLFn f exps = S.BEExp $ S.SEFnApp f exps Nothing
 
     handleEmptyIn []   = S.BELit False
     handleEmptyIn vals = S.BEIN lhs vals

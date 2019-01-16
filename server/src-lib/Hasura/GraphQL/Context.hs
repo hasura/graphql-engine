@@ -260,7 +260,7 @@ mkCompExpInp colTy =
         , "does the column have atleast one point in common with the given geometry value"
         )
       , ( "_st_within"
-        , "does the column completely inside given geometry value"
+        , "is the column contained in the given geometry value"
         )
       ]
 
