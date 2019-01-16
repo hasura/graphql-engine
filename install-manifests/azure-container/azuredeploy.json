@@ -25,7 +25,7 @@
         "description": "Port for the Postgres server."
       }
     },
-    "postgresUsername_serverAdminLoginName": {
+    "postgresUsername-ServerAdminLoginName": {
       "type": "string",
       "defaultValue": null,
       "metadata": {
@@ -50,7 +50,7 @@
   "variables": {
     "pgHost": "[parameters('postgresHost-serverName')]",
     "pgPort": "[parameters('postgresPort')]",
-    "pgUser": "[parameters('postgresUsername_serverAdminLoginName')]",
+    "pgUser": "[parameters('postgresUsername-ServerAdminLoginName')]",
     "pgPassword": "[parameters('postgresPassword')]",
     "dbName": "[parameters('postgresDatabaseName')]",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
