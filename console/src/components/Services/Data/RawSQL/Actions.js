@@ -1,6 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { loadSchema, handleMigrationErrors } from '../DataActions';
+import { handleMigrationErrors, fetchDataInit } from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -105,7 +105,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
               dispatch(loadMigrationStatus());
             }
             dispatch(showSuccessNotification('SQL executed!'));
-            dispatch(loadSchema()).then(() => {
+            dispatch(fetchDataInit()).then(() => {
               dispatch({ type: REQUEST_SUCCESS, data });
             });
           },

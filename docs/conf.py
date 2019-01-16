@@ -267,7 +267,7 @@ html_show_copyright = True
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #
-html_use_opensearch = 'https://docs.hasura.io/' + version
+html_use_opensearch = 'https://docs.hasura.io'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None

@@ -42,6 +42,6 @@ using the fields: ``issue_month -> months_of_the_year :: month``:
 
 Now the ``issue_month`` field can only take values from the months of the year.
 
-.. note::
-  This will not provide auto-complete or query validation on the client side using the GraphQL schema as of now
-  but will ensure consistency in the database.
+.. admonition:: Current limitation
+
+  This does not generate GraphQL schema enums as of now but it ensures consistency in the database.
