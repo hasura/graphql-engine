@@ -239,7 +239,7 @@ mkCompExpInp colTy =
     stDWithinOpInpVal =
       InpValInfo (Just stDWithinDesc) "_st_d_within" $ G.toGT stDWithinInpTy
     stDWithinDesc =
-      "is the column within in a distance from a geometry value"
+      "is the column within a distance from a geometry value"
 
     isGeometryTy = case colTy of
       PGGeometry -> True
