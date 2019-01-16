@@ -1,0 +1,35 @@
+description: Insert author with empty articles
+url: /v1alpha1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_author(
+        objects: [
+          {
+            id: 4
+            name: "Author 4"
+            articles: null
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          articles{
+            id
+            title
+            content
+          }
+        }
+      }
+    }
+response:
+  data:
+    insert_author:
+      affected_rows: 1
+      returning:
+      - id: 4
+        name: Author 4
+        articles: []

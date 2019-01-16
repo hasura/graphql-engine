@@ -1,0 +1,15 @@
+{
+    "post": [
+        { "id": 1, "title": "Lorem Ipsum", "views": 254, "user_id": 123 },
+        { "id": 2, "title": "Sic Dolor amet", "views": 65, "user_id": 456 }
+    ],
+    "user": [
+        { "id": 123, "name": "John Doe" },
+        { "id": 456, "name": "Alison Craus" }
+    ],
+    "comment": [
+        { "id": 987, "post_id": 1, "body": "Consectetur adipiscing elit", "user_id": 123 },
+        { "id": 995, "post_id": 2, "body": "Nam molestie pellentesque dui", "user_id": 456 },
+        { "id": 999, "post_id": 1, "body": "quid agis", "user_id": 456 }
+    ]
+}

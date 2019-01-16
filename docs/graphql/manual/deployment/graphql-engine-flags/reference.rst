@@ -40,6 +40,8 @@ For ``serve`` subcommand these are the flags available
 
 .. code-block:: none
 
+       --server-host            IP address of network interface that graphql-engine will listen on (default: '*', all interfaces)
+
        --server-port            Port on which graphql-engine should be served (default: 8080)
 
        --access-key             Secret access key, required to access this instance.
@@ -74,7 +76,7 @@ For ``serve`` subcommand these are the flags available
 
    -i, --tx-iso                 Transaction isolation. read-commited / repeatable-read /
                                 serializable
-                                
+
        --enable-console         Enable API console. It is served at '/' and '/console'
 
 
@@ -113,6 +115,7 @@ These are the environment variables which are available:
    HASURA_GRAPHQL_TX_ISOLATION          transaction isolation. read-committed /
                                         repeatable-read / serializable
                                         (default: read-commited)
+   HASURA_GRAPHQL_SERVER_HOST           IP address of network interface that graphql-engine will listen on
 
    HASURA_GRAPHQL_SERVER_PORT           Port on which graphql-engine should be served
 
