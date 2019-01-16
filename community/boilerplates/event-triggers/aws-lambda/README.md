@@ -20,8 +20,3 @@ Some of the language/platforms are work in progress. We welcome contributions fo
 
 1. AWS account with billing enabled
 2. Hasura GraphQL Engine
-
-### AWS setup
-You need to create a corresponding AWS Lambda for each of these examples.
-
-As the Hasura event system takes webhooks as the event triggers, we need to expose these Lambdas as webhooks. To do that, we need to add the API gateway trigger to each lambda and add an API to it.
