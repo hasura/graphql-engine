@@ -44,7 +44,7 @@ const transformData = (data, tables) => {
         if (column.type === 'timestamptz' && row[column.name]) {
           newRow[column.name] = moment(row[column.name]).format();
         }
-        if (column.type === 'json' && row[column.name]) {
+        if (column.type === 'jsonb' && row[column.name]) {
           newRow[column.name] = JSON.stringify(row[column.name]);
         }
       });
