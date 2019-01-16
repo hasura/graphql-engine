@@ -451,9 +451,7 @@ const makeMigrationCall = (
 const deleteTrigger = triggerName => {
   return (dispatch, getState) => {
     dispatch(showSuccessNotification('Deleting Trigger...'));
-
-    const triggerList = getState().triggers.triggerList;
-    const currentTriggerInfo = triggerList.filter(
+    const currentTriggerInfo = getState().triggers.triggerList.filter(
       t => t.name === triggerName
     )[0];
     // apply migrations
@@ -472,9 +470,17 @@ const deleteTrigger = triggerName => {
           name: currentTriggerInfo.table_name,
           schema: currentTriggerInfo.schema_name,
         },
-        webhook: currentTriggerInfo.webhook,
+        retry_conf: { ...currentTriggerInfo.configuration.retry_conf },
+        ...currentTriggerInfo.configuration.definition,
+        headers: [...currentTriggerInfo.configuration.headers],
       },
     };
+    if (currentTriggerInfo.configuration.webhook_from_env) {
+      downPayload.args.webhook_from_env =
+        currentTriggerInfo.configuration.webhook_from_env;
+    } else {
+      downPayload.args.webhook = currentTriggerInfo.configuration.webhook;
+    }
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
