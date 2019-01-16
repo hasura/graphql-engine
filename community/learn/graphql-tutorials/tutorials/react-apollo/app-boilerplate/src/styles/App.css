@@ -107,7 +107,7 @@ body {
   align-items: center;
 }
 
-.downArrow {
+.inputMarker {
   position: absolute;
   left: 15px;
   font-size: 25px;
@@ -170,6 +170,10 @@ body {
   overflow: auto;
   display: flex;
   align-items: center;
+}
+
+.labelContent.completed {
+  text-decoration: line-through;
 }
 
 .view {
@@ -260,7 +264,6 @@ body {
   padding: 10px 0 10px 15px;
   display: flex;
   align-items: center;
-  cursor: pointer;
 }
 
 .userInfo:hover {
@@ -353,7 +356,6 @@ body {
   margin-left: 10px;
   font-size: 12px;
   font-weight: bold;
-  cursor: pointer;
 }
 
 .overlay {

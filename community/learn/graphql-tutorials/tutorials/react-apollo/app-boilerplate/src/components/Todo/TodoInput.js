@@ -1,13 +1,14 @@
-import React from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
-import "../../styles/App.css";
 
-class TodoInput extends React.Component {
+class TodoInput extends Component {
   constructor() {
     super();
+
     this.state = {
       textboxValue: ""
     };
+
     this.handleTextboxValueChange = this.handleTextboxValueChange.bind(this);
   }
 
@@ -19,27 +20,24 @@ class TodoInput extends React.Component {
   }
 
   render() {
+    const { type } = this.props;
+
     return (
       <div className="formInput">
         <input
           className="input"
-          data-test={
-            this.props.type === "private"
-              ? "input-private"
-              : "input-public"
-          }
+          data-test={type === "private" ? "input-private" : "input-public"}
           placeholder="What needs to be done?"
           value={this.state.textboxValue}
           onChange={this.handleTextboxValueChange}
         />
-        <i className="downArrow fa fa-angle-down" />
+        <i className="inputMarker fa fa-angle-right" />
       </div>
     );
   }
 }
 
 TodoInput.propTypes = {
-  userId: PropTypes.string,
   type: PropTypes.string
 };
 

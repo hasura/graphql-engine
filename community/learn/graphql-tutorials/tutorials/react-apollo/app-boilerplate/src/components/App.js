@@ -1,10 +1,9 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Nav, Navbar, Button, NavItem } from "react-bootstrap";
-import "../styles/App.css";
 
-import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
 import TodoPrivateWrapper from "./Todo/TodoPrivateWrapper";
+import TodoPublicWrapper from "./Todo/TodoPublicWrapper";
 import OnlineUsersWrapper from "./OnlineUsers/OnlineUsersWrapper";
 
 
@@ -50,7 +49,7 @@ class App extends Component {
       <div className="overlay">
         <div className="overlay-content">
           <div className="overlay-heading">
-            Welcome to GraphQL tutorial app
+            Welcome to the GraphQL tutorial app
           </div>
           <div className="overlay-message">
             Please login to continue
@@ -82,20 +81,19 @@ class App extends Component {
 
         <div className="container-fluid p-left-right-0">
           <div className="col-xs-12 col-md-9 p-left-right-0">
-            <div className="col-xs-12 col-md-6 p-30">
+            <div className="col-xs-12 col-md-6 sliderMenu p-30">
               <TodoPrivateWrapper />
             </div>
-            <div className="col-xs-12 col-md-6 sliderMenu bg-gray p-30 border-right">
+            <div className="col-xs-12 col-md-6 sliderMenu p-30 bg-gray border-right">
               <TodoPublicWrapper />
             </div>
           </div>
           <div className="col-xs-12 col-md-3 p-left-right-0">
-            <div className="col-xs-12 col-md-12 sliderMenu bg-gray p-30">
+            <div className="col-xs-12 col-md-12 sliderMenu p-30 bg-gray">
               <OnlineUsersWrapper />
             </div>
           </div>
         </div>
-
       </div>
     );
   }

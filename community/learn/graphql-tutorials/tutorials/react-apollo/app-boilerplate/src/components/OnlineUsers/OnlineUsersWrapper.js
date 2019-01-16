@@ -1,5 +1,7 @@
 import React, { Component } from "react";
+
 import OnlineUser from "./OnlineUser";
+import "../../styles/App.css";
 
 class OnlineUsersWrapper extends Component {
   render() {

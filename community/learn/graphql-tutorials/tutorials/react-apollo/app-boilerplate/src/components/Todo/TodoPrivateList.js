@@ -1,18 +1,35 @@
 import React, { Component, Fragment } from "react";
 import PropTypes from "prop-types";
+
 import TodoItem from "./TodoItem";
 import TodoFilters from "./TodoFilters";
+import "../../styles/App.css";
 
 class TodoPrivateList extends Component {
   constructor() {
     super();
-    this.state = { filter: "all", clearInProgress: false };
+
+    this.state = {
+      filter: "all",
+      clearInProgress: false
+    };
+
+    this.filterResults = this.filterResults.bind(this);
+    this.clearCompleted = this.clearCompleted.bind(this);
   }
-  filterResults(type) {
-    this.setState({ ...this.state, filter: type });
+
+  filterResults(filter) {
+    this.setState({
+      ...this.state,
+      filter: filter
+    });
   }
+
+  clearCompleted(type) {}
+
   render() {
-    const { userId, type } = this.props;
+    const { type } = this.props;
+
     const data = [
       {
         id: "1",
@@ -27,36 +44,41 @@ class TodoPrivateList extends Component {
         is_public: false
       }
     ];
+
     // apply filters for displaying todos
-    let finalData = data;
+    let filteredTodos = data;
     if (this.state.filter === "active") {
-      finalData = data.filter(todo => todo.is_completed !== true);
+      filteredTodos = data.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      finalData = data.filter(todo => todo.is_completed === true);
+      filteredTodos = data.filter(todo => todo.is_completed === true);
     }
+
+    const todoList = [];
+    filteredTodos.forEach((todo, index) => {
+      todoList.push(
+        <TodoItem
+          key={index}
+          index={index}
+          todo={todo}
+          type={type}
+        />
+      );
+    });
+
     return (
       <Fragment>
         <div className="todoListWrapper">
           <ul>
-            {finalData.map((todo, index) => {
-              return (
-                <TodoItem
-                  key={index}
-                  index={index}
-                  todo={todo}
-                  type={type}
-                  userId={userId}
-                />
-              );
-            })}
+            { todoList }
           </ul>
         </div>
+
         <TodoFilters
-          todos={finalData}
-          userId={userId}
+          todos={filteredTodos}
           type={type}
           currentFilter={this.state.filter}
-          filterResults={this.filterResults.bind(this)}
+          filterResultsFn={this.filterResults}
+          clearCompletedFn={this.clearCompleted}
           clearInProgress={this.state.clearInProgress}
         />
       </Fragment>
@@ -65,7 +87,6 @@ class TodoPrivateList extends Component {
 }
 
 TodoPrivateList.propTypes = {
-  userId: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired
 };
 

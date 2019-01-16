@@ -1,12 +1,14 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 
+import "../../styles/App.css";
+
 class OnlineUser extends Component {
   render() {
-    const { user, key, index } = this.props;
+    const { user, index } = this.props;
 
     return (
-      <div key={key} className="userInfo">
+      <div className="userInfo">
         <div className="userImg">
           <i className="far fa-user" />
         </div>
@@ -20,7 +22,6 @@ class OnlineUser extends Component {
 
 OnlineUser.propTypes = {
   user: PropTypes.object.isRequired,
-  key: PropTypes.number.isRequired,
   index: PropTypes.number.isRequired
 };
 

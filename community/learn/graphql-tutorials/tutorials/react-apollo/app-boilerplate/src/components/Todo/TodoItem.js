@@ -1,74 +1,60 @@
-import React from "react";
+import React, { Component } from "react"
 import PropTypes from "prop-types";
 import "../../styles/App.css";
 
-const TodoItem = ({
-  index,
-  todo,
-  type,
-  userId,
-  completePublicTodoClicked,
-  deletePublicTodoClicked
-}) => (
-    <li
-      onClick={() => {
-      }}
-    >
-      {todo.is_public ? (
+class TodoItem extends Component {
+  render() {
+    const {index, todo, type} = this.props;
+
+    let todoAvatar = '';
+    if (todo.user && todo.user.name) {
+      todoAvatar = (
         <div className="userInfoPublic" title={todo.user.name}>
           {todo.user.name.charAt(0).toUpperCase()}
         </div>
-      ) : null}
-      <div className="view">
-        {todo.is_completed ? (
+      );
+    }
+
+    const removeTodo = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const toggleTodo = () => {};
+
+    return (
+      <li>
+        { todo.is_public ? todoAvatar : '' }
+
+        <div className="view">
           <div className="round">
             <input
-              checked={true}
+              checked={todo.is_completed}
               type="checkbox"
               id={todo.id}
-              onChange={() => {
-              }}
+              onChange={toggleTodo}
             />
-            <label htmlFor={todo.id} />
+            <label htmlFor={todo.id}/>)
           </div>
-        ) : (
-          <div className="round">
-            <input
-              type="checkbox"
-              checked={false}
-              id={todo.id}
-              onChange={() => {
-              }}
-            />
-            <label htmlFor={todo.id} />)
-          </div>
-        )}
-      </div>
-      <div className="labelContent">
-        {todo.is_completed ? (
-          <strike className="todoLabel">
-            <div data-test={type + "_" + index + "_" + todo.text}>
-              {todo.text}
-            </div>
-          </strike>
-        ) : (
+        </div>
+
+        <div className={"labelContent" + (todo.is_completed ? " completed" : '')}>
           <div data-test={type + "_" + index + "_" + todo.text}>
             {todo.text}
           </div>
-        )}
-      </div>
-      <button
-        className="closeBtn"
-        data-test={"remove_" + type + "_" + index + "_" + todo.text}
-        onClick={e => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        x
-      </button>
-    </li>
-  );
+        </div>
+
+        <button
+          className="closeBtn"
+          onClick={removeTodo}
+          data-test={"remove_" + type + "_" + index + "_" + todo.text}
+        >
+          x
+        </button>
+      </li>
+    );
+  }
+}
 
 TodoItem.propTypes = {
   todo: PropTypes.object.isRequired,

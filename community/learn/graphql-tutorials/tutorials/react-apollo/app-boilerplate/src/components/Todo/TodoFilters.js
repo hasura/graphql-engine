@@ -1,60 +1,67 @@
-import React from "react";
+import React, { Component } from "react";
 import PropTypes from "prop-types";
 
-const TodoFilters = ({
-  todos,
-  currentFilter,
-  type,
-  filterResults,
-  clearCompleted,
-  clearInProgress
-}) => {
-  const activeTodos = todos.filter(todo => todo.is_completed !== true);
-  return (
-    <div className="footerList">
-      <span> {activeTodos.length} items left </span>
-      <ul>
-        <li onClick={() => filterResults("all")}>
-          <a className={currentFilter === "all" ? "selected" : ""}>All</a>
-        </li>
-        <li onClick={() => filterResults("active")}>
-          <a
-            className={
-              currentFilter === "active"
-                ? "selected p-left-0"
-                : "p-left-0"
-            }
-          >
-            Active
-          </a>
-        </li>
-        <li onClick={() => filterResults("completed")}>
-          <a
-            className={
-              currentFilter === "completed"
-                ? "selected p-left-0"
-                : "p-left-0"
-            }
-          >
-            Completed
-          </a>
-        </li>
-      </ul>
-      {type === "private" ? (
-        <button onClick={() => clearCompleted(type)} className="clearComp">
-          {clearInProgress ? "Clearing" : "Clear completed"}
-        </button>
-      ) : null}
-    </div>
-  );
-};
+import "../../styles/App.css";
+
+class TodoFilters extends Component {
+  render() {
+    const { todos, currentFilter, type, filterResultsFn, clearCompletedFn, clearInProgress } = this.props;
+
+    const filterResultsHandler = (filter) => {
+      return () => {
+        filterResultsFn(filter);
+      }
+    };
+
+    const clearCompletedHandler = () => {
+      clearCompletedFn();
+    };
+
+    const clearCompletedButton = (
+      <button onClick={clearCompletedHandler} className="clearComp">
+        { clearInProgress ? "Clearing" : "Clear completed" }
+      </button>
+    );
+
+    const activeTodos = todos.filter(todo => todo.is_completed !== true);
+
+    return (
+      <div className="footerList">
+        <span> {activeTodos.length} item{activeTodos.length !== 1 ? 's' : ''} left </span>
+
+        <ul>
+          <li onClick={filterResultsHandler("all")}>
+            <a className={currentFilter === "all" ? "selected" : ""}>
+              All
+            </a>
+          </li>
+
+          <li onClick={filterResultsHandler("active")}>
+            <a className={currentFilter === "active" ? "selected" : ""}>
+              Active
+            </a>
+          </li>
+
+          <li onClick={filterResultsHandler("completed")}>
+            <a className={currentFilter === "completed" ? "selected" : ""}>
+              Completed
+            </a>
+          </li>
+        </ul>
+
+        {type === "private" ? clearCompletedButton : ''}
+      </div>
+    );
+  }
+}
 
 TodoFilters.propTypes = {
   todos: PropTypes.array.isRequired,
-  userId: PropTypes.string,
-  type: PropTypes.string,
-  currentFilter: PropTypes.string,
-  filterResults: PropTypes.func
+  type: PropTypes.string.isRequired,
+  currentFilter: PropTypes.string.isRequired,
+  filterResultsFn: PropTypes.func.isRequired,
+  clearCompletedFn: PropTypes.func.isRequired,
+  clearInProgress: PropTypes.bool.isRequired
 };
 
 export default TodoFilters;

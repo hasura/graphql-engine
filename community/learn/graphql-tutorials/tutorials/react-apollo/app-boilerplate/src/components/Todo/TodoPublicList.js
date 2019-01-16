@@ -1,13 +1,17 @@
 import React, { Component, Fragment } from "react";
 import PropTypes from "prop-types";
+
 import TodoItem from "./TodoItem";
 import TodoFilters from "./TodoFilters";
+import "../../styles/App.css";
 
 class TodoPublicList extends Component {
   constructor() {
     super();
+
     this.state = {
       filter: "all",
+      clearInProgress: false,
       dataLength: 0,
       showNew: false,
       showOlder: true,
@@ -34,24 +38,25 @@ class TodoPublicList extends Component {
         }
       ]
     };
-    this.filterResults = this.filterResults.bind(this);
-  }
-  filterResults(type) {
-    this.setState({ ...this.state, filter: type });
-  }
-  render() {
-    const { userId, type } = this.props;
 
-    // apply client side filters for displaying todos
-    let finalTodos = this.state.todos;
-    if (this.state.filter === "active") {
-      finalTodos = this.state.todos.filter(todo => todo.is_completed !== true);
-    } else if (this.state.filter === "completed") {
-      finalTodos = this.state.todos.filter(todo => todo.is_completed === true);
-    }
+    this.filterResults = this.filterResults.bind(this);
+    this.clearCompleted = this.clearCompleted.bind(this);
+  }
+
+  filterResults(filter) {
+    this.setState({
+      ...this.state,
+      filter: filter
+    });
+  }
+
+  clearCompleted(type) {}
+
+  render() {
+    const { type } = this.props;
 
     // show new todo feed logic
-    let showNewTodos = null;
+    let showNewTodos = '';
     if (this.state.showNew && this.state.newTodosLength) {
       showNewTodos = (
         <div className={"loadMoreSection"} onClick={this.loadMoreClicked}>
@@ -67,6 +72,7 @@ class TodoPublicList extends Component {
         Load Older Todos
       </div>
     );
+
     if (!this.state.showOlder && this.state.todos.length) {
       showOlderTodos = (
         <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
@@ -75,34 +81,46 @@ class TodoPublicList extends Component {
       );
     }
 
+    // apply client side filters for displaying todos
+    let filteredTodos = this.state.todos;
+    if (this.state.filter === "active") {
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
+    } else if (this.state.filter === "completed") {
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
+    }
+
+    const todoList = [];
+    filteredTodos.forEach((todo, index) => {
+      todoList.push(
+        <TodoItem
+          key={index}
+          index={index}
+          todo={todo}
+          type={type}
+        />
+      );
+    })
+
     return (
       <Fragment>
         <div className="todoListWrapper">
-          {showNewTodos}
+
+          { showNewTodos }
+
           <ul>
-            {finalTodos.map((todo, index) => {
-              return (
-                <TodoItem
-                  key={index}
-                  index={index}
-                  todo={todo}
-                  type={type}
-                  userId={userId}
-                  client={this.props.client}
-                  deletePublicTodoClicked={this.deletePublicTodoClicked}
-                  completePublicTodoClicked={this.completePublicTodoClicked}
-                />
-              );
-            })}
+            { todoList }
           </ul>
-          {showOlderTodos}
+
+          { showOlderTodos }
         </div>
+
         <TodoFilters
-          todos={this.state.todos}
-          userId={userId}
+          todos={filteredTodos}
           type={type}
           currentFilter={this.state.filter}
-          filterResults={this.filterResults}
+          filterResultsFn={this.filterResults}
+          clearCompletedFn={this.clearCompleted}
+          clearInProgress={this.state.clearInProgress}
         />
       </Fragment>
     );
@@ -110,7 +128,6 @@ class TodoPublicList extends Component {
 }
 
 TodoPublicList.propTypes = {
-  userId: PropTypes.string,
   type: PropTypes.string
 };
 
