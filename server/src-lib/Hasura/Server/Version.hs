@@ -31,4 +31,5 @@ currentVersion :: T.Text
 currentVersion = version
 
 isDevVersion :: Bool
-isDevVersion = either (const True) (const False) $ V.fromText currentVersion
+isDevVersion = either (const True) (const False) $
+               V.fromText $ T.dropWhile (== 'v') version
