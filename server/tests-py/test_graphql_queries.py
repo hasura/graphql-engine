@@ -263,6 +263,20 @@ class TestGraphQLQueryBoolExpJsonB(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
+class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
+
+    def test_query_using_point(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_point.yaml')
+
+    def test_query_using_line(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_line.yaml')
+
+    def test_query_using_polygon(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_polygon.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/postgis'
 
 class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_without_id(self, hge_ctx):
