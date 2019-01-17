@@ -19,7 +19,7 @@ class ReloadMetadata extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          dataTest="data-reload-metadata"
+          data-test="data-reload-metadata"
           color="white"
           size="sm"
           onClick={e => {

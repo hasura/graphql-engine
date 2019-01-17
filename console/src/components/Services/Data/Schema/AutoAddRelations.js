@@ -83,7 +83,7 @@ class AutoAddRelations extends Component {
           className={`${styles.display_inline} ${styles.add_mar_left}`}
           color="white"
           size="xs"
-          dataTest="track-all-relationships"
+          data-test="track-all-relationships"
         >
           Track All Relations
         </Button>

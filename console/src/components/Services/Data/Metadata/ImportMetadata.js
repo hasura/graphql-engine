@@ -88,7 +88,7 @@ class ImportMetadata extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          dataTest="data-import-metadata"
+          data-test="data-import-metadata"
           size="sm"
           color="white"
           onClick={e => {

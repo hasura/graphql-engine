@@ -150,7 +150,7 @@ const PageContainer = ({
                   className={styles.add_mar_right}
                   size="xs"
                   color="white"
-                  dataTest="sidebar-add-table"
+                  data-test="sidebar-add-table"
                 >
                   Add Table
                 </Button>

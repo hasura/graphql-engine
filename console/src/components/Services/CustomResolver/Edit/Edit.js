@@ -106,7 +106,7 @@ class Edit extends React.Component {
               e.preventDefault();
               this.modifyClick();
             }}
-            dataTest={'remote-schema-edit-modify-btn'}
+            data-test={'remote-schema-edit-modify-btn'}
             disabled={isRequesting}
           >
             Modify
@@ -119,7 +119,7 @@ class Edit extends React.Component {
               this.handleDeleteResolver(e);
             }}
             disabled={isRequesting}
-            dataTest={'remote-schema-edit-delete-btn'}
+            data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
           </Button>
@@ -140,7 +140,7 @@ class Edit extends React.Component {
             size="sm"
             type="submit"
             disabled={isRequesting}
-            dataTest={'remote-schema-edit-save-btn'}
+            data-test={'remote-schema-edit-save-btn'}
           >
             {isRequesting ? 'Saving' : 'Save'}
           </Button>
@@ -151,7 +151,7 @@ class Edit extends React.Component {
               e.preventDefault();
               this.handleCancelModify();
             }}
-            dataTest={'remote-schema-edit-cancel-btn'}
+            data-test={'remote-schema-edit-cancel-btn'}
             disabled={isRequesting}
           >
             Cancel

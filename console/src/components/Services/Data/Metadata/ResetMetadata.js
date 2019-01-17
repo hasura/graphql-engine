@@ -21,7 +21,7 @@ class ResetMetadata extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          dataTest="data-reset-metadata"
+          data-test="data-reset-metadata"
           color="white"
           size="sm"
           onClick={e => {

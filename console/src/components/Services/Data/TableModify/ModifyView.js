@@ -107,7 +107,7 @@ class ModifyView extends Component {
             dispatch(untrackTableSql(tableName));
           }
         }}
-        dataTest="untrack-view"
+        data-test="untrack-view"
       >
         Untrack View
       </Button>
@@ -221,7 +221,7 @@ class ModifyView extends Component {
               onClick={() => {
                 this.modifyViewDefinition(tableName);
               }}
-              dataTest="modify-view"
+              data-test="modify-view"
             >
               Modify
             </Button>
@@ -236,7 +236,7 @@ class ModifyView extends Component {
                   dispatch(deleteViewSql(tableName));
                 }
               }}
-              dataTest="delete-view"
+              data-test="delete-view"
             >
               Delete view
             </Button>

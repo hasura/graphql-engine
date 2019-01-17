@@ -119,7 +119,7 @@ const PageContainer = ({
                   className={styles.add_mar_right}
                   color="white"
                   size="xs"
-                  dataTest="sidebar-add-table"
+                  data-test="sidebar-add-table"
                 >
                   Add Trigger
                 </Button>

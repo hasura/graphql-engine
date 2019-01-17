@@ -86,7 +86,7 @@ const relationshipView = (
           color="red"
           size="sm"
           onClick={onDelete}
-          dataTest={`remove-button-${relName}`}
+          data-test={`remove-button-${relName}`}
         >
           Remove
         </Button>
@@ -150,7 +150,7 @@ const addRelationshipCellView = (
             size="xs"
             color="yellow"
             onClick={onAdd}
-            dataTest={
+            data-test={
               relMetaData[0] === 'object'
                 ? `obj-rel-add-${relMetaData[1]}`
                 : `arr-rel-add-${relMetaData[1]}`
@@ -178,7 +178,7 @@ const addRelationshipCellView = (
               type="submit"
               color="yellow"
               size="sm"
-              dataTest={
+              data-test={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
                   : `arr-rel-save-${relMetaData[1]}`
@@ -536,7 +536,7 @@ class Relationships extends Component {
                 onClick={() => {
                   dispatch(relManualAddClicked());
                 }}
-                dataTest="add-manual-relationship"
+                data-test="add-manual-relationship"
               >
                 + Add a relationship manually
               </Button>

@@ -27,7 +27,7 @@ class CustomResolver extends React.Component {
             </h2>
             {migrationMode ? (
               <Button
-                dataTest="data-create-remote-schemas"
+                data-test="data-create-remote-schemas"
                 color="yellow"
                 size="sm"
                 onClick={e => {

@@ -40,7 +40,7 @@ class Schema extends Component {
             </h2>
             {migrationMode ? (
               <Button
-                dataTest="data-create-trigger"
+                data-test="data-create-trigger"
                 color="yellow"
                 size="sm"
                 onClick={e => {

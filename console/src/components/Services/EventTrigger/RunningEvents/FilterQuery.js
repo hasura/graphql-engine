@@ -237,7 +237,7 @@ class FilterQuery extends Component {
               className={styles.add_mar_left}
               color="white"
               size="sm"
-              dataTest="run-query"
+              data-test="run-query"
             >
               {this.state.isWatching ? (
                 <span>

@@ -476,7 +476,7 @@ class AddTable extends Component {
             <Button
               type="submit"
               onClick={this.submitValidation.bind(this)}
-              dataTest="table-create"
+              data-test="table-create"
               color="yellow"
               size="sm"
             >

@@ -74,7 +74,7 @@ const LeftNavBar = ({
                   className={styles.add_mar_right}
                   color="white"
                   size="xs"
-                  dataTest="remote-schema-sidebar-add-table"
+                  data-test="remote-schema-sidebar-add-table"
                 >
                   Add
                 </Button>

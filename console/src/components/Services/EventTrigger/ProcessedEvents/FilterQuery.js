@@ -224,7 +224,12 @@ class FilterQuery extends Component {
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
-            <Button type="submit" color="yellow" size="sm" dataTest="run-query">
+            <Button
+              type="submit"
+              color="yellow"
+              size="sm"
+              data-test="run-query"
+            >
               Run query
             </Button>
             <Button
@@ -232,7 +237,7 @@ class FilterQuery extends Component {
               className={styles.add_mar_left}
               color="white"
               size="sm"
-              dataTest="run-query"
+              data-test="run-query"
             >
               {this.state.isWatching ? (
                 <span>

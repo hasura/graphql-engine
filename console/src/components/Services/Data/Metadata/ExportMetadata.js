@@ -19,7 +19,7 @@ class ExportMetadata extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          dataTest="data-export-metadata"
+          data-test="data-export-metadata"
           className={metaDataStyles.margin_right}
           size="sm"
           color="white"

@@ -22,7 +22,9 @@ class Editor extends React.Component {
         ${this.props.styles.modifyEditButton}`}
       color="white"
       size="sm"
-      dataTest={`${this.state.isEditing ? 'close' : 'edit'}-${this.props.name}`}
+      data-test={`${this.state.isEditing ? 'close' : 'edit'}-${
+        this.props.name
+      }`}
       onClick={this.toggleEditor}
     >
       {this.state.isEditing ? 'Close' : 'Edit'}
@@ -39,7 +41,7 @@ class Editor extends React.Component {
         color="yellow"
         size="sm"
         onClick={saveFunc}
-        dataTest={`modify-trigger-${name}-save`}
+        data-test={`modify-trigger-${name}-save`}
         disabled={isSaving}
       >
         {isSaving ? 'Saving ...' : 'Save'}

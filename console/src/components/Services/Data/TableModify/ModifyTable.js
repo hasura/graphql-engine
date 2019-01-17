@@ -137,7 +137,7 @@ const ColumnEditor = ({
                       color="white"
                       size="sm"
                       type="button"
-                      dataTest="add-rel-mod"
+                      data-test="add-rel-mod"
                     >
                       +Add relationship
                     </Button>
@@ -147,7 +147,7 @@ const ColumnEditor = ({
                     color="red"
                     size="sm"
                     onClick={onDeleteFK}
-                    dataTest="remove-constraint-button"
+                    data-test="remove-constraint-button"
                   >
                     {' '}
                     Remove Constraint{' '}
@@ -391,7 +391,7 @@ const ColumnEditor = ({
             color="yellow"
             className={styles.col_editor_button}
             size="sm"
-            dataTest="save-button"
+            data-test="save-button"
           >
             Save
           </Button>
@@ -405,7 +405,7 @@ const ColumnEditor = ({
                 e.preventDefault();
                 onDelete();
               }}
-              dataTest="remove-button"
+              data-test="remove-button"
             >
               Remove
             </Button>
@@ -575,7 +575,7 @@ class ModifyTable extends Component {
                   className={styles.add_mar_small}
                   size="xs"
                   color="white"
-                  dataTest={`edit-${colName}`}
+                  data-test={`edit-${colName}`}
                   onClick={() => {
                     if (activeEdit.column === colName) {
                       // just closing the column
@@ -624,7 +624,7 @@ class ModifyTable extends Component {
             dispatch(untrackTableSql(tableName));
           }
         }}
-        dataTest="untrack-table"
+        data-test="untrack-table"
       >
         Untrack Table
       </Button>
@@ -827,7 +827,7 @@ class ModifyTable extends Component {
                   type="submit"
                   color="yellow"
                   size="sm"
-                  dataTest="add-column-button"
+                  data-test="add-column-button"
                 >
                   + Add column
                 </Button>
@@ -845,7 +845,7 @@ class ModifyTable extends Component {
                   dispatch(deleteTableSql(tableName, tableSchema));
                 }
               }}
-              dataTest="delete-table"
+              data-test="delete-table"
             >
               Delete table
             </Button>

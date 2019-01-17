@@ -1,16 +1,9 @@
 import React from 'react';
 import styles from '../../../Common/Common.scss';
 
-const Button = ({
-  type,
-  onClick,
-  children,
-  size,
-  color,
-  dataTest,
-  className,
-  disabled,
-}) => {
+const Button = props => {
+  const { type, onClick, children, size, color, className, disabled } = props;
+
   let extendedClassName = `${className} btn ${
     size ? `btn-${size} ` : 'button '
   }`;
@@ -36,7 +29,7 @@ const Button = ({
       type={type}
       onClick={onClick}
       className={extendedClassName}
-      data-test={dataTest}
+      data-test={props['data-test']}
       disabled={disabled}
     >
       {children}

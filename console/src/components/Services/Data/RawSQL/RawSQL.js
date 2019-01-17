@@ -347,7 +347,7 @@ const RawSQL = ({
             onClick={submitSQL}
             color="yellow"
             size="sm"
-            dataTest="run-sql"
+            data-test="run-sql"
           >
             Run!
           </Button>

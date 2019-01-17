@@ -1366,7 +1366,7 @@ class Permissions extends Component {
         size="sm"
         onClick={onClickFn}
         disabled={disabled}
-        dataTest={`${value.split(' ').join('-')}-button`}
+        data-test={`${value.split(' ').join('-')}-button`}
       >
         {value}
       </Button>

@@ -13,7 +13,7 @@ const Buttons = ({ styles, dispatch, triggerName, ongoingRequest }) => (
     <Button
       color="red"
       size="sm"
-      dataTest="delete-trigger"
+      data-test="delete-trigger"
       onClick={() => verifyDeleteTrigger(triggerName, dispatch)}
       disabled={ongoingRequest === 'delete'}
     >

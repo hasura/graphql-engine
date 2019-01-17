@@ -195,7 +195,7 @@ const ViewRows = ({
               _push(`/schema/${currentSchema}/tables/${curTableName}/edit`)
             );
           }}
-          dataTest={`row-edit-button-${rowIndex}`}
+          data-test={`row-edit-button-${rowIndex}`}
         >
           Edit
         </Button>
@@ -212,7 +212,7 @@ const ViewRows = ({
               _push(`/schema/${currentSchema}/tables/${curTableName}/insert`)
             );
           }}
-          dataTest={`row-clone-button-${rowIndex}`}
+          data-test={`row-clone-button-${rowIndex}`}
         >
           Clone
         </Button>
@@ -226,7 +226,7 @@ const ViewRows = ({
           onClick={() => {
             dispatch(deleteItem(pkClause));
           }}
-          dataTest={`row-delete-button-${rowIndex}`}
+          data-test={`row-delete-button-${rowIndex}`}
         >
           Delete
         </Button>

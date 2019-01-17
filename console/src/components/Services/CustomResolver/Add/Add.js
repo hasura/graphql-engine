@@ -31,7 +31,7 @@ class Add extends React.Component {
               color="yellow"
               size="sm"
               disabled={isRequesting}
-              dataTest="add-remote-schema-submit"
+              data-test="add-remote-schema-submit"
             >
               {isRequesting ? 'Adding...' : 'Add Remote Schema'}
             </Button>

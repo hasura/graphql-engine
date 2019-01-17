@@ -95,7 +95,7 @@ class Schema extends Component {
         <div className={styles.padd_bottom} key={`${i}untracked`}>
           <div className={`${styles.display_inline} ${styles.padd_right}`}>
             <Button
-              dataTest={`add-track-table-${untrackedTables[i].table_name}`}
+              data-test={`add-track-table-${untrackedTables[i].table_name}`}
               className={`${styles.display_inline}`}
               color="white"
               size="xs"
@@ -135,7 +135,7 @@ class Schema extends Component {
             </h2>
             {migrationMode ? (
               <Button
-                dataTest="data-create-table"
+                data-test="data-create-table"
                 color="yellow"
                 onClick={e => {
                   e.preventDefault();

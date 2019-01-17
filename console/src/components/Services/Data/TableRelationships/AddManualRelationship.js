@@ -203,7 +203,7 @@ class AddManualRelationship extends Component {
           color="yellow"
           size="sm"
           onClick={this.onAddRelClicked}
-          dataTest={this.props.dataTestVal}
+          data-test={this.props.dataTestVal}
         >
           Add
         </Button>
@@ -213,7 +213,7 @@ class AddManualRelationship extends Component {
             color="white"
             size="sm"
             onClick={this.onCloseClicked}
-            dataTest="table-close-manual-relationship"
+            data-test="table-close-manual-relationship"
           >
             Close
           </Button>

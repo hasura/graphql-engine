@@ -654,7 +654,7 @@ class AddTrigger extends Component {
               <hr />
               <Button
                 onClick={this.toggleAdvanced.bind(this)}
-                dataTest="advanced-settings"
+                data-test="advanced-settings"
                 type="button"
                 className={styles.advancedToggleBtn}
                 color="gray"
@@ -754,7 +754,7 @@ class AddTrigger extends Component {
                 type="submit"
                 color="yellow"
                 size="sm"
-                dataTest="trigger-create"
+                data-test="trigger-create"
               >
                 {createBtnText}
               </Button>

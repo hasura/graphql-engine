@@ -20,7 +20,7 @@ class ClearAccessKey extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          dataTest="data-clear-access-key"
+          data-test="data-clear-access-key"
           className={metaDataStyles.margin_right}
           color="white"
           size="sm"
