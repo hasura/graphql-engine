@@ -111,6 +111,5 @@ func beam(d *Data, log *logrus.Logger) {
 		tock := time.Now()
 		delta := tock.Sub(tick)
 		log.WithField("isError", d.IsError).WithField("time", delta.String()).Debug("telemetry: beamed")
-
 	}
 }

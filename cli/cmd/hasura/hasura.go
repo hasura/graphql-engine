@@ -13,7 +13,6 @@ func main() {
 		commands.EC.Spinner.Stop()
 	}
 	if err != nil {
-		// telemetry.SendErrorEvent(commands.EC, nil)
 		commands.EC.Telemetry.IsError = true
 		commands.EC.Telemetry.Beam()
 		log.Fatal(err)

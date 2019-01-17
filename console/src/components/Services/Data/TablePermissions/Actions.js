@@ -549,6 +549,9 @@ const permChangePermissions = changeType => {
     const permissionsState = {
       ...getState().tables.modify.permissionsState,
     };
+    const prevPermissionsState = {
+      ...getState().tables.modify.prevPermissionState,
+    };
     const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
@@ -579,7 +582,7 @@ const permChangePermissions = changeType => {
         args: {
           table: { name: table, schema: currentSchema },
           role: role,
-          permission: permissionsState[query],
+          permission: prevPermissionsState[query],
         },
       };
       permissionsUpQueries.push(deleteQuery);
@@ -614,7 +617,6 @@ const permChangePermissions = changeType => {
         delete permissionsState[query].localSet;
       }
 
-      //
       const deleteQuery = {
         type: 'drop_' + query + '_permission',
         args: {
@@ -626,6 +628,9 @@ const permChangePermissions = changeType => {
       permissionsUpQueries.push(createQuery);
       permissionsDownQueries.push(deleteQuery);
     }
+
+    // Reverse order of down migration
+    permissionsDownQueries.reverse();
 
     // Apply migration
     const migrationName =
