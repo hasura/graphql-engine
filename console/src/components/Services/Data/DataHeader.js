@@ -45,14 +45,13 @@ const DataHeader = ({
 
   const handleSchemaChange = e => {
     const updatedSchema = e.target.value;
+    dispatch(_push(`/schema/${updatedSchema}`));
     Promise.all([
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
       dispatch(loadSchema()),
       dispatch(loadUntrackedSchema()),
       dispatch(loadUntrackedRelations()),
-    ]).then(() => {
-      dispatch(_push(`/schema/${updatedSchema}`));
-    });
+    ]);
   };
   return (
     <div>
