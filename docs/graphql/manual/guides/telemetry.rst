@@ -15,7 +15,7 @@ what to focus on next.
 The data collected is minimal and, since there is no *sign-in* associated with
 the GraphQL Engine, it **cannot be used to uniquely identify any user**.
 Furthermore, data collected is strictly statistical in nature and
-**no propriatary information is collected** (*please see the next section*).
+**no proprietary information is collected** (*please see the next section*).
 
 As a growing community, we greatly appreciate the telemetry data users
 send to us, as it is very valuable in making GraphQL Engine a better product
@@ -51,6 +51,7 @@ Here is a sample row from the telemetry database:
         "views": 1,
         "tables": 2,
         "permissions": {
+          "roles": 1,
           "delete": 2,
           "insert": 1,
           "select": 2,

@@ -13,10 +13,14 @@ func main() {
 		commands.EC.Spinner.Stop()
 	}
 	if err != nil {
-		commands.EC.Telemetry.IsError = true
-		commands.EC.Telemetry.Beam()
+		if commands.EC.Telemetry != nil {
+			commands.EC.Telemetry.IsError = true
+			commands.EC.Telemetry.Beam()
+		}
 		log.Fatal(err)
 	} else {
-		commands.EC.Telemetry.Beam()
+		if commands.EC.Telemetry != nil {
+			commands.EC.Telemetry.Beam()
+		}
 	}
 }
