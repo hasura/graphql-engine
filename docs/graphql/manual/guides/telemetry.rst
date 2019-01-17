@@ -1,3 +1,5 @@
+.. _telemetry:
+
 Telemetry Guide/FAQ
 ===================
 
@@ -6,11 +8,19 @@ Telemetry Guide/FAQ
   :depth: 1
   :local:
 
-The Hasura GraphQL Engine collects anonymous telemetry data that helps the Hasura team understand how the product is being used and in deciding what to focus on next.
+The Hasura GraphQL Engine collects anonymous telemetry data that helps the
+Hasura team in understanding how the product is being used and in deciding
+what to focus on next.
 
-The data collected is minimal and, since there is no *sign-in* associated with the GraphQL Engine, it **cannot be used to uniquely identify any user**. Furthermore, data collected is strictly statistical in nature and **no propriatary information is collected** (*please see the next section*).
+The data collected is minimal and, since there is no *sign-in* associated with
+the GraphQL Engine, it **cannot be used to uniquely identify any user**.
+Furthermore, data collected is strictly statistical in nature and
+**no propriatary information is collected** (*please see the next section*).
 
-As a growing community, we greatly appreciate the telemetry data users send to us, as it is very valuable in making GraphQL Engine a better product for everyone. If you are worried about privacy, you can choose to disable sending telemetry as described :ref:`here <optout>`.
+As a growing community, we greatly appreciate the telemetry data users
+send to us, as it is very valuable in making GraphQL Engine a better product
+for everyone. If you are worried about privacy, you can choose to disable
+sending telemetry as described :ref:`here <telemetry_optout>`.
 
 .. note::
 
@@ -24,9 +34,36 @@ Server
 
 The server periodically sends the number of tables, views, relationships,
 permission rules, event triggers and remote schemas tracked by GraphQL Engine,
-along with a randomly generated UUID and the server version.
+along with randomly generated UUID per database and per instance. The
+server version is also sent.
 
-.. lets add a table here. 
+Here is a sample row from the telemetry database:
+
+.. code-block:: json
+
+   {
+      "id": 12,
+      "timestamp": "2019-01-21T19:43:33.63838+00:00",
+      "db_uid": "dddff371-dab2-450f-9969-235bca66dab1",
+      "instance_uid": "6799360d-a431-40c5-9f68-24592a9f07df",
+      "version": "v1.0.0-alpha35",
+      "metrics": {
+        "views": 1,
+        "tables": 2,
+        "permissions": {
+          "delete": 2,
+          "insert": 1,
+          "select": 2,
+          "update": 2
+        },
+        "relationships": {
+          "auto": 2,
+          "manual": 0
+        },
+        "event_triggers": 0,
+        "remote_schemas": 1
+      }
+    }
 
 
 Console
@@ -35,6 +72,22 @@ Console
 The console is a React-Redux UI. Redux action names along with anonymized
 route names are sent without any identifiable information or payload. Console
 also records the UUID of the server/CLI that it is connected to.
+
+Here is a sample:
+
+.. code-block:: json
+
+   {
+     "id": 902,
+     "timestamp": "2019-01-21T10:00:23.849202+00:00",
+     "url": "/data/schema/SCHEMA_NAME/tables/TABLE_NAME/modify",
+     "event_type": "ModifyTable/RESET",
+     "served_by": "server",
+     "server_uuid": "79485a57-fca5-40f3-a31b-78c0d211314b",
+     "server_version": "v1.0.0-alpha35",
+     "cli_uuid": null
+   }
+
 
 CLI
 ~~~
@@ -46,14 +99,32 @@ are not recorded**. CLI also collects the server version and UUID that it
 is talking to. The operating system platform and architecture is also
 noted along with the CLI version.
 
-.. lets add a few lines here?
+Sample data:
+
+.. code-block:: json
+
+   {
+     "id": 115,
+     "timestamp": "2019-01-21T11:36:07.86783+00:00",
+     "uuid": "e462ce20-42dd-40fd-9549-edfb92f80455",
+     "execution_id": "ddfa9c33-0693-457d-9026-c7f456c43322",
+     "version": "v0.4.27",
+     "command": "hasura version",
+     "is_error": false,
+     "os_platform": "linux",
+     "os_arch": "amd64",
+     "server_uuid": "a4d66fb2-f88d-457b-8db1-ea7a0b57921d",
+     "server_version": "v1.0.0-alpha35",
+     "payload": null
+   }
 
 Where is the data sent?
 -----------------------
 
 The data is sent to Hasura's servers addressed by ``telemetry.hasura.io``.
 
-.. _optout:
+.. _telemetry_optout:
+
 How do I turn off telemetry (opt-out)?
 --------------------------------------
 
