@@ -111,9 +111,7 @@ Configuring JWT mode
 
 You can enable JWT mode by using the ``--jwt-secret`` flag or
 ``HASURA_GRAPHQL_JWT_SECRET`` environment variable; the value of which is a
-JSON.
-
-The JSON is:
+JSON object:
 
 .. code-block:: json
 
