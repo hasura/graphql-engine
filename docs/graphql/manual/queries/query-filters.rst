@@ -473,6 +473,136 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
       }
     }
 
+PostGIS topology operators
+--------------------------
+The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``,
+``_st_touches``, ``_st_within`` and ``_st_d_within`` operators are used to filter ``geometry`` like columns.
+For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.
+
+Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`_) representation of ``geometry`` values in ``variables`` as shown in the following examples
+
+
+Example: _st_within
+^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of geometry values which are within the given ``polygon`` value
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($polygon: geometry){
+      geom_table(where: {geom_col: {_st_within: $polygon}}){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    }
+
+Variables for above query:-
+
+.. code-block:: json
+
+   {
+     "polygon": {
+       "type": "Polygon",
+       "coordinates": [
+         [
+           [
+             0,
+             0
+           ],
+           [
+             0,
+             2
+           ],
+           [
+             2,
+             2
+           ],
+           [
+             2,
+             0
+           ],
+           [
+             0,
+             0
+           ]
+         ]
+       ]
+     }
+   }
+
+Example: _st_d_within
+^^^^^^^^^^^^^^^^^^^^^
+Fetch a list of geometry values which are 3 units from given ``point`` value
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    }
+
+Variables for above query:-
+
+.. code-block:: json
+
+   {
+     "point": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          0
+        ]
+     }
+   }
+
+
 Filter or check for null values
 -------------------------------
 Checking for null values can be achieved using the ``_is_null`` operator.

@@ -117,6 +117,15 @@ data OpExpG a
   | AHasKeysAny [Text]
   | AHasKeysAll [Text]
 
+  | ASTContains !a
+  | ASTCrosses !a
+  | ASTDWithin !S.SQLExp !a
+  | ASTEquals !a
+  | ASTIntersects !a
+  | ASTOverlaps !a
+  | ASTTouches !a
+  | ASTWithin !a
+
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
 
@@ -156,6 +165,15 @@ opExpToJPair f = \case
   AHasKey a      -> ("_has_key", f a)
   AHasKeysAny a  -> ("_has_keys_any", toJSON a)
   AHasKeysAll a  -> ("_has_keys_all", toJSON a)
+
+  ASTContains a   -> ("_st_contains", f a)
+  ASTCrosses a    -> ("_st_crosses", f a)
+  ASTDWithin _ a  -> ("_st_d_within", f a)
+  ASTEquals a     -> ("_st_equals", f a)
+  ASTIntersects a -> ("_st_intersects", f a)
+  ASTOverlaps a   -> ("_st_overlaps", f a)
+  ASTTouches a    -> ("_st_touches", f a)
+  ASTWithin a     -> ("_st_within", f a)
 
   ANISNULL       -> ("_is_null", toJSON True)
   ANISNOTNULL    -> ("_is_null", toJSON False)
