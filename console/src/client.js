@@ -84,7 +84,7 @@ function analyticsLogger({ getState }) {
             reqBody.url = sanitiseUrl(payload.pathname);
           }
           analyticsConnection.send(
-            JSON.stringify({ data: reqBody, topic: 'console_test' })
+            JSON.stringify({ data: reqBody, topic: globals.telemetryTopic })
           ); // Send the data
           // check for possible error events and store more data?
         } else {
