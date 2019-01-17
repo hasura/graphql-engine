@@ -28,9 +28,10 @@ initStateTx = clearHdbViews
 
 data RawConnParams
   = RawConnParams
-  { rcpStripes  :: !(Maybe Int)
-  , rcpConns    :: !(Maybe Int)
-  , rcpIdleTime :: !(Maybe Int)
+  { rcpStripes      :: !(Maybe Int)
+  , rcpConns        :: !(Maybe Int)
+  , rcpIdleTime     :: !(Maybe Int)
+  , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
@@ -225,11 +226,12 @@ mkServeOptions rso = do
   return $ ServeOptions port host connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
-    mkConnParams (RawConnParams s c i) = do
+    mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      return $ Q.ConnParams stripes conns iTime
+      allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
+      return $ Q.ConnParams stripes conns iTime allowPrepare
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -361,6 +363,12 @@ pgTimeoutEnv =
   , "Each connection's idle time before it is closed (default: 180 sec)"
   )
 
+pgUsePrepareEnv :: (String, String)
+pgUsePrepareEnv =
+  ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "Use prepared statements for queries (default: True)"
+  )
+
 txIsoEnv :: (String, String)
 txIsoEnv =
   ( "HASURA_GRAPHQL_TX_ISOLATION"
@@ -484,7 +492,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout
+  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -507,6 +515,12 @@ parseConnParams =
               ( long "timeout" <>
                 metavar "SECONDS" <>
                 help (snd pgTimeoutEnv)
+              )
+    allowPrepare = optional $
+      option auto
+              ( long "use-prepared-statements" <>
+                metavar "USE PREPARED STATEMENTS" <>
+                help (snd pgUsePrepareEnv)
               )
 
 parseServerPort :: Parser (Maybe Int)
