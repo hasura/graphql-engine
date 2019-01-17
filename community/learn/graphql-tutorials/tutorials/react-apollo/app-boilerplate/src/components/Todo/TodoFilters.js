@@ -19,7 +19,7 @@ class TodoFilters extends Component {
 
     const clearCompletedButton = (
       <button onClick={clearCompletedHandler} className="clearComp">
-        { clearInProgress ? "Clearing" : "Clear completed" }
+        { clearInProgress ? "Clearing..." : "Clear completed" }
       </button>
     );
 

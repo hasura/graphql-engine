@@ -6,9 +6,9 @@ class TodoItem extends Component {
   render() {
     const {index, todo, type} = this.props;
 
-    let todoAvatar = '';
+    let userAvatar = '';
     if (todo.user && todo.user.name) {
-      todoAvatar = (
+      userAvatar = (
         <div className="userInfoPublic" title={todo.user.name}>
           {todo.user.name.charAt(0).toUpperCase()}
         </div>
@@ -24,7 +24,7 @@ class TodoItem extends Component {
 
     return (
       <li>
-        { todo.is_public ? todoAvatar : '' }
+        { todo.is_public ? userAvatar : '' }
 
         <div className="view">
           <div className="round">
@@ -58,8 +58,7 @@ class TodoItem extends Component {
 
 TodoItem.propTypes = {
   todo: PropTypes.object.isRequired,
-  type: PropTypes.string,
-  userId: PropTypes.string
+  type: PropTypes.string.isRequired
 };
 
 export default TodoItem;
