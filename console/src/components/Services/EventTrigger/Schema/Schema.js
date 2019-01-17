@@ -8,6 +8,7 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
+import Button from '../../Layout/Button/Button';
 
 const appPrefix = globals.urlPrefix + '/events';
 
@@ -38,16 +39,17 @@ class Schema extends Component {
               Event Triggers{' '}
             </h2>
             {migrationMode ? (
-              <button
-                data-test="data-create-trigger"
-                className={styles.yellow_button}
+              <Button
+                dataTest="data-create-trigger"
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
                 }}
               >
                 Create Trigger
-              </button>
+              </Button>
             ) : null}
           </div>
           <hr />

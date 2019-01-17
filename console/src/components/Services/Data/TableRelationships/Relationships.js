@@ -18,7 +18,7 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -493,15 +493,16 @@ class Relationships extends Component {
                 />
               </div>
             ) : (
-              <button
+              <Button
                 type="submit"
-                className="btn btn-sm btn-default"
+                color="white"
+                size="sm"
                 onClick={() => {
                   dispatch(addNewRelClicked());
                 }}
               >
                 + Add relationship
-              </button>
+              </Button>
             )}
             <hr />
           </div>
@@ -528,16 +529,17 @@ class Relationships extends Component {
                 />
               </div>
             ) : (
-              <button
+              <Button
                 type="submit"
-                className="btn btn-sm btn-default"
+                color="white"
+                size="sm"
                 onClick={() => {
                   dispatch(relManualAddClicked());
                 }}
-                data-test="add-manual-relationship"
+                dataTest="add-manual-relationship"
               >
                 + Add a relationship manually
-              </button>
+              </Button>
             )}
             <hr />
           </div>

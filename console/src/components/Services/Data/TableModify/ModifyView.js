@@ -15,7 +15,7 @@ import {
 } from './ModifyActions';
 import { ordinalColSort } from '../utils';
 import { setTable, fetchTableComment } from '../DataActions';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 class ModifyView extends Component {
   componentDidMount() {

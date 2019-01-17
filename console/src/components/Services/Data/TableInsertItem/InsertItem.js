@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 class InsertItem extends Component {
   constructor() {

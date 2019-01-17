@@ -21,6 +21,7 @@ import {
   addOrder,
   removeOrder,
 } from './FilterActions.js';
+import Button from '../../Layout/Button/Button';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
 
@@ -223,16 +224,14 @@ class FilterQuery extends Component {
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
-            <button
-              type="submit"
-              className={`btn ${styles.yellow_button}`}
-              data-test="run-query"
-            >
+            <Button type="submit" color="yellow" size="sm" dataTest="run-query">
               Run query
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={this.watchChanges.bind(this)}
-              className={styles.add_mar_left + ' btn btn-default'}
+              className={styles.add_mar_left}
+              color="white"
+              size="sm"
               data-test="run-query"
             >
               {this.state.isWatching ? (
@@ -242,7 +241,7 @@ class FilterQuery extends Component {
               ) : (
                 'Watch'
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

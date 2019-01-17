@@ -9,7 +9,7 @@ import { push } from 'react-router-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import { untrackedTip, untrackedRelTip } from './Tooltips';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 import {
   setTableName,
   addExistingTableSql,

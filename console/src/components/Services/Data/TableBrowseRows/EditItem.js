@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';

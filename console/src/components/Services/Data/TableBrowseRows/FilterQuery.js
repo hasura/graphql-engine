@@ -22,7 +22,7 @@ import {
   removeOrder,
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 const renderCols = (colName, tableSchema, onChange, usage, key) => {
   const columns = tableSchema.columns.map(c => c.column_name);

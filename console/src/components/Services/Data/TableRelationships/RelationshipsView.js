@@ -7,7 +7,7 @@ import { findAllFromRel } from '../utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
 import AddRelationship from './AddManualRelationship';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {

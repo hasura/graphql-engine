@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../Common/Common.scss';
+import styles from '../../../Common/Common.scss';
 
 const Button = ({
   type,
@@ -23,6 +23,9 @@ const Button = ({
       break;
     case 'green':
       extendedClassName += 'btn-success';
+      break;
+    case 'gray':
+      extendedClassName += styles.gray_button;
       break;
     default:
       extendedClassName += 'btn-default';

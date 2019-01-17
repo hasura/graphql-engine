@@ -16,7 +16,7 @@ import {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
-import Button from '../../../Interface/Button';
+import Button from '../../Layout/Button/Button';
 
 class AddManualRelationship extends Component {
   constructor() {
