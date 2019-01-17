@@ -1,0 +1,20 @@
+<div class="container">
+  <mat-card>
+    <h1>
+      <mat-card-title>Advanced App</mat-card-title>
+    </h1>
+  </mat-card>
+  <mat-card-content>
+    <mat-selection-list class="container">
+      <mat-list-option *ngFor="let data of dataSource">
+          {{data.text}}
+      </mat-list-option>
+    </mat-selection-list>
+    <h3>Perform Operations on the table:</h3>
+    <div class="example-button-row">
+      <button mat-raised-button color="primary" (click)="addItemInDB()">Add Item</button>
+      <button mat-raised-button color="primary" (click)="deleteItem()">Delete Last Item</button>
+      <button mat-raised-button color="primary" (click)="updateItem()">Update Last text</button>
+    </div>
+  </mat-card-content>
+</div>

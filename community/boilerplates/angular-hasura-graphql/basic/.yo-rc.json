@@ -1,0 +1,22 @@
+{
+  "generator-ngx-rocket": {
+    "version": "5.2.0",
+    "props": {
+      "location": "path",
+      "appName": "basic-angular-hasura-boilerplate",
+      "target": [
+        "web"
+      ],
+      "pwa": true,
+      "ui": "material",
+      "layout": "simple",
+      "auth": true,
+      "lazy": true,
+      "angulartics": false,
+      "prettier": true,
+      "projectName": "basic-angular-hasura-boilerplate",
+      "packageManager": "npm",
+      "mobile": []
+    }
+  }
+}

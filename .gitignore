@@ -3,4 +3,5 @@ npm-debug.log
 *.DS_Store
 .tern-project
 test-server-output
+node_modules
 .vscode

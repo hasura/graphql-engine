@@ -1,0 +1,38 @@
+<div fxFill fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="1.5rem" class="mat-typography">
+  <div>
+    <h1 fxLayoutAlign="center" >Basic Hasura-Angular Boilerplate</h1>
+  </div>
+  <div class="login-container" fxLayout="row" fxLayoutAlign="center">
+    <mat-card fxFlex="90%" fxFlex.sm="66%" fxFlex.md="50%" fxFlex.gt-md="33%" class="login-box">
+      <form (ngSubmit)="login()" [formGroup]="loginForm" novalidate>
+        <div class="login-error" [hidden]="!error || isLoading" >
+          Username or password incorrect.
+        </div>
+        <br/>
+        <div fxLayout="column">
+          <mat-form-field>
+            <input type="text" matInput formControlName="username" autocomplete="username"
+                   [placeholder]="'Username'"/>
+            <mat-error *ngIf="loginForm.controls.username.valid || loginForm.controls.username.untouched">
+              <span >Username is required</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <input type="password" matInput formControlName="password" autocomplete="current-password"
+                   [placeholder]="'Password'" required/>
+            <mat-error *ngIf="loginForm.controls.password.valid || loginForm.controls.password.untouched">
+              <span >Password is required</span>
+            </mat-error>
+          </mat-form-field>
+          <mat-slide-toggle color="primary" formControlName="remember" >Remember me</mat-slide-toggle>
+          <br/>
+          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
+            <app-loader class="inline-loader" [isLoading]="isLoading"></app-loader>
+            <span >Login</span>
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </div>
+</div>
+
