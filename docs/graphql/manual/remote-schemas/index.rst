@@ -58,7 +58,7 @@ You need to create a custom GraphQL server with a schema and corresponding resol
 use any language/framework of your choice to author this server or deploy it anywhere. A great way to get started
 is to use one of our boilerplates:
 
-- `Serverless Boilerplates <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas>`__
+- `Boilerplates <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas>`__
 
 
 .. admonition:: Current limitations
