@@ -754,7 +754,7 @@ class AddTrigger extends Component {
                 type="submit"
                 color="yellow"
                 size="sm"
-                data-test="trigger-create"
+                dataTest="trigger-create"
               >
                 {createBtnText}
               </Button>
