@@ -63,7 +63,8 @@ function analyticsLogger({ getState }) {
         event_type: actionType,
         url,
         console_mode: consoleMode,
-        server_uuid: cliUUID || getState().telemetry.hasura_uuid,
+        cli_uuid: cliUUID,
+        server_uuid: getState().telemetry.hasura_uuid,
       };
 
       let isLocationType = false;

@@ -82,7 +82,7 @@ Here is a sample:
      "timestamp": "2019-01-21T10:00:23.849202+00:00",
      "url": "/data/schema/SCHEMA_NAME/tables/TABLE_NAME/modify",
      "event_type": "ModifyTable/RESET",
-     "served_by": "server",
+     "console_mode": "server",
      "server_uuid": "79485a57-fca5-40f3-a31b-78c0d211314b",
      "server_version": "v1.0.0-alpha35",
      "cli_uuid": null
