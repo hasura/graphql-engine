@@ -1,0 +1,5 @@
+{
+  "project": "zeit-mutation",
+  "version": 2,
+  "builds": [{ "src": "*.go", "use": "@now/go" }]
+}

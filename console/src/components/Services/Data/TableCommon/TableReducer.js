@@ -274,16 +274,20 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_OPEN_EDIT:
+      const permState = getBasePermissionsState(
+        action.tableSchema,
+        action.role,
+        action.query,
+        action.insertPermColumnRestriction
+      );
       return {
         ...modifyState,
         permissionsState: {
-          ...getBasePermissionsState(
-            action.tableSchema,
-            action.role,
-            action.query,
-            action.insertPermColumnRestriction
-          ),
+          ...permState,
           tableSchemas: schemas,
+        },
+        prevPermissionState: {
+          ...permState,
         },
       };
 
