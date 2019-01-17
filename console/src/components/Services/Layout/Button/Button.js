@@ -1,9 +1,15 @@
 import React from 'react';
 import styles from '../../../Common/Common.scss';
 
-const Button = props => {
-  const { type, onClick, children, size, color, className, disabled } = props;
+/*
+  This is a Button HOC that takes al the props supported by <button> and also
+  - color: (default: white) color of the button; currently supports yellow, red, green, gray, white
+  - size: size of the button; currently supports xs (extra small), sm(small)
+  - className: although you can provide any CSS classname, it is recommended to use only the positioning related classes and not the ones that change the appearance (color, font, size) of the button
+*/
 
+const Button = props => {
+  const { children, size, color, className } = props;
   let extendedClassName = `${className} btn ${
     size ? `btn-${size} ` : 'button '
   }`;
@@ -25,13 +31,7 @@ const Button = props => {
       break;
   }
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      className={extendedClassName}
-      data-test={props['data-test']}
-      disabled={disabled}
-    >
+    <button {...props} className={extendedClassName}>
       {children}
     </button>
   );
