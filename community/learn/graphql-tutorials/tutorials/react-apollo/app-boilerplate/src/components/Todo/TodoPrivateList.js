@@ -45,7 +45,6 @@ class TodoPrivateList extends Component {
       }
     ];
 
-    // apply filters for displaying todos
     let filteredTodos = data;
     if (this.state.filter === "active") {
       filteredTodos = data.filter(todo => todo.is_completed !== true);

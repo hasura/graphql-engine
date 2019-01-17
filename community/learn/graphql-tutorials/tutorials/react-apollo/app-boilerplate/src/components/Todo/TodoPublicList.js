@@ -12,35 +12,15 @@ class TodoPublicList extends Component {
     this.state = {
       filter: "all",
       clearInProgress: false,
-      dataLength: 0,
       showNew: false,
       showOlder: true,
       newTodosLength: 0,
-      limit: 5,
-      todos: [
-        {
-          id: "1",
-          text: "This is public todo 1",
-          is_completed: true,
-          is_public: true,
-          user: {
-            name: "someUser1"
-          }
-        },
-        {
-          id: "2",
-          text: "This is public todo 2",
-          is_completed: false,
-          is_public: true,
-          user: {
-            name: "someUser2"
-          }
-        }
-      ]
     };
 
     this.filterResults = this.filterResults.bind(this);
     this.clearCompleted = this.clearCompleted.bind(this);
+    this.loadMoreClicked = this.loadMoreClicked.bind(this);
+    this.loadOlderClicked = this.loadOlderClicked.bind(this);
   }
 
   filterResults(filter) {
@@ -52,41 +32,39 @@ class TodoPublicList extends Component {
 
   clearCompleted(type) {}
 
+  loadMoreClicked() {}
+
+  loadOlderClicked() {}
+
   render() {
     const { type } = this.props;
 
-    // show new todo feed logic
-    let showNewTodos = '';
-    if (this.state.showNew && this.state.newTodosLength) {
-      showNewTodos = (
-        <div className={"loadMoreSection"} onClick={this.loadMoreClicked}>
-          You have {this.state.newTodosLength} new{" "}
-          {this.state.newTodosLength > 1 ? "todos" : "todo"}
-        </div>
-      );
-    }
+    const data = [
+      {
+        id: "1",
+        text: "This is public todo 1",
+        is_completed: true,
+        is_public: true,
+        user: {
+          name: "someUser1"
+        }
+      },
+      {
+        id: "2",
+        text: "This is public todo 2",
+        is_completed: false,
+        is_public: true,
+        user: {
+          name: "someUser2"
+        }
+      }
+    ];
 
-    // show old todo history logic
-    let showOlderTodos = (
-      <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
-        Load Older Todos
-      </div>
-    );
-
-    if (!this.state.showOlder && this.state.todos.length) {
-      showOlderTodos = (
-        <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
-          No more todos available
-        </div>
-      );
-    }
-
-    // apply client side filters for displaying todos
-    let filteredTodos = this.state.todos;
+    let filteredTodos = data;
     if (this.state.filter === "active") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
+      filteredTodos = data.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
+      filteredTodos = data.filter(todo => todo.is_completed === true);
     }
 
     const todoList = [];
@@ -99,19 +77,36 @@ class TodoPublicList extends Component {
           type={type}
         />
       );
-    })
+    });
+
+    // show new todo feed logic
+    let newTodosMsg = '';
+    if (this.state.showNew && this.state.newTodosLength) {
+      newTodosMsg = (
+        <div className={"loadMoreSection"} onClick={this.loadMoreClicked}>
+          You have {this.state.newTodosLength} new Todo{this.state.newTodosLength !== 1 ? "s" : ""}
+        </div>
+      );
+    }
+
+    // show old todo history logic
+    const olderTodosMsg = (
+      <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
+        {(!this.state.showOlder && this.state.todos.length) ? 'No more Todos available' : 'Load Older Todos'}
+      </div>
+    );
 
     return (
       <Fragment>
         <div className="todoListWrapper">
 
-          { showNewTodos }
+          { newTodosMsg }
 
           <ul>
             { todoList }
           </ul>
 
-          { showOlderTodos }
+          { olderTodosMsg }
         </div>
 
         <TodoFilters

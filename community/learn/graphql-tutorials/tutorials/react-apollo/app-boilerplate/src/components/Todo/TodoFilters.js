@@ -27,7 +27,7 @@ class TodoFilters extends Component {
 
     return (
       <div className="footerList">
-        <span> {activeTodos.length} item{activeTodos.length !== 1 ? 's' : ''} left </span>
+        <span> {activeTodos.length} item{activeTodos.length !== 1 ? "s" : ""} left </span>
 
         <ul>
           <li onClick={filterResultsHandler("all")}>
