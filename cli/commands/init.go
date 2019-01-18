@@ -38,8 +38,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
