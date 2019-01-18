@@ -10,12 +10,14 @@ CREATE TABLE hdb_catalog.hdb_function
 CREATE VIEW hdb_catalog.hdb_function_agg AS
 (
 SELECT
-  r.routine_name AS function_name,
-  r.routine_schema AS function_schema,
+  p.proname::text AS function_name,
+  pn.nspname::text AS function_schema,
+
   CASE
     WHEN (p.provariadic = (0) :: oid) THEN false
     ELSE true
   END AS has_variadic,
+
   CASE
     WHEN (
       (p.provolatile) :: text = ('i' :: character(1)) :: text
@@ -28,60 +30,42 @@ SELECT
     ) THEN 'VOLATILE' :: text
     ELSE NULL :: text
   END AS function_type,
+
   pg_get_functiondef(p.oid) AS function_definition,
-  r.type_udt_schema AS return_type_schema,
-  r.type_udt_name AS return_type_name,
+
+  rtn.nspname::text AS return_type_schema,
+  rt.typname::text AS return_type_name,
+
   CASE
-    WHEN ((t.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
-    WHEN ((t.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
-    WHEN ((t.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
-    WHEN ((t.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
-    WHEN ((t.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((t.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
+    WHEN ((rt.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
+    WHEN ((rt.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
+    WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
+    WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
+    WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
+    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
     ELSE NULL :: text
   END AS return_type_type,
   p.proretset AS returns_set,
-  to_json(
-    (
-      SELECT
-        (array_agg(pt.typname)) :: text [] AS array_agg
-      FROM
-        (
-          unnest(
-            COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
-          ) WITH ORDINALITY pat(oid, ordinality)
-          LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
-        )
-    )
-  ) AS input_arg_types,
+  ( SELECT
+      COALESCE(json_agg(pt.typname), '[]')
+    FROM
+      (
+        unnest(
+          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+        ) WITH ORDINALITY pat(oid, ordinality)
+        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+      )
+   ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
 FROM
-  (
-    (
-      (
-        information_schema.routines r
-        JOIN pg_namespace n ON ((n.nspname = (r.routine_schema) :: name))
-      )
-      JOIN pg_proc p ON (
-        (
-          (p.proname = (r.routine_name) :: name)
-          AND (p.pronamespace = n.oid)
-        )
-      )
-    )
-    JOIN pg_type t ON ((t.oid = p.prorettype))
-  )
+  pg_proc p
+  JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
+  JOIN pg_type rt ON (rt.oid = p.prorettype)
+  JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
 WHERE
-  (
-    ((r.routine_schema) :: text !~~ 'pg_%' :: text)
-    AND (
-      (r.routine_schema) :: text <> ALL (
-        ARRAY ['information_schema'::text, 'hdb_catalog'::text, 'hdb_views'::text]
-      )
-    )
-    AND (
-      NOT (
-        EXISTS (
+  pn.nspname :: text NOT LIKE 'pg_%'
+  AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
+  AND (NOT EXISTS (
           SELECT
             1
           FROM
@@ -89,7 +73,5 @@ WHERE
           WHERE
             ((pg_aggregate.aggfnoid) :: oid = p.oid)
         )
-      )
     )
-  )
 );
