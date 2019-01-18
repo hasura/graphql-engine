@@ -8,7 +8,7 @@ started with auth webhooks, triggers, etc. and some community tooling around the
 Feel free to open pull requests to add more content here.
 
 - [Boilerplates](boilerplates)
-- [Examples](examples)
+- [Sample Apps](sample-apps)
 - [Tools](tools)
 
 ## License

@@ -55,6 +55,16 @@ parseOpExps annVal = do
       "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 
+      -- geometry type related operators
+      "_st_contains"    -> fmap ASTContains <$> asPGColValM v
+      "_st_crosses"     -> fmap ASTCrosses <$> asPGColValM v
+      "_st_equals"      -> fmap ASTEquals <$> asPGColValM v
+      "_st_intersects"  -> fmap ASTIntersects <$> asPGColValM v
+      "_st_overlaps"    -> fmap ASTOverlaps <$> asPGColValM v
+      "_st_touches"     -> fmap ASTTouches <$> asPGColValM v
+      "_st_within"      -> fmap ASTWithin <$> asPGColValM v
+      "_st_d_within"    -> asObjectM v >>= mapM parseAsSTDWithinObj
+
       _ ->
         throw500
           $  "unexpected operator found in opexp of "
@@ -69,6 +79,14 @@ parseOpExps annVal = do
         return $ Just $ bool ANISNOTNULL ANISNULL b
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
+
+    parseAsSTDWithinObj obj = do
+      distanceVal <- onNothing (OMap.lookup "distance" obj) $
+                 throw500 "expected \"distance\" input field in st_d_within_input ty"
+      distSQL <- uncurry toTxtValue <$> asPGColVal distanceVal
+      fromVal <- onNothing (OMap.lookup "from" obj) $
+                 throw500 "expected \"from\" input field in st_d_within_input ty"
+      ASTDWithin distSQL <$> asPGColVal fromVal
 
 parseAsEqOp
   :: (MonadError QErr m)
