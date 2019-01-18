@@ -196,7 +196,7 @@ const deleteFunctionSql = () => {
     // ];
 
     // Apply migrations
-    const migrationName = 'drop_view_' + currentSchema + '_' + functionName;
+    const migrationName = 'drop_function_' + currentSchema + '_' + functionName;
 
     const requestMsg = 'Deleting function...';
     const successMsg = 'Function deleted';
