@@ -517,7 +517,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
-      option auto
+      option (eitherReader parseStrAsBool)
               ( long "use-prepared-statements" <>
                 metavar "USE PREPARED STATEMENTS" <>
                 help (snd pgUsePrepareEnv)
@@ -634,6 +634,7 @@ serveOptsToLog so =
                        , "cors_domain" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
+                       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog
