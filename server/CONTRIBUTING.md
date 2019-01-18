@@ -17,7 +17,11 @@ own machine and how to contribute.
 
 ### Compile
 - `cd graphql-engine/server`
-- `stack build --fast`
+- `stack build --fast --flag graphql-engine:local-console`
+- To enable console for local development, if the folder *../console/node\_modules* is not present
+  - `cd ../console`
+  - `npm install`
+  - `cd ../server`
 
 ### Run
 - Make sure postgres is running
