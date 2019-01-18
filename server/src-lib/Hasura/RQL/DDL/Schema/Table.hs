@@ -453,10 +453,9 @@ runSqlP2 (RunSQL t cascade _) = do
   return res
 
 isAltrOrDrop :: QErrM m => T.Text -> m Bool
-isAltrOrDrop = either throwErr return . isMatchedE
+isAltrOrDrop = either throwErr return . matchRegex regex False
   where
     throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-    isMatchedE = matchRegex regex False
     regex = "alter table|drop table|alter view|drop view|replace view"
 
 runRunSQL
