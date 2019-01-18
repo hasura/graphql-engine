@@ -24,7 +24,8 @@ import _push from '../push';
 /* Constants */
 
 const RESET = '@customFunction/RESET';
-const FETCHING_INDIV_CUSTOM_FUNCTION = '@customFunction/RESET';
+const FETCHING_INDIV_CUSTOM_FUNCTION =
+  '@customFunction/FETCHING_INDIV_CUSTOM_FUNCTION';
 const CUSTOM_FUNCTION_FETCH_SUCCESS =
   '@customFunction/CUSTOM_FUNCTION_FETCH_SUCCESS';
 const CUSTOM_FUNCTION_FETCH_FAIL = '@customFunction/CUSTOM_FUNCTION_FETCH_FAIL';

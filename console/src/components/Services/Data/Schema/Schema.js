@@ -84,10 +84,14 @@ class Schema extends Component {
     const trackedTables = schema.map(t => t.table_name);
     const trackableFuncs = functionsList.filter(f => {
       // return function which are tracked && function name whose setof tables are tracked
-      return (
-        trackedFuncs.indexOf(f.function_name) === -1 &&
-        trackedTables.indexOf(f.return_type_name) !== -1
-      ); // && add condition which will check whether the setoff table is tracked or not
+      if (f.return_type_schema === currentSchema) {
+        return (
+          trackedFuncs.indexOf(f.function_name) === -1 &&
+          trackedTables.indexOf(f.return_type_name) !== -1
+        ); // && add condition which will check whether the setoff table is tracked or not
+      }
+      // Currently showing it on the console assuming that other table is already available and tracked. If not adding the function will throw an error
+      return true;
     });
     /* */
 

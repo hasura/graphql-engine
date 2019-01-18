@@ -88,6 +88,7 @@ $$ language sql stable;
       isRequesting,
       isDeleting,
       isUntracking,
+      isFetching,
     } = this.props.functions;
 
     const { migrationMode } = this.props;
@@ -188,11 +189,13 @@ $$ language sql stable;
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
           baseUrl={baseUrl}
-          showLoader={false}
+          showLoader={isFetching}
           testPrefix={'functions'}
         />
         <br />
+        {/*
         <h4>Function Definition:</h4>
+        */}
         <div className={styles.sqlBlock}>
           <ReusableTextAreaWithCopy
             copyText={functionDefinition}
