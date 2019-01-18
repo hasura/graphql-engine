@@ -399,10 +399,10 @@ execRawSQL =
       let e = err400 PostgresError "query execution failed"
       in e {qeInternal = Just $ toJSON txe}
 
-runSqlP2
+execWithMDCheck
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => RunSQL -> m RunSQLRes
-runSqlP2 (RunSQL t cascade _) = do
+execWithMDCheck (RunSQL t cascade _) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
@@ -463,14 +463,8 @@ runRunSQL
   => RunSQL -> m RespBody
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
-  encode <$> case mChkMDCnstcy of
-    Nothing -> withSQLChk
-    Just b  -> bool execSQL runP2 b
-  where
-    withSQLChk =
-      bool execSQL runP2 =<< isAltrDropReplace t
-    execSQL = execRawSQL t
-    runP2 = runSqlP2 q
+  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
+  encode <$> bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]
