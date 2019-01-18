@@ -117,7 +117,7 @@ _3 (_, _, z) = z
 -- regex related
 matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
 matchRegex regex caseSensitive src =
-  fmap (`TDFA.match` T.unpack src) compiledRegexE
+  fmap (`TDFA.match` TE.encodeUtf8 src) compiledRegexE
   where
     compOpt = TDFA.defaultCompOpt
       { TDFA.caseSensitive = caseSensitive
