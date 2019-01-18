@@ -46,7 +46,7 @@ stack exec graphql-engine -- --database-url=<database-url> serve`
   - `export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"`
 - Run tests:
   - `cd tests-py`
-  - `pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url> tests-py`
+  - `pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url>`
 
 ### Create Pull Request
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
