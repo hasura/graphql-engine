@@ -463,11 +463,13 @@ runRunSQL
   => RunSQL -> m RespBody
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
-  encode <$> bool withoutMDChk runP2 chkMDCnstcy
+  encode <$> case mChkMDCnstcy of
+    Nothing -> withSQLChk
+    Just b  -> bool execSQL runP2 b
   where
-    chkMDCnstcy = fromMaybe False mChkMDCnstcy
-    withoutMDChk =
-       bool (execRawSQL t) runP2 =<< isAltrDropReplace t
+    withSQLChk =
+      bool execSQL runP2 =<< isAltrDropReplace t
+    execSQL = execRawSQL t
     runP2 = runSqlP2 q
 
 -- Should be used only after checking the status
