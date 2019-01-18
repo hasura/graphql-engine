@@ -116,10 +116,10 @@ main =  do
       ci <- procConnInfo rci
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
+
       -- safe init catalog
-      initialise logger ci httpManager
-      -- migrate catalog if necessary
-      migrate logger ci httpManager
+      initRes <- initialise logger ci httpManager
+
       -- prepare event triggers data
       prepareEvents logger ci
 
@@ -146,9 +146,7 @@ main =  do
       -- start a background thread for telemetry
       when enableTelemetry $ do
         unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
-        res <- getUniqIds ci
-        runEither res (logTelemetryErr logger) $
-          void . C.forkIO . runTelemetry logger httpManager cacheRef
+        void $ C.forkIO $ runTelemetry logger httpManager cacheRef initRes
 
       unLogger logger $
         mkGenericStrLog "server" "starting API server"
@@ -194,13 +192,18 @@ main =  do
 
     initialise (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_init") res
 
-    migrate (Logger logger) ci httpMgr = do
-      currentTime <- getCurrentTime
-      res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_migrate") res
+      -- initialise the catalog
+      initRes <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_init") initRes
+
+      -- migrate catalog if necessary
+      migRes <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
+
+      -- generate and retrieve uuids
+      ids <- getUniqIds ci
+      either printErrJExit return ids
 
     prepareEvents (Logger logger) ci = do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
@@ -210,13 +213,8 @@ main =  do
     getUniqIds ci =
       runTx ci $ do
         dbId <- getDbId
-        fp <- generateFingerprint
+        fp   <- liftIO generateFingerprint
         return (dbId, fp)
-
-    logTelemetryErr (Logger logger) err = do
-      let err' = T.pack $ BLC.unpack $ A.encode err
-      logger $ mkTelemetryLog "initialise_error"
-               ("failed to start telemetry: " <> err') Nothing
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -229,8 +227,6 @@ main =  do
 
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
-
-    runEither ev lAction rAction = either lAction rAction ev
 
 
 telemetryNotice :: String

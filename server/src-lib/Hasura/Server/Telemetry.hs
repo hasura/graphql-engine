@@ -30,6 +30,8 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
+import qualified Data.UUID               as UUID
+import qualified Data.UUID.V4            as UUID
 import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
@@ -155,21 +157,16 @@ computeMetrics sc =
     permsOfTbl = Map.toList . tiRolePermInfoMap
 
 
--- TODO: use a 3rd party library?
-generateFingerprint :: Q.TxE QErr Text
-generateFingerprint =
-  Q.catchE defaultTxErrorHandler $
-    (runIdentity . Q.getRow) <$>
-    Q.withQ [Q.sql| SELECT gen_random_uuid() :: text |] () False
+generateFingerprint :: IO Text
+generateFingerprint = UUID.toText <$> UUID.nextRandom
 
 getDbId :: Q.TxE QErr Text
 getDbId =
   (runIdentity . Q.getRow) <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|
-    SELECT hasura_uuid :: text
-    FROM hdb_catalog.hdb_version
-    |] () False
+    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
+        |] () False
 
 
 -- | Logging related
