@@ -376,9 +376,9 @@ buildSchemaCache = do
 
 data RunSQL
   = RunSQL
-  { rSql               :: T.Text
-  , rCascade           :: !(Maybe Bool)
-  , rEnforceStateCheck :: !(Maybe Bool)
+  { rSql                      :: T.Text
+  , rCascade                  :: !(Maybe Bool)
+  , rCheckMetadataConsistency :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
@@ -452,22 +452,22 @@ runSqlP2 (RunSQL t cascade _) = do
 
   return res
 
-isAltrOrDrop :: QErrM m => T.Text -> m Bool
-isAltrOrDrop = either throwErr return . matchRegex regex False
+isAltrDropReplace :: QErrM m => T.Text -> m Bool
+isAltrDropReplace = either throwErr return . matchRegex regex False
   where
     throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-    regex = "alter table|drop table|alter view|drop view|replace view"
+    regex = "alter|drop|replace"
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => RunSQL -> m RespBody
-runRunSQL q@(RunSQL t _ mEnfStChk) = do
+runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
-  encode <$> bool withoutStChk runP2 enfStChk
+  encode <$> bool withoutMDChk runP2 chkMDCnstcy
   where
-    enfStChk = fromMaybe False mEnfStChk
-    withoutStChk =
-      bool (execRawSQL t) runP2 =<< isAltrOrDrop t
+    chkMDCnstcy = fromMaybe False mChkMDCnstcy
+    withoutMDChk =
+       bool (execRawSQL t) runP2 =<< isAltrDropReplace t
     runP2 = runSqlP2 q
 
 -- Should be used only after checking the status

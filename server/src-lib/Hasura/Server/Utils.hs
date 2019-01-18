@@ -16,7 +16,7 @@ import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
-import qualified Text.Regex.TDFA.String       as TDFA
+import qualified Text.Regex.TDFA.ByteString   as TDFA
 
 import           Hasura.Prelude
 
@@ -115,7 +115,7 @@ _3 :: (a, b, c) -> c
 _3 (_, _, z) = z
 
 -- regex related
-matchRegex :: String -> Bool -> T.Text -> Either String Bool
+matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
 matchRegex regex caseSensitive src =
   fmap (`TDFA.match` T.unpack src) compiledRegexE
   where
