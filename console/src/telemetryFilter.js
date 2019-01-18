@@ -1,3 +1,5 @@
+import globals from './Globals';
+
 const filterEventsBlockList = [
   'App/ONGOING_REQUEST',
   'App/DONE_REQUEST',
@@ -7,10 +9,10 @@ const filterEventsBlockList = [
 
 const filterPayloadAllowList = [];
 
-const DATA_PATH = '/data',
-      API_EXPLORER_PATH = '/api-explorer',
-      REMOTE_SCHEMAS_PATH = '/remote-schemas',
-      EVENTS_PATH = '/events'
+const DATA_PATH = '/data';
+const API_EXPLORER_PATH = '/api-explorer';
+const REMOTE_SCHEMAS_PATH = '/remote-schemas';
+const EVENTS_PATH = '/events';
 
 const dataHandler = path => {
   return (
@@ -40,6 +42,7 @@ const eventsHandler = path => {
 };
 
 const sanitiseUrl = path => {
+  path = path.replace(new RegExp(globals.urlPrefix, 'g'), '');
   if (path.indexOf(DATA_PATH) === 0) {
     return dataHandler(path.slice(DATA_PATH.length));
   }
