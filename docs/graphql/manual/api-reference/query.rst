@@ -361,6 +361,42 @@ Checking for ``null`` values :
 
 - ``_is_null`` (takes true/false as values)
 
+PostGIS related operators on GEOMETRY columns :
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersects``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     - ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
+
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+
+.. Note::
+   1. All operators take a json representation of ``geometry/geography`` values. Also see :doc:`here <../queries/query-filters>` for more query examples on these operators
+   2. Input value for ``_st_d_within`` operator is an object:-
+
+   .. parsed-literal::
+
+       {
+         field-name : {_st_d_within: {distance: Float, from: Value} }
+       }
+
 
 .. _OrderByExp:
 
