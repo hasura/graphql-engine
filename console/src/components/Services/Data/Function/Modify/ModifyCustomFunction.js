@@ -39,11 +39,13 @@ $$ language sql stable;
 `;
   }
   componentDidMount() {
-    const { functionName } = this.props.params;
+    const { functionName, schema } = this.props.params;
     if (!functionName) {
       this.props.dispatch(push(prefixUrl));
     }
-    Promise.all([this.props.dispatch(fetchCustomFunction(functionName))]);
+    Promise.all([
+      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+    ]);
   }
   loadRunSQLAndLoadPage() {
     const { functionDefinition } = this.props.functions;
