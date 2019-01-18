@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &consoleOptions{

@@ -143,6 +143,14 @@ type ExecutionContext struct {
 	Telemetry *telemetry.Data
 }
 
+// NewExecutionContext returns a new instance of execution context
+func NewExecutionContext() *ExecutionContext {
+	ec := &ExecutionContext{}
+	ec.Telemetry = telemetry.BuildEvent()
+	ec.Telemetry.Version = version.BuildVersion
+	return ec
+}
+
 // Prepare as the name suggests, prepares the ExecutionContext ec by
 // initializing most of the variables to sensible defaults, if it is not already
 // set.
@@ -202,9 +210,14 @@ func (ec *ExecutionContext) Prepare() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
+	// prepare the context
+	err := ec.Prepare()
+	if err != nil {
+		return errors.Wrap(err, "failed preparing context")
+	}
 
 	// validate execution directory
-	err := ec.validateDirectory()
+	err = ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -344,7 +357,9 @@ func (ec *ExecutionContext) setupLogger() {
 	}
 
 	// set the logger for telemetry
-	ec.Telemetry.Logger = ec.Logger
+	if ec.Telemetry.Logger == nil {
+		ec.Telemetry.Logger = ec.Logger
+	}
 }
 
 // setupGlobConfig ensures that global config directory and file exists and

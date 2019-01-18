@@ -9,18 +9,7 @@ import (
 // main is the entrypoint function
 func main() {
 	err := commands.Execute()
-	if commands.EC.Spinner != nil {
-		commands.EC.Spinner.Stop()
-	}
 	if err != nil {
-		if commands.EC.Telemetry != nil {
-			commands.EC.Telemetry.IsError = true
-			commands.EC.Telemetry.Beam()
-		}
 		log.Fatal(err)
-	} else {
-		if commands.EC.Telemetry != nil {
-			commands.EC.Telemetry.Beam()
-		}
 	}
 }

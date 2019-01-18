@@ -82,6 +82,11 @@ func BuildEvent() *Data {
 
 // Beam the telemetry data
 func (d *Data) Beam() {
+	// to be on the safe side, create a new logger if a logger
+	// is not passed
+	if d.Logger == nil {
+		d.Logger = logrus.New()
+	}
 	if !d.CanBeam {
 		d.Logger.Debugf("telemetry: disabled, not beaming any data")
 		return
