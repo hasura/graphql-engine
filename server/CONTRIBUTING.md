@@ -17,7 +17,14 @@ own machine and how to contribute.
 
 ### Compile
 - `cd graphql-engine/server`
-- `stack build --fast`
+- `stack build --fast --flag graphql-engine:local-console`
+- To enable console for local development, if the folder `../console/node_modules/` is not present
+
+```
+  cd ../console
+  npm install
+  cd ../server
+```
 
 ### Run
 - Make sure postgres is running
@@ -29,7 +36,32 @@ own machine and how to contribute.
 - Add test cases if relevant
 
 ### Test
-- Run tests: `stack test --ta --database-url=<database-url>`
+- Install the py-test dependencies:
+
+```
+pip3 install -r tests-py/requirements.txt
+```
+
+- Make sure postgres is running
+- Run the graphql-engine:
+
+```
+stack exec graphql-engine -- --database-url=<database-url> serve`
+```
+
+- Set the environmental variables for event-trigger tests
+
+```
+export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+```
+
+- Run tests:
+
+```
+cd tests-py
+pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url>
+```
 
 ### Create Pull Request
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
