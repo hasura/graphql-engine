@@ -1,6 +1,6 @@
 {
   "name": "ra-data-hasura",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "react-admin data provider for Hasura GraphQL Engine",
   "main": "lib/ra-data-hasura.min.js",
   "scripts": {
@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/hasura/graphql-engine/issues"
   },
-  "homepage": "https://github.com/hasura/graphql-engine",
+  "homepage": "https://github.com/hasura/graphql-engine/tree/master/community/tools/ra-data-hasura",
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.51",
     "@babel/core": "^7.0.0-beta.51",
