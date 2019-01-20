@@ -103,12 +103,12 @@ export default (serverEndpoint, headers) => {
         const finalManyQuery = cloneQuery(selectQuery);
         const finalManyCountQuery = cloneQuery(countQuery);
 
-        finalSelectQuery.args.table = resource;
-        finalSelectQuery.args.limit = params.pagination.perPage;
-        finalSelectQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
-        finalSelectQuery.args.where = { [params.target]: params.id };
-        finalSelectQuery.args.order_by = {column: params.sort.field, type: params.sort.order.toLowerCase()};
-        finalCountQuery.args.table = resource;
+        finalManyQuery.args.table = resource;
+        finalManyQuery.args.limit = params.pagination.perPage;
+        finalManyQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
+        finalManyQuery.args.where = { [params.target]: params.id };
+        finalManyQuery.args.order_by = {column: params.sort.field, type: params.sort.order.toLowerCase()};
+        finalManyCountQuery.args.table = resource;
         finalQuery = cloneQuery(bulkQuery);
         finalQuery.args.push(finalManyQuery);
         finalQuery.args.push(finalManyCountQuery);
