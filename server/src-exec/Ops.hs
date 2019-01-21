@@ -116,6 +116,15 @@ initCatalogStrict createSchema initTime =  do
                     |] (Identity sn) False
 
 
+migrateMetadata
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => RQLQuery -> m ()
+migrateMetadata rqlQuery = do
+  -- build schema cache
+  buildSchemaCache
+  -- run the RQL query to migrate metadata
+  void $ runQueryM rqlQuery
+
 setAllAsSystemDefined :: (MonadTx m) => m ()
 setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
@@ -202,7 +211,7 @@ from1To2 = do
   -- migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
-  void $ runQueryM migrateMetadataFrom1
+  migrateMetadata migrateMetadataFrom1
   -- set as system defined
   setAsSystemDefinedFor2
   where
@@ -223,7 +232,7 @@ from4To5
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
-  void $ runQueryM migrateMetadataFrom4
+  migrateMetadata migrateMetadataFrom4
   -- set as system defined
   setAsSystemDefinedFor5
   where
@@ -278,7 +287,7 @@ from7To8 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_7_to_8.sql")
   -- migrate metadata
-  void $ runQueryM migrateMetadataFrom7
+  migrateMetadata migrateMetadataFrom7
   setAsSystemDefinedFor8
   where
     migrateMetadataFrom7 =
@@ -340,7 +349,7 @@ migrateCatalog migrationTime = do
        -- clean hdb_views
        liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
-       void buildSchemaCache
+       buildSchemaCache
        return $ "successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
