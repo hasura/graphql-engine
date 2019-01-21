@@ -10,16 +10,15 @@ component/cli. If you're new to the CLI codebase, you can checkout the
 [`good-first-issue`](https://github.com/hasura/graphql-engine/issues?q=is%3Aissue+is%3Aopen+label%3Ac%2Fcli+label%3A%22good+first+issue%22) label for issues that
 are fairly easy to implement.
 
-For new contributors to get started quickly, we encourage one-on-one
-pair programming with the team. If you're interested in setting up a time,
-feel free to pick a slot from [shahidhk](https://github.com/shahidhk)'s
-[calendar](https://calendly.com/shahidhk).
+For first-time contributors, we have set aside some time slots for
+one-on-one pair programming with the team, to get you started quickly. :smile:
+If you're interested in setting up a chat, please feel free to pick a slot
+from [shahidhk](https://github.com/shahidhk)'s [calendar](https://calendly.com/shahidhk).
 
 ## Pre-requisites
 
 - [Go >= 1.10](https://golang.org/doc/install)
 - [GNU Make](https://www.gnu.org/software/make/) (optional)
-
 
 You can follow your existing Golang workflow to fork, work on a branch and
 submit PR. If you're new to forking and working on Golang repositories, please
