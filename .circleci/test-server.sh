@@ -80,6 +80,11 @@ CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
 cd $CIRCLECI_FOLDER
 CIRCLECI_FOLDER="$PWD"
 
+if ! $CIRCLECI_FOLDER/test-server-flags.sh  ; then
+	echo "Testing GraphQL server flags failed"
+	exit 1
+fi
+
 PYTEST_ROOT="$CIRCLECI_FOLDER/../server/tests-py"
 
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-output"}

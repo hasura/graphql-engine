@@ -17,7 +17,7 @@ packages:
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: 47b168d252d4adc800137a8b2cd3fc977cb3468d
+  commit: f3d1e9e67bdfbfa3de85b7cbdb4c557dce7fd84d
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: 75782ae894cce05ed31e5b87fd696fc10e88baf9
 - ginger-0.8.1.0

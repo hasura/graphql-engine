@@ -259,3 +259,18 @@ args:
   args:
     schema: hdb_catalog
     name: remote_schemas
+
+- type: create_object_relationship
+  args:
+    name: return_table_info
+    table:
+      schema: hdb_catalog
+      name: hdb_function_agg
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_table
+        column_mapping:
+          return_type_schema: table_schema
+          return_type_name: table_name
