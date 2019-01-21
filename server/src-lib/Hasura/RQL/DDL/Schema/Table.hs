@@ -13,6 +13,7 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -390,8 +391,9 @@ buildSchemaCache = do
 
 data RunSQL
   = RunSQL
-  { rSql     :: T.Text
-  , rCascade :: !(Maybe Bool)
+  { rSql                      :: T.Text
+  , rCascade                  :: !(Maybe Bool)
+  , rCheckMetadataConsistency :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
@@ -404,10 +406,18 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-runSqlP2
+execRawSQL :: (MonadTx m) => T.Text -> m RunSQLRes
+execRawSQL =
+  liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+  where
+    rawSqlErrHandler txe =
+      let e = err400 PostgresError "query execution failed"
+      in e {qeInternal = Just $ toJSON txe}
+
+execWithMDCheck
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => RunSQL -> m RespBody
-runSqlP2 (RunSQL t cascade) = do
+  => RunSQL -> m RunSQLRes
+execWithMDCheck (RunSQL t cascade _) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
@@ -418,7 +428,7 @@ runSqlP2 (RunSQL t cascade) = do
     liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
 
   -- Run the SQL
-  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromText t
+  res <- execRawSQL t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
@@ -471,19 +481,21 @@ runSqlP2 (RunSQL t cascade) = do
   -- refresh the gCtxMap in schema cache
   refreshGCtxMapInSchema
 
-  return $ encode (res :: RunSQLRes)
+  return res
 
+isAltrDropReplace :: QErrM m => T.Text -> m Bool
+isAltrDropReplace = either throwErr return . matchRegex regex False
   where
-    rawSqlErrHandler :: Q.PGTxErr -> QErr
-    rawSqlErrHandler txe =
-      let e = err400 PostgresError "query execution failed"
-      in e {qeInternal = Just $ toJSON txe}
+    throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
+    regex = "alter|drop|replace"
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => RunSQL -> m RespBody
-runRunSQL q =
-  adminOnly >> runSqlP2 q
+runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
+  adminOnly
+  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
+  encode <$> bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]
