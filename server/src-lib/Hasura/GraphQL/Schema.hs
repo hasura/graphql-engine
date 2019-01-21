@@ -8,7 +8,7 @@ module Hasura.GraphQL.Schema
   , InsCtxMap
   , RelationInfoMap
   , isAggFld
-  , qualFunctionToName
+  , qualObjectToName
   -- Schema stitching related
   , RemoteGCtx (..)
   , checkSchemaConflicts
@@ -155,18 +155,11 @@ type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 -- mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
 -- mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
 
-qualTableToName :: QualifiedTable -> G.Name
-qualTableToName = G.Name <$> \case
-  QualifiedTable (SchemaName "public") tn -> getTableTxt tn
-  QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
-
-qualFunctionToName :: QualifiedFunction -> G.Name
-qualFunctionToName = G.Name <$> \case
-  QualifiedFunction (SchemaName "public") fn -> getFunctionTxt fn
-  QualifiedFunction sn fn -> getSchemaTxt sn <> "_" <> getFunctionTxt fn
+qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
+qualObjectToName = G.Name . snakeCaseQualObject
 
 isValidTableName :: QualifiedTable -> Bool
-isValidTableName = isValidName . qualTableToName
+isValidTableName = isValidName . qualObjectToName
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
@@ -235,7 +228,7 @@ mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =
-  qualTableToName tn <> "_bool_exp"
+  qualObjectToName tn <> "_bool_exp"
 
 mkBoolExpTy :: QualifiedTable -> G.NamedType
 mkBoolExpTy =
@@ -243,7 +236,7 @@ mkBoolExpTy =
 
 mkFuncArgsName :: QualifiedFunction -> G.Name
 mkFuncArgsName fn =
-  qualFunctionToName fn <> "_args"
+  qualObjectToName fn <> "_args"
 
 mkFuncArgsTy :: QualifiedFunction -> G.NamedType
 mkFuncArgsTy =
@@ -251,22 +244,22 @@ mkFuncArgsTy =
 
 mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
-  G.NamedType . qualTableToName
+  G.NamedType . qualObjectToName
 
 mkTableAggTy :: QualifiedTable -> G.NamedType
 mkTableAggTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate"
+  G.NamedType $ qualObjectToName tn <> "_aggregate"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
 mkTableAggFldsTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate_fields"
+  G.NamedType $ qualObjectToName tn <> "_aggregate_fields"
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
-  G.NamedType $ qualTableToName tn <> "_" <> op <> "_fields"
+  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
 
 mkTableByPKeyTy :: QualifiedTable -> G.Name
-mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
+mkTableByPKeyTy tn = qualObjectToName tn <> "_by_pk"
 
 -- --- | make compare expression input type
 -- mkCompExpInp :: PGColType -> InpObjTyInfo
@@ -527,7 +520,7 @@ mkSelFld tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualTableToName tn
+    fldName = qualObjectToName tn
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -570,7 +563,7 @@ mkAggSelFld tn =
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualTableToName tn <> "_aggregate"
+    fldName = qualObjectToName tn <> "_aggregate"
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn
 
@@ -608,7 +601,7 @@ mkFuncQueryFld funInfo =
 
     desc = G.Description $ "execute function " <> funcName
            <<> " which returns " <>> retTable
-    fldName = qualFunctionToName funcName
+    fldName = qualObjectToName funcName
 
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
 
@@ -635,7 +628,7 @@ mkFuncAggQueryFld funInfo =
            <<> " and query aggregates on result of table type "
            <>> retTable
 
-    fldName = qualFunctionToName funcName <> "_aggregate"
+    fldName = qualObjectToName funcName <> "_aggregate"
 
     ty = G.toGT $ G.toNT $ mkTableAggTy retTable
 
@@ -643,7 +636,7 @@ mkFuncAggQueryFld funInfo =
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType
 mkMutRespTy tn =
-  G.NamedType $ qualTableToName tn <> "_mutation_response"
+  G.NamedType $ qualObjectToName tn <> "_mutation_response"
 
 {-
 type table_mutation_response {
@@ -753,7 +746,7 @@ mkFuncArgsInp funcInfo =
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
 mkUpdSetTy tn =
-  G.NamedType $ qualTableToName tn <> "_set_input"
+  G.NamedType $ qualObjectToName tn <> "_set_input"
 
 {-
 input table_set_input {
@@ -775,7 +768,7 @@ mkUpdSetInp tn cols  =
 -- table_inc_input
 mkUpdIncTy :: QualifiedTable -> G.NamedType
 mkUpdIncTy tn =
-  G.NamedType $ qualTableToName tn <> "_inc_input"
+  G.NamedType $ qualObjectToName tn <> "_inc_input"
 
 {-
 input table_inc_input {
@@ -801,7 +794,7 @@ mkUpdIncInp tn = maybe Nothing mkType
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
 mkJSONOpTy tn op =
-  G.NamedType $ qualTableToName tn <> op <> "_input"
+  G.NamedType $ qualObjectToName tn <> op <> "_input"
 
 -- json ops are _concat, _delete_key, _delete_elem, _delete_at_path
 {-
@@ -967,7 +960,7 @@ mkUpdMutFld tn cols =
                   <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
-    fldName = "update_" <> qualTableToName tn
+    fldName = "update_" <> qualObjectToName tn
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =
@@ -996,7 +989,7 @@ mkDelMutFld tn =
   where
     desc = G.Description $ "delete data from the table: " <>> tn
 
-    fldName = "delete_" <> qualTableToName tn
+    fldName = "delete_" <> qualObjectToName tn
 
     filterArgDesc = "filter the rows which have to be deleted"
     filterArg =
@@ -1006,28 +999,28 @@ mkDelMutFld tn =
 -- table_insert_input
 mkInsInpTy :: QualifiedTable -> G.NamedType
 mkInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_insert_input"
 
 -- table_obj_rel_insert_input
 mkObjInsInpTy :: QualifiedTable -> G.NamedType
 mkObjInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_obj_rel_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_obj_rel_insert_input"
 
 -- table_arr_rel_insert_input
 mkArrInsInpTy :: QualifiedTable -> G.NamedType
 mkArrInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_arr_rel_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_arr_rel_insert_input"
 
 
 -- table_on_conflict
 mkOnConflictInpTy :: QualifiedTable -> G.NamedType
 mkOnConflictInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_on_conflict"
+  G.NamedType $ qualObjectToName tn <> "_on_conflict"
 
 -- table_constraint
 mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_constraint"
+  G.NamedType $ qualObjectToName tn <> "_constraint"
 
 -- conflict_action
 conflictActionTy :: G.NamedType
@@ -1036,12 +1029,12 @@ conflictActionTy = G.NamedType "conflict_action"
 -- table_update_column
 mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
 mkUpdColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_update_column"
+  G.NamedType $ qualObjectToName tn <> "_update_column"
 
 --table_select_column
 mkSelColumnInpTy :: QualifiedTable -> G.NamedType
 mkSelColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_select_column"
+  G.NamedType $ qualObjectToName tn <> "_select_column"
 
 {-
 input table_obj_rel_insert_input {
@@ -1159,7 +1152,7 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualTableToName tn
+    fldName = "insert_" <> qualObjectToName tn
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
@@ -1246,7 +1239,7 @@ mkConflictActionTy updAllowed =
 
 mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
 mkTabAggOpOrdByTy tn op =
-  G.NamedType $ qualTableToName tn <> "_" <> op <> "_order_by"
+  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_order_by"
 
 {-
 input table_<op>_order_by {
@@ -1274,7 +1267,7 @@ mkTabAggOpOrdByInpObjs tn numCols compCols =
 
 mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
 mkTabAggOrdByTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate_order_by"
+  G.NamedType $ qualObjectToName tn <> "_aggregate_order_by"
 
 {-
 input table_aggregate_order_by {
@@ -1301,7 +1294,7 @@ mkTabAggOrdByInpObj tn numCols compCols =
 
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
-  G.NamedType $ qualTableToName tn <> "_order_by"
+  G.NamedType $ qualObjectToName tn <> "_order_by"
 
 {-
 input table_order_by {

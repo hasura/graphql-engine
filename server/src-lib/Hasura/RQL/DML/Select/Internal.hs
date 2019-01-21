@@ -629,7 +629,7 @@ mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
 
     tabFrom = TableFrom tn $ Just $ toIden funcAls
 
-    QualifiedFunction sn fn = qf
+    QualifiedObject sn fn = qf
     funcAls = S.Alias $ Iden $
       getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"
 

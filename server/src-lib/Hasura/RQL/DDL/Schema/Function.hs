@@ -41,7 +41,7 @@ data RawFuncInfo
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
 assertTableExists :: QualifiedTable -> T.Text -> Q.TxE QErr ()
-assertTableExists (QualifiedTable sn tn) err = do
+assertTableExists (QualifiedObject sn tn) err = do
   tableExists <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
        SELECT exists(SELECT 1 from information_schema.tables
@@ -73,7 +73,7 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  let retTable = QualifiedTable retSn (TableName retN)
+  let retTable = QualifiedObject retSn (TableName retN)
 
   -- throw error if return type is not a valid table
   assertTableExists retTable $ "return type " <> retTable <<> " is not a valid table"
@@ -87,7 +87,7 @@ mkFunctionInfo qf rawFuncInfo = do
 
 -- Build function info
 getFunctionInfo :: QualifiedFunction -> Q.TxE QErr FunctionInfo
-getFunctionInfo qf@(QualifiedFunction sn fn) = do
+getFunctionInfo qf@(QualifiedObject sn fn) = do
   -- fetch function details
   funcData <- Q.listQE defaultTxErrorHandler [Q.sql|
         SELECT
@@ -124,13 +124,13 @@ getFunctionInfo qf@(QualifiedFunction sn fn) = do
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedFunction sn fn) isSystemDefined =
+saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
          INSERT INTO "hdb_catalog"."hdb_function" VALUES ($1, $2, $3)
                  |] (sn, fn, isSystemDefined) False
 
 delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
-delFunctionFromCatalog (QualifiedFunction sn fn) =
+delFunctionFromCatalog (QualifiedObject sn fn) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
          DELETE FROM hdb_catalog.hdb_function
          WHERE function_schema = $1
@@ -163,7 +163,7 @@ trackFunctionP2 qf = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   -- check for conflicts in remote schema
-  GS.checkConflictingNode defGCtx $ GS.qualFunctionToName qf
+  GS.checkConflictingNode defGCtx $ GS.qualObjectToName qf
 
   trackFunctionP2Setup qf
   liftTx $ saveFunctionToCatalog qf False

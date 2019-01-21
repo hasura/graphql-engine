@@ -183,7 +183,7 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
-    withTableName qt = withPathK (qualTableToTxt qt)
+    withTableName qt = withPathK (qualObjectToText qt)
     functions = fromMaybe [] mFunctions
 
     checkMultipleDecls t l = do
@@ -286,7 +286,7 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-  let qts          = map (uncurry QualifiedTable) tables
+  let qts          = map (uncurry QualifiedObject) tables
       tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
 
   -- Fetch all the relationships
@@ -325,7 +325,7 @@ fetchMetadata = do
         modMetaMap tmEventTriggers triggerMetaDefs
 
   -- fetch all functions
-  functions <- map (uncurry QualifiedFunction) <$>
+  functions <- map (uncurry QualifiedObject) <$>
     Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all custom resolvers
@@ -344,19 +344,19 @@ fetchMetadata = do
 
     permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
       perm <- decodeValue pDef
-      return (QualifiedTable sn tn,  DP.PermDef rn perm mComment)
+      return (QualifiedObject sn tn,  DP.PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
-      return (QualifiedTable sn tn, DR.RelDef rn using mComment)
+      return (QualifiedObject sn tn, DR.RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
     trigRowToDef (sn, tn, Q.AltJ configuration) = do
       conf <- decodeValue configuration
-      return (QualifiedTable sn tn, conf::EventTriggerConf)
+      return (QualifiedObject sn tn, conf::EventTriggerConf)
 
     fetchTables =
       Q.listQ [Q.sql|

@@ -273,7 +273,7 @@ legacyQueryHandler tn queryType =
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedTable publicSchema tn
+    qt = QualifiedObject publicSchema tn
 
 
 mkWaiApp

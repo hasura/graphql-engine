@@ -154,7 +154,7 @@ addEventTriggerToCatalog qt allCols etc = do
   mkTriggerQ trid name qt allCols opsdef
   return trid
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     (EventTriggerConf name opsdef _ _ _ _) = etc
     getTrid []    = throw500 "could not create event-trigger"
     getTrid (x:_) = return x

@@ -111,7 +111,7 @@ fetchTableMeta = do
         AND t.table_schema <> 'hdb_catalog'
                 |] () False
   forM res $ \(ts, tn, toid, cols, constrnts) ->
-    return $ TableMeta toid (QualifiedTable ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
+    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -243,7 +243,7 @@ fetchFunctionMeta = do
         f.function_schema <> 'hdb_catalog'
                   |] () False
   forM res $ \(sn, fn, foid) ->
-    return $ FunctionMeta foid $ QualifiedFunction sn fn
+    return $ FunctionMeta foid $ QualifiedObject sn fn
 
 getDroppedFuncs :: [FunctionMeta] -> [FunctionMeta] -> [QualifiedFunction]
 getDroppedFuncs oldMeta newMeta =

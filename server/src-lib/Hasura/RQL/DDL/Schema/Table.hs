@@ -33,21 +33,21 @@ import qualified Database.PostgreSQL.LibPQ          as PQ
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
-delTableFromCatalog (QualifiedTable sn tn) =
+delTableFromCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             DELETE FROM "hdb_catalog"."hdb_table"
             WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
 
 saveTableToCatalog :: QualifiedTable -> Q.Tx ()
-saveTableToCatalog (QualifiedTable sn tn) =
+saveTableToCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
-getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
+getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
   tableData <- Q.catchE defaultTxErrorHandler $
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
@@ -93,8 +93,8 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
 
   return successMsg
   where
-    getSchemaN = getSchemaTxt . qtSchema
-    getTableN = getTableTxt . qtTable
+    getSchemaN = getSchemaTxt . qSchema
+    getTableN = getTableTxt . qName
     tn = case getSchemaN vn of
       "public" -> getTableN vn
       _        -> getSchemaN vn <> "_" <> getTableN vn
@@ -184,7 +184,7 @@ processTableChanges ti tableDiff = do
 
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
-delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
+delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
   liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."hdb_relationship"
@@ -283,7 +283,7 @@ buildSchemaCache = do
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup (QualifiedTable sn tn) isSystemDefined
+    trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
 
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
@@ -292,10 +292,10 @@ buildSchemaCache = do
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
     ObjRel -> do
       using <- decodeValue rDef
-      objRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
     ArrRel -> do
       using <- decodeValue rDef
-      arrRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
@@ -320,7 +320,7 @@ buildSchemaCache = do
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
 
-    let qt = QualifiedTable sn tn
+    let qt = QualifiedObject sn tn
     subTableP2Setup qt trid etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
     liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
@@ -328,7 +328,7 @@ buildSchemaCache = do
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
     modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-    trackFunctionP2Setup (QualifiedFunction sn fn)
+    trackFunctionP2Setup (QualifiedObject sn fn)
 
   -- remote schemas
   res <- liftTx fetchRemoteSchemas
@@ -347,7 +347,7 @@ buildSchemaCache = do
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> askSchemaCache
       perm <- decodeValue pDef
-      let qt = QualifiedTable sn tn
+      let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
       (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
