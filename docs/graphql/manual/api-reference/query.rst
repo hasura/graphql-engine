@@ -317,7 +317,7 @@ ColumnExp
 
 Operator
 ########
-Generic operators (all column types except json, jsonb) :
+**Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
 - ``_neq``
@@ -328,7 +328,7 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-JSONB operators:
+**JSONB operators:**
 
 .. list-table::
    :header-rows: 1
@@ -348,7 +348,7 @@ JSONB operators:
 
 (For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
-Text related operators :
+**Text related operators :**
 
 - ``_like``
 - ``_nlike``
@@ -357,11 +357,11 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
-Checking for ``null`` values :
+**Checking for NULL values:**
 
 - ``_is_null`` (takes true/false as values)
 
-PostGIS related operators on GEOMETRY columns :
+**PostGIS related operators on GEOMETRY columns:**
 
 .. list-table::
    :header-rows: 1
@@ -387,8 +387,9 @@ PostGIS related operators on GEOMETRY columns :
 
 (For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 
-.. Note::
-   1. All operators take a json representation of ``geometry/geography`` values. Also see :doc:`here <../queries/query-filters>` for more query examples on these operators
+.. note::
+
+   1. All operators take a ``json`` representation of ``geometry/geography`` values.
    2. Input value for ``_st_d_within`` operator is an object:-
 
    .. parsed-literal::
