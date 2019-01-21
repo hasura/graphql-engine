@@ -136,7 +136,7 @@ Issues in the repo for the console UI are labelled as `c/console`(see [list](htt
 
 Please note that some of these issues, labelled with both `c/console` and `c/server`, are part of a change/task that requires modifications in both the server and the console.
 
-Feel free to open pull requests to address these issues or to add/fix  console features, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`# contrib` channel the community [Discord](https://discord.gg/vBPpJkS).
+Feel free to open pull requests to address these issues or to add/fix  console features, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel the community [Discord](https://discord.gg/vBPpJkS).
 
 ### Submitting a pull request
 
