@@ -123,22 +123,51 @@ setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
 
-setAsSystemDefined :: (MonadTx m) => m ()
-setAsSystemDefined =
+setAsSystemDefinedFor2 :: (MonadTx m) => m ()
+setAsSystemDefinedFor2 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
             SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-
-            UPDATE hdb_catalog.hdb_permission
-            SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'event_triggers'
+                 OR table_name = 'event_log'
+                 OR table_name = 'event_invocation_logs'
+                 );
             UPDATE hdb_catalog.hdb_relationship
             SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-            |]
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'event_triggers'
+                 OR table_name = 'event_log'
+                 OR table_name = 'event_invocation_logs'
+                 );
+           |]
+
+setAsSystemDefinedFor5 :: (MonadTx m) => m ()
+setAsSystemDefinedFor5 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND table_name = 'remote_schemas';
+           |]
+
+setAsSystemDefinedFor8 :: (MonadTx m) => m ()
+setAsSystemDefinedFor8 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'hdb_function_agg'
+                 OR table_name = 'hdb_function'
+                 );
+            UPDATE hdb_catalog.hdb_relationship
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_function_agg';
+           |]
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -175,7 +204,7 @@ from1To2 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
   void $ runQueryM migrateMetadataFrom1
   -- set as system defined
-  setAsSystemDefined
+  setAsSystemDefinedFor2
   where
     migrateMetadataFrom1 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_1.yaml" :: Q (TExp RQLQuery)))
@@ -196,7 +225,7 @@ from4To5 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
   void $ runQueryM migrateMetadataFrom4
   -- set as system defined
-  setAsSystemDefined
+  setAsSystemDefinedFor5
   where
     migrateMetadataFrom4 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_4_to_5.yaml" :: Q (TExp RQLQuery)))
@@ -250,7 +279,7 @@ from7To8 = do
     $(Q.sqlFromFile "src-rsr/migrate_from_7_to_8.sql")
   -- migrate metadata
   void $ runQueryM migrateMetadataFrom7
-  setAsSystemDefined
+  setAsSystemDefinedFor8
   where
     migrateMetadataFrom7 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_7_to_8.yaml" :: Q (TExp RQLQuery)))
