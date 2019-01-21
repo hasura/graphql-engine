@@ -6,6 +6,9 @@ Update mutation
   :depth: 1
   :local:
 
+Auto-generated update mutation schema
+-------------------------------------
+
 Here’s the schema for the update mutation field for a table ``article``:
 
 .. code-block:: graphql
@@ -32,8 +35,11 @@ As you can see from the schema:
 
 .. note::
 
-  At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
-  ``_delete_elem``, ``_delete_at_path`` is required.
+  - At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
+    ``_delete_elem``, ``_delete_at_path`` is required.
+
+  - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
+    ``update_<schema_name>_<table_name>``.
 
 Update based on an object's fields
 ----------------------------------

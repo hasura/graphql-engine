@@ -43,16 +43,18 @@ For example, to fetch a list of authors who have articles with a rating greater 
       }
     }
 
-Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where`` argument to filter on
-equality.
+Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where``
+argument to filter on equality.
 
 Let’s take a look at different operators that can be used to filter results and other advanced use cases:
 
 Equality operators (_eq and _neq)
 ---------------------------------
 The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than
-json or jsonB (like Integer, Float, Double, Text, Boolean, Date/Time/Timestamp, etc.). The following are examples of
-using the equality operators on different types.
+``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
+``Date``/``Time``/``Timestamp``, etc.).
+
+The following are examples of using the equality operators on different types.
 
 Example: Integer (works with Double, Float, Numeric, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -185,9 +187,10 @@ Fetch a list of articles that were published on a certain date (``published_on``
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ----------------------------------------------------------
 The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal to),
-``_lte`` (less than or equal to) operators are compatible with any Postgres type other than json or jsonB
-(like Integer, Float, Double, Text, Boolean, Date/Time/Timestamp, etc.). The following are examples of using these
-operators on different types:
+``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
+(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+The following are examples of using these operators on different types:
 
 
 Example: Integer (works with Double, Float, etc.)
@@ -308,8 +311,10 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 List based search operators (_in, _nin)
 ---------------------------------------
 The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to comparing field values to a list of values.
-They are compatible with any Postgres type other than json or jsonB (like Integer, Float, Double, Text, Boolean,
-Date/Time/Timestamp, etc.). The following are examples of using these operators on different types:
+They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
+``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+
+The following are examples of using these operators on different types:
 
 Example: Integer (works with Double, Float, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -475,22 +480,26 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
 
 PostGIS topology operators
 --------------------------
+
 The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``,
 ``_st_touches``, ``_st_within`` and ``_st_d_within`` operators are used to filter ``geometry`` like columns.
 For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.
 
-Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`_) representation of ``geometry`` values in ``variables`` as shown in the following examples
+Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`_) representation of ``geometry`` values in
+``variables`` as shown in the following examples:
 
 
 Example: _st_within
-^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of geometry values which are within the given ``polygon`` value
+^^^^^^^^^^^^^^^^^^^
+Fetch a list of geometry values which are within the given ``polygon`` value:
 
 .. graphiql::
   :view_only:
   :query:
     query geom_table($polygon: geometry){
-      geom_table(where: {geom_col: {_st_within: $polygon}}){
+      geom_table(
+        where: {geom_col: {_st_within: $polygon}}
+      ){
         id
         geom_col
       }
@@ -512,50 +521,33 @@ Fetch a list of geometry values which are within the given ``polygon`` value
         ]
       }
     }
-
-Variables for above query:-
-
-.. code-block:: json
-
-   {
-     "polygon": {
-       "type": "Polygon",
-       "coordinates": [
-         [
-           [
-             0,
-             0
-           ],
-           [
-             0,
-             2
-           ],
-           [
-             2,
-             2
-           ],
-           [
-             2,
-             0
-           ],
-           [
-             0,
-             0
-           ]
-         ]
-       ]
-     }
-   }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [ 0, 0 ],
+            [ 0, 2 ],
+            [ 2, 2 ],
+            [ 2, 0 ],
+            [ 0, 0 ]
+          ]
+        ]
+      }
+    }
 
 Example: _st_d_within
 ^^^^^^^^^^^^^^^^^^^^^
-Fetch a list of geometry values which are 3 units from given ``point`` value
+Fetch a list of geometry values which are 3 units from given ``point`` value:
 
 .. graphiql::
   :view_only:
   :query:
     query geom_table($point: geometry){
-      geom_table(where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}){
+      geom_table(
+        where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}
+      ){
         id
         geom_col
       }
@@ -587,21 +579,13 @@ Fetch a list of geometry values which are 3 units from given ``point`` value
         ]
       }
     }
-
-Variables for above query:-
-
-.. code-block:: json
-
-   {
-     "point": {
+  :variables:
+    {
+      "point": {
         "type": "Point",
-        "coordinates": [
-          0,
-          0
-        ]
-     }
-   }
-
+        "coordinates": [ 0, 0 ]
+      }
+    }
 
 Filter or check for null values
 -------------------------------
@@ -1061,7 +1045,7 @@ Fetch if **all** of the nested objects defined via an array relationship satisfy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
-the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not(any of the nested objects
+the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
 
 For example,
@@ -1162,7 +1146,7 @@ Fetch if **none** of the nested objects defined via an array relationship satisf
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As by default a row is returned if any of the nested objects satisfy a condition, to achieve the above we need to frame
-the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not(any of the nested objects
+the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not (any of the nested objects
 satisfy the condition) i.e. none of the nested objects satisy the condition.
 
 For example,
