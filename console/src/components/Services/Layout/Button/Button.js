@@ -10,7 +10,7 @@ import styles from '../../../Common/Common.scss';
 
 const Button = props => {
   const { children, size, color, className } = props;
-  let extendedClassName = `${className} btn ${
+  let extendedClassName = `${className || ''} btn ${
     size ? `btn-${size} ` : 'button '
   }`;
   switch (color) {

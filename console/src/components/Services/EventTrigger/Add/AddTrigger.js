@@ -652,21 +652,17 @@ class AddTrigger extends Component {
                 )}
               </div>
               <hr />
-              <Button
+              <div
                 onClick={this.toggleAdvanced.bind(this)}
-                data-test="advanced-settings"
-                type="button"
-                className={styles.advancedToggleBtn}
-                color="gray"
-                size="sm"
+                className={styles.toggleAdvanced}
               >
-                Advanced Settings
                 {this.state.advancedExpanded ? (
-                  <i className={'fa fa-arrow-up'} />
+                  <i className={'fa fa-chevron-down'} />
                 ) : (
-                  <i className={'fa fa-arrow-down'} />
-                )}
-              </Button>
+                  <i className={'fa fa-chevron-right'} />
+                )}{' '}
+                <b>Advanced Settings</b>
+              </div>
               {this.state.advancedExpanded ? (
                 <div
                   className={
