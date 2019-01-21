@@ -21,7 +21,7 @@ function (user, context, callback) {
     { 
       'x-hasura-default-role': 'user',
       // do some custom logic to decide allowed roles
-      'x-hasura-allowed-roles': user.email.match(/foobar.com/) ? ['user', 'admin'] : ['user'],
+      'x-hasura-allowed-roles': user.email === 'admin@foobar.com' ? ['user', 'admin'] : ['user'],
       'x-hasura-user-id': user.user_id
     };
   callback(null, user, context);
