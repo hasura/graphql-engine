@@ -81,17 +81,11 @@ class Schema extends Component {
     /* Filter */
     const trackedFuncs = trackedFunctions.map(t => t.function_name);
     // Assuming schema for both function and tables are same
-    const trackedTables = schema.map(t => t.table_name);
     const trackableFuncs = functionsList.filter(f => {
       // return function which are tracked && function name whose setof tables are tracked
-      if (f.return_type_schema === currentSchema) {
-        return (
-          trackedFuncs.indexOf(f.function_name) === -1 &&
-          trackedTables.indexOf(f.return_type_name) !== -1
-        ); // && add condition which will check whether the setoff table is tracked or not
-      }
-      // Currently showing it on the console assuming that other table is already available and tracked. If not adding the function will throw an error
-      return true;
+      return (
+        trackedFuncs.indexOf(f.function_name) === -1 && !!f.return_table_info
+      ); // && add condition which will check whether the setoff table is tracked or not
     });
     /* */
 
@@ -263,106 +257,106 @@ class Schema extends Component {
 
           {trackableFuncs.length > 0
             ? [
-              <hr
-                className={styles.wd100 + ' ' + styles.clear_fix}
-                key={'custom-functions-hr'}
-              />,
-              <div
-                className={styles.wd100 + ' ' + styles.clear_fix}
-                key={'custom-functions-content'}
-              >
-                <h4
-                  className={`${styles.subheading_text} ${
-                    styles.heading_tooltip
-                  }`}
+                <hr
+                  className={styles.wd100 + ' ' + styles.clear_fix}
+                  key={'custom-functions-hr'}
+                />,
+                <div
+                  className={styles.wd100 + ' ' + styles.clear_fix}
+                  key={'custom-functions-content'}
                 >
+                  <h4
+                    className={`${styles.subheading_text} ${
+                      styles.heading_tooltip
+                    }`}
+                  >
                     Untracked custom functions
-                </h4>
-                <OverlayTrigger
-                  placement="right"
-                  overlay={trackableFunctions}
-                >
-                  <i className="fa fa-info-circle" aria-hidden="true" />
-                </OverlayTrigger>
-                <div className={`${styles.padd_left_remove} col-xs-12`}>
-                  {trackableFuncs.map((p, i) => (
-                    <div
-                      className={styles.padd_bottom}
-                      key={`${i}untracked-function`}
-                    >
+                  </h4>
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={trackableFunctions}
+                  >
+                    <i className="fa fa-info-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                  <div className={`${styles.padd_left_remove} col-xs-12`}>
+                    {trackableFuncs.map((p, i) => (
                       <div
-                        className={`${styles.display_inline} ${
-                          styles.padd_right
-                        }`}
+                        className={styles.padd_bottom}
+                        key={`${i}untracked-function`}
                       >
-                        <button
-                          data-test={`add-track-function-${p.function_name}`}
-                          className={`${
-                            styles.display_inline
-                          } btn btn-xs btn-default`}
-                          onClick={e => {
-                            e.preventDefault();
-                            dispatch(addExistingFunction(p.function_name));
-                          }}
+                        <div
+                          className={`${styles.display_inline} ${
+                            styles.padd_right
+                          }`}
                         >
+                          <button
+                            data-test={`add-track-function-${p.function_name}`}
+                            className={`${
+                              styles.display_inline
+                            } btn btn-xs btn-default`}
+                            onClick={e => {
+                              e.preventDefault();
+                              dispatch(addExistingFunction(p.function_name));
+                            }}
+                          >
                             Add
-                        </button>
+                          </button>
+                        </div>
+                        <div
+                          className={`${styles.padd_right} ${
+                            styles.inline_block
+                          }`}
+                        >
+                          {p.function_name}
+                        </div>
                       </div>
-                      <div
-                        className={`${styles.padd_right} ${
-                          styles.inline_block
-                        }`}
-                      >
-                        {p.function_name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>,
-            ]
+                    ))}
+                  </div>
+                </div>,
+              ]
             : null}
 
           {nonTrackableFunctionsList.length > 0
             ? [
-              <hr
-                className={styles.wd100 + ' ' + styles.clear_fix}
-                key={'non-trackable-custom-functions-id'}
-              />,
-              <div
-                className={styles.wd100 + ' ' + styles.clear_fix}
-                key={'non-trackable-custom-functions-content'}
-              >
-                <h4
-                  className={`${styles.subheading_text} ${
-                    styles.heading_tooltip
-                  }`}
+                <hr
+                  className={styles.wd100 + ' ' + styles.clear_fix}
+                  key={'non-trackable-custom-functions-id'}
+                />,
+                <div
+                  className={styles.wd100 + ' ' + styles.clear_fix}
+                  key={'non-trackable-custom-functions-content'}
                 >
+                  <h4
+                    className={`${styles.subheading_text} ${
+                      styles.heading_tooltip
+                    }`}
+                  >
                     Non trackable custom functions
-                </h4>
-                <OverlayTrigger
-                  placement="right"
-                  overlay={nonTrackableFunctions}
-                >
-                  <i className="fa fa-info-circle" aria-hidden="true" />
-                </OverlayTrigger>
-                <div className={`${styles.padd_left_remove} col-xs-12`}>
-                  {nonTrackableFunctionsList.map((p, i) => (
-                    <div
-                      className={styles.padd_bottom}
-                      key={`${i}untracked-function`}
-                    >
+                  </h4>
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={nonTrackableFunctions}
+                  >
+                    <i className="fa fa-info-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                  <div className={`${styles.padd_left_remove} col-xs-12`}>
+                    {nonTrackableFunctionsList.map((p, i) => (
                       <div
-                        className={`${styles.padd_right} ${
-                          styles.inline_block
-                        }`}
+                        className={styles.padd_bottom}
+                        key={`${i}untracked-function`}
                       >
-                        {p.function_name}
+                        <div
+                          className={`${styles.padd_right} ${
+                            styles.inline_block
+                          }`}
+                        >
+                          {p.function_name}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>,
-            ]
+                    ))}
+                  </div>
+                </div>,
+              ]
             : null}
         </div>
       </div>

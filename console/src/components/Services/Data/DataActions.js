@@ -121,6 +121,10 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
       ],
       where: {
         function_schema: '',
