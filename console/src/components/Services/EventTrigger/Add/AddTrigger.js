@@ -655,6 +655,7 @@ class AddTrigger extends Component {
               <div
                 onClick={this.toggleAdvanced.bind(this)}
                 className={styles.toggleAdvanced}
+                data-test="advanced-settings"
               >
                 {this.state.advancedExpanded ? (
                   <i className={'fa fa-chevron-down'} />
