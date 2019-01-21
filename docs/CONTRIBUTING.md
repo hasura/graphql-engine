@@ -9,7 +9,7 @@ Issues in the repo for documentation are labelled as `c/docs` (see [list](https:
 
 Please note that some of these issues, labelled with both `c/docs` and `c/console`/`c/server`, are part of a change/task that requires modifications in some component of GraphQL Engine and the docs.
 
-Feel free to open pull requests to address these issues or to add/fix  docs features/content, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel the community [Discord](https://discord.gg/vBPpJkS).
+Feel free to open pull requests to address these issues or to add/fix  docs features/content, even if a corresponding issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the community [Discord](https://discord.gg/vBPpJkS).
 
 ## Requirements
 
