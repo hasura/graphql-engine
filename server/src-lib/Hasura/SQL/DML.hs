@@ -124,11 +124,6 @@ mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
 mkFuncFromItem qf args =
   FIFunc qf args Nothing
 
-mkFuncAlias :: QualifiedFunction -> Alias
-mkFuncAlias (QualifiedFunction sn fn) =
-  Alias $ Iden $ getSchemaTxt sn <> "_" <> getFunctionTxt fn
-  <> "__result"
-
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
   innerSel = mkSelect { selExtr = extrs }
@@ -266,7 +261,6 @@ data SQLExp
   | SERowIden !Iden
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
-  | SEFnArg !T.Text !SQLExp
   | SEOpApp !SQLOp ![SQLExp]
   | SETyAnn !SQLExp !AnnType
   | SECond !BoolExp !SQLExp !SQLExp
@@ -315,9 +309,6 @@ instance ToSQL SQLExp where
   -- https://www.postgresql.org/docs/10/static/sql-expressions.html#SYNTAX-AGGREGATES
   toSQL (SEFnApp name args mObe) =
     TB.text name <> paren ((", " <+> args)  <-> toSQL mObe)
-  -- https://www.postgresql.org/docs/11/static/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS-NAMED
-  toSQL (SEFnArg name val) =
-    TB.text name <-> "=>" <-> toSQL val
   toSQL (SEOpApp op args) =
      paren (sqlOpTxt op <+> args)
   toSQL (SETyAnn e ty) =

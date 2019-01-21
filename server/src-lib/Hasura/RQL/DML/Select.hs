@@ -1,8 +1,7 @@
 module Hasura.RQL.DML.Select
   ( selectP2
   , selectAggP2
-  , selectFuncP2
-  , mkFuncSelectWith
+  , funcQueryTx
   , convSelectQuery
   , getSelectDeps
   , module Hasura.RQL.DML.Select.Internal
@@ -288,41 +287,24 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
+funcQueryTx
+  :: S.FromItem -> QualifiedFunction -> QualifiedTable
+  -> TablePerm -> TableArgs
+  -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
+  -> Q.TxE QErr RespBody
+funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
+  runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
+  where
+    sqlBuilder = toSQL $
+      mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
+
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkAggSelect sel
-
-mkFuncSelectWith
-  :: QualifiedFunction
-  -> (Either AnnAggSel AnnSel, S.FromItem)
-  -> S.SelectWith
-mkFuncSelectWith fn (sel, frmItem) = selWith
-  where
-    -- SELECT * FROM function_name(args)
-    funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
-                         , S.selExtr = [S.Extractor S.SEStar Nothing]
-                         }
-
-    mainSel = case sel of
-      Left aggSel  -> mkAggSelect aggSel
-      Right annSel -> mkSQLSelect False annSel
-
-    funcAls = S.mkFuncAlias fn
-    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel
-
-selectFuncP2
-  :: S.FromItem
-  -> QualifiedFunction
-  -> (Either AnnAggSel AnnSel, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr RespBody
-selectFuncP2 frmItem fn (sel, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
-  where
-    sqlBuilder = toSQL $ mkFuncSelectWith fn (sel, frmItem)
 
 -- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody

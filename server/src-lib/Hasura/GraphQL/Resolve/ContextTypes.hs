@@ -27,11 +27,9 @@ type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
-data FuncArgItem
-  = FuncArgItem
-  { faiName    :: !G.Name
-  , faiIsNamed :: !Bool
-  } deriving (Show, Eq)
+newtype FuncArgItem
+  = FuncArgItem {getArgName :: G.Name}
+  deriving (Show, Eq)
 
 type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
 

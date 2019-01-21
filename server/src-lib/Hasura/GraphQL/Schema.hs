@@ -741,13 +741,13 @@ mkFuncArgsInp funcInfo =
           let argGName = G.Name $ getFuncArgNameTxt argName
               inpVal = InpValInfo Nothing argGName $
                        G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName True
+              argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo)
         Nothing ->
           let argGName = G.Name $ "arg_" <> T.pack (show argNo)
               inpVal = InpValInfo Nothing argGName $
                        G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName False
+              argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo + 1)
 
 -- table_set_input

@@ -79,16 +79,11 @@ explainField userInfo gCtx fld =
           OCSelectAgg tn permFilter permLimit hdrs -> do
             validateHdrs hdrs
             toSQL . RS.mkAggSelect <$>
-              RS.fromAggField txtConverter
-              (RS.TableFrom tn Nothing) (RS.TablePerm permFilter permLimit) fld
-          OCFuncQuery tn fn permFilter permLimit hdrs -> do
-            validateHdrs hdrs
-            toSQL . RS.mkFuncSelectWith fn <$>
-               RS.fromFuncQueryField txtConverter tn fn permFilter permLimit False fld
-          OCFuncAggQuery tn fn permFilter permLimit hdrs -> do
-            validateHdrs hdrs
-            toSQL . RS.mkFuncSelectWith fn <$>
-               RS.fromFuncQueryField txtConverter tn fn permFilter permLimit True fld
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs False
+          OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs True
           _ -> throw500 "unexpected mut field info for explain"
 
       let txtSQL = TB.run builderSQL
@@ -108,6 +103,14 @@ explainField userInfo gCtx fld =
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
+
+    procFuncQuery tn fn permFilter permLimit hdrs isAgg = do
+      validateHdrs hdrs
+      (tabArgs, eSel, frmItem) <-
+        RS.fromFuncQueryField txtConverter fn isAgg fld
+      return $ toSQL $
+        RS.mkFuncSelectWith fn tn
+        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
 
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo
