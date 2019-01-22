@@ -110,6 +110,7 @@ const addRelationshipCellView = (
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
+    dispatch(relNameChanged(formRelName(rel)));
   };
 
   const onRelationshipNameChanged = e => {
@@ -168,7 +169,7 @@ const addRelationshipCellView = (
             <input
               type="text"
               className="input-sm form-control"
-              value={selectedRelationshipName || formRelName(rel)}
+              value={selectedRelationshipName}
               onChange={onRelationshipNameChanged}
               data-test="suggested-rel-name"
             />{' '}
