@@ -51,7 +51,7 @@ parseOpExps annVal = do
       -- jsonb related operators
       "_contains"     -> fmap AContains <$> asPGColValM v
       "_contained_in" -> fmap AContainedIn <$> asPGColValM v
-      "_has_key"      -> fmap AHasKey <$> asPGColValM v
+      "_has_key"      -> fmap AHasKey <$> asPGColTextM v
       "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 

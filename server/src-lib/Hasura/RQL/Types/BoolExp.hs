@@ -113,7 +113,7 @@ data OpExpG a
 
   | AContains !a
   | AContainedIn !a
-  | AHasKey !a
+  | AHasKey !Text
   | AHasKeysAny [Text]
   | AHasKeysAll [Text]
 
@@ -162,7 +162,7 @@ opExpToJPair f = \case
 
   AContains a    -> ("_contains", f a)
   AContainedIn a -> ("_contained_in", f a)
-  AHasKey a      -> ("_has_key", f a)
+  AHasKey a      -> ("_has_key", toJSON a)
   AHasKeysAny a  -> ("_has_keys_any", toJSON a)
   AHasKeysAll a  -> ("_has_keys_all", toJSON a)
 

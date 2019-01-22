@@ -24,75 +24,108 @@ parseOpExp
   -> FieldInfoMap
   -> PGColInfo
   -> (T.Text, Value) -> m (OpExpG a)
-parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
-  "$eq"       -> parseEq
-  "_eq"       -> parseEq
+parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
+  case opStr of
+    "$eq"            -> parseEq
+    "_eq"            -> parseEq
 
-  "$ne"       -> parseNe
-  "_ne"       -> parseNe
-  "$neq"      -> parseNe
-  "_neq"      -> parseNe
+    "$ne"            -> parseNe
+    "_ne"            -> parseNe
+    "$neq"           -> parseNe
+    "_neq"           -> parseNe
 
-  "$in"       -> parseIn
-  "_in"       -> parseIn
+    "$in"            -> parseIn
+    "_in"            -> parseIn
 
-  "$nin"      -> parseNin
-  "_nin"      -> parseNin
+    "$nin"           -> parseNin
+    "_nin"           -> parseNin
 
-  "$gt"       -> parseGt
-  "_gt"       -> parseGt
+    "$gt"            -> parseGt
+    "_gt"            -> parseGt
 
-  "$lt"       -> parseLt
-  "_lt"       -> parseLt
+    "$lt"            -> parseLt
+    "_lt"            -> parseLt
 
-  "$gte"      -> parseGte
-  "_gte"      -> parseGte
+    "$gte"           -> parseGte
+    "_gte"           -> parseGte
 
-  "$lte"      -> parseLte
-  "_lte"      -> parseLte
+    "$lte"           -> parseLte
+    "_lte"           -> parseLte
 
-  "$like"     -> parseLike
-  "_like"     -> parseLike
+    "$like"          -> parseLike
+    "_like"          -> parseLike
 
-  "$nlike"    -> parseNlike
-  "_nlike"    -> parseNlike
+    "$nlike"         -> parseNlike
+    "_nlike"         -> parseNlike
 
-  "$ilike"    -> parseIlike
-  "_ilike"    -> parseIlike
+    "$ilike"         -> parseIlike
+    "_ilike"         -> parseIlike
 
-  "$nilike"   -> parseNilike
-  "_nilike"   -> parseNilike
+    "$nilike"        -> parseNilike
+    "_nilike"        -> parseNilike
 
-  "$similar"  -> parseSimilar
-  "_similar"  -> parseSimilar
-  "$nsimilar" -> parseNsimilar
-  "_nsimilar" -> parseNsimilar
+    "$similar"       -> parseSimilar
+    "_similar"       -> parseSimilar
+    "$nsimilar"      -> parseNsimilar
+    "_nsimilar"      -> parseNsimilar
 
-  "$is_null"  -> parseIsNull
-  "_is_null"  -> parseIsNull
+    "$is_null"       -> parseIsNull
+    "_is_null"       -> parseIsNull
 
-  "$ceq"      -> parseCeq
-  "_ceq"      -> parseCeq
+    -- jsonb type
+    "_contains"      -> jsonbOnlyOp $ AContains <$> parseOne
+    "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
+    "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
+    "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseVal
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseVal
+    "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
+    "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
+    "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
 
-  "$cne"      -> parseCne
-  "_cne"      -> parseCne
-  "$cneq"     -> parseCne
-  "_cneq"     -> parseCne
+    -- geometry type
+    "_st_contains"   -> parseGeometryOp ASTContains
+    "$st_contains"   -> parseGeometryOp ASTContains
+    "_st_crosses"    -> parseGeometryOp ASTCrosses
+    "$st_crosses"    -> parseGeometryOp ASTCrosses
+    "_st_equals"     -> parseGeometryOp ASTEquals
+    "$st_equals"     -> parseGeometryOp ASTEquals
+    "_st_intersects" -> parseGeometryOp ASTIntersects
+    "$st_intersects" -> parseGeometryOp ASTIntersects
+    "_st_overlaps"   -> parseGeometryOp ASTOverlaps
+    "$st_overlaps"   -> parseGeometryOp ASTOverlaps
+    "_st_touches"    -> parseGeometryOp ASTTouches
+    "$st_touches"    -> parseGeometryOp ASTTouches
+    "_st_within"     -> parseGeometryOp ASTWithin
+    "$st_within"     -> parseGeometryOp ASTWithin
+    "_st_d_within"   -> parseSTDWithinObj
+    "$st_d_within"   -> parseSTDWithinObj
 
-  "$cgt"      -> parseCgt
-  "_cgt"      -> parseCgt
+    "$ceq"           -> parseCeq
+    "_ceq"           -> parseCeq
 
-  "$clt"      -> parseClt
-  "_clt"      -> parseClt
+    "$cne"           -> parseCne
+    "_cne"           -> parseCne
+    "$cneq"          -> parseCne
+    "_cneq"          -> parseCne
 
-  "$cgte"     -> parseCgte
-  "_cgte"     -> parseCgte
+    "$cgt"           -> parseCgt
+    "_cgt"           -> parseCgt
 
-  "$clte"     -> parseClte
-  "_clte"     -> parseClte
+    "$clt"           -> parseClt
+    "_clt"           -> parseClt
 
-  x           -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+    "$cgte"          -> parseCgte
+    "_cgte"          -> parseCgte
+
+    "$clte"          -> parseClte
+    "_clte"          -> parseClte
+
+    x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
   where
+    withErrPath = withPathK (getPGColTxt cn) . withPathK opStr
+
     parseEq       = AEQ <$> parseOne -- equals
     parseNe       = ANE <$> parseOne -- <>
     parseIn       = AIN <$> parseMany -- in an array
@@ -109,7 +142,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
     parseNsimilar = textOnlyOp colTy >> ANSIMILAR <$> parseOne
 
     parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
-                    <$> decodeValue val
+                    <$> parseVal
+
     parseCeq      = CEQ <$> decodeAndValidateRhsCol
     parseCne      = CNE <$> decodeAndValidateRhsCol
     parseCgt      = CGT <$> decodeAndValidateRhsCol
@@ -117,8 +151,27 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
     parseCgte     = CGTE <$> decodeAndValidateRhsCol
     parseClte     = CLTE <$> decodeAndValidateRhsCol
 
+    jsonbOnlyOp m = case colTy of
+      PGJSONB -> m
+      ty      -> throwError $ buildMsg ty [PGJSONB]
+
+    parseGeometryOp f =
+      geometryOnlyOp colTy >> f <$> parseOne
+
+    onNothing mV errM = maybe errM return mV
+
+    parseSTDWithinObj = do
+      stdObj :: Object <- parseVal
+      distVal <- onNothing (M.lookup "distance" stdObj) $
+                 throw400 UnexpectedPayload "expecting \"distance\" key"
+      distSQL <- txtRHSBuilder PGFloat distVal
+      fromVal <- onNothing (M.lookup "from" stdObj) $
+                 throw400 UnexpectedPayload "expecting \"from\" key"
+      ASTDWithin (S.annotateExp distSQL PGFloat) <$>
+                 withPathK "from" (parser colTy fromVal)
+
     decodeAndValidateRhsCol =
-      decodeValue val >>= validateRhsCol
+      parseVal >>= validateRhsCol
 
     validateRhsCol rhsCol = do
       let errMsg = "column operators can only compare postgres columns"
@@ -128,10 +181,17 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
              "incompatible column types : " <> cn <<> ", " <>> rhsCol
         else return rhsCol
 
+    geometryOnlyOp PGGeometry = return ()
+    geometryOnlyOp ty =
+      throwError $ buildMsg ty [PGGeometry]
+
     parseOne = parser colTy val
     parseMany = do
       vals <- runAesonParser parseJSON val
       indexedForM vals (parser colTy)
+
+    parseVal :: (FromJSON a, QErrM m) => m a
+    parseVal = decodeValue val
 
 parseOpExps
   :: (MonadError QErr m)
@@ -197,8 +257,8 @@ annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   case colInfo of
     FIColumn (PGColInfo _ PGJSON _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    FIColumn (PGColInfo _ PGJSONB _) ->
-      throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
+    -- FIColumn (PGColInfo _ PGJSONB _) ->
+    --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
@@ -273,7 +333,7 @@ mkColCompExp qual lhsCol = \case
   ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
   AContains val    -> S.BECompare S.SContains lhs val
   AContainedIn val -> S.BECompare S.SContainedIn lhs val
-  AHasKey val      -> S.BECompare S.SHasKey lhs val
+  AHasKey key      -> S.BECompare S.SHasKey lhs $ toText key
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
 
@@ -297,6 +357,9 @@ mkColCompExp qual lhsCol = \case
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
+
+    toText val =
+      S.SETyAnn (txtEncoder $ PGValText val) S.textType
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
