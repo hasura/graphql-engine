@@ -500,6 +500,7 @@ const deleteTrigger = triggerName => {
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
+      dispatch(showSuccessNotification('Trigger Deleted'));
       dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
       return;
     };
