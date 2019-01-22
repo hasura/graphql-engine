@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Function where
 
+import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -7,14 +8,15 @@ import           Hasura.SQL.Types
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Hasura.GraphQL.Schema      as GS
+import qualified Hasura.GraphQL.Schema         as GS
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import qualified Data.HashMap.Strict        as M
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
 
 
 data PGTypType
@@ -62,6 +64,15 @@ mkFunctionArgs tys argNames =
     mkArg "" ty = FunctionArg Nothing ty
     mkArg n  ty = flip FunctionArg ty $ Just $ FunctionArgName n
 
+validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
+validateFuncArgs args =
+  unless (null invalidArgs) $ throw400 NotSupported $
+    "arguments: " <> showNames invalidArgs
+    <> " are not in compliance with GraphQL spec"
+  where
+    funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
+    invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
+
 mkFunctionInfo :: QualifiedFunction -> RawFuncInfo -> Q.TxE QErr FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
@@ -78,10 +89,13 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if return type is not a valid table
   assertTableExists retTable $ "return type " <> retTable <<> " is not a valid table"
 
-  -- inpArgTyps <- mapM fetchTypNameFromOid inpArgTypIds
-  let funcArgs = Seq.fromList $ mkFunctionArgs inpArgTyps inpArgNames
+  let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
+
+  validateFuncArgs funcArgs
+
+  let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) "table"
-  return $ FunctionInfo qf False funTy funcArgs retTable [dep]
+  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet inpArgTyps inpArgNames = rawFuncInfo
 
@@ -162,9 +176,12 @@ trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
 trackFunctionP2 qf = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
+      funcNameGQL = GS.qualObjectToName qf
+  -- check function name is in compliance with GraphQL spec
+  unless (isValidName funcNameGQL) $ throw400 NotSupported $
+    "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
-  GS.checkConflictingNode defGCtx $ GS.qualObjectToName qf
-
+  GS.checkConflictingNode defGCtx funcNameGQL
   trackFunctionP2Setup qf
   liftTx $ saveFunctionToCatalog qf False
   return successMsg

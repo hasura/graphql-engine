@@ -158,8 +158,8 @@ type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
 
-isValidTableName :: QualifiedTable -> Bool
-isValidTableName = isValidName . qualObjectToName
+isValidObjectName :: (ToTxt a) => QualifiedObject a -> Bool
+isValidObjectName = isValidName . qualObjectToName
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
@@ -168,7 +168,7 @@ isValidField = \case
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
-                          && isValidTableName rt
+                          && isValidObjectName rt
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -1903,7 +1903,7 @@ mkGCtxMap tableCache functionCache = do
     mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (tiSystemDefined ti)
-                   && isValidTableName (tiName ti)
+                   && isValidObjectName (tiName ti)
 
 
 -- mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
