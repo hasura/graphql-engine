@@ -158,6 +158,33 @@ class TestV1SelectBoolExpSearch(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/boolexp/search'
 
+class TestV1SelectBoolExpJSONB(DefaultTestSelectQueries):
+
+    def test_select_article_author_jsonb_contained_in_bestseller_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contained_in_bestseller_latest.yaml')
+
+    def test_select_article_author_jsonb_contained_in_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contained_in_latest.yaml')
+
+    def test_select_article_author_jsonb_contains_latest(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contains_latest.yaml')
+
+    def test_select_author_article_jsonb_contains_bestseller(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_jsonb_contains_bestseller.yaml')
+
+    def test_select_product_jsonb_has_keys_all_ram_touchscreen(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
+
+    def test_select_product_jsonb_has_keys_any_os_operating_system(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_any_os_operating_system.yaml')
+
+    def test_select_product_jsonb_has_key_sim_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_key_sim_type.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/select/boolexp/jsonb'
+
 
 class TestV1SelectPermissions(DefaultTestSelectQueries):
 
