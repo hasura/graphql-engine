@@ -39,20 +39,9 @@ data RawFuncInfo
   , rfiReturnsSet       :: !Bool
   , rfiInputArgTypes    :: ![PGColType]
   , rfiInputArgNames    :: ![T.Text]
+  , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
-
-assertTableExists :: QualifiedTable -> T.Text -> Q.TxE QErr ()
-assertTableExists (QualifiedObject sn tn) err = do
-  tableExists <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-       SELECT exists(SELECT 1 from information_schema.tables
-                      WHERE table_schema = $1
-                      AND table_name = $2
-                    )
-          |] (sn, tn) False
-
-  unless tableExists $ throw400 NotExists err
 
 mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
 mkFunctionArgs tys argNames =
@@ -81,53 +70,29 @@ mkFunctionInfo qf rawFuncInfo = do
   when (retTyTyp /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
   -- throw error if function do not returns SETOF
   unless retSet $ throw400 NotSupported "function does not return a SETOF"
+  -- throw error if return type is not a valid table
+  unless returnsTab $ throw400 NotSupported "function does not return a SETOF table"
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  let retTable = QualifiedObject retSn (TableName retN)
-
-  -- throw error if return type is not a valid table
-  assertTableExists retTable $ "return type " <> retTable <<> " is not a valid table"
-
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
-
   validateFuncArgs funcArgs
 
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) "table"
+      retTable = QualifiedObject retSn (TableName retN)
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp retSet inpArgTyps inpArgNames = rawFuncInfo
+    RawFuncInfo hasVariadic funTy retSn retN retTyTyp
+                retSet inpArgTyps inpArgNames returnsTab
+                = rawFuncInfo
 
 -- Build function info
 getFunctionInfo :: QualifiedFunction -> Q.TxE QErr FunctionInfo
 getFunctionInfo qf@(QualifiedObject sn fn) = do
   -- fetch function details
-  funcData <- Q.listQE defaultTxErrorHandler [Q.sql|
-        SELECT
-          row_to_json (
-            (
-              SELECT
-                e
-              FROM
-                (
-                  SELECT
-                    has_variadic,
-                    function_type,
-                    return_type_schema,
-                    return_type_name,
-                    return_type_type,
-                    returns_set,
-                    input_arg_types,
-                    input_arg_names
-                ) AS e
-            )
-          ) AS "raw_function_info"
-        FROM
-          hdb_catalog.hdb_function_agg
-        WHERE
-          function_schema = $1 AND function_name = $2
-     |] (sn, fn) False
+  funcData <- Q.catchE defaultTxErrorHandler $
+              Q.listQ $(Q.sqlFromFile "src-rsr/function_info.sql") (sn, fn) True
 
   case funcData of
     []                              ->
@@ -168,7 +133,10 @@ trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
                      => QualifiedFunction -> m ()
 trackFunctionP2Setup qf = do
   fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
-  void $ askTabInfo $ fiReturnType fi
+  let retTable = fiReturnType fi
+      err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
+  sc <- askSchemaCache
+  void $ liftMaybe err $ M.lookup retTable $ scTables sc
   addFunctionToCache fi
 
 trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
