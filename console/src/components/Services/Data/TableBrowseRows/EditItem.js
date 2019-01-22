@@ -302,6 +302,7 @@ class EditItem extends Component {
               <Button
                 type="submit"
                 color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch({ type: E_ONGOING_REQ });

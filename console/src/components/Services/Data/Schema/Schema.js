@@ -137,6 +137,7 @@ class Schema extends Component {
               <Button
                 data-test="data-create-table"
                 color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(

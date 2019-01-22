@@ -43,6 +43,7 @@ class Schema extends Component {
                 data-test="data-create-trigger"
                 className={styles.button_mar_right}
                 color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
