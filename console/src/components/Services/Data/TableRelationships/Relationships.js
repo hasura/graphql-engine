@@ -10,6 +10,7 @@ import {
   relNameChanged,
   resetRelationshipForm,
   relManualAddClicked,
+  formRelName,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
@@ -167,7 +168,7 @@ const addRelationshipCellView = (
             <input
               type="text"
               className="input-sm form-control"
-              value={selectedRelationshipName}
+              value={selectedRelationshipName || formRelName(rel)}
               onChange={onRelationshipNameChanged}
               data-test="suggested-rel-name"
             />{' '}
