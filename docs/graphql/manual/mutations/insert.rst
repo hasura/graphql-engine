@@ -6,6 +6,9 @@ Insert mutation
   :depth: 1
   :local:
 
+Auto-generated insert mutation schema
+-------------------------------------
+
 Here’s the schema for the insert mutation field for a table ``article``:
 
 .. code-block:: graphql
@@ -28,6 +31,11 @@ As you can see from the schema:
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
 - You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+.. note::
+
+  If a table is not in the ``public`` Postgres schema, the insert mutation field will be of the format
+  ``insert_<schema_name>_<table_name>``.
 
 Insert a single object
 ----------------------
