@@ -97,7 +97,7 @@
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
-    "containerImage": "hasura/graphql-engine:v1.0.0-alpha34"
+    "containerImage": "hasura/graphql-engine:v1.0.0-alpha35"
   },
   "resources": [
     {
@@ -108,8 +108,7 @@
       "properties": {
         "createMode": "Default",
         "version": "[parameters('postgresVersion')]",
-        "sslEnforcement": "Disabled",
-        "administratorLogin": "hasura",
+        "administratorLogin": "[variables('adminUser')]",
         "administratorLoginPassword": "[variables('adminPassword')]",
         "storageProfile": {
           "storageMB": "[variables('dbSKUSizeInMB')]"
