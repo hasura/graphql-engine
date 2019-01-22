@@ -389,7 +389,7 @@ const ColumnEditor = ({
           <Button
             type="submit"
             color="yellow"
-            className={styles.col_editor_button}
+            className={styles.button_mar_right}
             size="sm"
             data-test="save-button"
           >
@@ -400,7 +400,6 @@ const ColumnEditor = ({
               type="submit"
               color="red"
               size="sm"
-              className={styles.col_editor_button1}
               onClick={e => {
                 e.preventDefault();
                 onDelete();
