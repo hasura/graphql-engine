@@ -114,6 +114,10 @@ Step 3: Initialize the migrations as per your current state
 
 - Remove ``migrations/<version>_first.down.{sql,yaml}`` migration files if you are not adding down migrations for these
 
+.. note::
+
+  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.sql``
+
 Step 4: Use the console from the CLI
 ------------------------------------
 
@@ -135,7 +139,7 @@ in the ``migrations/`` directory in your project.
 
 .. note::
 
-   Migrations are only created when using the Console through CLI.
+   Migrations are only created when using the console through CLI.
 
 Step 6: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------

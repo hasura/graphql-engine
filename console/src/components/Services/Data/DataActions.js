@@ -198,7 +198,7 @@ const loadUntrackedSchema = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
   const body = initQueries.loadUntrackedSchema;
-  body.args.where.table_name = currentSchema;
+  body.args.where.table_schema = currentSchema;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',

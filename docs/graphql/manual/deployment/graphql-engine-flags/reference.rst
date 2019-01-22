@@ -40,44 +40,46 @@ For ``serve`` subcommand these are the flags available
 
 .. code-block:: none
 
-       --server-host            IP address of network interface that graphql-engine will listen on (default: '*', all interfaces)
+       --server-host               IP address of network interface that graphql-engine will listen on (default: '*', all interfaces)
 
-       --server-port            Port on which graphql-engine should be served (default: 8080)
+       --server-port               Port on which graphql-engine should be served (default: 8080)
 
-       --access-key             Secret access key, required to access this instance.
-                                If specified client needs to send 'X-Hasura-Access-Key'
-                                header
+       --access-key                Secret access key, required to access this instance.
+                                   If specified client needs to send 'X-Hasura-Access-Key'
+                                   header
 
-       --cors-domain            The domain, including sheme and port, to allow CORS for
+       --cors-domain               The domain, including sheme and port, to allow CORS for
 
-       --disable-cors           Disable CORS handling
+       --disable-cors              Disable CORS handling
 
-       --auth-hook              The authentication webhook, required to authenticate
-                                incoming request
+       --auth-hook                 The authentication webhook, required to authenticate
+                                   incoming request
 
-       --auth-hook-mode         The authentication webhook mode. GET|POST (default: GET)
+       --auth-hook-mode            The authentication webhook mode. GET|POST (default: GET)
 
-       --jwt-secret             The JSON containing type and the JWK used for
-                                verifying. e.g: `{"type": "HS256", "key":
-                               "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                               "key": "<your-PEM-RSA-public-key>"}
+       --jwt-secret                The JSON containing type and the JWK used for
+                                   verifying. e.g: `{"type": "HS256", "key":
+                                   "<your-hmac-shared-secret>"}`,`{"type": "RS256",
+                                   "key": "<your-PEM-RSA-public-key>"}
 
-       --unauthorized-role      Unauthorized role, used when access-key is not sent in
-                                access-key only mode or "Authorization" header is absent
-                                in JWT mode
+       --unauthorized-role         Unauthorized role, used when access-key is not sent in
+                                   access-key only mode or "Authorization" header is absent
+                                   in JWT mode
 
-   -s, --stripes                Number of stripes (default: 1)
+   -s, --stripes                   Number of stripes (default: 1)
 
-   -c, --connections            Number of connections that need to be opened to Postgres
-                                (default: 50)
+   -c, --connections               Number of connections that need to be opened to Postgres
+                                   (default: 50)
 
-       --timeout                Each connection's idle time before it is closed
-                                (default: 180 sec)
+       --timeout                   Each connection's idle time before it is closed
+                                   (default: 180 sec)
 
-   -i, --tx-iso                 Transaction isolation. read-commited / repeatable-read /
-                                serializable
+   -i, --tx-iso                    Transaction isolation. read-commited / repeatable-read /
+                                   serializable
 
-       --enable-console         Enable API console. It is served at '/' and '/console'
+       --enable-console            Enable API console. It is served at '/' and '/console'
+
+       --use-prepared-statements   Use prepared statements for SQL queries (default: true)
 
        --enable-telemetry       Enable anonymous telemetry (default: true)
 
@@ -111,40 +113,43 @@ These are the environment variables which are available:
    HASURA_GRAPHQL_PG_CONNECTIONS        Number of connections that need to be opened to
                                         Postgres (default: 50)
 
-   HASURA_GRAPHQL_PG_TIMEOUT            Each connection's idle time before it is closed
-                                        (default: 180 sec)
+   HASURA_GRAPHQL_PG_TIMEOUT                Each connection's idle time before it is closed
+                                            (default: 180 sec)
 
-   HASURA_GRAPHQL_TX_ISOLATION          transaction isolation. read-committed /
-                                        repeatable-read / serializable
-                                        (default: read-commited)
-   HASURA_GRAPHQL_SERVER_HOST           IP address of network interface that graphql-engine will listen on
+   HASURA_GRAPHQL_TX_ISOLATION              transaction isolation. read-committed /
+                                            repeatable-read / serializable
+                                            (default: read-commited)
+   HASURA_GRAPHQL_SERVER_HOST               IP address of network interface that graphql-engine will listen on
 
-   HASURA_GRAPHQL_SERVER_PORT           Port on which graphql-engine should be served
+   HASURA_GRAPHQL_SERVER_PORT               Port on which graphql-engine should be served
 
-   HASURA_GRAPHQL_ACCESS_KEY            Secret access key, required to access this
-                                        instance. If specified client needs to send
-                                        'X-Hasura-Access-Key' header
+   HASURA_GRAPHQL_ACCESS_KEY                Secret access key, required to access this
+                                            instance. If specified client needs to send
+                                            'X-Hasura-Access-Key' header
 
-   HASURA_GRAPHQL_AUTH_HOOK             The authentication webhook, required to
-                                        authenticate incoming request
+   HASURA_GRAPHQL_AUTH_HOOK                 The authentication webhook, required to
+                                            authenticate incoming request
 
-   HASURA_GRAPHQL_AUTH_HOOK_MODE        The authentication webhook mode, GET|POST
-                                        (default: GET)
+   HASURA_GRAPHQL_AUTH_HOOK_MODE            The authentication webhook mode, GET|POST
+                                            (default: GET)
 
-   HASURA_GRAPHQL_CORS_DOMAIN           The domain, including sheme and port,
-                                        to allow CORS for
+   HASURA_GRAPHQL_CORS_DOMAIN               The domain, including sheme and port,
+                                            to allow CORS for
 
-   HASURA_GRAPHQL_JWT_SECRET            The JSON containing type and the JWK used for
-                                        verifying. e.g: `{"type": "HS256", "key":
-                                        "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                                        "key": "<your-PEM-RSA-public-key>"}
-                                        Enable JWT mode, the value of which is a JSON
+   HASURA_GRAPHQL_JWT_SECRET                The JSON containing type and the JWK used for
+                                            verifying. e.g: `{"type": "HS256", "key":
+                                            "<your-hmac-shared-secret>"}`,`{"type": "RS256",
+                                            "key": "<your-PEM-RSA-public-key>"}
+                                            Enable JWT mode, the value of which is a JSON
 
-   HASURA_GRAPHQL_UNAUTHORIZED_ROLE     Unauthorized role, used when access-key is not sent
-                                        in access-key only mode or "Authorization" header
-                                        is absent in JWT mode
+   HASURA_GRAPHQL_UNAUTHORIZED_ROLE         Unauthorized role, used when access-key is not sent
+                                            in access-key only mode or "Authorization" header
+                                            is absent in JWT mode
 
-   HASURA_GRAPHQL_ENABLE_CONSOLE        Enable API console. It is served at
-                                        '/' and '/console'
+   HASURA_GRAPHQL_ENABLE_CONSOLE            Enable API console. It is served at
+                                            '/' and '/console'
 
-   HASURA_GRAPHQL_ENABLE_TELEMETRY      Enable anonymous telemetry (default: true)
+   HASURA_GRAPHQL_ENABLE_TELEMETRY          Enable anonymous telemetry (default: true)
+
+   HASURA_GRAPHQL_USE_PREPARED_STATEMENTS   Use prepared statements for SQL queries
+                                            (default: true)
