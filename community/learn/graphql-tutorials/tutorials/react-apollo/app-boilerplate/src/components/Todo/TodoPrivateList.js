@@ -11,7 +11,21 @@ class TodoPrivateList extends Component {
 
     this.state = {
       filter: "all",
-      clearInProgress: false
+      clearInProgress: false,
+      todos: [
+        {
+          id: "1",
+          text: "This is private todo 1",
+          is_completed: true,
+          is_public: false
+        },
+        {
+          id: "2",
+          text: "This is private todo 2",
+          is_completed: false,
+          is_public: false
+        }
+      ]
     };
 
     this.filterResults = this.filterResults.bind(this);
@@ -30,26 +44,11 @@ class TodoPrivateList extends Component {
   render() {
     const { type } = this.props;
 
-    const data = [
-      {
-        id: "1",
-        text: "This is private todo 1",
-        is_completed: true,
-        is_public: false
-      },
-      {
-        id: "2",
-        text: "This is private todo 2",
-        is_completed: false,
-        is_public: false
-      }
-    ];
-
-    let filteredTodos = data;
+    let filteredTodos = this.state.todos;
     if (this.state.filter === "active") {
-      filteredTodos = data.filter(todo => todo.is_completed !== true);
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = data.filter(todo => todo.is_completed === true);
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
     }
 
     const todoList = [];

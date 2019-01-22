@@ -4,16 +4,20 @@ import OnlineUser from "./OnlineUser";
 import "../../styles/App.css";
 
 class OnlineUsersWrapper extends Component {
-  render() {
-    const data = {
-      online_users: [
+  constructor() {
+    super();
+
+    this.state = {
+      onlineUsers: [
         { name: "someUser1" },
         { name: "someUser2" }
       ]
     };
+  }
 
+  render() {
     const onlineUsersList = [];
-    data.online_users.forEach((user, index) => {
+    this.state.onlineUsers.forEach((user, index) => {
       onlineUsersList.push(
         <OnlineUser
           key={index}
@@ -24,7 +28,9 @@ class OnlineUsersWrapper extends Component {
 
     return (
       <div className="onlineUsersWrapper">
-        <div className="sliderHeader">Online users - {data.online_users.length}</div>
+        <div className="sliderHeader">
+          Online users - {this.state.onlineUsers.length}
+        </div>
 
         { onlineUsersList }
       </div>

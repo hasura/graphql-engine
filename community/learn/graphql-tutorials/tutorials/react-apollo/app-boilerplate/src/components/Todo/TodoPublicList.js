@@ -12,9 +12,28 @@ class TodoPublicList extends Component {
     this.state = {
       filter: "all",
       clearInProgress: false,
-      showNew: false,
-      showOlder: true,
-      newTodosLength: 0,
+      olderTodosAvailable: true,
+      newTodosCount: 0,
+      todos: [
+        {
+          id: "1",
+          text: "This is public todo 1",
+          is_completed: true,
+          is_public: true,
+          user: {
+            name: "someUser1"
+          }
+        },
+        {
+          id: "2",
+          text: "This is public todo 2",
+          is_completed: false,
+          is_public: true,
+          user: {
+            name: "someUser2"
+          }
+        }
+      ]
     };
 
     this.filterResults = this.filterResults.bind(this);
@@ -39,72 +58,51 @@ class TodoPublicList extends Component {
   render() {
     const { type } = this.props;
 
-    const data = [
-      {
-        id: "1",
-        text: "This is public todo 1",
-        is_completed: true,
-        is_public: true,
-        user: {
-          name: "someUser1"
-        }
-      },
-      {
-        id: "2",
-        text: "This is public todo 2",
-        is_completed: false,
-        is_public: true,
-        user: {
-          name: "someUser2"
-        }
-      }
-    ];
-
-    let filteredTodos = data;
+    let filteredTodos = this.state.todos;
     if (this.state.filter === "active") {
-      filteredTodos = data.filter(todo => todo.is_completed !== true);
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = data.filter(todo => todo.is_completed === true);
+      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
     }
 
-    const todoList = [];
-    filteredTodos.forEach((todo, index) => {
-      todoList.push(
-        <TodoItem
-          key={index}
-          index={index}
-          todo={todo}
-          type={type}
-        />
-      );
-    });
+    const todoList = (
+      <ul>
+        {
+          filteredTodos.map((todo, index) => {
+            return (
+              <TodoItem
+                key={index}
+                index={index}
+                todo={todo}
+                type={type}
+              />
+            );
+          })
+        }
+      </ul>
+    );
 
-    // show new todo feed logic
-    let newTodosMsg = '';
-    if (this.state.showNew && this.state.newTodosLength) {
-      newTodosMsg = (
+    let newTodosNotification = '';
+    if (this.state.newTodosCount) {
+      newTodosNotification = (
         <div className={"loadMoreSection"} onClick={this.loadMoreClicked}>
-          You have {this.state.newTodosLength} new Todo{this.state.newTodosLength !== 1 ? "s" : ""}
+          You have {this.state.newTodosCount} new Todo{this.state.newTodosCount !== 1 ? "s" : ""}
         </div>
       );
     }
 
-    // show old todo history logic
     const olderTodosMsg = (
       <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
-        {(!this.state.showOlder && this.state.todos.length) ? 'No more Todos available' : 'Load Older Todos'}
+        { this.state.olderTodosAvailable ? 'Load Older Todos' : 'No more Todos available'}
       </div>
     );
 
     return (
       <Fragment>
         <div className="todoListWrapper">
+          { newTodosNotification }
 
-          { newTodosMsg }
-
-          <ul>
-            { todoList }
-          </ul>
+          { todoList }
 
           { olderTodosMsg }
         </div>
