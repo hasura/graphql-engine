@@ -1,0 +1,10 @@
+query article($id: ID!) {
+  article(where: {author_id: {_eq: $id}}) {
+  	id
+    title
+    content
+    author {
+      name
+    }
+  }
+}
