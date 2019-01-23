@@ -272,7 +272,6 @@ a.expanded {
 
 .advancedToggleBtn {
   width: 300px;
-  background: #f2f2f2 !important;
   i {
     padding-left: 5px;
   }
@@ -293,7 +292,6 @@ a.expanded {
   min-height: 41px;
 }
 .newBtn {
-  font-size: 12px;
   margin-right: 10px;
 }
 .loadNewer {
@@ -313,9 +311,6 @@ a.expanded {
     width: auto;
     margin-left: 10px;
   }
-}
-.oldBtn {
-  font-size: 12px;
 }
 .retryEvent {
   cursor: pointer;
@@ -344,5 +339,14 @@ a.expanded {
   i
   {
     margin-left: 5px;
+  }
+}
+.toggleAdvanced {
+  cursor: pointer;
+  b {
+    font-size: 15px;
+  }
+  i:hover {
+    color: #4D4D4D ;
   }
 }

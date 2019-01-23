@@ -4,6 +4,7 @@ import { push } from 'react-router-redux';
 
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
+import Button from '../../Layout/Button/Button';
 
 class CustomResolver extends React.Component {
   render() {
@@ -25,16 +26,17 @@ class CustomResolver extends React.Component {
               Remote Schemas &nbsp;
             </h2>
             {migrationMode ? (
-              <button
+              <Button
                 data-test="data-create-remote-schemas"
-                className={styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
                 }}
               >
                 Add
-              </button>
+              </Button>
             ) : null}
             <hr />
           </div>

@@ -7,6 +7,7 @@ import { findAllFromRel } from '../utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
 import AddRelationship from './AddManualRelationship';
+import Button from '../../Layout/Button/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -70,9 +71,9 @@ const relationshipView = (
   return (
     <td>
       <div>
-        <button className="btn btn-sm btn-danger" onClick={onDelete}>
+        <Button size="sm" color="red" onClick={onDelete}>
           Remove
-        </button>
+        </Button>
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
@@ -230,15 +231,16 @@ class RelationshipsView extends Component {
                 />
               </div>
             ) : (
-              <button
+              <Button
                 type="submit"
-                className="btn btn-sm btn-default"
+                color="white"
+                size="sm"
                 onClick={() => {
                   dispatch(addNewRelClicked());
                 }}
               >
                 + Add relationship
-              </button>
+              </Button>
             )}
             <hr />
           </div>

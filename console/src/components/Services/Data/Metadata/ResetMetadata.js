@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { showNotification } from '../../../App/Actions';
+import Button from '../../Layout/Button/Button';
 
 import {
   showSuccessNotification,
@@ -16,13 +17,13 @@ class ResetMetadata extends Component {
   }
 
   render() {
-    const styles = require('../PageContainer/PageContainer.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
-        <button
+        <Button
           data-test="data-reset-metadata"
-          className={styles.default_button}
+          color="white"
+          size="sm"
           onClick={e => {
             e.preventDefault();
             const a = prompt(
@@ -78,7 +79,7 @@ class ResetMetadata extends Component {
           }}
         >
           {this.state.isResetting ? 'Resetting...' : 'Reset'}
-        </button>
+        </Button>
       </div>
     );
   }

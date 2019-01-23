@@ -16,6 +16,7 @@ import {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
+import Button from '../../Layout/Button/Button';
 
 class AddManualRelationship extends Component {
   constructor() {
@@ -198,21 +199,24 @@ class AddManualRelationship extends Component {
             </select>
           </div>
         </div>
-        <button
-          className={styles.yellow_button}
+        <Button
+          color="yellow"
+          size="sm"
           onClick={this.onAddRelClicked}
           data-test={this.props.dataTestVal}
         >
           Add
-        </button>
+        </Button>
         {this.props.showClose ? (
-          <button
-            className={styles.add_mar_left + ' btn btn-default btn-sm'}
+          <Button
+            className={styles.add_mar_left}
+            color="white"
+            size="sm"
             onClick={this.onCloseClicked}
             data-test="table-close-manual-relationship"
           >
             Close
-          </button>
+          </Button>
         ) : null}
       </div>
     );

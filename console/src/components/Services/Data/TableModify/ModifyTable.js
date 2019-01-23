@@ -47,6 +47,7 @@ import {
   TIMESTAMP,
   TIME,
 } from '../../../../constants';
+import Button from '../../Layout/Button/Button';
 
 const appPrefix = '/data';
 
@@ -132,23 +133,25 @@ const ColumnEditor = ({
                   <Link
                     to={`${appPrefix}/schema/${currentSchema}/tables/${tableName}/relationships`}
                   >
-                    <button
-                      className={`${styles.default_button} btn`}
+                    <Button
+                      color="white"
+                      size="sm"
                       type="button"
                       data-test="add-rel-mod"
                     >
                       +Add relationship
-                    </button>
+                    </Button>
                   </Link>
                   &nbsp;
-                  <button
-                    className="btn btn-danger btn-sm"
+                  <Button
+                    color="red"
+                    size="sm"
                     onClick={onDeleteFK}
                     data-test="remove-constraint-button"
                   >
                     {' '}
                     Remove Constraint{' '}
-                  </button>{' '}
+                  </Button>{' '}
                   &nbsp;
                 </h5>
               </div>
@@ -383,17 +386,20 @@ const ColumnEditor = ({
         </div>
         {checkExistingForeignKey()}
         <div className="row">
-          <button
+          <Button
             type="submit"
-            className={`${styles.yellow_button} btn`}
+            color="yellow"
+            className={styles.button_mar_right}
+            size="sm"
             data-test="save-button"
           >
             Save
-          </button>
+          </Button>
           {!isPrimaryKey ? (
-            <button
+            <Button
               type="submit"
-              className={`${styles.yellow_button1} btn btn-danger btn-sm`}
+              color="red"
+              size="sm"
               onClick={e => {
                 e.preventDefault();
                 onDelete();
@@ -401,7 +407,7 @@ const ColumnEditor = ({
               data-test="remove-button"
             >
               Remove
-            </button>
+            </Button>
           ) : null}
         </div>
       </form>
@@ -564,8 +570,10 @@ class ModifyTable extends Component {
           <div className="container-fluid">
             <div className="row">
               <h5 className={styles.padd_bottom}>
-                <button
-                  className={`${styles.add_mar_small} btn btn-xs btn-default`}
+                <Button
+                  className={styles.add_mar_small}
+                  size="xs"
+                  color="white"
                   data-test={`edit-${colName}`}
                   onClick={() => {
                     if (activeEdit.column === colName) {
@@ -585,7 +593,7 @@ class ModifyTable extends Component {
                   }}
                 >
                   {btnText}
-                </button>
+                </Button>
                 <b>{colName}</b> {keyProperties()}
                 &nbsp;
               </h5>
@@ -602,10 +610,13 @@ class ModifyTable extends Component {
     let colUniqueInput;
     let colDefaultInput;
 
+    // TODO
     const untrackBtn = (
-      <button
+      <Button
         type="submit"
-        className={`${styles.add_mar_right} btn btn-sm btn-default`}
+        className={styles.add_mar_right}
+        color="white"
+        size="sm"
         onClick={() => {
           const isOk = confirm('Are you sure to untrack?');
           if (isOk) {
@@ -615,7 +626,7 @@ class ModifyTable extends Component {
         data-test="untrack-table"
       >
         Untrack Table
-      </button>
+      </Button>
     );
 
     const editCommentClicked = () => {
@@ -811,20 +822,22 @@ class ModifyTable extends Component {
                   ref={n => (colDefaultInput = n)}
                   data-test="default-value"
                 />
-                <button
+                <Button
                   type="submit"
-                  className="btn btn-sm btn-warning"
+                  color="yellow"
+                  size="sm"
                   data-test="add-column-button"
                 >
                   + Add column
-                </button>
+                </Button>
               </form>
             </div>
             <hr />
             {untrackBtn}
-            <button
+            <Button
               type="submit"
-              className="btn btn-sm btn-danger"
+              color="red"
+              size="sm"
               onClick={() => {
                 const isOk = confirm('Are you sure?');
                 if (isOk) {
@@ -834,7 +847,7 @@ class ModifyTable extends Component {
               data-test="delete-table"
             >
               Delete table
-            </button>
+            </Button>
             <br />
             <br />
           </div>
