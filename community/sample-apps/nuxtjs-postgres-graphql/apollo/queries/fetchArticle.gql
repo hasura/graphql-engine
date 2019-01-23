@@ -1,0 +1,7 @@
+query article($id: Int) {
+  article(where: {author_id: {_eq: $id}}) {
+  	id
+    title
+    content
+  }
+}
