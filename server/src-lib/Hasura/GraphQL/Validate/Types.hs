@@ -26,6 +26,7 @@ module Hasura.GraphQL.Validate.Types
   , isIFaceTy
   , getPossibleObjTypes'
   , getObjTyM
+  , getUnionTyM
   , mkScalarTy
   , pgColTyToScalar
   , pgColValToAnnGVal
@@ -376,6 +377,23 @@ showSPTxt' (SchemaPath _ f a t)  = maybe "" (<> " "<> fld) t
 showSPTxt :: SchemaPath -> Text
 showSPTxt p = showSPTxt' p <> showSP p
 
+validateIFace :: MonadError Text f => IFaceTyInfo -> f ()
+validateIFace (IFaceTyInfo _ n flds) = do
+  when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for interface " <> showNamedTy n
+
+validateObj :: TypeMap -> ObjTyInfo -> Either Text ()
+validateObj tyMap objTyInfo@(ObjTyInfo _ n _ flds) = do
+  when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for " <> objTxt
+  mapM_ (extrIFaceTyInfo' >=> validateIFaceImpl objTyInfo) $ _otiImplIFaces objTyInfo
+  where
+    extrIFaceTyInfo' t = withObjTxt $ extrIFaceTyInfo tyMap t
+    withObjTxt x = x `catchError` \e -> throwError $ e <> " implemented by " <> objTxt
+    objTxt = "Object type " <> showNamedTy n
+    validateIFaceImpl = implmntsIFace tyMap
+
+isFldListEmpty :: ObjFieldMap -> Bool
+isFldListEmpty = Map.null . Map.delete "__typename"
+
 validateUnion :: MonadError Text m => TypeMap -> UnionTyInfo -> m ()
 validateUnion tyMap (UnionTyInfo _ un mt) = do
   when (Set.null mt) $ throwError $ "List of member types cannot be empty for union type " <> showNamedTy un
@@ -409,7 +427,7 @@ implmntsIFace tyMap objTyInfo iFaceTyInfo = do
     sameNameFld (spO, spIF) ifFld = do
       let spIFN = setFldNameSP spIF $ _fiName ifFld
       onNothing (Map.lookup (_fiName ifFld) objFlds)
-        $ throwError $ showSPTxt spIFN <> " expected, but  " <> showSP spO <> " does not provide it"
+        $ throwError $ showSPTxt spIFN <> " expected, but " <> showSP spO <> " does not provide it"
 
     hasAllArgs (spO, spIF) objFld ifFld = forM_ (_fiParams ifFld) $ \ifArg -> do
       objArg <- sameNameArg ifArg
@@ -428,8 +446,8 @@ implmntsIFace tyMap objTyInfo iFaceTyInfo = do
       where
         extraArgs = Map.difference (_fiParams objFld) (_fiParams ifFld)
         isInpValNullable ivi = unless (G.isNullable $ _iviType ivi) $ throwError $
-          showSPTxt spO <> " is of required type " <> G.showGT (_iviType ivi) <>
-          ", but is not provided by " <> showSPTxt spIF
+          showSPTxt (setArgNameSP spO $ _iviName ivi) <> " is of required type "
+          <> G.showGT (_iviType ivi) <> ", but is not provided by " <> showSPTxt spIF
 
     objFlds =  _otiFields objTyInfo
 
@@ -442,7 +460,7 @@ extrTyInfo tyMap tn = maybe
 extrIFaceTyInfo :: MonadError Text m => Map.HashMap G.NamedType TypeInfo -> G.NamedType -> m IFaceTyInfo
 extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
   Just (TIIFace i) -> return i
-  _ -> throwError $ "Could not find interface with name " <> showNamedTy tn
+  _ -> throwError $ "Could not find interface " <> showNamedTy tn
 
 extrObjTyInfoM :: TypeMap -> G.NamedType -> Maybe ObjTyInfo
 extrObjTyInfoM tyMap tn = case Map.lookup tn tyMap of
@@ -517,12 +535,16 @@ fromTyDef tyDef loc = case tyDef of
 fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
   tyMap <- fmap mkTyInfoMap $ mapM (flip fromTyDef loc) tyDefs
-  mapM_ (validateAllIFaceImpls tyMap) $ mapMaybe getObjTyM $ Map.elems tyMap
-  mapM_ (validateUnion tyMap) $ mapMaybe getUnionTyM $ Map.elems tyMap
+  validateTypeMap tyMap
   return tyMap
+
+validateTypeMap :: TypeMap -> Either Text ()
+validateTypeMap tyMap =  mapM_ validateTy $ Map.elems tyMap
   where
-    validateAllIFaceImpls tyMap objTyInfo = mapM_ (extrIFaceTyInfo tyMap >=> validateIFaceImpl objTyInfo) $ _otiImplIFaces objTyInfo
-      where validateIFaceImpl = implmntsIFace tyMap
+    validateTy (TIObj o)    = validateObj tyMap o
+    validateTy (TIUnion u)  = validateUnion tyMap u
+    validateTy (TIIFace i)  = validateIFace i
+    validateTy _            = return ()
 
 fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
 fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
