@@ -255,6 +255,80 @@ class UnionGraphQL(RequestHandler):
         res = union_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+class UnionGraphQLSchemaErrUnknownTypes(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for i, p in enumerate(t['possibleTypes']):
+                       p['name'] = 'Unknown' + str(i)
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrSubTypeInterface(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for p in t['possibleTypes']:
+                       p['name'] = 'Character'
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrNoMemberTypes(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    t['possibleTypes'] = []
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrWrappedType(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for i, p in enumerate(t['possibleTypes']):
+                        t['possibleTypes'][i] = {
+                            "kind": "NON_NULL",
+                            "name": None,
+                            "ofType": p
+                        }
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+
+
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
@@ -262,6 +336,10 @@ handlers = MkHandlers({
     '/country-graphql': CountryGraphQL,
     '/character-iface-graphql' : CharacterInterfaceGraphQL,
     '/union-graphql' : UnionGraphQL,
+    '/union-graphql-err-unknown-types' : UnionGraphQLSchemaErrUnknownTypes,
+    '/union-graphql-err-subtype-iface' : UnionGraphQLSchemaErrSubTypeInterface,
+    '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
+    '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
     '/person-graphql': PersonGraphQL
 })
 

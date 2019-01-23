@@ -33,6 +33,7 @@ module Hasura.GraphQL.Validate.Types
   , mkTyInfoMap
   , fromTyDef
   , fromTyDefQ
+  , fromSchemaDoc
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
@@ -377,7 +378,7 @@ showSPTxt p = showSPTxt' p <> showSP p
 
 validateUnion :: MonadError Text m => TypeMap -> UnionTyInfo -> m ()
 validateUnion tyMap (UnionTyInfo _ un mt) = do
-  when (Set.null mt) $ throwError $ "Unique member types cannot be empty for union type " <> showNamedTy un
+  when (Set.null mt) $ throwError $ "List of member types cannot be empty for union type " <> showNamedTy un
   mapM_ valIsObjTy $ Set.toList mt
   where
     valIsObjTy mn = case Map.lookup mn tyMap of

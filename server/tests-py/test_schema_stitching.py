@@ -85,13 +85,29 @@ class TestRemoteSchemaBasic:
         assert st_code == 200, resp
 
     def test_add_remote_schema_with_union(self, hge_ctx):
-        """add a remote schema with interfaces in it"""
+        """add a remote schema with union in it"""
         q = mk_add_remote_q('my remote union one', 'http://localhost:5000/union-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir + '/search_union_type_query.yaml')
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote union one"}})
         assert st_code == 200, resp
+
+    def test_add_remote_schema_with_union_err_no_member_types(self, hge_ctx):
+        """add a remote schema with a union having no member types"""
+        check_query_f(hge_ctx, self.dir + '/add_remote_schema_with_union_err_no_member_types.yaml')
+
+    def test_add_remote_schema_with_union_err_unkown_types(self, hge_ctx):
+        """add a remote schema with a union having unknown types as memberTypes"""
+        check_query_f(hge_ctx, self.dir + '/add_remote_schema_with_union_err_unknown_types.yaml')
+
+    def test_add_remote_schema_with_union_err_subtype_iface(self, hge_ctx):
+        """add a remote schema with a union having interface as a memberType"""
+        check_query_f(hge_ctx, self.dir + '/add_remote_schema_with_union_err_member_type_interface.yaml')
+
+    def test_add_remote_schema_with_union_err_wrapped_type(self, hge_ctx):
+        """add a remote schema with error in spec for union"""
+        check_query_f(hge_ctx, self.dir + '/add_remote_schema_with_union_err_wrapped_type.yaml')
 
     def test_bulk_remove_add_remote_schema(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')

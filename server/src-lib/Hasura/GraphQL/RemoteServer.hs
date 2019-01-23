@@ -48,12 +48,11 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
     either schemaErr return $ J.eitherDecode respData
-  let (G.SchemaDocument tyDefs, qRootN, mRootN, sRootN) =
+  let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
-  let etTypeInfos = mapM fromRemoteTyDef tyDefs
-  typeInfos <- either schemaErr return etTypeInfos
-  let typMap = VT.mkTyInfoMap typeInfos
-      mQrTyp = Map.lookup qRootN typMap
+  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
+     VT.RemoteType name def
+  let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
       mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
@@ -65,8 +64,10 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
-    schemaErr err = throw400 RemoteSchemaError (T.pack $ show err)
+    remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
+    remoteSchemaErr = throw400 RemoteSchemaError
+
+    schemaErr err = remoteSchemaErr (T.pack $ show err)
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
     throwHttpErr = schemaErr
