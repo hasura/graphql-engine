@@ -27,6 +27,10 @@
 
   ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
 
+- Similarly, create an article table with the following data model:
+table: `article`
+columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`)
+
 - Clone this repo:
   ```bash
   git clone https://github.com/hasura/graphql-engine
@@ -45,11 +49,11 @@
     export default function(context){
       return {
             httpLinkOptions: {
-                uri: 'http://localhost:8080/v1alpha1/graphql',
+                uri: 'https://my-app.herokuapp.com/v1alpha1/graphql',
                 credentials: 'same-origin'
             },
             cache: new InMemoryCache(),
-            wsEndpoint: 'ws://localhost:8080/v1alpha1/graphql',
+            wsEndpoint: 'ws://my-app.herokuapp.com/v1alpha1/graphql',
       }
     }
   ```
@@ -68,7 +72,7 @@
 
     ```
 
-    - In `pages/index.vue`, 
+    - In `pages/index.vue`, we import author query.
     ```js
 
     <script>
