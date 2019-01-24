@@ -51,7 +51,7 @@ parseOpExps annVal = do
       -- jsonb related operators
       "_contains"     -> fmap AContains <$> asPGColValM v
       "_contained_in" -> fmap AContainedIn <$> asPGColValM v
-      "_has_key"      -> fmap AHasKey <$> asPGColTextM v
+      "_has_key"      -> fmap AHasKey <$> asPGColValM v
       "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 
@@ -83,10 +83,11 @@ parseOpExps annVal = do
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
                  throw500 "expected \"distance\" input field in st_d_within_input ty"
-      distSQL <- uncurry toTxtValue <$> asPGColVal distanceVal
+      dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
                  throw500 "expected \"from\" input field in st_d_within_input ty"
-      ASTDWithin distSQL <$> asPGColVal fromVal
+      from <- asPGColVal fromVal
+      return $ ASTDWithin dist from
 
 parseAsEqOp
   :: (MonadError QErr m)

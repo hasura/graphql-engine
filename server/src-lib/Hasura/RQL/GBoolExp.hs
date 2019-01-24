@@ -77,12 +77,15 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
     "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
     "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseVal
-    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseVal
-    "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
-    "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
+
+    --FIXME:- Parse a session variable as text array values
+    --TODO:- Add following commented operators after fixing above said
+    -- "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
+    -- "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
+    -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
 
     -- geometry type
     "_st_contains"   -> parseGeometryOp ASTContains
@@ -164,11 +167,11 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
       stdObj :: Object <- parseVal
       distVal <- onNothing (M.lookup "distance" stdObj) $
                  throw400 UnexpectedPayload "expecting \"distance\" key"
-      distSQL <- txtRHSBuilder PGFloat distVal
+      dist <- withPathK "distance" $ parser PGFloat distVal
       fromVal <- onNothing (M.lookup "from" stdObj) $
                  throw400 UnexpectedPayload "expecting \"from\" key"
-      ASTDWithin (S.annotateExp distSQL PGFloat) <$>
-                 withPathK "from" (parser colTy fromVal)
+      from <- withPathK "from" $ parser colTy fromVal
+      return $ ASTDWithin dist from
 
     decodeAndValidateRhsCol =
       parseVal >>= validateRhsCol
@@ -185,7 +188,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     geometryOnlyOp ty =
       throwError $ buildMsg ty [PGGeometry]
 
-    parseOne = parser colTy val
+    parseWithTy ty = parser ty val
+    parseOne = parseWithTy colTy
     parseMany = do
       vals <- runAesonParser parseJSON val
       indexedForM vals (parser colTy)
@@ -312,7 +316,7 @@ txtRHSBuilder
   :: (MonadError QErr m)
   => PGColType -> Value -> m S.SQLExp
 txtRHSBuilder ty val =
-  txtEncoder <$> pgValParser ty val
+  toTxtValue ty <$> pgValParser ty val
 
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
@@ -333,7 +337,7 @@ mkColCompExp qual lhsCol = \case
   ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
   AContains val    -> S.BECompare S.SContains lhs val
   AContainedIn val -> S.BECompare S.SContainedIn lhs val
-  AHasKey key      -> S.BECompare S.SHasKey lhs $ toText key
+  AHasKey val      -> S.BECompare S.SHasKey lhs val
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
 
@@ -357,9 +361,6 @@ mkColCompExp qual lhsCol = \case
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
-
-    toText val =
-      S.SETyAnn (txtEncoder $ PGValText val) S.textType
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType

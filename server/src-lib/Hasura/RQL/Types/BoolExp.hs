@@ -113,13 +113,13 @@ data OpExpG a
 
   | AContains !a
   | AContainedIn !a
-  | AHasKey !Text
+  | AHasKey !a
   | AHasKeysAny [Text]
   | AHasKeysAll [Text]
 
   | ASTContains !a
   | ASTCrosses !a
-  | ASTDWithin !S.SQLExp !a
+  | ASTDWithin !a !a
   | ASTEquals !a
   | ASTIntersects !a
   | ASTOverlaps !a
@@ -162,7 +162,7 @@ opExpToJPair f = \case
 
   AContains a    -> ("_contains", f a)
   AContainedIn a -> ("_contained_in", f a)
-  AHasKey a      -> ("_has_key", toJSON a)
+  AHasKey a      -> ("_has_key", f a)
   AHasKeysAny a  -> ("_has_keys_any", toJSON a)
   AHasKeysAll a  -> ("_has_keys_all", toJSON a)
 

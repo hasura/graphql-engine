@@ -20,6 +20,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value           (withGeoVal)
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
@@ -182,10 +183,7 @@ getDependentHeaders (BoolExp boolExp) =
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap parseOnlyString (M.elems o)
-      -- if isRQLOp k
-      --                        then parseOnlyString v
-      --                        else []
+      concatMap parseValue (M.elems o)
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -198,9 +196,9 @@ valueParser columnType = \case
   val -> txtRHSBuilder columnType val
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr =
+    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
+    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
