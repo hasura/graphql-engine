@@ -789,6 +789,9 @@ code
     background-color: #F2B130;
   }
 }
+.gray_button {
+  background: #f2f2f2 !important;
+}
 .docsButton
 {
   background-color: #fff;
@@ -1109,6 +1112,11 @@ code
   height: 100vh;
   margin-bottom: 50px;
 }
+.button_mar_right
+{
+  margin-right: 20px;
+}
+
 
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);

@@ -25,6 +25,7 @@ import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import _push from '../push';
 import { ordinalColSort, findTableFromRel } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
+import Button from '../../Layout/Button/Button';
 import './ReactTableFix.css';
 
 const ViewRows = ({
@@ -184,8 +185,10 @@ const ViewRows = ({
     }
     if (!isSingleRow && !isView && hasPrimaryKeys) {
       editButton = (
-        <button
-          className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
+        <Button
+          className={styles.add_mar_right_small}
+          color="white"
+          size="xs"
           onClick={() => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
@@ -195,12 +198,14 @@ const ViewRows = ({
           data-test={`row-edit-button-${rowIndex}`}
         >
           Edit
-        </button>
+        </Button>
       );
 
       cloneButton = (
-        <button
-          className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
+        <Button
+          className={styles.add_mar_right_small}
+          size="xs"
+          color="white"
           onClick={() => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
@@ -210,19 +215,21 @@ const ViewRows = ({
           data-test={`row-clone-button-${rowIndex}`}
         >
           Clone
-        </button>
+        </Button>
       );
 
       deleteButton = (
-        <button
-          className={`${styles.add_mar_right_small} btn btn-xs btn-default`}
+        <Button
+          className={styles.add_mar_right_small}
+          size="xs"
+          color="white"
           onClick={() => {
             dispatch(deleteItem(pkClause));
           }}
           data-test={`row-delete-button-${rowIndex}`}
         >
           Delete
-        </button>
+        </Button>
       );
     }
     const buttonsDiv = (

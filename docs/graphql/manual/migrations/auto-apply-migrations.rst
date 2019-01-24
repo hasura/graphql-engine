@@ -1,5 +1,5 @@
-Auto-apply migrations or metadata when server starts
-====================================================
+Auto-apply migrations/metadata when server starts
+=================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,7 +23,7 @@ Applying migrations
 
 The ``migrations`` directory created by Hasura CLI (the one next to 
 ``config.yaml``) can be mounted at ``/hasura-migrations`` path of this docker
-container and the container's entrypoint script will apply the migrations before
+container and the container's entry point script will apply the migrations before
 starting the server. If no directory is mounted at the designated path, server
 will start ignoring migrations.
 
@@ -53,4 +53,4 @@ Applying only metadata
 
 If you're managing migrations with a different tool and want to use this image to apply only the
 metadata, mount a directory with just a ``metadata.yaml`` file and the script will
-apply the meatadata.
+apply the metadata.

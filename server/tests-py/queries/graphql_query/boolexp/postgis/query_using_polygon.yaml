@@ -1,0 +1,146 @@
+description: Query data from geom_table using postgis ops in bool exp and polygon value as input argument
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    st_d_within_2:
+    - id: 1
+      geom_col:
+        type: Point
+        coordinates:
+        - 1
+        - 2
+    - id: 2
+      geom_col:
+        type: LineString
+        coordinates:
+        - - 0
+          - 0
+        - - 0.5
+          - 1
+        - - 1
+          - 2
+        - - 1.5
+          - 3
+    - id: 3
+      geom_col:
+        type: LineString
+        coordinates:
+        - - 1
+          - 0
+        - - 0.5
+          - 0.5
+        - - 0
+          - 1
+    - id: 4
+      geom_col:
+        type: Polygon
+        coordinates:
+        - - - 0
+            - 0
+          - - 0
+            - 1
+          - - 1
+            - 1
+          - - 1
+            - 0
+          - - 0
+            - 0
+    - id: 5
+      geom_col:
+        type: Polygon
+        coordinates:
+        - - - 2
+            - 0
+          - - 2
+            - 1
+          - - 3
+            - 1
+          - - 3
+            - 0
+          - - 2
+            - 0
+    st_d_within_3:
+    - id: 1
+      geom_col:
+        type: Point
+        coordinates:
+        - 1
+        - 2
+    - id: 2
+      geom_col:
+        type: LineString
+        coordinates:
+        - - 0
+          - 0
+        - - 0.5
+          - 1
+        - - 1
+          - 2
+        - - 1.5
+          - 3
+    - id: 3
+      geom_col:
+        type: LineString
+        coordinates:
+        - - 1
+          - 0
+        - - 0.5
+          - 0.5
+        - - 0
+          - 1
+    - id: 4
+      geom_col:
+        type: Polygon
+        coordinates:
+        - - - 0
+            - 0
+          - - 0
+            - 1
+          - - 1
+            - 1
+          - - 1
+            - 0
+          - - 0
+            - 0
+    - id: 5
+      geom_col:
+        type: Polygon
+        coordinates:
+        - - - 2
+            - 0
+          - - 2
+            - 1
+          - - 3
+            - 1
+          - - 3
+            - 0
+          - - 2
+            - 0
+
+query:
+  variables:
+    polygon:
+      type: Polygon
+      coordinates:
+      - - - 2
+          - 0
+        - - 2
+          - 1
+        - - 3
+          - 1
+        - - 3
+          - 0
+        - - 2
+          - 0
+  query: |
+    query geom_table($polygon: geometry){
+      st_d_within_2: geom_table(where: {geom_col: {_st_d_within: {distance: 2 from: $polygon}}}){
+        id
+        geom_col
+      }
+      st_d_within_3: geom_table(where: {geom_col: {_st_d_within: {distance: 3 from: $polygon}}}){
+        id
+        geom_col
+      }
+    }

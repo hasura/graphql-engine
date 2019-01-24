@@ -42,4 +42,4 @@ Advanced
    For new project <new-project>
    For existing project <existing-project>
    With a database with an existing migration system <database-with-migrations>
-   Auto-apply migrations or metadata when server starts <auto-apply-migrations>
+   Auto-apply migrations/metadata when server starts <auto-apply-migrations>
