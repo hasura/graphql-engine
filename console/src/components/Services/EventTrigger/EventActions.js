@@ -50,7 +50,7 @@ const loadTriggers = () => (dispatch, getState) => {
         columns: ['*'],
         order_by: {
           column: 'name',
-          order: 'asc',
+          type: 'asc',
           nulls: 'last',
         },
       },
