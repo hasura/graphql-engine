@@ -442,7 +442,9 @@ export const checkViewRelationship = () => {
   // Add relationship
   cy.get(getElementFromAlias('add-rel-mod')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('someRel');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('someRel');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   cy.wait(300);
   // Insert a row
