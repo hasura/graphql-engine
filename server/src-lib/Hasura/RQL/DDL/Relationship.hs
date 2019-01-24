@@ -179,6 +179,10 @@ objRelP2Setup qt (RelDef rn ru _) = do
         [(consName, refsn, reftn, colMapping)] -> do
           let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
+                     -- this needs to be added explicitly to handle the remote table
+                     -- being untracked. In this case, neither the using_col nor
+                     -- the constraint name will help.
+                     , SchemaDependency (SOTable refqt) "remote_table"
                      ]
               refqt = QualifiedTable refsn reftn
           void $ askTabInfo refqt
@@ -284,6 +288,10 @@ arrRelP2Setup qt (RelDef rn ru _) = do
         [(consName, mapping)] -> do
           let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                      , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
+                     -- we don't need to necessarily track the remote table like we did in
+                     -- case of obj relationships as the remote table is indirectly
+                     -- tracked by tracking the constraint name and 'using_col'
+                     , SchemaDependency (SOTable refqt) "remote_table"
                      ]
           return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
         _  -> throw400 ConstraintError
