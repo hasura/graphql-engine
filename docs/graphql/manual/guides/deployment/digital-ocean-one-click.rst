@@ -281,6 +281,11 @@ Using a different database
 
       # type ESC followed by :wq to save and quit
 
+   .. note::
+
+     Hasura GraphQL engine needs access permissions to your Postgres database as described in
+     :doc:`Postgres permissions <../../deployment/postgres-permissions>`
+
 
 Logs
 ----

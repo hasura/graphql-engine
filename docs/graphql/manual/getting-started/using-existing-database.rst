@@ -6,7 +6,7 @@ Getting started with an existing database
   :depth: 1
   :local:
 
-Follow one of these guides to setup Hasura GraphQL engine use an existing database:
+Follow one of these guides to setup Hasura GraphQL engine using an existing database:
 
 - :doc:`Using Heroku <../deployment/heroku/using-existing-heroku-database>`: Run on Heroku and connect to an existing
   Heroku Postgres database.
