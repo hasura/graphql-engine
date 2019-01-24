@@ -402,7 +402,7 @@ Fetch a list of those authors whose names are NOT part of a list:
 Text search / filter or pattern matching operators
 --------------------------------------------------
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators behave exactly like
-their `SQL counterparts <https://www.postgresql.org/docs/10/static/functions-matching.html>`_  and are used for
+their `SQL counterparts <https://www.postgresql.org/docs/10/static/functions-matching.html>`__  and are used for
 pattern matching on string/Text fields.
 
 Example: _like
@@ -485,7 +485,7 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
 ``_st_touches``, ``_st_within`` and ``_st_d_within`` operators are used to filter ``geometry`` like columns.
 For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.
 
-Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`_) representation of ``geometry`` values in
+Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`__) representation of ``geometry`` values in
 ``variables`` as shown in the following examples:
 
 

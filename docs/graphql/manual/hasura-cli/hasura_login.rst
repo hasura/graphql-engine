@@ -3,7 +3,7 @@
 Hasura CLI: hasura login
 ------------------------
 
-Login to `Hasura dashboard <https://hasura.io>`_. Opens in a browser.
+Login to `Hasura dashboard <https://hasura.io>`__. Opens in a browser.
 
 Synopsis
 ~~~~~~~~

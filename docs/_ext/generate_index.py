@@ -67,7 +67,7 @@ def on_finish_building(app, exception):
 def generate_index_file(app, pagename, templatename, context, doctree):
     # If the page name is not part of the below list and is present in toc-tree
     if (pagename not in ['manual/index', 'index', 'search', 'genindex']
-            and not (pagename.startswith("ref/") or pagename.startswith("tutorials/") or pagename.startswith("guides/"))
+            and not (pagename.startswith("ref/") or pagename.startswith("tutorials/") or pagename.startswith("graphql/manual/hasura-cli/"))
             and re.search('<a[^>]*class="[^"]*current[^"]*"[^>]*>', context['toc_full'])):
         title = ''
         keyword = ''
@@ -132,7 +132,7 @@ def generate_index_file(app, pagename, templatename, context, doctree):
 
         indexObjs.append(index_obj)
     else:
-        print('\t\t\t\t\t\t\t\t\t\t\t\tIGNORED FOR INDEXING')
+        print('\t ** IGNORED FOR INDEXING **')
 
 
 def setup(app):
