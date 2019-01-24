@@ -245,14 +245,14 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
-    for (let i = 0; i < totalHeaders.length; i += 1) {
+    totalHeaders.forEach((t) => {
       // If header has x-hasura-*
-      const lHead = totalHeaders[i].toLowerCase();
-      if (lHead.indexOf('x-hasura-') !== -1) {
-        user[lHead] = reqHeaders[totalHeaders[i]];
-        delete reqHeaders[totalHeaders[i]];
+      const lHead = t.toLowerCase();
+      if (lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-') {
+        user[lHead] = reqHeaders[t];
+        delete reqHeaders[t];
       }
-    }
+    });
 
     editedQuery.user = user;
     return fetch(`${url}/explain`, {
