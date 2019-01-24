@@ -12,7 +12,7 @@ import {
   untrackedTip,
   untrackedRelTip,
   trackableFunctions,
-  nonTrackableFunctions,
+  // nonTrackableFunctions,
 } from './Tooltips';
 import Button from '../../Layout/Button/Button';
 import {
@@ -75,7 +75,7 @@ class Schema extends Component {
       currentSchema,
       dispatch,
       functionsList,
-      nonTrackableFunctionsList,
+      // nonTrackableFunctionsList, // Not used right now, will be used in future
       trackedFunctions,
     } = this.props;
 
@@ -320,7 +320,7 @@ class Schema extends Component {
             ]
             : null}
 
-          {nonTrackableFunctionsList.length > 0
+          {/* nonTrackableFunctionsList.length > 0
             ? [
               <hr
                 className={styles.wd100 + ' ' + styles.clear_fix}
@@ -361,7 +361,7 @@ class Schema extends Component {
                 </div>
               </div>,
             ]
-            : null}
+            : null */}
         </div>
       </div>
     );

@@ -28,15 +28,6 @@ class ModifyCustomFunction extends React.Component {
     super();
     this.state = {};
     this.state.deleteConfirmationError = null;
-    this.state.sampleSQL = `create function search_posts(search text)
-returns setof post as $$
-    select *
-    from post
-    where
-      title ilike ('%' || search || '%') or
-      content ilike ('%' || search || '%')
-$$ language sql stable;
-`;
   }
   componentDidMount() {
     const { functionName, schema } = this.props.params;

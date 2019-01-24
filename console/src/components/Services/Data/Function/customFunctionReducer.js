@@ -88,7 +88,6 @@ const makeRequest = (
       if (globals.consoleMode === 'cli') {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
-      // dispatch(loadTriggers());
       if (successMsg) {
         dispatch(showSuccessNotification(successMsg));
       }
@@ -172,7 +171,8 @@ const deleteFunctionSql = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const functionName = getState().functions.functionName;
-    const sqlDropView =
+    const functionDefinition = getState().functions.functionDefinition;
+    const sqlDropFunction =
       'DROP FUNCTION ' +
       '"' +
       currentSchema +
@@ -184,16 +184,16 @@ const deleteFunctionSql = () => {
     const sqlUpQueries = [
       {
         type: 'run_sql',
-        args: { sql: sqlDropView },
+        args: { sql: sqlDropFunction },
       },
     ];
-    // const sqlCreateView = ''; //pending
-    // const sqlDownQueries = [
-    //   {
-    //     type: 'run_sql',
-    //     args: { 'sql': sqlCreateView }
-    //   }
-    // ];
+    const sqlDownQueries = [];
+    if (functionDefinition && functionDefinition.length > 0) {
+      sqlDownQueries.push({
+        type: 'run_sql',
+        args: { sql: functionDefinition },
+      });
+    }
 
     // Apply migrations
     const migrationName = 'drop_function_' + currentSchema + '_' + functionName;
@@ -211,7 +211,7 @@ const deleteFunctionSql = () => {
     return dispatch(
       makeRequest(
         sqlUpQueries,
-        [],
+        sqlDownQueries,
         migrationName,
         customOnSuccess,
         customOnError,
