@@ -14,6 +14,7 @@ import {
   trackableFunctions,
   nonTrackableFunctions,
 } from './Tooltips';
+import Button from '../../Layout/Button/Button';
 import {
   setTableName,
   addExistingTableSql,
@@ -133,9 +134,11 @@ class Schema extends Component {
       untrackedHtml.push(
         <div className={styles.padd_bottom} key={`${i}untracked`}>
           <div className={`${styles.display_inline} ${styles.padd_right}`}>
-            <button
+            <Button
               data-test={`add-track-table-${untrackedTables[i].table_name}`}
-              className={`${styles.display_inline} btn btn-xs btn-default`}
+              className={`${styles.display_inline}`}
+              color="white"
+              size="xs"
               onClick={e => {
                 e.preventDefault();
                 dispatch(setTableName(untrackedTables[i].table_name));
@@ -143,7 +146,7 @@ class Schema extends Component {
               }}
             >
               Add
-            </button>
+            </Button>
           </div>
           <div className={`${styles.padd_right} ${styles.inline_block}`}>
             {untrackedTables[i].table_name}
@@ -171,9 +174,10 @@ class Schema extends Component {
               Schema{' '}
             </h2>
             {migrationMode ? (
-              <button
+              <Button
                 data-test="data-create-table"
-                className={styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(
@@ -182,7 +186,7 @@ class Schema extends Component {
                 }}
               >
                 Create Table
-              </button>
+              </Button>
             ) : null}
           </div>
           <hr />
@@ -217,17 +221,17 @@ class Schema extends Component {
                 <i className="fa fa-info-circle" aria-hidden="true" />
               </OverlayTrigger>
               {untrackedTables.length > 0 ? (
-                <button
-                  className={`${styles.display_inline} ${
-                    styles.addAllBtn
-                  } btn btn-xs btn-default`}
+                <Button
+                  className={`${styles.display_inline} ${styles.addAllBtn}`}
+                  color="white"
+                  size="xs"
                   onClick={e => {
                     e.preventDefault();
                     dispatch(addAllUntrackedTablesSql(untrackedTables));
                   }}
                 >
                   Add all
-                </button>
+                </Button>
               ) : null}
             </div>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
@@ -257,106 +261,106 @@ class Schema extends Component {
 
           {trackableFuncs.length > 0
             ? [
-                <hr
-                  className={styles.wd100 + ' ' + styles.clear_fix}
-                  key={'custom-functions-hr'}
-                />,
-                <div
-                  className={styles.wd100 + ' ' + styles.clear_fix}
-                  key={'custom-functions-content'}
+              <hr
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'custom-functions-hr'}
+              />,
+              <div
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'custom-functions-content'}
+              >
+                <h4
+                  className={`${styles.subheading_text} ${
+                    styles.heading_tooltip
+                  }`}
                 >
-                  <h4
-                    className={`${styles.subheading_text} ${
-                      styles.heading_tooltip
-                    }`}
-                  >
                     Untracked custom functions
-                  </h4>
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={trackableFunctions}
-                  >
-                    <i className="fa fa-info-circle" aria-hidden="true" />
-                  </OverlayTrigger>
-                  <div className={`${styles.padd_left_remove} col-xs-12`}>
-                    {trackableFuncs.map((p, i) => (
+                </h4>
+                <OverlayTrigger
+                  placement="right"
+                  overlay={trackableFunctions}
+                >
+                  <i className="fa fa-info-circle" aria-hidden="true" />
+                </OverlayTrigger>
+                <div className={`${styles.padd_left_remove} col-xs-12`}>
+                  {trackableFuncs.map((p, i) => (
+                    <div
+                      className={styles.padd_bottom}
+                      key={`${i}untracked-function`}
+                    >
                       <div
-                        className={styles.padd_bottom}
-                        key={`${i}untracked-function`}
+                        className={`${styles.display_inline} ${
+                          styles.padd_right
+                        }`}
                       >
-                        <div
-                          className={`${styles.display_inline} ${
-                            styles.padd_right
-                          }`}
+                        <button
+                          data-test={`add-track-function-${p.function_name}`}
+                          className={`${
+                            styles.display_inline
+                          } btn btn-xs btn-default`}
+                          onClick={e => {
+                            e.preventDefault();
+                            dispatch(addExistingFunction(p.function_name));
+                          }}
                         >
-                          <button
-                            data-test={`add-track-function-${p.function_name}`}
-                            className={`${
-                              styles.display_inline
-                            } btn btn-xs btn-default`}
-                            onClick={e => {
-                              e.preventDefault();
-                              dispatch(addExistingFunction(p.function_name));
-                            }}
-                          >
                             Add
-                          </button>
-                        </div>
-                        <div
-                          className={`${styles.padd_right} ${
-                            styles.inline_block
-                          }`}
-                        >
-                          {p.function_name}
-                        </div>
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                </div>,
-              ]
+                      <div
+                        className={`${styles.padd_right} ${
+                          styles.inline_block
+                        }`}
+                      >
+                        {p.function_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>,
+            ]
             : null}
 
           {nonTrackableFunctionsList.length > 0
             ? [
-                <hr
-                  className={styles.wd100 + ' ' + styles.clear_fix}
-                  key={'non-trackable-custom-functions-id'}
-                />,
-                <div
-                  className={styles.wd100 + ' ' + styles.clear_fix}
-                  key={'non-trackable-custom-functions-content'}
+              <hr
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'non-trackable-custom-functions-id'}
+              />,
+              <div
+                className={styles.wd100 + ' ' + styles.clear_fix}
+                key={'non-trackable-custom-functions-content'}
+              >
+                <h4
+                  className={`${styles.subheading_text} ${
+                    styles.heading_tooltip
+                  }`}
                 >
-                  <h4
-                    className={`${styles.subheading_text} ${
-                      styles.heading_tooltip
-                    }`}
-                  >
                     Non trackable custom functions
-                  </h4>
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={nonTrackableFunctions}
-                  >
-                    <i className="fa fa-info-circle" aria-hidden="true" />
-                  </OverlayTrigger>
-                  <div className={`${styles.padd_left_remove} col-xs-12`}>
-                    {nonTrackableFunctionsList.map((p, i) => (
+                </h4>
+                <OverlayTrigger
+                  placement="right"
+                  overlay={nonTrackableFunctions}
+                >
+                  <i className="fa fa-info-circle" aria-hidden="true" />
+                </OverlayTrigger>
+                <div className={`${styles.padd_left_remove} col-xs-12`}>
+                  {nonTrackableFunctionsList.map((p, i) => (
+                    <div
+                      className={styles.padd_bottom}
+                      key={`${i}untracked-function`}
+                    >
                       <div
-                        className={styles.padd_bottom}
-                        key={`${i}untracked-function`}
+                        className={`${styles.padd_right} ${
+                          styles.inline_block
+                        }`}
                       >
-                        <div
-                          className={`${styles.padd_right} ${
-                            styles.inline_block
-                          }`}
-                        >
-                          {p.function_name}
-                        </div>
+                        {p.function_name}
                       </div>
-                    ))}
-                  </div>
-                </div>,
-              ]
+                    </div>
+                  ))}
+                </div>
+              </div>,
+            ]
             : null}
         </div>
       </div>

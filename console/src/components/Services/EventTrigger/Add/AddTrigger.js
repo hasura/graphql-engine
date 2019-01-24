@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../Layout/Button/Button';
 
 import {
   removeHeader,
@@ -265,10 +266,7 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div
-              key={i}
-              className={styles.noPadd + ' col-md-4'}
-            >
+            <div key={i} className={styles.noPadd + ' col-md-4'}>
               <div className={'checkbox '}>
                 <label>
                   {inputHtml}
@@ -295,7 +293,10 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}> {getColumnList('update')} </div>
+          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+            {' '}
+            {getColumnList('update')}{' '}
+          </div>
         ) : (
           <div>
             <div
@@ -651,19 +652,18 @@ class AddTrigger extends Component {
                 )}
               </div>
               <hr />
-              <button
+              <div
                 onClick={this.toggleAdvanced.bind(this)}
+                className={styles.toggleAdvanced}
                 data-test="advanced-settings"
-                type="button"
-                className={'btn btn-default ' + styles.advancedToggleBtn}
               >
-                Advanced Settings
                 {this.state.advancedExpanded ? (
-                  <i className={'fa fa-arrow-up'} />
+                  <i className={'fa fa-chevron-down'} />
                 ) : (
-                  <i className={'fa fa-arrow-down'} />
-                )}
-              </button>
+                  <i className={'fa fa-chevron-right'} />
+                )}{' '}
+                <b>Advanced Settings</b>
+              </div>
               {this.state.advancedExpanded ? (
                 <div
                   className={
@@ -671,12 +671,20 @@ class AddTrigger extends Component {
                     ' ' +
                     styles.add_mar_bottom +
                     ' ' +
-                    styles.add_mar_top + ' ' + styles.wd100
+                    styles.add_mar_top +
+                    ' ' +
+                    styles.wd100
                   }
                 >
                   {tableName ? advancedColumnSection : null}
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div
@@ -725,7 +733,13 @@ class AddTrigger extends Component {
                     </div>
                   </div>
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top + ' ' + styles.wd100}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
@@ -733,13 +747,14 @@ class AddTrigger extends Component {
                 </div>
               ) : null}
               <hr />
-              <button
+              <Button
                 type="submit"
-                className={`btn ${styles.yellow_button}`}
+                color="yellow"
+                size="sm"
                 data-test="trigger-create"
               >
                 {createBtnText}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

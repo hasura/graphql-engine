@@ -28,6 +28,7 @@ import {
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
+import Button from '../../Layout/Button/Button';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -287,9 +288,11 @@ class StreamingLogs extends Component {
         />
         <br />
         <div className={'hide'}>
-          <button
+          <Button
             onClick={this.watchChanges.bind(this)}
-            className={styles.watchBtn + ' btn btn-default'}
+            className={styles.watchBtn}
+            color="white"
+            size="sm"
             data-test="run-query"
           >
             {this.state.isWatching ? (
@@ -302,7 +305,7 @@ class StreamingLogs extends Component {
                 Stream Logs <i className={'fa fa-play'} />
               </span>
             )}
-          </button>
+          </Button>
         </div>
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
@@ -315,9 +318,11 @@ class StreamingLogs extends Component {
                   onChange={this.filterAll.bind(this)}
                 />
               </div>
-              <button
+              <Button
                 onClick={this.handleNewerEvents.bind(this)}
-                className={styles.newBtn + ' btn btn-default'}
+                className={styles.newBtn}
+                color="white"
+                size="sm"
               >
                 {log.isLoadingNewer ? (
                   <span>
@@ -326,7 +331,7 @@ class StreamingLogs extends Component {
                 ) : (
                   <span>Load newer logs</span>
                 )}
-              </button>
+              </Button>
               {!log.isNewAvailable ? (
                 <span> No new logs available at this time </span>
               ) : null}
@@ -482,9 +487,10 @@ class StreamingLogs extends Component {
             />
             <div className={styles.loadOlder}>
               {log.isOldAvailable ? (
-                <button
+                <Button
                   onClick={this.handleOlderEvents.bind(this)}
-                  className={styles.oldBtn + ' btn btn-default'}
+                  color="white"
+                  size="sm"
                 >
                   {log.isLoadingOlder ? (
                     <span>
@@ -493,7 +499,7 @@ class StreamingLogs extends Component {
                   ) : (
                     <span>Load older logs</span>
                   )}
-                </button>
+                </Button>
               ) : (
                 <div> No more logs available </div>
               )}

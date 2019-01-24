@@ -4,7 +4,8 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
-import Button from 'react-bootstrap/lib/Button';
+import ModalButton from 'react-bootstrap/lib/Button';
+import Button from '../../Layout/Button/Button';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -354,19 +355,20 @@ const RawSQL = ({
           ) : (
             <hr />
           )}
-          <button
+          <Button
             type="submit"
-            className={styles.yellow_button}
             onClick={submitSQL}
+            color="yellow"
+            size="sm"
             data-test="run-sql"
           >
             Run!
-          </button>
+          </Button>
         </div>
         <div className="hidden col-xs-4">{alert}</div>
       </div>
       <Modal show={isModalOpen} onHide={onModalClose.bind(this)}>
-        <Modal.Header closeButton>
+        <Modal.Header closeModalButton>
           <Modal.Title>Run SQL</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -380,14 +382,14 @@ const RawSQL = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={onModalClose}>Cancel</Button>
-          <Button
+          <ModalButton onClick={onModalClose}>Cancel</ModalButton>
+          <ModalButton
             onClick={onConfirmNoMigration}
             bsStyle="primary"
             data-test="not-migration-confirm"
           >
             Yes, i confirm
-          </Button>
+          </ModalButton>
         </Modal.Footer>
       </Modal>
       <div className={`${styles.padd_left_remove} container-fluid`}>
