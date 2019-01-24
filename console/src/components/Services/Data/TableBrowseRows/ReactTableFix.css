@@ -64,7 +64,12 @@
   min-width: -o-fit-content !important;
 }
 .ReactTable .rt-table .rt-thead {
-  /* min-width: 1150px !important; */
+  min-width: fit-content !important;
+  min-width: -moz-fit-content !important;
+  min-width: -webkit-fit-content !important;
+  min-width: -o-fit-content !important;
+  border-right: solid 1px #f2f2f2;
+  border-left: solid 1px #f2f2f2;
 }
 .ReactTable .rt-tbody .rt-tr-group:last-child
 {
