@@ -30,7 +30,7 @@ def insert(hge_ctx, table, row, returning=[], headers = {}):
             "returning": returning
         }
     }
-    st_code, resp = hge_ctx.v1q(q, h = headers)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 
@@ -43,7 +43,7 @@ def update(hge_ctx, table, where_exp, set_exp, headers = {}):
             "$set": set_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q, h = headers)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 
@@ -55,7 +55,7 @@ def delete(hge_ctx, table, where_exp, headers = {}):
             "where": where_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q, h = headers)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 class TestCreateAndDelete(DefaultTestQueries):
