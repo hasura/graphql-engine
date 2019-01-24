@@ -6,6 +6,9 @@ Update mutation
   :depth: 1
   :local:
 
+Auto-generated update mutation schema
+-------------------------------------
+
 Here’s the schema for the update mutation field for a table ``article``:
 
 .. code-block:: graphql
@@ -32,8 +35,11 @@ As you can see from the schema:
 
 .. note::
 
-  At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
-  ``_delete_elem``, ``_delete_at_path`` is required.
+  - At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
+    ``_delete_elem``, ``_delete_at_path`` is required.
+
+  - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
+    ``update_<schema_name>_<table_name>``.
 
 Update based on an object's fields
 ----------------------------------
@@ -201,14 +207,10 @@ Since the input is a json value, it should be provided through a variable.
         }
       }
     }
-
-with variables:
-
-.. code-block:: json
-
-   {
-     "value": { "key1": "value1" }
-   }
+  :variables:
+    {
+      "value": { "key1": "value1" }
+    }
 
 Prepend a json to a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,7 +218,7 @@ You can prepend any ``jsonb`` column with another json value by using the ``_pre
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Prepend the json ``{"key0": "value0}``to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Prepend the json ``{"key0": "value0}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -249,14 +251,10 @@ Since the input is a json value, it should be provided through a variable.
         }
       }
     }
-
-with variables:
-
-.. code-block:: json
-
-   {
-     "value": { "key0": "value0" }
-   }
+  :variables:
+    {
+      "value": { "key0": "value0" }
+    }
 
 Delete a top-level key from a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

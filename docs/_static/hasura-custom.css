@@ -487,6 +487,18 @@ article ol ol {
   text-align: center;
   background-color: #eee;
   margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-hasura-custom .footer_logo {
+  width: 80px;
+  margin-right: 30px;
+}
+
+.footer-hasura-custom .footer_text {
+ display: inline-block;
 }
 
 /*** Footer END ***/
@@ -622,23 +634,28 @@ article ol ol {
 }
 
 .graphiql .query,
-.graphiql .response {
+.graphiql .response,
+.graphiql .variables {
   display: none;
 }
 
-.graphiql-container {
-  min-height: 300px;
+.graphiql .graphiql-container {
+  min-height: 325px;
   border: 1px solid #eee;
   -webkit-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
   -moz-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
   box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
 }
 
-.graphiql-container .topBarWrap {
+.graphiql.with-vars .graphiql-container {
+  min-height: 375px;
+}
+
+.graphiql .topBarWrap {
   height: 0;
 }
 
-.graphiql-container .execute-button-wrap {
+.graphiql .execute-button-wrap {
   z-index: 3;
   top: -2px;
   left: calc(50% - 50px);
@@ -646,35 +663,44 @@ article ol ol {
   height: 28px !important;
 }
 
-.graphiql-container .execute-button {
+.graphiql .execute-button {
   height: 28px !important;
   width: 28px !important;
 }
 
-.graphiql-container .execute-button svg {
+.graphiql .execute-button svg {
   position: relative;
   top: -3px;
   left: -3px;
 }
 
-.graphiql-container .CodeMirror pre {
+.graphiql .CodeMirror pre {
   padding: 0 15px;
 }
 
-.graphiql-container .CodeMirror-lines {
+.graphiql .CodeMirror-lines {
   padding: 15px 0 !important;
 }
 
-.graphiql-container .CodeMirror-gutter-wrapper,
-.graphiql-container .CodeMirror-gutters {
+.graphiql .CodeMirror-gutter-wrapper,
+.graphiql .CodeMirror-gutters {
   display: none;
 }
 
-.graphiql-container .title,
-.graphiql-container .docExplorerShow,
-.graphiql-container .toolbar,
-.graphiql-container .variable-editor {
+.graphiql .title,
+.graphiql .docExplorerShow,
+.graphiql .toolbar {
   display: none !important;
+}
+
+.graphiql:not(.with-vars) .variable-editor {
+  display: none !important;
+}
+
+.graphiql .variable-editor .variable-editor-title {
+  line-height: 12px;
+  font-size: 13px;
+  padding: 2px 10px;
 }
 
 .graphiql.view-only .execute-button {

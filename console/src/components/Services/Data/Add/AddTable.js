@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../Layout/Button/Button';
 
 import dataTypes from '../Common/DataTypes';
 import { showErrorNotification } from '../Notification';
@@ -472,14 +473,15 @@ class AddTable extends Component {
               }}
             />
             <hr />
-            <button
+            <Button
               type="submit"
-              className={`btn ${styles.yellow_button}`}
               onClick={this.submitValidation.bind(this)}
               data-test="table-create"
+              color="yellow"
+              size="sm"
             >
               {createBtnText}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
