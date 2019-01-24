@@ -91,8 +91,8 @@ foldBoolExp f (BoolFld ce)  =
   f ce
 
 data OpExpG a
-  = AEQ !a
-  | ANE !a
+  = AEQ !Bool !a
+  | ANE !Bool !a
 
   | AIN  ![a]
   | ANIN ![a]
@@ -140,8 +140,8 @@ data OpExpG a
 
 opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
 opExpToJPair f = \case
-  AEQ a          -> ("_eq", f a)
-  ANE a          -> ("_ne", f a)
+  AEQ _ a          -> ("_eq", f a)
+  ANE _ a          -> ("_ne", f a)
 
   AIN a          -> ("_in", toJSON $ map f a)
   ANIN a         -> ("_nin", toJSON $ map f a)
