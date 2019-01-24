@@ -487,6 +487,18 @@ article ol ol {
   text-align: center;
   background-color: #eee;
   margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-hasura-custom .footer_logo {
+  width: 80px;
+  margin-right: 30px;
+}
+
+.footer-hasura-custom .footer_text {
+ display: inline-block;
 }
 
 /*** Footer END ***/
