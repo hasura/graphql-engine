@@ -16,7 +16,7 @@ const countQuery = {
   type: 'count',
   args: {
     table: '',
-    where: { id: { '$gt': 0 }}
+    where: { id: { '$ne': null }}
   }
 };
 
