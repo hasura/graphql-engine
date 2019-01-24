@@ -489,6 +489,41 @@ class TestWebhookEnv(object):
         assert st_code == 200, resp
         check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)
 
+class TestSessionVariables(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        session_variables = { 'x-hasura-role': 'admin', 'x-hasura-allowed-roles': "['admin','user']", 'x-hasura-user-id': '1'}
+        st_code, resp = insert(hge_ctx, table, init_row, headers = session_variables)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, session_variables = session_variables)
+
+        where_exp = {"c1": 1}
+        set_exp = {"c2": "world"}
+        exp_ev_data = {
+            "old": init_row,
+            "new": {"c1": 1, "c2": "world"}
+        }
+        session_variables = { 'x-hasura-role': 'admin', 'x-hasura-random': 'some_random_info', 'X-Random-Header': 'not_session_variable'}
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp, headers = session_variables)
+        assert st_code == 200, resp
+        session_variables.pop('X-Random-Header')
+        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, session_variables = session_variables)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -496,4 +531,4 @@ class TestWebhookEnv(object):
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)
