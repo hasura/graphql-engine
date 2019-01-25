@@ -8,7 +8,7 @@ Auth0 as our authentication and JWT token provider.
 1. Create an application in Auth0 dashboard
 
 2. In the settings of the application, add `http://localhost:3000/callback` as
-   "Allowed Callback URLs" and "Allowed Web Origins"
+   "Allowed Callback URLs" and `http://localhost:3000` as "Allowed Web Origins"
 
 ## Add rules for custom JWT claims
 
