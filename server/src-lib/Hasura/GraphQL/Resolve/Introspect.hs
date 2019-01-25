@@ -13,6 +13,7 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -201,7 +202,7 @@ inputValueR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => Field -> InpValInfo -> m J.Object
-inputValueR fld (InpValInfo descM n ty) =
+inputValueR fld (InpValInfo descM n defM ty) =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__InputValue"
@@ -209,7 +210,7 @@ inputValueR fld (InpValInfo descM n ty) =
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
     -- TODO: figure out what the spec means by 'string encoding'
-    "defaultValue" -> return J.Null
+    "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 
 -- 4.5.5

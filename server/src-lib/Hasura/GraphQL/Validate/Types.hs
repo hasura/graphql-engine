@@ -98,10 +98,10 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
 
 data InpValInfo
   = InpValInfo
-  { _iviDesc :: !(Maybe G.Description)
-  , _iviName :: !G.Name
-  , _iviType :: !G.GType
-  -- TODO, handle default values
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType InpValInfo where
@@ -109,8 +109,8 @@ instance EquatableGType InpValInfo where
   getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
-fromInpValDef (G.InputValueDefinition descM n ty _) =
-  InpValInfo descM n ty
+fromInpValDef (G.InputValueDefinition descM n ty defM) =
+  InpValInfo descM n defM ty
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
@@ -317,8 +317,8 @@ defaultDirectives =
   [mkDirective "skip", mkDirective "include"]
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
-    args = Map.singleton "if" $ InpValInfo Nothing "if" $
-           G.TypeNamed (G.Nullability True) $ G.NamedType $ G.Name "Boolean"
+    args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing $
+           G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 

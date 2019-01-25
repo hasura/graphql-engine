@@ -181,7 +181,7 @@ mkCompExpInp colTy =
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
     tyDesc = mconcat
@@ -193,7 +193,7 @@ mkCompExpInp colTy =
       PGVarchar -> True
       PGText    -> True
       _         -> False
-    mk t n = InpValInfo Nothing n $ G.toGT t
+    mk t n = InpValInfo Nothing n Nothing $ G.toGT t
     colScalarTy = mkScalarTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
@@ -211,7 +211,7 @@ mkCompExpInp colTy =
     isJsonbTy = case colTy of
       PGJSONB -> True
       _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op ty
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -237,7 +237,7 @@ mkCompExpInp colTy =
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" $ G.toGT stDWithinInpTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
@@ -246,7 +246,7 @@ mkCompExpInp colTy =
       _          -> False
 
     geomOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op $ G.toGT $ mkScalarTy PGGeometry
+      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeometry
     geomOps =
       [
         ( "_st_contains"
@@ -345,15 +345,15 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          InpValInfo (Just "name of the type") "name"
+          InpValInfo (Just "name of the type") "name" Nothing
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGFloat
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ G.toNT $ mkScalarTy PGFloat
       ]
 
 emptyGCtx :: GCtx
