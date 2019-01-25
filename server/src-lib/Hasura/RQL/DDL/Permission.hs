@@ -103,7 +103,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe Object -> m (PreSetCols, [Text])
+  => TableInfo -> Maybe Object -> m (PreSetCols, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
@@ -112,7 +112,8 @@ procSetObj ti mObj = do
         "column " <> pgCol <<> " not found in table " <>> tn
       sqlExp <- valueParser ty val
       return (pgCol, sqlExp)
-  return (setColsSQL, depHeaders)
+  let deps = map (mkColDep "on_type" tn . fst) $ HM.toList setColsSQL
+  return (setColsSQL, depHeaders, deps)
   where
     fieldInfoMap = tiFieldInfoMap ti
     tn = tiName ti
@@ -128,10 +129,10 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
-  let deps = mkParentDep tn : beDeps
-      fltrHeaders = getDependentHeaders chk
-  (setColsSQL, setHdrs) <- procSetObj tabInfo set
+  let fltrHeaders = getDependentHeaders chk
+  (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
   let reqHdrs = fltrHeaders `union` setHdrs
+      deps = mkParentDep tn : beDeps ++ setColDeps
   preSetCols <- HM.union setColsSQL <$> nonInsColVals
   return (InsPermInfo vn be preSetCols reqHdrs, deps)
   where
@@ -282,13 +283,14 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
 
-  (setColsSQL, setHeaders) <- procSetObj tabInfo set
+  (setColsSQL, setHeaders, setColDeps) <- procSetObj tabInfo set
 
   -- check if the columns exist
   _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
        askPGType fieldInfoMap updCol relInUpdErr
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) updCols
+  let updColDeps = map (mkColDep "untyped" tn) updCols
+      deps = mkParentDep tn : beDeps ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `union` setHeaders
       updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
