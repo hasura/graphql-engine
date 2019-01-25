@@ -101,6 +101,24 @@ dropView vn =
     dropViewS = Q.fromBuilder $
       "DROP VIEW " <> toSQL vn
 
+procSetObj
+  :: (QErrM m)
+  => TableInfo -> Maybe Object -> m (PreSetCols, [Text])
+procSetObj ti mObj = do
+  setColsSQL <- withPathK "set" $
+    fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
+      let pgCol = PGCol t
+      ty <- askPGType fieldInfoMap pgCol $
+        "column " <> pgCol <<> " not found in table " <>> tn
+      sqlExp <- valueParser ty val
+      return (pgCol, sqlExp)
+  return (setColsSQL, depHeaders)
+  where
+    fieldInfoMap = tiFieldInfoMap ti
+    tn = tiName ti
+    setObj = fromMaybe mempty mObj
+    depHeaders = getDepHeadersFromVal $ Object setObj
+
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo
@@ -112,16 +130,8 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
     procBoolExp tn fieldInfoMap chk
   let deps = mkParentDep tn : beDeps
       fltrHeaders = getDependentHeaders chk
-      setObj = fromMaybe mempty set
-  setColsSQL <- withPathK "set" $
-    fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
-      let pgCol = PGCol t
-      ty <- askPGType fieldInfoMap pgCol $
-        "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser ty val
-      return (pgCol, sqlExp)
-  let setHdrs = mapMaybe (fetchHdr . snd) (HM.toList setObj)
-      reqHdrs = fltrHeaders `union` setHdrs
+  (setColsSQL, setHdrs) <- procSetObj tabInfo set
+  let reqHdrs = fltrHeaders `union` setHdrs
   preSetCols <- HM.union setColsSQL <$> nonInsColVals
   return (InsPermInfo vn be preSetCols reqHdrs, deps)
   where
@@ -137,10 +147,6 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
           indexedForM_ insCols $ \c -> void $ askPGType fieldInfoMap c ""
         return $ allCols \\ insCols
     nonInsColVals = S.mkColDefValMap <$> nonInsCols
-
-    fetchHdr (String t) = bool Nothing (Just $ T.toLower t)
-                          $ isUserVar t
-    fetchHdr _          = Nothing
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo vn be _ _) = do
@@ -258,6 +264,7 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
+  , ucSet     :: !(Maybe Object) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
   } deriving (Show, Eq, Lift)
 
@@ -271,9 +278,11 @@ buildUpdPermInfo
   => TableInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
-buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
+buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
+
+  (setColsSQL, setHeaders) <- procSetObj tabInfo set
 
   -- check if the columns exist
   _ <- withPathK "columns" $ indexedForM updCols $ \updCol ->
@@ -281,8 +290,10 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec fltr) = do
 
   let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) updCols
       depHeaders = getDependentHeaders fltr
+      reqHeaders = depHeaders `union` setHeaders
+      updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
 
-  return (UpdPermInfo (HS.fromList updCols) tn be depHeaders, deps)
+  return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be setColsSQL reqHeaders, deps)
 
   where
     tn = tiName tabInfo

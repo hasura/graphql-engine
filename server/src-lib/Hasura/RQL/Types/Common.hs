@@ -14,14 +14,17 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+       , PreSetCols
        ) where
 
 import           Hasura.Prelude
+import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
@@ -133,3 +136,5 @@ instance (FromJSON a) => FromJSON (WithTable a) where
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
+
+type PreSetCols = HM.HashMap PGCol S.SQLExp

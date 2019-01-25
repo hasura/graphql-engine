@@ -33,7 +33,7 @@ data OpCtx
   -- tn, fn, filter, limit, req hdrs
   | OCFuncAggQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
+  | OCUpdate QualifiedTable PreSetCols AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
   | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
   deriving (Show, Eq)
@@ -54,37 +54,6 @@ data GCtx
 instance Has TypeMap GCtx where
   getter = _gTypes
   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
-
--- data OpCtx
---   -- table, req hdrs
---   = OCInsert QualifiedTable [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, reqt hdrs
---   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCUpdate QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCDelete QualifiedTable S.BoolExp [T.Text]
---   deriving (Show, Eq)
-
--- data GCtx
---   = GCtx
---   { _gTypes     :: !TypeMap
---   , _gFields    :: !FieldMap
---   , _gOrdByCtx  :: !OrdByCtx
---   , _gQueryRoot :: !ObjTyInfo
---   , _gMutRoot   :: !(Maybe ObjTyInfo)
---   , _gSubRoot   :: !(Maybe ObjTyInfo)
---   , _gOpCtxMap  :: !OpCtxMap
---   , _gInsCtxMap :: !InsCtxMap
---   } deriving (Show, Eq)
-
--- instance Has TypeMap GCtx where
---   getter = _gTypes
---   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
 
 instance ToJSON GCtx where
   toJSON _ = String "GCtx"

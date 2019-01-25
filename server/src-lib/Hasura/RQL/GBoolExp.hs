@@ -252,7 +252,7 @@ txtRHSBuilder
   :: (MonadError QErr m)
   => PGColType -> Value -> m S.SQLExp
 txtRHSBuilder ty val =
-  txtEncoder <$> pgValParser ty val
+  toTxtValue ty <$> pgValParser ty val
 
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
