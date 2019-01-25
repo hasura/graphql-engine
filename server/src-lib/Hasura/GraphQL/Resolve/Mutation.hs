@@ -2,10 +2,13 @@ module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
   , convertDelete
   , convertMutResp
+  , buildEmptyMutResp
   ) where
 
+import           Control.Arrow                     (second)
 import           Hasura.Prelude
 
+import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -117,13 +120,17 @@ convertUpdate tn filterExp fld = do
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
                  ]
-      updExp = concat $ catMaybes updExpsM
+      setItems = concat $ catMaybes updExpsM
   -- atleast one of update operators is expected
   unless (any isJust updExpsM) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
-  let p1 = RU.UpdateQueryP1 tn updExp (filterExp, whereExp) mutFlds
-  return $ RU.updateQueryToTx (p1, prepArgs)
+  let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds
+      whenNonEmptyItems = return $ RU.updateQueryToTx (p1, prepArgs)
+      whenEmptyItems = buildEmptyMutResp mutFlds
+  -- if there are not set items then do not perform
+  -- update and return empty mutation response
+  bool whenNonEmptyItems whenEmptyItems $ null setItems
   where
     args = _fArguments fld
 
@@ -138,3 +145,14 @@ convertDelete tn filterExp fld = do
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteQueryToTx (p1, args)
+
+-- | build mutation response for empty objects
+buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
+buildEmptyMutResp = return . mkTx
+  where
+    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
+    -- generate empty mutation response
+    convMutFld = \case
+      RR.MCount -> J.toJSON (0 :: Int)
+      RR.MExp e -> J.toJSON e
+      RR.MRet _ -> J.toJSON ([] :: [J.Value])
