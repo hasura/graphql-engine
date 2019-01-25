@@ -82,3 +82,20 @@ args:
         2,
         true
       )
+
+#Create search article function
+- type: run_sql
+  args:
+    sql: |
+      create function search_articles(search text)
+      returns setof article as $$
+          select *
+          from article
+          where
+          title ilike ('%' || search || '%') or
+          content ilike ('%' || search || '%')
+      $$ language sql stable;
+- type: track_function
+  args:
+    name: search_articles
+    schema: public

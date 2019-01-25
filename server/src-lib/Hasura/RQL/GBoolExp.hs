@@ -93,8 +93,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
 
   x           -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
   where
-    parseEq       = AEQ <$> parseOne -- equals
-    parseNe       = ANE <$> parseOne -- <>
+    parseEq       = AEQ False <$> parseOne -- equals
+    parseNe       = ANE False <$> parseOne -- <>
     parseIn       = AIN <$> parseMany -- in an array
     parseNin      = ANIN <$> parseMany -- not in an array
     parseGt       = AGT <$> parseOne -- >
@@ -142,7 +142,7 @@ parseOpExps
   -> m [OpExpG a]
 parseOpExps valParser cim colInfo = \case
   (Object o) -> mapM (parseOpExp valParser cim colInfo)(M.toList o)
-  val        -> pure . AEQ <$> valParser (pgiType colInfo) val
+  val        -> pure . AEQ False <$> valParser (pgiType colInfo) val
 
 type ValueParser m a = PGColType -> Value -> m a
 
@@ -257,8 +257,10 @@ txtRHSBuilder ty val =
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
 mkColCompExp qual lhsCol = \case
-  AEQ val          -> equalsBoolExpBuilder lhs val
-  ANE val          -> notEqualsBoolExpBuilder lhs val
+  AEQ False val    -> equalsBoolExpBuilder lhs val
+  AEQ True val     -> S.BECompare S.SEQ lhs val
+  ANE False val    -> notEqualsBoolExpBuilder lhs val
+  ANE True  val    -> S.BECompare S.SNE lhs val
   AIN vals         -> handleEmptyIn vals
   ANIN vals        -> S.BENot $ handleEmptyIn vals
   AGT val          -> S.BECompare S.SGT lhs val
