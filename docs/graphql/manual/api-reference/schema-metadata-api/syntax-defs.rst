@@ -28,6 +28,27 @@ QualifiedTable
            "schema": String
    }
 
+.. _FunctionName:
+
+FunctionName
+^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String | QualifiedFunction_
+
+QualifiedFunction
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+           "name": String,
+           "schema": String
+   }
+
 .. _RoleName:
 
 RoleName

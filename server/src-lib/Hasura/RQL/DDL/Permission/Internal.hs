@@ -104,7 +104,7 @@ savePermToCatalog
   -> QualifiedTable
   -> PermDef a
   -> Q.TxE QErr ()
-savePermToCatalog pt (QualifiedTable sn tn) (PermDef  rn qdef mComment) =
+savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                hdb_catalog.hdb_permission
@@ -117,7 +117,7 @@ dropPermFromCatalog
   -> RoleName
   -> PermType
   -> Q.TxE QErr ()
-dropPermFromCatalog (QualifiedTable sn tn) rn pt =
+dropPermFromCatalog (QualifiedObject sn tn) rn pt =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                hdb_catalog.hdb_permission
@@ -217,8 +217,8 @@ injectDefaults qv qt =
   ]
 
   where
-    QualifiedTable (SchemaName vsn) (TableName vn) = qv
-    QualifiedTable (SchemaName tsn) (TableName tn) = qt
+    QualifiedObject (SchemaName vsn) (TableName vn) = qv
+    QualifiedObject (SchemaName tsn) (TableName tn) = qt
 
 data DropPerm a
   = DropPerm

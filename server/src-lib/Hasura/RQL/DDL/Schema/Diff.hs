@@ -11,6 +11,10 @@ module Hasura.RQL.DDL.Schema.Diff
   , SchemaDiff(..)
   , getSchemaDiff
   , getSchemaChangeDeps
+
+  , FunctionMeta(..)
+  , fetchFunctionMeta
+  , getDroppedFuncs
   ) where
 
 import           Hasura.Prelude
@@ -107,7 +111,7 @@ fetchTableMeta = do
         AND t.table_schema <> 'hdb_catalog'
                 |] () False
   forM res $ \(ts, tn, toid, cols, constrnts) ->
-    return $ TableMeta toid (QualifiedTable ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
+    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -219,3 +223,28 @@ getSchemaChangeDeps schemaDiff = do
 
     isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
     isDirectDep _                 = False
+
+data FunctionMeta
+  = FunctionMeta
+  { fmOid      :: !Int
+  , fmFunction :: !QualifiedFunction
+  } deriving (Show, Eq)
+
+fetchFunctionMeta :: Q.Tx [FunctionMeta]
+fetchFunctionMeta = do
+  res <- Q.listQ [Q.sql|
+    SELECT
+        f.function_schema,
+        f.function_name,
+        p.oid
+    FROM hdb_catalog.hdb_function_agg f
+         JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+    WHERE
+        f.function_schema <> 'hdb_catalog'
+                  |] () False
+  forM res $ \(sn, fn, foid) ->
+    return $ FunctionMeta foid $ QualifiedObject sn fn
+
+getDroppedFuncs :: [FunctionMeta] -> [FunctionMeta] -> [QualifiedFunction]
+getDroppedFuncs oldMeta newMeta =
+  map fmFunction $ getDifference fmOid oldMeta newMeta
