@@ -95,7 +95,7 @@ Fetch a list of articles and each article's author:
 
 An author can write multiple articles. This is an ``array relationship``.
 
-You can add an ``array relationship`` exactly how you added an ``object relationship`` as shown above:
+You can add an ``array relationship`` in the same fashion as an ``object relationship`` but on the ``author`` table:
 
 .. image:: ../../../../img/graphql/manual/schema/add-1-many-relationship.png
 
