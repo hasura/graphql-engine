@@ -202,6 +202,19 @@ module.exports = {
 };
 ```
 
+If you need to do some asynchronous stuff before exporting your data, you can
+also export a function:
+
+```js
+module.exports = async function() {
+  let db = {}
+
+  // do asynchronous stuff
+
+  return db
+}
+```
+
 ## Use cases
 
 ### Play with GraphQL on your MongoDB data
