@@ -14,6 +14,7 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Parser as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
@@ -23,6 +24,7 @@ import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT
+
 
 
 introspectionQuery :: BL.ByteString
@@ -265,11 +267,15 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     _type <- o .: "type"
-    --defValue <- o .: "defaultValue"
+    defVal <- o .:? "defaultValue"
     let desc' = fmap fromIntrospection desc
-        r = G.InputValueDefinition desc' name (fromIntrospection _type) Nothing
+    let defVal' = fmap fromIntrospection defVal
+        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal'
     return $ FromIntrospection r
 
+instance J.FromJSON (FromIntrospection G.ValueConst) where
+   parseJSON = J.withText "defaultValue" $ \t -> fmap FromIntrospection
+     $ either (fail . T.unpack) return $ G.parseValueConst t
 
 -- instance J.FromJSON (FromIntrospection G.ListType) where
 --   parseJSON = parseJSON
@@ -283,11 +289,6 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
 --     name <- o .: "name"
 --     ofVal <- o .: "value"
 --     return $ FromIntrospection $ G.ObjectFieldG name ofVal
-
--- instance J.FromJSON (FromIntrospection G.ValueConst) where
---   parseJSON =
---     fmap FromIntrospection .
---     $(J.mkParseJSON J.defaultOptions{J.sumEncoding=J.UntaggedValue} ''G.ValueConst)
 
 -- instance J.FromJSON (FromIntrospection G.Value) where
 --   parseJSON =
