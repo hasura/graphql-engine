@@ -44,7 +44,7 @@ Here is a sample row from the telemetry database:
       "timestamp": "2019-01-21T19:43:33.63838+00:00",
       "db_uid": "dddff371-dab2-450f-9969-235bca66dab1",
       "instance_uid": "6799360d-a431-40c5-9f68-24592a9f07df",
-      "version": "v1.0.0-alpha35",
+      "version": "v1.0.0-alpha36",
       "metrics": {
         "views": 1,
         "tables": 2,
@@ -83,7 +83,7 @@ Here is a sample:
      "event_type": "ModifyTable/RESET",
      "console_mode": "server",
      "server_uuid": "79485a57-fca5-40f3-a31b-78c0d211314b",
-     "server_version": "v1.0.0-alpha35",
+     "server_version": "v1.0.0-alpha36",
      "cli_uuid": null
    }
 
@@ -116,7 +116,7 @@ Sample data:
      "os_platform": "linux",
      "os_arch": "amd64",
      "server_uuid": "a4d66fb2-f88d-457b-8db1-ea7a0b57921d",
-     "server_version": "v1.0.0-alpha35",
+     "server_version": "v1.0.0-alpha36",
      "payload": null
    }
 
@@ -141,7 +141,7 @@ the flag ``--enable-telemetry=false``:
 In order to turn off telemetry on CLI and on the console served by CLI,
 you can set the same environment varibale on the machine running CLI.
 You can also set ``"enable_telemetry": false`` in the JSON file created
-by the CLI at ``~/.hasura/.config.json`` to perisist the setting.
+by the CLI at ``~/.hasura/config.json`` to perisist the setting.
 
 Privacy Policy
 --------------
