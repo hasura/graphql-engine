@@ -84,6 +84,9 @@ instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
 
+class ToTxt a where
+  toTxt :: a -> T.Text
+
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
@@ -96,6 +99,9 @@ instance DQuote TableName where
 
 instance ToSQL TableName where
   toSQL = toSQL . toIden
+
+instance ToTxt TableName where
+  toTxt = getTableTxt
 
 data TableType
   = TTBaseTable
@@ -135,6 +141,22 @@ instance IsIden ConstraintName where
 instance ToSQL ConstraintName where
   toSQL = toSQL . toIden
 
+newtype FunctionName
+  = FunctionName { getFunctionTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+
+instance IsIden FunctionName where
+  toIden (FunctionName t) = Iden t
+
+instance DQuote FunctionName where
+  dquoteTxt (FunctionName t) = t
+
+instance ToSQL FunctionName where
+  toSQL = toSQL . toIden
+
+instance ToTxt FunctionName where
+  toTxt = getFunctionTxt
+
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
@@ -148,50 +170,58 @@ instance IsIden SchemaName where
 instance ToSQL SchemaName where
   toSQL = toSQL . toIden
 
-data QualifiedTable
-  = QualifiedTable
-  { qtSchema :: !SchemaName
-  , qtTable  :: !TableName
+data QualifiedObject a
+  = QualifiedObject
+  { qSchema :: !SchemaName
+  , qName   :: !a
   } deriving (Show, Eq, Generic, Lift)
 
-instance FromJSON QualifiedTable where
+instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
-    QualifiedTable publicSchema <$> parseJSON v
+    QualifiedObject publicSchema <$> parseJSON v
   parseJSON (Object o) =
-    QualifiedTable <$>
+    QualifiedObject <$>
     o .:? "schema" .!= publicSchema <*>
     o .: "name"
   parseJSON _ =
-    fail "expecting a string/object for table"
+    fail "expecting a string/object for QualifiedObject"
 
-instance ToJSON QualifiedTable where
-  toJSON (QualifiedTable (SchemaName "public") tn) = toJSON tn
-  toJSON (QualifiedTable sn tn) =
+instance (ToJSON a) => ToJSON (QualifiedObject a) where
+  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
+  toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
-           , "name"  .= tn
+           , "name"  .= o
            ]
 
-instance ToJSONKey QualifiedTable where
-  toJSONKey = ToJSONKeyText qualTableToTxt (text . qualTableToTxt)
+instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
+  toJSONKey = ToJSONKeyText qualObjectToText (text . qualObjectToText)
 
-instance DQuote QualifiedTable where
-  dquoteTxt = qualTableToTxt
+instance (ToTxt a) => DQuote (QualifiedObject a) where
+  dquoteTxt = qualObjectToText
 
-instance Hashable QualifiedTable
+instance (Hashable a) => Hashable (QualifiedObject a)
 
-instance ToSQL QualifiedTable where
-  toSQL (QualifiedTable sn tn) =
-    toSQL sn <> "." <> toSQL tn
+instance (ToSQL a) => ToSQL (QualifiedObject a) where
+  toSQL (QualifiedObject sn o) =
+    toSQL sn <> "." <> toSQL o
 
-qualTableToTxt :: QualifiedTable -> T.Text
-qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
-  getTableTxt tn
-qualTableToTxt (QualifiedTable sn tn) =
-  getSchemaTxt sn <> "." <> getTableTxt tn
+qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
+qualObjectToText (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
-snakeCaseTable :: QualifiedTable -> T.Text
-snakeCaseTable (QualifiedTable sn tn) =
+snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
+snakeCaseQualObject (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "_" <> toTxt o
+
+type QualifiedTable = QualifiedObject TableName
+
+snakeCaseTable :: QualifiedObject TableName -> T.Text
+snakeCaseTable (QualifiedObject sn tn) =
   getSchemaTxt sn <> "_" <> getTableTxt tn
+
+type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }

@@ -48,11 +48,11 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx, FuncArgCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx, FuncArgCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
@@ -66,26 +66,31 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      sel <- runExplain (fldMap, orderByCtx) $ case opCxt of
-        OCSelect tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect False <$>
-            RS.fromField txtConverter tn permFilter permLimit fld
-        OCSelectPkey tn permFilter hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect True <$>
-            RS.fromFieldByPKey txtConverter tn permFilter fld
-        OCSelectAgg tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkAggSelect <$>
-            RS.fromAggField txtConverter tn permFilter permLimit fld
-        _ -> throw500 "unexpected mut field info for explain"
+      builderSQL <- runExplain (fldMap, orderByCtx, funcArgCtx) $
+        case opCxt of
+          OCSelect tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect False <$>
+              RS.fromField txtConverter tn permFilter permLimit fld
+          OCSelectPkey tn permFilter hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect True <$>
+              RS.fromFieldByPKey txtConverter tn permFilter fld
+          OCSelectAgg tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkAggSelect <$>
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs False
+          OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs True
+          _ -> throw500 "unexpected mut field info for explain"
 
-      let selectSQL = TB.run $ toSQL sel
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> selectSQL
+      let txtSQL = TB.run builderSQL
+          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      return $ FieldPlan fName (Just selectSQL) $ Just planLines
+      return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
     txtConverter = return . uncurry toTxtValue
@@ -93,10 +98,19 @@ explainField userInfo gCtx fld =
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
+    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
+
+    procFuncQuery tn fn permFilter permLimit hdrs isAgg = do
+      validateHdrs hdrs
+      (tabArgs, eSel, frmItem) <-
+        RS.fromFuncQueryField txtConverter fn isAgg fld
+      return $ toSQL $
+        RS.mkFuncSelectWith fn tn
+        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
 
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo

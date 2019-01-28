@@ -10,6 +10,7 @@ import {
   relNameChanged,
   resetRelationshipForm,
   relManualAddClicked,
+  formRelName,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
@@ -111,6 +112,7 @@ const addRelationshipCellView = (
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
+    dispatch(relNameChanged(formRelName(rel)));
   };
 
   const onRelationshipNameChanged = e => {

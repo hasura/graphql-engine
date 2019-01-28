@@ -206,6 +206,12 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_artist_select_query_Track(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track.yaml')
 
+    def test_artist_search_tracks(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks.yaml')
+
+    def test_artist_search_tracks_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks_aggregate.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
@@ -312,3 +318,15 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
+
+class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
+
+    def test_search_posts(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
+
+    def test_search_posts_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions'
