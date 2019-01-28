@@ -21,7 +21,7 @@ def select_last_event_fromdb(hge_ctx):
     return st_code, resp
 
 
-def insert(hge_ctx, table, row, returning=[]):
+def insert(hge_ctx, table, row, returning=[], headers = {}):
     q = {
         "type": "insert",
         "args": {
@@ -30,11 +30,11 @@ def insert(hge_ctx, table, row, returning=[]):
             "returning": returning
         }
     }
-    st_code, resp = hge_ctx.v1q(q)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 
-def update(hge_ctx, table, where_exp, set_exp):
+def update(hge_ctx, table, where_exp, set_exp, headers = {}):
     q = {
         "type": "update",
         "args": {
@@ -43,11 +43,11 @@ def update(hge_ctx, table, where_exp, set_exp):
             "$set": set_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 
-def delete(hge_ctx, table, where_exp):
+def delete(hge_ctx, table, where_exp, headers = {}):
     q = {
         "type": "delete",
         "args": {
@@ -55,7 +55,7 @@ def delete(hge_ctx, table, where_exp):
             "where": where_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q)
+    st_code, resp = hge_ctx.v1q(q, headers = headers)
     return st_code, resp
 
 class TestCreateAndDelete(DefaultTestQueries):
@@ -89,10 +89,9 @@ class TestCreateEvtQuery(object):
             "old": None,
             "new": init_row
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -102,7 +101,7 @@ class TestCreateEvtQuery(object):
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -110,7 +109,7 @@ class TestCreateEvtQuery(object):
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)
 
 
 class TestRetryConf(object):
@@ -132,7 +131,6 @@ class TestRetryConf(object):
             "old": None,
             "new": init_row
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
         time.sleep(15)
@@ -162,7 +160,7 @@ class TestEvtHeaders(object):
         headers = {"X-Header-From-Value": "MyValue", "X-Header-From-Env": "MyEnvValue"}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers = headers)
 
 
 class TestUpdateEvtQuery(object):
@@ -186,11 +184,10 @@ class TestUpdateEvtQuery(object):
             "old": None,
             "new": {"c1": 1, "c2": "hello"}
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/new")
+            check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, webhook_path = "/new")
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -198,7 +195,7 @@ class TestUpdateEvtQuery(object):
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/new")
+            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, webhook_path = "/new")
 
         where_exp = {"c1": 1}
         set_exp = {"c1": 2}
@@ -208,7 +205,7 @@ class TestUpdateEvtQuery(object):
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/new")
+        check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, webhook_path ="/new")
 
         where_exp = {"c1": 2}
         exp_ev_data = {
@@ -217,7 +214,7 @@ class TestUpdateEvtQuery(object):
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "DELETE", exp_ev_data, headers, "/new")
+        check_event(hge_ctx, "t1_cols", table, "DELETE", exp_ev_data, webhook_path = "/new")
 
 
 class TestDeleteEvtQuery(object):
@@ -241,11 +238,10 @@ class TestDeleteEvtQuery(object):
             "old": None,
             "new": init_row
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -256,7 +252,7 @@ class TestDeleteEvtQuery(object):
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -265,7 +261,7 @@ class TestDeleteEvtQuery(object):
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)
 
 
 class TestEvtSelCols:
@@ -287,10 +283,9 @@ class TestEvtSelCols:
             "old": None,
             "new": {"c1": 1, "c2": "hello"}
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_cols", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -298,7 +293,7 @@ class TestEvtSelCols:
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c1": 2}
@@ -308,7 +303,7 @@ class TestEvtSelCols:
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_cols", table, "UPDATE", exp_ev_data)
 
         where_exp = {"c1": 2}
         exp_ev_data = {
@@ -317,7 +312,7 @@ class TestEvtSelCols:
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_cols", table, "DELETE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_cols", table, "DELETE", exp_ev_data)
 
     def test_selected_cols_dep(self, hge_ctx):
         st_code, resp = hge_ctx.v1q({
@@ -357,10 +352,9 @@ class TestEvtInsertOnly:
             "old": None,
             "new": init_row
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_insert", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_insert", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -371,7 +365,7 @@ class TestEvtInsertOnly:
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_insert", table, "UPDATE", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_insert", table, "UPDATE", exp_ev_data)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -380,7 +374,7 @@ class TestEvtInsertOnly:
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, "t1_insert", table, "DELETE", exp_ev_data, headers, "/")
+            check_event(hge_ctx, "t1_insert", table, "DELETE", exp_ev_data)
 
 
 class TestEvtSelPayload:
@@ -402,10 +396,9 @@ class TestEvtSelPayload:
             "old": None,
             "new": {"c1": 1, "c2": "hello"}
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_payload", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_payload", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -415,7 +408,7 @@ class TestEvtSelPayload:
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c1": 2}
@@ -425,7 +418,7 @@ class TestEvtSelPayload:
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_payload", table, "UPDATE", exp_ev_data)
 
         where_exp = {"c1": 2}
         exp_ev_data = {
@@ -434,7 +427,7 @@ class TestEvtSelPayload:
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_payload", table, "DELETE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_payload", table, "DELETE", exp_ev_data)
 
     def test_selected_payload_dep(self, hge_ctx):
         st_code, resp = hge_ctx.v1q({
@@ -474,10 +467,9 @@ class TestWebhookEnv(object):
             "old": None,
             "new": init_row
         }
-        headers = {}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -487,7 +479,7 @@ class TestWebhookEnv(object):
         }
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -495,4 +487,48 @@ class TestWebhookEnv(object):
         }
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
-        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data, headers, "/")
+        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)
+
+class TestSessionVariables(object):
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic(self, hge_ctx):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        session_variables = { 'x-hasura-role': 'admin', 'x-hasura-allowed-roles': "['admin','user']", 'x-hasura-user-id': '1'}
+        st_code, resp = insert(hge_ctx, table, init_row, headers = session_variables)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "INSERT", exp_ev_data, session_variables = session_variables)
+
+        where_exp = {"c1": 1}
+        set_exp = {"c2": "world"}
+        exp_ev_data = {
+            "old": init_row,
+            "new": {"c1": 1, "c2": "world"}
+        }
+        session_variables = { 'x-hasura-role': 'admin', 'x-hasura-random': 'some_random_info', 'X-Random-Header': 'not_session_variable'}
+        st_code, resp = update(hge_ctx, table, where_exp, set_exp, headers = session_variables)
+        assert st_code == 200, resp
+        session_variables.pop('X-Random-Header')
+        check_event(hge_ctx, "t1_all", table, "UPDATE", exp_ev_data, session_variables = session_variables)
+
+        exp_ev_data = {
+            "old": {"c1": 1, "c2": "world"},
+            "new": None
+        }
+        st_code, resp = delete(hge_ctx, table, where_exp)
+        assert st_code == 200, resp
+        check_event(hge_ctx, "t1_all", table, "DELETE", exp_ev_data)

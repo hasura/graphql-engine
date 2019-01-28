@@ -38,3 +38,71 @@ export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   body,
   failOnStatusCode: false,
 });
+
+export const testCustomFunctionDefinition = i => `create function search_posts${'_' +
+  i} (search text) returns setof post as $$ select * from post where title ilike ('%' || search || '%') or content ilike ('%' || search || '%') $$ language sql stable;
+`;
+
+export const getCustomFunctionName = i => `search_posts${'_' + i}`;
+
+export const testCustomFunctionSQL = i => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `CREATE OR REPLACE FUNCTION public.search_posts_${i}(search text)\n RETURNS SETOF post\n LANGUAGE sql\n STABLE\nAS $function$\n          select *\n          from post\n          where\n          title ilike ('%' || search || '%') or\n          content ilike ('%' || search || '%')\n      $function$\n`,
+          cascade: false,
+        },
+      },
+      {
+        type: 'track_function',
+        args: {
+          name: `search_posts_${i}`,
+          schema: 'public',
+        },
+      },
+    ],
+  };
+};
+
+export const createTable = () => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql:
+            'create table post (\n        id serial PRIMARY KEY,\n        title TEXT,\n        content TEXT\n )',
+          cascade: false,
+        },
+      },
+      {
+        type: 'add_existing_table_or_view',
+        args: {
+          name: 'post',
+          schema: 'public',
+        },
+      },
+    ],
+  };
+};
+
+export const dropTable = () => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: 'DROP table post;',
+          cascade: false,
+        },
+      },
+    ],
+  };
+};
+
+export const getSchema = () => 'public';

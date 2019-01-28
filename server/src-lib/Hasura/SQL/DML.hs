@@ -120,6 +120,10 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
+mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
+mkFuncFromItem qf args =
+  FIFunc qf args Nothing
+
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
   innerSel = mkSelect { selExtr = extrs }
@@ -385,6 +389,7 @@ instance ToSQL DistinctExpr where
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
+  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
   | FISelect !Lateral !Select !Alias
   | FIJoin !JoinExpr
   deriving (Show, Eq)
@@ -400,6 +405,8 @@ instance ToSQL FromItem where
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
+  toSQL (FIFunc qf args mal) =
+    toSQL qf <> paren (", " <+> args) <-> toSQL mal
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIJoin je) =

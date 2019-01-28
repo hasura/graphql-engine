@@ -166,6 +166,7 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils

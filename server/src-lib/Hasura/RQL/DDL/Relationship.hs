@@ -112,7 +112,7 @@ persistRel :: QualifiedTable
            -> Value
            -> Maybe T.Text
            -> Q.TxE QErr ()
-persistRel (QualifiedTable sn tn) rn relType relDef comment =
+persistRel (QualifiedObject sn tn) rn relType relDef comment =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                   hdb_catalog.hdb_relationship
@@ -184,14 +184,14 @@ objRelP2Setup qt (RelDef rn ru _) = do
                      -- the constraint name will help.
                      , SchemaDependency (SOTable refqt) "remote_table"
                      ]
-              refqt = QualifiedTable refsn reftn
+              refqt = QualifiedObject refsn reftn
           void $ askTabInfo refqt
           return (RelInfo rn ObjRel colMapping refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     fetchFKeyDetail cn =
       Q.listQ [Q.sql|
            SELECT constraint_name, ref_table_table_schema, ref_table, column_mapping
@@ -279,7 +279,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
-      let QualifiedTable refSn refTn = refqt
+      let QualifiedObject refSn refTn = refqt
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
         fetchFKeyDetail refSn refTn refCol
       case mapMaybe processRes res of
@@ -298,7 +298,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
            SELECT constraint_name, column_mapping
              FROM hdb_catalog.hdb_foreign_key_constraint
@@ -381,7 +381,7 @@ delRelFromCatalog
   :: QualifiedTable
   -> RelName
   -> Q.TxE QErr ()
-delRelFromCatalog (QualifiedTable sn tn) rn =
+delRelFromCatalog (QualifiedObject sn tn) rn =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                   hdb_catalog.hdb_relationship
@@ -421,7 +421,7 @@ runSetRelComment defn = do
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedTable sn tn) rn comment) =
+setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

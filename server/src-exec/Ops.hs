@@ -24,7 +24,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "7"
+curCatalogVer = "8"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -116,6 +116,15 @@ initCatalogStrict createSchema initTime =  do
                     |] (Identity sn) False
 
 
+migrateMetadata
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => RQLQuery -> m ()
+migrateMetadata rqlQuery = do
+  -- build schema cache
+  buildSchemaCache
+  -- run the RQL query to migrate metadata
+  void $ runQueryM rqlQuery
+
 setAllAsSystemDefined :: (MonadTx m) => m ()
 setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_table SET is_system_defined = 'true'" () False
@@ -123,22 +132,51 @@ setAllAsSystemDefined = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "UPDATE hdb_catalog.hdb_permission SET is_system_defined = 'true'" () False
   Q.unitQ "UPDATE hdb_catalog.hdb_query_template SET is_system_defined = 'true'" () False
 
-setAsSystemDefined :: (MonadTx m) => m ()
-setAsSystemDefined =
+setAsSystemDefinedFor2 :: (MonadTx m) => m ()
+setAsSystemDefinedFor2 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
             SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-
-            UPDATE hdb_catalog.hdb_permission
-            SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'event_triggers'
+                 OR table_name = 'event_log'
+                 OR table_name = 'event_invocation_logs'
+                 );
             UPDATE hdb_catalog.hdb_relationship
             SET is_system_defined = 'true'
-            WHERE table_schema = 'hdb_catalog';
-            |]
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'event_triggers'
+                 OR table_name = 'event_log'
+                 OR table_name = 'event_invocation_logs'
+                 );
+           |]
+
+setAsSystemDefinedFor5 :: (MonadTx m) => m ()
+setAsSystemDefinedFor5 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND table_name = 'remote_schemas';
+           |]
+
+setAsSystemDefinedFor8 :: (MonadTx m) => m ()
+setAsSystemDefinedFor8 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND (  table_name = 'hdb_function_agg'
+                 OR table_name = 'hdb_function'
+                 );
+            UPDATE hdb_catalog.hdb_relationship
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_function_agg';
+           |]
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -173,9 +211,9 @@ from1To2 = do
   -- migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
-  void $ runQueryM migrateMetadataFrom1
+  migrateMetadata migrateMetadataFrom1
   -- set as system defined
-  setAsSystemDefined
+  setAsSystemDefinedFor2
   where
     migrateMetadataFrom1 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_1.yaml" :: Q (TExp RQLQuery)))
@@ -194,9 +232,9 @@ from4To5
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
-  void $ runQueryM migrateMetadataFrom4
+  migrateMetadata migrateMetadataFrom4
   -- set as system defined
-  setAsSystemDefined
+  setAsSystemDefinedFor5
   where
     migrateMetadataFrom4 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_4_to_5.yaml" :: Q (TExp RQLQuery)))
@@ -241,6 +279,20 @@ from6To7 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_6_to_7.sql")
   return ()
 
+from7To8
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from7To8 = do
+  -- migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_7_to_8.sql")
+  -- migrate metadata
+  migrateMetadata migrateMetadataFrom7
+  setAsSystemDefinedFor8
+  where
+    migrateMetadataFrom7 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_7_to_8.yaml" :: Q (TExp RQLQuery)))
+
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => UTCTime -> m String
@@ -255,12 +307,17 @@ migrateCatalog migrationTime = do
      | preVer == "4"   -> from4ToCurrent
      | preVer == "5"   -> from5ToCurrent
      | preVer == "6"   -> from6ToCurrent
+     | preVer == "7"   -> from7ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
+    from7ToCurrent = do
+      from7To8
+      postMigrate
+
     from6ToCurrent = do
       from6To7
-      postMigrate
+      from7ToCurrent
 
     from5ToCurrent = do
       from5To6
@@ -292,7 +349,7 @@ migrateCatalog migrationTime = do
        -- clean hdb_views
        liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
-       void buildSchemaCache
+       buildSchemaCache
        return $ "successfully migrated to " ++ show curCatalogVer
 
     updateVersion =
