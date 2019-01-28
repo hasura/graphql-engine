@@ -18,6 +18,7 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
+import semverCheck from '../../../../helpers/semver';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
@@ -37,10 +38,10 @@ const migrationNameTip = (
     'run_sql_migration'
   </Tooltip>
 );
-const trackTableTip = (
+const trackTableTip = (hasFunctionSupport) => (
   <Tooltip id="tooltip-tracktable">
-    If you are creating a table/view, you can track them to query them with
-    GraphQL
+    { `If you are creating a table/view${hasFunctionSupport ? '/function' : ''}, you can track them to query them
+      with GraphQL`}
   </Tooltip>
 );
 
@@ -58,6 +59,7 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
+  serverVersion,
 }) => {
   const styles = require('../TableCommon/Table.scss');
 
@@ -170,6 +172,10 @@ const RawSQL = ({
       </div>
     );
   })();
+  const functionText = semverCheck('customFunctionSection', serverVersion)
+    ? 'Function'
+    : '';
+  const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
       className={`${styles.main_wrapper} ${styles.padd_left} ${
@@ -194,9 +200,10 @@ const RawSQL = ({
                 communicate with the database.
               </li>
               <li>
-                If you plan to create a Table/View using Raw SQL, remember to
-                link it to Hasura DB by checking the <code>Track table</code>{' '}
-                checkbox below.
+                If you plan to create a Table/View
+                {functionText ? '/' + functionText : ''} using Raw SQL, remember
+                to link it to Hasura DB by checking the{' '}
+                <code>Track {placeholderText}</code> checkbox below.
               </li>
               <li>
                 Please note that if the migrations are enabled,{' '}
@@ -240,7 +247,13 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              let regExp;
+              if (functionText) {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              } else {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              }
+              // const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
               const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
               if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
@@ -285,8 +298,8 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track table
-            <OverlayTrigger placement="right" overlay={trackTableTip}>
+            Track {placeholderText}
+            <OverlayTrigger placement="right" overlay={trackTableTip(!!functionText)}>
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
                 aria-hidden="true"
@@ -406,6 +419,7 @@ const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

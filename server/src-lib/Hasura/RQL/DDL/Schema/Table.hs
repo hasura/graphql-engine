@@ -9,6 +9,7 @@ import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
@@ -32,21 +33,21 @@ import qualified Database.PostgreSQL.LibPQ          as PQ
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
-delTableFromCatalog (QualifiedTable sn tn) =
+delTableFromCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             DELETE FROM "hdb_catalog"."hdb_table"
             WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
 
 saveTableToCatalog :: QualifiedTable -> Q.Tx ()
-saveTableToCatalog (QualifiedTable sn tn) =
+saveTableToCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
-getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
+getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
   tableData <- Q.catchE defaultTxErrorHandler $
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
@@ -92,8 +93,8 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
 
   return successMsg
   where
-    getSchemaN = getSchemaTxt . qtSchema
-    getTableN = getTableTxt . qtTable
+    getSchemaN = getSchemaTxt . qSchema
+    getTableN = getTableTxt . qName
     tn = case getSchemaN vn of
       "public" -> getTableN vn
       _        -> getSchemaN vn <> "_" <> getTableN vn
@@ -121,6 +122,10 @@ purgeDep schemaObjId = case schemaObjId of
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
+
+  (SOFunction qf) -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
@@ -179,7 +184,7 @@ processTableChanges ti tableDiff = do
 
 delTableAndDirectDeps
   :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
-delTableAndDirectDeps qtn@(QualifiedTable sn tn) = do
+delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
   liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."hdb_relationship"
@@ -237,7 +242,7 @@ unTrackExistingTableOrViewP2
 unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
 
-  -- Get relational and query template dependants
+  -- Get relational, query template and function dependants
   let allDeps = getDependentObjs sc (SOTable qtn)
       indirectDeps = filter (not . isDirectDep) allDeps
 
@@ -278,7 +283,7 @@ buildSchemaCache = do
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup (QualifiedTable sn tn) isSystemDefined
+    trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
 
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
@@ -287,10 +292,10 @@ buildSchemaCache = do
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
     ObjRel -> do
       using <- decodeValue rDef
-      objRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
     ArrRel -> do
       using <- decodeValue rDef
-      arrRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
@@ -315,15 +320,20 @@ buildSchemaCache = do
   forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
 
-    let qt = QualifiedTable sn tn
+    let qt = QualifiedObject sn tn
     subTableP2Setup qt trid etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
     liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
 
+  functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
+  forM_ functions $ \(sn, fn) ->
+    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
+    trackFunctionP2Setup (QualifiedObject sn fn)
+
   -- remote schemas
   res <- liftTx fetchRemoteSchemas
   sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
 
   remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
     (,) n <$> validateRemoteSchemaDef def
@@ -337,7 +347,7 @@ buildSchemaCache = do
     permHelper sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx <$> askSchemaCache
       perm <- decodeValue pDef
-      let qt = QualifiedTable sn tn
+      let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
       (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
@@ -373,6 +383,11 @@ buildSchemaCache = do
                SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
                  FROM hdb_catalog.event_triggers e
                |] () False
+    fetchFunctions =
+      Q.listQ [Q.sql|
+               SELECT function_schema, function_name
+                 FROM hdb_catalog.hdb_function
+                    |] () False
 
 data RunSQL
   = RunSQL
@@ -409,16 +424,22 @@ execWithMDCheck (RunSQL t cascade _) = do
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  oldFuncMetaU <-
+    liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
 
   -- Run the SQL
   res <- execRawSQL t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
   sc <- askSchemaCache
   let existingTables = M.keys $ scTables sc
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
+      existingFuncs = M.keys $ scFunctions sc
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
+      droppedFuncs = getDroppedFuncs oldFuncMeta newFuncMeta
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -427,6 +448,16 @@ execWithMDCheck (RunSQL t cascade _) = do
 
   -- Purge all the indirect dependents from state
   mapM_ purgeDep indirectDeps
+
+  -- Purge all dropped functions
+  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
+        case dep of
+          SOFunction qf -> Just qf
+          _             -> Nothing
+
+  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
   -- update the schema cache with the changes
   processSchemaChanges schemaDiff

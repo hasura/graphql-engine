@@ -45,7 +45,7 @@ def test_init(hge_ctx):
 
 class TestSubscriptionBasic(object):
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope='class', autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = 'queries/subscriptions/basic'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
@@ -153,13 +153,12 @@ class TestSubscriptionBasic(object):
 
 class TestSubscriptionLiveQueries(object):
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope='class', autouse=True)
     def transact(self, request, hge_ctx):
-        self.dir = 'queries/subscriptions/live_queries'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
         assert st_code == 200, resp
 
     def test_live_queries(self, hge_ctx):
@@ -181,7 +180,7 @@ class TestSubscriptionLiveQueries(object):
         ev = hge_ctx.get_ws_event(3)
         assert ev['type'] == 'connection_ack', ev
 
-        with open(self.dir + "/steps.yaml") as c:
+        with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.load(c)
 
         query = """
@@ -242,6 +241,9 @@ class TestSubscriptionLiveQueries(object):
         with pytest.raises(queue.Empty):
             ev = hge_ctx.get_ws_event(3)
 
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/live_queries'
 
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate

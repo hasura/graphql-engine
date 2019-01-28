@@ -111,7 +111,7 @@ class OperationEditor extends React.Component {
                     dispatch(
                       toggleQueryType(
                         qt,
-                        allTableColumns,
+                        allTableColumns.map(c => c.name),
                         !modifyTrigger.definition[qt]
                       )
                     );
