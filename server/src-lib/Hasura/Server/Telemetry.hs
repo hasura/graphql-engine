@@ -63,6 +63,7 @@ data Metrics
   , _mtPermissions   :: !PermissionMetric
   , _mtEventTriggers :: !Int
   , _mtRemoteSchemas :: !Int
+  , _mtFunctions     :: !Int
   } deriving (Show, Eq)
 $(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 
@@ -141,8 +142,9 @@ computeMetrics sc =
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map tiEventTriggerInfoMap usrTbls
       rmSchemas   = Map.size $ scRemoteResolvers sc
+      funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
 
-  in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas
+  in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
     usrTbls = Map.filter (not . tiSystemDefined) $ scTables sc
@@ -166,7 +168,7 @@ getDbId =
   Q.withQE defaultTxErrorHandler
   [Q.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
-        |] () False
+  |] () False
 
 
 -- | Logging related
