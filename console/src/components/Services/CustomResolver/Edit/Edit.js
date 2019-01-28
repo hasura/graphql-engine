@@ -79,7 +79,7 @@ class Edit extends React.Component {
     }
   }
   updateDeleteConfirmationError(data) {
-    this.setState({ ...this.state, deleteConfirmationError: data });
+    this.setState({ deleteConfirmationError: data });
   }
   modifyClick() {
     this.props.dispatch({ type: TOGGLE_MODIFY });

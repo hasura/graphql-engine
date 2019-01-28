@@ -10,7 +10,7 @@ class LoginComponent extends React.Component {
     this.state = { graphqlEndpoint: '' };
   }
   setGraphQLEndpoint(e) {
-    this.setState({ ...this.state, graphqlEndpoint: e.target.value });
+    this.setState({ graphqlEndpoint: e.target.value });
   }
   render() {
     const { dispatch } = this.props;

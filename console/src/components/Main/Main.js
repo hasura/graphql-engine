@@ -66,7 +66,7 @@ class Main extends React.Component {
       this.props.serverVersion
     );
     if (showSchemaStitch) {
-      this.setState({ ...this.state, showSchemaStitch: true });
+      this.setState({ showSchemaStitch: true });
     }
     return Promise.resolve();
   }
@@ -97,7 +97,6 @@ class Main extends React.Component {
     };
     setLoveConsentState(s);
     this.setState({
-      ...this.state,
       loveConsentState: { ...getLoveConsentState() },
     });
   }
