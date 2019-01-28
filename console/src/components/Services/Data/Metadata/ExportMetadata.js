@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import Button from '../../Layout/Button/Button';
 
 import {
   showSuccessNotification,
@@ -14,13 +15,14 @@ class ExportMetadata extends Component {
     this.state.isExporting = false;
   }
   render() {
-    const styles = require('../PageContainer/PageContainer.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
-        <button
+        <Button
           data-test="data-export-metadata"
-          className={styles.default_button + ' ' + metaDataStyles.margin_right}
+          className={metaDataStyles.margin_right}
+          size="sm"
+          color="white"
           onClick={e => {
             e.preventDefault();
             this.setState({ isExporting: true });
@@ -83,7 +85,7 @@ class ExportMetadata extends Component {
           }}
         >
           {this.state.isExporting ? 'Exporting...' : 'Export metadata'}
-        </button>
+        </Button>
       </div>
     );
   }

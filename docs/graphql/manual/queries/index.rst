@@ -51,11 +51,12 @@ based on a typical author/article schema for reference.
   simple-object-queries
   nested-object-queries
   aggregation-queries
-  distinct-queries
   query-filters
   sorting
+  distinct-queries
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
+  custom-functions
   derived-data
   control-access

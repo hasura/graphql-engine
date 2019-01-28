@@ -1,6 +1,6 @@
 {
   "name": "ra-data-hasura",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "react-admin data provider for Hasura GraphQL Engine",
   "main": "lib/ra-data-hasura.min.js",
   "scripts": {

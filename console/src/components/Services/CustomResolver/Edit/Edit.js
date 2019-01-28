@@ -13,6 +13,7 @@ import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
 import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
+import Button from '../../Layout/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
@@ -97,8 +98,10 @@ class Edit extends React.Component {
     const generateMigrateBtns = () => {
       return 'isModify' in editState && !editState.isModify ? (
         <div className={styles.commonBtn}>
-          <button
-            className={styles.yellow_button}
+          <Button
+            className={styles.button_mar_right}
+            color="yellow"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.modifyClick();
@@ -107,9 +110,10 @@ class Edit extends React.Component {
             disabled={isRequesting}
           >
             Modify
-          </button>
-          <button
-            className={styles.danger_button + ' btn-danger'}
+          </Button>
+          <Button
+            color="red"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.handleDeleteResolver(e);
@@ -118,7 +122,7 @@ class Edit extends React.Component {
             data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
-          </button>
+          </Button>
           {this.state.deleteConfirmationError ? (
             <span
               className={styles.delete_confirmation_error}
@@ -130,16 +134,19 @@ class Edit extends React.Component {
         </div>
       ) : (
         <div className={styles.commonBtn}>
-          <button
-            className={styles.yellow_button}
+          <Button
+            className={styles.button_mar_right}
+            color="yellow"
+            size="sm"
             type="submit"
             disabled={isRequesting}
             data-test={'remote-schema-edit-save-btn'}
           >
             {isRequesting ? 'Saving' : 'Save'}
-          </button>
-          <button
-            className={styles.default_button}
+          </Button>
+          <Button
+            color="white"
+            size="sm"
             onClick={e => {
               e.preventDefault();
               this.handleCancelModify();
@@ -148,7 +155,7 @@ class Edit extends React.Component {
             disabled={isRequesting}
           >
             Cancel
-          </button>
+          </Button>
         </div>
       );
     };

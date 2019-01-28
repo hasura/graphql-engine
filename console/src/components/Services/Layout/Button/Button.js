@@ -1,0 +1,40 @@
+import React from 'react';
+import styles from '../../../Common/Common.scss';
+
+/*
+  This is a Button HOC that takes al the props supported by <button> and also
+  - color: (default: white) color of the button; currently supports yellow, red, green, gray, white
+  - size: size of the button; currently supports xs (extra small), sm(small)
+  - className: although you can provide any CSS classname, it is recommended to use only the positioning related classes and not the ones that change the appearance (color, font, size) of the button
+*/
+
+const Button = props => {
+  const { children, size, color, className } = props;
+  let extendedClassName = `${className || ''} btn ${
+    size ? `btn-${size} ` : 'button '
+  }`;
+  switch (color) {
+    case 'yellow':
+      extendedClassName += styles.yellow_button;
+      break;
+    case 'red':
+      extendedClassName += 'btn-danger';
+      break;
+    case 'green':
+      extendedClassName += 'btn-success';
+      break;
+    case 'gray':
+      extendedClassName += styles.gray_button;
+      break;
+    default:
+      extendedClassName += 'btn-default';
+      break;
+  }
+  return (
+    <button {...props} className={extendedClassName}>
+      {children}
+    </button>
+  );
+};
+
+export default Button;

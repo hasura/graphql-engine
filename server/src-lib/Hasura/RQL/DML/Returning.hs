@@ -41,9 +41,8 @@ mkDefaultMutFlds = \case
       (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
 
 qualTableToAliasIden :: QualifiedTable -> Iden
-qualTableToAliasIden (QualifiedTable sn tn) =
-  Iden $ getSchemaTxt sn <> "_" <> getTableTxt tn
-  <> "__mutation_result_alias"
+qualTableToAliasIden qt =
+  Iden $ snakeCaseTable qt <> "__mutation_result_alias"
 
 mkMutFldExp :: QualifiedTable -> Bool -> MutFld -> S.SQLExp
 mkMutFldExp qt singleObj = \case

@@ -74,6 +74,14 @@ The various types of queries are listed in the following table:
      - :ref:`untrack_table_args <untrack_table_syntax>`
      - Remove a table/view
 
+   * - :ref:`track_function`
+     - :ref:`FunctionName <FunctionName>`
+     - Add a SQL function
+
+   * - :ref:`untrack_function`
+     - :ref:`FunctionName <FunctionName>`
+     - Remove a SQL function
+
    * - :ref:`create_object_relationship`
      - :ref:`create_object_relationship_args <create_object_relationship_syntax>`
      - Define a new object relationship
@@ -142,6 +150,7 @@ The various types of queries are listed in the following table:
 
 - :doc:`Run SQL <run-sql>`
 - :doc:`Tables/Views <table-view>`
+- :doc:`Custom SQL Functions <custom-functions>`
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
@@ -203,6 +212,7 @@ Error codes
 
   Run SQL <run-sql>
   Tables/Views <table-view>
+  Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>

@@ -16,7 +16,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table "Track"
+      drop table "Track" cascade
     cascade: true
 
 - type: run_sql

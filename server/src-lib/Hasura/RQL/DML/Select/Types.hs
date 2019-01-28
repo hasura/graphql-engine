@@ -68,10 +68,14 @@ type ObjSel = AnnRelG AnnSel
 type ArrRel = AnnRelG AnnSel
 type ArrRelAgg = AnnRelG AnnAggSel
 
+type Fields a = [(FieldName, a)]
+
 data ArrSel
   = ASSimple !ArrRel
   | ASAgg !ArrRelAgg
   deriving (Show, Eq)
+
+type ArrSelFlds = Fields ArrSel
 
 data AnnFld
   = FCol !PGColInfo
@@ -97,7 +101,7 @@ data PGColFld
   | PCFExp !T.Text
   deriving (Show, Eq)
 
-type ColFlds = [(FieldName, PGColFld)]
+type ColFlds = Fields PGColFld
 
 data AggOp
   = AggOp
@@ -111,13 +115,16 @@ data AggFld
   | AFExp !T.Text
   deriving (Show, Eq)
 
-type AggFlds = [(FieldName, AggFld)]
+type AggFlds = Fields AggFld
+type AnnFlds = Fields AnnFld
 
 data TableAggFld
   = TAFAgg !AggFlds
-  | TAFNodes ![(FieldName, AnnFld)]
+  | TAFNodes !AnnFlds
   | TAFExp !T.Text
   deriving (Show, Eq)
+
+type TableAggFlds = Fields TableAggFld
 
 data TableFrom
   = TableFrom
@@ -139,8 +146,8 @@ data AnnSelG a
   , _asnArgs   :: !TableArgs
   } deriving (Show, Eq)
 
-type AnnSel = AnnSelG [(FieldName, AnnFld)]
-type AnnAggSel = AnnSelG [(FieldName, TableAggFld)]
+type AnnSel = AnnSelG AnnFlds
+type AnnAggSel = AnnSelG TableAggFlds
 
 data BaseNode
   = BaseNode
@@ -177,7 +184,7 @@ data OrderByNode
 
 data ArrRelCtx
   = ArrRelCtx
-  { aacFields    :: ![(FieldName, ArrSel)]
+  { aacFields    :: !ArrSelFlds
   , aacAggOrdBys :: ![RelName]
   } deriving (Show, Eq)
 

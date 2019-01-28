@@ -51,13 +51,13 @@ Step 1: Install the Hasura CLI
       .. note::
 
          You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this `link
-         <https://git-scm.com/download/win>`_. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
+         <https://git-scm.com/download/win>`__. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
          default console.
 
       Download the ``hasura`` installer:
 
-      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
-      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
+      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`__
+      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`__
 
       **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.

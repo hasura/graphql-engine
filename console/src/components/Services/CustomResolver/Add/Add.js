@@ -3,6 +3,7 @@ import Common from '../Common/Common';
 
 import { addResolver, RESET } from './addResolverReducer';
 import Helmet from 'react-helmet';
+import Button from '../../Layout/Button/Button';
 
 import { pageTitle } from '../constants';
 
@@ -25,14 +26,15 @@ class Add extends React.Component {
         >
           <Common {...this.props} />
           <div className={styles.commonBtn}>
-            <button
+            <Button
               type="submit"
-              className={styles.yellow_button}
+              color="yellow"
+              size="sm"
               disabled={isRequesting}
               data-test="add-remote-schema-submit"
             >
               {isRequesting ? 'Adding...' : 'Add Remote Schema'}
-            </button>
+            </Button>
             {/*
             <button className={styles.default_button}>Cancel</button>
             */}

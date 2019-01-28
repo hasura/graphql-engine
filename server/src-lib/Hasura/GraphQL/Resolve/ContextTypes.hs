@@ -3,6 +3,7 @@ module Hasura.GraphQL.Resolve.ContextTypes where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Sequence                     as Seq
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.RQL.Types.BoolExp
@@ -25,6 +26,12 @@ data OrdByItem
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
+
+newtype FuncArgItem
+  = FuncArgItem {getArgName :: G.Name}
+  deriving (Show, Eq)
+
+type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo

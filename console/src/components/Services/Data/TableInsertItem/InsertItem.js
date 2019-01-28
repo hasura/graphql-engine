@@ -4,6 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
+import Button from '../../Layout/Button/Button';
 
 class InsertItem extends Component {
   constructor() {
@@ -285,9 +286,10 @@ class InsertItem extends Component {
           <div className="col-xs-9">
             <form id="insertForm" className="form-horizontal">
               {elements}
-              <button
+              <Button
                 type="submit"
-                className={'btn ' + styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   const inputValues = {};
@@ -309,9 +311,10 @@ class InsertItem extends Component {
                 data-test="insert-save-button"
               >
                 {this.state.insertedRows > 0 ? 'Insert Again' : 'Save'}
-              </button>
-              <button
-                className={'btn ' + styles.default_button}
+              </Button>
+              <Button
+                color="white"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   const form = document.getElementById('insertForm');
@@ -334,7 +337,7 @@ class InsertItem extends Component {
                 data-test="clear-button"
               >
                 Clear
-              </button>
+              </Button>
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>
