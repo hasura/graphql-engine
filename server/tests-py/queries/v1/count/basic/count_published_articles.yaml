@@ -1,0 +1,11 @@
+description: Count number of authors
+url: /v1/query
+status: 200
+response:
+  count: 2
+query:
+  type: count
+  args:
+    table: article
+    where:
+      is_published: true

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ func testMetadataExport(t *testing.T, metadataFile string, endpoint *url.URL) {
 			MetadataFile: metadataFile,
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      "",
+				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
 				ParsedEndpoint: endpoint,
 			},
 		},

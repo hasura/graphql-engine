@@ -1,0 +1,40 @@
+{
+  "name": "passport-js-auth-webhook",
+  "version": "1.0.0",
+  "engines": {
+    "node": "8.9.1"
+  },
+  "description": "A boilerplate for Hasura Graphql Engine auth webhook with passport js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "lint": "eslint \"**/*.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasura/graphql-engine.git"
+  },
+  "author": "Aravind Shankar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hasura/graphql-engine/issues"
+  },
+  "homepage": "https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/passport-js#readme",
+  "dependencies": {
+    "bcrypt": "^3.0.0",
+    "body-parser": "^1.18.3",
+    "chalk": "^2.4.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "express-validator": "^5.3.0",
+    "knex": "^0.15.2",
+    "objection": "^1.2.6",
+    "objection-db-errors": "^1.0.0",
+    "passport": "^0.4.0",
+    "passport-http-bearer": "^1.0.1",
+    "passport-local": "^1.0.0",
+    "pg": "^7.4.3",
+    "util": "^0.11.0"
+  }
+}

@@ -1,0 +1,62 @@
+Status Code,Code,Error
+400,postgres-error,Not-NULL violation. null value in column <column-name> violates not-null constraint
+400,permission-denied,select on <column/table> for role <role-name> is not allowed.
+400,not-exists,table <table-name> does not exist
+400,not-exists,no such table/view exists in postgres : <table-name>
+400,not-exists,<field-name> does not exist
+400,already-tracked,view/table already tracked : <table-name>
+400,access-denied,restricted access : admin only
+400,not-supported,table renames are not yet supported : <table-name>
+400,not-exists,<column-name> does not exist
+400,already-exists,cannot add column <column-name> in table <table-name> as a relationship with the name already exists
+400,invalid-json,invalid json
+400,not-supported,column renames are not yet supported : <table-name>.<column-name>
+400,invalid-headers,missing header : <header-name>
+400,dependency-error,cannot change type of column <column-name> in table <table-name> because of the following dependencies : <dependencies>
+400,invalid-headers,X-Hasura-User-Id should be an integer
+400,dependency-error,cannot drop due to the following dependent objects : <dependencies>
+400,access-denied,You have to be admin to access this endpoint
+400,parse-failed,parsing dotted table failed : <table-name>
+400,access-denied,not authorised to access this tx
+400,already-exists,multiple declarations exist for the following <table-name> : <duplicates>
+400,not-exists,tx does not exists
+400,already-exists,column/relationship of table <table-name> already exists
+400,already-initialised,the state seems to be initialised already. \ \ you may need to migrate from this version: <catalog-version>
+400,constraint-error,no foreign constraint exists on the given column
+400,not-supported,unsupported version : <catalog-version>
+400,constraint-error,more than one foreign key constraint exists on the given column
+400,already-exists,the query template already exists <template-name>
+400,permission-error,<permission-type>' permission on <table-name> for role <role-name> already exists
+400,permission-error,<permission-type>' permission on <table-name> for role <role-name> does not exist
+400,unexpected-payload,Unknown operator : <operator-type>  
+400,unexpected-payload,expecting a string for column operator
+400,unexpected-payload,"incompatible column types : '<column-name>', '<column-name>' "
+400,unexpected-payload,Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'
+400,unexpected-payload,constraint' and 'constraint_on' cannot be set at a time
+400,unexpected-payload,upsert is not allowed for role '<role-name>'
+400,unexpected-payload,objects should not be empty
+400,invalid-params,missing parameter : <param-name>
+400,unexpected-payload,can't be empty
+400,,<col-name>' is a relationship and should be expanded
+400,unexpected-payload,<column-name>' should be included in 'columns'
+400,unexpected-payload,<column-name>' is an array relationship and can't be used in 'order_by'
+400,,<column-name>' is a Postgres column and cannot be chained further
+400,unexpected-payload,order_by array should not be empty
+400,unexpected-payload,"when selecting an 'obj_relationship' 'where', 'order_by', 'limit' and 'offset' can't be used"
+400,unexpected-payload,"atleast one of $set, $inc, $mul has to be present"
+400,permission-denied,<permission-type> on <table-name> for role <role-name> is not allowed
+400,not-exists,no such column exists : <column-name>
+400,permission-denied,role <role-name> does not have permission to <permission-type> column <column-name>
+400,,"expecting a postgres column; but, <name> is relationship"
+400,unexpected-payload,JSON column can not be part of where clause
+400,unexpected-payload,is of type <type-name>; this operator works only on column of types <[types]>
+400,postgres-error,query execution failed
+500,unexpected,unexpected dependency of relationship : <dependency>
+500,unexpected,unexpected dependent object : <dependency>
+500,unexpected,field already exists
+500,unexpected,field does not exist
+500,unexpected,permission does not exist
+500,postgres-error,postgres transaction error
+500,postgres-error,connection error
+500,postgres-error,postgres query error
+404,not-found,No such resource exists

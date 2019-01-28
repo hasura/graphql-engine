@@ -1,0 +1,44 @@
+- description: Insert area as a polygon
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_area:
+        returning:
+        - id: 1
+          name: Foo
+          area: &area
+            coordinates: &coords
+            -
+              - [43.75049, 11.03207]
+              - [43.80009, 11.03208]
+              - [42.60009, 10.13248]
+              - [43.75049, 11.03207]
+            type: Polygon
+            crs: &crs
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      areas:
+      - name: Foo
+        area: *area
+    query: |
+      mutation insertArea($areas: [area_insert_input!]!) {
+        insert_area(objects: $areas) {
+          returning{
+            id
+            name
+            area
+          }
+        }
+      }
+- description: Delete the inserted area
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from area

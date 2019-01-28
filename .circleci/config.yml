@@ -11,6 +11,18 @@ refs:
           sleep 1
         done
         echo Failed waiting for Postgres && exit 1
+  wait_for_hge: &wait_for_hge
+    run:
+      name: waiting for graphql-engine to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 8080 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for graphql-engine && exit 1
+
   filter_only_vtags: &filter_only_vtags
     filters:
       tags:
@@ -63,6 +75,37 @@ refs:
         command: |
           DATABASE_URL="postgres://gql_test:@localhost:5432/gql_test" make ci-test
 
+  # ref pytest server job
+  pytest_server: &pytest_server
+    working_directory: ~/graphql-engine
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - restore_cache:
+        keys:
+        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+    - attach_workspace:
+        at: /build
+    - *wait_for_postgres
+    - run:
+        name: Run Python tests
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+          GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
+        command: |
+          apt-get update
+          apt install --yes jq
+          OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
+    - run:
+        name: Generate coverage report
+        working_directory: ./server
+        command: |
+          stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+    - store_artifacts:
+        path: /build/_server_test_output
+        destination: server_test
 
 version: 2
 jobs:
@@ -70,7 +113,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: hasura/graphql-engine-cli-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
     - checkout
@@ -81,7 +124,7 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.2
+    - image: hasura/graphql-engine-server-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
     - checkout
@@ -101,8 +144,8 @@ jobs:
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
             make ci-binary
           else
-            echo "Non-release branch, non-optimized build"
-            BUILD_FLAGS="--fast" make ci-binary
+            echo "Non-release branch, non-optimized build with coverage"
+            BUILD_FLAGS="--fast --coverage" make ci-binary
           fi
           make ci-image
           make ci-save-image
@@ -131,34 +174,50 @@ jobs:
     steps:
     - run:
         name: All server tests passed
-        command: echo 'all tests passed!'
+        command: echo 'all server tests passed!'
 
-  # test the server with postgres versions >= 9.5
-  test_server_pg_10.4:
-    <<: *test_server
+  # pytest the server with postgres versions >= 9.5
+  pytest_server_pg_11.1:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "11_1"
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
-    - image: circleci/postgres:10.4-alpine
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+      # TODO: change this to circleci postgis when they have one for pg 11
+    - image: mdillon/postgis:11-alpine
       <<: *test_pg_env
 
-  test_server_pg_9.6:
-    <<: *test_server
+  pytest_server_pg_10.6:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "10_6"
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
-    - image: circleci/postgres:9.6-alpine
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
-  test_server_pg_9.5:
-    <<: *test_server
+  pytest_server_pg_9.6:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
-    - image: circleci/postgres:9.5-alpine
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:9.6-alpine-postgis
+      <<: *test_pg_env
+
+  pytest_server_pg_9.5:
+    <<: *pytest_server
+    environment:
+      PG_VERSION: "9_5"
+    docker:
+    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.2
+    - image: hasura/graphql-engine-cli-builder:v0.3
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -201,12 +260,15 @@ jobs:
   # test and build console
   test_and_build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.2
-    - image: circleci/postgres:10-alpine
+    - image: hasura/graphql-engine-console-builder:v0.3
+      environment:
+        CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
+    - image: circleci/postgres:10-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
+    parallelism: 4
     steps:
     - checkout
     - attach_workspace:
@@ -245,7 +307,7 @@ jobs:
 
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.2
+    - image: hasura/graphql-engine-deployer:v0.3
     working_directory: ~/graphql-engine
     steps:
     - *setup_remote_docker
@@ -265,24 +327,29 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - test_server_pg_10.4:
+    - pytest_server_pg_11.1:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - test_server_pg_9.6:
+    - pytest_server_pg_10.6:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - test_server_pg_9.5:
+    - pytest_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - pytest_server_pg_9.5:
         <<: *filter_only_vtags
         requires:
         - build_server
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
-        - test_server_pg_10.4
-        - test_server_pg_9.6
-        - test_server_pg_9.5
+        - pytest_server_pg_11.1
+        - pytest_server_pg_10.6
+        - pytest_server_pg_9.6
+        - pytest_server_pg_9.5
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:

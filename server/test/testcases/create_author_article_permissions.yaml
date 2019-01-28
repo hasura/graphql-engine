@@ -14,6 +14,21 @@ query:
             $or:
               - author_id: X-HASURA-USER-ID
               - is_published: true
+    - type: create_insert_permission
+      args:
+        table: article
+        role: user
+        permission:
+          check:
+            author_id: X-Hasura-User-Id
+    - type: create_update_permission
+      args:
+        table: article
+        role: user
+        permission:
+          columns: '*'
+          filter:
+            author_id: X-Hasura-User-Id
     - type: create_select_permission
       args:
         table: author
@@ -29,3 +44,11 @@ query:
         permission:
           check:
             id: X-HASURA-USER-ID
+    - type: create_update_permission
+      args:
+        table: author
+        role: user
+        permission:
+          columns: '*'
+          filter:
+            id: X-Hasura-User-Id

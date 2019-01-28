@@ -1,0 +1,35 @@
+description: Insert into resident table only with insertable columns
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: infant
+  X-Hasura-Infant-Id: '1'
+  X-Hasura-Infant-Name: 'Bittu'
+response:
+  data:
+    insert_resident:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Bittu
+        age: 3
+        is_user: false
+query:
+  query: |
+    mutation {
+      insert_resident(
+        objects: [
+          {
+            age: 3
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          age
+          is_user
+        }
+      }
+    }

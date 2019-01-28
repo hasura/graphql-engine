@@ -1,0 +1,223 @@
+type: bulk
+args:
+
+#Contact table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE contact (
+        id SERIAL PRIMARY KEY,
+        phone INTEGER,
+        address TEXT
+      )
+- type: track_table
+  args:
+    schema: public
+    name: contact
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key, 
+          name text unique,
+          contact_id INTEGER REFERENCES contact(id)
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: author
+    name: contact
+    using:
+      foreign_key_constraint_on: contact_id
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Insert values
+- type: run_sql
+  args:
+    sql: |
+      insert into contact (phone)
+      values
+      (1234567890),
+      (1234567891)
+
+- type: run_sql
+  args:
+    sql: |
+      insert into author (name, contact_id)
+      values
+      ('Author 1', 2),
+      ('Author 2', 1) 
+
+- type: run_sql
+  args:
+    sql: |
+      insert into article (title,content,author_id,is_published)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1,
+        false
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1,
+        true
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2,
+        true
+      )
+
+# Album - Track Schema
+- type: run_sql
+  args:
+    sql: |
+      create table "Album" (
+        album_id INTEGER NOT NULL PRIMARY KEY,
+        title TEXT NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: Album
+
+- type: run_sql
+  args:
+    sql: |
+      create table "Track" (
+      track_id INTEGER NOT NULL PRIMARY KEY,
+      name TEXT NOT NULL,
+      album_id INTEGER REFERENCES "Album"(album_id),
+      milliseconds INTEGER NOT NULL,
+      bytes INTEGER NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: Track
+
+- type: create_object_relationship
+  args:
+    table: Track
+    name: Album
+    using:
+      foreign_key_constraint_on: album_id
+
+- type: create_array_relationship
+  args:
+    table: Album
+    name: Tracks
+    using:
+      foreign_key_constraint_on:
+        table: Track
+        column: album_id
+
+# Insert values in Album and Track
+- type: run_sql
+  args:
+    sql: |
+      insert into "Album" (album_id, title)
+      values ( 1, 'Big Ones' ), (2, 'Face Lift')
+
+- type: run_sql
+  args:
+    sql: |
+      insert into "Track"
+      (track_id, name, album_id, milliseconds, bytes)
+      values
+      ( 1, 'Restless', 1, 123654, 9836284),
+      ( 2, 'Keepup', 1, 637483, 6382913) ,
+      ( 3, 'Havana', 1, 234512, 986384) ,
+      ( 4, 'Evil Walks', 2, 437294, 6284302) ,
+      ( 5, 'Random', 2, 1094732, 6032547) ,
+      ( 6, 'Good One', 2, 346208, 6732987) ,
+      ( 7, 'Mistress', 2, 420985, 7521946)
+
+# Create employee table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE employee (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        department TEXT,
+        salary INTEGER
+      )
+- type: track_table
+  args:
+    name: employee
+    schema: public
+
+# Insert data into employee table
+- type: insert
+  args:
+    table: employee
+    objects:
+    - name: Kai
+      department: Engineering
+      salary: 2345
+    - name: Zara
+      department: Services
+      salary: 1234
+    - name: Kelsy
+      department: Services
+      salary: 2134
+    - name: Damien
+      department: Product
+      salary: 3124
+    - name: Kamila
+      department: Engineering
+      salary: 4325
+    - name: Dara
+      department: Product
+      salary: 1209
+    - name: Rickard
+      department: Services
+      salary: 2223
+    - name: Bent
+      department: Engineering
+      salary: 4122

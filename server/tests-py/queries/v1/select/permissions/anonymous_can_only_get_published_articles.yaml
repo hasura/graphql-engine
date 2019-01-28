@@ -1,0 +1,54 @@
+- description: Anonymous Users cannot see unpublished articles
+  url: /v1/query
+  status: 200
+  headers:
+    X-Hasura-Role: anonymous
+  response: []
+  query:
+    type: select
+    args:
+      table: article
+      where:
+        is_published: false
+      columns:
+        - id
+        - title
+        - content
+        - is_published
+        - name: author
+          columns:
+          - id 
+          - name
+- description: Anonymous Users can only see published articles
+  url: /v1/query
+  status: 200
+  headers:
+    X-Hasura-Role: anonymous
+  response:
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      is_published: true
+      author:
+        id: 1
+        name: Author 1
+    - id: 3
+      title: Article 3
+      content: Sample article content 3
+      is_published: true
+      author:
+        id: 2
+        name: Author 2
+  query:
+    type: select
+    args:
+      table: article
+      columns:
+        - id
+        - title
+        - content
+        - is_published
+        - name: author
+          columns:
+          - id 
+          - name

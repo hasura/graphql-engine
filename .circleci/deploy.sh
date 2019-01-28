@@ -6,14 +6,22 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
 LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
-CHANGELOG_TEXT=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty=format:'- %s' --reverse)
-RELEASE_BODY=$(eval "cat <<EOF
-$(<$ROOT/.circleci/release_notes.template.md)
-EOF
-")
+CHANGELOG_TEXT=""
 
 # reviewers for pull requests opened to update installation manifests
 REVIEWERS="shahidhk,coco98,arvi3411301"
+
+changelog() {
+  CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty="tformat:- $1: %s" --reverse -- $ROOT/$1)
+  if [ -n "$CHANGELOG" ]
+  then
+      if [ -n "$CHANGELOG_TEXT" ]
+      then
+          echo ""
+      fi
+      echo "${CHANGELOG}"
+  fi
+}
 
 ## deploy functions
 deploy_server() {
@@ -60,9 +68,6 @@ send_pr_to_repo() {
 
 deploy_console() {
     echo "deploying console"
-    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-version-circleci.sh)
@@ -73,6 +78,31 @@ deploy_console() {
     unset VERSION
     unset DIST_PATH
 }
+
+# build and push container for auto-migrations
+build_and_push_cli_migrations_image() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    cd "$ROOT/scripts/cli-migrations"
+    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
+    docker build -t "$IMAGE_TAG" .
+    docker push "$IMAGE_TAG"
+}
+
+# copy docker-compose-https manifests to gcr for digital ocean one-click app
+deploy_do_manifests() {
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/docker-compose.yaml" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/docker-compose.yaml
+    gsutil cp "$ROOT/install-manifests/docker-compose-https/Caddyfile" \
+           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/Caddyfile
+}
+
+# setup gcloud cli tool
+setup_gcloud() {
+    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+}
+
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -90,6 +120,8 @@ fi
 # CIRCLE_PR_NUMBER
 # CIRCLE_BRANCH
 
+setup_gcloud
+
 RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
 if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
     # release branch, only update console
@@ -102,8 +134,16 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
+    build_and_push_cli_migrations_image
+    CHANGELOG_TEXT=$(changelog server)
+    CHANGELOG_TEXT+=$(changelog cli)
+    CHANGELOG_TEXT+=$(changelog console)
+    RELEASE_BODY=$(eval "cat <<EOF
+$(<$ROOT/.circleci/release_notes.template.md)
+EOF
+")
     draft_github_release
     configure_git
-    send_pr_to_repo graphql-engine-install-manifests
     send_pr_to_repo graphql-engine-heroku
+    deploy_do_manifests
 fi

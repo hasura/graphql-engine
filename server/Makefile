@@ -10,6 +10,10 @@ build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 
 build_output := /build/_server_output
 
+dev: src-lib src-exec src-rsr
+	stack build --fast
+	stack exec graphql-engine -- --database-url postgres://postgres:@localhost:5432/hge serve --enable-console
+
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(version)" \
 		-f packaging/Dockerfile \
@@ -30,10 +34,10 @@ release-image: $(project).cabal
 # assumes this is built in circleci
 ci-binary:
 	mkdir -p packaging/build/rootfs
-	stack $(STACK_FLAGS) test --coverage --no-run-tests $(BUILD_FLAGS)
+	stack $(STACK_FLAGS) build $(BUILD_FLAGS)
 	mkdir -p $(build_output)
 	cp $(build_dir)/$(project)/$(project) $(build_output)
-	cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
+# cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
 	echo "$(version)" > $(build_output)/version.txt
 
 ci-test:

@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
-module Hasura.RQL.DML.Update where
+module Hasura.RQL.DML.Update
+  ( validateUpdateQueryWith
+  , validateUpdateQuery
+  , UpdateQueryP1(..)
+  , updateQueryToTx
+  , getUpdateDeps
+  , runUpdate
+  ) where
 
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
@@ -26,18 +28,19 @@ data UpdateQueryP1
   = UpdateQueryP1
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, S.SQLExp)]
-  , uqp1Where   :: !(S.BoolExp, GBoolExp AnnSQLBoolExp)
+  , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
   , pqp1MutFlds :: !MutFlds
   } deriving (Show, Eq)
 
 mkSQLUpdate
   :: UpdateQueryP1 -> S.SelectWith
 mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith (S.CTEUpdate update) mutFlds
+  mkSelWith tn (S.CTEUpdate update) mutFlds False
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp permFltr $ cBoolExp wc
+    tableFltr = Just $ S.WhereFrag $
+                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
 
 getUpdateDeps
   :: UpdateQueryP1
@@ -45,7 +48,7 @@ getUpdateDeps
 getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds) =
   mkParentDep tn : colDeps <> whereDeps <> retDeps
   where
-    colDeps   = map (mkColDep "on_type" tn) $ fst $ unzip setExps
+    colDeps   = map (mkColDep "on_type" tn . fst) setExps
     whereDeps = getBoolExpDeps tn wc
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
@@ -104,14 +107,18 @@ convOp fieldInfoMap updPerm objs conv =
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
 
-convUpdateQuery
-  :: (P1C m)
+validateUpdateQueryWith
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m UpdateQueryP1
-convUpdateQuery f uq = do
+validateUpdateQueryWith f uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
+
+  -- If it is view then check if it is updatable
+  mutableView tableName viIsUpdatable
+    (tiViewInfo tableInfo) "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -140,18 +147,16 @@ convUpdateQuery f uq = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ fmap (zip retCols) $
-    checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
-      updTable = upiTable updPerm
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap updTable selPerm (uqWhere uq) f
+    convBoolExp' fieldInfoMap selPerm (uqWhere uq) f
 
   return $ UpdateQueryP1
     tableName
@@ -165,21 +170,21 @@ convUpdateQuery f uq = do
       <> "has \"select\" permission as \"where\" can't be used "
       <> "without \"select\" permission on the table"
 
-convUpdQ :: UpdateQuery -> P1 (UpdateQueryP1, DS.Seq Q.PrepArg)
-convUpdQ updQ = flip runStateT DS.empty $ convUpdateQuery binRHSBuilder updQ
+validateUpdateQuery
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
+validateUpdateQuery =
+  liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateP2 :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-updateP2 (u, p) =
+updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
   where
     updateSQL = toSQL $ mkSQLUpdate u
 
-instance HDBQuery UpdateQuery where
-
-  type Phase1Res UpdateQuery = (UpdateQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = convUpdQ
-
-  phaseTwo _ = liftTx . updateP2
-
-  schemaCachePolicy = SCPNoChange
+runUpdate
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => UpdateQuery -> m RespBody
+runUpdate q =
+  validateUpdateQuery q >>= liftTx . updateQueryToTx

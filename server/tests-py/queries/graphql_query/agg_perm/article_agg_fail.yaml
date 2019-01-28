@@ -1,0 +1,14 @@
+description: Query aggregations on article with user role (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: user
+query:
+  query: |
+    query {
+      article_agg{
+        agg{
+          count
+        }
+      }
+    }

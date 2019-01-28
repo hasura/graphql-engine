@@ -1,0 +1,9 @@
+- args:
+    permission:
+      columns:
+      - id
+      - avg
+      filter: {}
+    role: anonymous
+    table: author_average_rating
+  type: create_select_permission

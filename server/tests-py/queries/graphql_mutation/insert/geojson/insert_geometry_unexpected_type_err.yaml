@@ -1,0 +1,32 @@
+description: Insert landmarks
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      code: parse-failed
+      path: $.variableValues[0].location
+    message: 'unexpected geometry type: Random'
+query:
+  variables:
+    landmarks:
+    - name: Baz
+      type: river
+      location:
+        coordinates: [43.75049, 11.03207]
+        type: Random
+        crs: &crs
+          type: name
+          properties:
+            name: 'urn:ogc:def:crs:EPSG::4326'
+  query: |
+    mutation insertLandmark($landmarks: [landmark_insert_input!]!) {
+      insert_landmark(objects: $landmarks) {
+        returning{
+          id
+          name
+          location
+          type
+        }
+      }
+    }

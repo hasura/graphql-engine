@@ -1,0 +1,20 @@
+- description: Clear metadata
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: clear_metadata
+    args: {}
+
+- description: Check if metadata is cleared
+  url: /v1/query
+  status: 200
+  response:
+    functions: []
+    query_templates: []
+    tables: []
+    remote_schemas: []
+  query:
+    type: export_metadata
+    args: {}

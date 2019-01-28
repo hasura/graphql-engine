@@ -1,0 +1,7 @@
+description: Count number of authors
+url: /v1/query
+status: 400
+query:
+  type: random
+  args:
+    foo: bar

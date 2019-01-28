@@ -71,6 +71,7 @@ export const checkQuery = () => {
   cy.get('textarea')
     .first()
     .type('{enter}{uparrow}query{{}users{{}id}}', { force: true });
+  cy.wait(1000);
   cy.get('.execute-button').click();
   cy.get('.cm-property').contains('id');
   cy.get('.cm-number').contains('1');
@@ -83,7 +84,9 @@ export const checkMutation = () => {
       '{enter}{uparrow}#{leftarrow}{enter}{uparrow}mutation insert_user{{}insert_users(objects:[{{}name:"someName"}]){{}returning{{}id}}}',
       { force: true }
     );
+  cy.wait(1000);
   cy.get('.execute-button').click();
+  cy.wait(5000);
   cy.get('.cm-property').contains('id');
   cy.get('.cm-number').contains('2');
 };
@@ -96,7 +99,9 @@ export const checkSub = () => {
       '{enter}{uparrow}#{leftarrow}{enter}{uparrow}subscription{{}users{{}name}}',
       { force: true }
     );
+  cy.wait(1000);
   cy.get('.execute-button').click();
+  cy.wait(5000);
   cy.get('.cm-property').contains('name');
   cy.get('.cm-string').contains('someName');
   // Update the user with id 1

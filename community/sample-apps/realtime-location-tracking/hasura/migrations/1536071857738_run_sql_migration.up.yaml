@@ -1,0 +1,4 @@
+- args:
+    cascade: false
+    sql: ALTER TABLE vehicle_location alter column id set default nextval('vehicle_loc')
+  type: run_sql

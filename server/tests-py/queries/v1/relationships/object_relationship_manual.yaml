@@ -1,0 +1,65 @@
+  #Create object relationship
+- description: Create object relationship using manual method
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: create_object_relationship
+    args:
+      table: article_view
+      name: author
+      using:
+        manual_configuration:
+          remote_table: author_view
+          column_mapping: 
+            author_id : id
+  
+- description: Nested select on article
+  url: /v1/query
+  status: 200
+  response:
+    - id: 1
+      title: Article 1
+      content: Sample article content 1
+      author:
+        id: 1
+        name: AUTHOR 1
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      author:
+        id: 1
+        name: AUTHOR 1
+    - id: 3
+      title: Article 3
+      content: Sample article content 3
+      author:
+        id: 2
+        name: AUTHOR 2
+  query:
+    type: select
+    args:
+      table: article_view
+      columns:
+        - id
+        - title
+        - content
+        - name: author
+          columns:
+          - id
+          - name 
+
+  #Drop object relationship
+- description: Drop object relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+  query:
+  query:
+    type: drop_relationship
+    args:
+      table: article_view
+      relationship: author

@@ -1,0 +1,19 @@
+description: Insert into order table as user role (Check Constraint Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: merchant
+query:
+  query: |
+    mutation {
+      insert_address(objects: [{door_no: "12-21", street: "Madhapur", city: "Hyderabad", resident_id: 1}]){
+        affected_rows
+      }
+    }
+
+response:
+  errors:
+  - extensions:
+      path: $
+      code: validation-failed
+    message: no mutations exist 

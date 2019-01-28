@@ -1,0 +1,13 @@
+{
+  "name": "Hasura GraphQL Engine Auth Webhook",
+  "description": "Hasura GraphQL Engine Auth Webhook <> heroku",
+  "keywords": [
+    "graphql",
+    "heroku",
+    "postgres",
+    "hasura",
+    "auth",
+    "webhook"
+  ],
+  "repository": "https://github.com/hasura/sample-auth-webhook"
+}

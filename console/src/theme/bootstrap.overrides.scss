@@ -2,10 +2,26 @@
  * Override Bootstrap styles that you can't modify via variables here.
  *
  */
+
+/* Highlight js css */
+.hljs{display:block;overflow-x:auto;padding:0.5em;background:#F0F0F0}.hljs,.hljs-subst{color:#444}.hljs-comment{color:#888888}.hljs-keyword,.hljs-attribute,.hljs-selector-tag,.hljs-meta-keyword,.hljs-doctag,.hljs-name{font-weight:bold}.hljs-type,.hljs-string,.hljs-number,.hljs-selector-id,.hljs-selector-class,.hljs-quote,.hljs-template-tag,.hljs-deletion{color:#880000}.hljs-title,.hljs-section{color:#880000;font-weight:bold}.hljs-regexp,.hljs-symbol,.hljs-variable,.hljs-template-variable,.hljs-link,.hljs-selector-attr,.hljs-selector-pseudo{color:#BC6060}.hljs-literal{color:#78A960}.hljs-built_in,.hljs-bullet,.hljs-code,.hljs-addition{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta-string{color:#4d99bf}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
+/* */
+
+
 input[type="radio"], input[type="checkbox"]
 {
   margin: 0 5px 0px 0px;
 }
+.dropdown.input-group-btn {
+  button {
+    min-height: 34px;
+  }
+}
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
 label
 {
   margin-bottom: 0 !important;
@@ -75,8 +91,12 @@ select.form-control
 }
 .btn-warning:hover {
   color: #000;
-  background-color: #ec971f;
-  border-color: #d58512;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+.btn-warning:focus
+{
+  background-color: #F2B130 !important;
 }
 // Generate Code modal
 .padd_remove

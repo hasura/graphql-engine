@@ -1,0 +1,24 @@
+description: Inserts author with id 5
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - id: 5
+    name: Author 5
+    is_registered: false
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '5'
+query:
+  type: insert
+  args:
+    table: author
+    objects:
+    - id: 5
+      name: Author 5
+      is_registered: false
+    returning:
+    - id
+    - name
+    - is_registered  

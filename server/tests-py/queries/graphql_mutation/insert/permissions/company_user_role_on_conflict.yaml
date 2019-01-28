@@ -1,0 +1,35 @@
+description: Upsert Company name as user role
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Company-Id: '1'
+  X-Hasura-Role: user
+response:
+  data:
+    insert_Company:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Hasura
+query:
+  query: |
+    mutation insert_company {
+      insert_Company (
+        objects: [
+          {
+            name: "Hasura",
+            id: 1
+          }
+          ],
+        on_conflict: {
+          constraint: Company_pkey,
+          update_columns: [name]
+          }
+      ) {
+        affected_rows
+        returning{
+          id
+          name
+        }
+        }
+      }

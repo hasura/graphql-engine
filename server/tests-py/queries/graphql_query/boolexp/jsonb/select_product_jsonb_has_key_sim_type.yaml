@@ -1,0 +1,31 @@
+description: Select products having key 'SIM type' in spec
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    product:
+    - id: 3
+      category: Mobile
+      name: mobile1
+      spec:
+        Operating System Type: osType1
+        Weight: 200g
+        Processor: processor2
+        SIM type: DualSim
+        Sensors: Accelerometer sensor, E-compass, Proximity sensor
+        Network type: 4G
+        RAM: 3GB
+        Touchscreen: true
+query:
+  query: |
+    query {
+      product (
+      where: {spec: {_has_key: "SIM type" }}
+      ) {
+        id
+        category
+        name
+        spec
+
+      }
+    }

@@ -1,0 +1,21 @@
+description: Upserts article data via GraphQL mutation (Error 01)
+url: /v1/query
+status: 400
+response:
+  code: permission-denied
+  error: 'no such column exists : "name"'
+  path: '$.args.returning'
+query:
+  type: insert
+  args:
+    table: article
+    objects:
+    - content: Updated Article 1 content
+      id: 1
+    - content: Updated Article 2 content
+      id: 2
+    on_conflict:
+      action: update
+    returning:
+    - name
+    - id

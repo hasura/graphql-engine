@@ -1,7 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.GeoJSON
   ( Point(..)
   , MultiPoint(..)
@@ -10,16 +6,18 @@ module Hasura.SQL.GeoJSON
   , Polygon(..)
   , MultiPolygon(..)
   , GeometryCollection(..)
-  , Geometry(..)
+  , GeometryWithCRS(..)
   ) where
 
-import qualified Data.Aeson       as J
-import qualified Data.Aeson.Types as J
-import qualified Data.Text        as T
-import qualified Data.Vector      as V
+import qualified Data.Aeson        as J
+import qualified Data.Aeson.Casing as J
+import qualified Data.Aeson.TH     as J
+import qualified Data.Aeson.Types  as J
+import qualified Data.Text         as T
+import qualified Data.Vector       as V
 
 import           Control.Monad
-import           Data.Maybe       (maybeToList)
+import           Data.Maybe        (maybeToList)
 import           Hasura.Prelude
 
 data Position
@@ -81,7 +79,7 @@ newtype MultiLineString
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 newtype GeometryCollection
-  = GeometryCollection { unGeometryCollection :: [Geometry] }
+  = GeometryCollection { unGeometryCollection :: [GeometryWithCRS] }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 data LinearRing
@@ -129,32 +127,66 @@ data Geometry
   | GGeometryCollection !GeometryCollection
   deriving (Show, Eq)
 
-encToCoords :: (J.ToJSON a) => T.Text -> a -> J.Value
-encToCoords ty a =
-  J.object [ "type" J..= ty, "coordinates" J..= a]
+data GeometryWithCRS
+  = GeometryWithCRS
+  { _gwcGeom :: !Geometry
+  , _gwcCrs  :: !(Maybe CRS)
+  } deriving (Show, Eq)
 
-instance J.ToJSON Geometry where
-  toJSON = \case
-    GPoint o              -> encToCoords "Point" o
-    GMultiPoint o         -> encToCoords "MultiPoint" o
-    GLineString o         -> encToCoords "LineString" o
-    GMultiLineString o    -> encToCoords "MultiLineString" o
-    GPolygon o            -> encToCoords "Polygon" o
-    GMultiPolygon o       -> encToCoords "MultiPoylgon" o
+encToCoords :: (J.ToJSON a) => T.Text -> a -> Maybe CRS -> J.Value
+encToCoords ty a Nothing =
+  J.object [ "type" J..= ty, "coordinates" J..= a]
+encToCoords ty a (Just crs) =
+  J.object [ "type" J..= ty, "coordinates" J..= a, "crs" J..= crs]
+
+instance J.ToJSON GeometryWithCRS where
+  toJSON (GeometryWithCRS geom crsM) = case geom of
+    GPoint o              -> encToCoords "Point" o crsM
+    GMultiPoint o         -> encToCoords "MultiPoint" o crsM
+    GLineString o         -> encToCoords "LineString" o crsM
+    GMultiLineString o    -> encToCoords "MultiLineString" o crsM
+    GPolygon o            -> encToCoords "Polygon" o crsM
+    GMultiPolygon o       -> encToCoords "MultiPolygon" o crsM
     GGeometryCollection o ->
       J.object [ "type" J..= ("GeometryCollection"::T.Text)
                , "geometries" J..= o
                ]
 
-instance J.FromJSON Geometry where
+instance J.FromJSON GeometryWithCRS where
   parseJSON = J.withObject "Geometry" $ \o -> do
     ty <- o J..: "type"
-    case ty of
+    geom <- case ty of
       "Point"              -> GPoint      <$> o J..: "coordinates"
       "MultiPoint"         -> GMultiPoint <$> o J..: "coordinates"
       "LineString"         -> GLineString <$> o J..: "coordinates"
       "MultiLineString"    -> GMultiLineString <$> o J..: "coordinates"
       "Polygon"            -> GPolygon <$> o J..: "coordinates"
-      "MultiPoylgon"       -> GMultiPolygon <$> o J..: "coordinates"
+      "MultiPolygon"       -> GMultiPolygon <$> o J..: "coordinates"
       "GeometryCollection" -> GGeometryCollection <$> o J..: "geometries"
       _                    -> fail $ "unexpected geometry type: " <> ty
+    crsM <- o J..:? "crs"
+    return $ GeometryWithCRS geom crsM
+
+data CRSNameProps
+  = CRSNameProps
+  { _cnpName :: !Text
+  } deriving (Show, Eq)
+
+data CRSLinkProps
+  = CRSLinkProps
+  { _clpHref :: !Text
+  , _clpType :: !(Maybe Text)
+  } deriving (Show, Eq)
+
+data CRS
+  = CRSName !CRSNameProps
+  | CRSLink !CRSLinkProps
+  deriving (Show, Eq)
+
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSNameProps)
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSLinkProps)
+$(J.deriveJSON
+  J.defaultOptions { J.constructorTagModifier = J.camelCase . drop 3
+                   , J.sumEncoding = J.TaggedObject "type" "properties"
+                   }
+  ''CRS)

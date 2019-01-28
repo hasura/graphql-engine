@@ -12,7 +12,13 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 
+import { SERVER_CONSOLE_MODE } from '../../../constants';
+
 const SET_TABLE = 'Data/SET_TABLE';
+const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
+const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
+const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
+const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
 const LOAD_TABLE_COMMENT = 'Data/LOAD_TABLE_COMMENT';
@@ -23,10 +29,249 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ACCESS_KEY_ERROR = 'Data/ACCESS_KEY_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
+const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
+const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
+const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+
+const initQueries = {
+  schemaList: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'schemata',
+        schema: 'information_schema',
+      },
+      columns: ['schema_name'],
+      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+      where: {
+        schema_name: {
+          $nin: [
+            'information_schema',
+            'pg_catalog',
+            'hdb_catalog',
+            'hdb_views',
+          ],
+        },
+      },
+    },
+  },
+  loadSchema: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_table',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*.*',
+        {
+          name: 'columns',
+          columns: ['*.*'],
+          order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+        },
+      ],
+      where: { table_schema: '' },
+      order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
+    },
+  },
+  loadUntrackedSchema: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'tables',
+        schema: 'information_schema',
+      },
+      columns: ['table_name'],
+      where: {
+        table_schema: '',
+      },
+    },
+  },
+  loadTrackedFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['function_name', 'function_schema', 'is_system_defined'],
+      where: {
+        function_schema: '',
+      },
+    },
+  },
+  loadTrackableFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function_agg',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        'function_name',
+        'function_schema',
+        'has_variadic',
+        'function_type',
+        'function_definition',
+        'return_type_schema',
+        'return_type_name',
+        'return_type_type',
+        'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
+      ],
+      where: {
+        function_schema: '',
+        has_variadic: false,
+        returns_set: true,
+        return_type_type: {
+          $ilike: '%composite%',
+        },
+        $or: [
+          {
+            function_type: {
+              $ilike: '%stable%',
+            },
+          },
+          {
+            function_type: {
+              $ilike: '%immutable%',
+            },
+          },
+        ],
+      },
+    },
+  },
+  loadNonTrackableFunctions: {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function_agg',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        'function_name',
+        'function_schema',
+        'has_variadic',
+        'function_type',
+        'function_definition',
+        'return_type_schema',
+        'return_type_name',
+        'return_type_type',
+        'returns_set',
+      ],
+      where: {
+        function_schema: '',
+        has_variadic: false,
+        returns_set: true,
+        return_type_type: {
+          $ilike: '%composite%',
+        },
+        function_type: {
+          $ilike: '%volatile%',
+        },
+      },
+    },
+  },
+};
+
+const fetchTrackedFunctions = () => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const currentSchema = getState().tables.currentSchema;
+    const body = initQueries.loadTrackedFunctions;
+    body.args.where.function_schema = currentSchema;
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data });
+      },
+      error => {
+        console.error('Failed to load schema ' + JSON.stringify(error));
+      }
+    );
+  };
+};
+
+const fetchDataInit = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const body = {
+    type: 'bulk',
+    args: [
+      initQueries.schemaList,
+      initQueries.loadSchema,
+      initQueries.loadUntrackedSchema,
+    ],
+  };
+
+  // set schema in queries
+  const currentSchema = getState().tables.currentSchema;
+  body.args[1].args.where.table_schema = currentSchema;
+  body.args[2].args.where.table_schema = currentSchema;
+
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
+      dispatch({ type: LOAD_SCHEMA, allSchemas: data[1] });
+      dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data[2] });
+    },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+    }
+  );
+};
+
+const fetchFunctionInit = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const body = {
+    type: 'bulk',
+    args: [
+      initQueries.loadTrackableFunctions,
+      initQueries.loadNonTrackableFunctions,
+      initQueries.loadTrackedFunctions,
+    ],
+  };
+
+  // set schema in queries
+  const currentSchema = getState().tables.currentSchema;
+  body.args[0].args.where.function_schema = currentSchema;
+  body.args[1].args.where.function_schema = currentSchema;
+  body.args[2].args.where.function_schema = currentSchema;
+
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data[2] });
+    },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+    }
+  );
+};
 
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
@@ -35,26 +280,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'schemata',
-          schema: 'information_schema',
-        },
-        columns: ['schema_name'],
-        where: {
-          schema_name: {
-            $nin: [
-              'information_schema',
-              'pg_catalog',
-              'hdb_catalog',
-              'hdb_views',
-            ],
-          },
-        },
-      },
-    }),
+    body: JSON.stringify(initQueries.schemaList),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -69,21 +295,13 @@ const fetchSchemaList = () => (dispatch, getState) => {
 const loadSchema = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
+  const body = initQueries.loadSchema;
+  body.args.where.table_schema = currentSchema;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*.*'],
-        where: { table_schema: currentSchema },
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -95,9 +313,11 @@ const loadSchema = () => (dispatch, getState) => {
   );
 };
 
-const loadUntrackedSchema = () => (dispatch, getState) => {
+const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
+  dispatch,
+  getState
+) => {
   const url = Endpoints.getSchema;
-  const currentSchema = getState().tables.currentSchema;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -106,15 +326,36 @@ const loadUntrackedSchema = () => (dispatch, getState) => {
       type: 'select',
       args: {
         table: {
-          name: 'tables',
+          name: 'views',
           schema: 'information_schema',
         },
-        columns: ['table_name'],
+        columns: [
+          'is_updatable',
+          'is_insertable_into',
+          'is_trigger_updatable',
+          'is_trigger_deletable',
+          'is_trigger_insertable_into',
+        ],
         where: {
-          table_schema: currentSchema,
+          table_name: viewName,
+          table_schema: schemaName,
         },
       },
     }),
+  };
+  return dispatch(requestAction(url, options));
+};
+
+const loadUntrackedSchema = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const currentSchema = getState().tables.currentSchema;
+  const body = initQueries.loadUntrackedSchema;
+  body.args.where.table_schema = currentSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -202,7 +443,7 @@ const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
   const requestMsg = title;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
@@ -264,7 +505,7 @@ const makeMigrationCall = (
   const migrateUrl = returnMigrateUrl(currMigrationMode);
 
   let finalReqBody;
-  if (globals.consoleMode === 'hasuradb') {
+  if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
   } else if (globals.consoleMode === 'cli') {
     finalReqBody = migrationBody;
@@ -279,7 +520,7 @@ const makeMigrationCall = (
 
   const onSuccess = () => {
     if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for hasuradb mode
+      dispatch(loadMigrationStatus()); // don't call for server mode
     }
     dispatch(loadSchema());
     customOnSuccess();
@@ -298,6 +539,42 @@ const makeMigrationCall = (
   dispatch(requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)).then(
     onSuccess,
     onError
+  );
+};
+
+const fetchTableListBySchema = schemaName => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_table',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          '*.*',
+          {
+            name: 'columns',
+            columns: ['*.*'],
+            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
+          },
+        ],
+        where: { table_schema: schemaName },
+        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
+      },
+    }),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: UPDATE_MANUAL_REL_TABLE_LIST, data: data });
+    },
+    error => {
+      console.error('Failed to load table list' + JSON.stringify(error));
+    }
   );
 };
 
@@ -339,6 +616,28 @@ const dataReducer = (state = defaultState, action) => {
     };
   }
   switch (action.type) {
+    case LOAD_FUNCTIONS:
+      return {
+        ...state,
+        postgresFunctions: action.data,
+      };
+    case LOAD_NON_TRACKABLE_FUNCTIONS:
+      return {
+        ...state,
+        nonTrackablePostgresFunctions: action.data,
+      };
+    case LOAD_TRACKED_FUNCTIONS:
+      return {
+        ...state,
+        trackedFunctions: action.data,
+        listedFunctions: action.data,
+      };
+
+    case UPDATE_TRACKED_FUNCTIONS:
+      return {
+        ...state,
+        listedFunctions: [...action.data],
+      };
     case LOAD_SCHEMA:
       return {
         ...state,
@@ -372,6 +671,45 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, accessKeyError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
+    case UPDATE_REMOTE_SCHEMA_MANUAL_REL:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: {
+              ...state.modify.relAdd.manualRelInfo,
+              remoteSchema: action.data,
+            },
+          },
+        },
+      };
+    case UPDATE_MANUAL_REL_TABLE_LIST:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: {
+              ...state.modify.relAdd.manualRelInfo,
+              tables: action.data,
+            },
+          },
+        },
+      };
+    case RESET_MANUAL_REL_TABLE_LIST:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          relAdd: {
+            ...state.modify.relAdd,
+            manualRelInfo: { ...defaultState.modify.relAdd.manualRelInfo },
+          },
+        },
+      };
     default:
       return state;
   }
@@ -391,6 +729,15 @@ export {
   UPDATE_CURRENT_SCHEMA,
   loadUntrackedRelations,
   fetchSchemaList,
+  fetchDataInit,
+  fetchFunctionInit,
   ACCESS_KEY_ERROR,
   UPDATE_DATA_HEADERS,
+  UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+  fetchTableListBySchema,
+  RESET_MANUAL_REL_TABLE_LIST,
+  fetchViewInfoFromInformationSchema,
+  fetchTrackedFunctions,
+  UPDATE_TRACKED_FUNCTIONS,
+  initQueries,
 };

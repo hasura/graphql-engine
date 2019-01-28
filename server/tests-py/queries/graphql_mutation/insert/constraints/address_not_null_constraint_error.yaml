@@ -1,0 +1,21 @@
+description: Insert into order table as user role (Not Null Constraint Error)
+url: /v1alpha1/graphql
+status: 400
+query:
+  query: |
+    mutation {
+      insert_address(objects: [{street: "koramangala"}]){
+        returning{
+          id
+          street
+        }
+        affected_rows
+      }
+    } 
+
+response:
+  errors:
+  - extensions:
+      code: constraint-violation
+      path: $.selectionSet.insert_address.args.objects
+    message: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"

@@ -1,0 +1,22 @@
+description: Users cannot update id of his article
+url: /v1/query
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+status: 400
+response:
+  path: $.args.$set
+  error: role "user" does not have permission to update column "id"
+  code: permission-denied
+query:
+  type: update
+  args:
+    table: article
+    $set:
+      id: 2
+    where:
+      id: 1
+    returning:
+    - id
+    - title
+    - content

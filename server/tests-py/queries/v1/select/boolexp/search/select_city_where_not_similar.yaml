@@ -1,0 +1,18 @@
+description: Select cities not ending with ham
+url: /v1/query
+status: 200
+response:
+  - name:  New York
+    country: USA
+  - name: New Orleans 
+    country: USA
+query:
+  type: select
+  args:
+    table: city
+    where:
+      name:
+       $nsimilar: '_*ham'
+    columns:
+    - name
+    - country

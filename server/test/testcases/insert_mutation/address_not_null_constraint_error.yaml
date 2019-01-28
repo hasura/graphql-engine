@@ -14,6 +14,6 @@ query:
     } 
 response:
   errors:
-  - path: $
+  - path: $.selectionSet.insert_address.args.objects
     error: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"
     code: constraint-violation

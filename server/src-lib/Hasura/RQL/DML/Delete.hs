@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
-module Hasura.RQL.DML.Delete where
+module Hasura.RQL.DML.Delete
+  ( validateDeleteQWith
+  , validateDeleteQ
+  , DeleteQueryP1(..)
+  , deleteQueryToTx
+  , getDeleteDeps
+  , runDelete
+  ) where
 
 import           Data.Aeson
 import           Instances.TH.Lift        ()
@@ -23,17 +25,18 @@ import qualified Hasura.SQL.DML           as S
 data DeleteQueryP1
   = DeleteQueryP1
   { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(S.BoolExp, GBoolExp AnnSQLBoolExp)
+  , dqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
   , dqp1MutFlds :: !MutFlds
   } deriving (Show, Eq)
 
 mkSQLDelete
   :: DeleteQueryP1 -> S.SelectWith
 mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith (S.CTEDelete delete) mutFlds
+  mkSelWith tn (S.CTEDelete delete) mutFlds False
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
-    tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp fltr $ cBoolExp wc
+    tableFltr = Just $ S.WhereFrag $
+                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
 
 getDeleteDeps
   :: DeleteQueryP1 -> [SchemaDependency]
@@ -44,13 +47,17 @@ getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds) =
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
 
-convDeleteQuery
-  :: (P1C m)
+validateDeleteQWith
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m DeleteQueryP1
-convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
+validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
+
+  -- If table is view then check if it deletable
+  mutableView tableName viIsDeletable
+    (tiViewInfo tableInfo) "deletable"
 
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
@@ -66,12 +73,11 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $
-    zip retCols <$> checkRetCols fieldInfoMap selPerm retCols
+    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap tableName selPerm rqlBE prepValBuilder
+    convBoolExp' fieldInfoMap selPerm rqlBE prepValBuilder
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
@@ -83,21 +89,21 @@ convDeleteQuery prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
       <> "has \"select\" permission as \"where\" can't be used "
       <> "without \"select\" permission on the table"
 
-convDelQ :: DeleteQuery -> P1 (DeleteQueryP1, DS.Seq Q.PrepArg)
-convDelQ delQ = flip runStateT DS.empty $ convDeleteQuery binRHSBuilder delQ
+validateDeleteQ
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
+validateDeleteQ =
+  liftDMLP1 . validateDeleteQWith binRHSBuilder
 
-deleteP2 :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-deleteP2 (u, p) =
+deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
   where
     deleteSQL = toSQL $ mkSQLDelete u
 
-instance HDBQuery DeleteQuery where
-
-  type Phase1Res DeleteQuery = (DeleteQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = convDelQ
-
-  phaseTwo _ = liftTx . deleteP2
-
-  schemaCachePolicy = SCPNoChange
+runDelete
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  => DeleteQuery -> m RespBody
+runDelete q =
+  validateDeleteQ q >>= liftTx . deleteQueryToTx

@@ -1,0 +1,19 @@
+url: /v1/query
+status: 200
+response:
+  result_type: TuplesOk
+  result:
+  - 
+    - id
+    - name
+  - 
+    - '1'
+    - Author 1
+  - 
+    - '2'
+    - Author 2
+query:
+  type: run_sql
+  args:
+    sql: |
+      SELECT * from author

@@ -1,0 +1,202 @@
+descriptions: Select aggregations on article table along with it's nodes
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article_aggregate:
+      aggregate:
+        count: 3
+        sum:
+          id: 6
+          id_sum: 6
+          author_id: 4
+          author_id_sum: 4
+        sum_fields:
+          id: 6
+          id_sum: 6
+          author_id: 4
+          author_id_sum: 4
+        avg:
+          id: 2
+          id_avg: 2
+          author_id: 1.3333333333333333
+          author_id_avg: 1.3333333333333333
+        avg_fields:
+          id: 2
+          id_avg: 2
+          author_id: 1.3333333333333333
+          author_id_avg: 1.3333333333333333
+        max:
+          id: 3
+          id_max: 3
+          title: Article 3
+          title_max: Article 3
+          content: Sample article content 3
+          content_max: Sample article content 3
+          author_id: 2
+          author_id_max: 2
+        max_fields:
+          id: 3
+          id_max: 3
+          title: Article 3
+          title_max: Article 3
+          content: Sample article content 3
+          content_max: Sample article content 3
+          author_id: 2
+          author_id_max: 2
+        min:
+          id: 1
+          id_min: 1
+          title: Article 1
+          title_min: Article 1
+          content: Sample article content 1
+          content_min: Sample article content 1
+          author_id: 1
+          author_id_min: 1
+        min_fields:
+          id: 1
+          id_min: 1
+          title: Article 1
+          title_min: Article 1
+          content: Sample article content 1
+          content_min: Sample article content 1
+          author_id: 1
+          author_id_min: 1
+      nodes:
+      - id: 1
+        title: Article 1
+        content: Sample article content 1
+        is_published: false
+        author:
+          id: 1
+          name: Author 1
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        is_published: true
+        author:
+          id: 1
+          name: Author 1
+      - id: 3
+        title: Article 3
+        content: Sample article content 3
+        is_published: true
+        author:
+          id: 2
+          name: Author 2
+      articles:
+      - id: 1
+        title: Article 1
+        content: Sample article content 1
+        is_published: false
+        author:
+          id: 1
+          name: Author 1
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        is_published: true
+        author:
+          id: 1
+          name: Author 1
+      - id: 3
+        title: Article 3
+        content: Sample article content 3
+        is_published: true
+        author:
+          id: 2
+          name: Author 2
+
+query:
+  query: |
+   query{
+     article_aggregate{
+       aggregate{
+         count
+         sum{
+           id
+           id_sum: id
+           author_id
+           author_id_sum: author_id
+         }
+         sum_fields: sum{
+           id
+           id_sum: id
+           author_id
+           author_id_sum: author_id
+         }
+         avg{
+           id
+           id_avg: id
+           author_id
+           author_id_avg: author_id
+         }
+         avg_fields: avg{
+           id
+           id_avg: id
+           author_id
+           author_id_avg: author_id
+         }
+         max{
+           id
+           id_max: id
+           title
+           title_max: title
+           content
+           content_max: content
+           author_id
+           author_id_max: author_id
+         }
+         max_fields: max{
+           id
+           id_max: id
+           title
+           title_max: title
+           content
+           content_max: content
+           author_id
+           author_id_max: author_id
+         }
+         min{
+           id
+           id_min: id
+           title
+           title_min: title
+           content
+           content_min: content
+           author_id
+           author_id_min: author_id
+         }
+         min_fields: min{
+           id
+           id_min: id
+           title
+           title_min: title
+           content
+           content_min: content
+           author_id
+           author_id_min: author_id
+         }
+       }
+       nodes{
+         id
+         title
+         content
+         is_published
+         author{
+           id
+           name
+         }
+       }
+       articles: nodes{
+         id
+         title
+         content
+         is_published
+         author{
+           id
+           name
+         }
+       }
+     }
+   }

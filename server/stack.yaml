@@ -2,25 +2,35 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-12.4
+resolver: lts-12.22
+compiler: ghc-8.4.4
 
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
 # - '../../graphql-parser-hs'
+# - '../../pg-client-hs'
 # - extra-libs/aeson
 # - extra-libs/logger/wai-logger
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 # use https URLs so that build systems can clone these repos
-# - graphql-api-0.3.0
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: e61bc37794b4d9e281bad44b2d7c8d35f2dbc770
+  commit: f3d1e9e67bdfbfa3de85b7cbdb4c557dce7fd84d
 - git: https://github.com/hasura/graphql-parser-hs.git
-  commit: eae59812ec537b3756c3ddb5f59a7cc59508869b
-- Spock-core-0.13.0.0
-- reroute-0.5.0.0
+  commit: 75782ae894cce05ed31e5b87fd696fc10e88baf9
+- ginger-0.8.1.0
+
+# for text-builder
+- text-builder-0.6.4
+- deferred-folds-0.9.9
+- primitive-0.6.4.0
+
+# jose for the x5t bugfix (0.8.0.0)
+- git: https://github.com/frasertweedale/hs-jose.git
+  commit: d47572fb0650ac6cc2c9e00711c7f99132d897cb
+
 
 # Override default flag values for local packages and extra-deps
 flags: {}

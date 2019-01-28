@@ -1,0 +1,27 @@
+description: Insert a path using just a single point; error
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      path: $.variableValues[0].path.coordinates
+      code: parse-failed
+    message: A LineString needs at least 2 Positions
+query:
+  variables:
+    roads:
+    - name: Foo
+      path:
+        coordinates:
+        - [43.75049, 11.03207]
+        type: LineString
+  query: |
+    mutation insertRoad($roads: [road_insert_input!]!) {
+      insert_straight_road(objects: $roads) {
+        returning{
+          id
+          name
+          path
+        }
+      }
+    }

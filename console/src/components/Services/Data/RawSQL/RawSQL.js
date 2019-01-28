@@ -4,8 +4,8 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
-import Button from 'react-bootstrap/lib/Button';
-import { Link } from 'react-router';
+import ModalButton from 'react-bootstrap/lib/Button';
+import Button from '../../Layout/Button/Button';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -18,6 +18,7 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
+import semverCheck from '../../../../helpers/semver';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
@@ -31,10 +32,16 @@ const migrationTip = (
     migrations
   </Tooltip>
 );
-const trackTableTip = (
+const migrationNameTip = (
+  <Tooltip id="tooltip-migration">
+    Use this to change the name of the generated migration files. Defaults to
+    'run_sql_migration'
+  </Tooltip>
+);
+const trackTableTip = (hasFunctionSupport) => (
   <Tooltip id="tooltip-tracktable">
-    If you are creating a table/view, you can track them to query them with
-    GraphQL
+    { `If you are creating a table/view${hasFunctionSupport ? '/function' : ''}, you can track them to query them
+      with GraphQL`}
   </Tooltip>
 );
 
@@ -52,7 +59,7 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  currentSchema,
+  serverVersion,
 }) => {
   const styles = require('../TableCommon/Table.scss');
 
@@ -84,6 +91,41 @@ const RawSQL = ({
     );
   }
 
+  const submitSQL = () => {
+    // check migration mode global
+    if (migrationMode) {
+      const checkboxElem = document.getElementById('migration-checkbox');
+      const isMigration = checkboxElem ? checkboxElem.checked : false;
+      const textboxElem = document.getElementById('migration-name');
+      let migrationName = textboxElem ? textboxElem.value : '';
+      if (migrationName.length === 0) {
+        migrationName = 'run_sql_migration';
+      }
+      if (!isMigration && globals.consoleMode === 'cli') {
+        // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
+        const formattedSql = sql.toLowerCase();
+        if (
+          formattedSql.indexOf('create') !== -1 ||
+          formattedSql.indexOf('alter') !== -1 ||
+          formattedSql.indexOf('drop') !== -1
+        ) {
+          // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
+          dispatch(modalOpen());
+          const confirmation = false;
+          if (confirmation) {
+            dispatch(executeSQL(isMigration, migrationName));
+          }
+        } else {
+          dispatch(executeSQL(isMigration, migrationName));
+        }
+      } else {
+        dispatch(executeSQL(isMigration, migrationName));
+      }
+    } else {
+      dispatch(executeSQL(false, ''));
+    }
+  };
+
   const onModalClose = () => {
     dispatch(modalClose());
   };
@@ -100,7 +142,9 @@ const RawSQL = ({
     ));
     const rows = result.map((row, i) => (
       <tr key={i}>
-        {row.map((columnValue, j) => <td key={j}>{columnValue}</td>)}
+        {row.map((columnValue, j) => (
+          <td key={j}>{columnValue}</td>
+        ))}
       </tr>
     ));
     return !resultType || resultType === 'command' ? null : (
@@ -128,6 +172,10 @@ const RawSQL = ({
       </div>
     );
   })();
+  const functionText = semverCheck('customFunctionSection', serverVersion)
+    ? 'Function'
+    : '';
+  const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
       className={`${styles.main_wrapper} ${styles.padd_left} ${
@@ -152,16 +200,15 @@ const RawSQL = ({
                 communicate with the database.
               </li>
               <li>
-                If you plan to create a Table/View using Raw SQL, remember to
-                link it to Hasura DB using&nbsp;
-                <Link
-                  to={
-                    '/data/schema/' + currentSchema + '/existing-table-view/add'
-                  }
-                >
-                  Add Existing Table View
-                </Link>{' '}
-                functionality.
+                If you plan to create a Table/View
+                {functionText ? '/' + functionText : ''} using Raw SQL, remember
+                to link it to Hasura DB by checking the{' '}
+                <code>Track {placeholderText}</code> checkbox below.
+              </li>
+              <li>
+                Please note that if the migrations are enabled,{' '}
+                <code>down</code> migrations will not be generated when you
+                change the schema using Raw SQL.
               </li>
             </ul>
           </div>
@@ -177,6 +224,15 @@ const RawSQL = ({
             maxLines={100}
             width="100%"
             showPrintMargin={false}
+            commands={[
+              {
+                name: 'submit',
+                bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+                exec: () => {
+                  submitSQL();
+                },
+              },
+            ]}
             onChange={val => {
               dispatch({ type: SET_SQL, data: val });
               const formattedSql = val.toLowerCase();
@@ -191,10 +247,15 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              if (
-                formattedSql.indexOf('create view') !== -1 ||
-                formattedSql.indexOf('create table') !== -1
-              ) {
+              let regExp;
+              if (functionText) {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              } else {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              }
+              // const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
+              if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
               } else {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
@@ -237,8 +298,8 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track table
-            <OverlayTrigger placement="right" overlay={trackTableTip}>
+            Track {placeholderText}
+            <OverlayTrigger placement="right" overlay={trackTableTip(!!functionText)}>
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
                 aria-hidden="true"
@@ -267,54 +328,47 @@ const RawSQL = ({
                   aria-hidden="true"
                 />
               </OverlayTrigger>
+              <div className={styles.padd_top}>
+                Migration Name:
+                <OverlayTrigger placement="right" overlay={migrationNameTip}>
+                  <i
+                    className={`${styles.padd_small_left} fa fa-info-circle`}
+                    aria-hidden="true"
+                  />
+                </OverlayTrigger>
+              </div>
+              <input
+                className={
+                  styles.add_mar_right_small +
+                  ' ' +
+                  styles.tableNameInput +
+                  ' ' +
+                  styles.add_mar_top_small +
+                  ' form-control'
+                }
+                placeholder={'Name of the generated migration file'}
+                id="migration-name"
+                type="text"
+              />
               <hr />
             </div>
           ) : (
             <hr />
           )}
-          <button
+          <Button
             type="submit"
-            className={styles.yellow_button}
-            onClick={() => {
-              // check migration mode global
-              if (migrationMode) {
-                const checkboxElem = document.getElementById(
-                  'migration-checkbox'
-                );
-                const isMigration = checkboxElem ? checkboxElem.checked : false;
-                if (!isMigration && globals.consoleMode === 'cli') {
-                  // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
-                  const formattedSql = sql.toLowerCase();
-                  if (
-                    formattedSql.indexOf('create') !== -1 ||
-                    formattedSql.indexOf('alter') !== -1 ||
-                    formattedSql.indexOf('drop') !== -1
-                  ) {
-                    // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
-                    dispatch(modalOpen());
-                    const confirmation = false;
-                    if (confirmation) {
-                      dispatch(executeSQL(isMigration));
-                    }
-                  } else {
-                    dispatch(executeSQL(isMigration));
-                  }
-                } else {
-                  dispatch(executeSQL(isMigration));
-                }
-              } else {
-                dispatch(executeSQL(false));
-              }
-            }}
+            onClick={submitSQL}
+            color="yellow"
+            size="sm"
             data-test="run-sql"
           >
             Run!
-          </button>
+          </Button>
         </div>
         <div className="hidden col-xs-4">{alert}</div>
       </div>
       <Modal show={isModalOpen} onHide={onModalClose.bind(this)}>
-        <Modal.Header closeButton>
+        <Modal.Header closeModalButton>
           <Modal.Title>Run SQL</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -328,14 +382,14 @@ const RawSQL = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={onModalClose}>Cancel</Button>
-          <Button
+          <ModalButton onClick={onModalClose}>Cancel</ModalButton>
+          <ModalButton
             onClick={onConfirmNoMigration}
             bsStyle="primary"
             data-test="not-migration-confirm"
           >
             Yes, i confirm
-          </Button>
+          </ModalButton>
         </Modal.Footer>
       </Modal>
       <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -365,6 +419,7 @@ const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

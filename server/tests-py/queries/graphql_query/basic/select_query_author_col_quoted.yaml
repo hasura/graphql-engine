@@ -1,0 +1,21 @@
+description: Simple GraphQL object query on author
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    author:
+      - name: Author 1
+        id: 1
+        createdAt: '2017-09-21T09:39:44+00:00'
+      - name: Author 2
+        id: 2
+        createdAt: '2017-09-21T09:50:44+00:00'
+query:
+  query: |
+    query {
+      author {
+        id
+        name
+        createdAt
+      }
+    }

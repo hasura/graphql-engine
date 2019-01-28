@@ -9,5 +9,15 @@ query:
         _set: {name: "Jane"}
       ) {
         affected_rows
+        returning{
+          id
+          name
+          articles{
+            id
+            title
+            content
+            is_published
+          }
+        }
       }
     }

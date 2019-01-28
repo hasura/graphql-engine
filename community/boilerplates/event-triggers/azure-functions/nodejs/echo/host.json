@@ -1,0 +1,11 @@
+{
+    "functions": [ "HTTPTrigger" ],
+    "id": "3adb8c2ca78f4171bab74dfc9c600a2f",
+    "functionTimeout": "00:00:30",
+    "http": {
+        "routePrefix": ""
+    },
+    "tracing": {
+        "consoleLevel": "verbose"
+    }
+}

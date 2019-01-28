@@ -3,6 +3,12 @@
   padding: 0;
 }
 
+.migration_disclaimer {
+  font-size: 12px;
+  margin-left: 10px;
+  margin-top: 10px;
+  color: rgb(236, 61, 61);
+}
 .tableContainer {
   overflow: auto;
   //margin-top: 25px;
@@ -13,10 +19,22 @@
   width: 100%;
   .schemaSidebarSection {
     display: inline-block;
-    width: 40%;
+    width: 100%;
+    padding-left: 15px;
+    a
+    {
+      display: inline-block !important;
+      font-weight: bold;
+    }
   }
 }
-
+.changeSchema
+{
+  width: 50%;
+  margin-left: 10px;
+  display: inline-block;
+  font-weight: bold;
+}
 .aceBlock {
   max-height: 300px;
   position: relative;
@@ -129,6 +147,13 @@ a.expanded {
     width: 300px;
     height: 34px;
   }
+  .selectWidth {
+    width: 200px;
+  }
+  .defaultWidth {
+    width: 200px;
+    margin-right: 0px;
+  }
   i:hover {
     cursor: pointer;
     color: #B85C27;
@@ -173,4 +198,9 @@ a.expanded {
 .tableCellCenterAlignedExpanded {
   text-align: center;
   white-space: normal;
+}
+
+.sidebarMigration {
+  display: block !important;
+  clear: both !important;
 }

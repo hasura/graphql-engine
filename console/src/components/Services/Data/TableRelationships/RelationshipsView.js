@@ -2,18 +2,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import {
-  deleteRelMigrate,
-  addNewRelClicked,
-  relTableChange,
-  relNameChanged,
-  REL_SET_LCOL,
-  REL_SET_RCOL,
-  relTypeChange,
-  addRelViewMigrate,
-} from './Actions';
+import { deleteRelMigrate, addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
-import { setTable } from '../DataActions';
+import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
+
+import AddRelationship from './AddManualRelationship';
+import Button from '../../Layout/Button/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -42,13 +36,17 @@ const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const getGrayText = value => <i>{value}</i>;
   return isObjRel ? (
     <span>
-      &nbsp;{getGrayText(lcol)}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{rTable} :: {rcol}
+      &nbsp;
+      {getGrayText(lcol)}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {rTable} :: {rcol}
     </span>
   ) : (
     <span>
-      &nbsp;{rTable.name} :: {rcol}&nbsp;&nbsp;&rarr;&nbsp;&nbsp;{getGrayText(
-        lcol
-      )}
+      &nbsp;
+      {rTable} :: {rcol}
+      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {getGrayText(lcol)}
     </span>
   );
 };
@@ -73,9 +71,9 @@ const relationshipView = (
   return (
     <td>
       <div>
-        <button className="btn btn-sm btn-danger" onClick={onDelete}>
+        <Button size="sm" color="red" onClick={onDelete}>
           Remove
-        </button>
+        </Button>
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
@@ -86,141 +84,15 @@ const relationshipView = (
   );
 };
 
-const AddRelationship = ({
-  tableName,
-  allSchemas,
-  manualColumns,
-  dispatch,
-}) => {
-  // eslint-disable-line no-unused-vars
-  const styles = require('../TableModify/Modify.scss');
-  const tableSchema = allSchemas.find(t => t.table_name === tableName);
-  const onTableChange = e => {
-    dispatch(relTableChange(e.target.value));
-  };
-  const onRelNameChange = e => {
-    dispatch(relNameChanged(e.target.value));
-  };
-  const onRelLColChange = e => {
-    dispatch({ type: REL_SET_LCOL, lcol: e.target.value });
-  };
-  const onRelRColChange = e => {
-    dispatch({ type: REL_SET_RCOL, rcol: e.target.value });
-  };
-  const onRelTypeChange = e => {
-    if (e.target.value === 'object_rel') {
-      dispatch(relTypeChange('true'));
-    } else {
-      dispatch(relTypeChange('false'));
-    }
-  };
-  const onAddRelClicked = () => {
-    dispatch(addRelViewMigrate(tableName));
-  };
-  return (
-    <div>
-      <div>
-        <div className={styles.subheading_text}> Add New Relationship </div>
-        <div className="form-group">
-          <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-            Relationship Type
-          </div>
-          <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-            <select
-              data-test="data-rel-type"
-              className="form-control"
-              onChange={onRelTypeChange}
-              data-test="rel-type"
-            >
-              <option key="select_type" value="select_type">
-                Select relationship type
-              </option>
-              <option key="object" value="object_rel">
-                Object Relationship
-              </option>
-              <option key="array" value="array_rel">
-                Array Relationship
-              </option>
-            </select>
-          </div>
-        </div>
-        <div className="form-group">
-          <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-            Relationship Name
-          </div>
-          <div className={`${styles.relBlockInline} ${styles.relBlockRight}`}>
-            <input
-              onChange={onRelNameChange}
-              className="form-control"
-              placeholder="Enter relationship name"
-              data-test="rel-name"
-            />
-          </div>
-        </div>
-        <div className="form-group">
-          <div className={`${styles.relBlockInline} ${styles.relBlockLeft}`}>
-            Configuration
-          </div>
-          <select
-            className={`${styles.relBlockInline} form-control`}
-            onChange={onRelLColChange}
-            data-test="current-col"
-          >
-            <option key="default_column">Current Column</option>
-            {tableSchema.columns.map((c, i) => (
-              <option key={c + i} value={c.column_name}>
-                {c.column_name}
-              </option>
-            ))}
-          </select>
-          <span> :: </span>
-          <div className={styles.relBlockInline}>
-            <select
-              className="form-control"
-              onChange={onTableChange}
-              data-test="remote-table"
-            >
-              <option key="default_table">Remote Table</option>
-              {allSchemas.map((s, i) => (
-                <option key={i} value={s.table_name}>
-                  {s.table_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <span> -> </span>
-          <div className={styles.relBlockInline}>
-            <select
-              className="form-control"
-              onChange={onRelRColChange}
-              data-test="remote-table-col"
-            >
-              <option key="default_table_column">Remote Table Column:</option>
-              {manualColumns.map((c, i) => (
-                <option key={c + i} value={c.column_name}>
-                  {c.column_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <button
-          className={styles.yellow_button}
-          onClick={onAddRelClicked}
-          data-test="view-add-relationship"
-        >
-          Add Relationship
-        </button>
-      </div>
-    </div>
-  );
-};
-
 class RelationshipsView extends Component {
   componentDidMount() {
     this.props.dispatch({ type: RESET });
-
     this.props.dispatch(setTable(this.props.tableName));
+    // Sourcing the current schema into manual relationship
+    this.props.dispatch({
+      type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
+      data: this.props.currentSchema,
+    });
   }
 
   render() {
@@ -235,6 +107,7 @@ class RelationshipsView extends Component {
       relAdd,
       currentSchema,
       migrationMode,
+      schemaList,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
     const tableStyles = require('../TableCommon/TableStyles.scss');
@@ -334,7 +207,7 @@ class RelationshipsView extends Component {
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
@@ -348,19 +221,26 @@ class RelationshipsView extends Component {
                   lcol={relAdd.lcol}
                   rcol={relAdd.rcol}
                   allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  manualRelInfo={relAdd.manualRelInfo}
                   manualColumns={relAdd.manualColumns}
+                  titleInfo={'Add new relationship'}
+                  currentSchema={currentSchema}
+                  showClose={false}
+                  dataTestVal={'view-add-relationship'}
                 />
               </div>
             ) : (
-              <button
+              <Button
                 type="submit"
-                className="btn btn-sm btn-default"
+                color="white"
+                size="sm"
                 onClick={() => {
                   dispatch(addNewRelClicked());
                 }}
               >
                 + Add relationship
-              </button>
+              </Button>
             )}
             <hr />
           </div>
@@ -390,6 +270,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 

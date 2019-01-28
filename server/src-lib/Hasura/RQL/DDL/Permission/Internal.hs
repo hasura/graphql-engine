@@ -1,10 +1,4 @@
-{-# LANGUAGE DeriveLift             #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE OverloadedStrings      #-}
-{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
@@ -18,9 +12,7 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
 import qualified Data.HashMap.Strict        as M
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 
 import           Hasura.Prelude
@@ -47,9 +39,7 @@ instance ToJSON PermColSpec where
 
 convColSpec :: FieldInfoMap -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar      =
-  map pgiName $ fst $ partitionEithers $
-  map fieldInfoToEither $ M.elems cim
+convColSpec cim PCStar      = map pgiName $ getCols cim
 
 assertPermNotDefined
   :: (MonadError QErr m)
@@ -58,7 +48,8 @@ assertPermNotDefined
   -> TableInfo
   -> m ()
 assertPermNotDefined roleName pa tableInfo =
-  when (permissionIsDefined rpi pa) $ throw400 AlreadyExists $ mconcat
+  when (permissionIsDefined rpi pa || roleName == adminRole)
+  $ throw400 AlreadyExists $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
   , " permission on " <>> tiName tableInfo
   , " for role " <>> roleName
@@ -70,7 +61,7 @@ assertPermNotDefined roleName pa tableInfo =
 permissionIsDefined
   :: Maybe RolePermInfo -> PermAccessor a -> Bool
 permissionIsDefined rpi pa =
-  isJust $ join $ rpi ^? _Just.(permAccToLens pa)
+  isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
   :: (MonadError QErr m)
@@ -113,7 +104,7 @@ savePermToCatalog
   -> QualifiedTable
   -> PermDef a
   -> Q.TxE QErr ()
-savePermToCatalog pt (QualifiedTable sn tn) (PermDef  rn qdef mComment) =
+savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                hdb_catalog.hdb_permission
@@ -127,7 +118,7 @@ updatePermInCatalog
   -> QualifiedTable
   -> PermDef a
   -> Q.TxE QErr ()
-updatePermInCatalog pt (QualifiedTable sn tn) (PermDef rn qdef _) =
+updatePermInCatalog pt (QualifiedObject sn tn) (PermDef rn qdef _) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_permission
               SET perm_def = $1 :: jsonb
@@ -140,7 +131,7 @@ dropPermFromCatalog
   -> RoleName
   -> PermType
   -> Q.TxE QErr ()
-dropPermFromCatalog (QualifiedTable sn tn) rn pt =
+dropPermFromCatalog (QualifiedObject sn tn) rn pt =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                hdb_catalog.hdb_permission
@@ -178,79 +169,70 @@ data CreatePermP1Res a
   , cprDeps :: ![SchemaDependency]
   } deriving (Show, Eq)
 
-createPermP1 :: (P1C m) => QualifiedTable -> m TableInfo
-createPermP1 tn = do
-  adminOnly
-  askTabInfo tn
-
 procBoolExp
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> FieldInfoMap -> S.Qual -> BoolExp
-  -> m (S.BoolExp, [SchemaDependency])
-procBoolExp tn fieldInfoMap tq be = do
-  abe   <- annBoolExp valueParser fieldInfoMap be
-  sqlbe <- convFilterExp tq abe
+  => QualifiedTable -> FieldInfoMap -> BoolExp
+  -> m (AnnBoolExpSQL, [SchemaDependency])
+procBoolExp tn fieldInfoMap be = do
+  abe <- annBoolExp valueParser fieldInfoMap be
   let deps = getBoolExpDeps tn abe
-  return (sqlbe, deps)
+  return (abe, deps)
+
+isReqUserId :: T.Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
 
 getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders boolExp = case boolExp of
-  BoolAnd exps         -> concatMap getDependentHeaders exps
-  BoolOr exps          -> concatMap getDependentHeaders exps
-  BoolCol (ColExp _ v) -> parseValue v
-  BoolNot be           -> getDependentHeaders be
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
   where
     parseValue val = case val of
       (Object o) -> parseObject o
       _          -> parseOnlyString val
 
     parseOnlyString val = case val of
-      (String t) -> if isXHasuraTxt t
-                    then [T.toLower t]
-                    else []
-      _          -> []
-    parseObject o = flip concatMap (M.toList o) $ \(k, v) ->
-                             if isRQLOp k
-                             then parseOnlyString v
-                             else []
-
+      (String t)
+        | isUserVar t -> [T.toLower t]
+        | isReqUserId t -> [userIdHeader]
+        | otherwise -> []
+      _ -> []
+    parseObject o =
+      concatMap parseOnlyString (M.elems o)
+      -- if isRQLOp k
+      --                        then parseOnlyString v
+      --                        else []
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
-valueParser columnType val = case (val, columnType) of
+valueParser columnType = \case
   -- When it is a special variable
-  (String t, ty) ->
-    if isXHasuraTxt t
-    then return $ S.SEUnsafe $
-      "current_setting('hasura." <> dropAndSnakeCase t
-       <> "')::" <> T.pack (show ty)
-    else txtRHSBuilder ty val
+  val@(String t)
+    | isUserVar t -> return $ fromCurSess t
+    | isReqUserId t  -> return $ fromCurSess userIdHeader
+    | otherwise      -> txtRHSBuilder columnType val
   -- Typical value as Aeson's value
-  _ -> txtRHSBuilder columnType val
-
--- Convert where clause into SQL BoolExp
-convFilterExp :: (MonadError QErr m)
-              => S.Qual -> GBoolExp AnnValS -> m S.BoolExp
-convFilterExp tq be =
-  cBoolExp <$> convBoolRhs builderStrategy tq be
+  val -> txtRHSBuilder columnType val
   where
-    builderStrategy = mkBoolExpBuilder return
+    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
+    fromCurSess hdr =
+      S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
+      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
-  Q.fromBuilder $ mconcat
-  [ BB.string7 "SELECT hdb_catalog.inject_table_defaults("
-  , TE.encodeUtf8Builder $ pgFmtLit vsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit vn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tsn
-  , BB.string7 ", "
-  , TE.encodeUtf8Builder $ pgFmtLit tn
-  , BB.string7 ");"
+  Q.fromText $ mconcat
+  [ "SELECT hdb_catalog.inject_table_defaults("
+  , pgFmtLit vsn
+  , ", "
+  , pgFmtLit vn
+  , ", "
+  , pgFmtLit tsn
+  , ", "
+  , pgFmtLit tn
+  , ");"
   ]
+
   where
-    QualifiedTable (SchemaName vsn) (TableName vn) = qv
-    QualifiedTable (SchemaName tsn) (TableName tn) = qt
+    QualifiedObject (SchemaName vsn) (TableName vn) = qv
+    QualifiedObject (SchemaName tsn) (TableName tn) = qt
 
 data DropPerm a
   = DropPerm
@@ -273,10 +255,10 @@ class (ToJSON a) => IsPerm a where
     :: (QErrM m, CacheRM m)
     => TableInfo
     -> PermDef a
-    -> m (PermInfo a)
+    -> m (WithDeps (PermInfo a))
 
   addPermP2Setup
-    :: (CacheRWM m, MonadTx m, QErrM m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+    :: (MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
 
   buildDropPermP1Res
     :: (QErrM m, CacheRM m, UserInfoM m)
@@ -294,36 +276,60 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
-addPermP1 :: (QErrM m, CacheRM m, IsPerm a) => TableInfo -> PermDef a -> m (PermInfo a)
+validateViewPerm
+  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo -> m ()
+validateViewPerm permDef tableInfo =
+  case permAcc of
+    PASelect -> return ()
+    PAInsert -> mutableView tn viIsInsertable viewInfo "insertable"
+    PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
+    PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
+  where
+    tn = tiName tableInfo
+    viewInfo = tiViewInfo tableInfo
+    permAcc = getPermAcc1 permDef
+
+addPermP1
+  :: (QErrM m, CacheRM m, IsPerm a)
+  => TableInfo -> PermDef a -> m (WithDeps (PermInfo a))
 addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
   buildPermInfo tabInfo pd
 
 addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
-          => QualifiedTable -> PermDef a -> PermInfo a -> m ()
-addPermP2 tn pd permInfo = do
+          => QualifiedTable -> PermDef a -> WithDeps (PermInfo a) -> m ()
+addPermP2 tn pd (permInfo, deps) = do
   addPermP2Setup tn pd permInfo
-  addPermToCache tn (pdRole pd) pa permInfo
+  addPermToCache tn (pdRole pd) pa permInfo deps
   liftTx $ savePermToCatalog pt tn pd
   where
     pa = getPermAcc1 pd
     pt = permAccToType pa
 
-instance (IsPerm a) => HDBQuery (CreatePerm a) where
+createPermP1
+  :: ( UserInfoM m, MonadError QErr m
+     , CacheRM m, IsPerm a
+     )
+  => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
+createPermP1 (WithTable tn pd) = do
+  adminOnly
+  tabInfo <- askTabInfo tn
+  validateViewPerm pd tabInfo
+  addPermP1 tabInfo pd
 
-  type Phase1Res (CreatePerm a) = PermInfo a
+runCreatePerm
+  :: ( UserInfoM m
+     , CacheRWM m, IsPerm a, MonadTx m
+     )
+  => CreatePerm a -> m RespBody
+runCreatePerm defn@(WithTable tn pd) = do
+  permInfo <- createPermP1 defn
+  addPermP2 tn pd permInfo
+  return successMsg
 
-  phaseOne (WithTable tn pd) = do
-    tabInfo <- createPermP1 tn
-    addPermP1 tabInfo pd
-
-  phaseTwo (WithTable tn pd) permInfo = do
-    addPermP2 tn pd permInfo
-    return successMsg
-
-  schemaCachePolicy = SCPReload
-
-dropPermP1 :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a) => DropPerm a -> m (PermInfo a)
+dropPermP1
+  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
+  => DropPerm a -> m (PermInfo a)
 dropPermP1 dp@(DropPerm tn rn) = do
   adminOnly
   tabInfo <- askTabInfo tn
@@ -340,12 +346,20 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
     pa = getPermAcc2 dp
     pt = permAccToType pa
 
-instance (IsPerm a) => HDBQuery (DropPerm a) where
+runDropPerm
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropPerm a -> m RespBody
+runDropPerm defn = do
+  permInfo <- buildDropPermP1Res defn
+  dropPermP2 defn permInfo
+  return successMsg
 
-  type Phase1Res (DropPerm a) = DropPermP1Res a
+-- instance (IsPerm a) => HDBQuery (DropPerm a) where
 
-  phaseOne = buildDropPermP1Res
+--   type Phase1Res (DropPerm a) = DropPermP1Res a
 
-  phaseTwo dp p1Res = dropPermP2 dp p1Res >> return successMsg
+--   phaseOne = buildDropPermP1Res
 
-  schemaCachePolicy = SCPReload
+--   phaseTwo dp p1Res = dropPermP2 dp p1Res >> return successMsg
+
+--   schemaCachePolicy = SCPReload

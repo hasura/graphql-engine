@@ -1,0 +1,22 @@
+description: Update mutation on author
+url: /v1/query
+response:
+  affected_rows: 0
+  returning: []
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+status: 200
+query:
+  type: update
+  args:
+    table: article
+    $set:
+      content: Article content version 1.0.2
+      version: '1.0.2'
+    where:
+      id: 1
+    returning:
+    - id
+    - title
+    - content

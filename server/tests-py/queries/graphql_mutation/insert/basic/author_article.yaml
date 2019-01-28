@@ -1,0 +1,112 @@
+#Inserting author data
+- description: Inserts author data via GraphQL mutation
+  url: /v1alpha1/graphql
+  response:
+    data:
+      insert_author:
+        returning:
+        - id: 1
+          name: Author 1
+        - id: 2
+          name: Author 2
+  status: 200
+  query:
+    query: |
+      mutation insert_author {
+        insert_author(
+          objects: [
+            {
+              name: "Author 1"
+            },
+            {
+              name: "Author 2"
+            }
+          ]
+        ) {
+          returning {
+            id
+            name
+          }
+        }
+      }
+
+#Inserting empty objects
+- description: Inserts empty objects via GraphQL mutation
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_author:
+        affected_rows: 0
+        returning: []
+  query:
+    query: |
+      mutation insert_empty_objects {
+        insert_author(
+          objects: []
+        ){
+          affected_rows
+          returning{
+            id
+            name
+          }
+        }
+      }
+
+#Inserting article data
+- description: Inserts article data via GraphQL mutation
+  url: /v1alpha1/graphql
+  response:
+    data:
+      insert_article:
+        returning:
+        - content: Sample article content
+          id: 1
+          title: Article 1
+        - content: Sample article content
+          id: 2
+          title: Article 2
+        - content: Sample article content
+          id: 3
+          title: Article 3
+  status: 200
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+          {
+            title: "Article 1",
+            content: "Sample article content",
+            author_id: 1
+          },
+          {
+            title: "Article 2",
+            content: "Sample article content",
+            author_id: 1
+          },
+          {
+            title: "Article 3",
+            content: "Sample article content",
+            author_id: 2
+          }
+          ]
+        ) {
+          returning {
+            id
+            title
+            content
+          }
+        }
+      } 
+- description: Delete the inserted articles
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from article;
+        delete from author;
+        SELECT setval('article_id_seq', 1, FALSE);
+        SELECT setval('author_id_seq', 1, FALSE);

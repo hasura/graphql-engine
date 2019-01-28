@@ -1,0 +1,159 @@
+  #Inserting data into test_types table
+- description: Inserts data into test_types table with various postgres types
+  url: /v1alpha1/graphql
+  response:
+    data:
+      insert_test_types:
+        returning:
+        - c1_smallint: 32767
+          c2_integer: 2147483647
+          c3_bigint: "9223372036854775807"
+          c4_decimal: 123.45
+          c5_numeric: 1.234
+          c6_real: 0.00390625
+          c7_double_precision: 16.0001220703125
+          c8_smallserial: 1
+          c9_serial: 1
+          c10_bigserial: "1"
+          c11_varchar_3: "abc"
+          c12_char_4: "baaz"
+          c13_text: "foo bar baz"
+          c14_timestamp: "2004-10-19T10:23:54"
+          c15_timestamptz: "2015-10-17T14:42:43+00:00"
+          c16_date: '2014-09-14'
+          c17_time: '11:09:23'
+          c18_time_with_zone: '15:22:23+00'
+          c19_interval: '01:03:02'
+          c20_boolean: true
+          c21_point: '(1,2)'
+          c22_line: '{2,3,-1}'
+          c23_lseg: '[(4,2),(3,1)]'
+          c24_box: '(31,12),(14,11)'
+          c25_closed_path: '((0,0),(0,3),(1,0))'
+          c26_open_path: '[(0,0),(0,-1),(-3,0)]'
+          c27_polygon: '((0,0),(0,6),(2,0))'
+          c28_circle: '<(-2,-3),3>'
+          c29_cidr: '192.168.100.128/25'
+          c30_inet: '198.24.10.0'
+          c31_macaddr: '08:00:2b:01:02:03'
+          c32_json:
+            a: b
+          c33_jsonb:
+            c: d
+          c36_uuid: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+          c39_range_integer: '[123,456)'
+          c40_range_bigint: '[1147483647,2147483647)'
+          c41_range_numeric: '[1.23,4.56]'
+          c42_range_timestamp: '["2010-01-01 14:30:00","2010-01-01 15:30:02")'
+          c43_range_timestamptz: '("2011-02-05 12:03:00+00","2012-03-04 16:40:04+00"]'
+          c44_xml: '<foo>bar</foo>'
+  status: 200
+  query:
+    variables:
+      json:
+        a: b
+      jsonb:
+        c: d
+    query: |
+      mutation insert_test_types
+      ( $json: json
+      , $jsonb: jsonb
+      , $compositeComplex: complex
+      ) {
+        insert_test_types(
+          objects: [
+            { c1_smallint: 32767
+            , c2_integer: 2147483647
+            , c3_bigint: "9223372036854775807"
+            , c4_decimal: 123.45
+            , c5_numeric: 1.234
+            , c6_real: 0.00390625
+            , c7_double_precision: 16.0001220703125
+            , c11_varchar_3: "abc"
+            , c12_char_4: "baaz"
+            , c13_text: "foo bar baz"
+            , c14_timestamp: "2004-10-19T10:23:54"
+            , c15_timestamptz: "2015-10-17T14:42:43+00:00"
+            , c16_date: "2014-09-14"
+            , c17_time: "11:09:23"
+            , c18_time_with_zone: "15:22:23+00"
+            , c19_interval: "01:03:02"
+            , c20_boolean: true
+            , c21_point: "(1,2)"
+            , c22_line: "{2,3,-1}"
+            , c23_lseg: "[(4,2),(3,1)]"
+            , c24_box: "(31,12),(14,11)"
+            , c25_closed_path: "((0,0),(0,3),(1,0))"
+            , c26_open_path: "[(0,0),(0,-1),(-3,0)]"
+            , c27_polygon: "((0,0),(0,6),(2,0))"
+            , c28_circle: "<(-2,-3),3>"
+            , c29_cidr: "192.168.100.128/25"
+            , c30_inet: "198.24.10.0"
+            , c31_macaddr: "08:00:2b:01:02:03"
+            , c32_json: $json
+            , c33_jsonb: $jsonb
+            , c36_uuid: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+            , c39_range_integer: "[123,456)"
+            , c40_range_bigint: "[1147483647,2147483647)"
+            , c41_range_numeric: "[1.23,4.56]"
+            , c42_range_timestamp: "[\"2010-01-01 14:30:00\",\"2010-01-01 15:30:02\")"
+            , c43_range_timestamptz: "(\"2011-02-05 12:03:00+00\",\"2012-03-04 16:40:04+00\"]"
+            , c44_xml: "<foo>bar</foo>"
+            }
+          ]
+        ) {
+          returning {
+            c1_smallint
+            c2_integer
+            c3_bigint
+            c4_decimal
+            c5_numeric
+            c6_real
+            c7_double_precision
+            c8_smallserial
+            c9_serial
+            c10_bigserial
+            c11_varchar_3
+            c12_char_4
+            c13_text
+            c14_timestamp
+            c15_timestamptz
+            c16_date
+            c17_time
+            c18_time_with_zone
+            c19_interval
+            c20_boolean
+            c21_point
+            c22_line
+            c23_lseg
+            c24_box
+            c25_closed_path
+            c26_open_path
+            c27_polygon
+            c28_circle
+            c29_cidr
+            c30_inet
+            c31_macaddr
+            c32_json
+            c33_jsonb
+            c36_uuid
+            c39_range_integer
+            c40_range_bigint
+            c41_range_numeric
+            c42_range_timestamp
+            c43_range_timestamptz
+            c44_xml
+          }
+        }
+      }
+- description: Delete the inserted rows in test_types table
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from test_types;
+        SELECT setval('test_types_c10_bigserial_seq', 1, FALSE);
+        SELECT setval('test_types_c9_serial_seq', 1, FALSE);
+        SELECT setval('test_types_c8_smallserial_seq', 1, FALSE);

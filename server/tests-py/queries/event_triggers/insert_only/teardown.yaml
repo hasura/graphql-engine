@@ -1,0 +1,9 @@
+type: bulk
+args:
+- type: delete_event_trigger
+  args:
+    name: t1_insert
+- type: run_sql
+  args:
+    sql: |
+      drop table hge_tests.test_t1

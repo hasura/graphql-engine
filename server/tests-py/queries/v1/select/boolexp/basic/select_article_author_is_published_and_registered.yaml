@@ -1,0 +1,31 @@
+description: Nested select on article
+url: /v1/query
+status: 200
+response:
+  - id: 2
+    title: Article 2
+    content: Sample article content 2
+    is_published: true
+    author:
+      id: 1
+      name: Author 1
+      is_registered: true
+query:
+  type: select
+  args:
+    table: article
+    where:
+      $and: 
+      - is_published: true
+      - author:
+          is_registered: true
+    columns:
+    - id 
+    - title
+    - content
+    - is_published
+    - name: author
+      columns:
+      - id
+      - name
+      - is_registered

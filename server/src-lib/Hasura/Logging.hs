@@ -1,8 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Logging
   ( LoggerSettings(..)
@@ -13,7 +9,7 @@ module Hasura.Logging
   , debugT
   , debugBS
   , debugLBS
-  , Logger
+  , Logger (..)
   , LogLevel(..)
   , mkLogger
   , LoggerCtx(..)
@@ -105,9 +101,9 @@ data LoggerSettings
   , _lsLevel           :: !LogLevel
   } deriving (Show, Eq)
 
-defaultLoggerSettings :: LoggerSettings
-defaultLoggerSettings =
-  LoggerSettings True Nothing LevelInfo
+defaultLoggerSettings :: Bool -> LoggerSettings
+defaultLoggerSettings isCached =
+  LoggerSettings isCached Nothing LevelInfo
 
 getFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
 getFormattedTime tzM = do
@@ -117,7 +113,7 @@ getFormattedTime tzM = do
   return $ FormattedTime $ T.pack $ formatTime zt
   where
     formatTime = Format.formatTime Format.defaultTimeLocale format
-    format = "%FT%T%z"
+    format = "%FT%H:%M:%S%3Q%z"
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
 mkLoggerCtx :: LoggerSettings -> IO LoggerCtx
@@ -135,10 +131,10 @@ cleanLoggerCtx :: LoggerCtx -> IO ()
 cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
-type Logger = forall a. (ToEngineLog a) => a -> IO ()
+newtype Logger = Logger { unLogger :: forall a. (ToEngineLog a) => a -> IO () }
 
 mkLogger :: LoggerCtx -> Logger
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter) l = do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter) = Logger $ \l -> do
   localTime <- timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel) $

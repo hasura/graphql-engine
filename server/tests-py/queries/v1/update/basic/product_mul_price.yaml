@@ -1,0 +1,47 @@
+description: Updated product price using _mul operator
+url: /v1/query
+status: 200
+response:
+  affected_rows: 2
+  returning:
+  - product_id: 1
+    name: Product 1
+    price: 15
+  - product_id: 2
+    name: Product 2
+    price: 45
+query:
+  type: update
+  args:
+    table: products
+    $mul:
+      price: 3
+    where:
+      product_id:
+        $gte: 1
+    returning:
+    - product_id
+    - name
+    - price
+
+description: Updated product price using _mul operator
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - product_id: 2
+    name: Product 2
+    price: 16.5
+query:
+  type: update
+  args:
+    table: products
+    $mul:
+      price: 1.1
+    where:
+      product_id: 2
+    returning:
+    - product_id
+    - name
+    - price

@@ -1,0 +1,352 @@
+@import "../../../Common/Common.scss";
+.container {
+  padding: 0;
+}
+.dropdown_wrapper {
+  width: 300px;
+}
+.tableContainer {
+  overflow: auto;
+  //margin-top: 25px;
+}
+
+.schemaWrapper {
+  background: #FFF3D5;
+  width: 100%;
+  .schemaSidebarSection {
+    display: inline-block;
+    width: 40%;
+  }
+}
+.clearBoth
+{
+  clear: both;
+}
+.wd100
+{
+  width: 100%;
+  float: left;
+  clear: both;
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
+.listenColumnWrapper
+{
+  max-width: 700px;
+}
+.aceBlock {
+  max-height: 300px;
+  position: relative;
+  margin-top: 10px;
+}
+
+.aceBlockExpand {
+  position: absolute;
+  top: -25px;
+  right: 5px;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.viewRowsContainer {
+  border-left: 1px solid #ddd;
+}
+
+.cellExpand {
+  transform: rotate(-45deg);
+  cursor: pointer;
+  top: -5px;
+  left: 0px;
+  right: 0px;
+}
+
+.cellCollapse {
+  cursor: pointer;
+  top: -5px;
+  left: 0px;
+  right: 0px;
+  padding-right: 5px;
+}
+
+.insertContainer {
+  button {
+    margin: 0 10px;
+  }
+  label.radioLabel {
+    padding-top: 0;
+    input[type="radio"] {
+      margin-top: 10px;
+    }
+  }
+  span.radioSpan {
+    line-height: 34px;
+  }
+}
+
+.table {
+  width: auto;
+  thead {
+    background: #333;
+    color: #ddd;
+  }
+  th {
+    min-width: 100px;
+    font-weight: 300;
+  }
+  td {
+    max-width: 300px;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.expandable {
+  color: #779ecb;
+  text-decoration: underline;
+}
+
+a.expanded {
+  color: red;
+}
+
+.expandable:hover {
+  background: #eee;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.tableNameInput {
+  width: 300px;
+}
+.addCol {
+  .input {
+    width: 300px;
+    display: inline-block;
+  }
+  .inputCheckbox {
+    width: auto;
+    display: inline-block;
+    padding-left: 20px;
+    margin: 0px 20px;
+    box-shadow: none;
+  }
+  .inputDefault
+  {
+    width: 150px;
+    margin: 0px 20px;
+    display: inline-block;
+  }
+  .remove_ul_left
+  {
+
+  }
+  .select {
+    display: inline-block;
+    width: 300px;
+    height: 34px;
+  }
+  i:hover {
+    cursor: pointer;
+    color: #B85C27;
+    transition: 0.2s;
+  }
+}
+
+.insertBox {
+  min-width: 270px;
+}
+
+.insertBoxLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sqlBody {
+}
+
+.tablesBody {
+  padding-top: 20px;
+}
+
+.count {
+  margin-top: 15px;
+}
+
+.addTablesBody {
+  padding-top: 20px;
+  padding-bottom: 30px;
+}
+
+.dataBreadCrumb {
+  padding-bottom: 10px;
+}
+
+.tableCellCenterAligned {
+  text-align: center;
+}
+
+.tableCellCenterAlignedExpanded {
+  text-align: center;
+  white-space: normal;
+}
+
+.selectTrigger {
+  width: 300px;
+  display: inline-block;
+}
+
+.settingsSection {
+  table {
+    width: 80%;
+    margin-top: 20px;
+  }
+}
+
+.advancedOperations {
+  hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  margin-bottom: 10px;
+  label {
+    cursor: pointer;
+  }
+}
+
+.retryLabel {
+  display: block;
+  margin-bottom: 10px !important;
+}
+
+.retrySection {
+  width: 300px;
+  margin-right: 20px;
+}
+
+.invocationsSection {
+  margin-top: 20px;
+  li {
+    display: block;
+    padding: 5px 10px;
+    margin-right: -10px;
+    margin-left: -10px;
+    line-height: 23px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+  .invocationSuccess {
+    color: #28a745
+  }
+  .invocationFailure {
+    color: red;
+  }
+}
+
+.streamingLogs {
+  margin-top: 20px;
+  li {
+    display: block;
+    padding: 5px 10px;
+    margin-right: -10px;
+    margin-left: -10px;
+    line-height: 23px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+  .invocationSuccess {
+    color: #28a745;
+  }
+  .invocationFailure {
+    color: red;
+  }
+}
+
+.selectOperations {
+  label {
+    cursor: pointer;
+  }
+}
+
+.advancedToggleBtn {
+  width: 300px;
+  i {
+    padding-left: 5px;
+  }
+}
+
+.watchBtn {
+  i {
+    font-size: 12px;
+  }
+}
+
+.loadOlder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+}
+.newBtn {
+  margin-right: 10px;
+}
+.loadNewer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3D5;
+  padding: 5px;
+  min-height: 41px;
+  position: relative;
+}
+.filterAll {
+  position: absolute;
+  left: 10px;
+  input {
+    display: inline-block;
+    width: auto;
+    margin-left: 10px;
+  }
+}
+.retryEvent {
+  cursor: pointer;
+}
+.redeliverModal {
+  width: 60%;
+}
+.redeliverEventSection {
+  clear: both;
+  margin: 0;
+}
+.triggerSettingsModifyButton {
+  margin-right: 10px;
+  border-radius: 3px;
+}
+.dropDownGroup {
+  max-width: 300px;
+}
+.status_code_right {
+  text-align: right;
+  font-weight: bold;
+  font-size: 15px;
+  padding-bottom: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+  i
+  {
+    margin-left: 5px;
+  }
+}
+.toggleAdvanced {
+  cursor: pointer;
+  b {
+    font-size: 15px;
+  }
+  i:hover {
+    color: #4D4D4D ;
+  }
+}

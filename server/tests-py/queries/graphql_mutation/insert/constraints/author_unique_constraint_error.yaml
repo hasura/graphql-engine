@@ -1,0 +1,28 @@
+description: Insert into author table as user role (Unique Constraint Error)
+url: /v1alpha1/graphql
+status: 400
+query:
+  query: |
+    mutation insert_author {
+      insert_author(
+        objects: [
+          {
+            name: "Author 1"
+          },
+          {
+            name: "Author 1"
+          }
+        ]
+      ) {
+        returning {
+          id
+          name
+        }
+      }
+    } 
+response:
+  errors:
+  - extensions:
+      code: constraint-violation
+      path: $.selectionSet.insert_author.args.objects
+    message: "Uniqueness violation. duplicate key value violates unique constraint \"author_name_key\""

@@ -1,0 +1,12 @@
+url: /v1/query
+status: 400
+query:
+  type: insert
+  args:
+    table: author
+    objects:
+    - name: Author 1
+      age: 23     
+    returning:
+    - name
+    - id

@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
   , PGColMeta(..)
@@ -16,6 +11,10 @@ module Hasura.RQL.DDL.Schema.Diff
   , SchemaDiff(..)
   , getSchemaDiff
   , getSchemaChangeDeps
+
+  , FunctionMeta(..)
+  , fetchFunctionMeta
+  , getDroppedFuncs
   ) where
 
 import           Hasura.Prelude
@@ -43,9 +42,9 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PGColMeta)
 
 data ConstraintMeta
   = ConstraintMeta
-  { cmConstraintName :: !ConstraintName
-  , cmConstraintOid  :: !Int
-  , cmConstraintType :: !ConstraintType
+  { cmName :: !ConstraintName
+  , cmOid  :: !Int
+  , cmType :: !ConstraintType
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ConstraintMeta)
@@ -61,16 +60,59 @@ data TableMeta
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
   res <- Q.listQ [Q.sql|
-    SELECT table_schema,
-           table_name,
-           table_oid,
-           columns,
-           constraints
-    FROM hdb_views.hdb_table_meta
-    WHERE table_schema NOT LIKE 'hdb_%'
+    SELECT
+        t.table_schema,
+        t.table_name,
+        t.table_oid,
+        coalesce(c.columns, '[]') as columns,
+        coalesce(f.constraints, '[]') as constraints
+    FROM
+        (SELECT
+             c.oid as table_oid,
+             c.relname as table_name,
+             n.nspname as table_schema
+         FROM
+             pg_catalog.pg_class c
+         JOIN
+             pg_catalog.pg_namespace as n
+           ON
+             c.relnamespace = n.oid
+        ) t
+        LEFT OUTER JOIN
+        (SELECT
+             table_schema,
+             table_name,
+             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position, is_nullable::boolean) r)) as columns
+         FROM
+             information_schema.columns
+         GROUP BY
+             table_schema, table_name) c
+        ON (t.table_schema = c.table_schema AND t.table_name = c.table_name)
+        LEFT OUTER JOIN
+        (SELECT
+             tc.table_schema,
+             tc.table_name,
+             json_agg(
+              json_build_object(
+                  'name', tc.constraint_name,
+                  'oid', r.oid::integer,
+                  'type', tc.constraint_type
+                  )
+             ) as constraints
+         FROM
+             information_schema.table_constraints tc
+             JOIN pg_catalog.pg_constraint r
+             ON tc.constraint_name = r.conname
+         GROUP BY
+             table_schema, table_name) f
+        ON (t.table_schema = f.table_schema AND t.table_name = f.table_name)
+    WHERE
+        t.table_schema NOT LIKE 'pg_%'
+        AND t.table_schema <> 'information_schema'
+        AND t.table_schema <> 'hdb_catalog'
                 |] () False
   forM res $ \(ts, tn, toid, cols, constrnts) ->
-    return $ TableMeta toid (QualifiedTable ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
+    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -91,15 +133,23 @@ data TableDiff
   , _tdAddedCols       :: ![PGColInfo]
   , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
+  -- The final list of uniq/primary constraint names
+  -- used for generating types on_conflict clauses
+  -- TODO: this ideally should't be part of TableDiff
+  , _tdUniqOrPriCons   :: ![ConstraintName]
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
-  TableDiff mNewName droppedCols addedCols alteredCols droppedFKeyConstraints
+  TableDiff mNewName droppedCols addedCols alteredCols
+  droppedFKeyConstraints uniqueOrPrimaryCons
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
     newCols = tmColumns newtm
+
+    uniqueOrPrimaryCons =
+      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary $ cmType cm]
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -115,11 +165,13 @@ getTableDiff oldtm newtm =
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
 
-    droppedFKeyConstraints = map cmConstraintName $
-      filter (isForeignKey . cmConstraintType) $ getDifference cmConstraintOid
+    droppedFKeyConstraints = map cmName $
+      filter (isForeignKey . cmType) $ getDifference cmOid
       (tmConstraints oldtm) (tmConstraints newtm)
 
-getTableChangeDeps :: (P2C m) => TableInfo -> TableDiff -> m [SchemaObjId]
+getTableChangeDeps
+  :: (QErrM m, CacheRWM m)
+  => TableInfo -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps ti tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -127,13 +179,13 @@ getTableChangeDeps ti tableDiff = do
     let objId = SOTableObj tn $ TOCol droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
-  droppedConsDeps <- fmap concat $ forM droppedConstraints $ \droppedCons -> do
+  droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
     let objId = SOTableObj tn $ TOCons droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps
   where
     tn = tiName ti
-    TableDiff _ droppedCols _ _ droppedConstraints = tableDiff
+    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
 
 data SchemaDiff
   = SchemaDiff
@@ -150,7 +202,9 @@ getSchemaDiff oldMeta newMeta =
       flip map (getOverlap tmOid oldMeta newMeta) $ \(oldtm, newtm) ->
       (tmTable oldtm, getTableDiff oldtm newtm)
 
-getSchemaChangeDeps :: (P2C m) => SchemaDiff -> m [SchemaObjId]
+getSchemaChangeDeps
+  :: (QErrM m, CacheRWM m)
+  => SchemaDiff -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
@@ -169,3 +223,28 @@ getSchemaChangeDeps schemaDiff = do
 
     isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False
+
+data FunctionMeta
+  = FunctionMeta
+  { fmOid      :: !Int
+  , fmFunction :: !QualifiedFunction
+  } deriving (Show, Eq)
+
+fetchFunctionMeta :: Q.Tx [FunctionMeta]
+fetchFunctionMeta = do
+  res <- Q.listQ [Q.sql|
+    SELECT
+        f.function_schema,
+        f.function_name,
+        p.oid
+    FROM hdb_catalog.hdb_function_agg f
+         JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+    WHERE
+        f.function_schema <> 'hdb_catalog'
+                  |] () False
+  forM res $ \(sn, fn, foid) ->
+    return $ FunctionMeta foid $ QualifiedObject sn fn
+
+getDroppedFuncs :: [FunctionMeta] -> [FunctionMeta] -> [QualifiedFunction]
+getDroppedFuncs oldMeta newMeta =
+  map fmFunction $ getDifference fmOid oldMeta newMeta

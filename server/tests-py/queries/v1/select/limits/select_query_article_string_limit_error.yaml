@@ -1,0 +1,21 @@
+description: Nested select on article with limit expecting error
+url: /v1/query
+status: 400
+response:
+  code: parse-failed
+  error: 'expected Int, encountered String'
+  path: $.limit
+query:
+  type: select
+  args:
+    table: article
+    columns:
+    - id 
+    - title
+    - content
+    - name: author
+      columns:
+      - id
+      - name
+    order_by: -id
+    limit: "3"

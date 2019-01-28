@@ -41,7 +41,7 @@
 
 .newRoleInput {
   margin-left: 20px;
-  width: 80%;
+  width: calc(100% - 40px);
   height: 30px;
 }
 
@@ -116,7 +116,7 @@ hr
 
 .relBlockInline {
   display: inline-block;
-  width: 20%;
+  width: 16%;
 }
 
 .relBlockLeft {
@@ -173,7 +173,18 @@ hr
   td:first-child, th:first-child {
     border-right: 4px double #ddd;
     font-weight: bold;
-    width: 20%;
+    width: 10%;
+  }
+  td:nth-child(2) {
+    overflow: auto;
+    max-width: 250px;
+    width: 250px;
+  }
+  .newRoleTd {
+    padding-top: 13px;
+  }
+  .permissionDelete {
+    cursor: pointer;
   }
 
   .editPermissionLink {
@@ -181,6 +192,11 @@ hr
     position: absolute;
     right: 10px;
     color: #337ab7;
+    cursor: pointer;
+  }
+
+  .bulkSelect {
+    margin-right: 10px !important;
   }
 
   .clickableCell {
@@ -209,18 +225,44 @@ hr
   }
 }
 
+.applyBulkPermissions {
+  display: inline-block;
+}
+
+.samePermissionRole {
+  display: inline-block;
+  width: auto;
+  height: auto;
+}
+
+.bulkApplyBtn {
+  display: block;
+  margin-top: 10px;
+  clear: both;
+}
+
+.center_radio_label_input {
+  display: flex;
+  align-content: center;
+  input {
+    margin-top: 0px;
+  }
+}
 
 .activeEdit {
   .editPermissionsHeading {
     font-weight: bold;
     font-size: 16px;
     margin-bottom: 5px;
+    word-wrap: break-word;
   }
-
+  .editPermissionsSection.removePadding {
+    padding-top: 0px;
+  }
   .editPermissionsSection {
     margin: 5px;
     padding: 10px;
-
+    word-wrap: break-word;
     .columnListElement {
       float: left;
       margin-right: 75px;
@@ -236,6 +278,50 @@ hr
 
     .editActionButton {
       margin-right: 20px;
+    }
+    .form_permission_insert_set_wrapper {
+      .permission_insert_set_wrapper {
+        .configure_insert_set_checkbox {
+          position: relative;
+          display: block;
+          margin-top: 10px;
+          margin-bottom: 10px;
+          label {
+            cursor: pointer;
+            min-height: 20px;
+            font-weight: normal;
+            input:not([disabled]) {
+              cursor: pointer;
+            }
+          }
+        }
+        .insertSetConfigRow {
+          margin: 10px 0px;
+          display: flex;
+          align-items: center;
+          .e_g_text {
+            font-style: italic;
+          }
+          .input_element_wrapper {
+            width: 20%;
+            i {
+              cursor: pointer;
+            }
+            select {
+              width: 100%;
+            }
+            input {
+              width: 100%;
+            }
+          }
+        }
+        .set_warning {
+          margin-left: 25px;
+          .danger_text {
+            color: red;
+          }
+        }
+      }
     }
   }
 }

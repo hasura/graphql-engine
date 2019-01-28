@@ -1,0 +1,59 @@
+{
+  "name": "firebase2graphql",
+  "description": "A CLI tool to get GraphQL over Firebase data dump",
+  "version": "0.0.1-alpha8",
+  "author": "Hasura",
+  "bin": {
+    "firebase2graphql": "./bin/run",
+    "f2g": "./bin/run"
+  },
+  "bugs": "https://github.com/hasura/graphql-engine/issues?q=is%3Aissue+is%3Aopen+label%3Ac%2Ffirebase2graphql",
+  "dependencies": {
+    "@oclif/command": "^1.4.35",
+    "@oclif/config": "^1.6.33",
+    "@oclif/errors": "^1.1.2",
+    "@oclif/plugin-help": "^2.0.5",
+    "cli-ux": "^4.7.3",
+    "colors": "^1.3.2",
+    "graphqurl": "^0.3.2",
+    "moment": "^2.22.2",
+    "node-fetch": "^2.2.0",
+    "uuid": "^3.3.2",
+    "uuid-validate": "0.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-oclif": "^1.5.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/src"
+  ],
+  "homepage": "https://github.com/wawhal/graphql-engine/tree/master/community/tools/firebase2graphql",
+  "keywords": [
+    "oclif",
+    "cli",
+    "graphql",
+    "grapql-engine",
+    "json",
+    "firebase"
+  ],
+  "license": "MIT",
+  "main": "src/command.js",
+  "oclif": {
+    "bin": "firebase2graphql"
+  },
+  "repository": "hasura/graphql-engine",
+  "scripts": {
+    "eslint": "eslint .",
+    "eslintfix": "eslint . --fix",
+    "posttest": "npm run eslint",
+    "test": "cd test && ./test.sh"
+  },
+  "pre-commit": [
+    "eslintfix"
+  ]
+}

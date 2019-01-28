@@ -1,0 +1,16 @@
+description: Create object relationship using foreign key
+url: /v1/query
+status: 400  
+response:
+  path: $.args
+  error: no foreign constraint exists on the given column
+  code: constraint-error
+query:
+  type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: published_on

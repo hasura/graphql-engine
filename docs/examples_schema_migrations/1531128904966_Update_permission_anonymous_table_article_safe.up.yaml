@@ -1,0 +1,10 @@
+- args:
+    permission:
+      columns:
+      - id
+      - title
+      - rating
+      filter: {}
+    role: anonymous
+    table: article_safe
+  type: create_select_permission

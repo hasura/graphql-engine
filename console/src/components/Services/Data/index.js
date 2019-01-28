@@ -26,6 +26,14 @@ export dataRouter from './DataRouter';
 
 export dataReducer from './DataReducer';
 
+export metadataConnector from './Metadata/Metadata.js';
+
+/* Function component */
+
+export functionWrapperConnector from './Function/FunctionWrapper';
+export ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
+export PermissionCustomFunction from './Function/Permission/Permission';
+
 /*
 export Logs from './Logs/Logs';
 export BrowseTemplates from './QueryTemplates/BrowseTemplates';

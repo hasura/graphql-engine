@@ -1,0 +1,59 @@
+- description: Track table
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      name: resident
+      schema: hge_tests
+
+- description: Select query
+  url: /v1/query
+  status: 200
+  response:
+  - id: 1 
+    name: Resident 1
+  - id: 2
+    name: Resident 2
+  query:
+    type: select
+    args:
+      table: 
+        name: resident
+        schema: hge_tests
+      columns:
+        - id
+        - name
+
+#Untrack table
+- description: Untrack table
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: untrack_table
+    args:
+      table: 
+        name: resident
+        schema: hge_tests
+
+#Run a select query: error
+- description: Select query error
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args.table
+    error: table "hge_tests.resident" does not exist
+    code: not-exists
+  query:
+    type: select
+    args:
+      table: 
+        name: resident
+        schema: hge_tests
+      columns:
+        - id
+        - name

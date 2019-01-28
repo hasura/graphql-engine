@@ -1,0 +1,60 @@
+- description: Other Users cannot see unpublished articles
+  url: /v1alpha1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: anonymous
+  response:
+    data:
+      article: []
+  query:
+    query: |
+      query {
+        article ( 
+          where: { is_published: {_eq: false}}
+        )  {
+          id
+          title
+          content
+          is_published
+          author {
+            id
+            name
+          }
+        }
+      }
+- description: Other Users can only see published articles
+  url: /v1alpha1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: anonymous
+  response:
+    data:
+      article:
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        is_published: true
+        author:
+          id: 1
+          name: Author 1
+      - id: 3
+        title: Article 3
+        content: Sample article content 3
+        is_published: true
+        author:
+          id: 2
+          name: Author 2
+  query:
+    query: |
+      query {
+        article {
+          id
+          title
+          content
+          is_published
+          author {
+            id
+            name
+          }
+        }
+      }

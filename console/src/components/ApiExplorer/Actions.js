@@ -226,6 +226,45 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
   }).then(response => response.json());
 };
 
+/* Analyse Fetcher */
+const analyzeFetcher = (url, headers, analyzeApiChange) => {
+  return query => {
+    const editedQuery = {
+      query,
+    };
+    let user = {};
+    const reqHeaders = getHeadersAsJSON(headers);
+    if (!analyzeApiChange) {
+      user.role = 'admin';
+      user.headers = reqHeaders;
+    } else {
+      user = {
+        'x-hasura-role': 'admin',
+      };
+    }
+
+    // Check if x-hasura-role is available in some form in the headers
+    const totalHeaders = Object.keys(reqHeaders);
+    totalHeaders.forEach((t) => {
+      // If header has x-hasura-*
+      const lHead = t.toLowerCase();
+      if (lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-') {
+        user[lHead] = reqHeaders[t];
+        delete reqHeaders[t];
+      }
+    });
+
+    editedQuery.user = user;
+    return fetch(`${url}/explain`, {
+      method: 'post',
+      headers: reqHeaders,
+      body: JSON.stringify(editedQuery),
+      credentials: 'include',
+    });
+  };
+};
+/* End of it */
+
 const changeRequestHeader = (index, key, newValue, isDisabled) => ({
   type: REQUEST_HEADER_CHANGED,
   data: {
@@ -632,4 +671,5 @@ export {
   focusHeaderTextbox,
   unfocusTypingHeader,
   getRemoteQueries,
+  analyzeFetcher,
 };

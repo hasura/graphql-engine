@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.Types where
 
 import qualified Database.PG.Query          as Q
@@ -12,36 +7,38 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Encoding        (text)
+import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.ByteString.Builder    as BB
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
+import qualified PostgreSQL.Binary.Decoding as PD
+import qualified Text.Builder               as TB
 
 class ToSQL a where
-  toSQL :: a -> BB.Builder
+  toSQL :: a -> TB.Builder
 
-instance ToSQL BB.Builder where
+instance ToSQL TB.Builder where
   toSQL x = x
 
--- instance ToSQL T.Text where
---   toSQL x = TE.encodeUtf8Builder x
+toSQLTxt :: (ToSQL a) => a -> T.Text
+toSQLTxt = TB.run . toSQL
 
 infixr 6 <+>
-(<+>) :: (ToSQL a) => T.Text -> [a] -> BB.Builder
+(<+>) :: (ToSQL a) => T.Text -> [a] -> TB.Builder
 (<+>) _ [] = mempty
 (<+>) kat (x:xs) =
-  toSQL x <> mconcat [ TE.encodeUtf8Builder kat <> toSQL x' | x' <- xs ]
+  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
 {-# INLINE (<+>) #-}
 
-newtype Iden = Iden { getIdenTxt :: T.Text }
-             deriving (Show, Eq, FromJSON, ToJSON)
+newtype Iden
+  = Iden { getIdenTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
-    TE.encodeUtf8Builder $ pgFmtIden t
+    TB.text $ pgFmtIden t
 
 class IsIden a where
   toIden :: a -> Iden
@@ -87,6 +84,9 @@ instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
 
+class ToTxt a where
+  toTxt :: a -> T.Text
+
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
@@ -100,6 +100,37 @@ instance DQuote TableName where
 instance ToSQL TableName where
   toSQL = toSQL . toIden
 
+instance ToTxt TableName where
+  toTxt = getTableTxt
+
+data TableType
+  = TTBaseTable
+  | TTView
+  | TTForeignTable
+  | TTLocalTemporary
+  deriving (Eq)
+
+tableTyToTxt :: TableType -> T.Text
+tableTyToTxt TTBaseTable      = "BASE TABLE"
+tableTyToTxt TTView           = "VIEW"
+tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
+tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
+
+instance Show TableType where
+  show = T.unpack . tableTyToTxt
+
+instance Q.FromCol TableType where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "BASE TABLE"      -> Just TTBaseTable
+    "VIEW"            -> Just TTView
+    "FOREIGN TABLE"   -> Just TTForeignTable
+    "LOCAL TEMPORARY" -> Just TTLocalTemporary
+    _                 -> Nothing
+
+isView :: TableType -> Bool
+isView TTView = True
+isView _      = False
+
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
@@ -109,6 +140,22 @@ instance IsIden ConstraintName where
 
 instance ToSQL ConstraintName where
   toSQL = toSQL . toIden
+
+newtype FunctionName
+  = FunctionName { getFunctionTxt :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+
+instance IsIden FunctionName where
+  toIden (FunctionName t) = Iden t
+
+instance DQuote FunctionName where
+  dquoteTxt (FunctionName t) = t
+
+instance ToSQL FunctionName where
+  toSQL = toSQL . toIden
+
+instance ToTxt FunctionName where
+  toTxt = getFunctionTxt
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
@@ -123,46 +170,58 @@ instance IsIden SchemaName where
 instance ToSQL SchemaName where
   toSQL = toSQL . toIden
 
-data QualifiedTable
-  = QualifiedTable
-  { qtSchema :: !SchemaName
-  , qtTable  :: !TableName
+data QualifiedObject a
+  = QualifiedObject
+  { qSchema :: !SchemaName
+  , qName   :: !a
   } deriving (Show, Eq, Generic, Lift)
 
-instance FromJSON QualifiedTable where
+instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
-    QualifiedTable publicSchema <$> parseJSON v
+    QualifiedObject publicSchema <$> parseJSON v
   parseJSON (Object o) =
-    QualifiedTable <$>
+    QualifiedObject <$>
     o .:? "schema" .!= publicSchema <*>
     o .: "name"
   parseJSON _ =
-    fail "expecting a string/object for table"
+    fail "expecting a string/object for QualifiedObject"
 
-instance ToJSON QualifiedTable where
-  toJSON (QualifiedTable (SchemaName "public") tn) = toJSON tn
-  toJSON (QualifiedTable sn tn) =
+instance (ToJSON a) => ToJSON (QualifiedObject a) where
+  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
+  toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
-           , "name"  .= tn
+           , "name"  .= o
            ]
 
-instance ToJSONKey QualifiedTable where
-  toJSONKey = ToJSONKeyText qualTableToTxt (text . qualTableToTxt)
+instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
+  toJSONKey = ToJSONKeyText qualObjectToText (text . qualObjectToText)
 
-instance DQuote QualifiedTable where
-  dquoteTxt = qualTableToTxt
+instance (ToTxt a) => DQuote (QualifiedObject a) where
+  dquoteTxt = qualObjectToText
 
-instance Hashable QualifiedTable
+instance (Hashable a) => Hashable (QualifiedObject a)
 
-instance ToSQL QualifiedTable where
-  toSQL (QualifiedTable sn tn) =
-    toSQL sn <> BB.string7 "." <> toSQL tn
+instance (ToSQL a) => ToSQL (QualifiedObject a) where
+  toSQL (QualifiedObject sn o) =
+    toSQL sn <> "." <> toSQL o
 
-qualTableToTxt :: QualifiedTable -> T.Text
-qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
-  getTableTxt tn
-qualTableToTxt (QualifiedTable sn tn) =
-  getSchemaTxt sn <> "." <> getTableTxt tn
+qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
+qualObjectToText (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "." <> toTxt o
+
+snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
+snakeCaseQualObject (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "_" <> toTxt o
+
+type QualifiedTable = QualifiedObject TableName
+
+snakeCaseTable :: QualifiedObject TableName -> T.Text
+snakeCaseTable (QualifiedObject sn tn) =
+  getSchemaTxt sn <> "_" <> getTableTxt tn
+
+type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
@@ -176,6 +235,10 @@ instance ToSQL PGCol where
 
 instance DQuote PGCol where
   dquoteTxt (PGCol t) = t
+
+showPGCols :: (Foldable t) => t PGCol -> T.Text
+showPGCols cols =
+  T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
 
 data PGColType
   = PGSmallInt
@@ -228,7 +291,7 @@ instance ToJSON PGColType where
   toJSON pct = String $ T.pack $ show pct
 
 instance ToSQL PGColType where
-  toSQL pct = BB.string7 $ show pct
+  toSQL pct = fromString $ show pct
 
 instance FromJSON PGColType where
   parseJSON (String "serial")      = return PGSerial
@@ -310,6 +373,21 @@ isIntegerType PGSmallInt = True
 isIntegerType PGBigInt   = True
 isIntegerType _          = False
 
+isNumType :: PGColType -> Bool
+isNumType PGFloat   = True
+isNumType PGDouble  = True
+isNumType PGNumeric = True
+isNumType ty        = isIntegerType ty
+
 isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False
+
+isComparableType :: PGColType -> Bool
+isComparableType PGJSON        = False
+isComparableType PGJSONB       = False
+isComparableType PGGeometry    = False
+isComparableType PGGeography   = False
+isComparableType PGBoolean     = False
+isComparableType (PGUnknown _) = False
+isComparableType _             = True

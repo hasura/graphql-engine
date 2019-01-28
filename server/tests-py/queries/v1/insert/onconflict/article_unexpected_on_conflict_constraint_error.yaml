@@ -1,0 +1,23 @@
+description: Upserts article data via GraphQL mutation (Error 03)
+url: /v1/query
+status: 400
+response:
+  code: not-exists
+  error: column "name" does not exist
+  path: '$.args.on_conflict.constraint_on[0]'
+query:
+  type: insert
+  args:
+    table: article
+    objects:
+    - content: Updated Article 1 content
+      id: 1
+    - content: Updated Article 2 content
+      id: 2
+    on_conflict:
+      constraint_on:
+      - name
+      action: update
+    returning:
+    - content
+    - id

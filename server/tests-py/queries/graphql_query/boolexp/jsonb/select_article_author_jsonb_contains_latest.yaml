@@ -1,0 +1,39 @@
+description: Select author and their articles
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article:
+    - content: Sample article content 2
+      author:
+        name: Author 1
+        id: 1
+      id: 2
+      title: Article 2
+      tags:
+      - bestseller
+      - latest
+    - content: Sample article content 3
+      author:
+        name: Author 2
+        id: 2
+      id: 3
+      title: Article 3
+      tags:
+      - latest
+query:
+  query: |
+    query ($tags: jsonb) {
+      article (
+      where: { tags: {_contains: "latest"}}
+      ) {
+        id
+        title
+        content
+        tags
+        author {
+          id
+          name
+        }
+      }
+    }

@@ -1,11 +1,5 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs             #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE GADTs      #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
@@ -14,14 +8,21 @@ module Hasura.RQL.Types.SchemaCache
        , TableInfo(..)
        , TableConstraint(..)
        , ConstraintType(..)
+       , ViewInfo(..)
+       , isMutable
+       , mutableView
        , onlyIntCols
+       , onlyNumCols
        , onlyJSONBCols
+       , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
        , mkTableInfo
        , addTableToCache
        , modTableInCache
        , delTableFromCache
+
+       , WithDeps
 
        , CacheRM(..)
        , CacheRWM(..)
@@ -36,9 +37,14 @@ module Hasura.RQL.Types.SchemaCache
 
        , PGColInfo(..)
        , isPGColInfo
+       , getColInfos
        , RelInfo(..)
-       , addFldToCache
-       , delFldFromCache
+       -- , addFldToCache
+       , addColToCache
+       , addRelToCache
+
+       , delColFromCache
+       , delRelFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -50,17 +56,24 @@ module Hasura.RQL.Types.SchemaCache
        , permAccToType
        , withPermType
        , RolePermInfoMap
+
        , InsPermInfo(..)
        , SelPermInfo(..)
        , UpdPermInfo(..)
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
+       , InsSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
        , delQTemplateFromCache
        , TemplateParamInfo(..)
+
+       , addEventTriggerToCache
+       , delEventTriggerFromCache
+       , EventTriggerInfo(..)
+       , EventTriggerInfoMap
 
        , TableObjId(..)
        , SchemaObjId(..)
@@ -71,81 +84,45 @@ module Hasura.RQL.Types.SchemaCache
        , mkColDep
        , getDependentObjs
        , getDependentObjsWith
-       , getDependentObjsOfTable
-       , getDependentObjsOfQTemplateCache
-       , getDependentPermsOfTable
-       , getDependentRelsOfTable
-       , isDependentOn
+
        , getAllRelations
+
+       , FunctionType(..)
+       , FunctionArg(..)
+       , FunctionArgName(..)
+       , FunctionName(..)
+       , FunctionInfo(..)
+       , FunctionCache
+       , getFuncsOfTable
+       , addFunctionToCache
+       , askFunctionInfo
+       , delFunctionFromCache
        ) where
 
-import qualified Database.PG.Query           as Q
+import qualified Hasura.GraphQL.Context            as GC
 import           Hasura.Prelude
+import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
-import qualified Hasura.SQL.DML              as S
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCacheTypes
+import           Hasura.RQL.Types.Subscribe
 import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           GHC.Generics                (Generic)
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.HashSet                as HS
-import qualified Data.Text                   as T
-import qualified PostgreSQL.Binary.Decoding  as PD
-
-data TableObjId
-  = TOCol !PGCol
-  | TORel !RelName
-  | TOCons !ConstraintName
-  | TOPerm !RoleName !PermType
-  deriving (Show, Eq, Generic)
-
-instance Hashable TableObjId
-
-data SchemaObjId
-  = SOTable !QualifiedTable
-  | SOQTemplate !TQueryName
-  | SOTableObj !QualifiedTable !TableObjId
-   deriving (Eq, Generic)
-
-instance Hashable SchemaObjId
-
-reportSchemaObj :: SchemaObjId -> T.Text
-reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
-reportSchemaObj (SOQTemplate qtn) =
-  "query-template " <> getTQueryName qtn
-reportSchemaObj (SOTableObj tn (TOCol cn)) =
-  "column " <> qualTableToTxt tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualTableToTxt tn <> "." <> getRelTxt cn
-reportSchemaObj (SOTableObj tn (TOCons cn)) =
-  "constraint " <> qualTableToTxt tn <> "." <> getConstraintTxt cn
-reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
-  <> "." <> permTypeToCode pt
+import qualified Data.HashMap.Strict               as M
+import qualified Data.HashSet                      as HS
+import qualified Data.Sequence                     as Seq
+import qualified Data.Text                         as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
-
-instance Show SchemaObjId where
-  show soi = T.unpack $ reportSchemaObj soi
-
-instance ToJSON SchemaObjId where
-  toJSON = String . reportSchemaObj
-
-data SchemaDependency
-  = SchemaDependency
-  { sdObjId  :: !SchemaObjId
-  , sdReason :: !T.Text
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) "table"
@@ -154,59 +131,33 @@ mkColDep :: T.Text -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
-class CachedSchemaObj a where
-  dependsOn :: a -> [SchemaDependency]
-
-isDependentOn :: (CachedSchemaObj a) => (T.Text -> Bool) -> SchemaObjId -> a -> Bool
-isDependentOn reasonFn objId = any compareFn . dependsOn
-  where
-    compareFn (SchemaDependency depObjId rsn) = induces objId depObjId && reasonFn rsn
-    induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
-    induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
-    induces objId1 objId2                    = objId1 == objId2
-
 data QueryTemplateInfo
   = QueryTemplateInfo
   { qtiName  :: !TQueryName
   , qtiQuery :: !QueryT
-  , qtiDeps  :: ![SchemaDependency]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''QueryTemplateInfo)
 
-instance CachedSchemaObj QueryTemplateInfo where
-  dependsOn = qtiDeps
-
 type QTemplateCache = M.HashMap TQueryName QueryTemplateInfo
-
-data PGColInfo
-  = PGColInfo
-  { pgiName       :: !PGCol
-  , pgiType       :: !PGColType
-  , pgiIsNullable :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 onlyIntCols :: [PGColInfo] -> [PGColInfo]
 onlyIntCols = filter (isIntegerType . pgiType)
 
+onlyNumCols :: [PGColInfo] -> [PGColInfo]
+onlyNumCols = filter (isNumType . pgiType)
+
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
 
-data RelInfo
-  = RelInfo
-  { riName    :: !RelName
-  , riType    :: !RelType
-  , riMapping :: ![(PGCol, PGCol)]
-  , riRTable  :: !QualifiedTable
-  , riDeps    :: ![SchemaDependency]
-  } deriving (Show, Eq)
+onlyComparableCols :: [PGColInfo] -> [PGColInfo]
+onlyComparableCols = filter (isComparableType . pgiType)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
+getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
+  pgiName ci `elem` cols
 
-instance CachedSchemaObj RelInfo where
-  dependsOn = riDeps
+type WithDeps a = (a, [SchemaDependency])
 
 data FieldInfo
   = FIColumn !PGColInfo
@@ -245,64 +196,46 @@ isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True
 isPGColInfo _            = False
 
-instance ToJSON S.BoolExp where
-  toJSON = String . T.pack . show
-
 data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
-  , ipiCheck           :: !S.BoolExp
-  , ipiAllowUpsert     :: !Bool
-  , ipiDeps            :: ![SchemaDependency]
+  , ipiCheck           :: !AnnBoolExpSQL
+  , ipiSet             :: !InsSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 
-instance CachedSchemaObj InsPermInfo where
-  dependsOn = ipiDeps
-
 data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
-  , spiFilter          :: !S.BoolExp
+  , spiFilter          :: !AnnBoolExpSQL
   , spiLimit           :: !(Maybe Int)
-  , spiDeps            :: ![SchemaDependency]
+  , spiAllowAgg        :: !Bool
   , spiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
 
-instance CachedSchemaObj SelPermInfo where
-  dependsOn = spiDeps
-
 data UpdPermInfo
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
-  , upiFilter          :: !S.BoolExp
-  , upiDeps            :: ![SchemaDependency]
+  , upiFilter          :: !AnnBoolExpSQL
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 
-instance CachedSchemaObj UpdPermInfo where
-  dependsOn = upiDeps
-
 data DelPermInfo
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !S.BoolExp
-  , dpiDeps            :: ![SchemaDependency]
+  , dpiFilter          :: !AnnBoolExpSQL
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
-
-instance CachedSchemaObj DelPermInfo where
-  dependsOn = dpiDeps
 
 mkRolePermInfo :: RolePermInfo
 mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
@@ -319,6 +252,20 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
+
+data EventTriggerInfo
+ = EventTriggerInfo
+   { etiId          :: !TriggerId
+   , etiName        :: !TriggerName
+   , etiOpsDef      :: !TriggerOpsDef
+   , etiRetryConf   :: !RetryConf
+   , etiWebhookInfo :: !WebhookConfInfo
+   , etiHeaders     :: ![EventHeaderInfo]
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
+
+type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
 data ConstraintType
   = CTCHECK
@@ -338,31 +285,21 @@ instance Show ConstraintType where
   show = T.unpack . constraintTyToTxt
 
 instance FromJSON ConstraintType where
-  parseJSON (String "CHECK") = return CTCHECK
-  parseJSON (String "FOREIGN KEY") = return CTFOREIGNKEY
-  parseJSON (String "PRIMARY KEY") = return CTPRIMARYKEY
-  parseJSON (String "UNIQUE") = return CTUNIQUE
-  parseJSON (String _) = fail
-    "expecting 'CHECK', 'FOREIGN KEY', 'PRIMARY KEY' and 'UNIQUE' for constraint_type"
-  parseJSON _ = fail "expecting String for constraint_type"
+  parseJSON = withText "ConstraintType" $ \case
+    "CHECK"       -> return CTCHECK
+    "FOREIGN KEY" -> return CTFOREIGNKEY
+    "PRIMARY KEY" -> return CTPRIMARYKEY
+    "UNIQUE"      -> return CTUNIQUE
+    c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
 
 instance ToJSON ConstraintType where
   toJSON = String . constraintTyToTxt
 
-instance Q.FromCol ConstraintType where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "CHECK"       -> Just CTCHECK
-    "FOREIGN KEY" -> Just CTFOREIGNKEY
-    "PRIMARY KEY" -> Just CTPRIMARYKEY
-    "UNIQUE"      -> Just CTUNIQUE
-    _             -> Nothing
-
 isUniqueOrPrimary :: ConstraintType -> Bool
 isUniqueOrPrimary = \case
-  CTCHECK      -> False
-  CTFOREIGNKEY -> False
   CTPRIMARYKEY -> True
   CTUNIQUE     -> True
+  _            -> False
 
 isForeignKey :: ConstraintType -> Bool
 isForeignKey = \case
@@ -375,37 +312,138 @@ data TableConstraint
   , tcName :: !ConstraintName
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+$(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+
+data ViewInfo
+  = ViewInfo
+  { viIsUpdatable  :: !Bool
+  , viIsDeletable  :: !Bool
+  , viIsInsertable :: !Bool
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase) ''ViewInfo)
+
+isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
+isMutable _ Nothing   = True
+isMutable f (Just vi) = f vi
+
+mutableView :: (MonadError QErr m) => QualifiedTable
+            -> (ViewInfo -> Bool) -> Maybe ViewInfo
+            -> T.Text -> m ()
+mutableView qt f mVI operation =
+  unless (isMutable f mVI) $ throw400 NotSupported $
+  "view " <> qt <<> " is not " <> operation
 
 data TableInfo
   = TableInfo
-  { tiName            :: !QualifiedTable
-  , tiSystemDefined   :: !Bool
-  , tiFieldInfoMap    :: !FieldInfoMap
-  , tiRolePermInfoMap :: !RolePermInfoMap
-  , tiConstraints     :: ![TableConstraint]
+  { tiName                  :: !QualifiedTable
+  , tiSystemDefined         :: !Bool
+  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiRolePermInfoMap       :: !RolePermInfoMap
+  , tiUniqOrPrimConstraints :: ![ConstraintName]
+  , tiPrimaryKeyCols        :: ![PGCol]
+  , tiViewInfo              :: !(Maybe ViewInfo)
+  , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo :: QualifiedTable -> Bool -> [(ConstraintType, ConstraintName)]
-            -> [(PGCol, PGColType, Bool)] -> TableInfo
-mkTableInfo tn isSystemDefined rawCons cols =
-  TableInfo tn isSystemDefined colMap (M.fromList []) constraints
+mkTableInfo
+  :: QualifiedTable
+  -> Bool
+  -> [ConstraintName]
+  -> [PGColInfo]
+  -> [PGCol]
+  -> Maybe ViewInfo -> TableInfo
+mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
+  TableInfo tn isSystemDefined colMap (M.fromList [])
+  uniqCons pcols mVI (M.fromList [])
   where
-    constraints = flip map rawCons $ uncurry TableConstraint
     colMap     = M.fromList $ map f cols
-    f (cn, ct, b) = (fromPGCol cn, FIColumn $ PGColInfo cn ct b)
+    f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
+
+data FunctionType
+  = FTVOLATILE
+  | FTIMMUTABLE
+  | FTSTABLE
+  deriving (Eq)
+
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+
+funcTypToTxt :: FunctionType -> T.Text
+funcTypToTxt FTVOLATILE  = "VOLATILE"
+funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
+funcTypToTxt FTSTABLE    = "STABLE"
+
+instance Show FunctionType where
+  show = T.unpack . funcTypToTxt
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
+
+data FunctionArg
+  = FunctionArg
+  { faName :: !(Maybe FunctionArgName)
+  , faType :: !PGColType
+  } deriving(Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+data FunctionInfo
+  = FunctionInfo
+  { fiName          :: !QualifiedFunction
+  , fiSystemDefined :: !Bool
+  , fiType          :: !FunctionType
+  , fiInputArgs     :: !(Seq.Seq FunctionArg)
+  , fiReturnType    :: !QualifiedTable
+  , fiDeps          :: ![SchemaDependency]
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
+type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
+
+type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
+
+addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
+addToDepMap schObj deps =
+  M.insert schObj (HS.fromList deps)
+
+  -- M.unionWith HS.union objDepMap
+  -- where
+  --   objDepMap = M.fromList
+  --     [ (dep, HS.singleton $ SchemaDependency schObj reason)
+  --     | (SchemaDependency dep reason) <- deps
+  --     ]
+
+removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
+removeFromDepMap =
+  M.delete
 
 data SchemaCache
   = SchemaCache
-  { scTables     :: !TableCache
-  , scQTemplates :: !QTemplateCache
+  { scTables            :: !TableCache
+  , scFunctions         :: !FunctionCache
+  , scQTemplates        :: !QTemplateCache
+  , scRemoteResolvers   :: !RemoteSchemaMap
+  , scGCtxMap           :: !GC.GCtxMap
+  , scDefaultRemoteGCtx :: !GC.GCtx
+  , scDepMap            :: !DepMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+
+getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
+getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
+  where
+    allFuncs = M.elems fc
+
+modDepMapInCache :: (CacheRWM m) => (DepMap -> DepMap) -> m ()
+modDepMapInCache f = do
+  sc <- askSchemaCache
+  writeSchemaCache $ sc { scDepMap = f (scDepMap sc)}
 
 class (Monad m) => CacheRM m where
 
@@ -423,9 +461,12 @@ class (CacheRM m) => CacheRWM m where
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put
 
-addQTemplateToCache :: (QErrM m, CacheRWM m)
-                    => QueryTemplateInfo -> m ()
-addQTemplateToCache qti = do
+addQTemplateToCache
+  :: (QErrM m, CacheRWM m)
+  => QueryTemplateInfo
+  -> [SchemaDependency]
+  -> m ()
+addQTemplateToCache qti deps = do
   sc <- askSchemaCache
   let templateCache = scQTemplates sc
   case M.lookup qtn templateCache of
@@ -433,8 +474,10 @@ addQTemplateToCache qti = do
     Nothing -> do
       let newTemplateCache = M.insert qtn qti templateCache
       writeSchemaCache $ sc {scQTemplates = newTemplateCache}
+  modDepMapInCache (addToDepMap objId deps)
   where
     qtn = qtiName qti
+    objId = SOQTemplate qtn
 
 delQTemplateFromCache :: (QErrM m, CacheRWM m)
                       => TQueryName -> m ()
@@ -446,12 +489,13 @@ delQTemplateFromCache qtn = do
     Just _ -> do
       let newTemplateCache = M.delete qtn templateCache
       writeSchemaCache $ sc {scQTemplates = newTemplateCache}
-
--- instance CacheRM  where
---   askSchemaCache = get
+  modDepMapInCache (removeFromDepMap objId)
+  where
+    objId = SOQTemplate qtn
 
 emptySchemaCache :: SchemaCache
-emptySchemaCache = SchemaCache (M.fromList []) (M.fromList [])
+emptySchemaCache =
+  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -473,6 +517,10 @@ delTableFromCache tn = do
   sc <- askSchemaCache
   void $ getTableInfoFromCache tn sc
   modTableCache $ M.delete tn $ scTables sc
+  modDepMapInCache (M.filterWithKey notThisTableObj)
+  where
+    notThisTableObj (SOTableObj depTn _) _ = depTn /= tn
+    notThisTableObj _                    _ = True
 
 getTableInfoFromCache :: (QErrM m)
                       => QualifiedTable
@@ -502,9 +550,27 @@ modTableInCache f tn = do
   newTi <- f ti
   modTableCache $ M.insert tn newTi $ scTables sc
 
-addFldToCache :: (QErrM m, CacheRWM m)
-              => FieldName -> FieldInfo
-              -> QualifiedTable -> m ()
+addColToCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColInfo
+  -> QualifiedTable -> m ()
+addColToCache cn ci =
+  addFldToCache (fromPGCol cn) (FIColumn ci)
+
+addRelToCache
+  :: (QErrM m, CacheRWM m)
+  => RelName -> RelInfo -> [SchemaDependency]
+  -> QualifiedTable -> m ()
+addRelToCache rn ri deps tn = do
+  addFldToCache (fromRel rn) (FIRelationship ri)  tn
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    schObjId = SOTableObj tn $ TORel $ riName ri
+
+addFldToCache
+  :: (QErrM m, CacheRWM m)
+  => FieldName -> FieldInfo
+  -> QualifiedTable -> m ()
 addFldToCache fn fi =
   modTableInCache modFieldInfoMap
   where
@@ -526,6 +592,20 @@ delFldFromCache fn =
         Just _  -> return $
           ti { tiFieldInfoMap = M.delete fn fim }
         Nothing -> throw500 "field does not exist"
+
+delColFromCache :: (QErrM m, CacheRWM m)
+                => PGCol -> QualifiedTable -> m ()
+delColFromCache cn =
+  delFldFromCache (fromPGCol cn)
+
+delRelFromCache :: (QErrM m, CacheRWM m)
+                => RelName -> QualifiedTable -> m ()
+delRelFromCache rn tn = do
+  delFldFromCache (fromRel rn) tn
+  modDepMapInCache (removeFromDepMap schObjId)
+  where
+    schObjId = SOTableObj tn $ TORel rn
+
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
   PASelect :: PermAccessor SelPermInfo
@@ -550,23 +630,98 @@ withPermType PTSelect f = f PASelect
 withPermType PTUpdate f = f PAUpdate
 withPermType PTDelete f = f PADelete
 
+addEventTriggerToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable
+  -> EventTriggerInfo
+  -> [SchemaDependency]
+  -> m ()
+addEventTriggerToCache qt eti deps = do
+  modTableInCache modEventTriggerInfo qt
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    trn = etiName eti
+    modEventTriggerInfo ti = do
+      let etim = tiEventTriggerInfoMap ti
+      return $ ti { tiEventTriggerInfoMap = M.insert trn eti etim}
+    schObjId = SOTableObj qt $ TOTrigger trn
+
+delEventTriggerFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable
+  -> TriggerName
+  -> m ()
+delEventTriggerFromCache qt trn = do
+  modTableInCache modEventTriggerInfo qt
+  modDepMapInCache (removeFromDepMap schObjId)
+  where
+    modEventTriggerInfo ti = do
+      let etim = tiEventTriggerInfoMap ti
+      return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
+    schObjId = SOTableObj qt $ TOTrigger trn
+
+addFunctionToCache
+  :: (QErrM m, CacheRWM m)
+  => FunctionInfo -> m ()
+addFunctionToCache fi = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup fn functionCache of
+    Just _ -> throw500 $ "function already exists in cache " <>> fn
+    Nothing -> do
+      let newFunctionCache = M.insert fn fi functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (addToDepMap objId deps)
+  where
+    fn = fiName fi
+    objId = SOFunction $ fiName fi
+    deps = fiDeps fi
+
+askFunctionInfo
+  :: (CacheRM m, QErrM m)
+  => QualifiedFunction ->  m FunctionInfo
+askFunctionInfo qf = do
+  sc <- askSchemaCache
+  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  where
+    throwNoFn = throw400 NotExists $
+      "function not found in cache " <>> qf
+
+delFunctionFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> m ()
+delFunctionFromCache qf = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup qf functionCache of
+    Nothing -> throw500 $ "function does not exist in cache " <>> qf
+    Just _ -> do
+      let newFunctionCache = M.delete qf functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (removeFromDepMap objId)
+  where
+    objId = SOFunction qf
+
 addPermToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
   -> RoleName
   -> PermAccessor a
   -> a
+  -> [SchemaDependency]
   -> m ()
-addPermToCache tn rn pa i =
+addPermToCache tn rn pa i deps = do
   modTableInCache modRolePermInfo tn
+  modDepMapInCache (addToDepMap schObjId deps)
   where
     paL = permAccToLens pa
     modRolePermInfo ti = do
       let rpim = tiRolePermInfoMap ti
           rpi  = fromMaybe mkRolePermInfo $ M.lookup rn rpim
-          newRPI = rpi & paL .~ Just i
+          newRPI = rpi & paL ?~ i
       assertPermNotExists pa rpi
       return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
+    schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
 assertPermNotExists
   :: (QErrM m)
@@ -588,8 +743,9 @@ delPermFromCache
   -> RoleName
   -> QualifiedTable
   -> m ()
-delPermFromCache pa rn =
-  modTableInCache modRolePermInfo
+delPermFromCache pa rn tn = do
+  modTableInCache modRolePermInfo tn
+  modDepMapInCache (removeFromDepMap schObjId)
   where
     paL = permAccToLens pa
     modRolePermInfo ti = do
@@ -598,6 +754,7 @@ delPermFromCache pa rn =
       assertPermExists pa rpi
       let newRPI = rpi & paL .~ Nothing
       return $ ti { tiRolePermInfoMap = M.insert rn newRPI rpim }
+    schObjId = SOTableObj tn $ TOPerm rn $ permAccToType pa
 
 data TemplateParamInfo
   = TemplateParamInfo
@@ -608,67 +765,52 @@ data TemplateParamInfo
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
 
-getDependentObjsWith :: (T.Text -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
+getDependentObjsWith
+  :: (T.Text -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
-  HS.toList $ getDependentObjsRWith f HS.empty sc objId
-
-getDependentObjsRWith :: (T.Text -> Bool)
-                      -> HS.HashSet SchemaObjId
-                      -> SchemaCache -> SchemaObjId
-                      -> HS.HashSet SchemaObjId
-getDependentObjsRWith f visited sc objId =
-  foldr go visited thisLevelDeps
+  -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
+  map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
   where
-    thisLevelDeps = concatMap (getDependentObjsOfTableWith f objId) (scTables sc)
-                    <> getDependentObjsOfQTemplateCache objId (scQTemplates sc)
-    go lObjId vis =
-      if HS.member lObjId vis
-      then vis
-      else getDependentObjsRWith f (HS.insert lObjId vis) sc lObjId
+    isDependency deps = not $ HS.null $ flip HS.filter deps $
+      \(SchemaDependency depId reason) -> objId `induces` depId && f reason
+    -- induces a b : is b dependent on a
+    induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
+    induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
+    induces objId1 objId2                    = objId1 == objId2
+    -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
 
-getDependentObjsOfQTemplateCache :: SchemaObjId -> QTemplateCache -> [SchemaObjId]
-getDependentObjsOfQTemplateCache objId qtc =
-  map (SOQTemplate . qtiName) $ filter (isDependentOn (const True) objId) $
-  M.elems qtc
+-- <<<<<<< HEAD
+-- getDependentObjsOfTableWith :: (T.Text -> Bool) -> SchemaObjId -> TableInfo -> [SchemaObjId]
+-- getDependentObjsOfTableWith f objId ti =
+--   rels ++ perms
+--   where
+--     rels  = getDependentRelsOfTable f objId ti
+--     perms = getDependentPermsOfTable f objId ti
 
-getDependentObjsOfTable :: SchemaObjId -> TableInfo -> [SchemaObjId]
-getDependentObjsOfTable objId ti =
-  rels ++ perms
-  where
-    rels  = getDependentRelsOfTable (const True) objId ti
-    perms = getDependentPermsOfTable (const True) objId ti
+-- getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
+--                         -> TableInfo -> [SchemaObjId]
+-- getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _) =
+--     map (SOTableObj tn . TORel . riName) $
+--     filter (isDependentOn rsnFn objId) $ getRels fim
 
-getDependentObjsOfTableWith :: (T.Text -> Bool) -> SchemaObjId -> TableInfo -> [SchemaObjId]
-getDependentObjsOfTableWith f objId ti =
-  rels ++ perms
-  where
-    rels  = getDependentRelsOfTable f objId ti
-    perms = getDependentPermsOfTable f objId ti
+-- getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
+--                          -> TableInfo -> [SchemaObjId]
+-- getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _) =
+--   concat $ flip M.mapWithKey rpim $
+--   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
 
-getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
-                        -> TableInfo -> [SchemaObjId]
-getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _) =
-    map (SOTableObj tn . TORel . riName) $
-    filter (isDependentOn rsnFn objId) $ getRels fim
-
-getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
-                         -> TableInfo -> [SchemaObjId]
-getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _) =
-  concat $ flip M.mapWithKey rpim $
-  \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
-
-getDependentPerms' :: (T.Text -> Bool) -> SchemaObjId -> RolePermInfo -> [PermType]
-getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
-  mapMaybe join
-  [ forM mipi $ toPermRow PTInsert
-  , forM mspi $ toPermRow PTSelect
-  , forM mupi $ toPermRow PTUpdate
-  , forM mdpi $ toPermRow PTDelete
-  ]
-  where
-    toPermRow :: forall a. (CachedSchemaObj a) => PermType -> a -> Maybe PermType
-    toPermRow pt =
-      bool Nothing (Just pt) . isDependentOn rsnFn objId
+-- getDependentPerms' :: (T.Text -> Bool) -> SchemaObjId -> RolePermInfo -> [PermType]
+-- getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
+--   mapMaybe join
+--   [ forM mipi $ toPermRow PTInsert
+--   , forM mspi $ toPermRow PTSelect
+--   , forM mupi $ toPermRow PTUpdate
+--   , forM mdpi $ toPermRow PTDelete
+--   ]
+--   where
+--     toPermRow :: forall a. (CachedSchemaObj a) => PermType -> a -> Maybe PermType
+--     toPermRow pt =
+--       bool Nothing (Just pt) . isDependentOn rsnFn objId
 
 getAllRelations :: TableCache -> [(QualifiedTable, [RelInfo])]
 getAllRelations tc = map getRelInfo $ M.toList tc

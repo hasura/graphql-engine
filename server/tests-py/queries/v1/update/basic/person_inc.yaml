@@ -1,0 +1,23 @@
+description: Updated person data using _inc operator
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - id: 3
+    details:
+      address: foobar
+      name:
+        first: foo
+        last: bar
+query:
+  type: update
+  args:
+    table: person
+    $inc:
+      id: 2
+    where:
+      id: 1
+    returning:
+    - id
+    - details

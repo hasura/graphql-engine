@@ -1,0 +1,5 @@
+type: bulk
+args:
+- type: delete_event_trigger
+  args:
+    name: t1_all

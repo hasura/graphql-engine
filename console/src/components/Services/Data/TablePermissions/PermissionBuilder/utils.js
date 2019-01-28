@@ -17,9 +17,12 @@ export const columnOperators = [
   '_nlike',
   '_similar',
   '_nsimilar',
+  '_is_null',
 ];
 
 export const arrayColumnOperators = ['_in', '_nin'];
+
+export const boolColumnOperators = ['_is_null'];
 
 export const legacyOperatorsMap = {
   $and: '_and',
@@ -37,7 +40,28 @@ export const legacyOperatorsMap = {
   $nlike: '_nlike',
   $similar: '_similar',
   $nsimilar: '_nsimilar',
+  $is_null: '_is_null',
 };
+
+export function isNotOperator(value) {
+  return value === boolOperators.not;
+}
+
+export function isAndOrOperator(value) {
+  return value === boolOperators.or || value === boolOperators.and;
+}
+
+export function isArrayColumnOperator(value) {
+  return arrayColumnOperators.indexOf(value) !== -1;
+}
+
+export function isBoolColumnOperator(value) {
+  return boolColumnOperators.indexOf(value) !== -1;
+}
+
+export function isColumnOperator(value) {
+  return columnOperators.indexOf(value) !== -1;
+}
 
 export function addToPrefix(prefix, value) {
   let _newPrefix;
@@ -55,6 +79,14 @@ export function addToPrefix(prefix, value) {
   }
 
   return _newPrefix;
+}
+
+export function getTableSchema(allSchemas, table) {
+  return allSchemas.find(
+    tableSchema =>
+      tableSchema.table_name === table.name &&
+      tableSchema.table_schema === table.schema
+  );
 }
 
 export function getTableColumnNames(tableSchema) {
@@ -78,12 +110,16 @@ export function getTableRelationship(tableSchema, relName) {
     return {};
   }
 
-  return tableSchema.relationships[
-    getTableRelationshipNames(tableSchema).indexOf(relName)
-  ];
+  const relIndex = getTableRelationshipNames(tableSchema).indexOf(relName);
+
+  return tableSchema.relationships[relIndex];
 }
 
-export function getRefTable(rel, schema) {
+export function getTableDef(tableName, schema) {
+  return { name: tableName, schema: schema };
+}
+
+export function getRefTable(rel, tableSchema) {
   let _refTable = null;
 
   if (rel.rel_type === 'array') {
@@ -98,8 +134,8 @@ export function getRefTable(rel, schema) {
     if (rel.rel_def.foreign_key_constraint_on) {
       const fkCol = rel.rel_def.foreign_key_constraint_on;
 
-      for (let i = 0; i < schema.foreign_key_constraints.length; i++) {
-        const fkConstraint = schema.foreign_key_constraints[i];
+      for (let i = 0; i < tableSchema.foreign_key_constraints.length; i++) {
+        const fkConstraint = tableSchema.foreign_key_constraints[i];
         if (fkCol === Object.keys(fkConstraint.column_mapping)[0]) {
           _refTable = fkConstraint.ref_table;
           break;
@@ -110,5 +146,43 @@ export function getRefTable(rel, schema) {
     }
   }
 
+  if (typeof _refTable === 'string') {
+    _refTable = getTableDef(_refTable, 'public');
+  }
+
   return _refTable;
+}
+
+export function getAllJsonPaths(json, prefix = '') {
+  const _paths = [];
+
+  const addPrefix = subPath => {
+    return prefix + (prefix && subPath ? '.' : '') + subPath;
+  };
+
+  const handleSubJson = (subJson, newPrefix) => {
+    const subPaths = getAllJsonPaths(subJson, newPrefix);
+
+    subPaths.forEach(subPath => {
+      _paths.push(subPath);
+    });
+
+    if (!subPaths.length) {
+      _paths.push(newPrefix);
+    }
+  };
+
+  if (json instanceof Array) {
+    json.forEach((subJson, i) => {
+      handleSubJson(subJson, addPrefix(i.toString()));
+    });
+  } else if (json instanceof Object) {
+    Object.keys(json).forEach(key => {
+      handleSubJson(json[key], addPrefix(key));
+    });
+  } else {
+    _paths.push(addPrefix(json));
+  }
+
+  return _paths;
 }

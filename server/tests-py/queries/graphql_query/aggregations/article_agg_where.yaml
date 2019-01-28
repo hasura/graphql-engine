@@ -1,0 +1,324 @@
+descriptions: Select aggregations on article table along with it's nodes where id > 1
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    article_aggregate:
+      aggregate:
+        count: 2
+        count_columns_id: 2
+        count_columns_id_distinct: 2
+        sum:
+          id: 5
+          id_sum: 5
+          author_id: 3
+          author_id_sum: 3
+        sum_fields:
+          id: 5
+          id_sum: 5
+          author_id: 3
+          author_id_sum: 3
+        avg:
+          id: 2.5
+          id_avg: 2.5
+          author_id: 1.5
+          author_id_avg: 1.5
+        avg_fields:
+          id: 2.5
+          id_avg: 2.5
+          author_id: 1.5
+          author_id_avg: 1.5
+        stddev:
+          id: 0.7071067811865476
+          id_stddev: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev: 0.7071067811865476
+        stddev_fields:
+          id: 0.7071067811865476
+          id_stddev: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev: 0.7071067811865476
+        stddev_samp:
+          id: 0.7071067811865476
+          id_stddev_samp: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev_samp: 0.7071067811865476
+        stddev_samp_fields:
+          id: 0.7071067811865476
+          id_stddev_samp: 0.7071067811865476
+          author_id: 0.7071067811865476
+          author_id_stddev_samp: 0.7071067811865476
+        stddev_pop:
+          id: 0.5
+          id_stddev_pop: 0.5
+          author_id: 0.5
+          author_id_stddev_pop: 0.5
+        stddev_pop_fields:
+          id: 0.5
+          id_stddev_pop: 0.5
+          author_id: 0.5
+          author_id_stddev_pop: 0.5
+        variance:
+          id: 0.5
+          id_variance: 0.5
+          author_id: 0.5
+          author_id_variance: 0.5
+        variance_fields:
+          id: 0.5
+          id_variance: 0.5
+          author_id: 0.5
+          author_id_variance: 0.5
+        var_samp:
+          id: 0.5
+          id_var_samp: 0.5
+          author_id: 0.5
+          author_id_var_samp: 0.5
+        var_samp_fields:
+          id: 0.25
+          id_var_pop: 0.25
+          author_id: 0.25
+          author_id_var_pop: 0.25
+        var_pop:
+          id: 0.25
+          id_var_pop: 0.25
+          author_id: 0.25
+          author_id_var_pop: 0.25
+        var_pop_fields:
+          id: 0.25
+          id_var_pop: 0.25
+          author_id: 0.25
+          author_id_var_pop: 0.25
+        max:
+          id: 3
+          id_max: 3
+          title: Article 3
+          title_max: Article 3
+          content: Sample article content 3
+          content_max: Sample article content 3
+          author_id: 2
+          author_id_max: 2
+        max_fields:
+          id: 3
+          id_max: 3
+          title: Article 3
+          title_max: Article 3
+          content: Sample article content 3
+          content_max: Sample article content 3
+          author_id: 2
+          author_id_max: 2
+        min:
+          id: 2
+          id_min: 2
+          title: Article 2
+          title_min: Article 2
+          content: Sample article content 2
+          content_min: Sample article content 2
+          author_id: 1
+          author_id_min: 1
+        min_fields:
+          id: 2
+          id_min: 2
+          title: Article 2
+          title_min: Article 2
+          content: Sample article content 2
+          content_min: Sample article content 2
+          author_id: 1
+          author_id_min: 1
+      nodes:
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        is_published: true
+        author:
+          id: 1
+          name: Author 1
+      - id: 3
+        title: Article 3
+        content: Sample article content 3
+        is_published: true
+        author:
+          id: 2
+          name: Author 2
+      articles:
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        is_published: true
+        author:
+          id: 1
+          name: Author 1
+      - id: 3
+        title: Article 3
+        content: Sample article content 3
+        is_published: true
+        author:
+          id: 2
+          name: Author 2
+
+query:
+  query: |
+    query {
+      article_aggregate(where: {id: {_gt: 1}}) {
+        aggregate {
+          count
+          count_columns_id: count(columns: [id])
+          count_columns_id_distinct: count(columns: [id], distinct: true)
+          sum {
+            id
+            id_sum: id
+            author_id
+            author_id_sum: author_id
+          }
+          sum_fields: sum {
+            id
+            id_sum: id
+            author_id
+            author_id_sum: author_id
+          }
+          avg {
+            id
+            id_avg: id
+            author_id
+            author_id_avg: author_id
+          }
+          avg_fields: avg {
+            id
+            id_avg: id
+            author_id
+            author_id_avg: author_id
+          }
+          stddev {
+            id
+            id_stddev: id
+            author_id
+            author_id_stddev: author_id
+          }
+          stddev_fields: stddev {
+            id
+            id_stddev: id
+            author_id
+            author_id_stddev: author_id
+          }
+          stddev_samp {
+            id
+            id_stddev_samp: id
+            author_id
+            author_id_stddev_samp: author_id
+          }
+          stddev_samp_fields: stddev_samp {
+            id
+            id_stddev_samp: id
+            author_id
+            author_id_stddev_samp: author_id
+          }
+          stddev_pop {
+            id
+            id_stddev_pop: id
+            author_id
+            author_id_stddev_pop: author_id
+          }
+          stddev_pop_fields: stddev_pop {
+            id
+            id_stddev_pop: id
+            author_id
+            author_id_stddev_pop: author_id
+          }
+          variance {
+            id
+            id_variance: id
+            author_id
+            author_id_variance: author_id
+          }
+          variance_fields: variance {
+            id
+            id_variance: id
+            author_id
+            author_id_variance: author_id
+          }
+          var_samp {
+            id
+            id_var_samp: id
+            author_id
+            author_id_var_samp: author_id
+          }
+          var_samp_fields: var_pop {
+            id
+            id_var_pop: id
+            author_id
+            author_id_var_pop: author_id
+          }
+          var_pop {
+            id
+            id_var_pop: id
+            author_id
+            author_id_var_pop: author_id
+          }
+          var_pop_fields: var_pop {
+            id
+            id_var_pop: id
+            author_id
+            author_id_var_pop: author_id
+          }
+          max {
+            id
+            id_max: id
+            title
+            title_max: title
+            content
+            content_max: content
+            author_id
+            author_id_max: author_id
+          }
+          max_fields: max {
+            id
+            id_max: id
+            title
+            title_max: title
+            content
+            content_max: content
+            author_id
+            author_id_max: author_id
+          }
+          min {
+            id
+            id_min: id
+            title
+            title_min: title
+            content
+            content_min: content
+            author_id
+            author_id_min: author_id
+          }
+          min_fields: min {
+            id
+            id_min: id
+            title
+            title_min: title
+            content
+            content_min: content
+            author_id
+            author_id_min: author_id
+          }
+        }
+        nodes {
+          id
+          title
+          content
+          is_published
+          author {
+            id
+            name
+          }
+        }
+        articles: nodes {
+          id
+          title
+          content
+          is_published
+          author {
+            id
+            name
+          }
+        }
+      }
+    }

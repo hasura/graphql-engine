@@ -1,0 +1,30 @@
+description: Select author and their articles
+url: /v1/query
+status: 200
+response:
+  - name: Author 2
+    articles:
+    - content: Sample article content 3
+      id: 3
+      title: Article 3
+  - name: Author 3
+    articles:
+    - content: Sample article content 4
+      id: 4
+      title: Article 4
+query:
+  type: select
+  args:
+    table: author
+    where:
+      name: 
+        $in: 
+        - Author 2
+        - Author 3
+    columns:
+    - name
+    - name: articles
+      columns:
+      - id
+      - title
+      - content

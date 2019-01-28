@@ -1,0 +1,16 @@
+description: Select author with it's article aggregations with user role (Error)
+url: /v1alpha1/graphql
+status: 400
+headers:
+  X-Hasura-Role: user
+query:
+  query: |
+    query {
+      author{
+        articles_agg{
+          agg{
+            count
+          }
+        }
+      }
+    }

@@ -16,7 +16,6 @@ import (
 
 const (
 	defaultDirectory = "hasura"
-	MANIFESTS_DIR    = "install-scripts"
 )
 
 // NewInitCmd is the definition for init command
@@ -62,12 +61,9 @@ type initOptions struct {
 }
 
 func (o *initOptions) run() error {
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = o.InitDir
-	}
-
+	var dir string
 	// prompt for init directory if it's not set already
-	if len(o.InitDir) == 0 {
+	if o.InitDir == "" {
 		p := promptui.Prompt{
 			Label:   "Name of project directory ",
 			Default: defaultDirectory,
@@ -77,10 +73,18 @@ func (o *initOptions) run() error {
 			return handlePromptError(err)
 		}
 		if strings.TrimSpace(r) != "" {
-			o.EC.ExecutionDirectory = r
+			dir = r
 		} else {
-			o.EC.ExecutionDirectory = defaultDirectory
+			dir = defaultDirectory
 		}
+	} else {
+		dir = o.InitDir
+	}
+
+	if o.EC.ExecutionDirectory == "" {
+		o.EC.ExecutionDirectory = dir
+	} else {
+		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, dir)
 	}
 
 	var infoMsg string

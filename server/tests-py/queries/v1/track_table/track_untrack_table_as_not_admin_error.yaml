@@ -1,0 +1,41 @@
+  #Track table as not admin: error
+- description: Track table
+  url: /v1/query
+  status: 400
+  headers:
+    X-Hasura-User-Id: '1'
+    X-Hasura-Role: user  
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: track_table
+    args:
+      name: author
+
+- description: 'Track table: Success'
+  url: /v1/query
+  status: 200  
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      name: author
+
+  #Untrack table as not admin: error
+- description: 'Untrack table: error'
+  url: /v1/query
+  status: 400  
+  headers:
+    X-Hasura-User-Id: '1'
+    X-Hasura-Role: user  
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: untrack_table
+    args:
+      table: author

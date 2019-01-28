@@ -14,6 +14,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,10 +26,7 @@ func init() {
 
 const (
 	DefaultMigrationsTable = "schema_migrations"
-	DefaultRole            = "admin"
-	DefaultUserID          = "0"
 	DefaultSchema          = "hdb_catalog"
-	ACCESS_KEY_HEADER      = "X-Hasura-Access-Key"
 )
 
 var (
@@ -42,8 +40,7 @@ type Config struct {
 	MigrationsTable string
 	SettingsTable   string
 	URL             *nurl.URL
-	Role            string
-	UserID          string
+	Headers         map[string]string
 	isCMD           bool
 }
 
@@ -52,6 +49,7 @@ type HasuraDB struct {
 	settings       []database.Setting
 	migrations     *database.Migrations
 	migrationQuery HasuraInterfaceBulk
+	jsonPath       map[string]string
 	isLocked       bool
 	logger         *log.Logger
 }
@@ -96,46 +94,36 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		logger.Debug(err)
 		return nil, err
 	}
-	// Use sslMode to set Scheme
-	values := hurl.Query()
-	sslMode := values.Get("sslmode")
+	// Use sslMode query param to set Scheme
+	var scheme string
+	params := hurl.Query()
+	sslMode := params.Get("sslmode")
 	if sslMode == "enable" {
-		hurl.Scheme = "https"
+		scheme = "https"
 	} else {
-		hurl.Scheme = "http"
+		scheme = "http"
 	}
-	values.Del("sslmode")
-	hurl.RawQuery = values.Encode()
-	var user, pass string
-	switch hurl.User {
-	case nil:
-		user = DefaultRole
-		pass = DefaultUserID
-	default:
-		user = hurl.User.Username()
-		if user == "" {
-			user = DefaultRole
-		}
-		tmpPass, ok := hurl.User.Password()
-		if !ok {
-			// If Pass not set
-			pass = DefaultUserID
-		} else {
-			pass = tmpPass
+
+	headers := make(map[string]string)
+	if queryHeaders, ok := params["headers"]; ok {
+		for _, header := range queryHeaders {
+			headerValue := strings.SplitN(header, ":", 2)
+			if len(headerValue) == 2 && headerValue[1] != "" {
+				headers[headerValue[0]] = headerValue[1]
+			}
 		}
 	}
-	// Remove UserInfo
-	hurl.User = nil
-	// Add v1/query to path
-	hurl.Path = path.Join(hurl.Path, "v1/query")
 
 	hx, err := WithInstance(&Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
-		URL:             hurl,
-		Role:            user,
-		UserID:          pass,
-		isCMD:           isCMD,
+		URL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		isCMD:   isCMD,
+		Headers: headers,
 	}, logger)
 
 	if err != nil {
@@ -160,6 +148,7 @@ func (h *HasuraDB) Lock() error {
 		Type: "bulk",
 		Args: make([]interface{}, 0),
 	}
+	h.jsonPath = make(map[string]string)
 	h.isLocked = true
 	return nil
 }
@@ -187,14 +176,33 @@ func (h *HasuraDB) UnLock() error {
 
 		// Handle migration version here
 		if horror.Path != "" {
+			jsonData, err := json.Marshal(h.migrationQuery)
+			if err != nil {
+				return err
+			}
+			var migrationQuery interface{}
+			err = json.Unmarshal(jsonData, &migrationQuery)
+			if err != nil {
+				return err
+			}
+			res, err := jsonpath.JsonPathLookup(migrationQuery, horror.Path)
+			if err == nil {
+				queryData, err := json.MarshalIndent(res, "", "    ")
+				if err != nil {
+					return err
+				}
+				horror.migrationQuery = string(queryData)
+			}
 			re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
 			if err != nil {
 				return err
 			}
-
 			result := re1.FindAllStringSubmatch(horror.Path, -1)
 			if len(result) != 0 {
-
+				migrationNumber, ok := h.jsonPath[result[0][1]]
+				if ok {
+					horror.migrationFile = migrationNumber
+				}
 			}
 		}
 		return horror.Error(h.config.isCMD)
@@ -203,7 +211,7 @@ func (h *HasuraDB) UnLock() error {
 	return nil
 }
 
-func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
+func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
 		return err
@@ -221,6 +229,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 			},
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
+		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
 		var t []interface{}
@@ -232,6 +241,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType string) error {
 
 		for _, v := range t {
 			h.migrationQuery.Args = append(h.migrationQuery.Args, v)
+			h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 		}
 	}
 	return nil
@@ -464,8 +474,8 @@ func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, e
 
 	request = request.Post(h.config.URL.String()).Send(m)
 
-	if h.config.UserID != "" {
-		request = request.Set(ACCESS_KEY_HEADER, h.config.UserID)
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
 	}
 
 	resp, body, errs := request.EndBytes()
@@ -477,18 +487,6 @@ func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, e
 	}
 
 	return resp, body, err
-}
-
-func SingleJoiningSlash(a, b string) string {
-	aslash := strings.HasSuffix(a, "/")
-	bslash := strings.HasPrefix(b, "/")
-	switch {
-	case aslash && bslash:
-		return a + b[1:]
-	case !aslash && !bslash:
-		return a + "/" + b
-	}
-	return a + b
 }
 
 func (h *HasuraDB) First() (version uint64, ok bool) {

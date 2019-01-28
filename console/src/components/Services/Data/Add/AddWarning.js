@@ -9,6 +9,6 @@ export const primaryKeyAlreadyPresentMsg = key =>
 export const ATLEAST_ONE_COLUMN_MSG =
   'You need atleast one column for a given table.';
 export const RECOMMENEDED_NAMING_CONVENTION =
-  'We recommend using the snake_case naming convertion for table, column names. Eg: article_author.';
+  'We recommend using the snake_case naming convertion for table, column names. E.g.: article_author.';
 export const fieldRepeatedMsg = list =>
   `You have the following column names repeated: [${list}]`;

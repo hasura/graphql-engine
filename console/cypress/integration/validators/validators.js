@@ -30,6 +30,126 @@ export const createView = sql => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
+// ******************* Remote Schema Validator ****************************
+export const validateRS = (remoteSchemaName, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'remote_schemas',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        name: remoteSchemaName,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 && response.body[0].name === remoteSchemaName
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 && response.body[0].name === remoteSchemaName
+      ).to.be.false;
+    }
+  });
+};
+
+// ******************* Custom Function Validator **************************
+export const validateCFunc = (functionName, functionSchema, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        function_name: functionName,
+        function_schema: functionSchema,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].function_name === functionName
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].function_name === functionName
+      ).to.be.false;
+    }
+  });
+};
+
+export const validateUntrackedFunc = (functionName, functionSchema, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        function_name: functionName,
+        function_schema: functionSchema,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.body.length === 0).to.be.true;
+    } else {
+      expect(response.body.length === 0).to.be.false;
+    }
+  });
+};
+
+export const dataRequest = (reqBody, result) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].result_type === 'CommandOk' &&
+          response.body[1].message === 'success'
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].result_type === 'CommandOk' &&
+          response.body[1].message === 'success'
+      ).to.be.false;
+    }
+  });
+};
+
+export const dropTableRequest = (reqBody, result) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
+      ).to.be.false;
+    }
+  });
+};
+
 // ****************** Table Validator *********************
 
 export const validateCT = (tableName, result) => {
@@ -114,11 +234,10 @@ export const validateInsert = (tableName, rows) => {
 
 // ******************* Permissiosn Validator ****************
 
-const compareChecks = (permObj, check, query, columns, allowUpsert) => {
+const compareChecks = (permObj, check, query, columns) => {
   if (check === 'none') {
     if (query === 'insert') {
       expect(Object.keys(permObj.check).length === 0).to.be.true;
-      expect(permObj.allow_upsert === allowUpsert).to.be.true;
     } else {
       expect(Object.keys(permObj.filter).length === 0).to.be.true;
       if (query === 'select' || query === 'update') {
@@ -130,7 +249,6 @@ const compareChecks = (permObj, check, query, columns, allowUpsert) => {
   } else if (query === 'insert') {
     // eslint-disable-line no-lonely-if
     expect(permObj.check[getColName(0)]._eq === '1').to.be.true; // eslint-dsable-line eqeqeq
-    expect(permObj.allow_upsert === allowUpsert).to.be.true;
   } else {
     expect(permObj.filter[getColName(0)]._eq === '1').to.be.true;
     if (query === 'select' || query === 'update') {
@@ -147,8 +265,7 @@ const handlePermValidationResponse = (
   query,
   check,
   result,
-  columns,
-  allowUpsert
+  columns
 ) => {
   const rolePerms = tableSchema.permissions.find(
     permission => permission.role_name === role
@@ -156,7 +273,7 @@ const handlePermValidationResponse = (
   if (rolePerms) {
     const permObj = rolePerms.permissions[query];
     if (permObj) {
-      compareChecks(permObj, check, query, columns, allowUpsert, result);
+      compareChecks(permObj, check, query, columns);
     } else {
       // this block can be reached only if the permission doesn't exist (failure case)
       expect(result === 'failure').to.be.true;
@@ -173,8 +290,7 @@ export const validatePermission = (
   query,
   check,
   result,
-  columns,
-  allowUpsert
+  columns
 ) => {
   const reqBody = {
     type: 'select',
@@ -201,8 +317,7 @@ export const validatePermission = (
       query,
       check,
       result,
-      columns,
-      allowUpsert
+      columns
     );
   });
 };
@@ -214,5 +329,26 @@ export const validateMigrationMode = mode => {
     url: migrateModeUrl,
   }).then(response => {
     expect(response.body.migration_mode == mode.toString()).to.be.true; // eslint-disable-line
+  });
+};
+
+// ****************** Trigger Validator *********************
+
+export const validateCTrigger = (triggerName, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: { name: 'event_triggers', schema: 'hdb_catalog' },
+      columns: ['table_name'],
+      where: { name: triggerName },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.status === 200).to.be.true;
+    } else {
+      expect(response.status === 200).to.be.false;
+    }
   });
 };

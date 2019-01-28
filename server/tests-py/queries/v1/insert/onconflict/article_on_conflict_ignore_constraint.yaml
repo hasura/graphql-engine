@@ -1,0 +1,23 @@
+# The inserts are ignored on conflict
+description: Upserts article data via GraphQL mutation
+url: /v1/query
+status: 200
+response: 
+  affected_rows: 0
+  returning: []
+query:
+  type: insert
+  args:
+    table: article
+    objects:
+    - content: Updated Article 1 content
+      id: 1
+    - content: Updated Article 2 content
+      id: 2
+    on_conflict:
+      constraint_on:
+      - id
+      action: ignore
+    returning:
+    - content
+    - id

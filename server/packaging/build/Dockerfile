@@ -1,3 +1,3 @@
 FROM scratch
 COPY rootfs/ /
-CMD ["graphql-engine", "serve", "--enable-console"]
+CMD ["graphql-engine", "serve"]

@@ -5,6 +5,8 @@ type MetadataDriver interface {
 
 	ResetMetadata() error
 
+	ReloadMetadata() error
+
 	ApplyMetadata(data interface{}) error
 
 	Query(data []interface{}) error

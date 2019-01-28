@@ -1,0 +1,44 @@
+description: Insert article along with it's author_complex object (Error)
+url: /v1alpha1/graphql
+status: 400
+query:
+  query: |
+     mutation article_author_complex{
+       insert_article(
+         objects: [
+           {
+             title: "Article by author 1",
+             content: "Article content for article by author 1",
+             is_published: true,
+             author_complex: {
+               data: {
+                 author_id: 1
+                 article_title: "Article Title"
+               }
+             }
+           },
+           {
+             title: "Article by author 2",
+             content: "Article content for article by author 2",
+             is_published: true,
+             author_complex: {
+               data: {
+                 author_id: 2
+                 article_title: "Article title"
+               }
+             }
+           }
+         ]
+       ){
+         affected_rows
+         returning{
+           id
+           title
+           content
+           author_complex{
+             author_id
+             article_title
+           }
+         }
+       }
+     }

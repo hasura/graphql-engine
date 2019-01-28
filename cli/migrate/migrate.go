@@ -169,7 +169,7 @@ func (m *Migrate) ReScan() error {
 	return nil
 }
 
-// Close closes the the source and the database.
+// Close closes the source and the database.
 func (m *Migrate) Close() (source error) {
 	sourceSrvClose := make(chan error)
 
@@ -309,6 +309,11 @@ func (m *Migrate) ExportMetadata() (interface{}, error) {
 
 func (m *Migrate) ResetMetadata() error {
 	return m.databaseDrv.ResetMetadata()
+}
+
+// ReloadMetadata - Reload metadata on the database
+func (m *Migrate) ReloadMetadata() error {
+	return m.databaseDrv.ReloadMetadata()
 }
 
 func (m *Migrate) ApplyMetadata(data interface{}) error {
@@ -796,7 +801,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 		case *Migration:
 			migr := r.(*Migration)
 			if migr.Body != nil {
-				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType); err != nil {
+				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 					return err
 				}
 

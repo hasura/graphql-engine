@@ -325,25 +325,25 @@ export const deleteBITestTable = () => {
   validateCT(getTableName(0, testName), 'failure');
 };
 
-export const failBINullKeys = () => {
-  const textIndex = dataTypes.indexOf('text');
+// export const failBINullKeys = () => {
+//   const textIndex = dataTypes.indexOf('text');
 
-  cy.get(getElementFromAlias(`typed-input-${textIndex}`))
-    .clear()
-    .type('filter-text');
+//   cy.get(getElementFromAlias(`typed-input-${textIndex}`))
+//     .clear()
+//     .type('null-key-test');
 
-  cy.get("input[placeholder='float']")
-    .first()
-    .type('{selectall}{del}');
+//   cy.get("input[placeholder='float']")
+//     .first()
+//     .type('{selectall}{del}');
 
-  // Click the Insert Again button.
-  cy.get(getElementFromAlias('insert-save-button')).click();
+//   // Click the Insert Again button.
+//   cy.get(getElementFromAlias('insert-save-button')).click();
 
-  // cy.get('.notification-error').click();
-  // Wait for insert notifications to disappear
-  cy.wait(7000);
-  validateInsert(getTableName(0, testName), 20);
-};
+//   // cy.get('.notification-error').click();
+//   // Wait for insert notifications to disappear
+//   cy.wait(7000);
+//   validateInsert(getTableName(0, testName), 20);
+// };
 
 export const failBIUniqueKeys = () => {
   // Type a string in the text type fields of some rows  (to be tested in Browse rows)
@@ -438,25 +438,27 @@ export const checkViewRelationship = () => {
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(300);
+  cy.wait(1000);
   // Add relationship
   cy.get(getElementFromAlias('add-rel-mod')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('someRel');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('someRel');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.wait(300);
+  cy.wait(2000);
   // Insert a row
   cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get(getElementFromAlias('typed-input-1')).type('1');
   cy.get(getElementFromAlias('insert-save-button')).click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get(getElementFromAlias('table-browse-rows')).click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get('a')
     .contains('View')
     .first()
     .click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get('a')
     .contains('Close')
     .first()

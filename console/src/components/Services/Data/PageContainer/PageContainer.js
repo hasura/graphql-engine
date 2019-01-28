@@ -4,28 +4,40 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
+import Button from '../../Layout/Button/Button';
 
-import { LISTING_SCHEMA } from '../DataActions';
+import { LISTING_SCHEMA, UPDATE_TRACKED_FUNCTIONS } from '../DataActions';
+import semverCheck from '../../../../helpers/semver';
 
 const appPrefix = '/data';
 
 const PageContainer = ({
   schema,
   listingSchema,
+  functionsList,
+  listedFunctions,
   currentTable,
   schemaName,
   migrationMode,
   children,
   dispatch,
   location,
+  currentFunction,
+  serverVersion,
 }) => {
   const styles = require('./PageContainer.scss');
+  const functionSymbol = require('./function.svg');
+  const functionSymbolActive = require('./function_high.svg');
+
+  const handleFunc = semverCheck('customFunctionSection', serverVersion)
+    ? true
+    : false;
   // Now schema might be null or an empty array
-  let tableLinks = (
-    <li className={styles.noTables}>
-      <i>No tables available</i>
-    </li>
-  );
+  let tableLinks = [
+    <li className={styles.noTables} key="no-tables-1">
+      <i>No tables/views available</i>
+    </li>,
+  ];
   const tables = {};
   listingSchema.map(t => {
     tables[t.table_name] = t;
@@ -89,6 +101,58 @@ const PageContainer = ({
       });
   }
 
+  const dividerHr = [
+    <li key={'fn-divider-1'}>
+      <hr className={styles.tableFunctionDivider} />
+    </li>,
+  ];
+
+  // If the listedFunctions is non empty
+  if (listedFunctions.length > 0) {
+    const functionHtml = listedFunctions.map((f, i) => (
+      <li
+        className={
+          f.function_name === currentFunction ? styles.activeTable : ''
+        }
+        key={'fn ' + i}
+      >
+        <Link
+          to={
+            appPrefix +
+            '/schema/' +
+            schemaName +
+            '/functions/' +
+            f.function_name
+          }
+          data-test={f.function_name}
+        >
+          <div className={styles.display_inline + ' ' + styles.functionIcon}>
+            <img
+              src={
+                f.function_name === currentFunction
+                  ? functionSymbolActive
+                  : functionSymbol
+              }
+            />
+          </div>
+          {f.function_name}
+        </Link>
+      </li>
+    ));
+
+    tableLinks = [...tableLinks, ...dividerHr, ...functionHtml];
+  } else if (
+    functionsList.length !== listedFunctions.length &&
+    listedFunctions.length === 0
+  ) {
+    const noFunctionResult = [
+      <li className={styles.noTables}>
+        <i>No matching functions available</i>
+      </li>,
+    ];
+    tableLinks = [...tableLinks, ...dividerHr, ...noFunctionResult];
+  }
+
   function tableSearch(e) {
     const searchTerm = e.target.value;
     // form new schema
@@ -98,8 +162,14 @@ const PageContainer = ({
         matchedTables.push(table);
       }
     });
+
+    const matchedFuncs = functionsList.filter(
+      f => f.function_name.indexOf(searchTerm) !== -1
+    );
+
     // update schema with matchedTables
     dispatch({ type: LISTING_SCHEMA, updatedSchemas: matchedTables });
+    dispatch({ type: UPDATE_TRACKED_FUNCTIONS, data: matchedFuncs });
   }
 
   return (
@@ -115,7 +185,7 @@ const PageContainer = ({
             type="text"
             onChange={tableSearch.bind(this)}
             className="form-control"
-            placeholder="search table/view"
+            placeholder={`search table/view${handleFunc ? '/function' : ''}`}
             data-test="search-tables"
           />
         </div>
@@ -145,12 +215,14 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/data/schema/' + schemaName + '/table/add'}
               >
-                <button
-                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                <Button
+                  className={styles.add_mar_right}
+                  size="xs"
+                  color="white"
                   data-test="sidebar-add-table"
                 >
                   Add Table
-                </button>
+                </Button>
               </Link>
             </div>
           ) : null}
@@ -170,6 +242,10 @@ const mapStateToProps = state => {
     listingSchema: state.tables.listingSchemas,
     currentTable: state.tables.currentTable,
     migrationMode: state.main.migrationMode,
+    functionsList: state.tables.trackedFunctions,
+    listedFunctions: state.tables.listedFunctions,
+    currentFunction: state.functions.functionName,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 

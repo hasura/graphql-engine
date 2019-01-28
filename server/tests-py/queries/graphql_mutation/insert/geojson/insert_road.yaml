@@ -1,0 +1,41 @@
+- description: Insert a straight road as a geojson LineString
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_road:
+        returning:
+        - id: 1
+          name: Foo
+          path: &path
+            coordinates:
+            - [43.75049, 11.03207]
+            - [43.80009, 11.03208]
+            type: LineString
+            crs:
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      roads:
+      - name: Foo
+        path: *path
+    query: |
+      mutation insertRoad($roads: [road_insert_input!]!) {
+        insert_road(objects: $roads) {
+          returning{
+            id
+            name
+            path
+          }
+        }
+      }
+- description: Delete the inserted road
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from road

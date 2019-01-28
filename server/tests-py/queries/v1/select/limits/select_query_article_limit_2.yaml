@@ -1,0 +1,41 @@
+- &test
+  description: Nested select on article with limit
+  url: /v1/query
+  status: 200
+  response:
+    - id: 3
+      title: Article 3
+      content: Sample article content 3
+      author:
+        name: Author 2
+        id: 2
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      author:
+        name: Author 1
+        id: 1
+  query: &query
+    type: select
+    args: &args
+      table: article
+      columns:
+      - id 
+      - title
+      - content
+      - name: author
+        columns:
+        - id
+        - name
+      order_by: -id
+      limit: 2
+
+- <<: *test
+  query:
+    <<: *query
+    args:
+      <<: *args
+      order_by:
+      - type: desc
+        column: id
+  

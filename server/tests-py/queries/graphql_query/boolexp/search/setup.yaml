@@ -1,0 +1,121 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key, 
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE city (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        country TEXT NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: city
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+
+#Insert values
+- type: run_sql
+  args:
+    sql: |
+      insert into author (name)
+      values
+      ('Author 1'),
+      ('Author 2'),
+      ('Author 3') 
+
+
+- type: run_sql
+  args:
+    sql: |
+      insert into article (title,content,author_id,is_published)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1,
+        false
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1,
+        true
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2,
+        false
+      ),
+      (
+        'Article 4',
+        'Sample article content 4',
+        3,
+        true
+      )
+
+- type: insert
+  args:
+    table: city
+    objects:
+    - name: Durham
+      country: USA 
+    - name:  New York
+      country: USA
+    - name: Framlingham
+      country: UK
+    - name: New Orleans 
+      country: USA
+

@@ -1,0 +1,13 @@
+description: Count number of authors with atleast one published article
+url: /v1/query
+status: 200
+response:
+  count: 3
+query:
+  type: count
+  args:
+    table: article
+    distinct:
+    - author_id
+    where:
+      is_published: false

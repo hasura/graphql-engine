@@ -1,0 +1,33 @@
+description: Fetch highest salaried employee from each department
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    employee:
+    - id: 5
+      name: Kamila
+      department: Engineering
+      salary: 4325
+    - id: 4
+      name: Damien
+      department: Product
+      salary: 3124
+    - id: 7
+      name: Rickard
+      department: Services
+      salary: 2223
+
+query:
+  query: |
+    query {
+      employee(
+        distinct_on: [department]
+        order_by: [{department: asc}, {salary: desc}]
+      ){
+        id
+        name
+        department
+        salary
+      }
+    }
+

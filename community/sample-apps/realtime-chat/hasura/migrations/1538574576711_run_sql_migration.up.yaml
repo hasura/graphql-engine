@@ -1,0 +1,11 @@
+- args:
+    cascade: false
+    sql: |-
+      create view "user_online" as
+      select * from "user"
+      where "last_typed" > now() - interval '10 seconds';
+  type: run_sql
+- args:
+    name: user_online
+    schema: public
+  type: add_existing_table_or_view

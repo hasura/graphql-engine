@@ -1,0 +1,29 @@
+description: User can only get his unpublished articles
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  - id: 1
+    title: Article 1
+    content: Sample article content 1
+    is_published: false
+    author:
+      id: 1
+      name: Author 1
+query:
+  type: select
+  args:
+    table: article
+    where:
+      is_published: false
+    columns:
+      - id
+      - title
+      - content
+      - is_published
+      - name: author
+        columns:
+        - id 
+        - name

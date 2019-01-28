@@ -1,20 +1,14 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
 module Hasura.RQL.DML.Internal where
 
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 import qualified Hasura.SQL.DML               as S
 
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Prelude
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 import           Control.Lens
 import           Data.Aeson.Types
@@ -24,27 +18,25 @@ import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as DS
 import qualified Data.Text                    as T
 
--- class (P1C m) => Preparable m where
---   prepValBuilder :: PGColType -> Value -> m S.SQLExp
+newtype DMLP1 a
+  = DMLP1 {unDMLP1 :: StateT (DS.Seq Q.PrepArg) P1 a}
+  deriving ( Functor, Applicative
+           , Monad
+           , MonadState (DS.Seq Q.PrepArg)
+           , MonadError QErr
+           )
 
-type DMLP1 = StateT (DS.Seq Q.PrepArg) P1
+liftDMLP1
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => DMLP1 a -> m (a, DS.Seq Q.PrepArg)
+liftDMLP1 =
+  liftP1 . flip runStateT DS.empty . unDMLP1
 
 instance CacheRM DMLP1 where
-  askSchemaCache = lift askSchemaCache
+  askSchemaCache = DMLP1 $ lift askSchemaCache
 
 instance UserInfoM DMLP1 where
-  askUserInfo = lift askUserInfo
-
--- instance P1C DMLP1 where
---   askUserInfo = lift askUserInfo
-
--- instance Preparable DMLP1 where
---   prepValBuilder = binRHSBuilder
-
-peelDMLP1 :: QCtx -> DMLP1 a -> Either QErr (a, [Q.PrepArg])
-peelDMLP1 qEnv m = do
-  (a, prepSeq) <- runP1 qEnv $ runStateT m DS.empty
-  return (a, toList prepSeq)
+  askUserInfo = DMLP1 $ lift askUserInfo
 
 mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
@@ -55,13 +47,14 @@ mkAdminRolePermInfo ti =
       . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
 
     tn = tiName ti
-    i = InsPermInfo tn (S.BELit True) True [] []
-    s = SelPermInfo (HS.fromList pgCols) tn (S.BELit True) Nothing [] []
-    u = UpdPermInfo (HS.fromList pgCols) tn (S.BELit True) [] []
-    d = DelPermInfo tn (S.BELit True) [] []
+    i = InsPermInfo tn annBoolExpTrue M.empty []
+    s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
+        Nothing True []
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue []
+    d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
-  :: (P1C m)
+  :: (UserInfoM m)
   => PermAccessor c
   -> TableInfo
   -> m (Maybe c)
@@ -76,7 +69,7 @@ askPermInfo' pa tableInfo = do
       | otherwise             = M.lookup roleName rpim
 
 askPermInfo
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => PermAccessor c
   -> TableInfo
   -> m c
@@ -93,23 +86,30 @@ askPermInfo pa tableInfo = do
   where
     pt = permTypeToCode $ permAccToType pa
 
+isTabUpdatable :: RoleName -> TableInfo -> Bool
+isTabUpdatable role ti
+  | role == adminRole = True
+  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
+  where
+    rpim = tiRolePermInfoMap ti
+
 askInsPermInfo
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => TableInfo -> m InsPermInfo
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => TableInfo -> m SelPermInfo
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => TableInfo -> m UpdPermInfo
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => TableInfo -> m DelPermInfo
 askDelPermInfo = askPermInfo PADelete
 
@@ -141,7 +141,8 @@ checkPermOnCol pt allowedCols pgCol = do
       , permTypeToCode pt <> " column " <>> pgCol
       ]
 
-binRHSBuilder :: PGColType -> Value -> DMLP1 S.SQLExp
+binRHSBuilder
+  :: PGColType -> Value -> DMLP1 S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
   binVal <- runAesonParser (convToBin colType) val
@@ -149,7 +150,7 @@ binRHSBuilder colType val = do
   return $ toPrepParam (DS.length preparedArgs + 1) colType
 
 fetchRelTabInfo
-  :: (P1C m)
+  :: (QErrM m, CacheRM m)
   => QualifiedTable
   -> m TableInfo
 fetchRelTabInfo refTabName =
@@ -157,7 +158,7 @@ fetchRelTabInfo refTabName =
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
 fetchRelDet
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
   -> m (FieldInfoMap, SelPermInfo)
 fetchRelDet relName refTabName = do
@@ -178,71 +179,64 @@ fetchRelDet relName refTabName = do
       , " table " <>> rTable
       ]
 
-checkOnColExp :: (P1C m)
-              => SelPermInfo -> AnnValS -> m AnnValS
-checkOnColExp spi annVal =
-  case annVal of
-    AVCol pci@(PGColInfo cn _ _) opExps -> do
-      checkSelOnCol spi cn
-      return $ AVCol pci opExps
-    AVRel relInfo nesAnn _ -> do
-      relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
-      modAnn <- checkSelPerm relSPI nesAnn
-      return $ AVRel relInfo modAnn $ spiFilter relSPI
+checkOnColExp
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => SelPermInfo
+  -> AnnBoolExpFldSQL
+  -> m AnnBoolExpFldSQL
+checkOnColExp spi annFld = case annFld of
+  AVCol (PGColInfo cn _ _) _ -> do
+    checkSelOnCol spi cn
+    return annFld
+  AVRel relInfo nesAnn -> do
+    relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
+    modAnn <- checkSelPerm relSPI nesAnn
+    return $ AVRel relInfo $
+      andAnnBoolExps modAnn $ spiFilter relSPI
 
-checkSelPerm :: (P1C m)
-             => SelPermInfo -> GBoolExp AnnValS -> m (GBoolExp AnnValS)
-checkSelPerm spi = mapBoolExp (checkOnColExp spi)
-
-convBoolExp
-  :: (P1C m)
-  => FieldInfoMap
-  -> QualifiedTable
-  -> SelPermInfo
-  -> BoolExp
-  -> (PGColType -> Value -> m S.SQLExp)
-  -> m S.BoolExp
-convBoolExp cim tn spi be prepValBuilder =
-  cBoolExp <$> convBoolExp' cim tn spi be prepValBuilder
+checkSelPerm
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => SelPermInfo
+  -> AnnBoolExpSQL
+  -> m AnnBoolExpSQL
+checkSelPerm spi =
+  traverse (checkOnColExp spi)
 
 convBoolExp'
-  :: (P1C m)
+  :: ( UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
-  -> QualifiedTable
   -> SelPermInfo
   -> BoolExp
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m (GBoolExp AnnSQLBoolExp)
-convBoolExp' cim tn spi be prepValBuilder = do
+  -> m AnnBoolExpSQL
+convBoolExp' cim spi be prepValBuilder = do
   abe <- annBoolExp prepValBuilder cim be
-  modABE <- checkSelPerm spi abe
-  convBoolRhs binStrat (S.mkQual tn) modABE
-  where
-    binStrat = mkBoolExpBuilder return
+  checkSelPerm spi abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
   case err of
-    Nothing  -> defaultTxErrorHandler p2Res
+    Nothing          -> defaultTxErrorHandler p2Res
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
--- | col_name as col_name
-mkColExtr :: (PGCol, PGColType) -> S.Extractor
-mkColExtr (c, pct) =
-  mkColExtrAl (Just c) (c, pct)
-
-mkColExtrAl :: (IsIden a) => Maybe a -> (PGCol, PGColType) -> S.Extractor
-mkColExtrAl alM (c, pct) =
-  if pct == PGGeometry || pct == PGGeography
-  then S.mkAliasedExtrFromExp
-    (S.SEFnApp "ST_AsGeoJSON" [S.mkSIdenExp c] Nothing `S.SETyAnn` S.jsonType) alM
-  else S.mkAliasedExtr c alM
+toJSONableExp :: PGColType -> S.SQLExp -> S.SQLExp
+toJSONableExp colTy expn
+  | colTy == PGGeometry || colTy == PGGeography =
+      S.SEFnApp "ST_AsGeoJSON"
+      [ expn
+      , S.SEUnsafe "15" -- max decimal digits
+      , S.SEUnsafe "4"  -- to print out crs
+      ] Nothing
+      `S.SETyAnn` S.jsonType
+  | colTy == PGBigInt || colTy == PGBigSerial =
+      expn `S.SETyAnn` S.textType
+  | otherwise = expn
 
 -- validate headers
-validateHeaders :: (P1C m) => [T.Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- M.keys . userHeaders <$> askUserInfo
+  headers <- getVarNames . userVars <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
@@ -280,6 +274,8 @@ simplifyError txErr = do
         return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
       -- no constraint
       ("42704", msg) -> return (ConstraintError, msg)
+      -- invalid input values
+      ("22007", msg) -> return (DataException, msg)
       _              -> Nothing
 
 -- validate limit and offset int values

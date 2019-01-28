@@ -1,0 +1,178 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique,
+          is_registered boolean not null default false,
+          remarks_internal text
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER NOT NULL REFERENCES author(id),
+        is_published BOOLEAN NOT NULL default FALSE,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    name: author
+    table: article
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Article select permission for user
+- type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - is_published
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: true
+
+#Article select permission for anonymous (only published articles)
+- type: create_select_permission
+  args:
+    table: article
+    role: anonymous
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - is_published
+      filter:
+        is_published: true
+
+#Article insert permission for user
+- type: create_insert_permission
+  args:
+    table: article
+    role: user
+    permission:
+      check:
+        author_id: X-Hasura-User-Id
+
+#Author select permission for user
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      - is_registered
+      filter:
+        _or:
+        - id: X-HASURA-USER-ID
+        - articles:
+            is_published:
+              _eq: true
+
+#Author select permission for anonymous users
+#Only authors with atleast one article will be shown
+- type: create_select_permission
+  args:
+    table: author
+    role: anonymous
+    permission:
+      columns:
+      - id
+      - name
+      filter:
+        articles:
+          is_published:
+            _eq: true
+
+#Author insert permission for user
+- type: create_insert_permission
+  args:
+    table: author
+    role: user
+    permission:
+      check:
+        id: X-HASURA-USER-ID
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        id: X-HASURA-USER-ID
+
+#Insert Author values
+- type: insert
+  args:
+    table: author
+    objects:
+    - name: Author 1
+      remarks_internal: remark 1
+    - name: Author 2
+      remarks_internal: remark 2
+    - name: Author 3
+      remarks_internal: remark 3
+
+#Insert Article values
+- type: insert
+  args:
+    table: article
+    objects:
+    - title: Article 1
+      content: Sample article content 1
+      author_id: 1
+      is_published: false
+
+    - title: Article 2
+      content: Sample article content 2
+      author_id: 1
+      is_published: true
+
+    - title: Article 3
+      content: Sample article content 3
+      author_id: 2
+      is_published: true
+
+    - title: Article 4
+      content: Sample article content 4
+      author_id: 3
+      is_published: false

@@ -1,0 +1,20 @@
+{
+  "name": "aws-lambda-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "graphql.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.2.2",
+    "apollo-server-lambda": "^2.1.0",
+    "graphql": "^0.13.1",
+    "pg": "^7.6.0",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.41.0"
+  }
+}

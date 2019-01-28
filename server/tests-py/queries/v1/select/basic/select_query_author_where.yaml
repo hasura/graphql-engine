@@ -1,0 +1,28 @@
+- &test
+  description: Simple GraphQL object query on author
+  url: /v1/query
+  status: 200
+  response: &response
+    - name: Author 2
+      id: 2
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+      - id 
+      - name
+      where:
+        id: 2
+
+- <<: *test
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+      - id 
+      - name
+      where:
+        id:
+          $eq: 2

@@ -10,11 +10,10 @@ const ordinalColSort = (a, b) => {
 
 const findFKConstraint = (curTable, column) => {
   const fkConstraints = curTable.foreign_key_constraints;
-
   return fkConstraints.find(
     fk =>
-      Object.keys(fk.column_mapping).length === 1 &&
-      Object.keys(fk.column_mapping)[0] === column
+      Object.keys(fk.column_mapping).length === column.length &&
+      Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
 };
 
@@ -33,7 +32,7 @@ const findTableFromRel = (schemas, curTable, rel) => {
   if (rel.rel_def.foreign_key_constraint_on !== undefined) {
     // for object relationship
     if (rel.rel_type === 'object') {
-      const column = rel.rel_def.foreign_key_constraint_on;
+      const column = [rel.rel_def.foreign_key_constraint_on];
       const fkc = findFKConstraint(curTable, column);
       if (fkc) {
         rtable = fkc.ref_table;
@@ -48,7 +47,6 @@ const findTableFromRel = (schemas, curTable, rel) => {
       }
     }
   }
-
   return schemas.find(x => x.table_name === rtable);
 };
 
@@ -67,27 +65,27 @@ const findAllFromRel = (schemas, curTable, rel) => {
       rtable = rtable.name;
     }
     const columnMapping = rel.rel_def.manual_configuration.column_mapping;
-    lcol = Object.keys(columnMapping)[0];
-    rcol = columnMapping[lcol];
+    lcol = Object.keys(columnMapping);
+    rcol = lcol.map(column => columnMapping[column]);
   }
 
   // for table
   if (foreignKeyConstraintOn !== undefined) {
     // for object relationship
     if (rel.rel_type === 'object') {
-      lcol = foreignKeyConstraintOn;
+      lcol = [foreignKeyConstraintOn];
 
       const fkc = findFKConstraint(curTable, lcol);
       if (fkc) {
         rtable = fkc.ref_table;
-        rcol = fkc.column_mapping[lcol];
+        rcol = [fkc.column_mapping[lcol]];
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
       rtable = foreignKeyConstraintOn.table;
-      rcol = foreignKeyConstraintOn.column;
+      rcol = [foreignKeyConstraintOn.column];
       if (rtable.schema) {
         // if schema exists, its not public schema
         rtable = rtable.name;
@@ -95,10 +93,9 @@ const findAllFromRel = (schemas, curTable, rel) => {
 
       const rtableSchema = schemas.find(x => x.table_name === rtable);
       const rfkc = findFKConstraint(rtableSchema, rcol);
-      lcol = rfkc.column_mapping[rcol];
+      lcol = [rfkc.column_mapping[rcol]];
     }
   }
-
   return { lcol, rtable, rcol };
 };
 
@@ -122,6 +119,16 @@ const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
+const getTableName = t => {
+  const typ = typeof t;
+  if (typ === 'string') {
+    return t;
+  } else if (typ === 'object') {
+    return 'name' in t ? t.name : '';
+  }
+  return '';
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -129,4 +136,5 @@ export {
   getEdForm,
   getIngForm,
   escapeRegExp,
+  getTableName,
 };

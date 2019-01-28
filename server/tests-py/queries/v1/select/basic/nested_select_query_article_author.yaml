@@ -1,0 +1,34 @@
+description: Nested select on article
+url: /v1/query
+status: 200
+response:
+  - id: 1
+    title: Article 1
+    content: Sample article content 1
+    author:
+      id: 1
+      name: Author 1
+  - id: 2
+    title: Article 2
+    content: Sample article content 2
+    author:
+      id: 1
+      name: Author 1
+  - id: 3
+    title: Article 3
+    content: Sample article content 3
+    author:
+      id: 2
+      name: Author 2
+query:
+  type: select
+  args:
+    table: article
+    columns:
+      - id
+      - title
+      - content
+      - name: author
+        columns:
+        - id
+        - name 

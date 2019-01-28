@@ -1,8 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -93,7 +89,7 @@ getWSId = _wcConnId
 
 closeConn :: WSConn a -> BL.ByteString -> IO ()
 closeConn wsConn bs = do
-  _wcLogger wsConn $ WSLog (_wcConnId wsConn) $ ECloseSent $ TBS.fromLBS bs
+  (L.unLogger . _wcLogger) wsConn $ WSLog (_wcConnId wsConn) $ ECloseSent $ TBS.fromLBS bs
   WS.sendClose (_wcConnRaw wsConn) bs
 
 -- writes to a queue instead of the raw connection
@@ -114,7 +110,7 @@ createWSServer :: L.Logger -> STM.STM (WSServer a)
 createWSServer logger = WSServer logger <$> STMMap.new
 
 closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer writeLog connMap) msg = do
+closeAll (WSServer (L.Logger writeLog) connMap) msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
     conns <- ListT.toList $ STMMap.stream connMap
@@ -141,7 +137,7 @@ createServerApp
   -> WSHandlers a
   -- aka WS.ServerApp
   -> WS.PendingConnection -> IO ()
-createServerApp (WSServer writeLog connMap) wsHandlers pendingConn = do
+createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pendingConn = do
   wsId <- WSId <$> UUID.nextRandom
   writeLog $ WSLog wsId EConnectionRequest
   let reqHead = WS.pendingRequest pendingConn
@@ -158,7 +154,7 @@ createServerApp (WSServer writeLog connMap) wsHandlers pendingConn = do
       writeLog $ WSLog wsId EAccepted
 
       sendQ <- STM.newTQueueIO
-      let wsConn = WSConn wsId writeLog conn sendQ a
+      let wsConn = WSConn wsId logger conn sendQ a
       STM.atomically $ STMMap.insert wsConn wsId connMap
 
       rcvRef  <- A.async $ forever $ do

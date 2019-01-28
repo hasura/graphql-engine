@@ -1,0 +1,3 @@
+- args:
+    sql: ALTER TABLE "article" ALTER COLUMN "published_on" DROP NOT NULL;
+  type: run_sql

@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveGeneric    #-}
-{-# LANGUAGE FlexibleContexts #-}
-
 module Hasura.GraphQL.Resolve.LiveQuery
   ( LiveQuery(..)
   , LiveQueryMap
@@ -17,8 +14,9 @@ import qualified STMContainers.Map                      as STMMap
 
 import           Control.Concurrent                     (threadDelay)
 
-import           Hasura.GraphQL.Resolve.Context         (RespTx)
+import           Hasura.GraphQL.Resolve.Context         (LazyRespTx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -35,7 +33,7 @@ type OnChange k = GQResp -> IO ()
 data LQHandler k
   = LQHandler
   -- the tx to be executed
-  { _lqhRespTx  :: !RespTx
+  { _lqhRespTx  :: !LazyRespTx
   -- previous result
   , _lqhPrevRes :: !(STM.TVar (Maybe GQResp))
   -- the actions that have been run previously
@@ -52,7 +50,7 @@ type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new
 
-type TxRunner = RespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 
 removeLiveQuery
   :: (Eq k, Hashable k)
@@ -87,9 +85,6 @@ removeLiveQuery lqMap liveQ k = do
           Just <$> STM.takeTMVar threadRef
         else return Nothing
 
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m action = maybe (return ()) action m
-
 addLiveQuery
   :: (Eq k, Hashable k)
   => TxRunner
@@ -97,7 +92,7 @@ addLiveQuery
   -- the query
   -> LiveQuery
   -- the transaction associated with this query
-  -> RespTx
+  -> LazyRespTx
   -- a unique operation id
   -> k
   -- the action to be executed when result changes

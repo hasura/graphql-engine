@@ -28,17 +28,33 @@ const defaultPermissionsState = {
   custom_checked: false,
   newRole: '',
   limitEnabled: true,
+  bulkSelect: [],
+  applySamePermissions: [],
+  tableSchemas: [],
 };
 
+const defaultInsertSetState = {
+  key: '',
+  value: '',
+};
 const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    set: {},
+    columns: [],
+    localSet: [
+      {
+        ...defaultInsertSetState,
+      },
+    ],
+    isSetConfigChecked: false,
   },
   select: {
     columns: [],
     filter: {},
     limit: null,
+    allow_aggregations: false,
   },
   update: {
     columns: [],
@@ -72,13 +88,18 @@ const defaultModifyState = {
     name: '',
     tableName: '',
     isObjRel: null,
-    lcol: '',
+    lcol: [],
     rTable: null,
-    rcol: '',
+    rcol: [],
     manualColumns: [],
     isManualExpanded: false,
+    manualRelInfo: {
+      remoteSchema: '',
+      tables: [],
+    },
   },
   permissionsState: { ...defaultPermissionsState },
+  prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
@@ -106,6 +127,11 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  postgresFunctions: [],
+  nonTrackablePostgresFunctions: [],
+  trackedFunctions: [],
+  listedFunctions: [],
+
   listingSchemas: [],
   untrackedSchemas: [],
   information_schema: [],
@@ -127,4 +153,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
+  defaultInsertSetState,
 };

@@ -1,0 +1,24 @@
+description: Select author and their articles
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.author.args.where.name._ne
+    message: |-
+      field "_ne" not found in type: 'text_comparison_exp'
+query:
+  query: |
+    query {
+      author (where: {name: {_ne: "Author 1"}}) {
+        id
+        name
+        articles {
+          id
+          title
+          content
+          is_published
+        }
+      }
+    }

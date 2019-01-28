@@ -1,0 +1,25 @@
+description: Select author and their articles
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.author.args.where.id._unexpected
+    message: |-
+      field "_unexpected" not found in type: 'integer_comparison_exp'
+query:
+  query: |
+    query {
+      author (
+      where: {id: {_unexpected: 2}}
+      ) {
+        id
+        name
+        articles{
+          id
+          title
+          content
+        }
+      }
+    }

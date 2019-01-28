@@ -1,0 +1,20 @@
+description: 'Insert into order table with a null value'
+url: /v1/query
+status: 200
+response:
+  affected_rows: 1
+  returning:
+  - id: 1
+    placed: "2017-08-19T14:22:11+00:00"
+    shipped: null
+query:
+  type: insert
+  args:
+    table: orders
+    objects:
+    - placed: "2017-08-19T14:22:11+00:00"
+      shipped: null    
+    returning:
+    - id
+    - placed
+    - shipped

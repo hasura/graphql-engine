@@ -1,0 +1,37 @@
+- description: Insert location of drone as geojson point
+  url: /v1alpha1/graphql
+  status: 200
+  response:
+    data:
+      insert_drone_3d_location:
+        returning:
+        - drone_id: 1
+          location: &loc
+            coordinates: [43.75049, 11.03207, 1.234]
+            type: Point
+            crs:
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+  query:
+    variables:
+      location:
+      - drone_id: 1
+        location: *loc
+    query: |
+      mutation insertDroneLoc($location: [drone_3d_location_insert_input!]!) {
+        insert_drone_3d_location(objects: $location) {
+          returning{
+            drone_id
+            location
+          }
+        }
+      }
+- description: Delete the inserted drone location
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        delete from drone_3d_location

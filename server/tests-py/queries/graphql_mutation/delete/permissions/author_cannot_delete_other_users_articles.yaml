@@ -1,0 +1,26 @@
+description: A user cannot delete other users articles
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '5'
+response:
+  data:
+    delete_article:
+      affected_rows: 0
+      returning: []
+query:
+  query: |
+    mutation delete_article {
+      delete_article (
+        where: {id: {_eq: 1}}
+      ) 
+      { affected_rows
+        returning
+        { id
+          title
+          content
+          author_id
+        }
+      }
+    }

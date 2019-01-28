@@ -37,7 +37,7 @@ args:
 
 - type: add_existing_table_or_view
   args:
-    schema: hdb_views
+    schema: hdb_catalog
     name: hdb_primary_key
 
 - type: create_object_relationship
@@ -49,7 +49,7 @@ args:
     using:
       manual_configuration:
         remote_table:
-          schema: hdb_views
+          schema: hdb_catalog
           name: hdb_primary_key
         column_mapping:
           table_schema : table_schema
@@ -77,7 +77,7 @@ args:
 
 - type: add_existing_table_or_view
   args:
-    schema: hdb_views
+    schema: hdb_catalog
     name: hdb_foreign_key_constraint
 
 - type: create_array_relationship
@@ -89,7 +89,7 @@ args:
     using:
       manual_configuration:
         remote_table:
-          schema: hdb_views
+          schema: hdb_catalog
           name: hdb_foreign_key_constraint
         column_mapping:
           table_schema : table_schema
@@ -117,7 +117,7 @@ args:
 
 - type: add_existing_table_or_view
   args:
-    schema: hdb_views
+    schema: hdb_catalog
     name: hdb_permission_agg
 
 - type: create_array_relationship
@@ -129,7 +129,7 @@ args:
     using:
       manual_configuration:
         remote_table:
-          schema: hdb_views
+          schema: hdb_catalog
           name: hdb_permission_agg
         column_mapping:
           table_schema : table_schema
@@ -137,7 +137,7 @@ args:
 
 - type: add_existing_table_or_view
   args:
-    schema: hdb_views
+    schema: hdb_catalog
     name: hdb_check_constraint
 
 - type: create_array_relationship
@@ -149,7 +149,7 @@ args:
     using:
       manual_configuration:
         remote_table:
-          schema: hdb_views
+          schema: hdb_catalog
           name: hdb_check_constraint
         column_mapping:
           table_schema : table_schema
@@ -157,7 +157,7 @@ args:
 
 - type: add_existing_table_or_view
   args:
-    schema: hdb_views
+    schema: hdb_catalog
     name: hdb_unique_constraint
 
 - type: create_array_relationship
@@ -169,7 +169,7 @@ args:
     using:
       manual_configuration:
         remote_table:
-          schema: hdb_views
+          schema: hdb_catalog
           name: hdb_unique_constraint
         column_mapping:
           table_schema : table_schema
@@ -179,3 +179,98 @@ args:
   args:
     schema: hdb_catalog
     name: hdb_query_template
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_triggers
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_log
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: event_invocation_logs
+
+- type: create_object_relationship
+  args:
+    name: trigger
+    table:
+      schema: hdb_catalog
+      name: event_log
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: event_triggers
+        column_mapping:
+          trigger_id : id
+
+- type: create_array_relationship
+  args:
+    name: events
+    table:
+      schema: hdb_catalog
+      name: event_triggers
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: event_log
+        column_mapping:
+          id : trigger_id
+
+- type: create_object_relationship
+  args:
+    name: event
+    table:
+      schema: hdb_catalog
+      name: event_invocation_logs
+    using:
+      foreign_key_constraint_on: event_id
+
+- type: create_array_relationship
+  args:
+    name: logs
+    table:
+      schema: hdb_catalog
+      name: event_log
+    using:
+      foreign_key_constraint_on:
+        table:
+          schema: hdb_catalog
+          name: event_invocation_logs
+        column: event_id
+
+- type: track_table
+  args:
+    name: hdb_function_agg
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_function
+    schema: hdb_catalog
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
+    name: remote_schemas
+
+- type: create_object_relationship
+  args:
+    name: return_table_info
+    table:
+      schema: hdb_catalog
+      name: hdb_function_agg
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_table
+        column_mapping:
+          return_type_schema: table_schema
+          return_type_name: table_name

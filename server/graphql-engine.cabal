@@ -22,14 +22,19 @@ flag developer
   default: False
   manual: True
 
+flag local-console
+  description: embeds resources needed by console and serves them at /static/
+  default: False
+  manual: True
+
 library
-  default-extensions:  NoImplicitPrelude
   hs-source-dirs:      src-lib
                      , src-exec
   default-language:    Haskell2010
   build-depends:       base
                      , pg-client
                      , text
+                     , text-builder >= 0.6
                      , bytestring
                      , postgresql-libpq
                      , mtl
@@ -51,6 +56,7 @@ library
                      , wai-extra
                      , containers
                      , monad-control
+                     , monad-time
                      , wai-logger
                      , fast-logger
                      , wai
@@ -67,6 +73,12 @@ library
 
                      -- hashing for logging
                      , cryptonite
+                     -- for jwt verification
+                     , jose
+                     , pem
+                     , x509
+                     , asn1-encoding
+                     , asn1-types
 
                      -- Server related
                      , warp
@@ -75,7 +87,6 @@ library
 
                      -- GraphQL related
                      , graphql-parser
-                     , wai-middleware-static
 
                      -- URL parser related
                      , network-uri
@@ -89,6 +100,7 @@ library
                      , http-client
                      , http-client-tls
                      , connection
+                     , retry
 
                      -- ordered map
                      , insert-ordered-containers
@@ -98,6 +110,8 @@ library
 
                      -- Templating
                      , mustache
+                     , ginger
+                     , file-embed
 
                      --
                      , data-has
@@ -119,10 +133,14 @@ library
                      , auto-update
 
                      -- regex related
-                     , regex-compat
+                     , regex-tdfa >= 1.2
+
+                     -- pretty printer
+                     , ansi-wl-pprint
 
   exposed-modules:     Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
                      , Hasura.Server.Middleware
                      , Hasura.Server.Logging
@@ -133,10 +151,14 @@ library
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
+                     , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -145,14 +167,19 @@ library
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Schema.Table.Internal
+                     , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
+                     , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.Headers
+                     , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DML.Delete
-                     , Hasura.RQL.DML.Explain
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Returning
+                     , Hasura.RQL.DML.Select.Internal
+                     , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
@@ -172,13 +199,23 @@ library
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
                      , Hasura.GraphQL.Resolve.Introspect
+                     , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
+                     , Hasura.GraphQL.RemoteServer
+                     , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Resolve.ContextTypes
+
+                     , Hasura.Events.Lib
+                     , Hasura.Events.HTTP
+
+                     , Hasura.HTTP
 
                      , Data.Text.Extended
                      , Data.Sequence.NonEmpty
@@ -190,19 +227,73 @@ library
                      , Hasura.SQL.Value
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
+                     , Hasura.SQL.Rewrite
                      , Hasura.Prelude
                      , Hasura.Logging
+                     , Network.URI.Extended
                      , Ops
-                     , Migrate
-                     , TH
+
+  other-modules:       Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
+
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
+
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(local-console)
+    cpp-options: -DLocalConsole
 
-  ghc-options: -O2 -Wall
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
 
 executable graphql-engine
-  default-extensions:  NoImplicitPrelude
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
+
   main-is:           Main.hs
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
@@ -221,10 +312,12 @@ executable graphql-engine
                      , pg-client
                      , http-client
                      , http-client-tls
+                     , stm
+                     , wreq
+                     , connection
+                     , string-conversions
 
   other-modules:     Ops
-                     Migrate
-                     TH
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

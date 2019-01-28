@@ -1,3 +1,14 @@
+import { SERVER_CONSOLE_MODE } from './constants';
+
+/* helper tools to format explain json */
+
+/* eslint-disable */
+import sqlFormatter from './helpers/sql-formatter.min';
+import hljs from './helpers/highlight.min';
+/* eslint-enable */
+
+/* */
+
 const checkExtraSlashes = url => {
   if (!url) {
     return url;
@@ -12,10 +23,14 @@ const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
-  nodeEnv: window.__env.nodeEnv,
   devDataApiUrl: window.__env.devDataApiUrl,
+  nodeEnv: window.__env.nodeEnv,
   accessKey: window.__env.accessKey,
-  consoleMode: window.__env.consoleMode,
+  isAccessKeySet: window.__env.isAccessKeySet,
+  consoleMode:
+    window.__env.consoleMode === 'hasuradb'
+      ? 'server'
+      : window.__env.consoleMode,
   urlPrefix: checkExtraSlashes(window.__env.urlPrefix),
 };
 
@@ -25,19 +40,52 @@ if (!window.__env.urlPrefix) {
 }
 
 if (!window.__env.consoleMode) {
-  globals.consoleMode = 'hasuradb';
+  globals.consoleMode = SERVER_CONSOLE_MODE;
 }
 
 if (!window.__env.accessKey) {
   globals.accessKey = null;
 }
 
-if (globals.consoleMode === 'hasuradb') {
-  const windowUrl = window.location.protocol + '//' + window.location.host;
-  globals.dataApiUrl = windowUrl;
+if (!window.__env.isAccessKeySet) {
+  globals.isAccessKeySet = false;
+}
+
+if (
+  window &&
+  typeof window === 'object' &&
+  !window.sqlFormatter &&
+  !window.hljs
+) {
+  window.sqlFormatter = sqlFormatter;
+  window.hljs = hljs;
+}
+
+if (globals.consoleMode === SERVER_CONSOLE_MODE) {
+  if (globals.nodeEnv !== 'development') {
+    if (window.__env.consolePath) {
+      const safeCurrentUrl = checkExtraSlashes(window.location.href);
+      globals.dataApiUrl = safeCurrentUrl.slice(
+        0,
+        safeCurrentUrl.lastIndexOf(window.__env.consolePath)
+      );
+      const currentPath = checkExtraSlashes(window.location.pathname);
+      globals.urlPrefix =
+        currentPath.slice(
+          0,
+          currentPath.lastIndexOf(window.__env.consolePath)
+        ) + '/console';
+    } else {
+      const windowUrl = window.location.protocol + '//' + window.location.host;
+      globals.dataApiUrl = windowUrl;
+    }
+  }
+  /*
+   * Require the exact usecase
   if (globals.nodeEnv === 'development') {
     globals.dataApiUrl = globals.devDataApiUrl;
   }
+  */
 }
 
 export default globals;

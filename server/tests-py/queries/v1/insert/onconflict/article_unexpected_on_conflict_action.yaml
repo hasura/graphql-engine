@@ -1,0 +1,19 @@
+description: Upserts article data via GraphQL mutation (Error 02)
+url: /v1/query
+status: 400
+query:
+  type: insert
+  args:
+    table: article
+    objects:
+    - content: Updated Article 1 content
+      id: 1
+    - content: Updated Article 2 content
+      id: 2
+    on_conflict:
+      constraint_on:
+      - id
+      action: random
+    returning:
+    - name
+    - id

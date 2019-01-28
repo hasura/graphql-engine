@@ -1,0 +1,18 @@
+description: Select query on table which is not tracked
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.random
+    message: |-
+      field "random" not found in type: 'query_root'
+query:
+  query: |
+    query {
+      random {
+        id
+        name
+      }
+    }

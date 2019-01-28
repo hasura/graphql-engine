@@ -1,24 +1,13 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.RQL.Types.Common
-       ( RelName(..)
+       ( PGColInfo(..)
+       , RelName(..)
        , RelType(..)
        , relTypeToTxt
+       , RelInfo(..)
 
        , FieldName(..)
        , fromPGCol
        , fromRel
-
-       , ColExp(..)
-       , GBoolExp(..)
-       , BoolExp
-       , foldBoolExp
 
        , TQueryName(..)
        , TemplateParam(..)
@@ -28,17 +17,25 @@ module Hasura.RQL.Types.Common
        ) where
 
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
-import           Data.Aeson.Internal
-import qualified Data.HashMap.Strict        as M
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
+
+data PGColInfo
+  = PGColInfo
+  { pgiName       :: !PGCol
+  , pgiType       :: !PGColType
+  , pgiIsNullable :: !Bool
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype RelName
   = RelName {getRelTxt :: T.Text}
@@ -73,9 +70,20 @@ instance Q.FromCol RelType where
     "array"  -> Just ArrRel
     _   -> Nothing
 
+data RelInfo
+  = RelInfo
+  { riName     :: !RelName
+  , riType     :: !RelType
+  , riMapping  :: ![(PGCol, PGCol)]
+  , riRTable   :: !QualifiedTable
+  , riIsManual :: !Bool
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -88,67 +96,6 @@ fromPGCol (PGCol c) = FieldName c
 
 fromRel :: RelName -> FieldName
 fromRel (RelName r) = FieldName r
-
-type BoolExp = GBoolExp ColExp
-
-data ColExp
-  = ColExp
-  { ceCol :: !FieldName
-  , ceVal :: !Value
-  } deriving (Show, Eq, Lift)
-
-data GBoolExp a
-  = BoolAnd ![GBoolExp a]
-  | BoolOr  ![GBoolExp a]
-  | BoolCol !a
-  | BoolNot !(GBoolExp a)
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
-
-instance ToJSON (GBoolExp ColExp) where
-  toJSON (BoolAnd bExps) =
-    object $ flip map bExps $ \bExp -> case bExp of
-    BoolOr cbExps        -> "$or" .= cbExps
-    BoolAnd cbExps       -> "$and" .= cbExps
-    BoolCol (ColExp k v) -> getFieldNameTxt k .= v
-    BoolNot notExp       -> "$not" .= notExp
-  toJSON (BoolOr bExps) =
-    object $ flip map bExps $ \bExp -> case bExp of
-    BoolOr cbExps        -> "$or" .= cbExps
-    BoolAnd cbExps       -> "$and" .= cbExps
-    BoolCol (ColExp k v) -> getFieldNameTxt k .= v
-    BoolNot notExp       -> "$not" .= notExp
-  toJSON (BoolCol (ColExp k v)) =
-    object [ getFieldNameTxt k .= v ]
-  toJSON (BoolNot notExp) =
-    object [ "$not" .= notExp ]
-
-instance FromJSON (GBoolExp ColExp) where
-  parseJSON (Object o) = do
-    boolExps <- forM (M.toList o) $ \(k, v) -> if
-      | k == "$or"  -> BoolOr  <$> parseJSON v <?> Key k
-      | k == "_or"  -> BoolOr  <$> parseJSON v <?> Key k
-      | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
-      | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
-      | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
-      | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
-      | otherwise   -> fmap (BoolCol . ColExp (FieldName k)) $ parseJSON v
-    return $ BoolAnd boolExps
-  parseJSON _ = fail "expecting an Object for boolean exp"
-
-foldBoolExp :: (Monad m)
-            => (a -> m S.BoolExp)
-            -> GBoolExp a
-            -> m S.BoolExp
-foldBoolExp f (BoolAnd bes) = do
-  sqlBExps <- mapM (foldBoolExp f) bes
-  return $ foldr (S.BEBin S.AndOp) (S.BELit True) sqlBExps
-foldBoolExp f (BoolOr bes)  = do
-  sqlBExps <- mapM (foldBoolExp f) bes
-  return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
-foldBoolExp f (BoolNot notExp) =
-  S.BENot <$> foldBoolExp f notExp
-foldBoolExp f (BoolCol ce)  =
-  f ce
 
 newtype TQueryName
   = TQueryName { getTQueryName :: T.Text }

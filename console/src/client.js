@@ -24,12 +24,16 @@ import globals from './Globals';
 let _finalCreateStore;
 
 if (__DEVELOPMENT__) {
-  _finalCreateStore = compose(
+  const tools = [
     applyMiddleware(thunk, routerMiddleware(browserHistory), createLogger()),
     require('redux-devtools').persistState(
       window.location.href.match(/[?&]debug_session=([^&]+)\b/)
-    )
-  )(createStore);
+    ),
+  ];
+  if (typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION__) {
+    tools.push(window.__REDUX_DEVTOOLS_EXTENSION__());
+  }
+  _finalCreateStore = compose(...tools)(createStore);
 } else {
   _finalCreateStore = compose(
     applyMiddleware(thunk, routerMiddleware(browserHistory))

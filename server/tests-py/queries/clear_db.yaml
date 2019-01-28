@@ -1,0 +1,4 @@
+type: run_sql
+args:
+  sql: |
+    drop schema if exists hge_tests cascade; create schema hge_tests;

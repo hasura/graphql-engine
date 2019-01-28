@@ -14,32 +14,19 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
 	migrateCmd := &cobra.Command{
 		Use:          "migrate",
 		Short:        "Manage migrations on the database",
 		SilenceUsage: true,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return ec.Validate()
-		},
 	}
 	migrateCmd.AddCommand(
 		newMigrateApplyCmd(ec),
 		newMigrateStatusCmd(ec),
 		newMigrateCreateCmd(ec),
 	)
-	f := migrateCmd.PersistentFlags()
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return migrateCmd
 }
 
@@ -53,7 +40,7 @@ func newMigrate(dir string, db *url.URL, accessKey string, logger *logrus.Logger
 	return t, nil
 }
 
-func executeMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
+func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
 	var err error
 
 	switch cmd {
@@ -88,7 +75,6 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 	host := &url.URL{
 		Scheme: "hasuradb",
-		User:   url.UserPassword("admin", accessKey),
 		Host:   nurl.Host,
 		Path:   nurl.Path,
 	}
@@ -99,6 +85,9 @@ func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 		q.Set("sslmode", "enable")
 	default:
 		q.Set("sslmode", "disable")
+	}
+	if accessKey != "" {
+		q.Add("headers", "X-Hasura-Access-Key:"+accessKey)
 	}
 	host.RawQuery = q.Encode()
 	return host

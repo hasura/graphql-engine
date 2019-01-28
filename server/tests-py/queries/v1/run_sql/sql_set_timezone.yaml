@@ -1,0 +1,10 @@
+url: /v1/query
+status: 200
+response:
+  result: null
+  result_type: CommandOk
+query:
+  type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC'

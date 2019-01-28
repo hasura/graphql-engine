@@ -1,0 +1,35 @@
+description: Upserts author with id 1 as a user
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    insert_author:
+      affected_rows: 0
+      returning: []
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    mutation insert_author {
+      insert_author (
+        objects: [
+          {
+            id: 1
+            name: "Author 1"
+            is_registered: false
+          }
+          ],
+        on_conflict: {
+          constraint: author_pkey,
+          update_columns: []
+        }
+      ) {
+        affected_rows
+        returning {
+            id
+            name
+            is_registered
+          }
+        }
+      }

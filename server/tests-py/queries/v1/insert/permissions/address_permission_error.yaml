@@ -1,0 +1,18 @@
+description: Insert into order table as user role (Check Constraint Error)
+url: /v1/query
+status: 400
+headers:
+  X-Hasura-Role: merchant
+response:
+  path: $.args
+  error: 'insert on "address" for role "merchant" is not allowed. '
+  code: permission-denied
+query:
+  type: insert
+  args:
+    table: address
+    objects:
+      - door_no: 12-21
+        street: Madhapur 
+        city: Hyderabad 
+        resident_id: 1

@@ -1,0 +1,10 @@
+url: /v1/query
+status: 400
+query:
+  type: select
+  args:
+    table: author
+    columns:
+      - id
+      - name
+      - user

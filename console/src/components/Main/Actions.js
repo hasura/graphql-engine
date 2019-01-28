@@ -118,8 +118,9 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
           name: 'hdb_table',
           schema: 'hdb_catalog',
         },
-        columns: ['*'],
+        columns: ['table_schema'],
         where: { table_schema: currentSchema },
+        limit: 1,
       },
     }),
   };
@@ -128,12 +129,17 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
   }
   return dispatch(requestAction(url, options)).then(
     () => {
+      dispatch({ type: LOGIN_IN_PROGRESS, data: false });
+      dispatch({ type: LOGIN_ERROR, data: false });
       dispatch(push(globals.urlPrefix));
     },
     error => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: true });
       console.error('Failed to validate access key ' + JSON.stringify(error));
+      if (error.code !== 'access-denied') {
+        alert(JSON.stringify(error));
+      }
     }
   );
 };

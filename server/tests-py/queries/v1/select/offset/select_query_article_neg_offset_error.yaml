@@ -1,0 +1,22 @@
+description: Nested select on article with negative offset.
+url: /v1/query
+status: 400
+response:
+  code: not-supported
+  error: unexpected negative value
+  path: $.args.offset
+query:
+  type: select
+  args:
+    table: article
+    offset: -1
+    columns:
+    - id 
+    - title
+    - content
+    - name: author
+      columns:
+      - id
+      - name
+    order_by: -id
+    limit: 1
