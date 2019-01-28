@@ -1,3 +1,4 @@
+import React from 'react';
 import Notifications from 'react-notification-system-redux';
 import { setNotificationShownInDB } from './Actions';
 
@@ -22,6 +23,7 @@ const showTelemetryNotification = () => {
             <a
               href="https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html"
               target="_blank"
+              rel="noopener noreferrer"
             >
               {' '}
               Click here
