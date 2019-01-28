@@ -7,8 +7,8 @@ Exporting the Hasura GraphQL schema
   :local:
 
 If you need to share, introspect or export the GraphQL schema, you can use community tooling such as
-`graphqurl <https://github.com/hasura/graphqurl>`_, `apollo <https://github.com/apollographql/apollo-cli>`_,
-`get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`_, etc.
+`graphqurl <https://github.com/hasura/graphqurl>`__, `apollo <https://github.com/apollographql/apollo-cli>`__,
+`get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`__, etc.
 
 Using **graphqurl**
 -------------------

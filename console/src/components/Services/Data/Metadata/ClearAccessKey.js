@@ -7,6 +7,7 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../Notification';
+import Button from '../../Layout/Button/Button';
 
 class ClearAccessKey extends Component {
   constructor() {
@@ -15,13 +16,14 @@ class ClearAccessKey extends Component {
     this.state.isClearing = false;
   }
   render() {
-    const styles = require('../PageContainer/PageContainer.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
-        <button
+        <Button
           data-test="data-clear-access-key"
-          className={styles.default_button + ' ' + metaDataStyles.margin_right}
+          className={metaDataStyles.margin_right}
+          color="white"
+          size="sm"
           onClick={e => {
             e.preventDefault();
             this.setState({ isClearing: true });
@@ -52,7 +54,7 @@ class ClearAccessKey extends Component {
           }}
         >
           {this.state.isClearing ? 'Clearing...' : 'Clear access key (logout)'}
-        </button>
+        </Button>
       </div>
     );
   }

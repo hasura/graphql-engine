@@ -26,9 +26,9 @@ parseOpExps
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) -> case k of
-      "_eq"           -> fmap AEQ <$> asPGColValM v
-      "_ne"           -> fmap ANE <$> asPGColValM v
-      "_neq"          -> fmap ANE <$> asPGColValM v
+      "_eq"           -> fmap (AEQ True) <$> asPGColValM v
+      "_ne"           -> fmap (ANE True) <$> asPGColValM v
+      "_neq"          -> fmap (ANE True) <$> asPGColValM v
       "_is_null"      -> resolveIsNull v
 
       "_in"           -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
@@ -92,7 +92,7 @@ parseAsEqOp
   :: (MonadError QErr m)
   => AnnGValue -> m [OpExp]
 parseAsEqOp annVal = do
-  annValOpExp <- AEQ <$> asPGColVal annVal
+  annValOpExp <- AEQ True <$> asPGColVal annVal
   return [annValOpExp]
 
 parseColExp

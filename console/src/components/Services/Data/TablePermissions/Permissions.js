@@ -44,6 +44,7 @@ import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
 import semverCheck from '../../../../helpers/semver';
+import Button from '../../Layout/Button/Button';
 
 /* */
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
@@ -1358,15 +1359,17 @@ class Permissions extends Component {
       );
     };
 
-    const getButton = (value, customClasses, onClickFn, disabled) => (
-      <button
-        className={`${styles.editActionButton} button btn ${customClasses}`}
+    const getButton = (value, color, onClickFn, disabled) => (
+      <Button
+        className={styles.editActionButton}
+        color={color}
+        size="sm"
         onClick={onClickFn}
         disabled={disabled}
         data-test={`${value.split(' ').join('-')}-button`}
       >
         {value}
-      </button>
+      </Button>
     );
 
     const getButtonsSection = (tableSchema, permsState) => {
@@ -1400,19 +1403,19 @@ class Permissions extends Component {
 
       const saveButton = getButton(
         'Save permissions',
-        'btn-success',
+        'yellow',
         dispatchSavePermissions,
         disableSave
       );
 
       const removeAccessButton = getButton(
         'Remove',
-        'btn-danger',
+        'red',
         dispatchRemoveAccess,
         disableRemoveAccess
       );
 
-      const closeButton = getButton('Close', 'btn-default', dispatchCloseEdit);
+      const closeButton = getButton('Close', 'white', dispatchCloseEdit);
       const currentPermissions = tableSchema.permissions;
       const applySameSelected = e => {
         const isChecked = e.target.checked;
@@ -1463,19 +1466,23 @@ class Permissions extends Component {
             <div>Apply same {permsState.query} permissions to other roles</div>
             <div className={styles.add_mar_top_small}>{roleListHtml}</div>
             {permsState.applySamePermissions.length ? (
-              <button
+              <Button
                 onClick={applySameBulk}
-                className={'btn btn-default ' + styles.bulkApplyBtn}
+                className={styles.bulkApplyBtn}
+                color="white"
+                size="sm"
               >
                 Apply
-              </button>
+              </Button>
             ) : (
-              <button
-                className={'btn btn-default ' + styles.bulkApplyBtn}
+              <Button
+                color="white"
+                className={styles.bulkApplyBtn}
+                size="sm"
                 disabled
               >
                 Apply
-              </button>
+              </Button>
             )}
           </div>
         );
@@ -1552,12 +1559,9 @@ class Permissions extends Component {
             })}
           </div>
           <div className={styles.padd_bottom}>
-            <button
-              onClick={bulkDeleteClicked}
-              className={'btn btn-sm btn-default'}
-            >
+            <Button onClick={bulkDeleteClicked} color="red" size="sm">
               Delete
-            </button>
+            </Button>
           </div>
         </div>
       );

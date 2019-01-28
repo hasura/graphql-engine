@@ -1,0 +1,32 @@
+description: Search tracks of an artist (with Aggregate)
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: Artist
+  X-Hasura-Artist-Id: '1'
+response:
+  data:
+    search_tracks_aggregate:
+      aggregate:
+        count: 2
+      nodes:
+      - id: 1
+        name: Keepup
+        artist_id: 1
+      - id: 2
+        name: Keepdown
+        artist_id: 1
+query:
+  query: |
+    query {
+      search_tracks_aggregate(args: {search: "keep"}){
+        aggregate{
+          count
+        }
+        nodes{
+          id
+          name
+          artist_id
+        }
+      }
+    }

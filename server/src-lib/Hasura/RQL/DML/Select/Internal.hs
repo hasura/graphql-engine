@@ -1,6 +1,7 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
+  , mkFuncSelectWith
   , module Hasura.RQL.DML.Select.Types
   )
 where
@@ -608,3 +609,28 @@ mkSQLSelect isSingleObject annSel =
     baseNode = annSelToBaseNode (toIden rootFldName) rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
+
+mkFuncSelectWith
+  :: QualifiedFunction -> QualifiedTable
+  -> TablePerm -> TableArgs -> Either TableAggFlds AnnFlds
+  -> S.FromItem -> S.SelectWith
+mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
+  where
+    -- SELECT * FROM function_name(args)
+    funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
+                         , S.selExtr = [S.Extractor S.SEStar Nothing]
+                         }
+
+    mainSel = case eSelFlds of
+      Left aggFlds  -> mkAggSelect $
+                       AnnSelG aggFlds tabFrom tabPerm tabArgs
+      Right annFlds -> mkSQLSelect False $
+                       AnnSelG annFlds tabFrom tabPerm tabArgs
+
+    tabFrom = TableFrom tn $ Just $ toIden funcAls
+
+    QualifiedObject sn fn = qf
+    funcAls = S.Alias $ Iden $
+      getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"
+
+    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel

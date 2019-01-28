@@ -142,19 +142,6 @@ const TableHeader = ({
                 Permissions
               </Link>
             </li>
-            <li role="presentation" className={'hide'}>
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/permissions'
-                }
-              >
-                <button className="btn btn-xs btn-warning">Try out APIs</button>
-              </Link>
-            </li>
           </ul>
         </div>
         <div className="clearfix" />
