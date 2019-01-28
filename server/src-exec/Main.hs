@@ -202,19 +202,18 @@ main =  do
       either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
 
       -- generate and retrieve uuids
-      ids <- getUniqIds ci
-      either printErrJExit return ids
+      getUniqIds ci
 
     prepareEvents (Logger logger) ci = do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx ci unlockAllEvents
       either printErrJExit return res
 
-    getUniqIds ci =
-      runTx ci $ do
-        dbId <- getDbId
-        fp   <- liftIO generateFingerprint
-        return (dbId, fp)
+    getUniqIds ci = do
+      eDbId <- runTx ci getDbId
+      dbId <- either printErrJExit return eDbId
+      fp <- liftIO generateFingerprint
+      return (dbId, fp)
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
