@@ -87,7 +87,7 @@ parseOpExps annVal = do
       fromVal <- onNothing (OMap.lookup "from" obj) $
                  throw500 "expected \"from\" input field in st_d_within_input ty"
       from <- asPGColVal fromVal
-      return $ ASTDWithin dist from
+      return $ ASTDWithin $ WithinOp dist from
 
 parseAsEqOp
   :: (MonadError QErr m)
