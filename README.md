@@ -4,7 +4,7 @@
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
-<a href="https://discord.gg/3FNQnWj"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
+<a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
@@ -150,7 +150,7 @@ Check out all the example applications in the
 
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
-* Support & feedback: [Discord](https://discord.gg/3FNQnWj)
+* Support & feedback: [Discord](https://discord.gg/vBPpJkS)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Talk to us on our [website chat](https://hasura.io)
@@ -194,9 +194,7 @@ License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). We have
 written more about what you can and cannot do under AGPL
 [here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
 
-**Commercial licenses** that bundle the Hasura GraphQL Engine with support and
-SLAs are available on request. Please feel free to contact us at build@hasura.io
-or on our [website chat](https://hasura.io). 
+**Commercial licenses** are available on request. Typically, they come bundled with support plans and SLAs. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).

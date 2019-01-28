@@ -1,11 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
-
 module Hasura.RQL.GBoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
@@ -101,8 +93,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = case opStr of
 
   x           -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
   where
-    parseEq       = AEQ <$> parseOne -- equals
-    parseNe       = ANE <$> parseOne -- <>
+    parseEq       = AEQ False <$> parseOne -- equals
+    parseNe       = ANE False <$> parseOne -- <>
     parseIn       = AIN <$> parseMany -- in an array
     parseNin      = ANIN <$> parseMany -- not in an array
     parseGt       = AGT <$> parseOne -- >
@@ -150,7 +142,7 @@ parseOpExps
   -> m [OpExpG a]
 parseOpExps valParser cim colInfo = \case
   (Object o) -> mapM (parseOpExp valParser cim colInfo)(M.toList o)
-  val        -> pure . AEQ <$> valParser (pgiType colInfo) val
+  val        -> pure . AEQ False <$> valParser (pgiType colInfo) val
 
 type ValueParser m a = PGColType -> Value -> m a
 
@@ -265,8 +257,10 @@ txtRHSBuilder ty val =
 mkColCompExp
   :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
 mkColCompExp qual lhsCol = \case
-  AEQ val          -> equalsBoolExpBuilder lhs val
-  ANE val          -> notEqualsBoolExpBuilder lhs val
+  AEQ False val    -> equalsBoolExpBuilder lhs val
+  AEQ True val     -> S.BECompare S.SEQ lhs val
+  ANE False val    -> notEqualsBoolExpBuilder lhs val
+  ANE True  val    -> S.BECompare S.SNE lhs val
   AIN vals         -> handleEmptyIn vals
   ANIN vals        -> S.BENot $ handleEmptyIn vals
   AGT val          -> S.BECompare S.SGT lhs val
@@ -284,6 +278,16 @@ mkColCompExp qual lhsCol = \case
   AHasKey val      -> S.BECompare S.SHasKey lhs val
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+
+  ASTContains val   -> mkGeomOpBe "ST_Contains" val
+  ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
+  ASTDWithin r val  -> applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTEquals val     -> mkGeomOpBe "ST_Equals" val
+  ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
+  ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
+  ASTTouches val    -> mkGeomOpBe "ST_Touches" val
+  ASTWithin val     -> mkGeomOpBe "ST_Within" val
+
   ANISNULL         -> S.BENull lhs
   ANISNOTNULL      -> S.BENotNull lhs
   CEQ rhsCol       -> S.BECompare S.SEQ lhs $ mkQCol rhsCol
@@ -298,6 +302,10 @@ mkColCompExp qual lhsCol = \case
 
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+
+    mkGeomOpBe fn v = applySQLFn fn [lhs, v]
+
+    applySQLFn f exps = S.BEExp $ S.SEFnApp f exps Nothing
 
     handleEmptyIn []   = S.BELit False
     handleEmptyIn vals = S.BEIN lhs vals

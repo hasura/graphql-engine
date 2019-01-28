@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../Layout/Button/Button';
 
 import {
   removeHeader,
@@ -249,6 +250,7 @@ class AddTrigger extends Component {
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
+          const columnDataType = colObj.udt_name;
           const checked = operations[type]
             ? operations[type].includes(column)
             : false;
@@ -264,14 +266,12 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div
-              key={i}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-            >
-              <div className="checkbox">
+            <div key={i} className={styles.noPadd + ' col-md-4'}>
+              <div className={'checkbox '}>
                 <label>
                   {inputHtml}
                   {column}
+                  <small> ({columnDataType})</small>
                 </label>
               </div>
             </div>
@@ -293,7 +293,10 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div>{getColumnList('update')}</div>
+          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+            {' '}
+            {getColumnList('update')}{' '}
+          </div>
         ) : (
           <div>
             <div
@@ -395,42 +398,42 @@ class AddTrigger extends Component {
             }}
             data-test={`header-${i}`}
           />
-          <select
-            value={header.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
-              styles.add_pad_left
-            } ${styles.add_mar_right}`}
-            onChange={e => {
-              dispatch(setHeaderType(e.target.value, i));
-              if (i + 1 === headers.length) {
-                dispatch(addHeader());
+          <div className={styles.dropDownGroup}>
+            <DropdownButton
+              dropdownOptions={[
+                { display_text: 'Value', value: 'static' },
+                { display_text: 'From env var', value: 'env' },
+              ]}
+              title={
+                (header.type === 'static' && 'Value') ||
+                (header.type === 'env' && 'From env var') ||
+                'Value'
               }
-            }}
-            data-test={`header-type-${i}`}
-          >
-            {header.type === '' ? (
-              <option disabled value="">
-                -- value type --
-              </option>
-            ) : null}
-            <option value="static" key="0" title="static">
-              static
-            </option>
-            <option value="env" key="1" title="env">
-              from env variable
-            </option>
-          </select>{' '}
-          <input
-            type="text"
-            className={`${styles.input} form-control ${styles.add_mar_right}`}
-            value={header.value}
-            placeholder="value"
-            onChange={e => {
-              dispatch(setHeaderValue(e.target.value, i));
-            }}
-            data-test={`header-value-${i}`}
-          />{' '}
-          {removeIcon}
+              dataKey={
+                (header.type === 'static' && 'static') ||
+                (header.type === 'env' && 'env')
+              }
+              title={header.type === 'env' ? 'From env var' : 'Value'}
+              dataKey={header.type === 'env' ? 'env' : 'static'}
+              onButtonChange={e => {
+                dispatch(setHeaderType(e.target.getAttribute('value'), i));
+              }}
+              onInputChange={e => {
+                dispatch(setHeaderValue(e.target.value, i));
+                if (i + 1 === headers.length) {
+                  dispatch(addHeader());
+                }
+              }}
+              bsClass={styles.dropdown_button}
+              inputVal={header.value}
+              id={`header-value-${i}`}
+              inputPlaceHolder={
+                header.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+              }
+              testId={`header-value-${i}`}
+            />
+          </div>
+          <div>{removeIcon}</div>
         </div>
       );
     });
@@ -649,19 +652,18 @@ class AddTrigger extends Component {
                 )}
               </div>
               <hr />
-              <button
+              <div
                 onClick={this.toggleAdvanced.bind(this)}
+                className={styles.toggleAdvanced}
                 data-test="advanced-settings"
-                type="button"
-                className={'btn btn-default ' + styles.advancedToggleBtn}
               >
-                Advanced Settings
                 {this.state.advancedExpanded ? (
-                  <i className={'fa fa-arrow-up'} />
+                  <i className={'fa fa-chevron-down'} />
                 ) : (
-                  <i className={'fa fa-arrow-down'} />
-                )}
-              </button>
+                  <i className={'fa fa-chevron-right'} />
+                )}{' '}
+                <b>Advanced Settings</b>
+              </div>
               {this.state.advancedExpanded ? (
                 <div
                   className={
@@ -669,12 +671,20 @@ class AddTrigger extends Component {
                     ' ' +
                     styles.add_mar_bottom +
                     ' ' +
-                    styles.add_mar_top
+                    styles.add_mar_top +
+                    ' ' +
+                    styles.wd100
                   }
                 >
                   {tableName ? advancedColumnSection : null}
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div
@@ -723,7 +733,13 @@ class AddTrigger extends Component {
                     </div>
                   </div>
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
@@ -731,13 +747,14 @@ class AddTrigger extends Component {
                 </div>
               ) : null}
               <hr />
-              <button
+              <Button
                 type="submit"
-                className={`btn ${styles.yellow_button}`}
+                color="yellow"
+                size="sm"
                 data-test="trigger-create"
               >
                 {createBtnText}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

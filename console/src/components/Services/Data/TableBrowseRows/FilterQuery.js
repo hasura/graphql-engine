@@ -22,6 +22,7 @@ import {
   removeOrder,
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
+import Button from '../../Layout/Button/Button';
 
 const renderCols = (colName, tableSchema, onChange, usage, key) => {
   const columns = tableSchema.columns.map(c => c.column_name);
@@ -198,13 +199,14 @@ class FilterQuery extends Component {
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
-            <button
+            <Button
               type="submit"
-              className={`btn ${styles.yellow_button}`}
+              color="yellow"
+              size="sm"
               data-test="run-query"
             >
               Run query
-            </button>
+            </Button>
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>
         </form>

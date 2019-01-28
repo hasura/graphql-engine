@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap
@@ -38,6 +30,7 @@ module Hasura.GraphQL.Validate.Types
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
+  , typeEq
   , AnnGValue(..)
   , AnnGObject
   , hasNullVal
@@ -63,6 +56,16 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+
+-- | Typeclass for equating relevant properties of various GraphQL types
+-- | defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a
+
+typeEq :: (EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
+typeEq a b = getEqProps a == getEqProps b
+
 data EnumValInfo
   = EnumValInfo
   { _eviDesc         :: !(Maybe G.Description)
@@ -82,24 +85,32 @@ data EnumTyInfo
   , _etiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+instance EquatableGType EnumTyInfo where
+  type EqProps EnumTyInfo = (G.NamedType, Map.HashMap G.EnumValue EnumValInfo)
+  getEqProps ety = (,) (_etiName ety) (_etiValues ety)
+
 fromEnumTyDef :: G.EnumTypeDefinition -> TypeLoc -> EnumTyInfo
 fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
   EnumTyInfo descM (G.NamedType n) enumVals loc
   where
-    enumVals = Map.fromList $
+    enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
 data InpValInfo
   = InpValInfo
-  { _iviDesc :: !(Maybe G.Description)
-  , _iviName :: !G.Name
-  , _iviType :: !G.GType
-  -- TODO, handle default values
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift)
 
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
+
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
-fromInpValDef (G.InputValueDefinition descM n ty _) =
-  InpValInfo descM n ty
+fromInpValDef (G.InputValueDefinition descM n ty defM) =
+  InpValInfo descM n defM ty
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
@@ -120,6 +131,10 @@ data ObjFldInfo
   , _fiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+instance EquatableGType ObjFldInfo where
+  type EqProps ObjFldInfo = (G.Name, G.GType, ParamMap)
+  getEqProps o = (,,) (_fiName o) (_fiTy o) (_fiParams o)
+
 fromFldDef :: G.FieldDefinition -> TypeLoc -> ObjFldInfo
 fromFldDef (G.FieldDefinition descM n args ty _) loc =
   ObjFldInfo descM n params ty loc
@@ -134,6 +149,11 @@ data ObjTyInfo
   , _otiName   :: !G.NamedType
   , _otiFields :: !ObjFieldMap
   } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType ObjTyInfo where
+  type EqProps ObjTyInfo =
+    (G.NamedType, Map.HashMap G.Name (G.Name, G.GType, ParamMap))
+  getEqProps a = (,) (_otiName a) (Map.map getEqProps (_otiFields a))
 
 instance Monoid ObjTyInfo where
   mempty = ObjTyInfo Nothing (G.NamedType "") Map.empty
@@ -172,6 +192,10 @@ data InpObjTyInfo
   , _iotiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
+instance EquatableGType InpObjTyInfo where
+  type EqProps InpObjTyInfo = (G.NamedType, Map.HashMap G.Name (G.Name, G.GType))
+  getEqProps a = (,) (_iotiName a) (Map.map getEqProps $ _iotiFields a)
+
 fromInpObjTyDef :: G.InputObjectTypeDefinition -> TypeLoc -> InpObjTyInfo
 fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) loc =
   InpObjTyInfo descM (G.NamedType n) fldMap loc
@@ -185,6 +209,10 @@ data ScalarTyInfo
   , _stiType :: !PGColType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
+
+instance EquatableGType ScalarTyInfo where
+  type EqProps ScalarTyInfo = PGColType
+  getEqProps = _stiType
 
 fromScalarTyDef
   :: G.ScalarTypeDefinition
@@ -289,8 +317,8 @@ defaultDirectives =
   [mkDirective "skip", mkDirective "include"]
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
-    args = Map.singleton "if" $ InpValInfo Nothing "if" $
-           G.TypeNamed (G.Nullability True) $ G.NamedType $ G.Name "Boolean"
+    args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing $
+           G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 

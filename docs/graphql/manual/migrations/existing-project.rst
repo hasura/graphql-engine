@@ -55,13 +55,13 @@ Step 1: Install the Hasura CLI
       .. note::
 
          You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this `link
-         <https://git-scm.com/download/win>`_. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
+         <https://git-scm.com/download/win>`__. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
          default console.
 
       Download the ``hasura`` installer:
 
-      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
-      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
+      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`__
+      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`__
 
       **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still
       getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
@@ -114,6 +114,10 @@ Step 3: Initialize the migrations as per your current state
 
 - Remove ``migrations/<version>_first.down.{sql,yaml}`` migration files if you are not adding down migrations for these
 
+.. note::
+
+  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.sql``
+
 Step 4: Use the console from the CLI
 ------------------------------------
 
@@ -135,7 +139,7 @@ in the ``migrations/`` directory in your project.
 
 .. note::
 
-   Migrations are only created when using the Console through CLI.
+   Migrations are only created when using the console through CLI.
 
 Step 6: Apply the migrations to another instance of the GraphQL engine
 ----------------------------------------------------------------------

@@ -19,10 +19,22 @@
   width: 100%;
   .schemaSidebarSection {
     display: inline-block;
-    width: 60%;
+    width: 100%;
+    padding-left: 15px;
+    a
+    {
+      display: inline-block !important;
+      font-weight: bold;
+    }
   }
 }
-
+.changeSchema
+{
+  width: 50%;
+  margin-left: 10px;
+  display: inline-block;
+  font-weight: bold;
+}
 .aceBlock {
   max-height: 300px;
   position: relative;
@@ -186,4 +198,9 @@ a.expanded {
 .tableCellCenterAlignedExpanded {
   text-align: center;
   white-space: normal;
+}
+
+.sidebarMigration {
+  display: block !important;
+  clear: both !important;
 }

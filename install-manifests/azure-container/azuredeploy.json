@@ -1,0 +1,129 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "defaultValue": null,
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 63,
+      "metadata": {
+        "description": "Unique name for the deployment, used for Hasura and DNS label."
+      }
+    },
+    "postgresHost (ServerName)": {
+      "type": "string",
+      "defaultValue": null,
+      "metadata": {
+        "description": "Server name (hostname) for the Postgres server. Typically like pg-server-name.postgres.database.azure.com"
+      }
+    },
+    "postgresPort": {
+      "type": "int",
+      "defaultValue": 5432,
+      "metadata": {
+        "description": "Port for the Postgres server."
+      }
+    },
+    "postgresUsername (ServerAdminLoginName)": {
+      "type": "string",
+      "defaultValue": null,
+      "metadata": {
+        "description": "Username for Postgres. Typically like hasura@pg-server-name"
+      }
+    },
+    "postgresPassword": {
+      "type": "securestring",
+      "defaultValue": null,
+      "metadata": {
+        "description": "Password for Postgres user."
+      }
+    },
+    "postgresDatabaseName": {
+      "type": "string",
+      "defaultValue": null,
+      "metadata": {
+        "description": "Name of the database to connect."
+      }
+    }
+  },
+  "variables": {
+    "pgHost": "[parameters('postgresHost (ServerName)')]",
+    "pgPort": "[parameters('postgresPort')]",
+    "pgUser": "[parameters('postgresUsername (ServerAdminLoginName)')]",
+    "pgPassword": "[parameters('postgresPassword')]",
+    "dbName": "[parameters('postgresDatabaseName')]",
+    "containerGroupName": "[concat(parameters('name'), '-container-group')]",
+    "containerName": "hasura-graphql-engine",
+    "containerImage": "hasura/graphql-engine:v1.0.0-alpha35"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "name": "[variables('containerGroupName')]",
+      "apiVersion": "2018-10-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('containerName')]",
+            "properties": {
+              "image": "[variables('containerImage')]",
+              "ports": [
+                {
+                  "protocol": "TCP",
+                  "port": 80
+                }
+              ],
+              "command": [
+                "graphql-engine",
+                "--host",
+                "[variables('pgHost')]",
+                "--port",
+                "[variables('pgPort')]",
+                "--user",
+                "[variables('pgUser')]",
+                "--password",
+                "[variables('pgPassword')]",
+                "--dbname",
+                "[variables('dbName')]",
+                "serve",
+                "--server-port",
+                "80",
+                "--enable-console"
+              ],
+              "resources": {
+                "requests": {
+                  "memoryInGB": 1,
+                  "cpu": 1
+                }
+              }
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "ipAddress": {
+          "ports": [
+            {
+              "protocol": "TCP",
+              "port": 80
+            }
+          ],
+          "type": "Public",
+          "dnsNameLabel": "[parameters('name')]"
+        },
+        "osType": "Linux"
+      }
+    }
+  ],
+  "outputs": {
+    "fqdn": {
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('containerGroupName'))).ipAddress.fqdn]",
+      "type": "string"
+    },
+    "ipaddress": {
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('containerGroupName'))).ipAddress.ip]",
+      "type": "string"
+    }
+  }
+}

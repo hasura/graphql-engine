@@ -243,7 +243,7 @@ const addTriggerReducer = (state = defaultState, action) => {
     case ADD_HEADER:
       return {
         ...state,
-        headers: [...state.headers, { key: '', type: '', value: '' }],
+        headers: [...state.headers, { key: '', type: 'static', value: '' }],
       };
     case REMOVE_HEADER:
       return {

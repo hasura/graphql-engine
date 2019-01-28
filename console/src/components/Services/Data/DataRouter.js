@@ -21,13 +21,15 @@ import {
   permissionsConnector,
   dataHeaderConnector,
   migrationsConnector,
+  functionWrapperConnector,
+  ModifyCustomFunction,
+  PermissionCustomFunction,
   // metadataConnector,
 } from '.';
 
 import {
-  loadSchema,
-  loadUntrackedSchema,
-  fetchSchemaList,
+  fetchDataInit,
+  fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   // UPDATE_DATA_HEADERS,
   // ACCESS_KEY_ERROR,
@@ -52,6 +54,14 @@ const makeDataRouter = (
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
         <Route path=":schema/views" component={schemaConnector(connect)} />
+        <Route
+          path=":schema/functions/:functionName"
+          component={functionWrapperConnector(connect)}
+        >
+          <IndexRedirect to="modify" />
+          <Route path="modify" component={ModifyCustomFunction} />
+          <Route path="permissions" component={PermissionCustomFunction} />
+        </Route>
         <Route
           path=":schema/tables/:table/browse"
           component={viewTableConnector(connect)}
@@ -146,9 +156,8 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
         type: UPDATE_CURRENT_SCHEMA,
         currentSchema: currentSchema,
       }),
-      store.dispatch(fetchSchemaList()),
-      store.dispatch(loadSchema()),
-      store.dispatch(loadUntrackedSchema()),
+      store.dispatch(fetchDataInit()),
+      store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {
         cb();

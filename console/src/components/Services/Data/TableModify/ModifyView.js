@@ -15,6 +15,7 @@ import {
 } from './ModifyActions';
 import { ordinalColSort } from '../utils';
 import { setTable, fetchTableComment } from '../DataActions';
+import Button from '../../Layout/Button/Button';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -83,9 +84,9 @@ class ModifyView extends Component {
           <div className="container-fluid">
             <div className="row">
               <h5 className={styles.padd_bottom}>
-                <button disabled="disabled" className="btn btn-xs btn-warning">
+                <Button disabled="disabled" size="xs" color="yellow">
                   {btnText}
-                </button>{' '}
+                </Button>{' '}
                 &nbsp; {c.column_name}
               </h5>
             </div>
@@ -95,9 +96,11 @@ class ModifyView extends Component {
     });
 
     const untrackBtn = (
-      <button
+      <Button
         type="submit"
-        className={styles.add_mar_right + ' btn btn-sm btn-default'}
+        className={styles.add_mar_right}
+        color="white"
+        size="sm"
         onClick={() => {
           const isOk = confirm('Are you sure to untrack?');
           if (isOk) {
@@ -107,7 +110,7 @@ class ModifyView extends Component {
         data-test="untrack-view"
       >
         Untrack View
-      </button>
+      </Button>
     );
 
     const editCommentClicked = () => {
@@ -210,25 +213,23 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            <button
+            <Button
               type="submit"
-              className={
-                'btn btn-sm ' +
-                styles.yellow_button +
-                ' ' +
-                styles.add_mar_right
-              }
+              color="yellow"
+              size="sm"
+              className={styles.add_mar_right}
               onClick={() => {
                 this.modifyViewDefinition(tableName);
               }}
               data-test="modify-view"
             >
               Modify
-            </button>
+            </Button>
             {untrackBtn}
-            <button
+            <Button
               type="submit"
-              className={'btn btn-sm btn-danger'}
+              color="red"
+              size="sm"
               onClick={() => {
                 const isOk = confirm('Are you sure');
                 if (isOk) {
@@ -238,7 +239,7 @@ class ModifyView extends Component {
               data-test="delete-view"
             >
               Delete view
-            </button>
+            </Button>
             <br />
             <br />
           </div>

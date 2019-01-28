@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Hasura.RQL.DDL.RemoteSchema where
+module Hasura.RQL.DDL.RemoteSchema
+  ( runAddRemoteSchema
+  , runRemoveRemoteSchema
+  , writeRemoteSchemasToCache
+  , refreshGCtxMapInSchema
+  , fetchRemoteSchemas
+  , addRemoteSchemaP2
+  ) where
 
 import           Hasura.Prelude
 
@@ -18,17 +19,15 @@ import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Schema       as GS
 
-
-instance HDBQuery AddRemoteSchemaQuery where
-  type Phase1Res AddRemoteSchemaQuery = AddRemoteSchemaQuery
-  phaseOne   = addRemoteSchemaP1
-  phaseTwo _ = addRemoteSchemaP2
-  schemaCachePolicy = SCPReload
-
-addRemoteSchemaP1
-  :: (P1C m)
-  => AddRemoteSchemaQuery -> m AddRemoteSchemaQuery
-addRemoteSchemaP1 q = adminOnly >> return q
+runAddRemoteSchema
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m
+     , HasHttpManager m
+     )
+  => AddRemoteSchemaQuery -> m RespBody
+runAddRemoteSchema q = do
+  adminOnly
+  addRemoteSchemaP2 q
 
 addRemoteSchemaP2
   :: ( QErrM m
@@ -46,7 +45,7 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   let defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager name rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
-  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   newGCtxMap <- mergeRemoteSchema newHsraGCtxMap newDefGCtx
   liftTx $ addRemoteSchemaToCatalog q
   addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
@@ -81,22 +80,21 @@ refreshGCtxMapInSchema
   => m ()
 refreshGCtxMapInSchema = do
   sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   httpMgr <- askHttpManager
   (mergedGCtxMap, defGCtx) <-
     mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap
                       , scDefaultRemoteGCtx = defGCtx }
 
-
-instance HDBQuery RemoveRemoteSchemaQuery where
-  type Phase1Res RemoveRemoteSchemaQuery = RemoveRemoteSchemaQuery
-  phaseOne   = removeRemoteSchemaP1
-  phaseTwo _ = removeRemoteSchemaP2
-  schemaCachePolicy = SCPReload
+runRemoveRemoteSchema
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RemoveRemoteSchemaQuery -> m RespBody
+runRemoveRemoteSchema q =
+  removeRemoteSchemaP1 q >>= removeRemoteSchemaP2
 
 removeRemoteSchemaP1
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m)
   => RemoveRemoteSchemaQuery -> m RemoveRemoteSchemaQuery
 removeRemoteSchemaP1 q = adminOnly >> return q
 
@@ -119,7 +117,7 @@ removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   let resolvers = scRemoteResolvers sc
       newResolvers = Map.filterWithKey (\n _ -> n /= name) resolvers
 
-  newGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   (mergedGCtxMap, defGCtx) <- mergeSchemas newResolvers newGCtxMap hMgr
   removeRemoteSchemaFromCache newResolvers mergedGCtxMap defGCtx
   liftTx $ removeRemoteSchemaFromCatalog name

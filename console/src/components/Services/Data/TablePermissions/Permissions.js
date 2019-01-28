@@ -44,6 +44,7 @@ import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
 import semverCheck from '../../../../helpers/semver';
+import Button from '../../Layout/Button/Button';
 
 /* */
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
@@ -204,16 +205,22 @@ class Permissions extends Component {
   }
   checkSemVer(version) {
     let showAggregation = false;
+    let showUpsertSection = false;
     try {
       showAggregation = semverCheck('aggregationPerm', version);
-      if (showAggregation) {
-        this.setState({ ...this.state, showAggregation: true });
-      } else {
-        this.setState({ ...this.state, showAggregation: false });
-      }
+      showUpsertSection = !semverCheck('permHideUpsertSection', version);
+      this.setState({
+        ...this.state,
+        showAggregation,
+        showUpsertSection,
+      });
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showAggregation: false });
+      this.setState({
+        ...this.state,
+        showAggregation: false,
+        showUpsertSection: false,
+      });
     }
     return Promise.resolve();
   }
@@ -460,21 +467,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-          <input
-            onChange={dispatchBulkSelect}
-            checked="checked"
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        ) : (
-          <input
-            onChange={dispatchBulkSelect}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+            <input
+              onChange={dispatchBulkSelect}
+              checked="checked"
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          ) : (
+            <input
+              onChange={dispatchBulkSelect}
+              data-role={role}
+              className={styles.bulkSelect}
+              type="checkbox"
+            />
+          );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -685,9 +692,12 @@ class Permissions extends Component {
         </div>
       );
     };
-
     const getUpsertSection = permsState => {
-      let _upsertSection = '';
+      if (!this.state.showUpsertSection) {
+        return null;
+      }
+
+      let _upsertSection;
       const query = permsState.query;
 
       if (query === 'insert') {
@@ -730,7 +740,6 @@ class Permissions extends Component {
           </div>
         );
       }
-
       return _upsertSection;
     };
 
@@ -770,164 +779,164 @@ class Permissions extends Component {
         const setOptions =
           insertState && insertState.localSet && insertState.localSet.length > 0
             ? insertState.localSet.map((s, i) => {
-                return (
-                  <div className={styles.insertSetConfigRow} key={i}>
-                    <div
-                      className={
-                        styles.display_inline +
+              return (
+                <div className={styles.insertSetConfigRow} key={i}>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
+                    }
+                  >
+                    <select
+                      className="input-sm form-control"
+                      value={s.key}
+                      onChange={this.onSetKeyChange.bind(this)}
+                      data-index-id={i}
+                      disabled={disableInput}
                     >
-                      <select
-                        className="input-sm form-control"
-                        value={s.key}
-                        onChange={this.onSetKeyChange.bind(this)}
-                        data-index-id={i}
-                        disabled={disableInput}
-                      >
-                        <option value="" disabled>
+                      <option value="" disabled>
                           Column Name
-                        </option>
-                        {columns && columns.length > 0
-                          ? columns.map((c, key) => (
-                              <option
-                                value={c.column_name}
-                                data-column-type={c.data_type}
-                                key={key}
-                              >
-                                {c.column_name}
-                              </option>
-                            ))
-                          : null}
-                      </select>
-                    </div>
-                    <div
-                      className={
-                        styles.display_inline +
+                      </option>
+                      {columns && columns.length > 0
+                        ? columns.map((c, key) => (
+                          <option
+                            value={c.column_name}
+                            data-column-type={c.data_type}
+                            key={key}
+                          >
+                            {c.column_name}
+                          </option>
+                        ))
+                        : null}
+                    </select>
+                  </div>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
+                    }
+                  >
+                    <select
+                      className="input-sm form-control"
+                      onChange={this.onSetTypeChange.bind(this)}
+                      data-index-id={i}
+                      value={setConfigValueType(s.value) || ''}
+                      disabled={disableInput}
                     >
-                      <select
-                        className="input-sm form-control"
-                        onChange={this.onSetTypeChange.bind(this)}
-                        data-index-id={i}
-                        value={setConfigValueType(s.value) || ''}
-                        disabled={disableInput}
-                      >
-                        <option value="" disabled>
+                      <option value="" disabled>
                           Select Preset Type
-                        </option>
-                        <option value="static">static</option>
-                        <option value="session">from session variable</option>
-                      </select>
-                    </div>
-                    <div
-                      className={
-                        styles.display_inline +
+                      </option>
+                      <option value="static">static</option>
+                      <option value="session">from session variable</option>
+                    </select>
+                  </div>
+                  <div
+                    className={
+                      styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                      }
-                    >
-                      {setConfigValueType(s.value) === 'session' ? (
-                        <InputGroup>
-                          <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                          <input
-                            className={'input-sm form-control '}
-                            placeholder="column_value"
-                            value={s.value.slice(X_HASURA_CONST.length)}
-                            onChange={this.onSetValueChange.bind(this)}
-                            onBlur={e => this.onSetValueBlur(e, i, null)}
-                            data-index-id={i}
-                            data-prefix-val={X_HASURA_CONST}
-                            disabled={disableInput}
-                          />
-                        </InputGroup>
-                      ) : (
-                        <EnhancedInput
+                    }
+                  >
+                    {setConfigValueType(s.value) === 'session' ? (
+                      <InputGroup>
+                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                        <input
+                          className={'input-sm form-control '}
                           placeholder="column_value"
-                          type={
-                            i in this.state.insertSetOperations.columnTypeMap
-                              ? this.state.insertSetOperations.columnTypeMap[i]
-                              : ''
-                          }
-                          value={s.value}
+                          value={s.value.slice(X_HASURA_CONST.length)}
                           onChange={this.onSetValueChange.bind(this)}
-                          onBlur={this.onSetValueBlur}
-                          indexId={i}
+                          onBlur={e => this.onSetValueBlur(e, i, null)}
+                          data-index-id={i}
                           data-prefix-val={X_HASURA_CONST}
                           disabled={disableInput}
                         />
-                      )}
-                    </div>
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                        }
-                      >
-                        e.g. X-Hasura-User-Id
-                      </div>
+                      </InputGroup>
                     ) : (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
+                      <EnhancedInput
+                        placeholder="column_value"
+                        type={
+                          i in this.state.insertSetOperations.columnTypeMap
+                            ? this.state.insertSetOperations.columnTypeMap[i]
+                            : ''
                         }
-                      >
-                        e.g. false, 1, some-text
-                      </div>
-                    )}
-                    {i !== insertState.localSet.length - 1 ? (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                        }
-                      >
-                        <i
-                          className="fa-lg fa fa-times"
-                          onClick={
-                            !disableInput ? this.deleteSetKeyVal.bind(this) : ''
-                          }
-                          data-index-id={i}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className={
-                          styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                        }
+                        value={s.value}
+                        onChange={this.onSetValueChange.bind(this)}
+                        onBlur={this.onSetValueBlur}
+                        indexId={i}
+                        data-prefix-val={X_HASURA_CONST}
+                        disabled={disableInput}
                       />
                     )}
                   </div>
-                );
-              })
+                  {setConfigValueType(s.value) === 'session' ? (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                      }
+                    >
+                        e.g. X-Hasura-User-Id
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                      }
+                    >
+                        e.g. false, 1, some-text
+                    </div>
+                  )}
+                  {i !== insertState.localSet.length - 1 ? (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                      }
+                    >
+                      <i
+                        className="fa-lg fa fa-times"
+                        onClick={
+                          !disableInput ? this.deleteSetKeyVal.bind(this) : ''
+                        }
+                        data-index-id={i}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                      }
+                    />
+                  )}
+                </div>
+              );
+            })
             : null;
 
         return (
@@ -1069,10 +1078,18 @@ class Permissions extends Component {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
+        let accessText;
+        if (query === 'insert') {
+          accessText = 'Allow input for';
+        } else if (query === 'select') {
+          accessText = 'Allow access to';
+        } else {
+          accessText = 'Allow updates to';
+        }
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>
-              With access to <b>columns</b>:
+              {accessText} these <b>columns</b>:
               <span
                 className={styles.toggleAll}
                 onClick={dispatchToggleAllColumns}
@@ -1342,15 +1359,17 @@ class Permissions extends Component {
       );
     };
 
-    const getButton = (value, customClasses, onClickFn, disabled) => (
-      <button
-        className={`${styles.editActionButton} button btn ${customClasses}`}
+    const getButton = (value, color, onClickFn, disabled) => (
+      <Button
+        className={styles.editActionButton}
+        color={color}
+        size="sm"
         onClick={onClickFn}
         disabled={disabled}
         data-test={`${value.split(' ').join('-')}-button`}
       >
         {value}
-      </button>
+      </Button>
     );
 
     const getButtonsSection = (tableSchema, permsState) => {
@@ -1384,19 +1403,19 @@ class Permissions extends Component {
 
       const saveButton = getButton(
         'Save permissions',
-        'btn-success',
+        'yellow',
         dispatchSavePermissions,
         disableSave
       );
 
       const removeAccessButton = getButton(
         'Remove',
-        'btn-danger',
+        'red',
         dispatchRemoveAccess,
         disableRemoveAccess
       );
 
-      const closeButton = getButton('Close', 'btn-default', dispatchCloseEdit);
+      const closeButton = getButton('Close', 'white', dispatchCloseEdit);
       const currentPermissions = tableSchema.permissions;
       const applySameSelected = e => {
         const isChecked = e.target.checked;
@@ -1447,19 +1466,23 @@ class Permissions extends Component {
             <div>Apply same {permsState.query} permissions to other roles</div>
             <div className={styles.add_mar_top_small}>{roleListHtml}</div>
             {permsState.applySamePermissions.length ? (
-              <button
+              <Button
                 onClick={applySameBulk}
-                className={'btn btn-default ' + styles.bulkApplyBtn}
+                className={styles.bulkApplyBtn}
+                color="white"
+                size="sm"
               >
                 Apply
-              </button>
+              </Button>
             ) : (
-              <button
-                className={'btn btn-default ' + styles.bulkApplyBtn}
+              <Button
+                color="white"
+                className={styles.bulkApplyBtn}
+                size="sm"
                 disabled
               >
                 Apply
-              </button>
+              </Button>
             )}
           </div>
         );
@@ -1536,12 +1559,9 @@ class Permissions extends Component {
             })}
           </div>
           <div className={styles.padd_bottom}>
-            <button
-              onClick={bulkDeleteClicked}
-              className={'btn btn-sm btn-default'}
-            >
+            <Button onClick={bulkDeleteClicked} color="red" size="sm">
               Delete
-            </button>
+            </Button>
           </div>
         </div>
       );

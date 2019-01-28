@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
-
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -82,7 +76,7 @@ data Event
   } deriving (Show, Eq)
 
 instance ToJSON Event where
-  toJSON (Event eid (QualifiedTable sn tn) trigger event _ created)=
+  toJSON (Event eid (QualifiedObject sn tn) trigger event _ created)=
     object [ "id" .= eid
            , "table"  .= object [ "schema" .= sn
                                 , "name"  .= tn
@@ -94,13 +88,13 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
-data Request
-  = Request
+data WebhookRequest
+  = WebhookRequest
   { _rqPayload :: Value
   , _rqHeaders :: Maybe [HeaderConf]
   , _rqVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''Request)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
 
 data WebhookResponse
   = WebhookResponse
@@ -123,7 +117,7 @@ data Invocation
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
-  , iRequest  :: Request
+  , iRequest  :: WebhookRequest
   , iResponse :: Response
   }
 
@@ -152,7 +146,6 @@ initEventEngineCtx maxT fetchI = do
 
 processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
 processEventQueue logctx logenv httpSess pool cacheRef eectx = do
-  putStrLn "event_trigger: starting workers"
   threads <- mapM async [fetchThread , consumeThread]
   void $ waitAny threads
   where
@@ -195,10 +188,8 @@ processEvent logenv pool e = do
     errorFn
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
          , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     errorFn err = do
@@ -207,13 +198,7 @@ processEvent logenv pool e = do
       checkError err
 
     successFn
-      :: ( MonadReader r m
-         , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
-         , Has CacheRef r
-         , Has EventEngineCtx r
-         )
+      :: (MonadIO m)
       => HTTPResp -> m (Either QErr ())
     successFn _ = liftIO $ runExceptT $ runUnlockQ pool e
 
@@ -223,10 +208,7 @@ processEvent logenv pool e = do
     checkError
       :: ( MonadReader r m
          , MonadIO m
-         , Has WS.Session r
-         , Has HLogger r
          , Has CacheRef r
-         , Has EventEngineCtx r
          )
       => HTTPErr -> m (Either QErr ())
     checkError err = do
@@ -356,8 +338,8 @@ tryWebhook logenv pool e = do
        where
          decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-    mkWebhookReq :: Value -> [HeaderConf] -> Request
-    mkWebhookReq payload headers = Request payload (mkMaybe headers) invocationVersion
+    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
+    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
 
     mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
     mkResp status payload headers =
@@ -395,7 +377,7 @@ fetchEvents =
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) (TriggerMeta trid trn) payload tries created
+  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedObject sn tn) (TriggerMeta trid trn) payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

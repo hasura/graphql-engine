@@ -336,21 +336,25 @@ const sanitizeRelName = arg =>
     });
 
 const formRelName = relMeta => {
-  let finalRelName;
-  // remove special chars and change first letter after underscore to uppercase
-  const targetTable = sanitizeRelName(relMeta.rTable);
-  if (relMeta.isObjRel) {
-    const objLCol = sanitizeRelName(relMeta.lcol.join(','));
-    finalRelName = `${targetTable}By${objLCol}`;
-  } else {
-    const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-    finalRelName =
-      `${
-        targetTable
-        // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
-      }s` + `By${arrRCol}`;
+  try {
+    let finalRelName;
+    // remove special chars and change first letter after underscore to uppercase
+    const targetTable = sanitizeRelName(relMeta.rTable);
+    if (relMeta.isObjRel) {
+      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
+      finalRelName = `${targetTable}By${objLCol}`;
+    } else {
+      const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
+      finalRelName =
+        `${
+          targetTable
+          // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
+        }s` + `By${arrRCol}`;
+    }
+    return finalRelName;
+  } catch (e) {
+    return '';
   }
-  return finalRelName;
 };
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {

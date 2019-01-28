@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.GraphQL.Explain
   ( explainGQLQuery
   , GQLExplain
@@ -32,8 +27,6 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.RQL.DML.Select                  as RS
-import qualified Hasura.Server.Query                    as RQ
-import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -55,16 +48,17 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx, FuncArgCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx, FuncArgCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
 explainField
-  :: UserInfo -> GCtx -> Field -> Q.TxE QErr FieldPlan
+  :: (MonadTx m)
+  => UserInfo -> GCtx -> Field -> m FieldPlan
 explainField userInfo gCtx fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
@@ -72,37 +66,51 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      sel <- runExplain (fldMap, orderByCtx) $ case opCxt of
-        OCSelect tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect False <$>
-            RS.fromField txtConverter tn permFilter permLimit fld
-        OCSelectPkey tn permFilter hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect True <$>
-            RS.fromFieldByPKey txtConverter tn permFilter fld
-        OCSelectAgg tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkAggSelect <$>
-            RS.fromAggField txtConverter tn permFilter permLimit fld
-        _ -> throw500 "unexpected mut field info for explain"
+      builderSQL <- runExplain (fldMap, orderByCtx, funcArgCtx) $
+        case opCxt of
+          OCSelect tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect False <$>
+              RS.fromField txtConverter tn permFilter permLimit fld
+          OCSelectPkey tn permFilter hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect True <$>
+              RS.fromFieldByPKey txtConverter tn permFilter fld
+          OCSelectAgg tn permFilter permLimit hdrs -> do
+            validateHdrs hdrs
+            toSQL . RS.mkAggSelect <$>
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs False
+          OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+            procFuncQuery tn fn permFilter permLimit hdrs True
+          _ -> throw500 "unexpected mut field info for explain"
 
-      let selectSQL = TB.run $ toSQL sel
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> selectSQL
+      let txtSQL = TB.run builderSQL
+          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      return $ FieldPlan fName (Just selectSQL) $ Just planLines
+      return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter (ty, val) =
-      return $ S.annotateExp (txtEncoder val) ty
+    txtConverter = return . uncurry toTxtValue
+
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
+    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
+
+    procFuncQuery tn fn permFilter permLimit hdrs isAgg = do
+      validateHdrs hdrs
+      (tabArgs, eSel, frmItem) <-
+        RS.fromFuncQueryField txtConverter fn isAgg fld
+      return $ toSQL $
+        RS.mkFuncSelectWith fn tn
+        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
 
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo
@@ -135,9 +143,8 @@ explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
     gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runTx tx =
-      Q.runTx pool (iso, Nothing) $
-      RQ.setHeadersTx (userVars userInfo) >> tx
+
+    runTx tx = runLazyTx pool iso $ withUserInfo userInfo tx
 
     allHasuraNodes gCtx nodes =
       let typeLocs = TH.gatherTypeLocs gCtx nodes

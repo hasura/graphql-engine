@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExp
@@ -16,8 +10,6 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Hasura.SQL.DML                    as S
-
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
@@ -29,14 +21,14 @@ import           Hasura.SQL.Value
 type OpExp = OpExpG (PGColType, PGColValue)
 
 parseOpExps
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
+  :: (MonadError QErr m)
   => AnnGValue -> m [OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) -> case k of
-      "_eq"           -> fmap AEQ <$> asPGColValM v
-      "_ne"           -> fmap ANE <$> asPGColValM v
-      "_neq"          -> fmap ANE <$> asPGColValM v
+      "_eq"           -> fmap (AEQ True) <$> asPGColValM v
+      "_ne"           -> fmap (ANE True) <$> asPGColValM v
+      "_neq"          -> fmap (ANE True) <$> asPGColValM v
       "_is_null"      -> resolveIsNull v
 
       "_in"           -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
@@ -63,6 +55,16 @@ parseOpExps annVal = do
       "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 
+      -- geometry type related operators
+      "_st_contains"    -> fmap ASTContains <$> asPGColValM v
+      "_st_crosses"     -> fmap ASTCrosses <$> asPGColValM v
+      "_st_equals"      -> fmap ASTEquals <$> asPGColValM v
+      "_st_intersects"  -> fmap ASTIntersects <$> asPGColValM v
+      "_st_overlaps"    -> fmap ASTOverlaps <$> asPGColValM v
+      "_st_touches"     -> fmap ASTTouches <$> asPGColValM v
+      "_st_within"      -> fmap ASTWithin <$> asPGColValM v
+      "_st_d_within"    -> asObjectM v >>= mapM parseAsSTDWithinObj
+
       _ ->
         throw500
           $  "unexpected operator found in opexp of "
@@ -78,21 +80,25 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
+    parseAsSTDWithinObj obj = do
+      distanceVal <- onNothing (OMap.lookup "distance" obj) $
+                 throw500 "expected \"distance\" input field in st_d_within_input ty"
+      distSQL <- uncurry toTxtValue <$> asPGColVal distanceVal
+      fromVal <- onNothing (OMap.lookup "from" obj) $
+                 throw500 "expected \"from\" input field in st_d_within_input ty"
+      ASTDWithin distSQL <$> asPGColVal fromVal
+
 parseAsEqOp
   :: (MonadError QErr m)
   => AnnGValue -> m [OpExp]
 parseAsEqOp annVal = do
-  annValOpExp <- AEQ <$> asPGColVal annVal
+  annValOpExp <- AEQ True <$> asPGColVal annVal
   return [annValOpExp]
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> G.NamedType
-  -> G.Name
-  -> AnnGValue
-  -> (AnnGValue -> m [OpExp])
-  -> m AnnBoolExpFldSQL
+  => PrepFn m -> G.NamedType -> G.Name -> AnnGValue
+  -> (AnnGValue -> m [OpExp]) -> m AnnBoolExpFldSQL
 parseColExp f nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -105,9 +111,7 @@ parseColExp f nt n val expParser = do
 
 parseBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> AnnGValue
-  -> m AnnBoolExpSQL
+  => PrepFn m -> AnnGValue -> m AnnBoolExpSQL
 parseBoolExp f annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
@@ -124,9 +128,7 @@ type PGColValMap = Map.HashMap G.Name AnnGValue
 
 pgColValToBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> PGColValMap
-  -> m AnnBoolExpSQL
+  => PrepFn m -> PGColValMap -> m AnnBoolExpSQL
 pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
     (ty, _) <- asPGColVal val

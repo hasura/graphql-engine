@@ -4,6 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
+import Button from '../../Layout/Button/Button';
 
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
@@ -298,9 +299,10 @@ class EditItem extends Component {
           <div className="col-xs-9">
             <form className="form-horizontal">
               {elements}
-              <button
+              <Button
                 type="submit"
-                className={styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch({ type: E_ONGOING_REQ });
@@ -321,7 +323,7 @@ class EditItem extends Component {
                 data-test="save-button"
               >
                 {buttonText}
-              </button>
+              </Button>
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

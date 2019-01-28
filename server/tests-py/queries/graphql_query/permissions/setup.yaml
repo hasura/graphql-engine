@@ -130,7 +130,6 @@ args:
     permission:
       check:
         id: X-HASURA-USER-ID
-      allow_upsert: true
 
 #Insert Author values
 - type: insert
@@ -242,5 +241,23 @@ args:
       filter:
         Artist:
           id: X-Hasura-Artist-Id
+      allow_aggregations: true
+
+# Create search_track function
+- type: run_sql
+  args:
+    sql: |
+      create function search_tracks(search text)
+      returns setof "Track" as $$
+          select *
+          from "Track"
+          where
+          name ilike ('%' || search || '%')
+      $$ language sql stable;
+
+- type: track_function
+  args:
+    name: search_tracks
+    schema: public
 
 

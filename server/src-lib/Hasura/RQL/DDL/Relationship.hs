@@ -1,13 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 module Hasura.RQL.DDL.Relationship where
 
 import qualified Database.PG.Query          as Q
@@ -122,7 +112,7 @@ persistRel :: QualifiedTable
            -> Value
            -> Maybe T.Text
            -> Q.TxE QErr ()
-persistRel (QualifiedTable sn tn) rn relType relDef comment =
+persistRel (QualifiedObject sn tn) rn relType relDef comment =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                   hdb_catalog.hdb_relationship
@@ -162,7 +152,7 @@ objRelP1 tabInfo (RelDef rn ru _) = do
     RUManual (ObjRelManualConfig rm) -> validateManualConfig fim rm
 
 createObjRelP1
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => CreateObjRel
   -> m ()
 createObjRelP1 (WithTable qt rd) = do
@@ -189,15 +179,19 @@ objRelP2Setup qt (RelDef rn ru _) = do
         [(consName, refsn, reftn, colMapping)] -> do
           let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
+                     -- this needs to be added explicitly to handle the remote table
+                     -- being untracked. In this case, neither the using_col nor
+                     -- the constraint name will help.
+                     , SchemaDependency (SOTable refqt) "remote_table"
                      ]
-              refqt = QualifiedTable refsn reftn
+              refqt = QualifiedObject refsn reftn
           void $ askTabInfo refqt
           return (RelInfo rn ObjRel colMapping refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     fetchFKeyDetail cn =
       Q.listQ [Q.sql|
            SELECT constraint_name, ref_table_table_schema, ref_table, column_mapping
@@ -223,19 +217,18 @@ objRelP2 qt rd@(RelDef rn ru comment) = do
   objRelP2Setup qt rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
-createObjRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => CreateObjRel -> m RespBody
+createObjRelP2
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m RespBody
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
 
-instance HDBQuery CreateObjRel where
-
-  type Phase1Res CreateObjRel = ()
-  phaseOne = createObjRelP1
-
-  phaseTwo cor _ = createObjRelP2 cor
-
-  schemaCachePolicy = SCPReload
+runCreateObjRel
+  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  => CreateObjRel -> m RespBody
+runCreateObjRel defn = do
+  createObjRelP1 defn
+  createObjRelP2 defn
 
 data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
@@ -253,7 +246,7 @@ type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
 type ArrRelDef = RelDef ArrRelUsing
 type CreateArrRel = WithTable ArrRelDef
 
-createArrRelP1 :: (P1C m) => CreateArrRel -> m ()
+createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
 createArrRelP1 (WithTable qt rd) = do
   adminOnly
   tabInfo    <- askTabInfo qt
@@ -286,7 +279,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
-      let QualifiedTable refSn refTn = refqt
+      let QualifiedObject refSn refTn = refqt
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
         fetchFKeyDetail refSn refTn refCol
       case mapMaybe processRes res of
@@ -295,13 +288,17 @@ arrRelP2Setup qt (RelDef rn ru _) = do
         [(consName, mapping)] -> do
           let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                      , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
+                     -- we don't need to necessarily track the remote table like we did in
+                     -- case of obj relationships as the remote table is indirectly
+                     -- tracked by tracking the constraint name and 'using_col'
+                     , SchemaDependency (SOTable refqt) "remote_table"
                      ]
           return (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     fetchFKeyDetail refsn reftn refcn = Q.listQ [Q.sql|
            SELECT constraint_name, column_mapping
              FROM hdb_catalog.hdb_foreign_key_constraint
@@ -323,19 +320,18 @@ arrRelP2 qt rd@(RelDef rn u comment) = do
   arrRelP2Setup qt rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
-createArrRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => CreateArrRel -> m RespBody
+createArrRelP2
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m RespBody
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
 
-instance HDBQuery CreateArrRel where
-
-  type Phase1Res CreateArrRel = ()
-  phaseOne = createArrRelP1
-
-  phaseTwo car _ = createArrRelP2 car
-
-  schemaCachePolicy = SCPReload
+runCreateArrRel
+  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  => CreateArrRel -> m RespBody
+runCreateArrRel defn = do
+  createArrRelP1 defn
+  createArrRelP2 defn
 
 data DropRel
   = DropRel
@@ -346,7 +342,7 @@ data DropRel
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 
-dropRelP1 :: (P1C m) => DropRel -> m [SchemaObjId]
+dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
   adminOnly
   tabInfo <- askTabInfo qt
@@ -358,32 +354,34 @@ dropRelP1 (DropRel qt rn cascade) = do
   where
     relObjId = SOTableObj qt $ TORel rn
 
-purgeRelDep :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SchemaObjId -> m ()
+purgeRelDep
+  :: (CacheRWM m, MonadTx m) => SchemaObjId -> m ()
 purgeRelDep (SOTableObj tn (TOPerm rn pt)) =
   purgePerm tn rn pt
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
-dropRelP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => DropRel -> [SchemaObjId] -> m RespBody
+dropRelP2
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => DropRel -> [SchemaObjId] -> m RespBody
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
   delRelFromCache rn qt
   liftTx $ delRelFromCatalog qt rn
   return successMsg
 
-instance HDBQuery DropRel where
+runDropRel
+  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  => DropRel -> m RespBody
+runDropRel defn = do
+  depObjs <- dropRelP1 defn
+  dropRelP2 defn depObjs
 
-  type Phase1Res DropRel = [SchemaObjId]
-  phaseOne = dropRelP1
-
-  phaseTwo = dropRelP2
-
-  schemaCachePolicy = SCPReload
-
-delRelFromCatalog :: QualifiedTable
-                  -> RelName
-                  -> Q.TxE QErr ()
-delRelFromCatalog (QualifiedTable sn tn) rn =
+delRelFromCatalog
+  :: QualifiedTable
+  -> RelName
+  -> Q.TxE QErr ()
+delRelFromCatalog (QualifiedObject sn tn) rn =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                   hdb_catalog.hdb_relationship
@@ -401,29 +399,29 @@ data SetRelComment
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
 
-setRelCommentP1 :: (P1C m) => SetRelComment -> m ()
+setRelCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetRelComment -> m ()
 setRelCommentP1 (SetRelComment qt rn _) = do
   adminOnly
   tabInfo <- askTabInfo qt
   void $ askRelType (tiFieldInfoMap tabInfo) rn ""
 
-setRelCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetRelComment -> m RespBody
+setRelCommentP2
+  :: (QErrM m, MonadTx m)
+  => SetRelComment -> m RespBody
 setRelCommentP2 arc = do
   liftTx $ setRelComment arc
   return successMsg
 
-instance HDBQuery SetRelComment where
-
-  type Phase1Res SetRelComment = ()
-  phaseOne = setRelCommentP1
-
-  phaseTwo q _ = setRelCommentP2 q
-
-  schemaCachePolicy = SCPNoChange
+runSetRelComment
+  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  => SetRelComment -> m RespBody
+runSetRelComment defn = do
+  setRelCommentP1 defn
+  setRelCommentP2 defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
-setRelComment (SetRelComment (QualifiedTable sn tn) rn comment) =
+setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_relationship
            SET comment = $1

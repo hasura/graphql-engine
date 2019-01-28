@@ -1,10 +1,5 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE DataKinds  #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Hasura.Server.Auth
   ( getUserInfo
@@ -13,7 +8,6 @@ module Hasura.Server.Auth
   , AccessKey (..)
   , AuthHookType(..)
   , AuthHookG (..)
-  , AuthHookConf
   , AuthHook
   -- JWT related
   , RawJWT
@@ -40,7 +34,7 @@ import qualified Network.HTTP.Client     as H
 import qualified Network.HTTP.Types      as N
 import qualified Network.Wreq            as Wreq
 
-import           Hasura.HTTP.Utils       (wreqOptions)
+import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -58,7 +52,11 @@ newtype AccessKey
 data AuthHookType
   = AHTGet
   | AHTPost
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show AuthHookType where
+  show AHTGet  = "GET"
+  show AHTPost = "POST"
 
 data AuthHookG a b
   = AuthHookG
@@ -66,7 +64,6 @@ data AuthHookG a b
   , ahType :: !b
   } deriving (Show, Eq)
 
-type AuthHookConf = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
@@ -218,7 +215,8 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
     logAndThrow err = do
       liftIO $ L.unLogger logger $
-        WebHookLog L.LevelError Nothing urlT method (Just err) Nothing
+        WebHookLog L.LevelError Nothing urlT method
+        (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->

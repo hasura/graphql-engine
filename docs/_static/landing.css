@@ -1,0 +1,239 @@
+/*** landing.html ***/
+
+.landing_page_wrapper {
+  width: 100%;
+}
+
+.main_wrapper {
+  background-color: #F8FAFB;
+  padding-top: 28px;
+}
+
+.head_wrapper {
+  font-family: 'Khula';
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.subhead_wrapper {
+  font-family: 'Khula';
+  font-size: 16px;
+  font-weight: 600;
+  padding: 15px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.body_content {
+  font-family: 'Gudea';
+  font-size: 15px;
+  color: #333;
+}
+
+.small_content {
+  font-family: 'Gudea';
+  font-size: 14px;
+  color: #333;
+}
+
+.small_content img {
+  max-width: 100%;
+}
+
+.extra_small_content {
+  font-family: 'Gudea';
+  font-size: 12px;
+  color: #333;
+}
+
+.landing_page_wrapper p {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1.7;
+}
+
+.hcl_half {
+  width: 50%;
+  float: left;
+}
+
+.box_wrapper {
+  width: 89%;
+  margin: 0 auto;
+  margin-bottom: 28px;
+  text-align: center;
+  min-height: 240px;
+  padding: 10px;
+  background-color: #fff;
+  -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+  -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.2);
+}
+
+.box_head_wrapper {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.box_head {
+  width: 80%;
+  display: flex;
+  align-items: center;
+}
+
+.box_head img {
+  width: 30px;
+  display: inline-block;
+  padding-right: 15px;
+}
+
+.box_head h3 {
+  margin: 0 0 0;
+  display: inline-block;
+  color: #333;
+}
+
+.view_all_wrapper {
+  display: flex;
+  align-items: center;
+  width: 20%;
+  justify-content: flex-end;
+  color: #9c9c9c;
+  font-weight: 600;
+  margin-top: -9px;
+}
+
+.view_all_wrapper img {
+  display: inline-block;
+  width: 12px;
+  padding-right: 5px;
+  opacity: 0.5;
+}
+
+.view_all_wrapper a {
+  color: #FEC53D !important;
+  text-decoration: underline;
+}
+
+.space_top_bot {
+  padding: 15px 0;
+}
+
+.space_wrapper {
+  padding: 15px 15px;
+  padding-bottom: 0;
+}
+
+.text_left {
+  text-align: left;
+}
+
+.common_btn {
+  padding-top: 10px;
+}
+
+.common_btn button {
+  padding: 5px 15px;
+  background-color: #FEC53D;
+  color: #000;
+  border-radius: 5px;
+  border: 1px solid #FEC53D;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Gudea';
+}
+
+.sign_in_wrapper1 {
+  text-align: left;
+}
+
+.sign_in_wrapper1 .get_start {
+  display: inline-block;
+  padding-right: 5px;
+}
+
+.sign_in_wrapper1 .common_btn {
+  display: inline-block;
+}
+
+.sign_in_wrapper {
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+.tutorial_in_wrapper {
+  display: block;
+}
+
+.sign_in_wrapper .get_start {
+  display: inline-block;
+  padding-right: 5px;
+}
+
+.sign_in_wrapper .common_btn {
+  display: inline-block;
+}
+
+.get_start img {
+  width: 25px;
+}
+
+.docs_link {
+  display: inline;
+  color: #FEC53D;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.docs_link img {
+  display: inline-block;
+  width: 12px;
+  padding-left: 5px;
+}
+
+.ref_link {
+  display: inline;
+  color: #333;
+  font-weight: 600;
+}
+
+.ref_link img {
+  display: inline-block;
+  width: 12px;
+  padding-left: 5px;
+}
+
+.tags_wrapper {
+  width: 100%;
+  text-align: left;
+}
+
+.tags_btn {
+  text-align: left;
+}
+
+.tags_wrapper .tags_btn {
+  padding-right: 10px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.tags_btn button {
+  padding: 2px 7px;
+  background-color: #FEECC0;
+  color: #DFB653;
+  border-radius: 5px;
+  border: 1px solid #FEECC0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Gudea';
+}
+
+.wd_80 {
+  margin: 0 auto;
+  width: 80%;
+}
+
+/*** landing.html END ***/

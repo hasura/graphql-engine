@@ -6,13 +6,15 @@ Queries
   :depth: 1
   :local:
 
-Hasura GraphQL engine auto-generates queries and mutations as part of the GraphQL schema from your Postgres schema
-model. It generates a range of possible queries and operators that also work with relationships defined in your SQL
+GraphQL queries are used to fetch data from the server.
+
+Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your Postgres schema model.
+It generates a range of possible queries and operators that also work with relationships defined in your SQL
 schema.
 
-All tracked tables of the database can be queried and modified over the GraphQL endpoint. If you have a tracked table
-in your database, a query and insert/update/delete mutations each are added as nested fields under the root level
-types, ``query_root`` and ``mutation_root`` respectively.
+All tables of the database tracked by the GraphQL engine can be queried over the GraphQL endpoint.
+If you have a tracked table in your database, its query field is added as a nested
+field under the ``query_root`` root level type.
 
 Auto-generated query schema
 ---------------------------
@@ -49,11 +51,12 @@ based on a typical author/article schema for reference.
   simple-object-queries
   nested-object-queries
   aggregation-queries
-  distinct-queries
   query-filters
   sorting
+  distinct-queries
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
+  custom-functions
   derived-data
   control-access

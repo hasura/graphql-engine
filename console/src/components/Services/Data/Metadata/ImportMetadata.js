@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import Button from '../../Layout/Button/Button';
 
 import {
   showSuccessNotification,
@@ -83,13 +84,13 @@ class ImportMetadata extends Component {
       });
   }
   render() {
-    const styles = require('../PageContainer/PageContainer.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
-        <button
+        <Button
           data-test="data-import-metadata"
-          className={styles.default_button}
+          size="sm"
+          color="white"
           onClick={e => {
             e.preventDefault();
             const currThis = this;
@@ -112,7 +113,7 @@ class ImportMetadata extends Component {
           }}
         >
           {this.state.isImporting ? 'Importing...' : 'Import metadata'}
-        </button>
+        </Button>
       </div>
     );
   }

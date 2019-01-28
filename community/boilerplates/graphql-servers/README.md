@@ -1,4 +1,6 @@
-# GraphQL Server Boilerplates
+# (MOVED) GraphQL Server Boilerplates
+
+**The contents of this directory have been moved to [remote-schemas](../remote-schemas).**
 
 Hasura GraphQL Engine can combine schemas from multiple remote GraphQL servers
 and expose them at a single endpoint. You can write these GraphQL servers in any

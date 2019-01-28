@@ -122,6 +122,32 @@ const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
+const getTableColumns = tableSchema => {
+  if (tableSchema) {
+    return tableSchema.columns.map(colObj => ({
+      name: colObj.column_name,
+      type: colObj.udt_name,
+    }));
+  }
+  return [];
+};
+
+const convertDateTimeToLocale = dateTime => {
+  const options = {
+    hourCycle: 'h24',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    second: '2-digit',
+    timeZoneName: 'short',
+    weekday: 'short',
+    year: 'numeric',
+  };
+
+  return new Date(dateTime + 'Z').toLocaleString('en-US', options);
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -129,4 +155,6 @@ export {
   getEdForm,
   getIngForm,
   escapeRegExp,
+  getTableColumns,
+  convertDateTimeToLocale,
 };

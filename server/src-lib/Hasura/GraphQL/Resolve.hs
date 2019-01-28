@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Resolve
   ( resolveSelSet
   ) where
@@ -32,31 +27,38 @@ import qualified Hasura.GraphQL.Resolve.Select          as RS
 buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
+  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
 
     OCSelect tn permFilter permLimit hdrs ->
       validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
 
     OCSelectPkey tn permFilter hdrs ->
       validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
-      -- RS.convertSelect tn permFilter fld
+
     OCSelectAgg tn permFilter permLimit hdrs ->
       validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
+
+    OCFuncQuery tn fn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
+
+    OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
+
     OCInsert tn hdrs    ->
       validateHdrs hdrs >> RI.convertInsert roleName tn fld
-      -- RM.convertInsert (tn, vn) cols fld
+
     OCUpdate tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
-      -- RM.convertUpdate tn permFilter fld
+
     OCDelete tn permFilter hdrs ->
       validateHdrs hdrs >> RM.convertDelete tn permFilter fld
-      -- RM.convertDelete tn permFilter fld
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
     insCtxMap = _gInsCtxMap gCtx
+    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
@@ -70,16 +72,17 @@ buildTx userInfo gCtx fld = do
 
 -- {-# SCC resolveFld #-}
 resolveFld
-  :: UserInfo -> GCtx
+  :: (MonadTx m)
+  => UserInfo -> GCtx
   -> G.OperationType
   -> Field
-  -> Q.TxE QErr BL.ByteString
+  -> m BL.ByteString
 resolveFld userInfo gCtx opTy fld =
   case _fName fld of
     "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
     "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
     "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> buildTx userInfo gCtx fld
+    _            -> liftTx $ buildTx userInfo gCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
@@ -88,10 +91,11 @@ resolveFld userInfo gCtx opTy fld =
       G.OperationTypeSubscription -> "subscription_root"
 
 resolveSelSet
-  :: UserInfo -> GCtx
+  :: (MonadTx m)
+  => UserInfo -> GCtx
   -> G.OperationType
   -> SelSet
-  -> Q.TxE QErr BL.ByteString
+  -> m BL.ByteString
 resolveSelSet userInfo gCtx opTy fields =
   fmap mkJSONObj $ forM (toList fields) $ \fld -> do
     fldResp <- resolveFld userInfo gCtx opTy fld

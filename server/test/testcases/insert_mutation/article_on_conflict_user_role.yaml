@@ -1,9 +1,9 @@
 description: Upserts article data via GraphQL mutation as User role
 url: /v1alpha1/graphql
 status: 200
-header:
+headers:
   X-Hasura-Role: user
-  X-Hasura-User-Id: 1
+  X-Hasura-User-Id: '1'
 query:
   query: |
     mutation insert_article {
@@ -12,6 +12,7 @@ query:
           {
             content: "Updated Article 1 content",
             id: 1
+            author_id: 1
           }
           ],
         on_conflict: {
@@ -21,6 +22,7 @@ query:
         returning {
           title
           content
+          author_id
           }
         }
       }
