@@ -7,26 +7,33 @@ import { push } from 'react-router-redux';
 class ApiExplorer extends Component {
   componentWillMount() {
     let localStorageUrl;
+
     if (window.__env.graphqlEndpoint && window.__env.graphqlEndpoint !== 'undefined') {
       localStorageUrl = window.__env.graphqlEndpoint;
     } else {
       localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
     }
+
     if (!this.props.graphqlEndpoint && (localStorageUrl === 'undefined' || localStorageUrl === null)) {
       this.props.dispatch(push('/'));
     }
   }
+
   render() {
     let localStorageUrl;
+
     if (window.__env.graphqlEndpoint && window.__env.graphqlEndpoint !== 'undefined') {
       localStorageUrl = window.__env.graphqlEndpoint;
     } else {
       localStorageUrl = window.localStorage.getItem('ONLINE_GRAPHIQL_ENDPOINT');
     }
+
     const styles = require('./ApiExplorer.scss');
+
     const wrapperClass = styles.apiExplorerWrapper;
     const requestStyles = '';
     const wdClass = '';
+
     const requestWrapper = (
       <ApiRequestWrapper
         credentials={this.props.credentials}
