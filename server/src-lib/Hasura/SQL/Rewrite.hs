@@ -87,6 +87,8 @@ uFromItem fromItem = case fromItem of
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
+  S.FIFunc f args alM ->
+    S.FIFunc f args <$> mapM addAlias alM
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
     -- idens to empty based on correlation

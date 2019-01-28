@@ -1,6 +1,11 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { handleMigrationErrors, fetchDataInit } from '../DataActions';
+import {
+  // loadSchema,
+  handleMigrationErrors,
+  fetchTrackedFunctions,
+  fetchDataInit,
+} from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -11,6 +16,8 @@ import {
 } from '../../../Main/Actions';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
+
+import semverCheck from '../../../../helpers/semver';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -31,7 +38,12 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch(showSuccessNotification('Executing the Query...'));
 
   const sql = getState().rawSQL.sql;
+  const serverVersion = getState().main.serverVersion;
   const currMigrationMode = getState().main.migrationMode;
+
+  const handleFunc = semverCheck('customFunctionSection', serverVersion)
+    ? true
+    : false;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const currentSchema = 'public';
@@ -45,17 +57,31 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
     },
   ];
   // check if track view enabled
+
   if (getState().rawSQL.isTableTrackChecked) {
-    const regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    let regExp;
+    if (handleFunc) {
+      regExp = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    } else {
+      regExp = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+    }
     const matches = sql.match(new RegExp(regExp, 'gmi'));
     if (matches) {
       matches.forEach(element => {
         const itemMatch = element.match(new RegExp(regExp, 'i'));
         if (itemMatch && itemMatch.length === 6) {
-          const trackQuery = {
-            type: 'add_existing_table_or_view',
-            args: {},
-          };
+          let trackQuery = {};
+          if (itemMatch[1].toLowerCase() === 'function') {
+            trackQuery = {
+              type: 'track_function',
+              args: {},
+            };
+          } else {
+            trackQuery = {
+              type: 'add_existing_table_or_view',
+              args: {},
+            };
+          }
           // If group 5 is undefined, use group 3 and 4 for schema and table respectively
           // If group 5 is present, use group 5 for table name using public schema.
           if (itemMatch[5]) {
@@ -108,6 +134,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             dispatch(fetchDataInit()).then(() => {
               dispatch({ type: REQUEST_SUCCESS, data });
             });
+            dispatch(fetchTrackedFunctions());
           },
           err => {
             const parsedErrorMsg = err;

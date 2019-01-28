@@ -76,7 +76,7 @@ data Event
   } deriving (Show, Eq)
 
 instance ToJSON Event where
-  toJSON (Event eid (QualifiedTable sn tn) trigger event _ created)=
+  toJSON (Event eid (QualifiedObject sn tn) trigger event _ created)=
     object [ "id" .= eid
            , "table"  .= object [ "schema" .= sn
                                 , "name"  .= tn
@@ -377,7 +377,7 @@ fetchEvents =
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) (TriggerMeta trid trn) payload tries created
+  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedObject sn tn) (TriggerMeta trid trn) payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

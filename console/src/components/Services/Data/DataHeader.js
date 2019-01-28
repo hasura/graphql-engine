@@ -10,6 +10,7 @@ import {
   loadUntrackedSchema,
   loadUntrackedRelations,
   UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
 } from './DataActions';
 
 const sectionPrefix = '/data';
@@ -72,6 +73,7 @@ const DataHeader = ({
       dispatch(loadSchema()),
       dispatch(loadUntrackedSchema()),
       dispatch(loadUntrackedRelations()),
+      dispatch(fetchFunctionInit()),
     ]);
   };
   return (

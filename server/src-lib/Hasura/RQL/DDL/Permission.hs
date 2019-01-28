@@ -79,8 +79,8 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedTable sn tn) (RoleName rTxt) pt =
-  QualifiedTable hdbViewsSchema $ TableName
+buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
+  QualifiedObject hdbViewsSchema $ TableName
   (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
     hdbViewsSchema = SchemaName "hdb_views"
@@ -400,7 +400,7 @@ runSetPermComment defn =  do
 setPermCommentTx
   :: SetPermComment
   -> Q.TxE QErr ()
-setPermCommentTx (SetPermComment (QualifiedTable sn tn) rn pt comment) =
+setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.hdb_permission
            SET comment = $1

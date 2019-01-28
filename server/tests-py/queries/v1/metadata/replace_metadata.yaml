@@ -40,3 +40,5 @@ query:
       update_permissions: []
       delete_permissions: []
       event_triggers: []
+    functions:
+    - search_articles

@@ -30,7 +30,7 @@ export const createView = sql => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
-// ******************* Remote schema Validator ****************************
+// ******************* Remote Schema Validator ****************************
 export const validateRS = (remoteSchemaName, result) => {
   const reqBody = {
     type: 'select',
@@ -54,6 +54,97 @@ export const validateRS = (remoteSchemaName, result) => {
     } else {
       expect(
         response.body.length > 0 && response.body[0].name === remoteSchemaName
+      ).to.be.false;
+    }
+  });
+};
+
+// ******************* Custom Function Validator **************************
+export const validateCFunc = (functionName, functionSchema, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        function_name: functionName,
+        function_schema: functionSchema,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].function_name === functionName
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].function_name === functionName
+      ).to.be.false;
+    }
+  });
+};
+
+export const validateUntrackedFunc = (functionName, functionSchema, result) => {
+  const reqBody = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'hdb_function',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      where: {
+        function_name: functionName,
+        function_schema: functionSchema,
+      },
+    },
+  };
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(response.body.length === 0).to.be.true;
+    } else {
+      expect(response.body.length === 0).to.be.false;
+    }
+  });
+};
+
+export const dataRequest = (reqBody, result) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].result_type === 'CommandOk' &&
+          response.body[1].message === 'success'
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 &&
+          response.body[0].result_type === 'CommandOk' &&
+          response.body[1].message === 'success'
+      ).to.be.false;
+    }
+  });
+};
+
+export const dropTableRequest = (reqBody, result) => {
+  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  cy.request(requestOptions).then(response => {
+    if (result === 'success') {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
+      ).to.be.true;
+    } else {
+      expect(
+        response.body.length > 0 && response.body[0].result_type === 'CommandOk'
       ).to.be.false;
     }
   });
