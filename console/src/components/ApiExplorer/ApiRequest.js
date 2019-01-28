@@ -143,10 +143,10 @@ class ApiRequest extends Component {
               onChange={this.onUrlChanged}
               value={this.props.url}
               type="text"
+              readOnly
               className={
                 styles.inputGroupInput +
-                ' form-control ' +
-                styles.cursorNotAllowed
+                ' form-control '
               }
             />
           </div>
