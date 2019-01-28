@@ -298,7 +298,7 @@ serveCmdFooter =
     examplesDoc = mkExamplesDoc examples
     examples =
       [
-        [ "# Start GraphQL Engine on default port (8080) with console cnabled"
+        [ "# Start GraphQL Engine on default port (8080) with console enabled"
         , "graphql-engine --database-url <database-url> serve --enable-console"
         ]
       , [ "# Start GraphQL Engine on default port (8080) with console disabled"
@@ -321,8 +321,8 @@ serveCmdFooter =
         , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
           <> " --auth-hook https://mywebhook.com/post --auth-hook-mode POST"
         ]
-      , [ "# Start GraphQL Engine with telemetry disabled"
-        , "graphql-engine --database-url <database-url> serve --disable-telemetry"
+      , [ "# Start GraphQL Engine with telemetry enabled/disabled"
+        , "graphql-engine --database-url <database-url> serve --enable-telemetry true|false"
         ]
       ]
 
