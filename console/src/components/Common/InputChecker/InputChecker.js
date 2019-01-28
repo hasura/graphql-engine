@@ -58,6 +58,7 @@ export default class InputChecker extends React.Component {
         data-index-id={indexId || 0}
         disabled={disabled}
         title={this.state.errorMessage || ''}
+        data-test={this.props['data-test']}
       />
     );
   }
