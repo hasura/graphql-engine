@@ -149,10 +149,10 @@ class TestAddRemoteSchemaTbls:
         assert st_code == 500, resp
         assert resp['code'] == 'postgres-error'
 
-    def test_add_schema_same_type(self, hge_ctx):
+    def test_add_schema_same_type_containing_same_scalar(self, hge_ctx):
         """
         test types get merged when remote schema has type with same name and
-        same structure
+        same structure + a same custom scalar
         """
         st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
         assert st_code == 200, resp
