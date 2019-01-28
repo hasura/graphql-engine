@@ -226,10 +226,7 @@ fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
       "Float"   -> return PGFloat
       "String"  -> return PGText
       "Boolean" -> return PGBoolean
-      -- TODO: is this correct?
-      "ID"      -> return $ PGUnknown "ID" --PGText
-      -- FIXME: is this correct for hasura scalar also?
-      _         -> return $ PGUnknown $ G.unName n --throwError $ "unexpected type: " <> G.unName n
+      _         -> return $ txtToPgColTy $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo

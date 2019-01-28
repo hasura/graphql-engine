@@ -98,6 +98,17 @@ class UserGraphQL(RequestHandler):
         res = user_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+class timestamptz(graphene.types.Scalar):
+    @staticmethod
+    def serialize(t):
+        return "2018-12-20"
+    @staticmethod
+    def parse_literal(s):
+        return "2018-12-20"
+    @staticmethod
+    def parse_value(s):
+        return "2018-12-20"
+
 class Country(graphene.ObjectType):
     name = graphene.String()
 
@@ -128,11 +139,14 @@ class CountryGraphQL(RequestHandler):
 class person(graphene.ObjectType):
     id = graphene.Int(required=True)
     name = graphene.String()
+    created = graphene.Field(timestamptz)
 
     def resolve_id(self, info):
         return 42
     def resolve_name(self, info):
         return 'Arthur Dent'
+    def resolve_created(self, info):
+        return '2018-12-20'
 
 class PersonQuery(graphene.ObjectType):
     person_ = graphene.Field(person)
