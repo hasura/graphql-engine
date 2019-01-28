@@ -13,23 +13,29 @@ import (
 
 func TestConsoleCmd(t *testing.T) {
 	logger, _ := test.NewNullLogger()
+	ec := cli.NewExecutionContext()
+	ec.Telemetry.Command = "TEST"
+	ec.Logger = logger
+	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
+	ec.Config = &cli.HasuraGraphQLConfig{
+		Endpoint:  "http://localhost:8080",
+		AccessKey: "",
+	}
+	ec.Version = version.New()
+	err := ec.Prepare()
+	if err != nil {
+		t.Fatalf("prepare failed: %v", err)
+	}
+
 	opts := &consoleOptions{
-		EC: &cli.ExecutionContext{
-			Logger:  logger,
-			Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  "http://localhost:8080",
-				AccessKey: "",
-			},
-			Version: version.New(),
-		},
+		EC:              ec,
 		APIPort:         "9693",
 		ConsolePort:     "9695",
 		Address:         "localhost",
 		DontOpenBrowser: true,
 	}
 	opts.EC.Spinner.Writer = &fake.FakeWriter{}
-	err := opts.EC.Config.ParseEndpoint()
+	err = opts.EC.Config.ParseEndpoint()
 	if err != nil {
 		t.Fatal(err)
 	}
