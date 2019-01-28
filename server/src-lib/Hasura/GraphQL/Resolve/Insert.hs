@@ -2,7 +2,6 @@ module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 import           Hasura.Server.Utils
@@ -445,17 +444,6 @@ insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
 
--- | build mutation response for empty objects
-withEmptyObjs :: RR.MutFlds -> Convert RespTx
-withEmptyObjs = return . mkTx
-  where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
-    -- generate empty mutation response
-    convMutFld = \case
-      RR.MCount -> J.toJSON (0 :: Int)
-      RR.MExp e -> J.toJSON e
-      RR.MRet _ -> J.toJSON ([] :: [J.Value])
-
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
@@ -470,7 +458,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFlds) (withEmptyObjs mutFlds) $ null annVals
+  bool (withNonEmptyObjs annVals mutFlds) (buildEmptyMutResp mutFlds) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
