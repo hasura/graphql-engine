@@ -587,7 +587,7 @@ mkFuncArgs funInfo =
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName
-    funcInpArg = InpValInfo (Just funcArgDesc) "args" $ G.toGT $ G.toNT $
+    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $ G.toGT $ G.toNT $
                  mkFuncArgsTy funcName
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
 
@@ -732,13 +732,13 @@ mkFuncArgsInp funcInfo =
       case nameM of
         Just argName ->
           let argGName = G.Name $ getFuncArgNameTxt argName
-              inpVal = InpValInfo Nothing argGName $
+              inpVal = InpValInfo Nothing argGName Nothing $
                        G.toGT $ G.toNT $ mkScalarTy ty
               argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo)
         Nothing ->
           let argGName = G.Name $ "arg_" <> T.pack (show argNo)
-              inpVal = InpValInfo Nothing argGName $
+              inpVal = InpValInfo Nothing argGName Nothing $
                        G.toGT $ G.toNT $ mkScalarTy ty
               argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo + 1)
