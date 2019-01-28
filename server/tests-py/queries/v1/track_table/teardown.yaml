@@ -1,12 +1,9 @@
 type: bulk
 args:
-    
-- type: run_sql
-  args:
-    sql: |
-      drop table author
 
 - type: run_sql
   args:
     sql: |
-      drop table hge_tests.resident
+      drop table hge_tests.resident;
+      drop table article;
+      drop table author;

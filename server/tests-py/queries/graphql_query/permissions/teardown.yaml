@@ -5,7 +5,7 @@ args:
     sql: |
       DROP TABLE article;
       DROP TABLE author;
-      DROP TABLE "Track";
+      DROP TABLE "Track" cascade;
       DROP TABLE "Artist";
       DROP TABLE geom_table;
       DROP TABLE jsonb_table;

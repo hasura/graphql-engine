@@ -245,7 +245,32 @@ args:
           name: event_invocation_logs
         column: event_id
 
+- type: track_table
+  args:
+    name: hdb_function_agg
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_function
+    schema: hdb_catalog
+
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
     name: remote_schemas
+
+- type: create_object_relationship
+  args:
+    name: return_table_info
+    table:
+      schema: hdb_catalog
+      name: hdb_function_agg
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_table
+        column_mapping:
+          return_type_schema: table_schema
+          return_type_name: table_name

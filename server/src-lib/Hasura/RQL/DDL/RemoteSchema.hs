@@ -45,7 +45,7 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   let defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager name rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
-  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   newGCtxMap <- mergeRemoteSchema newHsraGCtxMap newDefGCtx
   liftTx $ addRemoteSchemaToCatalog q
   addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
@@ -80,7 +80,7 @@ refreshGCtxMapInSchema
   => m ()
 refreshGCtxMapInSchema = do
   sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   httpMgr <- askHttpManager
   (mergedGCtxMap, defGCtx) <-
     mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
@@ -117,7 +117,7 @@ removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   let resolvers = scRemoteResolvers sc
       newResolvers = Map.filterWithKey (\n _ -> n /= name) resolvers
 
-  newGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   (mergedGCtxMap, defGCtx) <- mergeSchemas newResolvers newGCtxMap hMgr
   removeRemoteSchemaFromCache newResolvers mergedGCtxMap defGCtx
   liftTx $ removeRemoteSchemaFromCatalog name

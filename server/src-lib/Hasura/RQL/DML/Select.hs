@@ -1,6 +1,7 @@
 module Hasura.RQL.DML.Select
   ( selectP2
   , selectAggP2
+  , funcQueryTx
   , convSelectQuery
   , getSelectDeps
   , module Hasura.RQL.DML.Select.Internal
@@ -286,13 +287,24 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
+funcQueryTx
+  :: S.FromItem -> QualifiedFunction -> QualifiedTable
+  -> TablePerm -> TableArgs
+  -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
+  -> Q.TxE QErr RespBody
+funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
+  runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
+  where
+    sqlBuilder = toSQL $
+      mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
+
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkAggSelect sel
-
 
 -- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
