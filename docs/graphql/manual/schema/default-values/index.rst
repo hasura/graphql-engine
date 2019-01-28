@@ -27,3 +27,4 @@ the following ways:
   Custom SQL functions/stored procedures <sql-functions>
   Role based column presets <column-presets>
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/default-values/index.rst>`_

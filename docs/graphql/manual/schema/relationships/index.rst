@@ -73,3 +73,5 @@ The following guides will help you model the different types of table relationsh
   create
   rename
   Database modelling <database-modelling/index>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/relationships/index.rst>`_

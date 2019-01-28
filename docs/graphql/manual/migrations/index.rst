@@ -43,3 +43,5 @@ Advanced
    For existing project <existing-project>
    With a database with an existing migration system <database-with-migrations>
    Auto-apply migrations/metadata when server starts <auto-apply-migrations>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/migrations/index.rst>`_

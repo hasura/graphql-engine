@@ -49,3 +49,5 @@ For example, fetch a list of ``authors`` and a list of ``articles``:
         ]
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/multiple-queries.rst>`_

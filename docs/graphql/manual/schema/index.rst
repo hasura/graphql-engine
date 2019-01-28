@@ -29,3 +29,5 @@ Postgres constructs.
   Enum type fields <enums>
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/index.rst>`_

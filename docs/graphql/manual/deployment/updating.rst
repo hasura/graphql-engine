@@ -19,3 +19,5 @@ Based on your deployment method, follow the appropriate guide to update the Grap
 - :doc:`Updating on Heroku <heroku/updating>`
 - :doc:`Updating on Docker <docker/updating>`
 - :doc:`Updating on Kubernetes <kubernetes/updating>`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/updating.rst>`_

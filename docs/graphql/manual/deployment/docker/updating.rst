@@ -37,3 +37,5 @@ you should change it to:
 .. raw:: html
 
    <code>docker run hasura/graphql-engine:<span class="latest-release-tag">latest</span> ...</code>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/docker/updating.rst>`_

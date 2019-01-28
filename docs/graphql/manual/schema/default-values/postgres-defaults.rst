@@ -56,3 +56,5 @@ Also see
 
 - :doc:`sql-functions`
 - :doc:`column-presets`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/default-values/postgres-defaults.rst>`_

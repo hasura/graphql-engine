@@ -110,3 +110,5 @@ Advanced
    using-existing-heroku-database
    GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/heroku/index.rst>`_

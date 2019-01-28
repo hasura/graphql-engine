@@ -18,3 +18,5 @@ service, i.e. ``hasura``:
 
 
 See https://kubernetes.io/docs/concepts/cluster-administration/logging for more details on logging in Kubernetes.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/kubernetes/index.rst>`_

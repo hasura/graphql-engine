@@ -73,3 +73,5 @@ Each header has 3 parameters:
    the raw value of the header. ``from env variable`` means the value provided in the ``Value`` field is the name of
    the environment variable in the GraphQL Engine which will be resolved before sending the header.
 3. ``Value``: The value of the header. Either static value or name of an environment variable.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/event-triggers/create-trigger.rst>`_

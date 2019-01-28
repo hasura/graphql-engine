@@ -14,3 +14,5 @@ By default, the binary is installed at ``/usr/local/bin/hasura``
 
   # use sudo if required
   $ rm /usr/local/bin/hasura
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/hasura-cli/uninstall-hasura-cli.rst>`_

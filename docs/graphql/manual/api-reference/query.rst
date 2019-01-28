@@ -518,3 +518,5 @@ PaginationExp
 
    limit: Integer
    [offset: Integer]
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/query.rst>`_

@@ -566,3 +566,5 @@ Args syntax
      - false
      - Text
      - comment
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/permission.rst>`_

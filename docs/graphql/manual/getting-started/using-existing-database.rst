@@ -15,3 +15,4 @@ Follow one of these guides to setup Hasura GraphQL engine use an existing databa
 - :doc:`Using Kubernetes <../deployment/kubernetes/index>`: Run on Kubernetes and connect to an existing Postgres
   database.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/getting-started/using-existing-database.rst>`_

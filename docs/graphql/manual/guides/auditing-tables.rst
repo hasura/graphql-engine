@@ -25,3 +25,5 @@ This information can therefore be captured in any trigger on the underlying tabl
    current_setting('hasura.user');
 
 We've set up some utility functions that'll let you quickly get started with auditing in this `repo <https://github.com/hasura/audit-trigger>`__.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/auditing-tables.rst>`_

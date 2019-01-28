@@ -25,3 +25,5 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 .. note::
 
     If you are using ``firebase`` you will have to set the associated environment variables.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/webhook-examples.rst>`_

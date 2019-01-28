@@ -181,3 +181,5 @@ Fetch a list of authors and a list of 2 of each of their articles:
         ]
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/pagination.rst>`_

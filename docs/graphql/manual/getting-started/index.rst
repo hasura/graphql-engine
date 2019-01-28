@@ -45,7 +45,8 @@ Using an existing database
    first-graphql-query
    first-event-trigger
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/getting-started/index.rst>`_
+
 License
 -------
 The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.
-

@@ -78,3 +78,5 @@ Also see
 
 - :doc:`postgres-defaults`
 - :doc:`sql-functions`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/default-values/column-presets.rst>`_

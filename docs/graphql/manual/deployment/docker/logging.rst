@@ -23,3 +23,5 @@ GraphQL engine container:
 
 
 See https://docs.docker.com/config/containers/logging for more details on logging in Docker.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/docker/logging.rst>`_

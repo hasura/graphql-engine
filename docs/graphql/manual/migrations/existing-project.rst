@@ -163,3 +163,5 @@ Step 7: Create migrations without the console & other advanced actions
 - Each migration consists of a pair of yaml and sql files with up and down steps.
 - Create migrations manually using :ref:`migrate create <hasura_migrate_create>`.
 - You can apply only certain versions or numbers of steps. Read more at :ref:`migrate apply <hasura_migrate_apply>`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/migrations/existing-project.rst>`_

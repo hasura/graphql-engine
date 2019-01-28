@@ -294,3 +294,5 @@ A JSONObject_
    }
 
 .. _JSONObject: https://tools.ietf.org/html/rfc7159
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/syntax-defs.rst>`_

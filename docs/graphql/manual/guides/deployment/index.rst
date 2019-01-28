@@ -22,3 +22,5 @@ Guides: Deployment
 
    DigitalOcean One-click App <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/deployment/index.rst>`_

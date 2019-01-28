@@ -60,3 +60,5 @@ based on a typical author/article schema for reference.
   custom-functions
   derived-data
   control-access
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/index.rst>`_

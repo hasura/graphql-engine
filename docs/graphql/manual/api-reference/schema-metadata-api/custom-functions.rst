@@ -76,3 +76,5 @@ Args syntax
      - true
      - :ref:`FunctionName <FunctionName>`
      - Name of the SQL function
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/custom-functions.rst>`_

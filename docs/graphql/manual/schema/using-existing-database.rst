@@ -68,3 +68,4 @@ To track all the foreign-keys of all tables in the database:
   You can change the relationship names by heading to the ``Relationships`` tab of the concerned table and
   dropping and recreating the relationship with a name of your choice.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/using-existing-database.rst>`_

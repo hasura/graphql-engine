@@ -99,3 +99,5 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates).
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/table-view.rst>`_

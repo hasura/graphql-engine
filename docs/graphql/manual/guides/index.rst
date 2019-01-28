@@ -66,3 +66,5 @@ Telemetry
    Integrating with monitoring frameworks <monitoring/index>
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/index.rst>`_

@@ -150,3 +150,5 @@ Advanced
    Securing your GraphQL endpoint <securing-graphql-endpoint>
    GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/docker/index.rst>`_

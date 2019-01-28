@@ -105,3 +105,5 @@ For example:
                 serve \
                 --access-key XXXXXXXXXXXXXXXX
                 --cors-domain https://mywebsite.com:8090
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/graphql-engine-flags/config-examples.rst>`_

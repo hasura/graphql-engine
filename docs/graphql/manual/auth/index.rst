@@ -40,3 +40,5 @@ Next, let's setup some :doc:`basic access control rules <basics>`.
    webhook-examples
    jwt
    jwt-examples
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/index.rst>`_

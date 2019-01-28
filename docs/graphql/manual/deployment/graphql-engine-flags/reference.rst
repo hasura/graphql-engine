@@ -153,3 +153,5 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_USE_PREPARED_STATEMENTS   Use prepared statements for SQL queries
                                             (default: true)
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/graphql-engine-flags/index.rst>`_

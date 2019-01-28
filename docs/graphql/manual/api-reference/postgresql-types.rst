@@ -263,4 +263,4 @@ E.g. For macaddr type
 
    You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__
 
-
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/postgresql-types.rst>`_

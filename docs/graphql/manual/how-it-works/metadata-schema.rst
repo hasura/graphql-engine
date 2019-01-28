@@ -144,3 +144,5 @@ Column Definitions
 | is_system_defined   | If it is true, then the permission is created by GraphQL engine for internal purpose. If |
 |                     | it is false, then the permission is created by the end user.                             |
 +---------------------+------------------------------------------------------------------------------------------+
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/how-it-works/metadata-schema.rst>`_

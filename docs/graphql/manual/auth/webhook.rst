@@ -107,3 +107,5 @@ If you want to deny the GraphQL request return a ``401 Unauthorized`` exception.
 **See:**
 
 - :doc:`Auth webhook samples <webhook-examples>`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/webhook.rst>`_

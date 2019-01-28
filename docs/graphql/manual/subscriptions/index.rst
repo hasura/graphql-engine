@@ -40,3 +40,5 @@ for sending and receiving events.
   :hidden:
 
   Sample use cases <use-cases>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/subscriptions/index.rst>`_

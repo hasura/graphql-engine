@@ -66,3 +66,4 @@ Read more about:
 - :doc:`Building your schema <../schema/index>`
 - :doc:`Queries <../queries/index>`
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/getting-started/first-graphql-query.rst>`_

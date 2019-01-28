@@ -218,3 +218,4 @@ Error codes
   Event Triggers <event-triggers>
   Syntax definitions <syntax-defs>
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/index.rst>`_

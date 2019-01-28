@@ -17,3 +17,5 @@ of Hasura GraphQL engine deployed on Heroku:
    ...
 
 See https://devcenter.heroku.com/articles/logging for more details on logging in Heroku.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/heroku/logging.rst>`_

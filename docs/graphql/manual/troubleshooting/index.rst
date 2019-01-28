@@ -84,3 +84,5 @@ OR
 - Connect to the database and switch to ``hdb_catalog`` schema.
 - In the ``hdb_relationship`` table, find the entry for the above relationship and delete it.
 - Restart GraphQL engine to verify.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/troubleshooting/index.rst>`_

@@ -265,3 +265,5 @@ Access control permissions configured for the ``SETOF`` table of a function are 
 **For example**, in our text-search example above, if the role ``user`` doesn't have the requisite permissions to view
 the table ``article``, a validation error will be thrown if the ``search_articles`` query is run using the ``user``
 role.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/custom-functions.rst>`_

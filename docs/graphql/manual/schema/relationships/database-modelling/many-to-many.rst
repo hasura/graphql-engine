@@ -389,3 +389,5 @@ We can now:
   without setting up a new relationship to the ``author`` table from the ``tag_articles_view`` view.
 
   In our opinion, the cons of this approach seem to outweigh the pros.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/relationships/database-modelling/index.rst>`_

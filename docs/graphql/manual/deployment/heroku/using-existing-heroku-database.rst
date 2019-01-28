@@ -49,3 +49,5 @@ Step 3: Track tables and relationships
 Wait for the GraphQL engine to restart and you'll see your existing tables as "untracked tables" in the console.
 
 .. image:: ../../../../img/graphql/manual/getting-started/TrackTable.jpg
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/heroku/updating.rst>`_

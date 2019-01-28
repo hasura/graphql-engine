@@ -385,3 +385,5 @@ OR
         }
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/mutations/insert.rst>`_

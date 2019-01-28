@@ -208,3 +208,5 @@ Fetch an author whose id is ``1`` and a nested list of articles with aggregated 
 .. note::
 
     The name of the :ref:`aggregate field <aggregate_object>` is of the form ``field-name + _aggregate``
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/nested-object-queries.rst>`_

@@ -52,3 +52,5 @@ You can refer to the following to know about all PostgreSQL types supported by t
   Mutation <mutation>
   Schema/Metadata APIs <schema-metadata-api/index>
   Supported PostgreSQL types <postgresql-types>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/index.rst>`_

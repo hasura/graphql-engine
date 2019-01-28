@@ -54,6 +54,8 @@ Advanced
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
 on deploying using Heroku, check out :doc:`../deployment/heroku/index`.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/getting-started/heroku-simple.rst>`_
+
 License
 -------
 The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.

@@ -154,3 +154,5 @@ Here are a couple of examples:
         }
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/basics.rst>`_

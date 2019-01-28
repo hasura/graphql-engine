@@ -31,5 +31,4 @@ Views can be created using SQL which can be run in the Hasura console:
 - Select the ``Track this`` checkbox to expose the new view over the GraphQL API
 - Hit the ``Run`` button
 
-
-
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/views.rst>`_

@@ -19,3 +19,5 @@ The following guides will help you model the different types of table relationsh
   One-to-one relationship <one-to-one>
   One-to-many relationship <one-to-many>
   Many-to-many relationship <many-to-many>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/relationships/database-modelling/index.rst>`_

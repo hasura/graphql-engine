@@ -341,3 +341,5 @@ care of escaping new lines.
 **See:**
 
 - :doc:`Auth JWT examples <jwt-examples>`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/jwt.rst>`_

@@ -55,3 +55,5 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    GraphQL engine server configuration <graphql-engine-flags/index>
    GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/index.rst>`_

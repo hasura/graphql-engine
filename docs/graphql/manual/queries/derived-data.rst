@@ -96,3 +96,5 @@ Fetch a list of authors along with their average article rating:
     }
 
 This example can be easily extended to cover any use-case involving a complicated SQL query that you may want to use.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/derived-data.rst>`_

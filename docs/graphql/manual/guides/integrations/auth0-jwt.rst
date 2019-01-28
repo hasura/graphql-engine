@@ -105,3 +105,5 @@ With the above steps, Auth0 is configured and ready to be used in the applicatio
 a table, you can setup access control rules.
 
 Refer :doc:`../../auth/basics` for more information.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/integrations/auth0-jwt.rst>`_

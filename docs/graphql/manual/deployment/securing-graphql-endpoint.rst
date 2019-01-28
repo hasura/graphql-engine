@@ -21,3 +21,4 @@ access to your GraphQL endpoint and the Hasura console:
   If you're looking at adding authentication and access control to your GraphQL API then head
   to :doc:`Authentication / access control <../auth/index>`.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/securing-graphql-endpoint.rst>`_

@@ -22,3 +22,5 @@ events happening on the specified tables and then call configured webhooks to ca
    payload
    serverless
    samples
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/event-triggers/index.rst>`_

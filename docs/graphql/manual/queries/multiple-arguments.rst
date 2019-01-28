@@ -109,3 +109,5 @@ For example, fetch a list of authors and only 2 of their published articles that
         ]
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/multiple-arguments.rst>`_

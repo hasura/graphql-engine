@@ -27,3 +27,5 @@ The following are a few configuration use cases:
 
    Server flags reference <reference>
    Server config examples <config-examples>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/graphql-engine-flags/index.rst>`_

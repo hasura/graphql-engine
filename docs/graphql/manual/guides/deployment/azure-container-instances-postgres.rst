@@ -248,3 +248,5 @@ References
   <https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-server-database-azure-cli>`_
 - `Using Azure Container Instances
   <https://docs.microsoft.com/en-us/azure/container-instances/container-instances-quickstart>`_
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/deployment/azure-container-instances-postgres.rst>`_

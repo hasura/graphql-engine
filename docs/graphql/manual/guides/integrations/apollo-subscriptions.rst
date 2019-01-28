@@ -150,3 +150,5 @@ Related Blog
 ------------
 
 - `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://blog.hasura.io/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/integrations/apollo-subscriptions.rst>`_

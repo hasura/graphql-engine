@@ -50,3 +50,4 @@ Step 3: Rollout the change
 
   $ kubectl replace -f deployment.yaml
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/kubernetes/updating.rst>`_

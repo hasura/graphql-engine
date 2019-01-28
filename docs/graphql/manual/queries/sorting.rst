@@ -352,3 +352,5 @@ nulls first):
         ]
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/sorting.rst>`_

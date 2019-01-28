@@ -45,3 +45,5 @@ Now the ``issue_month`` field can only take values from the months of the year.
 .. admonition:: Current limitation
 
   This does not generate GraphQL schema enums as of now but it ensures consistency in the database.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/enums.rst>`_

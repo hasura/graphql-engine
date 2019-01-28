@@ -38,3 +38,5 @@ Algolia search.
 
 * Video: https://youtu.be/kWVEBWdEVAA
 * Source code: https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/serverless-etl
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/event-triggers/samples.rst>`_

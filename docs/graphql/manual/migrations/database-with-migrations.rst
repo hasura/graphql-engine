@@ -121,3 +121,5 @@ Step 7: Other metadata commands
 -------------------------------
 
 To clear, export, apply metadata refer to :ref:`hasura metadata <hasura_metadata>` command.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/migrations/database-with-migrations.rst>`_

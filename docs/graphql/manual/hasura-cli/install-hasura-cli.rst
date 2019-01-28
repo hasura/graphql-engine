@@ -64,3 +64,5 @@ Alternatively, you can directly download the appropriate binary from: https://gi
 To add command auto completion in the shell
 
 Refer to :ref:`hasura completion <hasura_completion>`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/hasura-cli/install-hasura-cli.rst>`_

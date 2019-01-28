@@ -1210,6 +1210,4 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
-
-
-
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/query-filters.rst>`_

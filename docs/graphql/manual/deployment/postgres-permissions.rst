@@ -59,3 +59,5 @@ Here's a sample SQL block that you can run on your database to create the right 
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
 
     -- Similarly repeat this for other schemas, if you have.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/postgres-permissions.rst>`_

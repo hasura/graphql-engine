@@ -308,6 +308,8 @@ Logs
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/deployment/digital-ocean-one-click.rst>`_
+
 License
 -------
 The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.

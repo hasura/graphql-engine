@@ -518,3 +518,5 @@ E.g.
      field-name-2 : ["path-array"],
      ..
    }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/mutation.rst>`_

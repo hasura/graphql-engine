@@ -373,3 +373,4 @@ Input value should be a ``String Array``.
       }
     }
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/mutations/update.rst>`_

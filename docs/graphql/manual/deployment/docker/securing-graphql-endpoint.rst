@@ -27,3 +27,5 @@ Run the docker command with an access-key env var
 
   If you're looking at adding authentication and access control to your GraphQL API then head
   to :doc:`Authentication / access control <../../auth/index>`.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/docker/securing-graphql-endpoint.rst>`_

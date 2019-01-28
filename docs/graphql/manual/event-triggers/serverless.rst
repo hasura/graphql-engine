@@ -107,3 +107,5 @@ Our AWS Lambda code looks like this:
                 callback(null, response);
             });
     };
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/event-triggers/serverless.rst>`_

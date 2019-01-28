@@ -181,3 +181,4 @@ Fetch an author whose id is ``1`` and a nested list of articles with aggregated 
       }
     }
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/aggregation-queries.rst>`_

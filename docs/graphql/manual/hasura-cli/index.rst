@@ -71,3 +71,5 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/hasura-cli/index.rst>`_

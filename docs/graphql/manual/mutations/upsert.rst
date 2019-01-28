@@ -152,3 +152,5 @@ You can specify ``on_conflict`` clause while inserting nested objects
 
   - Any of upsert in object relationships does not affect any rows (``update_columns: []``)
   - Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []``)
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/mutations/upsert.rst>`_

@@ -148,3 +148,5 @@ Privacy Policy
 --------------
 
 You can check out our privacy policy `here <https://hasura.io/legal/hasura-privacy-policy>`_.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/telemetry.rst>`_

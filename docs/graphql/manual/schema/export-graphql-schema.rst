@@ -34,3 +34,5 @@ flag ``--format json``:
 
   # Getting the schema in .json format
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect --format json > schema.json
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/export-graphql-schema.rst>`_

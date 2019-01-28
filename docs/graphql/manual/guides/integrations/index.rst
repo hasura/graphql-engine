@@ -20,3 +20,5 @@ Guides: Integration/migration tutorials
 
   Auth0 JWT Integration <auth0-jwt>
   Subscriptions using apollo-client <apollo-subscriptions>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/guides/integrations/auth0-jwt.rst>`_

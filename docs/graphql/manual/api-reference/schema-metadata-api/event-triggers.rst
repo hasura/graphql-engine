@@ -216,4 +216,4 @@ Args syntax
 
    "*" | [:ref:`PGColumn`]
 
-
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/event-triggers.rst>`_

@@ -54,3 +54,5 @@ Applying only metadata
 If you're managing migrations with a different tool and want to use this image to apply only the
 metadata, mount a directory with just a ``metadata.yaml`` file and the script will
 apply the metadata.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/migrations/auto-apply-migrations.rst>`_

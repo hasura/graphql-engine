@@ -15,3 +15,4 @@ repositories to get started.
 - `Firebase JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt>`__:
   Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/jwt-examples.rst>`_

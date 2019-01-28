@@ -50,3 +50,5 @@ In case you're using the CLI to open the Hasura console, use the ``access-key`` 
 
   If you're looking at adding authentication and access control to your GraphQL API then head
   to :doc:`Authentication / access control <../../auth/index>`.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/kubernetes/securing-graphql-endpoint.rst>`_

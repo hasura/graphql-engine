@@ -93,3 +93,5 @@ In this case, anonymous users might have access only to a subset of fields while
 - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
 
   - This reads: Allow users to that are owned by them.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/common-roles-auth-examples.rst>`_

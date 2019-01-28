@@ -240,3 +240,5 @@ Fetch a list of authors with the average rating of their articles:
         ]
       }
     }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/schema/relationships/create.rst>`_

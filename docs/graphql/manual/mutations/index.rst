@@ -28,13 +28,4 @@ The following types of mutation requests are possible:
   Delete <delete>
   multiple-mutations
 
-
-
-
-
-
-
-
-
-
-
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/mutations/index.rst>`_

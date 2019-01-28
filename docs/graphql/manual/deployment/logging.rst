@@ -22,3 +22,5 @@ You can integrate the logs emitted by Hasura GraphQL with external monitoring to
 your convenience.
 
 For some examples, see :doc:`../guides/monitoring/index`
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/deployment/logging.rst>`_

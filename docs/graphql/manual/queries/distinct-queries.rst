@@ -69,3 +69,4 @@ Fetch results with distinct values of a particular field
        }
      }
      
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/queries/distinct-queries.rst>`_

@@ -231,3 +231,5 @@ A query to create a table:
      "result_type": "CommandOk",
      "result": null
    }
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/api-reference/schema-metadata-api/run-sql.rst>`_

@@ -193,3 +193,5 @@ For example, the generated JWT can be:
 Hasura will get this JWT and successfully validate it. When your remote server receives this JWT, it should
 specifically validate the JWT and, for example, check for ``role`` key in the JWT. If it is set to ``anonymous``
 then it should consider the request as unauthenticated.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/remote-schemas/index.rst>`_

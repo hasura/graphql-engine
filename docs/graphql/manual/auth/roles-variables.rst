@@ -120,3 +120,4 @@ given the session token (authorization token, JWT, cookie etc.) that your app no
 
 See :doc:`webhook` or :doc:`jwt` for more details on passing dynamic session variables in production.
 
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/auth/roles-variables.rst>`_

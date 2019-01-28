@@ -162,3 +162,5 @@ Retry-After header
 If the webhook response contains a ``Retry-After`` header, then the event will be redelivered once more after the duration (in seconds) found in the header. Note that the header will be respected only if the response status code is ``non-2xx``.
 
 The ``Retry-After`` header can be used for retrying/rate-limiting/debouncing your webhook triggers.
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/event-triggers/payload.rst>`_

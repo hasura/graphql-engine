@@ -67,3 +67,5 @@ Postgres schema in the database. See :doc:`metadata schema <metadata-schema>` fo
   :hidden:
 
   Metadata schema <metadata-schema>
+
+`Edit on GitHub <https://github.com/hasura/graphql-engine/blob/master/docs/graphql/manual/how-it-works/index.rst>`_
