@@ -555,6 +555,7 @@ class EchoGraphQL(RequestHandler):
         res = echo_schema.execute(req.json['query'])
         respDict = res.to_dict()
         typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166
         if typesList is not None:
             for t in filter(lambda ty: ty['name'] == 'EchoQuery', typesList):
                 for f in filter(lambda fld: fld['name'] == 'echo', t['fields']):
