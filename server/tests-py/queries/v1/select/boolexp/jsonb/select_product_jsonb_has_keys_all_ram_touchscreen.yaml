@@ -1,0 +1,40 @@
+description: Select products having key 'SIM type' in spec
+url: /v1/query
+status: 200
+response:
+- id: 2
+  category: Laptop
+  name: laptop2
+  spec:
+    Disk: 128GB
+    Weight: 1.2Kg
+    OS: os2
+    Processor: processor2
+    RAM: 16GB
+    Touchscreen: true
+- id: 3
+  category: Mobile
+  name: mobile1
+  spec:
+    Operating System Type: osType1
+    Weight: 200g
+    SIM type: DualSim
+    Sensors: Accelerometer sensor, E-compass, Proximity sensor
+    Network type: 4G
+    Processor: processor2
+    RAM: 3GB
+    Touchscreen: true
+query:
+  type: select
+  args:
+    table: product
+    where:
+      spec:
+        $has_keys_all:
+        - Touchscreen
+        - RAM
+    columns:
+    - id
+    - category
+    - name
+    - spec

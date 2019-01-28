@@ -83,10 +83,11 @@ parseOpExps annVal = do
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
                  throw500 "expected \"distance\" input field in st_d_within_input ty"
-      distSQL <- uncurry toTxtValue <$> asPGColVal distanceVal
+      dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
                  throw500 "expected \"from\" input field in st_d_within_input ty"
-      ASTDWithin distSQL <$> asPGColVal fromVal
+      from <- asPGColVal fromVal
+      return $ ASTDWithin $ WithinOp dist from
 
 parseAsEqOp
   :: (MonadError QErr m)
