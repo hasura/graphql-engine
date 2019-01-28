@@ -395,7 +395,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 			UUID:            u.String(),
 			EnableTelemetry: true,
 		}
-		data, err := json.Marshal(gc)
+		data, err := json.MarshalIndent(gc, "", "  ")
 		if err != nil {
 			return errors.Wrap(err, "cannot marshal json for config file")
 		}
