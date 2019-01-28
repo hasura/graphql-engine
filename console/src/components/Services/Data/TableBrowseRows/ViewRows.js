@@ -478,7 +478,7 @@ const ViewRows = ({
           <Spinner />{' '}
         </div>
       );
-    } else if (count === 0) {
+    } else if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
