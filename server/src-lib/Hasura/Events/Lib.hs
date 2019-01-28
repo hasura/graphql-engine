@@ -10,6 +10,7 @@ module Hasura.Events.Lib
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
+import           Control.Exception             (try)
 import           Control.Monad.STM             (STM, atomically, retry)
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -103,14 +104,14 @@ data WebhookResponse
   }
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
 
-data InitError =  InitError { _ieMessage :: TBS.TByteString}
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InitError)
+data ClientError =  ClientError { _ceMessage :: TBS.TByteString}
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
 
-data Response = ResponseType1 WebhookResponse | ResponseType2 InitError
+data Response = ResponseType1 WebhookResponse | ResponseType2 ClientError
 
 instance ToJSON Response where
   toJSON (ResponseType1 resp) = object ["type" .= String "webhook_response", "data" .= toJSON resp, "version" .= invocationVersion]
-  toJSON (ResponseType2 err)  = object ["type" .= String "init_error", "data" .= toJSON err, "version" .= invocationVersion]
+  toJSON (ResponseType2 err)  = object ["type" .= String "client_error", "data" .= toJSON err, "version" .= invocationVersion]
 
 data Invocation
   = Invocation
@@ -278,46 +279,49 @@ tryWebhook logenv pool e = do
           then retry
           else modifyTVar' c (+1)
       -- TODO: Catch exception
-      initReq <- liftIO $ HTTP.parseRequest $ T.unpack webhook
-      let req = initReq
+      initReqE <- liftIO $ try $ HTTP.parseRequest $ T.unpack webhook
+      case initReqE of
+        Left excp -> return $ Left (HClient excp)
+        Right initReq -> do
+          let req = initReq
                 { HTTP.method = "POST"
                 , HTTP.requestHeaders = headers
                 , HTTP.requestBody = HTTP.RequestBodyLBS (encode e)
                 , HTTP.responseTimeout = responseTimeout
                 }
-          decodedHeaders = map (decodeHeader headerInfos) $ HTTP.requestHeaders req
-      eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
+              decodedHeaders = map (decodeHeader headerInfos) $ HTTP.requestHeaders req
+          eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c _ _ = eeCtx
-        modifyTVar' c (\v -> v - 1)
+          liftIO $ atomically $ do
+            let EventEngineCtx _ c _ _ = eeCtx
+            modifyTVar' c (\v -> v - 1)
 
-      finally <- liftIO $ runExceptT $ case eitherResp of
-        Left err ->
-          case err of
-            HClient excp -> let errMsg = TBS.fromLBS $ encode $ show excp
-                            in runFailureQ pool $ mkInvo e 1000 decodedHeaders errMsg []
-            HParse _ detail -> let errMsg = TBS.fromLBS $ encode detail
-                               in runFailureQ pool $ mkInvo e 1001 decodedHeaders errMsg []
-            HStatus errResp -> let respPayload = hrsBody errResp
-                                   respHeaders = hrsHeaders errResp
-                                   respStatus = hrsStatus errResp
-                               in runFailureQ pool $ mkInvo e respStatus decodedHeaders respPayload respHeaders
-            HOther detail -> let errMsg = (TBS.fromLBS $ encode detail)
-                             in runFailureQ pool $ mkInvo e 500 decodedHeaders errMsg []
-        Right resp -> let respPayload = hrsBody resp
-                          respHeaders = hrsHeaders resp
-                          respStatus = hrsStatus resp
-                      in runSuccessQ pool e $ mkInvo e respStatus decodedHeaders respPayload respHeaders
-      case finally of
-        Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
-        Right _  -> return ()
-      return eitherResp
+          finally <- liftIO $ runExceptT $ case eitherResp of
+            Left err ->
+              case err of
+                HClient excp -> let errMsg = TBS.fromLBS $ encode $ show excp
+                                in runFailureQ pool $ mkInvo e 1000 decodedHeaders errMsg []
+                HParse _ detail -> let errMsg = TBS.fromLBS $ encode detail
+                                   in runFailureQ pool $ mkInvo e 1001 decodedHeaders errMsg []
+                HStatus errResp -> let respPayload = hrsBody errResp
+                                       respHeaders = hrsHeaders errResp
+                                       respStatus = hrsStatus errResp
+                                   in runFailureQ pool $ mkInvo e respStatus decodedHeaders respPayload respHeaders
+                HOther detail -> let errMsg = (TBS.fromLBS $ encode detail)
+                                 in runFailureQ pool $ mkInvo e 500 decodedHeaders errMsg []
+            Right resp -> let respPayload = hrsBody resp
+                              respHeaders = hrsHeaders resp
+                              respStatus = hrsStatus resp
+                          in runSuccessQ pool e $ mkInvo e respStatus decodedHeaders respPayload respHeaders
+          case finally of
+            Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+            Right _  -> return ()
+          return eitherResp
   where
     mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
     mkInvo e' status reqHeaders respBody respHeaders
-      = let resp = if isInitError status then mkErr respBody else mkResp status respBody respHeaders
+      = let resp = if isClientError status then mkClientErr respBody else mkResp status respBody respHeaders
         in
           Invocation
           (eId e')
@@ -359,17 +363,17 @@ tryWebhook logenv pool e = do
       let wr = WebhookResponse payload (mkMaybe headers) status
       in ResponseType1 wr
 
-    mkErr :: TBS.TByteString -> Response
-    mkErr message =
-      let ir = InitError message
-      in ResponseType2 ir
+    mkClientErr :: TBS.TByteString -> Response
+    mkClientErr message =
+      let cerr = ClientError message
+      in ResponseType2 cerr
 
     mkMaybe :: [a] -> Maybe [a]
     mkMaybe [] = Nothing
     mkMaybe x  = Just x
 
-    isInitError :: Int -> Bool
-    isInitError status = status >= 1000
+    isClientError :: Int -> Bool
+    isClientError status = status >= 1000
 
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
