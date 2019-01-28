@@ -4,6 +4,8 @@ from http import HTTPStatus
 
 import graphene
 
+import copy
+
 from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 from enum import Enum
@@ -167,6 +169,344 @@ class PersonGraphQL(RequestHandler):
         res = person_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
+#GraphQL server with interfaces
+
+class Character(graphene.Interface):
+    id = graphene.ID(required=True)
+    name = graphene.String(required=True)
+
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+class Human(graphene.ObjectType):
+    class Meta:
+        interfaces = (Character, )
+
+    home_planet = graphene.String()
+
+    def __init__(self, home_planet, character):
+        self.home_planet = home_planet
+        self.character = character
+
+    def resolve_id(self, info):
+        return self.character.id
+
+    def resolve_name(self, info):
+        return self.character.name
+
+    def refolve_primary_function(self, info):
+        return self.home_planet
+
+class Droid(graphene.ObjectType):
+    class Meta:
+        interfaces = (Character, )
+
+    primary_function = graphene.String()
+
+    def __init__(self, primary_function, character):
+        self.primary_function = primary_function
+        self.character = character
+
+    def resolve_id(self, info):
+        return self.character.id
+
+    def resolve_name(self, info):
+        return self.character.name
+
+    def resolve_primary_function(self, info):
+        return self.primary_function
+
+class CharacterSearchResult(graphene.Union):
+    class Meta:
+        types = (Human,Droid)
+
+all_characters = {
+ 4: Droid("Astromech", Character(1,'R2-D2')),
+ 5: Human("Tatooine", Character(2, "Luke Skywalker")),
+}
+
+character_search_results = {
+ 1: Droid("Astromech", Character(6,'R2-D2')),
+ 2: Human("Tatooine", Character(7, "Luke Skywalker")),
+}
+
+class CharacterIFaceQuery(graphene.ObjectType):
+    hero = graphene.Field(
+        Character,
+        required=False,
+        episode=graphene.Int(required=True)
+    )
+
+    def resolve_hero(_, info, episode):
+        return all_characters.get(episode)
+
+schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
+
+character_interface_schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
+
+class CharacterInterfaceGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        return mkJSONResp(res)
+
+class InterfaceGraphQLErrEmptyFieldList(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'INTERFACE':
+                  t['fields'] = []
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class InterfaceGraphQLErrUnknownInterface(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'OBJECT' and t['name'] == 'Droid':
+                    t['interfaces'][0]['name'] = 'UnknownIFace'
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class InterfaceGraphQLErrWrongFieldType(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                #Remove id field from Droid
+                if t['kind'] == 'OBJECT' and t['name'] == 'Droid':
+                    for f in t['fields'].copy():
+                        if f['name'] == 'id':
+                            f['type']['ofType']['name'] = 'String'
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class InterfaceGraphQLErrMissingField(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                #Remove id field from Droid
+                if t['kind'] == 'OBJECT' and t['name'] == 'Droid':
+                    for f in t['fields'].copy():
+                        if f['name'] == 'id':
+                            t['fields'].remove(f)
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+ifaceArg = {
+    "name": "ifaceArg",
+    "description": None,
+    "type": {
+        "kind": "NON_NULL",
+        "name": None,
+        "ofType": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": None
+        }
+    },
+    "defaultValue": None
+}
+
+class InterfaceGraphQLErrMissingArg(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'INTERFACE':
+                    for f in t['fields']:
+                        if f['name'] == 'id':
+                            f['args'].append(ifaceArg)
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class InterfaceGraphQLErrWrongArgType(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        objArg = copy.deepcopy(ifaceArg)
+        objArg['type']['ofType']['name'] = 'String'
+
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in filter(lambda ty : ty['kind'] == 'INTERFACE', typesList):
+                for f in filter(lambda fld: fld['name'] == 'id', t['fields']):
+                    f['args'].append(ifaceArg)
+
+            for t in filter(lambda ty: ty['name'] in ['Droid','Human'], typesList):
+                for f in filter(lambda fld: fld['name'] == 'id', t['fields']):
+                    f['args'].append(ifaceArg if t['name'] == 'Droid' else objArg)
+
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class InterfaceGraphQLErrExtraNonNullArg(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = character_interface_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'OBJECT' and t['name'] == 'Droid':
+                    for f in t['fields']:
+                        if f['name'] == 'id':
+                            f['args'].append({
+                                "name": "extraArg",
+                                "description": None,
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": None,
+                                    "ofType": {
+                                        "kind": "SCALAR",
+                                        "name": "Int",
+                                        "ofType": None
+                                    }
+                                },
+                                "defaultValue": None
+                            })
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+#GraphQL server involving union type
+
+class UnionQuery(graphene.ObjectType):
+    search = graphene.Field(
+        CharacterSearchResult,
+        required=False,
+        episode=graphene.Int(required=True)
+    )
+
+    def resolve_search(_, info, episode):
+        return character_search_results.get(episode)
+
+union_schema = graphene.Schema(query=UnionQuery, types=[Human, Droid])
+
+class UnionGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        return mkJSONResp(res)
+
+class UnionGraphQLSchemaErrUnknownTypes(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for i, p in enumerate(t['possibleTypes']):
+                       p['name'] = 'Unknown' + str(i)
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrSubTypeInterface(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for p in t['possibleTypes']:
+                       p['name'] = 'Character'
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrNoMemberTypes(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    t['possibleTypes'] = []
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+class UnionGraphQLSchemaErrWrappedType(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = union_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in typesList:
+                if t['kind'] == 'UNION':
+                    for i, p in enumerate(t['possibleTypes']):
+                        t['possibleTypes'][i] = {
+                            "kind": "NON_NULL",
+                            "name": None,
+                            "ofType": p
+                        }
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
+
+#GraphQL server with default values for inputTypes
+
 class InpObjType(graphene.InputObjectType):
 
     @classmethod
@@ -229,6 +569,7 @@ class EchoGraphQL(RequestHandler):
         res = echo_schema.execute(req.json['query'])
         respDict = res.to_dict()
         typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166
         if typesList is not None:
             for t in filter(lambda ty: ty['name'] == 'EchoQuery', typesList):
                 for f in filter(lambda fld: fld['name'] == 'echo', t['fields']):
@@ -242,6 +583,19 @@ handlers = MkHandlers({
     '/hello-graphql': HelloGraphQL,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,
+    '/character-iface-graphql' : CharacterInterfaceGraphQL,
+    '/iface-graphql-err-empty-field-list' : InterfaceGraphQLErrEmptyFieldList,
+    '/iface-graphql-err-unknown-iface' : InterfaceGraphQLErrUnknownInterface,
+    '/iface-graphql-err-missing-field' : InterfaceGraphQLErrMissingField,
+    '/iface-graphql-err-wrong-field-type' : InterfaceGraphQLErrWrongFieldType,
+    '/iface-graphql-err-missing-arg' : InterfaceGraphQLErrMissingArg,
+    '/iface-graphql-err-wrong-arg-type' : InterfaceGraphQLErrWrongArgType,
+    '/iface-graphql-err-extra-non-null-arg' : InterfaceGraphQLErrExtraNonNullArg,
+    '/union-graphql' : UnionGraphQL,
+    '/union-graphql-err-unknown-types' : UnionGraphQLSchemaErrUnknownTypes,
+    '/union-graphql-err-subtype-iface' : UnionGraphQLSchemaErrSubTypeInterface,
+    '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
+    '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
     '/default-value-echo-graphql' : EchoGraphQL,
     '/person-graphql': PersonGraphQL
 })

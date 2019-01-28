@@ -8,6 +8,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as Set
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -75,14 +76,14 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR (ObjTyInfo descM n flds) fld =
+objectTypeR (ObjTyInfo descM n iFaces flds) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKOBJECT
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> retJ ([] :: [()])
+    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
     "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
                     sortBy (comparing _fiName) $
                     filter notBuiltinFld $ Map.elems flds
@@ -93,6 +94,55 @@ notBuiltinFld f =
   fldName /= "__typename" && fldName /= "__type" && fldName /= "__schema"
   where
     fldName = _fiName f
+
+getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
+getImplTypes aot = do
+   tyInfo :: TypeMap <- asks getter
+   return $ sortBy (comparing _otiName) $ Map.elems $ getPossibleObjTypes' tyInfo $ aot
+
+-- 4.5.2.3
+unionR :: (MonadReader t m, MonadError QErr m, Has TypeMap t) => UnionTyInfo -> Field -> m J.Object
+unionR u@(UnionTyInfo descM n _) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Field"
+    "kind"          -> retJ TKUNION
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
+    _               -> return J.Null
+
+-- 4.5.2.4
+ifaceR
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => G.NamedType
+  -> Field
+  -> m J.Object
+ifaceR n fld = do
+  tyInfo <- getTyInfo n
+  case tyInfo of
+    TIIFace ifaceTyInfo -> ifaceR' ifaceTyInfo fld
+    _                   -> throw500 $ "Unknown interface " <> G.unName (G.unNamedType n)
+
+ifaceR'
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => IFaceTyInfo
+  -> Field
+  -> m J.Object
+ifaceR' i@(IFaceTyInfo descM n flds) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Type"
+    "kind"          -> retJ TKINTERFACE
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                      sortBy (comparing _fiName) $
+                      filter notBuiltinFld $ Map.elems flds
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld) =<< getImplTypes (AOTIFace i)
+    _               -> return J.Null
 
 -- 4.5.2.5
 enumTypeR
@@ -179,6 +229,8 @@ namedTypeR' fld = \case
   TIObj objTyInfo       -> objectTypeR objTyInfo fld
   TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
   TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
+  TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
+  TIUnion unionTyInfo   -> unionR unionTyInfo fld
 
 -- 4.5.3
 fieldR

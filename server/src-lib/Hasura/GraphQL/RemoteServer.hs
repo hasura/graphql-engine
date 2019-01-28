@@ -11,6 +11,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -49,12 +50,11 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
     either schemaErr return $ J.eitherDecode respData
-  let (G.SchemaDocument tyDefs, qRootN, mRootN, sRootN) =
+  let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
-  let etTypeInfos = mapM fromRemoteTyDef tyDefs
-  typeInfos <- either schemaErr return etTypeInfos
-  let typMap = VT.mkTyInfoMap typeInfos
-      mQrTyp = Map.lookup qRootN typMap
+  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
+     VT.RemoteType name def
+  let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
       mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
@@ -66,8 +66,10 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
-    fromRemoteTyDef ty = VT.fromTyDef ty $ VT.RemoteType name def
-    schemaErr err = throw400 RemoteSchemaError (T.pack $ show err)
+    remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
+    remoteSchemaErr = throw400 RemoteSchemaError
+
+    schemaErr err = remoteSchemaErr (T.pack $ show err)
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
     throwHttpErr = schemaErr
@@ -150,11 +152,11 @@ mergeMutRoot a b =
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
 mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Map.empty
+                    (G.NamedType "mutation_root") Set.empty Map.empty
 
 mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
 mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") flds
+                    (G.NamedType "mutation_root") Set.empty flds
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeSubRoot a b =
@@ -171,7 +173,7 @@ mergeSubRoot a b =
 
 mkNewEmptySubRoot :: VT.ObjTyInfo
 mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Map.empty
+                    (G.NamedType "subscription_root") Set.empty Map.empty
 
 
 mergeTyMaps

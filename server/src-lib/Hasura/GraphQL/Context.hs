@@ -133,10 +133,11 @@ mkHsraObjFldInfo descM name params ty =
 mkHsraObjTyInfo
   :: Maybe G.Description
   -> G.NamedType
+  -> IFacesSet
   -> ObjFieldMap
   -> ObjTyInfo
-mkHsraObjTyInfo descM ty flds =
-  mkObjTyInfo descM ty flds HasuraType
+mkHsraObjTyInfo descM ty implIFaces flds =
+  mkObjTyInfo descM ty implIFaces flds HasuraType
 
 mkHsraInpTyInfo
   :: Maybe G.Description
@@ -318,7 +319,7 @@ defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
 mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
-                  (G.NamedType "query_root") $
+                  (G.NamedType "query_root") Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
@@ -338,12 +339,12 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap 
     colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
     mkMutRoot =
-      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
+      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
     mkSubRoot =
       mkHsraObjTyInfo (Just "subscription root")
-      (G.NamedType "subscription_root") . mapFromL _fiName
+      (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
