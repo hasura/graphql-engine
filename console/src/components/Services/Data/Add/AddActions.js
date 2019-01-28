@@ -24,6 +24,7 @@ const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
+const SET_FOREIGNKEY = 'AddTable/SET_FOREIGNKEY';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
@@ -56,6 +57,11 @@ const setColNullable = (isNull, index) => ({
 const setColUnique = (isUnique, index) => ({
   type: SET_COLUNIQUE,
   isUnique,
+  index,
+});
+const setColForeignkey = (isForeign, index) => ({
+  type: SET_FOREIGNKEY,
+  isForeign,
   index,
 });
 const addCol = () => ({ type: ADD_COL });
@@ -351,6 +357,16 @@ const addTableReducer = (state = defaultState, action) => {
           ...state.columns.slice(colInd + 1),
         ],
       };
+    case SET_FOREIGNKEY:
+      const foreignInd = action.index;
+      return {
+        ...state,
+        columns: [
+          ...state.columns.slice(0, foreignInd),
+          { ...state.columns[foreignInd], foreignKey: action.isForeign },
+          ...state.columns.slice(foreignInd + 1),
+        ],
+      };
     case ADD_COL:
       return { ...state, columns: [...state.columns, { name: '', type: '' }] };
     case ADD_PK:
@@ -388,6 +404,7 @@ export {
   setColNullable,
   setColUnique,
   setColDefault,
+  setColForeignkey,
   removeColDefault,
   addCol,
   addPk,

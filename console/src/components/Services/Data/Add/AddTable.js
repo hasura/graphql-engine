@@ -17,6 +17,7 @@ import {
   setColNullable,
   setColDefault,
   setColUnique,
+  setColForeignkey,
   removeColDefault,
   addCol,
 } from './AddActions';
@@ -51,6 +52,12 @@ const typeDescriptionDict = convertListToDictUsingKV(
   dataTypes
 );
 */
+import {
+  fkRefTableChange,
+  fkRColChange,
+  addFkSql,
+} from '../TableModify/ModifyActions';
+
 class AddTable extends Component {
   constructor(props) {
     super(props);
@@ -66,6 +73,9 @@ class AddTable extends Component {
         dispatch(removeColDefault(i));
       }
     });
+    this.state = {
+      tableName: '',
+    };
   }
 
   componentWillUnmount() {
@@ -214,7 +224,8 @@ class AddTable extends Component {
     return true;
   }
 
-  submitValidation() {
+  submitValidation(tableName, columns) {
+    console.log(tableName);
     this.props.dispatch(resetValidation());
     // table name validation
     if (this.tableNameCheck()) {
@@ -223,9 +234,20 @@ class AddTable extends Component {
         // The primary key validation ensure.
         if (this.minPrimaryKeyCheck()) {
           this.props.dispatch(createTableSql());
+          columns.map((value, index) => {
+            if (columns[index].foreignKey === true) {
+              console.log('done');
+              this.props.dispatch(addFkSql(tableName, true));
+            }
+          });
         }
       }
     }
+  }
+
+  addForeignkey(columns) {
+    console.log('hello');
+    console.log(columns);
   }
 
   render() {
@@ -237,7 +259,16 @@ class AddTable extends Component {
       lastError,
       lastSuccess,
       internalError,
+      allSchemas,
+      fkAdd,
     } = this.props;
+    const allTableNames = allSchemas.map(t => t.table_name);
+    allTableNames.sort();
+    const refSchema = allSchemas.find(t => t.table_name === fkAdd.refTable);
+    const refColumnNames = refSchema
+      ? refSchema.columns.map(col => col.column_name)
+      : [];
+    refColumnNames.sort();
     const styles = require('../TableCommon/Table.scss');
     const cols = columns.map((column, i) => {
       let removeIcon;
@@ -310,6 +341,45 @@ class AddTable extends Component {
               </option>
             ))}
           </select>
+          {columns[i].foreignKey === true && (
+            <select
+              className={`${styles.select} ${styles.selectWidth} form-control ${
+                styles.add_pad_left
+              } ${styles.add_mar_left}`}
+              value={fkAdd.refTable}
+              onChange={e => {
+                dispatch(fkRefTableChange(e.target.value));
+              }}
+              data-test="ref-table"
+            >
+              <option value="">Reference table</option>
+              {allTableNames.map((tName, index) => (
+                <option key={index} value={tName}>
+                  {tName}
+                </option>
+              ))}
+            </select>
+          )}
+          {columns[i].foreignKey === true && (
+            <select
+              className={`${styles.select} ${styles.selectWidth} form-control ${
+                styles.add_pad_left
+              } ${styles.add_mar_left}`}
+              value={fkAdd.rcol}
+              onChange={e => {
+                dispatch(fkRColChange(e.target.value));
+                column.type = e.target.value;
+              }}
+              data-test="ref-col"
+            >
+              <option value="">Reference column</option>
+              {refColumnNames.map((co, index) => (
+                <option key={index} value={co}>
+                  {co}
+                </option>
+              ))}
+            </select>
+          )}
           {/*
           {typeDescriptionDict && typeDescriptionDict[column.type] ? (
             <span>
@@ -344,6 +414,17 @@ class AddTable extends Component {
             }}
             data-test={`col-default-${i}`}
           />{' '}
+          <input
+            className={`${styles.inputCheckbox} form-control `}
+            type="checkbox"
+            checked={columns[i].foreignKey}
+            onChange={e => {
+              dispatch(setColForeignkey(e.target.checked, i));
+            }}
+            value="ForeignKey"
+            data-test="foreign-key-checkbox"
+          />{' '}
+          <label>Foreign Key</label>
           <input
             className={`${styles.inputCheckbox} form-control `}
             checked={columns[i].nullable}
@@ -443,6 +524,7 @@ class AddTable extends Component {
               className={`${styles.tableNameInput} form-control`}
               onChange={e => {
                 dispatch(setTableName(e.target.value));
+                this.setState({ tableName: e.target.value });
               }}
             />
             <hr />
@@ -475,7 +557,11 @@ class AddTable extends Component {
             <button
               type="submit"
               className={`btn ${styles.yellow_button}`}
-              onClick={this.submitValidation.bind(this)}
+              onClick={this.submitValidation.bind(
+                this,
+                this.state.tableName,
+                columns
+              )}
               data-test="table-create"
             >
               {createBtnText}
@@ -498,7 +584,11 @@ AddTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({ ...state.addTable.table });
+const mapStateToProps = state => ({
+  ...state.addTable.table,
+  allSchemas: state.tables.allSchemas,
+  fkAdd: state.tables.modify.fkAdd,
+});
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);
 
