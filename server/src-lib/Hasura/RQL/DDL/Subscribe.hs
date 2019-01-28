@@ -32,12 +32,6 @@ import qualified Database.PG.Query       as Q
 
 data OpVar = OLD | NEW deriving (Show)
 
-defaultNumRetries :: Int
-defaultNumRetries = 0
-
-defaultRetryInterval :: Int
-defaultRetryInterval = 10
-
 triggerTmplt :: Maybe GingerTmplt
 triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j2") of
   Left _      -> Nothing
@@ -235,7 +229,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   assertCols ti update
   assertCols ti delete
 
-  let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
+  let rconf = fromMaybe defaultRetryConf retryConf
   return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()

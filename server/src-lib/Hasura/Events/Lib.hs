@@ -22,10 +22,10 @@ import           Hasura.Events.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version         (currentVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
-import qualified Control.Lens                  as CL
 import qualified Data.ByteString               as BS
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
@@ -37,9 +37,8 @@ import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
-import qualified Network.HTTP.Types            as N
-import qualified Network.Wreq                  as W
-import qualified Network.Wreq.Session          as WS
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Types            as HTTP
 
 type Version = T.Text
 
@@ -144,13 +143,13 @@ initEventEngineCtx maxT fetchI = do
   c <- newTVar 0
   return $ EventEngineCtx q c maxT fetchI
 
-processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
-processEventQueue logctx logenv httpSess pool cacheRef eectx = do
+processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
   threads <- mapM async [fetchThread , consumeThread]
   void $ waitAny threads
   where
     fetchThread = pushEvents (mkHLogger logctx) pool eectx
-    consumeThread = consumeEvents (mkHLogger logctx) logenv httpSess pool cacheRef eectx
+    consumeThread = consumeEvents (mkHLogger logctx) logenv httpMgr pool cacheRef eectx
 
 pushEvents
   :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
@@ -163,17 +162,17 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: HLogger -> LogEnvHeaders -> WS.Session -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
-consumeEvents logger logenv httpSess pool cacheRef eectx  = forever $ do
+  :: HLogger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT  (processEvent logenv pool event) (logger, httpSess, cacheRef, eectx)
+  async $ runReaderT  (processEvent logenv pool event) (logger, httpMgr, cacheRef, eectx)
 
 processEvent
   :: ( MonadReader r m
      , MonadIO m
-     , Has WS.Session r
+     , Has HTTP.Manager r
      , Has HLogger r
      , Has CacheRef r
      , Has EventEngineCtx r
@@ -217,7 +216,7 @@ processEvent logenv pool e = do
       cache <- liftIO $ readIORef cacheRef
       let eti = getEventTriggerInfoFromEvent cache e
           retryConfM = etiRetryConf <$> eti
-          retryConf = fromMaybe (RetryConf 0 10) retryConfM
+          retryConf = fromMaybe defaultRetryConf retryConfM
           tries = eTries e
           mretryHeaderSeconds = parseRetryHeader mretryHeader
           triesExhausted = tries >= rcNumRetries retryConf
@@ -247,7 +246,7 @@ processEvent logenv pool e = do
 tryWebhook
   :: ( MonadReader r m
      , MonadIO m
-     , Has WS.Session r
+     , Has HTTP.Manager r
      , Has HLogger r
      , Has CacheRef r
      , Has EventEngineCtx r
@@ -259,13 +258,17 @@ tryWebhook logenv pool e = do
   cache <- liftIO $ readIORef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
-    Nothing -> return $ Left $ HOther "table or event-trigger not found"
+    Nothing -> return $ Left (HOther "table or event-trigger not found")
     Just eti -> do
       let webhook = wciCachedValue $ etiWebhookInfo eti
           createdAt = eCreatedAt e
           eventId =  eId e
           headerInfos = etiHeaders eti
-          headers = map encodeHeader headerInfos
+          etHeaders = map encodeHeader headerInfos
+          headers = addDefaultHeaders etHeaders
+          retryConf = etiRetryConf eti
+          timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
+          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
       eeCtx <- asks getter
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
@@ -274,9 +277,16 @@ tryWebhook logenv pool e = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      let options = addHeaders headers W.defaults
-          decodedHeaders = map (decodeHeader headerInfos) $ options CL.^. W.headers
-      eitherResp <- runExceptT $ runHTTP options (mkAnyHTTPPost (T.unpack webhook) (Just $ toJSON e)) (Just (ExtraContext createdAt eventId))
+      -- TODO: Catch exception
+      initReq <- liftIO $ HTTP.parseRequest $ T.unpack webhook
+      let req = initReq
+                { HTTP.method = "POST"
+                , HTTP.requestHeaders = headers
+                , HTTP.requestBody = HTTP.RequestBodyLBS (encode e)
+                , HTTP.responseTimeout = responseTimeout
+                }
+          decodedHeaders = map (decodeHeader headerInfos) $ HTTP.requestHeaders req
+      eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
 
       --decrement counter once http is done
       liftIO $ atomically $ do
@@ -314,17 +324,20 @@ tryWebhook logenv pool e = do
           status
           (mkWebhookReq (toJSON e) reqHeaders)
           resp
-    addHeaders :: [(N.HeaderName, BS.ByteString)] -> W.Options -> W.Options
-    addHeaders headers opts = foldl (\acc h -> acc CL.& W.header (fst h) CL..~ [snd h] ) opts headers
-
-    encodeHeader :: EventHeaderInfo -> (N.HeaderName, BS.ByteString)
+    encodeHeader :: EventHeaderInfo -> HTTP.Header
     encodeHeader (EventHeaderInfo hconf cache) =
       let (HeaderConf name _) = hconf
           ciname = CI.mk $ T.encodeUtf8 name
           value = T.encodeUtf8 cache
       in  (ciname, value)
 
-    decodeHeader :: [EventHeaderInfo] -> (N.HeaderName, BS.ByteString) -> HeaderConf
+    addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
+    addDefaultHeaders hdrs = hdrs ++
+      [ (CI.mk "Content-Type", "application/json")
+      , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion )
+      ]
+
+    decodeHeader :: [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString) -> HeaderConf
     decodeHeader headerInfos (hdrName, hdrVal)
       = let name = decodeBS $ CI.original hdrName
             getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
