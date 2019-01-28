@@ -9,13 +9,15 @@ import qualified Data.Aeson                   as J
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
-
+import qualified Data.String                  as DataString
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Network.Wai.Handler.Warp
+
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -26,9 +28,10 @@ initStateTx = clearHdbViews
 
 data RawConnParams
   = RawConnParams
-  { rcpStripes  :: !(Maybe Int)
-  , rcpConns    :: !(Maybe Int)
-  , rcpIdleTime :: !(Maybe Int)
+  { rcpStripes      :: !(Maybe Int)
+  , rcpConns        :: !(Maybe Int)
+  , rcpIdleTime     :: !(Maybe Int)
+  , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
@@ -36,6 +39,7 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 data RawServeOptions
   = RawServeOptions
   { rsoPort          :: !(Maybe Int)
+  , rsoHost          :: !(Maybe HostPreference)
   , rsoConnParams    :: !RawConnParams
   , rsoTxIso         :: !(Maybe Q.TxIsolation)
   , rsoAccessKey     :: !(Maybe AccessKey)
@@ -58,6 +62,7 @@ type CorsConfig = CorsConfigG T.Text
 data ServeOptions
   = ServeOptions
   { soPort          :: !Int
+  , soHost          :: !HostPreference
   , soConnParams    :: !Q.ConnParams
   , soTxIso         :: !Q.TxIsolation
   , soAccessKey     :: !(Maybe AccessKey)
@@ -106,6 +111,9 @@ class FromEnv a where
 
 instance FromEnv String where
   fromEnv = Right
+
+instance FromEnv HostPreference where
+  fromEnv = Right . DataString.fromString
 
 instance FromEnv Text where
   fromEnv = Right . T.pack
@@ -202,6 +210,9 @@ mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$>
           withEnv (rsoPort rso) (fst servePortEnv)
+  host <- fromMaybe "*" <$>
+          withEnv (rsoHost rso) (fst serveHostEnv)
+
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
@@ -212,14 +223,15 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port connParams txIso accKey authHook
+  return $ ServeOptions port host connParams txIso accKey authHook
                         jwtSecr unAuthRole corsCfg enableConsole
   where
-    mkConnParams (RawConnParams s c i) = do
+    mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      return $ Q.ConnParams stripes conns iTime
+      allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
+      return $ Q.ConnParams stripes conns iTime allowPrepare
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -308,7 +320,7 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       ]
@@ -328,6 +340,12 @@ servePortEnv =
   , "Port on which graphql-engine should be served (default: 8080)"
   )
 
+serveHostEnv :: (String, String)
+serveHostEnv =
+  ( "HASURA_GRAPHQL_SERVER_HOST"
+  , "Host on which graphql-engine will listen (default: *)"
+  )
+
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
@@ -343,6 +361,12 @@ pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =
   ( "HASURA_GRAPHQL_PG_TIMEOUT"
   , "Each connection's idle time before it is closed (default: 180 sec)"
+  )
+
+pgUsePrepareEnv :: (String, String)
+pgUsePrepareEnv =
+  ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "Use prepared statements for queries (default: True)"
   )
 
 txIsoEnv :: (String, String)
@@ -468,7 +492,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout
+  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -492,6 +516,12 @@ parseConnParams =
                 metavar "SECONDS" <>
                 help (snd pgTimeoutEnv)
               )
+    allowPrepare = optional $
+      option (eitherReader parseStrAsBool)
+              ( long "use-prepared-statements" <>
+                metavar "USE PREPARED STATEMENTS" <>
+                help (snd pgUsePrepareEnv)
+              )
 
 parseServerPort :: Parser (Maybe Int)
 parseServerPort = optional $
@@ -500,6 +530,12 @@ parseServerPort = optional $
          metavar "PORT" <>
          help (snd servePortEnv)
        )
+
+parseServerHost :: Parser (Maybe HostPreference)
+parseServerHost = optional $ strOption ( long "server-host" <>
+                metavar "HOST" <>
+                help "Host on which graphql-engine will listen (default: *)"
+              )
 
 parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =
@@ -598,6 +634,7 @@ serveOptsToLog so =
                        , "cors_domain" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
+                       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

@@ -2,6 +2,7 @@
 
 import pytest
 import yaml
+import requests
 
 from validate import check_query_f, check_query
 
@@ -16,6 +17,14 @@ def mk_add_remote_q(name, url):
                 "url": url,
                 "forward_client_headers": False
             }
+        }
+    }
+
+def mk_delete_remote_q(name):
+    return {
+        "type" : "remove_remote_schema",
+        "args" : {
+            "name": name
         }
     }
 
@@ -218,6 +227,62 @@ class TestAddRemoteSchemaTbls:
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "person-graphql"}})
         assert st_code == 200, resp
 
+
+class TestAddRemoteSchemaCompareRootQueryFields:
+
+    remote = 'http://localhost:5000/default-value-echo-graphql'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q(mk_add_remote_q('default_value_test', self.remote))
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('default_value_test'))
+        assert st_code == 200, resp
+
+    def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx):
+        with open('queries/graphql_introspection/introspection.yaml') as f:
+            query = yaml.load(f)
+        st_code, introspect_hasura = check_query(hge_ctx, query)
+        assert st_code == 200, introspect_hasura
+        resp = requests.post(
+            self.remote,
+            json=query['query']
+        )
+        introspect_remote = resp.json()
+        assert resp.status_code == 200, introspect_remote
+        remote_root_ty_info = get_query_root_info(introspect_remote)
+        hasura_root_ty_Info = get_query_root_info(introspect_hasura)
+        hasFld=dict()
+        for fr in remote_root_ty_info['fields']:
+            hasFld[fr['name']] = False
+            for fh in filter(lambda f: f['name'] == fr['name'], hasura_root_ty_Info['fields']):
+                hasFld[fr['name']] = True
+                assert fr['type'] == fh['type'], yaml.dump({
+                    'error' : 'Types do not match for fld ' + fr['name'],
+                    'remote_type' : fr['type'],
+                    'hasura_type' : fh['type']
+                })
+                hasArg=dict()
+                for ar in fr['args']:
+                    arPath = fr['name'] + '(' + ar['name'] + ':)'
+                    hasArg[arPath] = False
+                    for ah in filter(lambda a: a['name'] == ar['name'], fh['args']):
+                        hasArg[arPath] = True
+                        assert ar['type'] == ah['type'], yaml.dump({
+                            'error' : 'Types do not match for arg ' + arPath,
+                            'remote_type' : ar['type'],
+                            'hasura_type' : ah['type']
+                        })
+                        assert ar['defaultValue'] == ah['defaultValue'], yaml.dump({
+                            'error' : 'Default values do not match for arg ' + arPath,
+                            'remote_default_value' : ar['defaultValue'],
+                            'hasura_default_value' : ah['defaultValue']
+                        })
+                    assert hasArg[arPath], 'Argument ' + arPath + ' in the remote schema root query type not found in Hasura schema'
+            assert hasFld[fr['name']], 'Field ' + fr['name'] + ' in the remote shema root query type not found in Hasura schema'
+
+
 #    def test_remote_query_variables(self, hge_ctx):
 #        pass
 #    def test_add_schema_url_from_env(self, hge_ctx):
@@ -231,6 +296,13 @@ def _map(f, l):
 
 def _filter(f, l):
     return list(filter(f, l))
+
+def get_query_root_info(res):
+    root_ty_name = res['data']['__schema']['queryType']['name']
+    return list(filter(lambda ty: ty['name'] == root_ty_name, get_types(res) ))[0]
+
+def get_types(res):
+    return res['data']['__schema']['types']
 
 def check_introspection_result(res, types, node_names):
     all_types = _map(lambda t: t['name'], res['data']['__schema']['types'])

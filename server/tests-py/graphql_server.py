@@ -8,6 +8,8 @@ import copy
 
 from webserver import RequestHandler, WebServer, MkHandlers, Response
 
+from enum import Enum
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -152,6 +154,8 @@ class PersonGraphQL(RequestHandler):
             return Response(HTTPStatus.BAD_REQUEST)
         res = person_schema.execute(req.json['query'])
         return mkJSONResp(res)
+
+#GraphQL server with interfaces
 
 class Character(graphene.Interface):
     id = graphene.ID(required=True)
@@ -393,6 +397,8 @@ class InterfaceGraphQLErrExtraNonNullArg(RequestHandler):
         return Response(HTTPStatus.OK, respDict,
                     {'Content-Type': 'application/json'})
 
+#GraphQL server involving union type
+
 class UnionQuery(graphene.ObjectType):
     search = graphene.Field(
         CharacterSearchResult,
@@ -485,8 +491,77 @@ class UnionGraphQLSchemaErrWrappedType(RequestHandler):
         return Response(HTTPStatus.OK, respDict,
                     {'Content-Type': 'application/json'})
 
+#GraphQL server with default values for inputTypes
+
+class InpObjType(graphene.InputObjectType):
+
+    @classmethod
+    def default(cls):
+        meta = cls._meta
+        fields = meta.fields
+        default_fields = {name: field.default_value for name, field in fields.items()}
+        container = meta.container
+        return container(**default_fields)
+
+class SizeObj(graphene.ObjectType):
+    width = graphene.Int()
+    height = graphene.Float()
+    shape = graphene.String()
+    hasTag = graphene.Boolean()
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+
+GQColorEnum = graphene.Enum.from_enum(Color)
+
+class SizeInput(InpObjType):
+    width = graphene.Int(default_value=100)
+    height = graphene.Float(default_value=100.1)
+    shape = graphene.String(default_value="cube")
+    hasTag = graphene.Boolean(default_value=False)
+
+    def asSizeObj(self):
+        return SizeObj(width=self.width, height=self.height, shape=self.shape, hasTag=self.hasTag)
 
 
+class Echo(graphene.ObjectType):
+    intFld = graphene.Int()
+    listFld = graphene.List(graphene.String)
+    objFld = graphene.Field(SizeObj)
+    enumFld = graphene.Field(GQColorEnum)
+
+class EchoQuery(graphene.ObjectType):
+    echo = graphene.Field(
+                Echo,
+                int_input=graphene.Int( default_value=1234),
+                list_input=graphene.Argument(graphene.List(graphene.String), default_value=["hi","there"]),
+                obj_input=graphene.Argument(SizeInput, default_value=SizeInput.default()),
+                enum_input=graphene.Argument(GQColorEnum, default_value=GQColorEnum.RED.name),
+            )
+
+    def resolve_echo(self, info, int_input, list_input, obj_input, enum_input):
+        #print (int_input, list_input, obj_input)
+        return Echo(intFld=int_input, listFld=list_input, objFld=obj_input, enumFld=enum_input)
+
+echo_schema = graphene.Schema(query=EchoQuery)
+
+class EchoGraphQL(RequestHandler):
+    def get(self, req):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+    def post(self, req):
+        if not req.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = echo_schema.execute(req.json['query'])
+        respDict = res.to_dict()
+        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        if typesList is not None:
+            for t in filter(lambda ty: ty['name'] == 'EchoQuery', typesList):
+                for f in filter(lambda fld: fld['name'] == 'echo', t['fields']):
+                    for a in filter(lambda arg: arg['name'] == 'enumInput', f['args']):
+                        a['defaultValue'] = 'RED'
+        return Response(HTTPStatus.OK, respDict,
+                    {'Content-Type': 'application/json'})
 
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
@@ -506,6 +581,7 @@ handlers = MkHandlers({
     '/union-graphql-err-subtype-iface' : UnionGraphQLSchemaErrSubTypeInterface,
     '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
     '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
+    '/default-value-echo-graphql' : EchoGraphQL,
     '/person-graphql': PersonGraphQL
 })
 

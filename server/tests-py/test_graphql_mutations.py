@@ -205,6 +205,12 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_author_with_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
 
+    def test_author_with_articles_empty(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_empty.yaml")
+
+    def test_author_with_articles_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_null.yaml")
+
     def test_author_with_articles_author_id_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_author_id_fail.yaml")
 
@@ -248,6 +254,10 @@ class TestGraphqlUpdateBasic(DefaultTestQueries):
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
+
+    def test_empty_set_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_empty_set.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_set_person_details(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")

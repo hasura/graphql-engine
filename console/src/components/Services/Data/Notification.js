@@ -2,6 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification, showTempNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
+import Button from '../Layout/Button/Button';
 
 const styles = require('./TableCommon/Table.scss');
 
@@ -47,15 +48,17 @@ const showErrorNotification = (title, message, reqBody, error) => {
   let finalJson = error ? error.message : '{}';
   if (error && 'action' in error) {
     refreshBtn = (
-      <button
-        className={styles.yellow_button + ' ' + styles.add_mar_top_small}
+      <Button
+        className={styles.add_mar_top_small}
+        color="yellow"
+        size="sm"
         onClick={e => {
           e.preventDefault();
           window.location.reload();
         }}
       >
         Refresh Console
-      </button>
+      </Button>
     );
     finalJson = error.action;
   } else if (error && 'internal' in error) {

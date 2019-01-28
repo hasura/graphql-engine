@@ -12,6 +12,7 @@ import {
 } from '../EventActions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
+import Button from '../../Layout/Button/Button';
 
 class RedeliverEvent extends Component {
   constructor(props) {
@@ -211,12 +212,14 @@ class RedeliverEvent extends Component {
                 <div className="col-md-12">
                   <div className={styles.add_mar_bottom}>
                     Event ID - {log.redeliverEventId}
-                    <button
+                    <Button
                       onClick={this.handleRedeliver.bind(this)}
-                      className={'hide btn btn-default'}
+                      className="hide"
+                      color="white"
+                      size="sm"
                     >
                       Deliver again
-                    </button>
+                    </Button>
                   </div>
                   <div className={styles.padd_left_remove + ' col-md-5'}>
                     <div> Request </div>
@@ -227,10 +230,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                              log.eventInvocations[0].request,
-                              null,
-                              4
-                            )
+                            log.eventInvocations[0].request,
+                            null,
+                            4
+                          )
                           : ''
                       }
                       minLines={8}

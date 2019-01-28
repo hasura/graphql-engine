@@ -1,0 +1,223 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "defaultValue": null,
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 63,
+      "metadata": {
+        "description": "Unique name for the deployment, used for Postgres Server, Hasura and DNS label."
+      }
+    },
+    "postgresVersion": {
+      "type": "string",
+      "defaultValue": "10",
+      "allowedValues": [
+        "10",
+        "9.6",
+        "9.5"
+      ],
+      "metadata": {
+        "description": "Version of PostgreSQL Server to be provisioned."
+      }
+    },
+    "postgresPricingTier": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "GeneralPurpose",
+        "MemoryOptimized"
+      ],
+      "defaultValue": "GeneralPurpose",
+      "metadata": {
+        "description": "Azure database for PostgreSQL pricing tier."
+      }
+    },
+    "postgresCPUCores": {
+      "type": "int",
+      "allowedValues": [
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Azure database for PostgreSQL SKU capacity - number of cores."
+      }
+    },
+    "postgresDiskSizeInMB": {
+      "type": "int",
+      "minValue": 5210,
+      "maxValue": 4096000,
+      "defaultValue": 10240,
+      "metadata": {
+        "description": "Azure database for PostgreSQL SKU storage size."
+      }
+    },
+    "postgresAdminUsername": {
+      "type": "string",
+      "defaultValue": "hasura",
+      "minLength": 4,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Administrator username for Postgres."
+      }
+    },
+    "postgresAdminPassword": {
+      "type": "securestring",
+      "defaultValue": null,
+      "minLength": 8,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Administrator password for Postgres. Must be at least 8 characters in length, must contain characters from three of the following categories – English uppercase letters, English lowercase letters, numbers (0-9), and non-alphanumeric characters (!, $, #, %, etc.)."
+      }
+    },
+    "postgresDatabaseName": {
+      "type": "string",
+      "defaultValue": "hasura",
+      "minLength": 4,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Name of the database to be created."
+      }
+    }
+  },
+  "variables": {
+    "serverName": "[concat(parameters('name'), '-pg-server')]",
+    "adminUser": "[parameters('postgresAdminUsername')]",
+    "adminPassword": "[parameters('postgresAdminPassword')]",
+    "dbName": "[parameters('postgresDatabaseName')]",
+    "dbSKUTier": "[parameters('postgresPricingTier')]",
+    "dbSKUCapacity": "[parameters('postgresCPUCores')]",
+    "dbSKUSizeInMB": "[parameters('postgresDiskSizeInMB')]",
+    "firewallRuleName": "allow-all-azure-firewall-rule",
+    "containerGroupName": "[concat(parameters('name'), '-container-group')]",
+    "containerName": "hasura-graphql-engine",
+    "containerImage": "hasura/graphql-engine:v1.0.0-alpha35"
+  },
+  "resources": [
+    {
+      "name": "[variables('serverName')]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.DBforPostgreSQL/servers",
+      "apiVersion": "2017-12-01",
+      "properties": {
+        "createMode": "Default",
+        "version": "[parameters('postgresVersion')]",
+        "administratorLogin": "[variables('adminUser')]",
+        "administratorLoginPassword": "[variables('adminPassword')]",
+        "storageProfile": {
+          "storageMB": "[variables('dbSKUSizeInMB')]"
+        }
+      },
+      "sku": {
+        "name": "[concat(if(equals(variables('dbSKUTier'), 'Basic'), 'B', if(equals(variables('dbSKUTier'), 'GeneralPurpose'), 'GP', if(equals(variables('dbSKUTier'), 'MemoryOptimized'), 'MO', 'X'))), '_Gen5_', variables('dbSKUCapacity') )]",
+        "tier": "[variables('dbSKUTier')]",
+        "capacity": "[variables('dbSKUCapacity')]",
+        "size": "[variables('dbSKUSizeInMB')]",
+        "family": "Gen5"
+      },
+      "resources": [
+        {
+          "name": "[variables('dbName')]",
+          "type": "databases",
+          "apiVersion": "2017-12-01",
+          "properties": {
+            "charset": "UTF8",
+            "collation": "English_United States.1252"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))]"
+          ]
+        },
+        {
+          "type": "firewallRules",
+          "name": "[variables('firewallRuleName')]",
+          "apiVersion": "2017-12-01",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))]"
+          ]
+
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "name": "[variables('containerGroupName')]",
+      "apiVersion": "2018-10-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('containerName')]",
+            "properties": {
+              "image": "[variables('containerImage')]",
+              "ports": [
+                {
+                  "protocol": "TCP",
+                  "port": 80
+                }
+              ],
+              "command": [
+                "graphql-engine",
+                "--host",
+                "[reference(resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))).fullyQualifiedDomainName]",
+                "--port",
+                "5432",
+                "--user",
+                "[concat(variables('adminUser'), '@', variables('serverName'))]",
+                "--password",
+                "[variables('adminPassword')]",
+                "--dbname",
+                "[variables('dbName')]",
+                "serve",
+                "--server-port",
+                "80",
+                "--enable-console"
+              ],
+              "resources": {
+                "requests": {
+                  "memoryInGB": 1,
+                  "cpu": 1
+                }
+              }
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "ipAddress": {
+          "ports": [
+            {
+              "protocol": "TCP",
+              "port": 80
+            }
+          ],
+          "type": "Public",
+          "dnsNameLabel": "[parameters('name')]"
+        },
+        "osType": "Linux"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "fqdn": {
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('containerGroupName'))).ipAddress.fqdn]",
+      "type": "string"
+    },
+    "ipaddress": {
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('containerGroupName'))).ipAddress.ip]",
+      "type": "string"
+    }
+  }
+}

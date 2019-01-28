@@ -1,0 +1,39 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
+
+- type: run_sql
+  args:
+    sql: |
+     CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+#Create table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE geom_table(
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        geom_col geometry NOT NULL
+      );
+- type: track_table
+  args:
+    name: geom_table
+    schema: public
+
+#Insert data
+- type: run_sql
+  args:
+    sql: |
+      INSERT INTO geom_table (type, geom_col)
+      VALUES
+      ('point', ST_GeomFromText('POINT(1 2)')),
+      ('linestring', ST_GeomFromText('LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
+      ('linestring', ST_GeomFromText('LINESTRING(1 0, 0.5 0.5, 0 1)')),
+      ('polygon', ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
+      ('polygon', ST_GeomFromText('POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
+      ;
+

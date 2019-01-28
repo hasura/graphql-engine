@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from '../../Layout/Button/Button';
 
 class Editor extends React.Component {
   state = {
@@ -16,37 +17,35 @@ class Editor extends React.Component {
   };
 
   toggleButton = () => (
-    <button
+    <Button
       className={`${this.props.styles.add_mar_small}
-        btn btn-sm btn-default
         ${this.props.styles.modifyEditButton}`}
+      color="white"
+      size="sm"
       data-test={`${this.state.isEditing ? 'close' : 'edit'}-${
         this.props.name
       }`}
       onClick={this.toggleEditor}
     >
       {this.state.isEditing ? 'Close' : 'Edit'}
-    </button>
+    </Button>
   );
 
   saveButton = saveFunc => {
     const { name, property, ongoingRequest, styles } = this.props;
     const isSaving = ongoingRequest === property;
     return (
-      <button
+      <Button
         type="submit"
-        className={`
-          btn
-          ${styles.yellow_button}
-          ${
-            isSaving ? styles.modifySaveButtonDisabled : styles.modifySaveButton
-          }`}
+        className={styles.modifySaveButton}
+        color="yellow"
+        size="sm"
         onClick={saveFunc}
         data-test={`modify-trigger-${name}-save`}
         disabled={isSaving}
       >
         {isSaving ? 'Saving ...' : 'Save'}
-      </button>
+      </Button>
     );
   };
 

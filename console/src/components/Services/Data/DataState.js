@@ -99,6 +99,7 @@ const defaultModifyState = {
     },
   },
   permissionsState: { ...defaultPermissionsState },
+  prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
@@ -126,6 +127,10 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  postgresFunctions: [],
+  nonTrackablePostgresFunctions: [],
+  trackedFunctions: [],
+  listedFunctions: [],
 
   listingSchemas: [],
   untrackedSchemas: [],

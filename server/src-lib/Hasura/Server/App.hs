@@ -218,7 +218,7 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
       (mergedGCtxMap, defGCtx) <-
         mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       let newSc' =
@@ -273,7 +273,7 @@ legacyQueryHandler tn queryType =
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedTable publicSchema tn
+    qt = QualifiedObject publicSchema tn
 
 
 mkWaiApp

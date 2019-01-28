@@ -188,11 +188,29 @@ iresToEither (ISuccess a)   = return a
 pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
+applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
+applyGeomFromGeoJson v =
+  S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+
+isGeoTy :: PGColType -> Bool
+isGeoTy = \case
+  PGGeometry  -> True
+  PGGeography -> True
+  _           -> False
+
 toPrepParam :: Int -> PGColType -> S.SQLExp
-toPrepParam i pct =
-  if pct == PGGeometry || pct == PGGeography
-  then S.SEFnApp "ST_GeomFromGeoJSON" [S.SEPrep i] Nothing
-  else S.SEPrep i
+toPrepParam i =
+  bool prepVal (applyGeomFromGeoJson prepVal) . isGeoTy
+  where
+    prepVal = S.SEPrep i
+
+toTxtValue :: PGColType -> PGColValue -> S.SQLExp
+toTxtValue ty val =
+  S.annotateExp txtVal ty
+  where
+    txtVal = withGeoVal $ txtEncoder val
+    withGeoVal v =
+      bool v (applyGeomFromGeoJson v) $ isGeoTy ty
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

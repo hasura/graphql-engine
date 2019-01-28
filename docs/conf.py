@@ -36,7 +36,7 @@ CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 
 # GraphiQL defaults
-GRAPHIQL_DEFAULT_ENDPOINT = "https://data.accouterments35.hasura-app.io/v1alpha1/graphql"
+GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1alpha1/graphql"
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
@@ -267,7 +267,7 @@ html_show_copyright = True
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #
-# html_use_opensearch = ''
+html_use_opensearch = 'https://docs.hasura.io'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None

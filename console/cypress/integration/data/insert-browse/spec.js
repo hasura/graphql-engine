@@ -438,25 +438,27 @@ export const checkViewRelationship = () => {
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
   cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(300);
+  cy.wait(1000);
   // Add relationship
   cy.get(getElementFromAlias('add-rel-mod')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('someRel');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('someRel');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.wait(300);
+  cy.wait(2000);
   // Insert a row
   cy.get(getElementFromAlias('table-insert-rows')).click();
   cy.get(getElementFromAlias('typed-input-1')).type('1');
   cy.get(getElementFromAlias('insert-save-button')).click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get(getElementFromAlias('table-browse-rows')).click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get('a')
     .contains('View')
     .first()
     .click();
-  cy.wait(300);
+  cy.wait(1000);
   cy.get('a')
     .contains('Close')
     .first()

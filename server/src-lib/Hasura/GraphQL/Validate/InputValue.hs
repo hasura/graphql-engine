@@ -3,6 +3,7 @@ module Hasura.GraphQL.Validate.InputValue
   , jsonParser
   , valueParser
   , constValueParser
+  , pPrintValueC
   ) where
 
 import           Data.Scientific                 (fromFloatDigits)
@@ -14,6 +15,7 @@ import           Data.Has
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Data.Text                       as T
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
@@ -134,6 +136,22 @@ valueParser =
     pScalar (G.VEnum _)       = throwVE "unexpected enum for a scalar"
     pScalar v                 = pVal =<< toJValue v
 
+pPrintValueC :: G.ValueConst -> Text
+pPrintValueC = \case
+  G.VCInt i                        -> T.pack $ show i
+  G.VCFloat f                      -> T.pack $ show f
+  G.VCString (G.StringValue t)     -> T.pack $ show t
+  G.VCBoolean b                    -> bool "false" "true"  b
+  G.VCNull                         -> "null"
+  G.VCEnum (G.EnumValue n)         -> G.unName n
+  G.VCList (G.ListValueG vals)     -> withSquareBraces $ T.intercalate ", " $ map pPrintValueC vals
+  G.VCObject (G.ObjectValueG objs) -> withCurlyBraces $ T.intercalate ", " $ map ppObjFld objs
+  where
+    ppObjFld (G.ObjectFieldG f v) = G.unName f <> ": " <> pPrintValueC v
+    withSquareBraces t = "[" <> t <> "]"
+    withCurlyBraces t = "{" <> t <> "}"
+
+
 toJValueC :: G.ValueConst -> J.Value
 toJValueC = \case
   G.VCInt i                        -> J.toJSON i
@@ -145,7 +163,7 @@ toJValueC = \case
   G.VCList (G.ListValueG vals)     ->
     J.toJSON $ map toJValueC vals
   G.VCObject (G.ObjectValueG objs) ->
-    J.toJSON . Map.fromList $ map toTup objs
+    J.toJSON . OMap.fromList $ map toTup objs
   where
     toTup (G.ObjectFieldG f v) = (f, toJValueC v)
 
