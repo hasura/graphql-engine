@@ -12,22 +12,20 @@ The Hasura GraphQL Engine collects anonymous telemetry data that helps the
 Hasura team in understanding how the product is being used and in deciding
 what to focus on next.
 
-The data collected is minimal and, since there is no *sign-in* associated with
-the GraphQL Engine, it **cannot be used to uniquely identify any user**.
-Furthermore, data collected is strictly statistical in nature and
-**no proprietary information is collected** (*please see the next section*).
+The data collected is minimal, statistical in nature and 
+**cannot be used to uniquely identify a user**. Please see the 
+next section to see what data is collected and sent. Access to collected 
+data is strictly limited to the Hasura team and not shared with 3rd parties.
 
-As a growing community, we greatly appreciate the telemetry data users
-send to us, as it is very valuable in making GraphQL Engine a better product
-for everyone. If you are worried about privacy, you can choose to disable
-sending telemetry as described :ref:`here <telemetry_optout>`.
+As a growing community, we greatly appreciate the usage data users
+send to us, as it is very valuable in helping us make the Hasura GraphQL 
+engine a better product for everyone! However, if you are concerned about 
+sending usage stats, you can choose to disable telemetry as 
+described :ref:`here <telemetry_optout>`.
 
-.. note::
 
-   Access to collected data is strictly limited to the Hasura team and not shared with 3rd parties.
-
-What data are collected?
-------------------------
+What data is collected?
+-----------------------
 
 Server
 ~~~~~~
@@ -70,8 +68,8 @@ Here is a sample row from the telemetry database:
 Console
 ~~~~~~~
 
-The console is a React-Redux UI. Redux action names along with anonymized
-route names are sent without any identifiable information or payload. Console
+The console is a React-Redux app. Redux action names along with anonymized
+route names are sent without any identifiable information or payload. The console
 also records the UUID of the server/CLI that it is connected to.
 
 Here is a sample:
@@ -89,6 +87,9 @@ Here is a sample:
      "cli_uuid": null
    }
 
+Please note, that ``TABLE_NAME`` and ``SCHEMA_NAME`` are not placeholders. 
+The actual names of the tables, schemas, remote-schemas and event-triggers that
+are a part of the URL are not sent.
 
 CLI
 ~~~
