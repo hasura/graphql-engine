@@ -517,7 +517,7 @@ class AddTrigger extends Component {
                 }
               >
                 <option value="">Select table</option>
-                {tableListBySchema.map(t => {
+                {tableListBySchema.sort((t1, t2) => (t1.table_name > t2.table_name ? 1 : -1)).map(t => {
                   if (t.detail.table_type === 'BASE TABLE') {
                     return (
                       <option key={t.table_name} value={t.table_name}>
