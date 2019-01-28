@@ -12,7 +12,6 @@ class VoyagerView extends Component {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
-        'x-hasura-access-key': 'abcd',
       },
       body: JSON.stringify({ query: query }),
     }).then(response => response.json());
