@@ -4,12 +4,19 @@ import (
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/version"
 )
 
-func TestBeam(t *testing.T) {
+func TestBeamDev(t *testing.T) {
 	tm := telemetry.BuildEvent()
-	tm.Version = version.BuildVersion
+	tm.Version = "dev"
+	tm.Command = "TEST"
+	tm.CanBeam = true
+	tm.Beam()
+}
+
+func TestBeamProd(t *testing.T) {
+	tm := telemetry.BuildEvent()
+	tm.Version = "v1.0.0-a-valid-semver"
 	tm.Command = "TEST"
 	tm.CanBeam = true
 	tm.Beam()
