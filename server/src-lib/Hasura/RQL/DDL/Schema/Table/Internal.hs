@@ -26,16 +26,16 @@ import           Data.Aeson
 renameTableInCatalog
   :: (MonadTx m)
   => SchemaCache -> QualifiedTable -> QualifiedTable -> m ()
-renameTableInCatalog sc newQT oldQT = do
+renameTableInCatalog sc newTN oldTN = do
   let allRels = getAllRelations $ scTables sc
   -- Update depended relations on this table with new name
-  forM_ allRels $ \rel -> updateRelDefs newQT oldQT rel
+  forM_ allRels $ \rel -> updateRelDefs newTN oldTN rel
   -- Update table name in hdb_catalog
   liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
 
   where
-    QualifiedObject nsn ntn = newQT
-    QualifiedObject osn otn = oldQT
+    QualifiedObject nsn ntn = newTN
+    QualifiedObject osn otn = oldTN
     updateTableInCatalog =
       Q.unitQ [Q.sql|
            UPDATE "hdb_catalog"."hdb_table"
@@ -83,15 +83,15 @@ updateRelDefs
   -> QualifiedTable
   -> (QualifiedTable, [RelInfo])
   -> m ()
-updateRelDefs newQT oldQT (qt, rels) =
-  forM_ rels $ \rel -> when (oldQT == riRTable rel) $
+updateRelDefs newTN oldTN (qt, rels) =
+  forM_ rels $ \rel -> when (oldTN == riRTable rel) $
     case riType rel of
-      ObjRel -> updateObjRelDef newQT qt $ riName rel
-      ArrRel -> updateArrRelDef newQT qt $ riName rel
+      ObjRel -> updateObjRelDef newTN qt $ riName rel
+      ArrRel -> updateArrRelDef newTN qt $ riName rel
 
 updateObjRelDef :: (MonadTx m) => QualifiedTable
                 -> QualifiedTable -> RelName -> m ()
-updateObjRelDef newQT qt rn = do
+updateObjRelDef newTN qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   case oldDef of
@@ -101,20 +101,20 @@ updateObjRelDef newQT qt rn = do
       liftTx $ updateRel qt rn $ toJSON (newDef :: ObjRelUsing)
   where
     mkObjRelUsing colMap = RUManual $ ObjRelManualConfig $
-      RelManualConfig newQT colMap
+      RelManualConfig newTN colMap
 
 updateArrRelDef :: (MonadTx m) => QualifiedTable
                 -> QualifiedTable -> RelName -> m ()
-updateArrRelDef newQT qt rn = do
+updateArrRelDef newTN qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef  <- decodeValue oldDefV
   liftTx $ updateRel qt rn $ toJSON $ mkNewArrRelUsing oldDef
   where
     mkNewArrRelUsing arrRelUsing = case arrRelUsing of
       RUFKeyOn (ArrRelUsingFKeyOn _ c) ->
-        RUFKeyOn $ ArrRelUsingFKeyOn newQT c
+        RUFKeyOn $ ArrRelUsingFKeyOn newTN c
       RUManual (ArrRelManualConfig (RelManualConfig _ rmCols)) ->
-        RUManual $ ArrRelManualConfig $ RelManualConfig newQT rmCols
+        RUManual $ ArrRelManualConfig $ RelManualConfig newTN rmCols
 
 -- helper functions for rename column
 

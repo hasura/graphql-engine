@@ -32,7 +32,6 @@ import qualified Data.HashMap.Strict                  as M
 import qualified Data.Text                            as T
 import qualified Data.Text.Encoding                   as TE
 import qualified Database.PostgreSQL.LibPQ            as PQ
-import qualified Language.GraphQL.Draft.Syntax        as G
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedObject sn tn) =
@@ -84,7 +83,8 @@ trackExistingTableOrViewP2
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
-  GS.checkConflictingNode defGCtx (G.Name tn)
+      tn = GS.qualObjectToName vn
+  GS.checkConflictingNode defGCtx tn
 
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -94,12 +94,6 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   refreshGCtxMapInSchema
 
   return successMsg
-  where
-    getSchemaN = getSchemaTxt . qSchema
-    getTableN = getTableTxt . qName
-    tn = case getSchemaN vn of
-      "public" -> getTableN vn
-      _        -> getSchemaN vn <> "_" <> getTableN vn
 
 runTrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
@@ -139,24 +133,28 @@ purgeDep schemaObjId = case schemaObjId of
 processTableChanges :: (MonadTx m, CacheRWM m)
                     => TableInfo -> TableDiff -> m Bool
 processTableChanges ti tableDiff = do
-  -- If table rename occurs then don't replace constraints and process dropped and added columns
-  -- Pass updated table name to rename column function
+  -- If table rename occurs then don't replace constraints and
+  -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
-  let oldQT = tiName ti
+  let tn = tiName ti
       withOldTabName = do
         -- replace constraints
-        replaceConstraints oldQT
+        replaceConstraints tn
         -- for all the dropped columns
-        procDroppedCols oldQT
+        procDroppedCols tn
         -- for all added columns
-        procAddedCols oldQT
+        procAddedCols tn
         -- for all altered columns
-        procAlteredCols sc oldQT
+        procAlteredCols sc tn
 
-      withNewTabName newQT = do
+      withNewTabName newTN = do
+        let tnGQL = GS.qualObjectToName newTN
+            defGCtx = scDefaultRemoteGCtx sc
+        -- check for GraphQL schema conflicts on new name
+        GS.checkConflictingNode defGCtx tnGQL
         -- update new table in catalog
-        renameTableInCatalog sc newQT oldQT
-        void $ procAlteredCols sc newQT
+        renameTableInCatalog sc newTN tn
+        void $ procAlteredCols sc newTN
         return True
 
   maybe withOldTabName withNewTabName mNewName
@@ -221,12 +219,11 @@ processSchemaChanges schemaDiff = do
   mapM_ delTableAndDirectDeps droppedTables
 
   sc <- askSchemaCache
-  bools <- forM alteredTables $ \(oldQtn, tableDiff) -> do
+  fmap or $ forM alteredTables $ \(oldQtn, tableDiff) -> do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
     processTableChanges ti tableDiff
-  return $ or bools
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
@@ -475,9 +472,11 @@ execWithMDCheck (RunSQL t cascade _) = do
     liftTx $ delFunctionFromCatalog qf
     delFunctionFromCache qf
 
-  -- update the cache and hdb_catalog with the changes
+  -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff
-  let withoutReload = do
+
+  let withReload = buildSchemaCache
+      withoutReload = do
         postSc <- askSchemaCache
         -- recreate the insert permission infra
         forM_ (M.elems $ scTables postSc) $ \ti -> do
@@ -494,7 +493,7 @@ execWithMDCheck (RunSQL t cascade _) = do
                 trid = etiId eti
             liftTx $ mkTriggerQ trid trn tn cols opsDef
 
-  bool withoutReload buildSchemaCache reloadRequired
+  bool withoutReload withReload reloadRequired
 
   -- refresh the gCtxMap in schema cache
   refreshGCtxMapInSchema
