@@ -8,6 +8,8 @@
 package cli
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -15,7 +17,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/briandowns/spinner"
+	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
@@ -37,9 +43,17 @@ const (
 // Other constants used in the package
 const (
 	// Name of the global configuration directory
-	GLOBAL_CONFIG_DIR_NAME = ".hasura-graphql"
+	GLOBAL_CONFIG_DIR_NAME = ".hasura"
 	// Name of the global configuration file
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
+)
+
+// String constants
+const (
+	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
+allow us to keep improving Hasura at warp speed. To opt-out or read more,
+visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
+`
 )
 
 // HasuraGraphQLConfig has the config values required to contact the server.
@@ -62,6 +76,15 @@ func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
 	return nil
 }
 
+// GlobalConfig is the configuration object stored in the GlobalConfigFile.
+type GlobalConfig struct {
+	// UUID used for telemetry, generated on first run.
+	UUID string `json:"uuid"`
+
+	// Indicate if telemetry is enabled or not
+	EnableTelemetry bool `json:"enable_telemetry"`
+}
+
 // ExecutionContext contains various contextual information required by the cli
 // at various points of it's execution. Values are filled in by the
 // initializers and passed on to each command. Commands can also fill in values
@@ -70,6 +93,12 @@ type ExecutionContext struct {
 	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
 	// correctly render example strings etc.
 	CMDName string
+
+	// ID is a unique ID for this Execution
+	ID string
+
+	// ServerUUID is the unique ID for the server this execution is contacting.
+	ServerUUID string
 
 	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
@@ -96,6 +125,9 @@ type ExecutionContext struct {
 	// stored.
 	GlobalConfigFile string
 
+	// GlobalConfig holds all the configuration options.
+	GlobalConfig *GlobalConfig
+
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
 	// Version indicates the version object
@@ -106,6 +138,17 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+
+	// Telemetry collects the telemetry data throughout the execution
+	Telemetry *telemetry.Data
+}
+
+// NewExecutionContext returns a new instance of execution context
+func NewExecutionContext() *ExecutionContext {
+	ec := &ExecutionContext{}
+	ec.Telemetry = telemetry.BuildEvent()
+	ec.Telemetry.Version = version.BuildVersion
+	return ec
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -128,14 +171,37 @@ func (ec *ExecutionContext) Prepare() error {
 	// populate version
 	ec.setVersion()
 
-	// setup global config directory
-	err := ec.setupGlobalConfigDir()
+	// setup global config
+	err := ec.setupGlobalConfig()
 	if err != nil {
-		return errors.Wrap(err, "setting up config directory failed")
+		// TODO(shahidhk): should this be a failure?
+		return errors.Wrap(err, "setting up global config directory failed")
+	}
+
+	// read global config
+	err = ec.readGlobalConfig()
+	if err != nil {
+		return errors.Wrap(err, "reading global config failed")
 	}
 
 	// initialize a blank config
-	ec.Config = &HasuraGraphQLConfig{}
+	if ec.Config == nil {
+		ec.Config = &HasuraGraphQLConfig{}
+	}
+
+	// generate an execution id
+	if ec.ID == "" {
+		id := "00000000-0000-0000-0000-000000000000"
+		u, err := uuid.NewV4()
+		if err == nil {
+			id = u.String()
+		} else {
+			ec.Logger.Debugf("generating uuid for execution ID failed, %v", err)
+		}
+		ec.ID = id
+		ec.Logger.Debugf("execution id: %v", ec.ID)
+	}
+	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
 }
@@ -171,7 +237,17 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
 
 	// get version from the server and match with the cli version
-	return ec.checkServerVersion()
+	err = ec.checkServerVersion()
+	if err != nil {
+		return errors.Wrap(err, "version check")
+	}
+
+	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AccessKey, ec.Version.ServerSemver, ec.Logger)
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+
+	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
@@ -180,6 +256,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 		return errors.Wrap(err, "failed to get version from server")
 	}
 	ec.Version.SetServerVersion(v)
+	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
@@ -189,27 +266,56 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	return nil
 }
 
+// readGlobalConfig reads the configuration from global config file env vars,
+// through viper.
+func (ec *ExecutionContext) readGlobalConfig() error {
+	// need to get existing viper because https://github.com/spf13/viper/issues/233
+	v := viper.New()
+	v.SetEnvPrefix("HASURA_GRAPHQL")
+	v.AutomaticEnv()
+	v.SetConfigName("config")
+	v.AddConfigPath(ec.GlobalConfigDir)
+	err := v.ReadInConfig()
+	if err != nil {
+		return errors.Wrap(err, "cannor read global config from file/env")
+	}
+	if ec.GlobalConfig == nil {
+		ec.Logger.Debugf("global config is not pre-set, reading from current env")
+		ec.GlobalConfig = &GlobalConfig{
+			UUID:            v.GetString("uuid"),
+			EnableTelemetry: v.GetBool("enable_telemetry"),
+		}
+	} else {
+		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
+	}
+	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
+	ec.Logger.Debugf("global config: enableTelemetry: %v", ec.GlobalConfig.EnableTelemetry)
+	// set if telemetry can be beamed or not
+	ec.Telemetry.CanBeam = ec.GlobalConfig.EnableTelemetry
+	ec.Telemetry.UUID = ec.GlobalConfig.UUID
+	return nil
+}
+
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetDefault("endpoint", "http://localhost:8080")
-	v.SetDefault("access_key", "")
 	v.SetEnvPrefix("HASURA_GRAPHQL")
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config file")
+		return errors.Wrap(err, "cannor read config from file/env")
 	}
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
-	err = ec.Config.ParseEndpoint()
-	return err
+	return ec.Config.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -249,24 +355,90 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
+
+	// set the logger for telemetry
+	if ec.Telemetry.Logger == nil {
+		ec.Telemetry.Logger = ec.Logger
+	}
 }
 
-// setupGlobalConfigDir ensures that global config directory exists and the
-// paths are correctly set.
-func (ec *ExecutionContext) setupGlobalConfigDir() error {
+// setupGlobConfig ensures that global config directory and file exists and
+// reads it into the GlobalConfig object.
+func (ec *ExecutionContext) setupGlobalConfig() error {
 	if len(ec.GlobalConfigDir) == 0 {
+		ec.Logger.Debug("global config directory is not pre-set, defaulting")
 		home, err := homedir.Dir()
 		if err != nil {
 			return errors.Wrap(err, "cannot get home directory")
 		}
 		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
 		ec.GlobalConfigDir = globalConfigDir
+		ec.Logger.Debugf("global config directory set as '%s'", ec.GlobalConfigDir)
 	}
 	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cannot create config directory")
+		return errors.Wrap(err, "cannot create global config directory")
 	}
-	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
+	if len(ec.GlobalConfigFile) == 0 {
+		ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
+		ec.Logger.Debugf("global config file set as '%s'", ec.GlobalConfigFile)
+	}
+	_, err = os.Stat(ec.GlobalConfigFile)
+	if os.IsNotExist(err) {
+		// file does not exist, teat as first run and create it
+		ec.Logger.Debug("global config file does not exist, this could be the first run, creating it...")
+		u, err := uuid.NewV4()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate uuid")
+		}
+		gc := GlobalConfig{
+			UUID:            u.String(),
+			EnableTelemetry: true,
+		}
+		data, err := json.MarshalIndent(gc, "", "  ")
+		if err != nil {
+			return errors.Wrap(err, "cannot marshal json for config file")
+		}
+		err = ioutil.WriteFile(ec.GlobalConfigFile, data, 0644)
+		if err != nil {
+			return errors.Wrap(err, "writing global config file failed")
+		}
+		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
+		// also show a notice about telemetry
+		ec.Logger.Info(StrTelemetryNotice)
+	} else if os.IsExist(err) || err == nil {
+		// file exists, verify contents
+		ec.Logger.Debug("global config file exisits, verifying contents")
+		data, err := ioutil.ReadFile(ec.GlobalConfigFile)
+		if err != nil {
+			return errors.Wrap(err, "reading global config file failed")
+		}
+		var gc GlobalConfig
+		err = json.Unmarshal(data, &gc)
+		if err != nil {
+			return errors.Wrap(err, "global config file not a valid json")
+		}
+		_, err = uuid.FromString(gc.UUID)
+		if err != nil {
+			ec.Logger.Debugf("invalid uuid '%s' in global config: %v", gc.UUID, err)
+			// create a new UUID
+			ec.Logger.Debug("global config file exists, but uuid is invalid, creating a new one...")
+			u, err := uuid.NewV4()
+			if err != nil {
+				return errors.Wrap(err, "failed to generate uuid")
+			}
+			gc.UUID = u.String()
+			data, err := json.Marshal(gc)
+			if err != nil {
+				return errors.Wrap(err, "cannot marshal json for config file")
+			}
+			err = ioutil.WriteFile(ec.GlobalConfigFile, data, 0644)
+			if err != nil {
+				return errors.Wrap(err, "writing global config file failed")
+			}
+			ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
+		}
+	}
 	return nil
 }
 

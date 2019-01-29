@@ -101,10 +101,26 @@ def MkHandlers(handlers):
                 self.send_response(resp.status)
                 if resp.headers:
                     self.append_headers(resp.headers)
+                #Required for graphiql to work with the graphQL test server
+                self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
                 self.end_headers()
                 self.wfile.write(resp.get_body().encode('utf-8'))
             except KeyError:
                 self.not_found()
+
+        def do_OPTIONS(self):
+            self.send_response(204)
+            #Required for graphiql to work with the graphQL test server
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Max-Age', '1728000')
+            self.send_header('Access-Control-Allow-Headers', 'content-type,x-apollo-tracing')
+            self.send_header('Content-Type', 'text/plain charset=UTF-8')
+            self.send_header('Access-Control-Allow-Credentials', 'true')
+            self.send_header('Access-Control-Allow-Origin', self.headers['Origin'])
+            self.send_header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+            self.end_headers()
 
     return HTTPHandler
 

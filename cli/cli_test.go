@@ -22,10 +22,9 @@ func init() {
 
 func TestPrepare(t *testing.T) {
 	logger, _ := test.NewNullLogger()
-	ec := &cli.ExecutionContext{
-		Logger:  logger,
-		Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-	}
+	ec := cli.NewExecutionContext()
+	ec.Logger = logger
+	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	ec.Spinner.Writer = &fake.FakeWriter{}
 	err := ec.Prepare()
 	if err != nil {
@@ -47,16 +46,15 @@ func TestPrepare(t *testing.T) {
 		t.Fatalf("global config file: expected $HOME/%s/%s, got %s", cli.GLOBAL_CONFIG_DIR_NAME, cli.GLOBAL_CONFIG_FILE_NAME, ec.GlobalConfigFile)
 	}
 	if ec.Config == nil {
-		t.Fatal("nil HasuraGraphQLConfig")
+		t.Fatal("got empty Config")
 	}
 }
 
 func TestValidate(t *testing.T) {
 	logger, _ := test.NewNullLogger()
-	ec := &cli.ExecutionContext{
-		Logger:  logger,
-		Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-	}
+	ec := cli.NewExecutionContext()
+	ec.Logger = logger
+	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	ec.Spinner.Writer = &fake.FakeWriter{}
 	ec.ExecutionDirectory = filepath.Join(os.TempDir(), "hasura-gql-tests-"+strconv.Itoa(rand.Intn(1000)))
 	ec.Viper = viper.New()
