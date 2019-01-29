@@ -28,6 +28,10 @@ data OpCtx
   | OCSelectPkey QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, limit, req hdrs
   | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
+  -- tn, fn, filter, limit, req hdrs
+  | OCFuncQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
+  -- tn, fn, filter, limit, req hdrs
+  | OCFuncAggQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
   -- tn, filter exp, req hdrs
   | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
   -- tn, filter exp, req hdrs
@@ -36,14 +40,15 @@ data OpCtx
 
 data GCtx
   = GCtx
-  { _gTypes     :: !TypeMap
-  , _gFields    :: !FieldMap
-  , _gOrdByCtx  :: !OrdByCtx
-  , _gQueryRoot :: !ObjTyInfo
-  , _gMutRoot   :: !(Maybe ObjTyInfo)
-  , _gSubRoot   :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap  :: !OpCtxMap
-  , _gInsCtxMap :: !InsCtxMap
+  { _gTypes      :: !TypeMap
+  , _gFields     :: !FieldMap
+  , _gOrdByCtx   :: !OrdByCtx
+  , _gFuncArgCtx :: !FuncArgCtx
+  , _gQueryRoot  :: !ObjTyInfo
+  , _gMutRoot    :: !(Maybe ObjTyInfo)
+  , _gSubRoot    :: !(Maybe ObjTyInfo)
+  , _gOpCtxMap   :: !OpCtxMap
+  , _gInsCtxMap  :: !InsCtxMap
   } deriving (Show, Eq)
 
 instance Has TypeMap GCtx where
@@ -88,17 +93,19 @@ type GCtxMap = Map.HashMap RoleName GCtx
 
 data TyAgg
   = TyAgg
-  { _taTypes  :: !TypeMap
-  , _taFields :: !FieldMap
-  , _taOrdBy  :: !OrdByCtx
+  { _taTypes   :: !TypeMap
+  , _taFields  :: !FieldMap
+  , _taOrdBy   :: !OrdByCtx
+  , _taFuncArg :: !FuncArgCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
-  (TyAgg t1 f1 o1) <> (TyAgg t2 f2 o2) =
+  (TyAgg t1 f1 o1 fa1) <> (TyAgg t2 f2 o2 fa2) =
     TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
+          (Map.union fa1 fa2)
 
 instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Map.empty
+  mempty = TyAgg Map.empty Map.empty Map.empty Map.empty
   mappend = (<>)
 
 newtype RootFlds
@@ -126,10 +133,11 @@ mkHsraObjFldInfo descM name params ty =
 mkHsraObjTyInfo
   :: Maybe G.Description
   -> G.NamedType
+  -> IFacesSet
   -> ObjFieldMap
   -> ObjTyInfo
-mkHsraObjTyInfo descM ty flds =
-  mkObjTyInfo descM ty flds HasuraType
+mkHsraObjTyInfo descM ty implIFaces flds =
+  mkObjTyInfo descM ty implIFaces flds HasuraType
 
 mkHsraInpTyInfo
   :: Maybe G.Description
@@ -181,7 +189,7 @@ mkCompExpInp colTy =
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [InpValInfo Nothing "_is_null" $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
     tyDesc = mconcat
@@ -193,7 +201,7 @@ mkCompExpInp colTy =
       PGVarchar -> True
       PGText    -> True
       _         -> False
-    mk t n = InpValInfo Nothing n $ G.toGT t
+    mk t n = InpValInfo Nothing n Nothing $ G.toGT t
     colScalarTy = mkScalarTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
@@ -211,7 +219,7 @@ mkCompExpInp colTy =
     isJsonbTy = case colTy of
       PGJSONB -> True
       _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op ty
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarTy PGJSONB
@@ -237,7 +245,7 @@ mkCompExpInp colTy =
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" $ G.toGT stDWithinInpTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
@@ -246,7 +254,7 @@ mkCompExpInp colTy =
       _          -> False
 
     geomOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op $ G.toGT $ mkScalarTy PGGeometry
+      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeometry
     geomOps =
       [
         ( "_st_contains"
@@ -309,9 +317,9 @@ defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
+mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
-                  (G.NamedType "query_root") $
+                  (G.NamedType "query_root") Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
@@ -325,18 +333,18 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
+  in GCtx allTys fldInfos ordByEnums funcArgCtx queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
   where
     colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
     mkMutRoot =
-      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") .
+      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
     mkSubRoot =
       mkHsraObjTyInfo (Just "subscription root")
-      (G.NamedType "subscription_root") . mapFromL _fiName
+      (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
@@ -345,15 +353,15 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums) (RootFlds flds) insCtxMap =
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          InpValInfo (Just "name of the type") "name"
+          InpValInfo (Just "name of the type") "name" Nothing
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "distance" $ G.toNT $ G.toNT $ mkScalarTy PGFloat
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ G.toNT $ mkScalarTy PGFloat
       ]
 
 emptyGCtx :: GCtx

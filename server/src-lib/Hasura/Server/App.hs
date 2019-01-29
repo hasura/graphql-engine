@@ -55,9 +55,12 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
+
 isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+isAccessKeySet AMNoAuth = boolToText False
+isAccessKeySet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
@@ -68,14 +71,15 @@ consoleAssetsLoc =
   "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
 #endif
 
-mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
-mkConsoleHTML path authMode =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
                          , "isAccessKeySet" .= isAccessKeySet authMode
                          , "consolePath" .= consolePath
+                         , "enableTelemetry" .= boolToText enableTelemetry
                          ]
     consolePath = case path of
       "" -> "/console"
@@ -218,7 +222,7 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
       (mergedGCtxMap, defGCtx) <-
         mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       let newSc' =
@@ -273,7 +277,7 @@ legacyQueryHandler tn queryType =
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedTable publicSchema tn
+    qt = QualifiedObject publicSchema tn
 
 
 mkWaiApp
@@ -284,8 +288,9 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
     cacheRef <- do
       pgResp <- runExceptT $
         peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
@@ -300,7 +305,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole
+                httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
@@ -308,8 +313,8 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- cors middleware
     unless (ccDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
@@ -381,7 +386,7 @@ httpApp corsCfg serverCtx enableConsole = do
       get root $ redirect "console"
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path $ scAuthMode serverCtx
+          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry
 
 #ifdef LocalConsole
       get "static/main.js" $ do

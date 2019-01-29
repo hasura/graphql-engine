@@ -27,7 +27,7 @@ class Vehicle extends Component { constructor() {
   }
   updateLocation() {
     if (locationData.length === this.state.locationId) {
-      this.setState({ ...this.state, locationId: 0 });
+      this.setState({ locationId: 0 });
     }
     const insert_vehicle_location = gql`
       mutation insert_vehicle_location ($objects: [vehicle_location_insert_input!]! )  {
@@ -52,7 +52,7 @@ class Vehicle extends Component { constructor() {
         variables: { ...variables },
       }
     ).then((response) => {
-      this.setState({ ...this.state, locationId: this.state.locationId + 1});
+      this.setState({ locationId: this.state.locationId + 1});
 
     })
     .catch((error) => console.error(error));
@@ -60,11 +60,11 @@ class Vehicle extends Component { constructor() {
   loadVehicleInfo(e) {
     const vehicleId = e.target.getAttribute('data-vehicle-id');
     if ( vehicleId ){
-      this.setState({ ...this.state, vehicleId: parseInt(vehicleId, 10)});
+      this.setState({ vehicleId: parseInt(vehicleId, 10)});
     }
   }
   handleTrackLocationClick() {
-    this.setState({ ...this.state, isLoading: true });
+    this.setState({ isLoading: true });
     const insert_vehicle = gql`
       mutation insert_vehicle ($objects: [vehicle_insert_input!]! )  {
         insert_vehicle (objects: $objects){
@@ -88,11 +88,11 @@ class Vehicle extends Component { constructor() {
         variables: { ...variables },
       }
     ).then((response) => {
-      this.setState({ ...this.state, startTracking: true });
+      this.setState({ startTracking: true });
       const pollId = setInterval(this.updateLocation.bind(this), this.state.delay);
-      this.setState({ ...this.state, pollId: pollId, isLoading: false });
+      this.setState({ pollId: pollId, isLoading: false });
     }).catch((error) => {
-      this.setState({ ...this.state, isLoading: false });
+      this.setState({ isLoading: false });
       console.error(error)
     });
   }

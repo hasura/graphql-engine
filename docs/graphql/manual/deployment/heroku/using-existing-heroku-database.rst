@@ -6,7 +6,7 @@ Using an existing Heroku database
   :depth: 1
   :local:
 
-Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`_ database with data in it, and you'd
+Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`__ database with data in it, and you'd
 like add GraphQL on it.
 
 .. note::

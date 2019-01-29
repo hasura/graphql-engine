@@ -127,6 +127,10 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  postgresFunctions: [],
+  nonTrackablePostgresFunctions: [],
+  trackedFunctions: [],
+  listedFunctions: [],
 
   listingSchemas: [],
   untrackedSchemas: [],
