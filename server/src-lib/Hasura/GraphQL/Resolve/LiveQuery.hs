@@ -10,7 +10,7 @@ import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
 import qualified Data.ByteString.Lazy                   as BL
 import qualified ListT
-import qualified STMContainers.Map                      as STMMap
+import qualified StmContainers.Map                      as STMMap
 
 import           Control.Concurrent                     (threadDelay)
 
@@ -145,10 +145,10 @@ pollQuery runTx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do
-    curOpsL <- ListT.toList $ STMMap.stream curOpsTV
-    newOpsL <- ListT.toList $ STMMap.stream newOpsTV
+    curOpsL <- ListT.toList $ STMMap.listT curOpsTV
+    newOpsL <- ListT.toList $ STMMap.listT newOpsTV
     forM_ newOpsL $ \(k, action) -> STMMap.insert action k curOpsTV
-    STMMap.deleteAll newOpsTV
+    STMMap.reset newOpsTV
     return (curOpsL, newOpsL)
 
   runOperations resp newOps
