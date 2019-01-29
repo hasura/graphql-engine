@@ -20,7 +20,7 @@ import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
-import qualified STMContainers.Map                           as STMMap
+import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
@@ -342,7 +342,7 @@ onClose
   -> IO ()
 onClose logger lqMap _ wsConn = do
   logWSEvent logger wsConn EClosed
-  operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
+  operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
   where
