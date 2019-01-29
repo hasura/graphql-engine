@@ -152,12 +152,12 @@ const loginClicked = () => (dispatch, getState) => {
   // redirect to / to test the accessKeyInput;
   const updatedDataHeaders = {
     'Content-Type': 'application/json',
-    'X-Hasura-Access-Key': accessKeyInput,
+    'X-Hasura-Admin-Secret': accessKeyInput,
   };
   Promise.all([
     dispatch({ type: ACCESS_KEY_ERROR, data: false }),
     dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
-    dispatch(changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)),
+    dispatch(changeRequestHeader(1, 'key', 'X-Hasura-Admin-Secret', true)),
     dispatch(changeRequestHeader(1, 'value', accessKeyInput, true)),
     // dispatch(push('/'))
   ]).then(() => {

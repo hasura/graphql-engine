@@ -157,7 +157,7 @@ following header:
 
 .. code-block:: bash
 
-   X-Hasura-Access-Key: mysecretaccesskey
+   X-Hasura-Admin-Secret: mysecretaccesskey
 
 
 Adding a domain & Enabling HTTPS

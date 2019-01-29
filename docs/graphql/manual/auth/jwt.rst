@@ -26,9 +26,9 @@ is used for the permissions system.
 .. note::
    Configuring JWT requires Hasura to run with an access key (``--access-key``).
 
-   - The authorization is **enforced** when ``X-Hasura-Access-Key`` header is
+   - The authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
-   - The authorization is **skipped** when ``X-Hasura-Access-Key`` header **is
+   - The authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
      found** in the request.
 
 ..   :doc:`Read more<config>`.

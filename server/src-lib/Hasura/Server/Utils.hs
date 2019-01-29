@@ -26,8 +26,11 @@ jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
+deprecatedAccessKeyHeader :: T.Text
+deprecatedAccessKeyHeader = "x-hasura-access-key"
+
 accessKeyHeader :: T.Text
-accessKeyHeader = "x-hasura-access-key"
+accessKeyHeader = "x-hasura-admin-secret"
 
 userIdHeader :: T.Text
 userIdHeader = "x-hasura-user-id"

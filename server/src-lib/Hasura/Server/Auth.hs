@@ -239,7 +239,7 @@ getUserInfo logger manager rawHeaders = \case
   AMNoAuth -> return userInfoFromHeaders
 
   AMAccessKey accKey unAuthRole ->
-    case getVarVal accessKeyHeader usrVars of
+    case accessKeyM of
       Just givenAccKey -> userInfoWhenAccessKey accKey givenAccKey
       Nothing          -> userInfoWhenNoAccessKey unAuthRole
 
@@ -253,7 +253,9 @@ getUserInfo logger manager rawHeaders = \case
     -- when access key is absent, run the action to retrieve UserInfo, otherwise
     -- accesskey override
     whenAccessKeyAbsent ak action =
-      maybe action (userInfoWhenAccessKey ak) $ getVarVal accessKeyHeader usrVars
+      maybe action (userInfoWhenAccessKey ak) $ accessKeyM
+
+    accessKeyM = foldl1 (<|>) $ map (flip getVarVal usrVars) [accessKeyHeader, deprecatedAccessKeyHeader]
 
     usrVars = mkUserVars $ hdrsToText rawHeaders
 
@@ -267,5 +269,5 @@ getUserInfo logger manager rawHeaders = \case
       return userInfoFromHeaders
 
     userInfoWhenNoAccessKey = \case
-      Nothing -> throw401 $ accessKeyHeader <> " required, but not found"
+      Nothing -> throw401 $ accessKeyHeader <> "/" <>  deprecatedAccessKeyHeader <> " required, but not found"
       Just role -> return $ mkUserInfo role usrVars

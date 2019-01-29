@@ -15,7 +15,7 @@ const checkValidity = accessKey => {
     const currentSchema = 'public';
     const headers = {
       'Content-Type': 'application/json',
-      'X-Hasura-Access-Key': accessKey,
+      'X-Hasura-Admin-Secret': accessKey,
     };
     const options = {
       credentials: globalCookiePolicy,
@@ -56,11 +56,11 @@ const validateLogin = ({ dispatch }) => {
               type: UPDATE_DATA_HEADERS,
               data: {
                 'Content-Type': 'application/json',
-                'X-Hasura-Access-Key': accessKey,
+                'X-Hasura-Admin-Secret': accessKey,
               },
             }),
             dispatch(
-              changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)
+              changeRequestHeader(1, 'key', 'X-Hasura-Admin-Secret', true)
             ),
             dispatch(changeRequestHeader(1, 'value', accessKey, true)),
           ]);

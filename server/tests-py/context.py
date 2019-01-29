@@ -140,7 +140,7 @@ class HGECtx:
     def v1q(self, q, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
-            h['X-Hasura-Access-Key'] = self.hge_key
+            h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
             json=q,

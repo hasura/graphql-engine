@@ -38,7 +38,7 @@ func GetServerState(endpoint, accessKey string, serverVersion *semver.Version, l
 	}`
 	req := gorequest.New()
 	req = req.Post(endpoint + "/v1/query").Send(payload)
-	req.Set("X-Hasura-Access-Key", accessKey)
+	req.Set("X-Hasura-Admin-Secret", accessKey)
 
 	var r []hdbVersion
 	_, _, errs := req.EndStruct(&r)

@@ -34,7 +34,7 @@ exports.handler = (event, context, callback) => {
     fetch(hgeEndpoint + '/v1alpha1/graphql', {
         method: 'POST',
         body: JSON.stringify({query: query, variables: qv}),
-        headers: {'Content-Type': 'application/json', 'x-hasura-access-key': accessKey},
+        headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': accessKey},
     })
         .then(res => res.json())
         .then(json => {

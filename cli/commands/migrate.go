@@ -87,7 +87,7 @@ func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 		q.Set("sslmode", "disable")
 	}
 	if accessKey != "" {
-		q.Add("headers", "X-Hasura-Access-Key:"+accessKey)
+		q.Add("headers", "X-Hasura-Admin-Secret:"+accessKey)
 	}
 	host.RawQuery = q.Encode()
 	return host

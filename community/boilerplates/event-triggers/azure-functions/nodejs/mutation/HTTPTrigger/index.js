@@ -28,7 +28,7 @@ module.exports = function (context, req) {
               endpoint: HGE_ENDPOINT + '/v1alpha1/graphql',
               variables: qv,
               headers: {
-                'x-hasura-access-key': ACCESS_KEY
+                'x-hasura-admin-secret': ACCESS_KEY
               }
         }).then((response) => {
             context.log(response);

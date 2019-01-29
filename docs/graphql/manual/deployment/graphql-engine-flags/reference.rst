@@ -45,7 +45,7 @@ For ``serve`` subcommand these are the flags available
        --server-port               Port on which graphql-engine should be served (default: 8080)
 
        --access-key                Secret access key, required to access this instance.
-                                   If specified client needs to send 'X-Hasura-Access-Key'
+                                   If specified client needs to send 'X-Hasura-Admin-Secret'
                                    header
 
        --cors-domain               The domain, including sheme and port, to allow CORS for
@@ -125,7 +125,7 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_ACCESS_KEY                Secret access key, required to access this
                                             instance. If specified client needs to send
-                                            'X-Hasura-Access-Key' header
+                                            'X-Hasura-Admin-Secret' header
 
    HASURA_GRAPHQL_AUTH_HOOK                 The authentication webhook, required to
                                             authenticate incoming request

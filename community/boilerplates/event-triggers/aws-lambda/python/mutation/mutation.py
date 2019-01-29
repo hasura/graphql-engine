@@ -8,7 +8,7 @@ HGE_URL = HGE_ENDPOINT + '/v1alpha1/graphql'
 
 HEADERS = {
     'Content-Type': 'application/json',
-    'X-Hasura-Access-Key': ACCESS_KEY,
+    'X-Hasura-Admin-Secret': ACCESS_KEY,
 }
 
 query = """

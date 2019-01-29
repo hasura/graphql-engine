@@ -15,7 +15,7 @@ run_sql
 
   This is an admin-only query, i.e. the query can only be executed by a
   request having ``X-Hasura-Role: admin``. This can be set by passing
-  ``X-Hasura-Access-Key`` or by setting the right role in Webhook/JWT
+  ``X-Hasura-Admin-Secret`` or by setting the right role in Webhook/JWT
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If

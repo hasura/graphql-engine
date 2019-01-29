@@ -16,8 +16,8 @@ to authenticate all incoming requests to the Hasura GraphQL engine server.
 ..   :doc:`Read more<config>`.
 
 
-- The configured webhook is  **called** when ``X-Hasura-Access-Key`` header is not found in the request.
-- The configured webhook is **ignored** when ``X-Hasura-Access-Key`` header is found in the request.
+- The configured webhook is  **called** when ``X-Hasura-Admin-Secret`` header is not found in the request.
+- The configured webhook is **ignored** when ``X-Hasura-Admin-Secret`` header is found in the request.
 
 
 Spec for the webhook

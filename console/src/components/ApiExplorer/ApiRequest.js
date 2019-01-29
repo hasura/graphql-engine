@@ -144,10 +144,7 @@ class ApiRequest extends Component {
               value={this.props.url}
               type="text"
               readOnly
-              className={
-                styles.inputGroupInput +
-                ' form-control '
-              }
+              className={styles.inputGroupInput + ' form-control '}
             />
           </div>
         </div>
@@ -323,7 +320,7 @@ class ApiRequest extends Component {
               onBlur={this.handleBlur}
               data-test={`header-value-${i}`}
               type={
-                header.key.toLowerCase() === 'x-hasura-access-key' &&
+                header.key.toLowerCase() === 'x-hasura-admin-secret' &&
                 !this.state.accessKeyVisible
                   ? 'password'
                   : 'text'
@@ -332,7 +329,7 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() === 'x-hasura-access-key' ? (
+              {header.key.toLowerCase() === 'x-hasura-admin-secret' ? (
                 <i
                   className={styles.showAccessKey + ' fa fa-eye'}
                   data-header-id={i}

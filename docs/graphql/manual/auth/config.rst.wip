@@ -8,7 +8,7 @@ You can run Hasura's GraphQL Engine in three modes:
 
 - When ``--access-key`` and ``--auth-hook`` are not set
 
-- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Access-Key``) header and other required ``X-Hasura-*`` headers.
+- It is useful when you're developing . It is not recommended to use in production but however you can have proxy gateway that will set (``X-Hasura-Admin-Secret``) header and other required ``X-Hasura-*`` headers.
 
 Run server in this mode using following docker command.
 
@@ -27,7 +27,7 @@ Run server in this mode using following docker command.
 
 - When only ``--access-key`` is set. See :doc:`GraphQL Server Options <../deployment/options>`
 
-- Server authenticates based on ``X-Hasura-Access-Key`` header and expects all other required ``X-Hasura-*`` headers.
+- Server authenticates based on ``X-Hasura-Admin-Secret`` header and expects all other required ``X-Hasura-*`` headers.
 
 Run server in this mode using following docker command.
 
@@ -47,9 +47,9 @@ Run server in this mode using following docker command.
 
 - When both ``--access-key`` and ``--auth-hook`` are set
 
-- This mode is useful in production. When server founds ``X-Hasura-Access-Key`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
+- This mode is useful in production. When server founds ``X-Hasura-Admin-Secret`` header it ignores webhook and expects all other required ``X-Hasura*`` headers
 
-- If ``X-Hasura-Access-key`` header not found then server authenticaters through webhook. See :doc:`Authorization
+- If ``X-Hasura-Admin-Secret`` header not found then server authenticaters through webhook. See :doc:`Authorization
   Webhook <webhook>`
 
 Run server in this mode using following docker command.

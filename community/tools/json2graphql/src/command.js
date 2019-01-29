@@ -24,7 +24,7 @@ class JSON2GraphQL extends Command {
       throw new CLIError('path to sample database is required: \'json2graphql <url> -d ./db.js\'');
     }
     const dbJson = this.getDbJson(db);
-    const headers = key ? {'x-hasura-access-key': key} : {};
+    const headers = key ? {'x-hasura-admin-secret': key} : {};
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
       throw new CLIError(urlVerification.message);
@@ -83,7 +83,7 @@ JSON2GraphQL.flags = {
   // Access key to Hasura GraphQL Engine
   'access-key': flags.string({
     char: 'k',
-    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Access-Key)',
+    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Admin-Secret)',
   }),
 
   db: flags.string({
