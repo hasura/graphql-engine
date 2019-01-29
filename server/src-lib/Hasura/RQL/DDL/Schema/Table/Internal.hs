@@ -23,19 +23,30 @@ import qualified Database.PG.Query                  as Q
 import           Control.Arrow                      (first, (***))
 import           Data.Aeson
 
-renameTableInCatalog :: (MonadTx m)
-            => SchemaCache -> QualifiedTable -> QualifiedTable -> m ()
+renameTableInCatalog
+  :: (MonadTx m)
+  => SchemaCache -> QualifiedTable -> QualifiedTable -> m ()
 renameTableInCatalog sc newQT oldQT = do
   let allRels = getAllRelations $ scTables sc
   -- Update depended relations on this table with new name
   forM_ allRels $ \rel -> updateRelDefs newQT oldQT rel
   -- Update table name in hdb_catalog
-  liftTx $ Q.catchE defaultTxErrorHandler $
-    updateTableInCatalog oldQT newQT
+  liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
 
-renameColumnInCatalog :: (MonadTx m)
-             => SchemaCache -> PGCol -> PGCol
-             -> QualifiedTable -> TableInfo -> m ()
+  where
+    QualifiedObject nsn ntn = newQT
+    QualifiedObject osn otn = oldQT
+    updateTableInCatalog =
+      Q.unitQ [Q.sql|
+           UPDATE "hdb_catalog"."hdb_table"
+              SET table_schema = $1, table_name = $2
+            WHERE table_schema = $3 AND table_name = $4
+                |] (nsn, ntn, osn, otn) False
+
+renameColumnInCatalog
+  :: (MonadTx m)
+  => SchemaCache -> PGCol -> PGCol
+  -> QualifiedTable -> TableInfo -> m ()
 renameColumnInCatalog sc oCol nCol qt ti = do
   -- Check if any relation exists with new column name
   assertFldNotExists
@@ -43,10 +54,10 @@ renameColumnInCatalog sc oCol nCol qt ti = do
   updatePermCols oCol nCol qt
   -- Update right cols in relations
   let allRels = getAllRelations $ scTables sc
-  forM_ allRels $ \r -> updateRelRCols oCol nCol qt r
+  forM_ allRels $ \r -> updateRelRemoteCols oCol nCol qt r
   -- Update left cols in table's relations
   let rels = getRels $ tiFieldInfoMap ti
-  updateRelLCols oCol nCol rels qt
+  updateRelNativeCols oCol nCol rels qt
   where
     assertFldNotExists =
       case M.lookup (fromPGCol oCol) $ tiFieldInfoMap ti of
@@ -106,6 +117,8 @@ updateArrRelDef newQT qt rn = do
         RUManual $ ArrRelManualConfig $ RelManualConfig newQT rmCols
 
 -- helper functions for rename column
+
+-- | update columns in premissions
 updatePermCols :: (MonadTx m)
                => PGCol -> PGCol -> QualifiedTable -> m ()
 updatePermCols oCol nCol qt@(QualifiedObject sn tn) = do
@@ -114,20 +127,16 @@ updatePermCols oCol nCol qt@(QualifiedObject sn tn) = do
     case ty of
       PTInsert -> do
         perm <- decodeValue pDef
-        updateInsPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
+        updateInsPermCols oCol nCol qt rn perm
       PTSelect -> do
         perm <- decodeValue pDef
-        updateSelPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
+        updateSelPermCols oCol nCol qt rn perm
       PTUpdate -> do
         perm <- decodeValue pDef
-        updateUpdPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
+        updateUpdPermCols oCol nCol qt rn perm
       PTDelete -> do
         perm <- decodeValue pDef
-        updateDelPermCols oCol nCol $
-          WithTable qt $ PermDef rn perm Nothing
+        updateDelPermCols oCol nCol qt rn perm
   where
     fetchPerms = Q.listQE defaultTxErrorHandler [Q.sql|
                   SELECT role_name, perm_type, perm_def::json
@@ -136,48 +145,66 @@ updatePermCols oCol nCol qt@(QualifiedObject sn tn) = do
                      AND table_name = $2
                  |] (sn, tn) True
 
-updateInsPermCols :: (MonadTx m) => PGCol -> PGCol -> CreateInsPerm -> m ()
-updateInsPermCols oCol nCol (WithTable qt (PermDef rn (InsPerm chk _ cols) _)) = do
-  let updatedBoolExp = updateBoolExp oCol nCol chk
-  when (snd updatedBoolExp) $
-    liftTx $ updatePermInCatalog PTInsert qt $
-      PermDef rn (InsPerm (fst updatedBoolExp) Nothing cols) Nothing
+updateInsPermCols
+  :: (MonadTx m)
+  => PGCol -> PGCol
+  -> QualifiedTable -> RoleName -> InsPerm -> m ()
+updateInsPermCols oCol nCol qt rn (InsPerm chk preset cols) =
+  when updNeeded $
+    liftTx $ updatePermDefInCatalog PTInsert qt rn $
+      InsPerm updBoolExp updPreset updCols
+  where
+    updNeeded = updNeededFromPreset || updNeededFromBoolExp || updNeededFromCols
+    (updPreset, updNeededFromPreset) = fromM $ updatePreset oCol nCol <$> preset
+    (updCols, updNeededFromCols) = fromM $ updateCols oCol nCol <$> cols
+    (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol chk
 
-updateSelPermCols :: (MonadTx m) => PGCol -> PGCol -> CreateSelPerm -> m ()
-updateSelPermCols oCol nCol (WithTable qt (PermDef rn (SelPerm cols fltr limit aggAllwd) _)) =
+    fromM = maybe (Nothing, False) (first Just)
+
+updateSelPermCols
+  :: (MonadTx m)
+  => PGCol -> PGCol
+  -> QualifiedTable -> RoleName -> SelPerm -> m ()
+updateSelPermCols oCol nCol qt rn (SelPerm cols fltr limit aggAllwd) =
   when ( updNeededFromCols || updNeededFromBoolExp) $
-    liftTx $ updatePermInCatalog PTSelect qt $
-      PermDef rn (SelPerm updCols updBoolExp limit aggAllwd) Nothing
+    liftTx $ updatePermDefInCatalog PTSelect qt rn $
+      SelPerm updCols updBoolExp limit aggAllwd
   where
     (updCols, updNeededFromCols) = updateCols oCol nCol cols
     (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
 
-updateUpdPermCols :: (MonadTx m) => PGCol -> PGCol -> CreateUpdPerm -> m ()
-updateUpdPermCols oCol nCol (WithTable qt (PermDef rn (UpdPerm cols fltr) _)) =
+updateUpdPermCols
+  :: (MonadTx m)
+  => PGCol -> PGCol
+  -> QualifiedTable -> RoleName -> UpdPerm -> m ()
+updateUpdPermCols oCol nCol qt rn (UpdPerm cols fltr) =
   when ( updNeededFromCols || updNeededFromBoolExp) $
-    liftTx $ updatePermInCatalog PTUpdate qt $
-      PermDef rn (UpdPerm updCols updBoolExp) Nothing
+    liftTx $ updatePermDefInCatalog PTUpdate qt rn $
+      UpdPerm updCols updBoolExp
   where
     (updCols, updNeededFromCols) = updateCols oCol nCol cols
     (updBoolExp, updNeededFromBoolExp) = updateBoolExp oCol nCol fltr
 
-updateDelPermCols :: (MonadTx m) => PGCol -> PGCol -> CreateDelPerm -> m ()
-updateDelPermCols oCol nCol (WithTable qt (PermDef rn (DelPerm fltr)_)) = do
+updateDelPermCols
+  :: (MonadTx m)
+  => PGCol -> PGCol
+  -> QualifiedTable -> RoleName -> DelPerm -> m ()
+updateDelPermCols oCol nCol qt rn (DelPerm fltr) = do
   let updatedFltrExp = updateBoolExp oCol nCol fltr
   when (snd updatedFltrExp) $
-    liftTx $ updatePermInCatalog PTDelete qt $
-      PermDef rn (DelPerm $ fst updatedFltrExp) Nothing
+    liftTx $ updatePermDefInCatalog PTDelete qt rn $
+      DelPerm $ fst updatedFltrExp
 
-updateTableInCatalog :: QualifiedTable -> QualifiedTable -> Q.Tx ()
-updateTableInCatalog oldTable newTable =
-  Q.unitQ [Q.sql|
-           UPDATE "hdb_catalog"."hdb_table"
-              SET table_schema = $1, table_name = $2
-            WHERE table_schema = $3 AND table_name = $4
-                |] (nsn, ntn, osn, otn) False
+updatePreset :: PGCol -> PGCol -> Object -> (Object, Bool)
+updatePreset oCol nCol obj =
+  (M.fromList updItems, or isUpds)
   where
-    QualifiedObject osn otn = oldTable
-    QualifiedObject nsn ntn = newTable
+    (updItems, isUpds) = unzip $ map procObjItem $ M.toList obj
+    procObjItem (k, v) =
+      let pgCol = PGCol k
+          isUpdated = pgCol == oCol
+          updCol = bool pgCol nCol isUpdated
+      in ((getPGColTxt updCol, v), isUpdated)
 
 updateCols :: PGCol -> PGCol -> PermColSpec -> (PermColSpec, Bool)
 updateCols oCol nCol cols = case cols of
@@ -208,22 +235,22 @@ updateBoolExp' oCol nCol boolExp = case boolExp of
   where
     updateExps exps = unzip $ flip map exps $ updateBoolExp' oCol nCol
 
--- update right columns
-updateRelRCols
+-- | update remote columns of relationships
+updateRelRemoteCols
   :: (MonadTx m)
   => PGCol -> PGCol
   -> QualifiedTable
   -> (QualifiedTable, [RelInfo])
   -> m ()
-updateRelRCols oCol nCol table (qt, rels) =
+updateRelRemoteCols oCol nCol table (qt, rels) =
   forM_ rels $ \rel -> when (table == riRTable rel) $
     case riType rel of
-      ObjRel -> updateObjRelRCol oCol nCol qt $ riName rel
-      ArrRel -> updateArrRelRCol oCol nCol qt $ riName rel
+      ObjRel -> updateObjRelRemoteCol oCol nCol qt $ riName rel
+      ArrRel -> updateArrRelRemoteCol oCol nCol qt $ riName rel
 
-updateObjRelRCol :: (MonadTx m) => PGCol -> PGCol
+updateObjRelRemoteCol :: (MonadTx m) => PGCol -> PGCol
                  -> QualifiedTable -> RelName -> m ()
-updateObjRelRCol oCol nCol qt rn = do
+updateObjRelRemoteCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   case oldDef of
@@ -235,9 +262,9 @@ updateObjRelRCol oCol nCol qt rn = do
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
 
-updateArrRelRCol :: (MonadTx m) => PGCol -> PGCol
+updateArrRelRemoteCol :: (MonadTx m) => PGCol -> PGCol
                 -> QualifiedTable -> RelName -> m ()
-updateArrRelRCol oCol nCol qt rn = do
+updateArrRelRemoteCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef <- decodeValue oldDefV
   updateArrRel oldDef
@@ -253,17 +280,17 @@ updateArrRelRCol oCol nCol qt rn = do
           liftTx $ updateRel qt rn $ toJSON
             (RUManual $ ArrRelManualConfig updatedManualConf :: ArrRelUsing)
 
--- update left columns
-updateRelLCols
+-- | update native columns in relationships
+updateRelNativeCols
   :: (MonadTx m) => PGCol -> PGCol -> [RelInfo] -> QualifiedTable -> m ()
-updateRelLCols oCol nCol rels qt =
+updateRelNativeCols oCol nCol rels qt =
   forM_ rels $ \rel -> case riType rel of
-    ObjRel -> updateObjRelLCol oCol nCol qt $ riName rel
-    ArrRel -> updateArrRelLCol oCol nCol qt $ riName rel
+    ObjRel -> updateObjRelNativeCol oCol nCol qt $ riName rel
+    ArrRel -> updateArrRelNativeCol oCol nCol qt $ riName rel
 
-updateObjRelLCol :: (MonadTx m) => PGCol -> PGCol
+updateObjRelNativeCol :: (MonadTx m) => PGCol -> PGCol
                  -> QualifiedTable -> RelName -> m ()
-updateObjRelLCol oCol nCol qt rn = do
+updateObjRelNativeCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   case oldDef of
@@ -277,9 +304,9 @@ updateObjRelLCol oCol nCol qt rn = do
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
 
-updateArrRelLCol :: (MonadTx m) => PGCol -> PGCol
+updateArrRelNativeCol :: (MonadTx m) => PGCol -> PGCol
                 -> QualifiedTable -> RelName -> m ()
-updateArrRelLCol oCol nCol qt rn = do
+updateArrRelNativeCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ArrRelUsing <- decodeValue oldDefV
   updateArrRel oldDef
@@ -293,7 +320,7 @@ updateArrRelLCol oCol nCol qt rn = do
           liftTx $ updateRel qt rn $ toJSON
             (RUManual $ ArrRelManualConfig updatedManualConf :: ArrRelUsing)
 
--- update columns in manual_configuration
+-- | update columns in manual_configuration
 type ColMapModifier = (PGCol -> PGCol) -> Map.Map PGCol PGCol -> Map.Map PGCol PGCol
 type ColAccessor = (PGCol, PGCol) -> PGCol
 
@@ -303,7 +330,7 @@ updateColForManualConfig
   -> RelManualConfig -> (RelManualConfig, Bool)
 updateColForManualConfig oCol nCol modFn accFn (RelManualConfig tn rmCols) =
   let updatedColMap =
-        flip modFn rmCols $ \col -> if col == oCol then nCol else col
+        flip modFn rmCols $ \col -> bool col nCol $ col == oCol
   in
   ( RelManualConfig tn updatedColMap
   , oCol `elem` map accFn (Map.toList rmCols)
