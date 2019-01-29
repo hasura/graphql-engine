@@ -769,7 +769,7 @@ class AddTrigger extends Component {
                             onChange={e => {
                               dispatch(setRetryTimeout(e.target.value));
                             }}
-                            data-test="interval-seconds"
+                            data-test="timeout-seconds"
                             className={`${styles.display_inline} form-control ${
                               styles.width300
                             }`}

@@ -1,6 +1,12 @@
 import { makeDataAPIOptions, getColName } from '../../helpers/dataHelpers';
 import { migrateModeUrl } from '../../helpers/common';
 import { toggleOnMigrationMode } from '../data/migration-mode/utils';
+import {
+  getNoOfRetries,
+  getIntervalSeconds,
+  getTimeoutSeconds,
+} from '../../helpers/eventHelpers';
+
 // ***************** UTIL FUNCTIONS **************************
 
 let accessKey;
@@ -339,7 +345,7 @@ export const validateCTrigger = (triggerName, result) => {
     type: 'select',
     args: {
       table: { name: 'event_triggers', schema: 'hdb_catalog' },
-      columns: ['table_name'],
+      columns: ['*', 'table_name'],
       where: { name: triggerName },
     },
   };
@@ -347,8 +353,30 @@ export const validateCTrigger = (triggerName, result) => {
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(response.status === 200).to.be.true;
+      expect(response.body.length === 1).to.be.true;
+      const trigger = response.body[0];
+      expect(trigger.configuration.definition.insert.columns.length === 3).to.be
+        .true;
+      expect(trigger.configuration.definition.update.columns.length === 3).to.be
+        .true;
+      expect(trigger.configuration.definition.delete.columns.length === 3).to.be
+        .true;
+      expect(
+        trigger.configuration.retry_conf.interval_sec ===
+          parseInt(getIntervalSeconds(), 10)
+      ).to.be.true;
+      expect(
+        trigger.configuration.retry_conf.num_retries ===
+          parseInt(getNoOfRetries(), 10)
+      ).to.be.true;
+      expect(
+        trigger.configuration.retry_conf.timeout_sec ===
+          parseInt(getTimeoutSeconds(), 10)
+      ).to.be.true;
+      expect(trigger.schema_name === 'public').to.be.true;
+      expect(trigger.table_name === 'apic_test_table_ctr_0').to.be.true;
     } else {
-      expect(response.status === 200).to.be.false;
+      expect(response.body.length === 0).to.be.true;
     }
   });
 };
