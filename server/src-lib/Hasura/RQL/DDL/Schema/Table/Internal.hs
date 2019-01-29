@@ -4,8 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Hasura.RQL.DDL.Schema.Table.Internal
-  ( renameTable
-  , renameColumn
+  ( renameTableInCatalog
+  , renameColumnInCatalog
   )
 where
 
@@ -23,20 +23,20 @@ import qualified Database.PG.Query                  as Q
 import           Control.Arrow                      (first, (***))
 import           Data.Aeson
 
-renameTable :: (MonadTx m)
+renameTableInCatalog :: (MonadTx m)
             => SchemaCache -> QualifiedTable -> QualifiedTable -> m ()
-renameTable sc newQT oldQT = do
-   let allRels = getAllRelations $ scTables sc
-   -- Update depended relations on this table with new name
-   forM_ allRels $ \rel -> updateRelDefs newQT oldQT rel
-   -- Update table name in hdb_catalog
-   liftTx $ Q.catchE defaultTxErrorHandler $
-     updateTableInCatalog oldQT newQT
+renameTableInCatalog sc newQT oldQT = do
+  let allRels = getAllRelations $ scTables sc
+  -- Update depended relations on this table with new name
+  forM_ allRels $ \rel -> updateRelDefs newQT oldQT rel
+  -- Update table name in hdb_catalog
+  liftTx $ Q.catchE defaultTxErrorHandler $
+    updateTableInCatalog oldQT newQT
 
-renameColumn :: (MonadTx m)
+renameColumnInCatalog :: (MonadTx m)
              => SchemaCache -> PGCol -> PGCol
              -> QualifiedTable -> TableInfo -> m ()
-renameColumn sc oCol nCol qt ti = do
+renameColumnInCatalog sc oCol nCol qt ti = do
   -- Check if any relation exists with new column name
   assertFldNotExists
   -- Update cols in permissions

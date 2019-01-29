@@ -779,39 +779,6 @@ getDependentObjsWith f sc objId =
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
 
--- <<<<<<< HEAD
--- getDependentObjsOfTableWith :: (T.Text -> Bool) -> SchemaObjId -> TableInfo -> [SchemaObjId]
--- getDependentObjsOfTableWith f objId ti =
---   rels ++ perms
---   where
---     rels  = getDependentRelsOfTable f objId ti
---     perms = getDependentPermsOfTable f objId ti
-
--- getDependentRelsOfTable :: (T.Text -> Bool) -> SchemaObjId
---                         -> TableInfo -> [SchemaObjId]
--- getDependentRelsOfTable rsnFn objId (TableInfo tn _ fim _ _) =
---     map (SOTableObj tn . TORel . riName) $
---     filter (isDependentOn rsnFn objId) $ getRels fim
-
--- getDependentPermsOfTable :: (T.Text -> Bool) -> SchemaObjId
---                          -> TableInfo -> [SchemaObjId]
--- getDependentPermsOfTable rsnFn objId (TableInfo tn _ _ rpim _) =
---   concat $ flip M.mapWithKey rpim $
---   \rn rpi -> map (SOTableObj tn . TOPerm rn) $ getDependentPerms' rsnFn objId rpi
-
--- getDependentPerms' :: (T.Text -> Bool) -> SchemaObjId -> RolePermInfo -> [PermType]
--- getDependentPerms' rsnFn objId (RolePermInfo mipi mspi mupi mdpi) =
---   mapMaybe join
---   [ forM mipi $ toPermRow PTInsert
---   , forM mspi $ toPermRow PTSelect
---   , forM mupi $ toPermRow PTUpdate
---   , forM mdpi $ toPermRow PTDelete
---   ]
---   where
---     toPermRow :: forall a. (CachedSchemaObj a) => PermType -> a -> Maybe PermType
---     toPermRow pt =
---       bool Nothing (Just pt) . isDependentOn rsnFn objId
-
 getAllRelations :: TableCache -> [(QualifiedTable, [RelInfo])]
 getAllRelations tc = map getRelInfo $ M.toList tc
   where

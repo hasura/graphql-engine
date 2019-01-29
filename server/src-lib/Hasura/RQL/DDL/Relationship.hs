@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Relationship where
 
 import qualified Database.PG.Query          as Q

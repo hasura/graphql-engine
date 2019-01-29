@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Schema.Table where
 
 import           Hasura.GraphQL.RemoteServer
@@ -135,74 +136,97 @@ purgeDep schemaObjId = case schemaObjId of
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
--- reloadSchemaCache :: (CacheRWM m, MonadTx m) => m ()
--- reloadSchemaCache = do
---   sc <- liftTx buildSchemaCache
---   writeSchemaCache sc
+processTableChanges :: (MonadTx m, CacheRWM m)
+                    => TableInfo -> TableDiff -> m Bool
+processTableChanges ti tableDiff = do
+  -- If table rename occurs then don't replace constraints and process dropped and added columns
+  -- Pass updated table name to rename column function
+  sc <- askSchemaCache
+  let oldQT = tiName ti
+      withOldTabName = do
+        -- replace constraints
+        replaceConstraints oldQT
+        -- for all the dropped columns
+        procDroppedCols oldQT
+        -- for all added columns
+        procAddedCols oldQT
+        -- for all altered columns
+        procAlteredCols sc oldQT
 
-processTableChanges :: (MonadTx m)
-                    => SchemaCache -> TableInfo -> TableDiff -> m ()
-processTableChanges sc ti tableDiff = do
-  newtn <- do
-    let tn = tiName ti
-    case mNewName of
-      Just newQT -> do
-        renameTable sc newQT tn
-        return newQT
-      Nothing -> return tn
+      withNewTabName newQT = do
+        -- update new table in catalog
+        renameTableInCatalog sc newQT oldQT
+        void $ procAlteredCols sc newQT
+        return True
 
-  -- -- replace constraints
-  -- replaceConstraints
+  maybe withOldTabName withNewTabName mNewName
 
-  -- -- for all the dropped columns
-  -- forM_ droppedCols $ \droppedCol ->
-  --   -- Drop the column from the cache
-  --   delColFromCache droppedCol tn
-
-  -- In the newly added columns check that there is no conflict with relationships
-  forM_ addedCols $ \(PGColInfo colName _ _) ->
-    case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
-      Just (FIRelationship _) ->
-        throw400 AlreadyExists $ "cannot add column " <> colName
-        <<> " in table " <> newtn <<>
-        " as a relationship with the name already exists"
-      _ -> return ()
-
-  -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
-    if | oColName /= nColName -> renameColumn sc oColName nColName newtn ti
-       | oColTy /= nColTy -> do
-           let colId   = SOTableObj newtn $ TOCol oColName
-               depObjs = getDependentObjsWith (== "on_type") sc colId
-           unless (null depObjs) $ throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
-                  <> newtn <<> " because of the following dependencies : " <>
-                  reportSchemaObjs depObjs
-       | otherwise -> return ()
   where
-    TableDiff mNewName _ addedCols alteredCols _ _ = tableDiff
-    -- replaceConstraints = flip modTableInCache tn $ \tInfo ->
-    --   return $ tInfo {tiUniqOrPrimConstraints = constraints}
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiUniqOrPrimConstraints = constraints}
 
-processCatalogChanges :: (MonadTx m) => SchemaCache -> SchemaDiff -> m ()
-processCatalogChanges sc schemaDiff = do
+    procDroppedCols tn =
+      forM_ droppedCols $ \droppedCol ->
+        -- Drop the column from the cache
+        delColFromCache droppedCol tn
+
+    procAddedCols tn =
+      -- In the newly added columns check that there is no conflict with relationships
+      forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
+        case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
+          Just (FIRelationship _) ->
+            throw400 AlreadyExists $ "cannot add column " <> colName
+            <<> " in table " <> tn <<>
+            " as a relationship with the name already exists"
+          _ -> addColToCache colName pci tn
+
+    procAlteredCols sc tn = fmap or $
+      forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
+        if | oColName /= nColName -> do
+               renameColumnInCatalog sc oColName nColName tn ti
+               return True
+           | oColTy /= nColTy -> do
+               let colId   = SOTableObj tn $ TOCol oColName
+                   depObjs = getDependentObjsWith (== "on_type") sc colId
+               unless (null depObjs) $ throw400 DependencyError $
+                 "cannot change type of column " <> oColName <<> " in table "
+                 <> tn <<> " because of the following dependencies : " <>
+                 reportSchemaObjs depObjs
+               return False
+           | otherwise -> return False
+
+delTableAndDirectDeps
+  :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
+delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
+  liftTx $ Q.catchE defaultTxErrorHandler $ do
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_relationship"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_permission"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."event_triggers"
+             WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    delTableFromCatalog qtn
+  delTableFromCache qtn
+
+processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m Bool
+processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
-  forM_ droppedTables $ \qtn@(QualifiedObject sn tn) ->
-    liftTx $ Q.catchE defaultTxErrorHandler $ do
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_relationship"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_permission"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      delTableFromCatalog qtn
+  mapM_ delTableAndDirectDeps droppedTables
 
-  forM_ alteredTables $ \(oldQtn, tableDiff) -> do
+  sc <- askSchemaCache
+  bools <- forM alteredTables $ \(oldQtn, tableDiff) -> do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-    processTableChanges sc ti tableDiff
+    processTableChanges ti tableDiff
+  return $ or bools
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
@@ -243,11 +267,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   mapM_ purgeDep indirectDeps
 
   -- delete the table and its direct dependencies
-  -- delTableAndDirectDeps qtn
-  postPurgeSc <- askSchemaCache
-  -- update the hdb_catalog with the changes
-  processCatalogChanges postPurgeSc $ SchemaDiff [qtn] []
-  delTableFromCache qtn
+  delTableAndDirectDeps qtn
 
   -- refresh the gctxmap in schema cache
   refreshGCtxMapInSchema
@@ -453,30 +473,26 @@ execWithMDCheck (RunSQL t cascade _) = do
     liftTx $ delFunctionFromCatalog qf
     delFunctionFromCache qf
 
-  postPurgeSc <- askSchemaCache
-  -- update the hdb_catalog with the changes
-  processCatalogChanges postPurgeSc schemaDiff
+  -- update the cache and hdb_catalog with the changes
+  reloadRequired <- processSchemaChanges schemaDiff
+  let withoutReload = do
+        postSc <- askSchemaCache
+        -- recreate the insert permission infra
+        forM_ (M.elems $ scTables postSc) $ \ti -> do
+          let tn = tiName ti
+          forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
+            maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
 
-  -- Reload SchemaCache
-  -- reloadSchemaCache
-  buildSchemaCache
+        --recreate triggers
+        forM_ (M.elems $ scTables postSc) $ \ti -> do
+          let tn = tiName ti
+              cols = getCols $ tiFieldInfoMap ti
+          forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
+            let opsDef = etiOpsDef eti
+                trid = etiId eti
+            liftTx $ mkTriggerQ trid trn tn cols opsDef
 
-  postSc <- askSchemaCache
-  -- -- recreate the insert permission infra
-  -- forM_ (M.elems $ scTables postSc) $ \ti -> do
-  --   let tn = tiName ti
-  --       pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
-  --   forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-  --     maybe (return ()) (\ipi -> liftTx $ buildInsInfra tn ipi pgCols) $ _permIns rpi
-
-  --recreate triggers
-  forM_ (M.elems $ scTables postSc) $ \ti -> do
-    let tn = tiName ti
-        cols = getCols $ tiFieldInfoMap ti
-    forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-      let opsDef = etiOpsDef eti
-          trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn cols opsDef
+  bool withoutReload buildSchemaCache reloadRequired
 
   -- refresh the gCtxMap in schema cache
   refreshGCtxMapInSchema
