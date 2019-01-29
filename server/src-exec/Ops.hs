@@ -24,7 +24,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "8"
+curCatalogVer = "9"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -102,7 +102,8 @@ initCatalogStrict createSchema initTime =  do
 
     addVersion modTime = liftTx $ Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
-                INSERT INTO "hdb_catalog"."hdb_version" VALUES ($1, $2)
+                INSERT INTO "hdb_catalog"."hdb_version"
+                (version, upgraded_on) VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
@@ -177,6 +178,17 @@ setAsSystemDefinedFor8 =
             WHERE table_schema = 'hdb_catalog'
              AND  table_name = 'hdb_function_agg';
            |]
+
+setAsSystemDefinedFor9 :: (MonadTx m) => m ()
+setAsSystemDefinedFor9 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_version';
+           |]
+
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -293,6 +305,21 @@ from7To8 = do
     migrateMetadataFrom7 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_7_to_8.yaml" :: Q (TExp RQLQuery)))
 
+-- alter hdb_version table and track it (telemetry changes)
+from8To9
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from8To9 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_8_to_9.sql")
+  void $ runQueryM migrateMetadataFrom8
+  -- set as system defined
+  setAsSystemDefinedFor9
+  where
+    migrateMetadataFrom8 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_8_to_9.yaml" :: Q (TExp RQLQuery)))
+
+
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
   => UTCTime -> m String
@@ -308,12 +335,17 @@ migrateCatalog migrationTime = do
      | preVer == "5"   -> from5ToCurrent
      | preVer == "6"   -> from6ToCurrent
      | preVer == "7"   -> from7ToCurrent
+     | preVer == "8"   -> from8ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
+    from8ToCurrent = do
+      from8To9
+      postMigrate
+
     from7ToCurrent = do
       from7To8
-      postMigrate
+      from8ToCurrent
 
     from6ToCurrent = do
       from6To7

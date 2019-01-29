@@ -44,7 +44,6 @@ class Chat extends React.Component {
   // set refetch function (coming from child <Query> component) using callback
   setRefetch = (refetch) => {
     this.setState({
-      ...this.state,
       refetch
     })
   }

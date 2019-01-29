@@ -24,18 +24,18 @@ class PollQuestion extends Component {
   }
 
   handleOptionChange = (e) => {
-    this.setState({ ...this.state, optionId: e.currentTarget.value });
+    this.setState({ optionId: e.currentTarget.value });
   }
 
   onMutationCompleted = () => {
-    this.setState({ ...this.state, voteBtnText: '👍 Done', voteBtnStyle: 'success' });
+    this.setState({ voteBtnText: '👍 Done', voteBtnStyle: 'success' });
     window.setTimeout(() => {
-      this.setState({ ...this.state, voteBtnText: '🗳️ Vote', voteBtnStyle: 'primary' });
+      this.setState({ voteBtnText: '🗳️ Vote', voteBtnStyle: 'primary' });
     }, 3000);
   }
 
   onMutationError = () => {
-    this.setState({ ...this.state, voteBtnText: 'Error 😞 Try again', voteBtnStyle: 'danger' });
+    this.setState({ voteBtnText: 'Error 😞 Try again', voteBtnStyle: 'danger' });
   }
 
   render () {
@@ -52,10 +52,10 @@ class PollQuestion extends Component {
                 onSubmit={e => {
                     e.preventDefault();
                     if (!this.state.optionId) {
-                      this.setState({...this.state, voteBtnText: '✋ Select an option and try again', voteBtnStyle: 'warning'});
+                      this.setState({ voteBtnText: '✋ Select an option and try again', voteBtnStyle: 'warning'});
                       return
                     }
-                    this.setState({...this.state, voteBtnText: '🗳️ Submitting', voteBtnStyle: 'info'});
+                    this.setState({ voteBtnText: '🗳️ Submitting', voteBtnStyle: 'info'});
                     vote({
                       variables: {
                         optionId: this.state.optionId,

@@ -260,6 +260,11 @@ args:
     schema: hdb_catalog
     name: remote_schemas
 
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_version
+
 - type: create_object_relationship
   args:
     name: return_table_info
