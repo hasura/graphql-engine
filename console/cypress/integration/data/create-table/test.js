@@ -38,8 +38,6 @@ export const runCreateTableTests = () => {
     it('Fails to create with duplicate primary key', failCTDuplicatePrimaryKey);
     it('Fails to create with wrong default value', failCTWrongDefaultValue);
     it('Successfuly creates table', passCT);
-    it('Fails to add existing table', failAddExistingTable);
-    it('Passes add existing table', passAddExistingTable);
     it('Fails to create duplicate table', failCTDuplicateTable);
     it('Delete off the test table', deleteCTTestTable);
   });

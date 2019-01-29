@@ -1,0 +1,32 @@
+description: Nested select on article
+url: /v1/query
+status: 200
+response:
+- content: Sample article content 3
+  author:
+    name: Author 2
+    id: 2
+  id: 3
+  title: Article 3
+  tags:
+  - latest
+query:
+  variables:
+    tags:
+    - latest
+  type: select
+  args:
+    table: article
+    where:
+      tags:
+        $contained_in:
+        - latest
+    columns:
+    - id
+    - title
+    - content
+    - tags
+    - name: author
+      columns:
+      - id
+      - name

@@ -223,7 +223,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;

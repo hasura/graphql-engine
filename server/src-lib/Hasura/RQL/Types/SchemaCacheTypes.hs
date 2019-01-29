@@ -30,25 +30,27 @@ data SchemaObjId
   = SOTable !QualifiedTable
   | SOQTemplate !TQueryName
   | SOTableObj !QualifiedTable !TableObjId
+  | SOFunction !QualifiedFunction
    deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
 reportSchemaObj :: SchemaObjId -> T.Text
-reportSchemaObj (SOTable tn) = "table " <> qualTableToTxt tn
+reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
+reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
 reportSchemaObj (SOQTemplate qtn) =
   "query-template " <> getTQueryName qtn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
-  "column " <> qualTableToTxt tn <> "." <> getPGColTxt cn
+  "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualTableToTxt tn <> "." <> getRelTxt cn
+  "relationship " <> qualObjectToText tn <> "." <> getRelTxt cn
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
-  "constraint " <> qualTableToTxt tn <> "." <> getConstraintTxt cn
+  "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualTableToTxt tn <> "." <> getRoleTxt rn
+  "permission " <> qualObjectToText tn <> "." <> getRoleTxt rn
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualTableToTxt tn <> "." <> trn
+  "event-trigger " <> qualObjectToText tn <> "." <> trn
 
 
 instance Show SchemaObjId where

@@ -6,47 +6,44 @@ import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
+import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
-import qualified Data.String                  as DataString
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
+import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
 
--- clear the hdb_views schema
-initStateTx :: Q.Tx ()
-initStateTx = clearHdbViews
-
 data RawConnParams
   = RawConnParams
-  { rcpStripes  :: !(Maybe Int)
-  , rcpConns    :: !(Maybe Int)
-  , rcpIdleTime :: !(Maybe Int)
+  { rcpStripes      :: !(Maybe Int)
+  , rcpConns        :: !(Maybe Int)
+  , rcpIdleTime     :: !(Maybe Int)
+  , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort          :: !(Maybe Int)
-  , rsoHost          :: !(Maybe HostPreference)
-  , rsoConnParams    :: !RawConnParams
-  , rsoTxIso         :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey     :: !(Maybe AccessKey)
-  , rsoAuthHook      :: !RawAuthHook
-  , rsoJwtSecret     :: !(Maybe Text)
-  , rsoUnAuthRole    :: !(Maybe RoleName)
-  , rsoCorsConfig    :: !RawCorsConfig
-  , rsoEnableConsole :: !Bool
+  { rsoPort            :: !(Maybe Int)
+  , rsoHost            :: !(Maybe HostPreference)
+  , rsoConnParams      :: !RawConnParams
+  , rsoTxIso           :: !(Maybe Q.TxIsolation)
+  , rsoAccessKey       :: !(Maybe AccessKey)
+  , rsoAuthHook        :: !RawAuthHook
+  , rsoJwtSecret       :: !(Maybe Text)
+  , rsoUnAuthRole      :: !(Maybe RoleName)
+  , rsoCorsConfig      :: !RawCorsConfig
+  , rsoEnableConsole   :: !Bool
+  , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 data CorsConfigG a
@@ -60,16 +57,17 @@ type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
-  { soPort          :: !Int
-  , soHost          :: !HostPreference
-  , soConnParams    :: !Q.ConnParams
-  , soTxIso         :: !Q.TxIsolation
-  , soAccessKey     :: !(Maybe AccessKey)
-  , soAuthHook      :: !(Maybe AuthHook)
-  , soJwtSecret     :: !(Maybe Text)
-  , soUnAuthRole    :: !(Maybe RoleName)
-  , soCorsConfig    :: !CorsConfig
-  , soEnableConsole :: !Bool
+  { soPort            :: !Int
+  , soHost            :: !HostPreference
+  , soConnParams      :: !Q.ConnParams
+  , soTxIso           :: !Q.TxIsolation
+  , soAccessKey       :: !(Maybe AccessKey)
+  , soAuthHook        :: !(Maybe AuthHook)
+  , soJwtSecret       :: !(Maybe Text)
+  , soUnAuthRole      :: !(Maybe RoleName)
+  , soCorsConfig      :: !CorsConfig
+  , soEnableConsole   :: !Bool
+  , soEnableTelemetry :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -217,19 +215,23 @@ mkServeOptions rso = do
            withEnv (rsoTxIso rso) (fst txIsoEnv)
   accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecr <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
-  return $ ServeOptions port host connParams txIso accKey authHook
-                        jwtSecr unAuthRole corsCfg enableConsole
+  enableTelemetry <- fromMaybe True <$>
+                     withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+
+  return $ ServeOptions port host connParams txIso accKey authHook jwtSecret
+                        unAuthRole corsCfg enableConsole enableTelemetry
   where
-    mkConnParams (RawConnParams s c i) = do
+    mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      return $ Q.ConnParams stripes conns iTime
+      allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
+      return $ Q.ConnParams stripes conns iTime allowPrepare
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -258,7 +260,7 @@ mkEnvVarDoc envVars =
   PP.indent 2 (PP.vsep $ map mkEnvVarLine envVars)
   where
     mkEnvVarLine (var, desc) =
-      (PP.fillBreak 30 (PP.text var) PP.<+> prettifyDesc desc) <> PP.hardline
+      (PP.fillBreak 40 (PP.text var) PP.<+> prettifyDesc desc) <> PP.hardline
     prettifyDesc = PP.align . PP.fillSep . map PP.text . words
 
 mainCmdFooter :: PP.Doc
@@ -314,6 +316,9 @@ serveCmdFooter =
         , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
           <> " --auth-hook https://mywebhook.com/post --auth-hook-mode POST"
         ]
+      , [ "# Start GraphQL Engine with telemetry enabled/disabled"
+        , "graphql-engine --database-url <database-url> serve --enable-telemetry true|false"
+        ]
       ]
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
@@ -321,6 +326,7 @@ serveCmdFooter =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
+      , enableTelemetryEnv
       ]
 
     eventEnvs =
@@ -359,6 +365,12 @@ pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =
   ( "HASURA_GRAPHQL_PG_TIMEOUT"
   , "Each connection's idle time before it is closed (default: 180 sec)"
+  )
+
+pgUsePrepareEnv :: (String, String)
+pgUsePrepareEnv =
+  ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "Use prepared statements for queries (default: True)"
   )
 
 txIsoEnv :: (String, String)
@@ -408,6 +420,13 @@ enableConsoleEnv :: (String, String)
 enableConsoleEnv =
   ( "HASURA_GRAPHQL_ENABLE_CONSOLE"
   , "Enable API Console"
+  )
+
+enableTelemetryEnv :: (String, String)
+enableTelemetryEnv =
+  ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
+  -- TODO: better description
+  , "Enable anonymous telemetry (default: true)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -484,7 +503,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout
+  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -507,6 +526,12 @@ parseConnParams =
               ( long "timeout" <>
                 metavar "SECONDS" <>
                 help (snd pgTimeoutEnv)
+              )
+    allowPrepare = optional $
+      option (eitherReader parseStrAsBool)
+              ( long "use-prepared-statements" <>
+                metavar "USE PREPARED STATEMENTS" <>
+                help (snd pgUsePrepareEnv)
               )
 
 parseServerPort :: Parser (Maybe Int)
@@ -597,6 +622,13 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
+parseEnableTelemetry :: Parser (Maybe Bool)
+parseEnableTelemetry = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "enable-telemetry" <>
+           help (snd enableTelemetryEnv)
+         )
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog (Q.ConnInfo host port user _ db _) =
@@ -620,6 +652,8 @@ serveOptsToLog so =
                        , "cors_domain" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
+                       , "enable_telemetry" J..= soEnableTelemetry so
+                       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

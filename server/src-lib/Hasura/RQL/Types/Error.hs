@@ -33,6 +33,7 @@ module Hasura.RQL.Types.Error
        , indexedForM
        , indexedMapM
        , indexedForM_
+       , indexedMapM_
        ) where
 
 import           Data.Aeson
@@ -275,6 +276,10 @@ indexedForM_ :: (QErrM m)
 indexedForM_ l f =
   forM_ (zip [0..] l) $ \(i, a) ->
     withPathE (Index i) (f a)
+
+indexedMapM_ :: (QErrM m)
+            => (a -> m ()) -> [a] -> m ()
+indexedMapM_ = flip indexedForM_
 
 liftIResult :: (QErrM m) => IResult a -> m a
 liftIResult (IError path msg) =

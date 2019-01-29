@@ -42,7 +42,6 @@ class Metadata extends Component {
   }
   updateMetadataState(displayReloadMetadata) {
     this.setState({
-      ...this.state,
       showMetadata: displayReloadMetadata,
     });
   }

@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
   , convertAggSelect
+  , convertFuncQuery
   , parseColumns
   , withSelSet
   , fromSelSet
@@ -9,6 +10,7 @@ module Hasura.GraphQL.Resolve.Select
   , fromField
   , fromFieldByPKey
   , fromAggField
+  , fromFuncQueryField
   ) where
 
 import           Control.Arrow                     (first)
@@ -43,7 +45,7 @@ withSelSet selSet f =
 
 fromSelSet
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => PrepFn m -> G.NamedType -> SelSet -> m [(FieldName, RS.AnnFld)]
+  => PrepFn m -> G.NamedType -> SelSet -> m RS.AnnFlds
 fromSelSet f fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
@@ -67,6 +69,19 @@ fromSelSet f fldTy flds =
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
+
+fromAggSelSet
+  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
+  => PrepFn m -> G.NamedType -> SelSet -> m RS.TableAggFlds
+fromAggSelSet fn fldTy selSet = fmap toFields $
+  withSelSet selSet $ \f -> do
+    let fTy = _fType f
+        fSelSet = _fSelSet f
+    case _fName f of
+      "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
+      "aggregate"  -> RS.TAFAgg <$> convertAggFld fTy fSelSet
+      "nodes"      -> RS.TAFNodes <$> fromSelSet fn fTy fSelSet
+      G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
@@ -103,8 +118,7 @@ fromField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => PrepFn m -> QualifiedTable -> AnnBoolExpSQL
   -> Maybe Int -> Field -> m RS.AnnSel
-fromField f tn permFilter permLimitM fld =
-  fieldAsPath fld $ do
+fromField f tn permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs f args
   annFlds   <- fromSelSet f (_fType fld) $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
@@ -266,7 +280,7 @@ convertCount args = do
     mkCType isDistinct cols = return $
       bool (S.CTSimple cols) (S.CTDistinct cols) isDistinct
 
-toFields :: [(T.Text, a)] -> [(FieldName, a)]
+toFields :: [(T.Text, a)] -> RS.Fields a
 toFields = map (first FieldName)
 
 convertColFlds
@@ -299,24 +313,14 @@ fromAggField
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => PrepFn m -> QualifiedTable -> AnnBoolExpSQL
   -> Maybe Int -> Field -> m RS.AnnAggSel
-fromAggField fn tn permFilter permLimitM fld = fieldAsPath fld $ do
-  tableArgs <- parseTableArgs fn args
-  aggSelFlds <- toFields <$>
-                fromAggSel (_fType fld) (_fSelSet fld)
+fromAggField f tn permFilter permLimit fld = fieldAsPath fld $ do
+  tableArgs <- parseTableArgs f args
+  aggSelFlds <- fromAggSelSet f (_fType fld) (_fSelSet fld)
   let tabFrom = RS.TableFrom tn Nothing
-      tabPerm = RS.TablePerm permFilter permLimitM
+      tabPerm = RS.TablePerm permFilter permLimit
   return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs
   where
     args = _fArguments fld
-    fromAggSel ty selSet =
-      withSelSet selSet $ \f -> do
-        let fTy = _fType f
-            fSelSet = _fSelSet f
-        case _fName f of
-          "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType ty
-          "aggregate"  -> RS.TAFAgg <$> convertAggFld fTy fSelSet
-          "nodes"      -> RS.TAFNodes <$> fromSelSet fn fTy fSelSet
-          G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 convertAggSelect
   :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
@@ -325,3 +329,48 @@ convertAggSelect qt permFilter permLimit fld = do
              fromAggField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectAggP2 (selData, prepArgs)
+
+fromFuncQueryField
+  ::( MonadError QErr m, MonadReader r m, Has FieldMap r
+    , Has OrdByCtx r, Has FuncArgCtx r
+    )
+  => PrepFn m -> QualifiedFunction -> Bool -> Field
+  -> m (RS.TableArgs, Either RS.TableAggFlds RS.AnnFlds, S.FromItem)
+fromFuncQueryField f qf isAgg fld = fieldAsPath fld $ do
+  funcArgsM <- withArgM args "args" $ parseFunctionArgs f
+  let funcArgs = fromMaybe [] funcArgsM
+      funcFrmItem = S.mkFuncFromItem qf funcArgs
+  tableArgs <- parseTableArgs f args
+  eSelFlds <- bool nonAggSel aggSel isAgg
+  return (tableArgs, eSelFlds, funcFrmItem)
+  where
+    args = _fArguments fld
+
+    nonAggSel = Right <$>
+      fromSelSet f (_fType fld) (_fSelSet fld)
+    aggSel = Left <$>
+      fromAggSelSet f (_fType fld) (_fSelSet fld)
+
+parseFunctionArgs
+  ::(MonadError QErr m, MonadReader r m, Has FuncArgCtx r)
+  => PrepFn m -> AnnGValue -> m [S.SQLExp]
+parseFunctionArgs fn val =
+  flip withObject val $ \nTy obj -> do
+    funcArgCtx :: FuncArgCtx <- asks getter
+    argSeq <- onNothing (Map.lookup nTy funcArgCtx) $ throw500 $
+              "namedType " <> showNamedTy nTy <> " not found in args context"
+    fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
+      argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
+                "argument " <> showName argName <> " required in input type "
+                <> showNamedTy nTy
+      fn =<< asPGColVal argVal
+
+convertFuncQuery
+  :: QualifiedTable -> QualifiedFunction -> AnnBoolExpSQL
+  -> Maybe Int -> Bool -> Field -> Convert RespTx
+convertFuncQuery qt qf permFilter permLimit isAgg fld = do
+  (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
+    fromFuncQueryField prepare qf isAgg fld
+  let tabPerm = RS.TablePerm permFilter permLimit
+  prepArgs <- get
+  return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs (sel, prepArgs)

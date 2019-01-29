@@ -14,6 +14,22 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6
   font-size: 40px;
   text-align: center;
 }
+input::-moz-focus-inner {
+ outline: 0;
+ -moz-outline: none;
+ border:0;
+}
+select:-moz-focusring
+{
+  color: transparent;
+  text-shadow: 0 0 0 #000;
+}
+select::-moz-focus-inner {
+ outline: 0;
+ -moz-outline: none;
+ border: 0;
+}
+option::-moz-focus-inner { border: 0; outline: 0 }
 table thead tr th
 {
   background-color: #F2F2F2 !important;
@@ -789,6 +805,9 @@ code
     background-color: #F2B130;
   }
 }
+.gray_button {
+  background: #f2f2f2 !important;
+}
 .docsButton
 {
   background-color: #fff;
@@ -1109,6 +1128,11 @@ code
   height: 100vh;
   margin-bottom: 50px;
 }
+.button_mar_right
+{
+  margin-right: 20px;
+}
+
 
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../Layout/Button/Button';
 
 import {
   removeHeader,
@@ -82,13 +83,12 @@ class AddTrigger extends Component {
 
   checkWebhookEnvSupport(version) {
     const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
-    this.setState({ ...this.state, supportWebhookEnv });
+    this.setState({ supportWebhookEnv });
     return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      ...this.state,
       supportColumnChangeFeature: val
     });
   }
@@ -660,19 +660,18 @@ class AddTrigger extends Component {
                 </div>
               </div>
               <hr />
-              <button
+              <div
                 onClick={this.toggleAdvanced.bind(this)}
+                className={styles.toggleAdvanced}
                 data-test="advanced-settings"
-                type="button"
-                className={'btn btn-default ' + styles.advancedToggleBtn}
               >
-                Advanced Settings
                 {this.state.advancedExpanded ? (
-                  <i className={'fa fa-arrow-up'} />
+                  <i className={'fa fa-chevron-down'} />
                 ) : (
-                  <i className={'fa fa-arrow-down'} />
-                )}
-              </button>
+                  <i className={'fa fa-chevron-right'} />
+                )}{' '}
+                <b>Advanced Settings</b>
+              </div>
               {this.state.advancedExpanded ? (
                 <div
                   className={
@@ -756,13 +755,14 @@ class AddTrigger extends Component {
                 </div>
               ) : null}
               <hr />
-              <button
+              <Button
                 type="submit"
-                className={`btn ${styles.yellow_button}`}
+                color="yellow"
+                size="sm"
                 data-test="trigger-create"
               >
                 {createBtnText}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

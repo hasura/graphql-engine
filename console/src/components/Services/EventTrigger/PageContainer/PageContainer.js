@@ -4,6 +4,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
+import Button from '../../Layout/Button/Button';
 
 import { LISTING_TRIGGER } from '../EventActions';
 
@@ -93,7 +94,7 @@ const PageContainer = ({
         <div className={styles.sidebarHeadingWrapper}>
           <div
             className={
-              'col-xs-8 ' +
+              'col-xs-7 ' +
               styles.sidebarHeading +
               ' ' +
               styles.padd_left_remove
@@ -104,7 +105,7 @@ const PageContainer = ({
           {migrationMode ? (
             <div
               className={
-                'col-xs-4 text-center ' +
+                'col-xs-5 text-center ' +
                 styles.padd_remove +
                 ' ' +
                 styles.sidebarCreateTable
@@ -114,12 +115,13 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/events/manage/triggers/add'}
               >
-                <button
-                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                <Button
+                  color="white"
+                  size="xs"
                   data-test="sidebar-add-table"
                 >
                   Add Trigger
-                </button>
+                </Button>
               </Link>
             </div>
           ) : null}
