@@ -55,7 +55,7 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 .. note::
 
   - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
-    ``HASURA_GRAPHQL_DATABASE_URL`` (e.g. %40 for @).
+    ``HASURA_GRAPHQL_DATABASE_URL`` env var (e.g. %40 for @).
 
     You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
     to connect to the database.

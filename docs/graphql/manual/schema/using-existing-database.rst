@@ -67,7 +67,7 @@ To track all the foreign-keys of all tables in the database:
   For example, for the foreign-key ``article::author_id -> author::id``, the relationship names will be
   ``authorByAuthorId`` for ``article`` table and ``articlesByAuthorId`` for ``author`` table.
 
-  Note that, **this is just a random naming convention** chosen by Hasura to ensure generation of unique relationship
-  names. You can choose to rename your relationships to anything you wish. You can **change the relationship names**
-  with a name of your choice as shown in :doc:`relationships/rename`.
+  Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure generation of unique
+  relationship names. You can choose to rename your relationships to anything you wish. You can **change the
+  relationship names** with a name of your choice as shown in :doc:`relationships/rename`.
 
