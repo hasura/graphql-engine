@@ -10,7 +10,6 @@ import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils         (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
@@ -378,8 +377,6 @@ migrateCatalog migrationTime = do
     postMigrate = do
        -- update the catalog version
        updateVersion
-       -- clean hdb_views
-       liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
        buildSchemaCache
        return $ "successfully migrated to " ++ show curCatalogVer
