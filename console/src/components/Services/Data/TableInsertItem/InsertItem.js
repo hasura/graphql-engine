@@ -31,7 +31,6 @@ class InsertItem extends Component {
     // Since the state variable lifecycle is tired to the instance of the class
     // and making this change using an anonymous function will case errors.
     this.setState({
-      ...this.state,
       insertedRows: this.state.insertedRows + 1,
     });
   }

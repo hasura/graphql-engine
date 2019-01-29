@@ -51,7 +51,6 @@ class TodoPublicList extends Component {
             next(data) {
               if (data.data.todos.length) {
                 _this.setState({
-                  ...this.state,
                   showNew: true,
                   newTodosLength:
                     _this.state.newTodosLength + data.data.todos.length
@@ -69,7 +68,7 @@ class TodoPublicList extends Component {
   }
   loadMoreClicked() {
     const { client } = this.props;
-    this.setState({ ...this.state, showNew: false, newTodosLength: 0 });
+    this.setState({ showNew: false, newTodosLength: 0 });
     client
       .query({
         query: QUERY_FEED_PUBLIC_TODO,
@@ -81,7 +80,7 @@ class TodoPublicList extends Component {
         if (data.data.todos.length) {
           const mergedTodos = data.data.todos.concat(this.state.todos);
           // update state with new todos
-          this.setState({ ...this.state, todos: mergedTodos });
+          this.setState({ todos: mergedTodos });
         }
       });
   }
@@ -100,9 +99,9 @@ class TodoPublicList extends Component {
         if (data.data.todos.length) {
           const mergedTodos = this.state.todos.concat(data.data.todos);
           // update state with new todos
-          this.setState({ ...this.state, todos: mergedTodos });
+          this.setState({ todos: mergedTodos });
         } else {
-          this.setState({ ...this.state, showOlder: false });
+          this.setState({ showOlder: false });
         }
       });
   }
@@ -110,7 +109,7 @@ class TodoPublicList extends Component {
     const finalTodos = this.state.todos.filter(t => {
       return t.id !== deletedTodo.id;
     });
-    this.setState({ ...this.state, todos: finalTodos });
+    this.setState({ todos: finalTodos });
   }
   completePublicTodoClicked(completedTodo) {
     const finalTodos = this.state.todos.filter(t => {
@@ -120,7 +119,7 @@ class TodoPublicList extends Component {
       }
       return t;
     });
-    this.setState({ ...this.state, todos: finalTodos });
+    this.setState({ todos: finalTodos });
   }
   render() {
     const { userId, type } = this.props;
