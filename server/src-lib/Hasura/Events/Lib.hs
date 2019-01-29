@@ -278,7 +278,7 @@ tryWebhook logenv pool e = do
         if countThreads >= maxT
           then retry
           else modifyTVar' c (+1)
-      -- TODO: Catch exception
+
       initReqE <- liftIO $ try $ HTTP.parseRequest $ T.unpack webhook
       case initReqE of
         Left excp -> return $ Left (HClient excp)
