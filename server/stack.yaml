@@ -19,7 +19,7 @@ extra-deps:
 - git: https://github.com/hasura/pg-client-hs.git
   commit: f3d1e9e67bdfbfa3de85b7cbdb4c557dce7fd84d
 - git: https://github.com/hasura/graphql-parser-hs.git
-  commit: 75782ae894cce05ed31e5b87fd696fc10e88baf9
+  commit: ff95d9a96aa5ef9e5390f8712958e4118e3831f6
 - ginger-0.8.1.0
 
 # for text-builder

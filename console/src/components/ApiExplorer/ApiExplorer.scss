@@ -32,10 +32,10 @@
   opacity: 0.1;
 }
 .panelInFocus {
-  
+
 }
 .requestInFocus {
-  
+
 }
 .cursorNotAllowed {
   cursor: not-allowed;
@@ -348,6 +348,8 @@
           border: 0;
           box-shadow: none;
           padding: 10px 12px;
+          height: auto;
+          background-color: #fff;
         }
       }
       .sendBtn
@@ -770,4 +772,3 @@ label
 
 
 }
-

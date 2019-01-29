@@ -9,6 +9,7 @@ const defaultState = {
   loginError: false,
   serverVersion: null,
   latestServerVersion: null,
+  telemetryEnabled: true,
 };
 
 export default defaultState;
