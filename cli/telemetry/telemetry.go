@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/Masterminds/semver"
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
 )
@@ -18,13 +18,6 @@ const Endpoint = "https://telemetry.hasura.io/v1/http"
 
 // Topic is the name under which telemetry is sent.
 var Topic = "cli_test"
-
-func init() {
-	var v = version.New()
-	if v.CLISemver != nil {
-		Topic = "cli"
-	}
-}
 
 type requestPayload struct {
 	Topic string `json:"topic"`
@@ -98,10 +91,18 @@ func (d *Data) Beam() {
 	}
 }
 
+func getTopic(v string) string {
+	topic := "cli_test"
+	if _, err := semver.NewVersion(v); err == nil {
+		topic = "cli"
+	}
+	return topic
+}
+
 func beam(d *Data, log *logrus.Logger) {
 	d.IsBeamed = true
 	p := requestPayload{
-		Topic: Topic,
+		Topic: getTopic(d.Version),
 		Data:  *d,
 	}
 	tick := time.Now()
