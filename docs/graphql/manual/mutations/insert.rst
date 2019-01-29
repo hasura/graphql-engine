@@ -9,7 +9,7 @@ Insert mutation
 Auto-generated insert mutation schema
 -------------------------------------
 
-Here’s the schema for the insert mutation field for a table ``article``:
+**For example**, the auto-generated schema for the insert mutation field for a table ``article`` looks like this:
 
 .. code-block:: graphql
 
@@ -31,6 +31,8 @@ As you can see from the schema:
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
 - You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications
 
 .. note::
 

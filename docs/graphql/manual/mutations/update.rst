@@ -9,7 +9,7 @@ Update mutation
 Auto-generated update mutation schema
 -------------------------------------
 
-Here’s the schema for the update mutation field for a table ``article``:
+**For example**, the auto-generated schema for the update mutation field for a table ``article`` looks like this:
 
 .. code-block:: graphql
 
@@ -32,6 +32,8 @@ As you can see from the schema:
 - ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+See the :ref:`update mutation API reference <update_syntax>` for the full specifications
 
 .. note::
 

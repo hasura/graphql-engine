@@ -165,7 +165,7 @@ The response is a JSON Object with the following structure.
 .. note::
    The first row in the ``result`` (when present) will be the names of the columns.
 
-More examples
+Some examples
 ^^^^^^^^^^^^^
 
 A query returning results.
