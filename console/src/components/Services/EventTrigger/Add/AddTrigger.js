@@ -17,6 +17,7 @@ import {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
@@ -40,6 +41,7 @@ class AddTrigger extends Component {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
+      supportRetryTimeout: false,
     };
   }
   componentDidMount() {
@@ -48,6 +50,7 @@ class AddTrigger extends Component {
     if (this.props.serverVersion) {
       this.checkSemVer(this.props.serverVersion).then(() => {
         this.checkWebhookEnvSupport(this.props.serverVersion);
+        this.checkRetryTimeoutSupport(this.props.serverVersion);
       });
     }
   }
@@ -55,6 +58,7 @@ class AddTrigger extends Component {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion).then(() => {
         this.checkWebhookEnvSupport(nextProps.serverVersion);
+        this.checkRetryTimeoutSupport(this.props.serverVersion);
       });
     }
   }
@@ -83,7 +87,13 @@ class AddTrigger extends Component {
 
   checkWebhookEnvSupport(version) {
     const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
-    this.setState({ ...this.state, supportWebhookEnv });
+    this.setState({ supportWebhookEnv });
+    return Promise.resolve();
+  }
+
+  checkRetryTimeoutSupport(version) {
+    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
+    this.setState({ supportRetryTimeout });
     return Promise.resolve();
   }
 
@@ -130,6 +140,14 @@ class AddTrigger extends Component {
         isValid = false;
         errorMsg = 'Retry interval is not valid';
         customMsg = 'Retry interval cannot be empty and can only be numbers';
+      }
+      if (
+        this.state.supportRetryTimeout &&
+        isNaN(parseInt(this.props.retryConf.timeout_sec, 10))
+      ) {
+        isValid = false;
+        errorMsg = 'Timeout is not valid';
+        customMsg = 'Timeout cannot be empty and can only be numbers';
       }
     } else if (this.props.selectedOperations.insert) {
       // check if columns are selected.
@@ -200,7 +218,7 @@ class AddTrigger extends Component {
       webhookUrlType,
     } = this.props;
 
-    const { supportColumnChangeFeature } = this.state;
+    const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
     let createBtnText = 'Create';
@@ -687,50 +705,80 @@ class AddTrigger extends Component {
                     }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Number of retries (default: 0)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryNum(e.target.value));
-                        }}
-                        data-test="no-of-retries"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="no of retries"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Number of retries (default: 0)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryNum(e.target.value));
+                          }}
+                          data-test="no-of-retries"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="no of retries"
+                        />
+                      </div>
                     </div>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Retry Interval in seconds (default: 10)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryInterval(e.target.value));
-                        }}
-                        data-test="interval-seconds"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="interval time in seconds"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Retry Interval in seconds (default: 10)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryInterval(e.target.value));
+                          }}
+                          data-test="interval-seconds"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="interval time in seconds"
+                        />
+                      </div>
                     </div>
+                    {supportRetryTimeout && (
+                      <div className={styles.retrySection}>
+                        <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                          <label
+                            className={`${styles.add_mar_right} ${
+                              styles.retryLabel
+                            }`}
+                          >
+                            Timeout in seconds (default: 60)
+                          </label>
+                        </div>
+                        <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                          <input
+                            onChange={e => {
+                              dispatch(setRetryTimeout(e.target.value));
+                            }}
+                            data-test="interval-seconds"
+                            className={`${styles.display_inline} form-control ${
+                              styles.width300
+                            }`}
+                            type="text"
+                            placeholder="timeout in seconds"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div
                     className={

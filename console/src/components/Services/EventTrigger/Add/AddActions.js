@@ -19,6 +19,7 @@ const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
 const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
 const SET_RETRY_NUM = 'AddTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'AddTrigger/SET_RETRY_INTERVAL';
+const SET_RETRY_TIMEOUT = 'AddTrigger/SET_RETRY_TIMEOUT';
 const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
@@ -40,6 +41,7 @@ const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
+const setRetryTimeout = value => ({ type: SET_RETRY_TIMEOUT, value });
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const addHeader = () => ({ type: ADD_HEADER });
 const removeHeader = i => ({ type: REMOVE_HEADER, index: i });
@@ -341,6 +343,14 @@ const addTriggerReducer = (state = defaultState, action) => {
           interval_sec: parseInt(action.value, 10),
         },
       };
+    case SET_RETRY_TIMEOUT:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          timeout_sec: parseInt(action.value, 10),
+        },
+      };
     case SET_TABLENAME:
       return { ...state, tableName: action.value };
     case SET_SCHEMANAME:
@@ -382,6 +392,7 @@ export {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   createTrigger,
   fetchTableListBySchema,
   operationToggleColumn,
