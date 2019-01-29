@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &consoleOptions{
@@ -100,13 +101,15 @@ func (o *consoleOptions) run() error {
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":        "http://" + o.Address,
-		"apiPort":        o.APIPort,
-		"cliVersion":     o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":     o.EC.Config.ParsedEndpoint.String(),
-		"dataApiVersion": "",
-		"accessKey":      o.EC.Config.AccessKey,
-		"assetsVersion":  consoleAssetsVersion,
+		"apiHost":         "http://" + o.Address,
+		"apiPort":         o.APIPort,
+		"cliVersion":      o.EC.Version.GetCLIVersion(),
+		"dataApiUrl":      o.EC.Config.ParsedEndpoint.String(),
+		"dataApiVersion":  "",
+		"accessKey":       o.EC.Config.AccessKey,
+		"assetsVersion":   consoleAssetsVersion,
+		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
+		"cliUUID":         o.EC.GlobalConfig.UUID,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
@@ -146,6 +149,8 @@ func (o *consoleOptions) run() error {
 
 	o.EC.Spinner.Stop()
 	log.Infof("console running at: %s", consoleURL)
+
+	o.EC.Telemetry.Beam()
 
 	wg.Wait()
 	return nil

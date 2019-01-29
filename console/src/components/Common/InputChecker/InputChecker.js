@@ -17,7 +17,6 @@ export default class InputChecker extends React.Component {
       e.target && parseInt(e.target.getAttribute('data-index-id'), 10);
     if (!val) {
       this.setState({
-        ...this.state,
         isError: false,
         errorMessage: '',
       });
@@ -26,7 +25,6 @@ export default class InputChecker extends React.Component {
     inputChecker(this.props.type, val)
       .then(r => {
         this.setState({
-          ...this.state,
           isError: false,
           errorMessage: '',
         });
@@ -34,7 +32,6 @@ export default class InputChecker extends React.Component {
       })
       .catch(r => {
         this.setState({
-          ...this.state,
           isError: true,
           errorMessage: r.message,
         });

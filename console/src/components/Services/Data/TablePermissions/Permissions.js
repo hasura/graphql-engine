@@ -94,7 +94,7 @@ class Permissions extends Component {
       )
       .then(r => {
         if (r.length > 0) {
-          this.setState({ ...this.state, viewInfo: r[0] });
+          this.setState({ viewInfo: r[0] });
         }
       });
   }
@@ -215,14 +215,12 @@ class Permissions extends Component {
       showAggregation = semverCheck('aggregationPerm', version);
       showUpsertSection = !semverCheck('permHideUpsertSection', version);
       this.setState({
-        ...this.state,
         showAggregation,
         showUpsertSection,
       });
     } catch (e) {
       console.error(e);
       this.setState({
-        ...this.state,
         showAggregation: false,
         showUpsertSection: false,
       });
@@ -234,13 +232,13 @@ class Permissions extends Component {
     try {
       showInsertPrefix = semverCheck('insertPrefix', version);
       if (showInsertPrefix) {
-        this.setState({ ...this.state, showInsertPrefix: true });
+        this.setState({ showInsertPrefix: true });
       } else {
-        this.setState({ ...this.state, showInsertPrefix: false });
+        this.setState({ showInsertPrefix: false });
       }
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showInsertPrefix: false });
+      this.setState({ showInsertPrefix: false });
     }
     return Promise.resolve();
   }

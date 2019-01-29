@@ -20,26 +20,17 @@ func init() {
 
 func TestInitCmd(t *testing.T) {
 	logger, _ := test.NewNullLogger()
+	ec := cli.NewExecutionContext()
+	ec.Logger = logger
+	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	tt := []struct {
 		name string
 		opts *initOptions
 		err  error
 	}{
 		{"only-init-dir", &initOptions{
-			EC: &cli.ExecutionContext{
-				Logger:  logger,
-				Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			},
+			EC:        ec,
 			Endpoint:  "",
-			AccessKey: "",
-			InitDir:   filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-		}, nil},
-		{"with-endpoint-flag", &initOptions{
-			EC: &cli.ExecutionContext{
-				Logger:  logger,
-				Spinner: spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			},
-			Endpoint:  "https://localhost:8080",
 			AccessKey: "",
 			InitDir:   filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 		}, nil},
