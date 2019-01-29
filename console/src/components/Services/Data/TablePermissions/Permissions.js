@@ -67,12 +67,14 @@ class Permissions extends Component {
     this.state.viewInfo = {};
     this.state.showAggregation = false;
     this.state.showInsertPrefix = false;
+    this.state.showUpdatePresets = false;
   }
   componentDidMount() {
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion).then(() =>
-        this.checkPrefixVer(this.props.serverVersion)
-      );
+      this.checkSemVer(this.props.serverVersion).then(() => {
+        this.checkPrefixVer(this.props.serverVersion);
+        this.checkUpdatePresetVer(this.props.serverVersion);
+      });
     }
     this.props.dispatch({ type: RESET });
     const currentSchema = this.props.allSchemas.find(
@@ -101,9 +103,10 @@ class Permissions extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion).then(() =>
-        this.checkPrefixVer(nextProps.serverVersion)
-      );
+      this.checkSemVer(nextProps.serverVersion).then(() => {
+        this.checkPrefixVer(nextProps.serverVersion);
+        this.checkUpdatePresetVer(nextProps.serverVersion);
+      });
     }
   }
 
@@ -242,6 +245,16 @@ class Permissions extends Component {
     }
     return Promise.resolve();
   }
+  checkUpdatePresetVer(version) {
+    let showUpdatePresets = false;
+    try {
+      showUpdatePresets = semverCheck('permUpdatePresets', version);
+      this.setState({ showUpdatePresets });
+    } catch (e) {
+      console.error(e);
+    }
+    return Promise.resolve();
+  }
   deleteSetKeyVal(e, queryType) {
     const deleteIndex = parseInt(e.target.getAttribute('data-index-id'), 10);
     if (deleteIndex >= 0) {
@@ -293,7 +306,7 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
-    const { showAggregation, showInsertPrefix } = this.state;
+    const { showAggregation, showInsertPrefix, showUpdatePresets } = this.state;
     const styles = require('../TableModify/Modify.scss');
 
     let qTypes;
@@ -991,7 +1004,13 @@ class Permissions extends Component {
             </form>
           </div>
         );
-      } else if (query === 'update') {
+      }
+      return null;
+    };
+
+    const getUpdateSetSection = (tableSchema, permsState) => {
+      const query = permsState.query;
+      if (query === 'update') {
         const updateState = permsState.update;
         const { columns } = tableSchema;
         const isSetValues = !!(
@@ -1766,6 +1785,7 @@ class Permissions extends Component {
           {showInsertPrefix
             ? getInsertSetPermission(tableSchema, permsState)
             : null}
+          {showUpdatePresets && getUpdateSetSection(tableSchema, permsState)}
           {getButtonsSection(tableSchema, permsState)}
         </div>
       </div>
