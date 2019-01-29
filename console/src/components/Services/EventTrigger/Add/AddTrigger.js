@@ -99,7 +99,6 @@ class AddTrigger extends Component {
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      ...this.state,
       supportColumnChangeFeature: val,
     });
   }

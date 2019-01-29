@@ -88,13 +88,13 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
-data Request
-  = Request
+data WebhookRequest
+  = WebhookRequest
   { _rqPayload :: Value
   , _rqHeaders :: Maybe [HeaderConf]
   , _rqVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''Request)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
 
 data WebhookResponse
   = WebhookResponse
@@ -117,7 +117,7 @@ data Invocation
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
-  , iRequest  :: Request
+  , iRequest  :: WebhookRequest
   , iResponse :: Response
   }
 
@@ -355,8 +355,8 @@ tryWebhook logenv pool e = do
        where
          decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-    mkWebhookReq :: Value -> [HeaderConf] -> Request
-    mkWebhookReq payload headers = Request payload (mkMaybe headers) invocationVersion
+    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
+    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
 
     mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
     mkResp status payload headers =

@@ -94,7 +94,7 @@ const PageContainer = ({
         <div className={styles.sidebarHeadingWrapper}>
           <div
             className={
-              'col-xs-8 ' +
+              'col-xs-7 ' +
               styles.sidebarHeading +
               ' ' +
               styles.padd_left_remove
@@ -105,7 +105,7 @@ const PageContainer = ({
           {migrationMode ? (
             <div
               className={
-                'col-xs-4 text-center ' +
+                'col-xs-5 text-center ' +
                 styles.padd_remove +
                 ' ' +
                 styles.sidebarCreateTable
@@ -115,12 +115,7 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/events/manage/triggers/add'}
               >
-                <Button
-                  className={styles.add_mar_right}
-                  color="white"
-                  size="xs"
-                  data-test="sidebar-add-table"
-                >
+                <Button color="white" size="xs" data-test="sidebar-add-table">
                   Add Trigger
                 </Button>
               </Link>

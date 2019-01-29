@@ -40,13 +40,18 @@ def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
 
 
-def check_event(hge_ctx, trig_name, table, operation, exp_ev_data, headers, webhook_path):
+def check_event(hge_ctx, trig_name, table, operation, exp_ev_data,
+                headers = {},
+                webhook_path = '/',
+                session_variables = {'x-hasura-role': 'admin'}
+):
     ev_full = hge_ctx.get_event(3)
     validate_event_webhook(ev_full['path'], webhook_path)
     validate_event_headers(ev_full['headers'], headers)
     validate_event_payload(ev_full['body'], trig_name, table)
     ev = ev_full['body']['event']
     assert ev['op'] == operation, ev
+    assert ev['session_variables'] == session_variables, ev
     assert ev['data'] == exp_ev_data, ev
 
 

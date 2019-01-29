@@ -53,11 +53,11 @@ class RedeliverEvent extends Component {
       () => this.props.dispatch(loadEventInvocations(eventId)),
       5000
     );
-    this.setState({ ...this.state, intervalId: intervalId });
+    this.setState({ intervalId: intervalId });
   }
   removeFetching(intervalId) {
     clearInterval(intervalId);
-    this.setState({ ...this.state, intervalId: null });
+    this.setState({ intervalId: null });
   }
   refreshData() {
     this.props.dispatch(loadEventInvocations(this.props.log.event_id));

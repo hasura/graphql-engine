@@ -245,7 +245,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
-    totalHeaders.forEach((t) => {
+    totalHeaders.forEach(t => {
       // If header has x-hasura-*
       const lHead = t.toLowerCase();
       if (lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-') {
