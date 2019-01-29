@@ -54,7 +54,7 @@ export class MapContainer extends Component {
     }
   }
 	handleGoogleMapApi = (google) => {
-    this.setState({ ...this.state, ...google, mapLoaded: true});
+    this.setState({ ...google, mapLoaded: true});
     const getPolyline = (routeJson) => {
       var polyline = new google.maps.Polyline({
         path: [],

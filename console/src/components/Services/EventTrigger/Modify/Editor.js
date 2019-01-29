@@ -11,7 +11,6 @@ class Editor extends React.Component {
       this.props.toggleCallback();
     }
     this.setState({
-      ...this.state,
       isEditing: !this.state.isEditing,
     });
   };

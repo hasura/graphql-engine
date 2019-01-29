@@ -18,7 +18,6 @@ export default class TodoInput extends React.Component {
 
   handleTextboxValueChange = (e) => {
     this.setState({
-      ...this.state,
       textboxValue: e.target.value
     });
   }
@@ -44,7 +43,6 @@ export default class TodoInput extends React.Component {
             data
           })
           this.setState({
-            ...this.state,
             textboxValue: ''
           });
         }

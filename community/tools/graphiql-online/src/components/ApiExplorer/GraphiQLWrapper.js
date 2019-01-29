@@ -20,7 +20,7 @@ class GraphiQLWrapper extends Component {
       : null;
     if (queryFile) {
       getRemoteQueries(queryFile, queries =>
-        this.setState({ ...this.state, queries })
+        this.setState({ queries })
       );
     }
   }
