@@ -44,7 +44,7 @@ For ``serve`` subcommand these are the flags available
 
        --server-port               Port on which graphql-engine should be served (default: 8080)
 
-       --access-key                Secret access key, required to access this instance.
+       --admin-secret              Admin secret key, required to access this instance.
                                    If specified client needs to send 'X-Hasura-Admin-Secret'
                                    header
 
@@ -62,8 +62,8 @@ For ``serve`` subcommand these are the flags available
                                    "<your-hmac-shared-secret>"}`,`{"type": "RS256",
                                    "key": "<your-PEM-RSA-public-key>"}
 
-       --unauthorized-role         Unauthorized role, used when access-key is not sent in
-                                   access-key only mode or "Authorization" header is absent
+       --unauthorized-role         Unauthorized role, used when admin-secret is not sent in
+                                   admin-secret only mode or "Authorization" header is absent
                                    in JWT mode
 
    -s, --stripes                   Number of stripes (default: 1)
@@ -123,7 +123,7 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_SERVER_PORT               Port on which graphql-engine should be served
 
-   HASURA_GRAPHQL_ACCESS_KEY                Secret access key, required to access this
+   HASURA_GRAPHQL_ADMIN_SECRET              Admin secret key, required to access this
                                             instance. If specified client needs to send
                                             'X-Hasura-Admin-Secret' header
 
@@ -142,8 +142,8 @@ These are the environment variables which are available:
                                             "key": "<your-PEM-RSA-public-key>"}
                                             Enable JWT mode, the value of which is a JSON
 
-   HASURA_GRAPHQL_UNAUTHORIZED_ROLE         Unauthorized role, used when access-key is not sent
-                                            in access-key only mode or "Authorization" header
+   HASURA_GRAPHQL_UNAUTHORIZED_ROLE         Unauthorized role, used when admin-secret is not sent
+                                            in admin-secret only mode or "Authorization" header
                                             is absent in JWT mode
 
    HASURA_GRAPHQL_ENABLE_CONSOLE            Enable API console. It is served at

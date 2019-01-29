@@ -55,26 +55,26 @@ def check_event(hge_ctx, trig_name, table, operation, exp_ev_data,
     assert ev['data'] == exp_ev_data, ev
 
 
-def test_forbidden_when_access_key_reqd(hge_ctx, conf):
+def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
 
-    # Test without access key
+    # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
     assert code == 401, "\n" + yaml.dump({
-        "expected": "Should be access denied as access key is not provided",
+        "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
             "response": resp
         }
     })
 
-    # Test with random access key
+    # Test with random admin secret
     headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
     assert code == 401, "\n" + yaml.dump({
-        "expected": "Should be access denied as an incorrect access key is provided",
+        "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
             "response": resp
@@ -130,7 +130,7 @@ def check_query(hge_ctx, conf, add_auth=True):
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
         elif hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
-            test_forbidden_when_access_key_reqd(hge_ctx, conf)
+            test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)

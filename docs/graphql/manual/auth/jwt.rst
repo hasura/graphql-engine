@@ -24,7 +24,7 @@ If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 is used for the permissions system.
 
 .. note::
-   Configuring JWT requires Hasura to run with an access key (``--access-key``).
+   Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
 
    - The authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
@@ -235,7 +235,7 @@ Using the flag:
       graphql-engine \
       --database-url postgres://username:password@hostname:port/dbname \
       serve \
-      --access-key mysecretkey \
+      --admin-secret myadminsecretkey \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -243,7 +243,7 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ACCESS_KEY="mysecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \

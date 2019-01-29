@@ -12,7 +12,7 @@ to authenticate all incoming requests to the Hasura GraphQL engine server.
 .. image:: ../../../img/graphql/manual/auth/webhook-auth.png
 
 .. note::
-   Configuring webhook requires Hasura to run with an access key (``--access-key``).
+   Configuring webhook requires Hasura to run with an admin secret (``--admin-secret``).
 ..   :doc:`Read more<config>`.
 
 

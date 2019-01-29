@@ -31,7 +31,7 @@ Options
 
 ::
 
-      --access-key string     access key for Hasura GraphQL Engine
+      --admin-secret string   admin secret key for Hasura GraphQL Engine
       --address string        address to use (default "localhost")
       --api-port string       port for serving migrate api (default "9693")
       --console-port string   port for serving console (default "9695")

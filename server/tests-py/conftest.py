@@ -11,7 +11,7 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
     parser.addoption(
-        "--hge-key", metavar="HGE_KEY", help="access key for graphql-engine", required=False
+        "--hge-key", metavar="HGE_KEY", help="admin secret key for graphql-engine", required=False
     )
     parser.addoption(
         "--hge-webhook", metavar="HGE_WEBHOOK", help="url for graphql-engine's access control webhook", required=False

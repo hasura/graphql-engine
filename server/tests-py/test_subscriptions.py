@@ -12,7 +12,7 @@ import yaml
 
 def test_init_without_payload(hge_ctx):
     if hge_ctx.hge_key is not None:
-        pytest.skip("Payload is needed when access key is set")
+        pytest.skip("Payload is needed when admin secret is set")
     obj = {
         'type': 'connection_init'
     }

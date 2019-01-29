@@ -84,11 +84,11 @@ Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you 
 
 .. code-block:: bash
 
-   # Without access key
+   # Without admin secret key
    hasura console
 
-   # With access key
-   hasura console --access-key mysecretkey
+   # With admin secret key
+   hasura console --admin-secret adminsecretkey
 
 Step 4: Add a new table and see how a migration is added
 --------------------------------------------------------
