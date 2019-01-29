@@ -11,7 +11,6 @@ import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils         (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
@@ -25,7 +24,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "9"
+curCatalogVer = "10"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -103,7 +102,8 @@ initCatalogStrict createSchema initTime =  do
 
     addVersion modTime = liftTx $ Q.catchE defaultTxErrorHandler $
       Q.unitQ [Q.sql|
-                INSERT INTO "hdb_catalog"."hdb_version" VALUES ($1, $2)
+                INSERT INTO "hdb_catalog"."hdb_version"
+                (version, upgraded_on) VALUES ($1, $2)
                 |] (curCatalogVer, modTime) False
 
     isExtAvailable :: T.Text -> Q.Tx Bool
@@ -178,6 +178,17 @@ setAsSystemDefinedFor8 =
             WHERE table_schema = 'hdb_catalog'
              AND  table_name = 'hdb_function_agg';
            |]
+
+setAsSystemDefinedFor9 :: (MonadTx m) => m ()
+setAsSystemDefinedFor9 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_version';
+           |]
+
 
 cleanCatalog :: (MonadTx m) => m ()
 cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -294,11 +305,26 @@ from7To8 = do
     migrateMetadataFrom7 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_7_to_8.yaml" :: Q (TExp RQLQuery)))
 
-from8To9 :: (MonadTx m) => m ()
-from8To9 = liftTx $ do
+-- alter hdb_version table and track it (telemetry changes)
+from8To9
+  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  => m ()
+from8To9 = do
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_8_to_9.sql")
+  void $ runQueryM migrateMetadataFrom8
+  -- set as system defined
+  setAsSystemDefinedFor9
+  where
+    migrateMetadataFrom8 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_8_to_9.yaml" :: Q (TExp RQLQuery)))
+
+-- alter foreign keys on hdb_relationship and hdb_permission table to have ON UPDATE CASCADE
+from9To10 :: (MonadTx m) => m ()
+from9To10 = liftTx $ do
   -- migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_8_to_9.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_9_to_10.sql")
   return ()
 
 migrateCatalog
@@ -317,12 +343,17 @@ migrateCatalog migrationTime = do
      | preVer == "6"   -> from6ToCurrent
      | preVer == "7"   -> from7ToCurrent
      | preVer == "8"   -> from8ToCurrent
+     | preVer == "9"   -> from9ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
+    from9ToCurrent = do
+      from9To10
+      postMigrate
+
     from8ToCurrent = do
       from8To9
-      postMigrate
+      from9ToCurrent
 
     from7ToCurrent = do
       from7To8
@@ -359,8 +390,6 @@ migrateCatalog migrationTime = do
     postMigrate = do
        -- update the catalog version
        updateVersion
-       -- clean hdb_views
-       liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
        -- try building the schema cache
        buildSchemaCache
        return $ "successfully migrated to " ++ show curCatalogVer

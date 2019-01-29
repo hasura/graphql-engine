@@ -64,13 +64,13 @@ class StreamingLogs extends Component {
     try {
       showRedeliver = semverCheck('eventRedeliver', version);
       if (showRedeliver) {
-        this.setState({ ...this.state, showRedeliver: true });
+        this.setState({ showRedeliver: true });
       } else {
-        this.setState({ ...this.state, showRedeliver: false });
+        this.setState({ showRedeliver: false });
       }
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showRedeliver: false });
+      this.setState({ showRedeliver: false });
     }
   }
   handleNewerEvents() {

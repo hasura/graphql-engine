@@ -83,13 +83,12 @@ class AddTrigger extends Component {
 
   checkWebhookEnvSupport(version) {
     const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
-    this.setState({ ...this.state, supportWebhookEnv });
+    this.setState({ supportWebhookEnv });
     return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      ...this.state,
       supportColumnChangeFeature: val,
     });
   }

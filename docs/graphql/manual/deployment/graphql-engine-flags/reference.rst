@@ -81,6 +81,8 @@ For ``serve`` subcommand these are the flags available
 
        --use-prepared-statements   Use prepared statements for SQL queries (default: true)
 
+       --enable-telemetry       Enable anonymous telemetry (default: true)
+
 
 Default environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,6 +148,8 @@ These are the environment variables which are available:
 
    HASURA_GRAPHQL_ENABLE_CONSOLE            Enable API console. It is served at
                                             '/' and '/console'
+
+   HASURA_GRAPHQL_ENABLE_TELEMETRY          Enable anonymous telemetry (default: true)
 
    HASURA_GRAPHQL_USE_PREPARED_STATEMENTS   Use prepared statements for SQL queries
                                             (default: true)
