@@ -292,10 +292,8 @@ mkWaiApp
   -> IO (Wai.Application, IORef SchemaCache)
 mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
     cacheRef <- do
-      pgResp <- runExceptT $
-        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
-        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
-        buildSchemaCache
+      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+                httpManager pool Q.Serializable buildSchemaCache
       either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()

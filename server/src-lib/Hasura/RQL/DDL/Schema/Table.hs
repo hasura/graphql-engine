@@ -277,6 +277,8 @@ buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
   => m ()
 buildSchemaCache = do
+  -- clean hdb_views
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
