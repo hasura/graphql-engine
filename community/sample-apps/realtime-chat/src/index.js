@@ -27,7 +27,7 @@ const mkWsLink = (uri) => {
   return new WebSocketLink(subClient);
 }
 
-// Makle HttpLink
+// Make HttpLink
 const httpLink = new HttpLink({ uri: GRAPHQL_ENDPOINT });
 const wsLink = mkWsLink(GRAPHQL_ENDPOINT);
 const link = split(
