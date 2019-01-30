@@ -81,7 +81,7 @@ class RetryConfEditor extends React.Component {
               Number of retries:
             </div>
             <div className={'col-md-12 ' + styles.noPadd}>
-              {retryConf.num_retries}
+              {retryConf.num_retries || 0}
             </div>
           </div>
           <div className={styles.modifyOpsCollapsedContent1}>
@@ -89,14 +89,14 @@ class RetryConfEditor extends React.Component {
               Retry Interval (sec):
             </div>
             <div className={'col-md-12 ' + styles.noPadd}>
-              {retryConf.interval_sec}
+              {retryConf.interval_sec || 10}
             </div>
           </div>
           {supportRetryTimeout && (
             <div className={styles.modifyOpsCollapsedContent1}>
               <div className={'col-md-4 ' + styles.noPadd}>Timeout (sec):</div>
               <div className={'col-md-12 ' + styles.noPadd}>
-                {retryConf.timeout_sec}
+                {retryConf.timeout_sec || 60}
               </div>
             </div>
           )}
