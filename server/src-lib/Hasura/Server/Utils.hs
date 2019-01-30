@@ -15,6 +15,8 @@ import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
 import qualified Text.Ginger                  as TG
+import qualified Text.Regex.TDFA              as TDFA
+import qualified Text.Regex.TDFA.ByteString   as TDFA
 
 import           Hasura.Prelude
 
@@ -111,3 +113,16 @@ _2 (_, y, _) = y
 
 _3 :: (a, b, c) -> c
 _3 (_, _, z) = z
+
+-- regex related
+matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
+matchRegex regex caseSensitive src =
+  fmap (`TDFA.match` TE.encodeUtf8 src) compiledRegexE
+  where
+    compOpt = TDFA.defaultCompOpt
+      { TDFA.caseSensitive = caseSensitive
+      , TDFA.multiline = True
+      , TDFA.lastStarGreedy = True
+      }
+    execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
+    compiledRegexE = TDFA.compile compOpt execOption regex

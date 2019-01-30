@@ -111,7 +111,7 @@ class OperationEditor extends React.Component {
                     dispatch(
                       toggleQueryType(
                         qt,
-                        allTableColumns,
+                        allTableColumns.map(c => c.name),
                         !modifyTrigger.definition[qt]
                       )
                     );
@@ -139,7 +139,7 @@ class OperationEditor extends React.Component {
                       styles.noPadd
                     } ${styles.cursorPointer}`}
                     key={i}
-                    onClick={() => dispatch(toggleColumn('update', col))}
+                    onClick={() => dispatch(toggleColumn('update', col.name))}
                   >
                     <input
                       type="checkbox"

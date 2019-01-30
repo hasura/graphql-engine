@@ -62,7 +62,7 @@
                   </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
-                    <input type="text" class="search_element" placeholder="Search docs..." />
+                    <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
@@ -128,9 +128,23 @@
               </div>
 
               <div class="footer-hasura-custom">
-                Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/graphql-engine/tree/master/docs">github repo for docs</a>.<br>
-                Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
-                Copyright &copy; 2018 <a target="_blank" href="https://hasura.io">Hasura</a>.
+                <img class="responsive footer_logo" src="{{ pathto('_images/layout/Hasura.svg', 1) }}" />
+                <div class="footer_text">
+                  <div>Want to contribute or report missing content?</div>
+                  <div>
+                    <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">check this page on github</a>
+                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
+                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/issues/new">report an issue</a>
+                  </div>
+                  <br/>
+                  <div>
+                    <a target="_blank" href="https://github.com/hasura/graphql-engine">Hasura GraphQL Engine</a> is open source. <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
+                  </div>
+                  <div>
+                    Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
+                    |  Copyright &copy; 2019 <a target="_blank" href="https://hasura.io">Hasura</a>.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -162,14 +176,21 @@
     ga('send', 'pageview');
   </script>
 
-  <!-- intercom -->
-  <script>
-    window.intercomSettings = {
-      app_id: "rucirpb3"
-    };
+  <!-- crisp -->
+  <script type="text/javascript">
+    window.$crisp=[];window.CRISP_WEBSITE_ID="20ddaf80-763d-4a52-a5f8-c8c939a128e9";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
   </script>
-  <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
-    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
+
+  <!-- support button -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const supportBtnHandler = function() {
+        if (window.$crisp) {
+          window.$crisp.push(['do', 'chat:open']);
+        }
+      };
+      $('.supportBtn').on('click', supportBtnHandler);
+    });
   </script>
 
   <!-- utils -->
@@ -243,25 +264,13 @@
     };
   </script>
 
-  <!-- support button -->
-  <script type="text/javascript">
-    $(document).ready( function() {
-      const supportbtnHandler = function() {
-        if ( window.Intercom ) {
-          window.Intercom('show');
-        }
-      };
-      $('.supportBtn').on('click', supportbtnHandler);
-    });
-  </script>
-
   <!-- search -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
   <script type="text/javascript">
     docsearch({
       apiKey: 'c59018461c19e20fe11459136e57900c',
       indexName: 'hasura',
-      inputSelector: '.search_element',
+      inputSelector: '#search_element',
       transformData: function(suggestions) {
         if (window.location.origin !== 'https://docs.hasura.io') {
           suggestions.forEach(suggestion => {
@@ -426,15 +435,24 @@
           const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
           const query = target.getElementsByClassName("query")[0].innerHTML.trim();
           const response = target.getElementsByClassName("response")[0].innerHTML.trim();
+          const variables = target.getElementsByClassName("variables")[0].innerHTML.trim();
 
           const graphiQLElement = React.createElement(GraphiQL, {
             fetcher: graphQLFetcher(endpoint),
             schema: null, // TODO: pass undefined if introspection supported
             query: query,
-            response: response
+            response: response,
+            variables: variables
           });
 
           ReactDOM.render(graphiQLElement, target);
+        }
+      };
+
+      const resizeGraphiQLVariableEditors = function() {
+        const graphiQLVariableEditors = $('.graphiql .variable-editor');
+        for (let i = 0; i < graphiQLVariableEditors.length; i++) {
+          graphiQLVariableEditors[i].style.height = '120px';
         }
       };
 
@@ -454,6 +472,8 @@
             }
 
             setupGraphiQL();
+
+            resizeGraphiQLVariableEditors();
           }
         };
 
@@ -501,4 +521,5 @@
     });
   </script>
 
+  {%- block extrafooter %} {% endblock %}
 {% endblock %}

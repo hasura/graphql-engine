@@ -28,9 +28,7 @@ class GraphiQLWrapper extends Component {
       ? this.props.queryParams.query_file
       : null;
     if (queryFile) {
-      getRemoteQueries(queryFile, queries =>
-        this.setState({ ...this.state, queries })
-      );
+      getRemoteQueries(queryFile, queries => this.setState({ queries }));
     }
   }
 
@@ -83,13 +81,11 @@ class GraphiQLWrapper extends Component {
   }
   updateAnalyzeState(supportAnalyze) {
     this.setState({
-      ...this.state,
       supportAnalyze: supportAnalyze,
     });
   }
   updateAnalyzeApiState(analyzeApiChange) {
     this.setState({
-      ...this.state,
       analyzeApiChange: analyzeApiChange,
     });
   }

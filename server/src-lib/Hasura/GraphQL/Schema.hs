@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema
   , InsCtxMap
   , RelationInfoMap
   , isAggFld
+  , qualObjectToName
   -- Schema stitching related
   , RemoteGCtx (..)
   , checkSchemaConflicts
@@ -23,6 +24,8 @@ import           Data.Maybe                     (maybeToList)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
+import qualified Data.Sequence                  as Seq
+
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
@@ -152,13 +155,11 @@ type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 -- mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
 -- mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
 
-qualTableToName :: QualifiedTable -> G.Name
-qualTableToName = G.Name <$> \case
-  QualifiedTable (SchemaName "public") tn -> getTableTxt tn
-  QualifiedTable sn tn -> getSchemaTxt sn <> "_" <> getTableTxt tn
+qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
+qualObjectToName = G.Name . snakeCaseQualObject
 
-isValidTableName :: QualifiedTable -> Bool
-isValidTableName = isValidName . qualTableToName
+isValidObjectName :: (ToTxt a) => QualifiedObject a -> Bool
+isValidObjectName = isValidName . qualObjectToName
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
@@ -167,7 +168,7 @@ isValidField = \case
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
-                          && isValidTableName rt
+                          && isValidObjectName rt
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -227,30 +228,38 @@ mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =
-  qualTableToName tn <> "_bool_exp"
+  qualObjectToName tn <> "_bool_exp"
 
 mkBoolExpTy :: QualifiedTable -> G.NamedType
 mkBoolExpTy =
   G.NamedType . mkBoolExpName
 
+mkFuncArgsName :: QualifiedFunction -> G.Name
+mkFuncArgsName fn =
+  qualObjectToName fn <> "_args"
+
+mkFuncArgsTy :: QualifiedFunction -> G.NamedType
+mkFuncArgsTy =
+  G.NamedType . mkFuncArgsName
+
 mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
-  G.NamedType . qualTableToName
+  G.NamedType . qualObjectToName
 
 mkTableAggTy :: QualifiedTable -> G.NamedType
 mkTableAggTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate"
+  G.NamedType $ qualObjectToName tn <> "_aggregate"
 
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
 mkTableAggFldsTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate_fields"
+  G.NamedType $ qualObjectToName tn <> "_aggregate_fields"
 
 mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
-  G.NamedType $ qualTableToName tn <> "_" <> op <> "_fields"
+  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
 
 mkTableByPKeyTy :: QualifiedTable -> G.Name
-mkTableByPKeyTy tn = qualTableToName tn <> "_by_pk"
+mkTableByPKeyTy tn = qualObjectToName tn <> "_by_pk"
 
 -- --- | make compare expression input type
 -- mkCompExpInp :: PGColType -> InpObjTyInfo
@@ -339,12 +348,12 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 -- distinct_on: [table_select_column!]
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
-  [ InpValInfo (Just whereDesc) "where" $ G.toGT $ mkBoolExpTy tn
-  , InpValInfo (Just limitDesc) "limit" $ G.toGT $ mkScalarTy PGInteger
-  , InpValInfo (Just offsetDesc) "offset" $ G.toGT $ mkScalarTy PGInteger
-  , InpValInfo (Just orderByDesc) "order_by" $ G.toGT $ G.toLT $ G.toNT $
+  [ InpValInfo (Just whereDesc) "where" Nothing $ G.toGT $ mkBoolExpTy tn
+  , InpValInfo (Just limitDesc) "limit" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo (Just offsetDesc) "offset" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo (Just orderByDesc) "order_by" Nothing $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
-  , InpValInfo (Just distinctDesc) "distinct_on" $ G.toGT $ G.toLT $
+  , InpValInfo (Just distinctDesc) "distinct_on" Nothing $ G.toGT $ G.toLT $
     G.toNT $ mkSelColumnInpTy tn
   ]
   where
@@ -408,7 +417,7 @@ mkTableObj
   -> [SelField]
   -> ObjTyInfo
 mkTableObj tn allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) (mapFromL _fiName flds) HasuraType
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
     flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
@@ -424,7 +433,7 @@ type table_aggregate {
 mkTableAggObj
   :: QualifiedTable -> ObjTyInfo
 mkTableAggObj tn =
-  mkHsraObjTyInfo (Just desc) (mkTableAggTy tn) $ mapFromL _fiName
+  mkHsraObjTyInfo (Just desc) (mkTableAggTy tn) Set.empty $ mapFromL _fiName
   [aggFld, nodesFld]
   where
     desc = G.Description $
@@ -451,7 +460,7 @@ type table_aggregate_fields{
 mkTableAggFldsObj
   :: QualifiedTable -> [PGCol] -> [PGCol] -> ObjTyInfo
 mkTableAggFldsObj tn numCols compCols =
-  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
     desc = G.Description $
@@ -462,9 +471,9 @@ mkTableAggFldsObj tn numCols compCols =
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
-    countColInpVal = InpValInfo Nothing "columns" $ G.toGT $
+    countColInpVal = InpValInfo Nothing "columns" Nothing $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
-    distinctInpVal = InpValInfo Nothing "distinct" $ G.toGT $
+    distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
@@ -487,7 +496,7 @@ mkTableColAggFldsObj
   -> [PGColInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) $ mapFromL _fiName $
+  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
   map mkColObjFld cols
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
@@ -511,7 +520,7 @@ mkSelFld tn =
   mkHsraObjFldInfo (Just desc) fldName args ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
-    fldName = qualTableToName tn
+    fldName = qualObjectToName tn
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -535,7 +544,7 @@ mkSelFldPKey tn cols =
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) $ G.toGT $ G.toNT $ mkScalarTy typ
+      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
 
 {-
 
@@ -554,14 +563,80 @@ mkAggSelFld tn =
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
-    fldName = qualTableToName tn <> "_aggregate"
+    fldName = qualObjectToName tn <> "_aggregate"
     args = fromInpValL $ mkSelArgs tn
     ty = G.toGT $ G.toNT $ mkTableAggTy tn
+
+{-
+
+function(
+  args: function_args
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+): [table!]!
+
+-}
+
+mkFuncArgs :: FunctionInfo -> ParamMap
+mkFuncArgs funInfo =
+  fromInpValL $ funcInpArgs <> mkSelArgs retTable
+  where
+    funcName = fiName funInfo
+    funcArgs = fiInputArgs funInfo
+    retTable = fiReturnType funInfo
+
+    funcArgDesc = G.Description $ "input parameters for function " <>> funcName
+    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $ G.toGT $ G.toNT $
+                 mkFuncArgsTy funcName
+    funcInpArgs = bool [funcInpArg] [] $ null funcArgs
+
+mkFuncQueryFld
+  :: FunctionInfo -> ObjFldInfo
+mkFuncQueryFld funInfo =
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    retTable = fiReturnType funInfo
+    funcName = fiName funInfo
+
+    desc = G.Description $ "execute function " <> funcName
+           <<> " which returns " <>> retTable
+    fldName = qualObjectToName funcName
+
+    ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
+
+{-
+
+function_aggregate(
+  args: function_args
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+): table_aggregate!
+
+-}
+
+mkFuncAggQueryFld
+  :: FunctionInfo -> ObjFldInfo
+mkFuncAggQueryFld funInfo =
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    funcName = fiName funInfo
+    retTable = fiReturnType funInfo
+
+    desc = G.Description $ "execute function " <> funcName
+           <<> " and query aggregates on result of table type "
+           <>> retTable
+
+    fldName = qualObjectToName funcName <> "_aggregate"
+
+    ty = G.toGT $ G.toNT $ mkTableAggTy retTable
+
 
 -- table_mutation_response
 mkMutRespTy :: QualifiedTable -> G.NamedType
 mkMutRespTy tn =
-  G.NamedType $ qualTableToName tn <> "_mutation_response"
+  G.NamedType $ qualObjectToName tn <> "_mutation_response"
 
 {-
 type table_mutation_response {
@@ -574,7 +649,7 @@ mkMutRespObj
   -> Bool -- is sel perm defined
   -> ObjTyInfo
 mkMutRespObj tn sel =
-  mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) $ mapFromL _fiName
+  mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) Set.empty $ mapFromL _fiName
     $ affectedRowsFld : bool [] [returningFld] sel
   where
     objDesc = G.Description $
@@ -590,6 +665,7 @@ mkMutRespObj tn sel =
       where
         desc = "data of the affected rows by the mutation"
 
+-- table_bool_exp
 mkBoolExpInp
   :: QualifiedTable
   -- the fields that are allowed
@@ -609,7 +685,7 @@ mkBoolExpInp tn fields =
     -- all the fields of this input object
     inpValues = combinators <> map mkFldExpInp fields
 
-    mk n ty = InpValInfo Nothing n $ G.toGT ty
+    mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
 
     boolExpListTy = G.toLT boolExpTy
 
@@ -627,13 +703,50 @@ mkBoolExpInp tn fields =
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
-  InpValInfo Nothing (G.Name $ getPGColTxt colName) $
+  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing $
   G.toGT $ mkScalarTy colTy
+
+{-
+input function_args {
+  arg1: arg-type1!
+  .     .
+  .     .
+  argn: arg-typen!
+}
+-}
+mkFuncArgsInp :: FunctionInfo -> Maybe (InpObjTyInfo, FuncArgCtx)
+mkFuncArgsInp funcInfo =
+  bool (Just (inpObj, funcArgCtx)) Nothing $ null funcArgs
+  where
+    funcName = fiName funcInfo
+    funcArgs = fiInputArgs funcInfo
+    funcArgsTy = mkFuncArgsTy funcName
+
+    inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
+             fromInpValL argInps
+
+    (argInps, ctxItems) = unzip $ fst $ foldl mkArgInps ([], 1::Int) funcArgs
+    funcArgCtx = Map.singleton funcArgsTy $ Seq.fromList ctxItems
+
+    mkArgInps (items, argNo) (FunctionArg nameM ty) =
+      case nameM of
+        Just argName ->
+          let argGName = G.Name $ getFuncArgNameTxt argName
+              inpVal = InpValInfo Nothing argGName Nothing $
+                       G.toGT $ G.toNT $ mkScalarTy ty
+              argCtxItem = FuncArgItem argGName
+          in (items <> pure (inpVal, argCtxItem), argNo)
+        Nothing ->
+          let argGName = G.Name $ "arg_" <> T.pack (show argNo)
+              inpVal = InpValInfo Nothing argGName Nothing $
+                       G.toGT $ G.toNT $ mkScalarTy ty
+              argCtxItem = FuncArgItem argGName
+          in (items <> pure (inpVal, argCtxItem), argNo + 1)
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
 mkUpdSetTy tn =
-  G.NamedType $ qualTableToName tn <> "_set_input"
+  G.NamedType $ qualObjectToName tn <> "_set_input"
 
 {-
 input table_set_input {
@@ -655,7 +768,7 @@ mkUpdSetInp tn cols  =
 -- table_inc_input
 mkUpdIncTy :: QualifiedTable -> G.NamedType
 mkUpdIncTy tn =
-  G.NamedType $ qualTableToName tn <> "_inc_input"
+  G.NamedType $ qualObjectToName tn <> "_inc_input"
 
 {-
 input table_inc_input {
@@ -681,7 +794,7 @@ mkUpdIncInp tn = maybe Nothing mkType
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
 mkJSONOpTy tn op =
-  G.NamedType $ qualTableToName tn <> op <> "_input"
+  G.NamedType $ qualObjectToName tn <> op <> "_input"
 
 -- json ops are _concat, _delete_key, _delete_elem, _delete_at_path
 {-
@@ -776,19 +889,19 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
       G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
       G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) $
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
       G.toGT $ G.toLT $ G.NamedType "String"
 
 {-
@@ -811,7 +924,7 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     intCols = onlyIntCols cols
     incArgDesc = "increments the integer columns with given value of the filtered values"
     incArg =
-      InpValInfo (Just incArgDesc) "_inc" $ G.toGT $ mkUpdIncTy tn
+      InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
 
 mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
@@ -820,21 +933,21 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
     jsonbOpArgs = [appendArg, prependArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
 
     appendArg =
-      InpValInfo (Just appendDesc) appendOp $ G.toGT $ mkJSONOpTy tn appendOp
+      InpValInfo (Just appendDesc) appendOp Nothing $ G.toGT $ mkJSONOpTy tn appendOp
 
     prependArg =
-      InpValInfo (Just prependDesc) prependOp $ G.toGT $ mkJSONOpTy tn prependOp
+      InpValInfo (Just prependDesc) prependOp Nothing $ G.toGT $ mkJSONOpTy tn prependOp
 
     deleteKeyArg =
-      InpValInfo (Just deleteKeyDesc) deleteKeyOp $
+      InpValInfo (Just deleteKeyDesc) deleteKeyOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteKeyOp
 
     deleteElemArg =
-      InpValInfo (Just deleteElemDesc) deleteElemOp $
+      InpValInfo (Just deleteElemDesc) deleteElemOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteElemOp
 
     deleteAtPathArg =
-      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp $
+      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
 mkUpdMutFld
@@ -847,16 +960,16 @@ mkUpdMutFld tn cols =
                   <> mkJSONOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
-    fldName = "update_" <> qualTableToName tn
+    fldName = "update_" <> qualObjectToName tn
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =
-      InpValInfo (Just filterArgDesc) "where" $ G.toGT $
+      InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
 
     setArgDesc = "sets the columns of the filtered rows to the given values"
     setArg =
-      InpValInfo (Just setArgDesc) "_set" $ G.toGT $ mkUpdSetTy tn
+      InpValInfo (Just setArgDesc) "_set" Nothing $ G.toGT $ mkUpdSetTy tn
 
     incArg = maybeToList $ mkIncInpVal tn cols
 
@@ -876,38 +989,38 @@ mkDelMutFld tn =
   where
     desc = G.Description $ "delete data from the table: " <>> tn
 
-    fldName = "delete_" <> qualTableToName tn
+    fldName = "delete_" <> qualObjectToName tn
 
     filterArgDesc = "filter the rows which have to be deleted"
     filterArg =
-      InpValInfo (Just filterArgDesc) "where" $ G.toGT $
+      InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
 
 -- table_insert_input
 mkInsInpTy :: QualifiedTable -> G.NamedType
 mkInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_insert_input"
 
 -- table_obj_rel_insert_input
 mkObjInsInpTy :: QualifiedTable -> G.NamedType
 mkObjInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_obj_rel_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_obj_rel_insert_input"
 
 -- table_arr_rel_insert_input
 mkArrInsInpTy :: QualifiedTable -> G.NamedType
 mkArrInsInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_arr_rel_insert_input"
+  G.NamedType $ qualObjectToName tn <> "_arr_rel_insert_input"
 
 
 -- table_on_conflict
 mkOnConflictInpTy :: QualifiedTable -> G.NamedType
 mkOnConflictInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_on_conflict"
+  G.NamedType $ qualObjectToName tn <> "_on_conflict"
 
 -- table_constraint
 mkConstraintInpTy :: QualifiedTable -> G.NamedType
 mkConstraintInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_constraint"
+  G.NamedType $ qualObjectToName tn <> "_constraint"
 
 -- conflict_action
 conflictActionTy :: G.NamedType
@@ -916,12 +1029,12 @@ conflictActionTy = G.NamedType "conflict_action"
 -- table_update_column
 mkUpdColumnInpTy :: QualifiedTable -> G.NamedType
 mkUpdColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_update_column"
+  G.NamedType $ qualObjectToName tn <> "_update_column"
 
 --table_select_column
 mkSelColumnInpTy :: QualifiedTable -> G.NamedType
 mkSelColumnInpTy tn =
-  G.NamedType $ qualTableToName tn <> "_select_column"
+  G.NamedType $ qualObjectToName tn <> "_select_column"
 
 {-
 input table_obj_rel_insert_input {
@@ -944,14 +1057,14 @@ mkRelInsInps
 mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
   where
     onConflictInpVal =
-      InpValInfo Nothing "on_conflict" $ G.toGT $ mkOnConflictInpTy tn
+      InpValInfo Nothing "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
 
     onConflictInp = bool [] [onConflictInpVal] upsertAllowed
 
     objRelDesc = G.Description $
       "input type for inserting object relation for remote table " <>> tn
 
-    objRelDataInp = InpValInfo Nothing "data" $ G.toGT $
+    objRelDataInp = InpValInfo Nothing "data" Nothing $ G.toGT $
                     G.toNT $ mkInsInpTy tn
     objRelInsInp = mkHsraInpTyInfo (Just objRelDesc) (mkObjInsInpTy tn)
                    $ fromInpValL $ objRelDataInp : onConflictInp
@@ -959,7 +1072,7 @@ mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
     arrRelDesc = G.Description $
       "input type for inserting array relation for remote table " <>> tn
 
-    arrRelDataInp = InpValInfo Nothing "data" $ G.toGT $
+    arrRelDataInp = InpValInfo Nothing "data" Nothing $ G.toGT $
                     G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
     arrRelInsInp = mkHsraInpTyInfo (Just arrRelDesc) (mkArrInsInpTy tn)
                    $ fromInpValL $ arrRelDataInp : onConflictInp
@@ -993,9 +1106,9 @@ mkInsInp tn insCtx =
          let rty = riType relInfo
              remoteQT = riRTable relInfo
          in case rty of
-            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) $
+            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
                       G.toGT $ mkObjInsInpTy remoteQT
-            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) $
+            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
                       G.toGT $ mkArrInsInpTy remoteQT
 
 {-
@@ -1016,10 +1129,10 @@ mkOnConflictInp tn =
     desc = G.Description $
       "on conflict condition type for table " <>> tn
 
-    constraintInpVal = InpValInfo Nothing (G.Name "constraint") $
+    constraintInpVal = InpValInfo Nothing (G.Name "constraint") Nothing $
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
-    updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") $
+    updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") Nothing $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
@@ -1039,18 +1152,18 @@ mkInsMutFld tn isUpsertable =
     desc = G.Description $
       "insert data into the table: " <>> tn
 
-    fldName = "insert_" <> qualTableToName tn
+    fldName = "insert_" <> qualObjectToName tn
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
-      InpValInfo (Just objsArgDesc) "objects" $ G.toGT $
+      InpValInfo (Just objsArgDesc) "objects" Nothing $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
     onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" $ G.toGT $ mkOnConflictInpTy tn
+      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
@@ -1126,7 +1239,7 @@ mkConflictActionTy updAllowed =
 
 mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
 mkTabAggOpOrdByTy tn op =
-  G.NamedType $ qualTableToName tn <> "_" <> op <> "_order_by"
+  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_order_by"
 
 {-
 input table_<op>_order_by {
@@ -1149,12 +1262,12 @@ mkTabAggOpOrdByInpObjs tn numCols compCols =
     mkInpObjTy cols op = mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
                          fromInpValL $ map mkColInpVal cols
 
-    mkColInpVal c = InpValInfo Nothing (mkColName c) $ G.toGT
+    mkColInpVal c = InpValInfo Nothing (mkColName c) Nothing $ G.toGT
                     ordByTy
 
 mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
 mkTabAggOrdByTy tn =
-  G.NamedType $ qualTableToName tn <> "_aggregate_order_by"
+  G.NamedType $ qualObjectToName tn <> "_aggregate_order_by"
 
 {-
 input table_aggregate_order_by {
@@ -1174,14 +1287,14 @@ mkTabAggOrdByInpObj tn numCols compCols =
 
     numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
     compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
-    mkInpValInfo op = InpValInfo Nothing op $ G.toGT $
+    mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
                      mkTabAggOpOrdByTy tn op
 
-    countInpVal = InpValInfo Nothing "count" $ G.toGT ordByTy
+    countInpVal = InpValInfo Nothing "count" Nothing $ G.toGT ordByTy
 
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
-  G.NamedType $ qualTableToName tn <> "_order_by"
+  G.NamedType $ qualObjectToName tn <> "_order_by"
 
 {-
 input table_order_by {
@@ -1213,14 +1326,14 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
-    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) $
+    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) Nothing $
                     G.toGT ordByTy
     mkObjRelOrdBy (ri, _, _, _, _) =
-      InpValInfo Nothing (mkRelName $ riName ri) $
+      InpValInfo Nothing (mkRelName $ riName ri) Nothing $
       G.toGT $ mkOrdByTy $ riRTable ri
 
     mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
-      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) $
+      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
             G.toGT $ mkTabAggOrdByTy $ riRTable ri
       in bool Nothing (Just ivi) isAggAllowed
 
@@ -1280,9 +1393,11 @@ mkGCtxRole'
   -- constraints
   -> [ConstraintName]
   -> Maybe ViewInfo
+  -- all functions
+  -> [FunctionInfo]
   -> TyAgg
-mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
-  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx
+mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM funcs =
+  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx funcArgCtx
 
   where
 
@@ -1295,8 +1410,11 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
     relInsInpObjTys = maybe [] (map TIInpObj) $
                       mutHelper viIsInsertable relInsInpObjsM
 
+    funcInpArgTys = bool [] (map TIInpObj funcArgInpObjs) $ isJust selFldsM
+
     allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys
                <> queryTypes <> aggQueryTypes <> mutationTypes
+               <> funcInpArgTys
 
     queryTypes = catMaybes
       [ TIInpObj <$> boolExpInpObjM
@@ -1355,6 +1473,10 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM =
         if isJust updColsM || isJust delPermM
         then Just $ mkBoolExpInp tn []
         else Nothing
+
+    -- funcargs input type
+    (funcArgInpObjs, funcArgCtxs) = unzip $ mapMaybe mkFuncArgsInp funcs
+    funcArgCtx = Map.unions funcArgCtxs
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -1430,22 +1552,29 @@ getRootFldsRole'
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
+  -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
   -> Maybe ([PGCol], AnnBoolExpSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
-getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
+getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
   RootFlds mFlds
   where
-    mFlds = mapFromL (either _fiName _fiName . snd) $ catMaybes
+    mFlds = mapFromL (either _fiName _fiName . snd) $
+      funcQueries <>
+      funcAggQueries <>
+      catMaybes
             [ mutHelper viIsInsertable getInsDet insM
             , mutHelper viIsUpdatable getUpdDet updM
             , mutHelper viIsDeletable getDelDet delM
             , getSelDet <$> selM, getSelAggDet selM
             , getPKeySelDet selM $ getColInfos primCols colInfos
             ]
+
+    funcQueries = maybe [] getFuncQueryFlds selM
+    funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
     mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
     mutHelper f getDet mutM =
@@ -1475,6 +1604,16 @@ getRootFldsRole' tn primCols constraints fields insM selM updM delM viM =
     getPKeySelDet _ [] = Nothing
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
       (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
+
+    getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
+      flip map funcs $ \fi ->
+      (OCFuncQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncQueryFld fi)
+
+    getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
+      flip map funcs $ \fi ->
+      (OCFuncAggQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncAggQueryFld fi)
+    getFuncAggQueryFlds _ = []
+
 
 -- getRootFlds
 --   :: TableCache
@@ -1572,19 +1711,20 @@ mkGCtxRole
   -> FieldInfoMap
   -> [PGCol]
   -> [ConstraintName]
+  -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
-mkGCtxRole tableCache tn fields pCols constraints viM role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
     return (tic, isJust $ _permUpd permInfo)
   let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn tabInsCtxM selPermM updColsM
-              (void $ _permDel permInfo) pColInfos constraints viM
-      rootFlds = getRootFldsRole tn pCols constraints fields viM permInfo
+              (void $ _permDel permInfo) pColInfos constraints viM funcs
+      rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
@@ -1598,11 +1738,12 @@ getRootFldsRole
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
+  -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RolePermInfo
   -> RootFlds
-getRootFldsRole tn pCols constraints fields viM (RolePermInfo insM selM updM delM) =
-  getRootFldsRole' tn pCols constraints fields
+getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM updM delM) =
+  getRootFldsRole' tn pCols constraints fields funcs
   (mkIns <$> insM) (mkSel <$> selM)
   (mkUpd <$> updM) (mkDel <$> delM)
   viM
@@ -1620,15 +1761,16 @@ getRootFldsRole tn pCols constraints fields viM (RolePermInfo insM selM updM del
 mkGCtxMapTable
   :: (MonadError QErr m)
   => TableCache
+  -> FunctionCache
   -> TableInfo
   -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
-mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _) = do
+mkGCtxMapTable tableCache funcCache (TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _) = do
   m <- Map.traverseWithKey
-       (mkGCtxRole tableCache tn fields pkeyCols validConstraints viewInfo) rolePerms
+       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
   let adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
-                 pkeyColInfos validConstraints viewInfo
+                 pkeyColInfos validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
@@ -1636,11 +1778,12 @@ mkGCtxMapTable tableCache (TableInfo tn _ fields rolePerms constraints pkeyCols 
     colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
+    tabFuncs = getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
     adminRootFlds =
-      getRootFldsRole' tn pkeyCols validConstraints fields
+      getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (allCols, noFilter, [])) (Just (noFilter, []))
       viewInfo
@@ -1751,16 +1894,16 @@ checkConflictingNode gCtx node = do
 
 mkGCtxMap
   :: (MonadError QErr m)
-  => TableCache -> m GCtxMap
-mkGCtxMap tableCache = do
-  typesMapL <- mapM (mkGCtxMapTable tableCache) $
+  => TableCache -> FunctionCache -> m GCtxMap
+mkGCtxMap tableCache functionCache = do
+  typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter tableFltr $ Map.elems tableCache
   let typesMap = foldr (Map.unionWith mappend) Map.empty typesMapL
   return $ flip Map.map typesMap $ \(ty, flds, insCtxMap) ->
     mkGCtx ty flds insCtxMap
   where
     tableFltr ti = not (tiSystemDefined ti)
-                   && isValidTableName (tiName ti)
+                   && isValidObjectName (tiName ti)
 
 
 -- mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx

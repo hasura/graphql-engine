@@ -7,6 +7,7 @@ import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
+import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
 
@@ -35,6 +36,7 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadConsoleOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
@@ -50,9 +52,12 @@ class Main extends React.Component {
           );
           if (isClosedBefore === 'true') {
             isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
+            this.setState({ ...this.state, showBannerNotification: false });
           } else {
-            this.setState({ showBannerNotification: isUpdateAvailable });
+            this.setState({
+              ...this.state,
+              showBannerNotification: isUpdateAvailable,
+            });
           }
         } catch (e) {
           console.error(e);
@@ -66,14 +71,14 @@ class Main extends React.Component {
       this.props.serverVersion
     );
     if (showSchemaStitch) {
-      this.setState({ ...this.state, showSchemaStitch: true });
+      this.setState({ showSchemaStitch: true });
     }
     return Promise.resolve();
   }
   checkEventsTab() {
     const showEvents = semverCheck('eventsTab', this.props.serverVersion);
     if (showEvents) {
-      this.setState({ showEvents: true });
+      this.setState({ ...this.state, showEvents: true });
     }
     return Promise.resolve();
   }
@@ -97,7 +102,6 @@ class Main extends React.Component {
     };
     setLoveConsentState(s);
     this.setState({
-      ...this.state,
       loveConsentState: { ...getLoveConsentState() },
     });
   }
@@ -107,7 +111,7 @@ class Main extends React.Component {
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ showBannerNotification: false });
+    this.setState({ ...this.state, showBannerNotification: false });
   }
 
   render() {
@@ -456,7 +460,7 @@ class Main extends React.Component {
                         </li>
                         <li className={'dropdown-item '}>
                           <a
-                            href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com//hasura/graphql-engine%0A"
+                            href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
                             target="_blank"
                             rel="noopener noreferrer"
                           >

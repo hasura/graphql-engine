@@ -7,16 +7,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ec is the Execution Context for the current run.
+var ec *cli.ExecutionContext
+
 // rootCmd is the main "hasura" command
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
 	Short:         "Hasura GraphQL Engine command line tool",
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		ec.Telemetry.Command = cmd.CommandPath()
+	},
 }
 
 func init() {
-	ec := &cli.ExecutionContext{}
+	ec = cli.NewExecutionContext()
 	rootCmd.AddCommand(
 		NewInitCmd(ec),
 		NewConsoleCmd(ec),
@@ -33,5 +39,13 @@ func init() {
 
 // Execute executes the command and returns the error
 func Execute() error {
-	return rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		ec.Telemetry.IsError = true
+	}
+	ec.Telemetry.Beam()
+	if ec.Spinner != nil {
+		ec.Spinner.Stop()
+	}
+	return err
 }

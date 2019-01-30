@@ -4,6 +4,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import { LISTING_SCHEMA } from '../../Data/DataActions';
+import Button from '../Button/Button';
 
 const LeftNavBar = ({
   appPrefix,
@@ -69,12 +70,14 @@ const LeftNavBar = ({
                 className={styles.padd_remove_full}
                 to={`${appPrefix}/manage/add`}
               >
-                <button
-                  className={styles.add_mar_right + ' btn btn-xs btn-default'}
+                <Button
+                  className={styles.add_mar_right}
+                  color="white"
+                  size="xs"
                   data-test="remote-schema-sidebar-add-table"
                 >
                   Add
-                </button>
+                </Button>
               </Link>
             </div>
           ) : null}

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import Button from '../Button/Button';
 import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
@@ -38,16 +39,18 @@ class Schema extends Component {
               Event Triggers{' '}
             </h2>
             {migrationMode ? (
-              <button
+              <Button
                 data-test="data-create-trigger"
-                className={styles.yellow_button}
+                className={styles.button_mar_right}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
                 }}
               >
                 Create Trigger
-              </button>
+              </Button>
             ) : null}
           </div>
           <hr />

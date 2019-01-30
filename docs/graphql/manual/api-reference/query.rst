@@ -317,7 +317,7 @@ ColumnExp
 
 Operator
 ########
-Generic operators (all column types except json, jsonb) :
+**Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
 - ``_neq``
@@ -328,7 +328,7 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-JSONB operators:
+**JSONB operators:**
 
 .. list-table::
    :header-rows: 1
@@ -348,7 +348,7 @@ JSONB operators:
 
 (For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
-Text related operators :
+**Text related operators :**
 
 - ``_like``
 - ``_nlike``
@@ -357,9 +357,46 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
-Checking for ``null`` values :
+**Checking for NULL values:**
 
 - ``_is_null`` (takes true/false as values)
+
+**PostGIS related operators on GEOMETRY columns:**
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersects``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     - ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
+
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+
+.. note::
+
+   1. All operators take a ``json`` representation of ``geometry/geography`` values.
+   2. Input value for ``_st_d_within`` operator is an object:-
+
+   .. parsed-literal::
+
+       {
+         field-name : {_st_d_within: {distance: Float, from: Value} }
+       }
 
 
 .. _OrderByExp:

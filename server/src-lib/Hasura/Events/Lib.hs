@@ -76,7 +76,7 @@ data Event
   } deriving (Show, Eq)
 
 instance ToJSON Event where
-  toJSON (Event eid (QualifiedTable sn tn) trigger event _ created)=
+  toJSON (Event eid (QualifiedObject sn tn) trigger event _ created)=
     object [ "id" .= eid
            , "table"  .= object [ "schema" .= sn
                                 , "name"  .= tn
@@ -88,13 +88,13 @@ instance ToJSON Event where
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
-data Request
-  = Request
+data WebhookRequest
+  = WebhookRequest
   { _rqPayload :: Value
   , _rqHeaders :: Maybe [HeaderConf]
   , _rqVersion :: T.Text
   }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''Request)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
 
 data WebhookResponse
   = WebhookResponse
@@ -117,7 +117,7 @@ data Invocation
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
-  , iRequest  :: Request
+  , iRequest  :: WebhookRequest
   , iResponse :: Response
   }
 
@@ -338,8 +338,8 @@ tryWebhook logenv pool e = do
        where
          decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-    mkWebhookReq :: Value -> [HeaderConf] -> Request
-    mkWebhookReq payload headers = Request payload (mkMaybe headers) invocationVersion
+    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
+    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
 
     mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
     mkResp status payload headers =
@@ -377,7 +377,7 @@ fetchEvents =
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedTable sn tn) (TriggerMeta trid trn) payload tries created
+  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedObject sn tn) (TriggerMeta trid trn) payload tries created
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

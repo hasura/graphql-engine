@@ -1,14 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router';
+import _push from './push';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 import globals from '../../../Globals';
 
-const appPrefix = '/data';
+import {
+  loadSchema,
+  loadUntrackedSchema,
+  loadUntrackedRelations,
+  UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
+} from './DataActions';
+
+const sectionPrefix = '/data';
 
 const DataHeader = ({
   schema,
   currentSchema,
+  schemaList,
   children,
   location,
   dispatch,
@@ -24,10 +34,27 @@ const DataHeader = ({
           currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
         }
       >
-        <Link to={appPrefix + '/migrations'}>Migrations</Link>
+        <Link
+          className={styles.sidebarMigration}
+          to={sectionPrefix + '/migrations'}
+        >
+          Migrations
+        </Link>
       </li>
     );
   }
+
+  const handleSchemaChange = e => {
+    const updatedSchema = e.target.value;
+    dispatch(_push(`/schema/${updatedSchema}`));
+    Promise.all([
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+      dispatch(loadSchema()),
+      dispatch(loadUntrackedSchema()),
+      dispatch(loadUntrackedRelations()),
+      dispatch(fetchFunctionInit()),
+    ]);
+  };
   return (
     <div>
       <Helmet title={'Data | Hasura'} />
@@ -50,10 +77,23 @@ const DataHeader = ({
                   >
                     <Link
                       className={styles.schemaBorder}
-                      to={appPrefix + '/schema'}
+                      to={sectionPrefix + '/schema'}
                     >
-                      Schema - {currentSchema}
+                      Schema:
                     </Link>
+                    <select
+                      onChange={handleSchemaChange}
+                      className={styles.changeSchema + ' form-control'}
+                    >
+                      {schemaList.map(s => (
+                        <option
+                          key={s.schema_name}
+                          selected={s.schema_name === currentSchema}
+                        >
+                          {s.schema_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <PageContainer
@@ -69,7 +109,11 @@ const DataHeader = ({
                   currentLocation.indexOf('sql') !== -1 ? styles.active : ''
                 }
               >
-                <Link to={appPrefix + '/sql'} data-test="sql-link">
+                <Link
+                  className={styles.wd100}
+                  to={sectionPrefix + '/sql'}
+                  data-test="sql-link"
+                >
                   SQL
                 </Link>
               </li>
