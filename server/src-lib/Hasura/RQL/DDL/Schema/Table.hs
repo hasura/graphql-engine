@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Schema.Table where
 
 import           Hasura.GraphQL.RemoteServer
@@ -11,27 +10,27 @@ import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Table.Internal
+import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                  (matchRegex)
+import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query                    as Q
-import qualified Hasura.GraphQL.Schema                as GS
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Instances.TH.Lift                    ()
-import           Language.Haskell.TH.Syntax           (Lift)
-import           Network.URI.Extended                 ()
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
+import           Network.URI.Extended               ()
 
-import qualified Data.HashMap.Strict                  as M
-import qualified Data.Text                            as T
-import qualified Data.Text.Encoding                   as TE
-import qualified Database.PostgreSQL.LibPQ            as PQ
+import qualified Data.HashMap.Strict                as M
+import qualified Data.Text                          as T
+import qualified Data.Text.Encoding                 as TE
+import qualified Database.PostgreSQL.LibPQ          as PQ
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
 delTableFromCatalog (QualifiedObject sn tn) =

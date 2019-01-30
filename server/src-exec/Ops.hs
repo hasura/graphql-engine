@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
 module Ops
   ( initCatalogSafe
   , cleanCatalog

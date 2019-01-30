@@ -165,9 +165,10 @@ library
                      , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship
+                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
-                     , Hasura.RQL.DDL.Schema.Table.Internal
+                     , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
