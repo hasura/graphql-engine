@@ -18,21 +18,32 @@ class TestCors():
         assert headers['Access-Control-Allow-Methods'] == 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
 
     def test_cors_foo_bar_top_domain(self, hge_ctx):
-        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': 'foo.bar.com'})
-        self.assert_cors_headers('foo.bar.com', resp)
+        origin = 'http://foo.bar.com'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
+        self.assert_cors_headers(origin, resp)
 
     def test_cors_foo_bar_sub_domain(self, hge_ctx):
-        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': 'app.foo.bar.com'})
-        self.assert_cors_headers('app.foo.bar.com', resp)
+        origin = 'https://app.foo.bar.com'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
+        self.assert_cors_headers(origin, resp)
+
     def test_cors_foo_bar_sub_sub_domain_fails(self, hge_ctx):
-        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': 'inst1.app.foo.bar.com'})
+        origin = 'http://inst1.app.foo.bar.com'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
         with pytest.raises(AssertionError):
-            self.assert_cors_headers('inst1.app.foo.bar.com', resp)
+            self.assert_cors_headers(origin, resp)
+
+    def test_cors_localhost_domain_w_port(self, hge_ctx):
+        origin = 'http://localhost:3000'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
+        self.assert_cors_headers(origin, resp)
 
     def test_cors_localhost_domain(self, hge_ctx):
-        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': 'localhost'})
-        self.assert_cors_headers('localhost', resp)
+        origin = 'http://app.localhost'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
+        self.assert_cors_headers(origin, resp)
 
     def test_cors_wrong_domain(self, hge_ctx):
-        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': 'example.com'})
+        origin = 'https://example.com'
+        resp = hge_ctx.http.get(url(hge_ctx), headers={'Origin': origin})
         assert 'Access-Control-Allow-Origin' not in resp.headers

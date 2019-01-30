@@ -305,6 +305,9 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine with restrictive CORS policy (only allow https://example.com:8080)"
         , "graphql-engine --database-url <database-url> serve --cors-domain https://example.com:8080"
         ]
+      , [ "# Start GraphQL Engine with multiple domains for CORS (https://example.com, http://localhost:3000 and *.foo.bar.com)"
+        , "graphql-engine --database-url <database-url> serve --cors-domain \"example.com, *.foo.bar.com, localhost:3000\""
+        ]
       , [ "# Start GraphQL Engine with Authentication Webhook (GET)"
         , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
           <> " --auth-hook https://mywebhook.com/get"
@@ -321,7 +324,7 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
+      , pgUsePrepareEnv, txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
       , enableTelemetryEnv
       ]
@@ -367,7 +370,7 @@ pgTimeoutEnv =
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
-  , "Use prepared statements for queries (default: True)"
+  , "Use prepared statements for queries (default: true)"
   )
 
 txIsoEnv :: (String, String)
@@ -385,13 +388,13 @@ accessKeyEnv =
 authHookEnv :: (String, String)
 authHookEnv =
   ( "HASURA_GRAPHQL_AUTH_HOOK"
-  , "The authentication webhook, required to authenticate requests"
+  , "URL of the authorization webhook required to authorize requests"
   )
 
 authHookModeEnv :: (String, String)
 authHookModeEnv =
   ( "HASURA_GRAPHQL_AUTH_HOOK_MODE"
-  , "The authentication webhook mode (default: GET)"
+  , "HTTP method to use for authorization webhook (default: GET)"
   )
 
 jwtSecretEnv :: (String, String)
@@ -410,7 +413,8 @@ unAuthRoleEnv =
 corsDomainEnv :: (String, String)
 corsDomainEnv =
   ( "HASURA_GRAPHQL_CORS_DOMAIN"
-  , "The domain, including scheme and port, to allow CORS for"
+  , "CSV of list of domains, excluding scheme (http/https) and including  port, "
+    ++ "to allow CORS for. Wildcard domains are allowed. See docs for details."
   )
 
 enableConsoleEnv :: (String, String)
@@ -433,24 +437,24 @@ parseRawConnInfo =
   where
     host = optional $
       strOption ( long "host" <>
-                  metavar "HOST" <>
+                  metavar "<HOST>" <>
                   help "Postgres server host" )
 
     port = optional $
       option auto ( long "port" <>
                   short 'p' <>
-                  metavar "PORT" <>
+                  metavar "<PORT>" <>
                   help "Postgres server port" )
 
     user = optional $
       strOption ( long "user" <>
                   short 'u' <>
-                  metavar "USER" <>
+                  metavar "<USER>" <>
                   help "Database user name" )
 
     password =
       strOption ( long "password" <>
-                  metavar "PASSWORD" <>
+                  metavar "<PASSWORD>" <>
                   value "" <>
                   help "Password of the user"
                 )
@@ -458,14 +462,14 @@ parseRawConnInfo =
     dbUrl = optional $
       strOption
                 ( long "database-url" <>
-                  metavar "DATABASE-URL" <>
+                  metavar "<DATABASE-URL>" <>
                   help (snd databaseUrlEnv)
                 )
 
     dbName = optional $
       strOption ( long "dbname" <>
                   short 'd' <>
-                  metavar "NAME" <>
+                  metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
 
@@ -494,7 +498,7 @@ parseTxIsolation = optional $
   option (eitherReader readIsoLevel)
            ( long "tx-iso" <>
              short 'i' <>
-             metavar "TXISO" <>
+             metavar "<TXISO>" <>
              help (snd txIsoEnv)
            )
 
@@ -506,7 +510,7 @@ parseConnParams =
       option auto
               ( long "stripes" <>
                  short 's' <>
-                 metavar "NO OF STRIPES" <>
+                 metavar "<NO OF STRIPES>" <>
                  help (snd pgStripesEnv)
               )
 
@@ -514,20 +518,20 @@ parseConnParams =
       option auto
             ( long "connections" <>
                short 'c' <>
-               metavar "NO OF CONNS" <>
+               metavar "<NO OF CONNS>" <>
                help (snd pgConnsEnv)
             )
 
     timeout = optional $
       option auto
               ( long "timeout" <>
-                metavar "SECONDS" <>
+                metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
       option (eitherReader parseStrAsBool)
               ( long "use-prepared-statements" <>
-                metavar "USE PREPARED STATEMENTS" <>
+                metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
               )
 
@@ -535,13 +539,13 @@ parseServerPort :: Parser (Maybe Int)
 parseServerPort = optional $
   option auto
        ( long "server-port" <>
-         metavar "PORT" <>
+         metavar "<PORT>" <>
          help (snd servePortEnv)
        )
 
 parseServerHost :: Parser (Maybe HostPreference)
 parseServerHost = optional $ strOption ( long "server-host" <>
-                metavar "HOST" <>
+                metavar "<HOST>" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
@@ -549,7 +553,7 @@ parseAccessKey :: Parser (Maybe AccessKey)
 parseAccessKey =
   optional $ AccessKey <$>
     strOption ( long "access-key" <>
-                metavar "SECRET ACCESS KEY" <>
+                metavar "<SECRET ACCESS KEY>" <>
                 help (snd accessKeyEnv)
               )
 
@@ -566,13 +570,13 @@ parseWebHook =
   where
     url = optional $
       strOption ( long "auth-hook" <>
-                  metavar "AUTHENTICATION WEB HOOK" <>
+                  metavar "<WEB HOOK URL>" <>
                   help (snd authHookEnv)
                 )
     urlType = optional $
       option (eitherReader readHookType)
                   ( long "auth-hook-mode" <>
-                    metavar "GET|POST" <>
+                    metavar "<GET|POST>" <>
                     help (snd authHookModeEnv)
                   )
 
@@ -581,7 +585,7 @@ parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =
   optional $ strOption
              ( long "jwt-secret" <>
-               metavar "JWK" <>
+               metavar "<JSON CONFIG>" <>
                help (snd jwtSecretEnv)
              )
 
@@ -593,7 +597,7 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
 parseUnAuthRole :: Parser (Maybe RoleName)
 parseUnAuthRole = optional $
   RoleName <$> strOption ( long "unauthorized-role" <>
-                          metavar "UNAUTHORIZED ROLE" <>
+                          metavar "<ROLE>" <>
                           help (snd unAuthRoleEnv)
                         )
 
@@ -604,13 +608,13 @@ parseCorsConfig =
     corsDomain = optional $
       option (eitherReader readCorsDomains)
                  ( long "cors-domain" <>
-                   metavar "CORS DOMAIN" <>
+                   metavar "<DOMAINS>" <>
                    help (snd corsDomainEnv)
                  )
 
     disableCors =
       switch ( long "disable-cors" <>
-               help "Disable CORS handling"
+               help "Disable CORS. Do not send any CORS headers on any request"
              )
 
 parseEnableConsole :: Parser Bool

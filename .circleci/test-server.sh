@@ -186,7 +186,7 @@ unset HASURA_GRAPHQL_JWT_SECRET
 # test with CORS modes
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
-export HASURA_GRAPHQL_CORS_DOMAIN="*.foo.bar.com, localhost"
+export HASURA_GRAPHQL_CORS_DOMAIN="*.localhost, localhost:3000, *.foo.bar.com"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 

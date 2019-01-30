@@ -41,7 +41,7 @@ type CorsConfig = CorsConfigG CorsDomain
 
 
 wildcardDomainRegex :: B.ByteString
-wildcardDomainRegex = "^(\\*\\.)?([a-zA-Z0-9]+\\.)*[a-zA-Z0-9]+$"
+wildcardDomainRegex = "^(\\*\\.)?([a-zA-Z0-9]+\\.)*[a-zA-Z0-9]+(:[0-9]+)*$"
 
 validateDomain :: Text -> Either String Bool
 validateDomain = matchRegex wildcardDomainRegex False
