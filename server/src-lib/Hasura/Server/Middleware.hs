@@ -4,7 +4,9 @@ import           Data.Maybe            (fromMaybe)
 import           Network.Wai
 
 import           Hasura.Prelude
+import           Hasura.Server.Cors
 import           Hasura.Server.Logging (getRequestHeader)
+import           Hasura.Server.Utils
 
 import qualified Data.ByteString       as B
 import qualified Data.CaseInsensitive  as CI
@@ -12,32 +14,27 @@ import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
 
-data CorsPolicy
-  = CorsPolicy
-  { cpDomain  :: !T.Text
-  , cpMethods :: ![T.Text]
-  , cpMaxAge  :: !Int
-  } deriving (Show, Eq)
-
-mkDefaultCorsPolicy :: T.Text -> CorsPolicy
-mkDefaultCorsPolicy domain =
-  CorsPolicy
-  { cpDomain = domain
-  , cpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-  , cpMaxAge = 1728000
-  }
 
 corsMiddleware :: CorsPolicy -> Middleware
 corsMiddleware policy app req sendResp =
   maybe (app req sendResp) handleCors $ getRequestHeader "Origin" req
 
   where
-    handleCors origin
-      | cpDomain policy /= "*" && origin /= TE.encodeUtf8 (cpDomain policy) = app req sendResp
-      | otherwise =
-        case requestMethod req of
-          "OPTIONS" -> sendResp $ respondPreFlight origin
-          _         -> app req $ sendResp . injectCorsHeaders origin
+    handleCors origin = case cpDomains policy of
+      CDStar -> sendCors origin
+      CDDomains ds
+        -- if the origin is in our cors domains, send cors headers
+        | bsToTxt origin `elem` dFqdn ds     -> sendCors origin
+        -- if current origin is part of wildcard domain list, send cors
+        | inWildcardList ds (bsToTxt origin) -> sendCors origin
+        -- otherwise don't send cors headers
+        | otherwise                          -> app req sendResp
+
+    sendCors :: B.ByteString -> IO ResponseReceived
+    sendCors origin =
+      case requestMethod req of
+        "OPTIONS" -> sendResp $ respondPreFlight origin
+        _         -> app req $ sendResp . injectCorsHeaders origin
 
     respondPreFlight :: B.ByteString -> Response
     respondPreFlight origin =
@@ -67,3 +64,9 @@ corsMiddleware policy app req sendResp =
 
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
     mkRespHdrs = map (\(k,v) -> (CI.mk k, v))
+
+    inWildcardList :: Domains -> Text -> Bool
+    inWildcardList (Domains _ wildcards) origin =
+      let listed = map (T.drop 2) wildcards
+          orig = T.intercalate "." . tail . T.splitOn "." $ origin
+      in orig `elem` listed || origin `elem` listed

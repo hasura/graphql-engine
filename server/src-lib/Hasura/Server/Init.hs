@@ -8,14 +8,17 @@ import           System.Exit                  (exitFailure)
 import qualified Data.Aeson                   as J
 import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
-import qualified Hasura.Logging               as L
+import qualified Text.PrettyPrint.ANSI.Leijen as PP
+
 import           Hasura.Prelude
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
+import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
+
+import qualified Hasura.Logging               as L
 
 
 initErrExit :: (Show e) => e -> IO a
@@ -45,15 +48,6 @@ data RawServeOptions
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
-
-data CorsConfigG a
-  = CorsConfigG
-  { ccDomain   :: !a
-  , ccDisabled :: !Bool
-  } deriving (Show, Eq)
-
-type RawCorsConfig = CorsConfigG (Maybe T.Text)
-type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
@@ -132,6 +126,9 @@ instance FromEnv Bool where
 
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
+
+instance FromEnv CorsDomain where
+  fromEnv = readCorsDomains
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -245,7 +242,7 @@ mkServeOptions rso = do
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
     mkCorsConfig (CorsConfigG mDom isDis) = do
-      domEnv <- fromMaybe "*" <$> withEnv mDom (fst corsDomainEnv)
+      domEnv <- fromMaybe CDStar <$> withEnv mDom (fst corsDomainEnv)
       return $ CorsConfigG domEnv isDis
 
 mkExamplesDoc :: [[String]] -> PP.Doc
@@ -604,13 +601,13 @@ parseCorsConfig :: Parser RawCorsConfig
 parseCorsConfig =
   CorsConfigG <$> corsDomain <*> disableCors
   where
-    corsDomain =
-      optional (strOption
+    corsDomain = optional $
+      option (eitherReader readCorsDomains)
                  ( long "cors-domain" <>
                    metavar "CORS DOMAIN" <>
                    help (snd corsDomainEnv)
                  )
-               )
+
     disableCors =
       switch ( long "disable-cors" <>
                help "Disable CORS handling"
@@ -649,7 +646,7 @@ serveOptsToLog so =
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
                        , "unauth_role" J..= soUnAuthRole so
-                       , "cors_domain" J..= (ccDomain . soCorsConfig) so
+                       , "cors_domains" J..= (ccDomain . soCorsConfig) so
                        , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so

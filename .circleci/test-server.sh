@@ -119,6 +119,8 @@ WH_PID=""
 trap stop_services ERR
 trap stop_services INT
 
+# test without access key
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ACCESS KEYS ###########################################>\n"
 
 "$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
@@ -131,7 +133,9 @@ kill -INT $PID
 sleep 4
 mv graphql-engine.tix graphql-engine-combined.tix || true
 
-##########
+
+# test with access key
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY #####################################>\n"
 
 export HASURA_GRAPHQL_ACCESS_KEY="HGE$RANDOM$RANDOM"
@@ -146,7 +150,9 @@ kill -INT $PID
 sleep 4
 combine_hpc_reports
 
-##########
+
+# test with jwt
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY AND JWT #####################################>\n"
 
 init_jwt
@@ -177,7 +183,24 @@ combine_hpc_reports
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-##########
+# test with CORS modes
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
+export HASURA_GRAPHQL_CORS_DOMAIN="*.foo.bar.com, localhost"
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --test-cors test_cors.py
+
+kill -INT $PID
+sleep 4
+combine_hpc_reports
+unset HASURA_GRAPHQL_CORS_DOMAIN
+
+
+# webhook tests
 
 if [ $EUID != 0 ] ; then
 	echo -e "SKIPPING webhook based tests, as \nroot permission is required for running webhook tests (inorder to trust certificate authority)."
@@ -248,6 +271,8 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	combine_hpc_reports
 
 	kill $WH_PID
+
+
 fi
 
 mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true
