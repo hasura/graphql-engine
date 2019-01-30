@@ -86,10 +86,12 @@ The following object type and query/mutation fields are generated for the ``arti
 See the :doc:`query <../api-reference/query>` and :doc:`mutation <../api-reference/mutation>`
 API references for the full specifications
 
+You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
+
 Try basic GraphQL queries
 -------------------------
 At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the
-console ``GraphiQL`` tab (*you may want to add some test data in the tables first*).
+console ``GraphiQL`` tab (*you may want to add some sample data into the tables first*).
 
 Here are a couple of examples:
 

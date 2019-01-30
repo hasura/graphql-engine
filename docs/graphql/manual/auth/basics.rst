@@ -21,19 +21,7 @@ Head to your console and :ref:`create a table <create-tables>` called ``author``
     name TEXT
   )
 
-Insert some sample data into the table:
-
-+-------------+----------+
-|      **id** | **name** |
-+-------------+----------+
-| 1           |  john    |
-+-------------+----------+
-| 2           |  shruti  |
-+-------------+----------+
-| 3           |  celine  |
-+-------------+----------+
-| 4           |  raj     |
-+-------------+----------+
+Now, insert some sample data into the table using the ``Insert Row` tab of the ``author`` table.
 
 Try out a query
 ---------------
@@ -96,19 +84,29 @@ Now, let's make the same query as above but also include two dynamic authorizati
 
 You can notice above how the same query now only includes the right slice of data.
 
-.. admonition:: Permission rules can also use nested object's fields
+.. admonition:: Defining access control rules
+
+  Access control, or permission rules can be as complex as you need them to be, even using a nested object's
+  fields if required. You can use the same operators that you use to filter query results to define
+  permission rules. See :doc:`filtering query results <../queries/query-filters>` for more details.
 
   For example, for an ``article`` table with nested ``author`` table, we can define the select permission as:
 
   .. code-block:: json
 
     {
-      "author" : {
-        "id": {
-          "_eq": "X-Hasura-User-Id"
-        }
+      "_and":
+        [
+          {
+            "published_on": { "_gt": "31-12-2018" }
+          },
+          {
+            "author": {
+              "id": { "_eq": "X-Hasura-User-Id" }
+            }
+          }
+        ]
       }
-    }
 
 .. _restrict_columns:
 
