@@ -11,6 +11,11 @@ Schema/Metadata API Reference: Run SQL
 run_sql
 -------
 
+``run_sql`` can be used to run arbitrary SQL statements.
+
+Multiple SQL statements can be separated by a ``;``, however, only the result of the last SQL statement will be
+returned.
+
 .. admonition:: Admin-only
 
   This is an admin-only query, i.e. the query can only be executed by a
@@ -28,9 +33,6 @@ Use cases
 
 1. To execute DDL operations that are not supported by the console (e.g. managing indexes).
 2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
-
-``run_sql`` can be used to run arbitrary SQL statements. Multiple SQL statements can be separated by a
-"``;``", however, only the result of the last sql statement will be returned.
 
 An example:
 
