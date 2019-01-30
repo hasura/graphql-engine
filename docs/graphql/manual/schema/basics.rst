@@ -44,7 +44,7 @@ For example, here is the schema for the ``article`` table in this interface:
 
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-The following *object type* and *query/mutation* fields are generated for the ``article`` table we just created:
+The following object type and query/mutation fields are generated for the ``article`` table we just created:
 
 .. code-block:: graphql
 
@@ -83,7 +83,8 @@ The following *object type* and *query/mutation* fields are generated for the ``
     where: article_bool_exp!
   ): article_mutation_response
 
-See the :doc:`API reference <../api-reference/index>` for more details.
+See the :doc:`query <../api-reference/query>` and :doc:`mutation <../api-reference/mutation>`
+API references for the full specifications
 
 Try basic GraphQL queries
 -------------------------
