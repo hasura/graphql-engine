@@ -28,7 +28,7 @@ class VoyagerView extends Component {
           'https://storage.googleapis.com/hasura-graphql-engine/console/assets/voyager.worker.js'
         }
       />,
-      document.getElementById('voyager-root')
+      document.getElementById('content')
     );
   }
 }
