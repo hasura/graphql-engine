@@ -568,7 +568,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
         "author": [
           {
             "id": 1,
-            "name": "Hasura",
+            "name": "Ash",
             "address": {
               "street_address": "161, 19th Main Road, Koramangala 6th Block",
               "city": "Bengaluru",

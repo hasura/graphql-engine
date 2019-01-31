@@ -268,6 +268,63 @@ in the response
       }
     }
 
+Insert an object with a JSONB column
+------------------------------------
+**Example:** Insert a new ``author`` object with a JSONB ``address`` column
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author($address: jsonb) {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            address: $address
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          address
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "address": {
+                "city": "Bengaluru",
+                "phone": "9090909090",
+                "state": "Karnataka",
+                "pincode": 560095,
+                "street_address": "161, 19th Main Road, Koramangala 6th Block"
+              }
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "address": {
+        "street_address": "161, 19th Main Road, Koramangala 6th Block",
+        "city": "Bengaluru",
+        "phone": "9090909090",
+        "state": "Karnataka",
+        "pincode": 560095
+      }
+    }
+
 Set a field to its default value during insert
 ----------------------------------------------
 
