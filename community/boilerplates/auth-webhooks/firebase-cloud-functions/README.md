@@ -33,7 +33,7 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
 
   Make sure to change id column of user table to TXT type as uid sent from webhook is firebase User UID format (e.g. 0LnvZc7405TjRTbjURhZYYVXPI52)
 
-## How to call webhook from frontend JS code (React, VueJS, Angular etc...)
+## How to query GraphQL Engine from frontend JS code (React, VueJS, Angular etc...)
 
   postAxios.js
   ```bash
