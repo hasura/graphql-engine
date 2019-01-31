@@ -151,9 +151,9 @@ processTableChanges ti tableDiff = do
             defGCtx = scDefaultRemoteGCtx sc
         -- check for GraphQL schema conflicts on new name
         GS.checkConflictingNode defGCtx tnGQL
+        void $ procAlteredCols sc tn
         -- update new table in catalog
         renameTableInCatalog newTN tn
-        void $ procAlteredCols sc tn
         return True
 
   maybe withOldTabName withNewTabName mNewName
@@ -181,7 +181,7 @@ processTableChanges ti tableDiff = do
     procAlteredCols sc tn = fmap or $
       forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
         if | oColName /= nColName -> do
-               renameColInCatalog oColName nColName tn mNewName ti
+               renameColInCatalog oColName nColName tn ti
                return True
            | oColTy /= nColTy -> do
                let colId   = SOTableObj tn $ TOCol oColName
