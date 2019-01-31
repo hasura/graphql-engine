@@ -11,6 +11,7 @@ import           Hasura.Server.Utils
 
 import qualified Data.ByteString       as B
 import qualified Data.CaseInsensitive  as CI
+import qualified Data.HashSet          as Set
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
@@ -28,21 +29,15 @@ corsMiddleware policy app req sendResp =
   maybe (app req sendResp) handleCors $ getRequestHeader "Origin" req
 
   where
-    handleCors origin = do
-      let mUri = URI.parseURI (T.unpack $ bsToTxt origin)
-      case mUri of
-        Nothing -> app req sendResp
-        Just uri -> do
-          let origin' = dropUriScheme uri
-          case cpDomains policy of
-            CDStar -> sendCors origin
-            CDDomains ds
-              -- if the origin is in our cors domains, send cors headers
-              | origin' `elem` dFqdn ds   -> sendCors origin
-              -- if current origin is part of wildcard domain list, send cors
-              | inWildcardList ds origin' -> sendCors origin
-              -- otherwise don't send cors headers
-              | otherwise                 -> app req sendResp
+    handleCors origin = case cpDomains policy of
+      CDStar -> sendCors origin
+      CDDomains ds
+        -- if the origin is in our cors domains, send cors headers
+        | bsToTxt origin `elem` dmFqdns ds   -> sendCors origin
+        -- if current origin is part of wildcard domain list, send cors
+        | inWildcardList ds (bsToTxt origin) -> sendCors origin
+        -- otherwise don't send cors headers
+        | otherwise                          -> app req sendResp
 
     sendCors :: B.ByteString -> IO ResponseReceived
     sendCors origin =
@@ -81,6 +76,4 @@ corsMiddleware policy app req sendResp =
 
     inWildcardList :: Domains -> Text -> Bool
     inWildcardList (Domains _ wildcards) origin =
-      let listed = map (T.drop 2) wildcards
-          orig = T.intercalate "." . tail . T.splitOn "." $ origin
-      in orig `elem` listed || origin `elem` listed
+      either (const False) (`Set.member` wildcards) $ parseOrigin origin

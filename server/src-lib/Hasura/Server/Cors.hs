@@ -2,11 +2,16 @@
 
 module Hasura.Server.Cors where
 
-import qualified Data.Aeson          as J
-import qualified Data.ByteString     as B
-import qualified Data.Text           as T
+import qualified Data.Aeson           as J
+import qualified Data.Aeson.Casing    as J
+import qualified Data.Aeson.TH        as J
+import qualified Data.Attoparsec.Text as AT
+import qualified Data.ByteString      as B
+import qualified Data.HashSet         as Set
+import qualified Data.Text            as T
 
-import           Data.List           (partition)
+import           Control.Applicative  (optional)
+import           Data.List            (partition)
 
 import           Hasura.Prelude
 import           Hasura.Server.Utils
@@ -14,12 +19,11 @@ import           Hasura.Server.Utils
 
 data Domains
   = Domains
-  { dFqdn      :: ![Text]
-  , dWildcards :: ![Text]
+  { dmFqdns     :: !(Set.HashSet Text)
+  , dmWildcards :: !(Set.HashSet (Text, Text, Maybe Int))
   } deriving (Show, Eq)
 
-instance J.ToJSON Domains where
-  toJSON ds = J.toJSON $ dFqdn ds ++ dWildcards ds
+$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
 
 data CorsDomain
   = CDStar -- corresponds to *
@@ -41,7 +45,7 @@ type CorsConfig = CorsConfigG CorsDomain
 
 
 wildcardDomainRegex :: B.ByteString
-wildcardDomainRegex = "^(\\*\\.)?([a-zA-Z0-9]+\\.)*[a-zA-Z0-9]+(:[0-9]+)*$"
+wildcardDomainRegex = "^http(s)?://(\\*\\.)?([a-zA-Z0-9]+\\.)*[a-zA-Z0-9]+(:[0-9]+)*$"
 
 validateDomain :: Text -> Either String Bool
 validateDomain = matchRegex wildcardDomainRegex False
@@ -56,10 +60,11 @@ readCorsDomains str
         res <- validateDomain dom
         bool (Left $ err dom) (Right dom) res
       let (wcs, fqdns) = partitionDomains domains
-      Right $ CDDomains $ Domains fqdns wcs
+      wcsTriples <- mapM parseWildcardDomain wcs
+      Right $ CDDomains $ Domains (Set.fromList fqdns) (Set.fromList wcsTriples)
   where
     err d = "invalid domain: '" <> T.unpack d <> "'"
-    partitionDomains = partition (T.isPrefixOf "*.")
+    partitionDomains = partition (\d -> T.isPrefixOf "http://*." d || T.isPrefixOf "https://*." d)
 
 
 data CorsPolicy
@@ -76,3 +81,44 @@ mkDefaultCorsPolicy cfg =
   , cpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   , cpMaxAge = 1728000
   }
+
+
+parseOrigin :: Text -> Either String (Text, Text, Maybe Int)
+parseOrigin = runParser originParser
+
+originParser :: AT.Parser (Text, Text, Maybe Int)
+originParser = do
+  scheme <- schemeParser
+  void $ AT.takeTill (== '.')
+  void $ AT.char '.'
+  host <- parseHostWPort <|> AT.takeText
+  port <- optional portParser
+  return (scheme, host, port)
+
+
+parseWildcardDomain :: Text -> Either String (Text, Text, Maybe Int)
+parseWildcardDomain = runParser wildcardDomainParser
+
+runParser :: AT.Parser a -> Text -> Either String a
+runParser = AT.parseOnly
+
+wildcardDomainParser :: AT.Parser (Text, Text, Maybe Int)
+wildcardDomainParser =
+  (,,) <$> schemeParser <*> wildcardHostParser <*> optional portParser
+
+schemeParser :: AT.Parser Text
+schemeParser = AT.string "http://" <|> AT.string "https://"
+
+wildcardHostParser :: AT.Parser Text
+wildcardHostParser = do
+  void $ "*" *> "."
+  parseHostWPort <|> AT.takeText
+
+parseHostWPort :: AT.Parser Text
+parseHostWPort = do
+  h <- AT.takeWhile1 (/= ':')
+  void $ AT.char ':'
+  return h
+
+portParser :: AT.Parser Int
+portParser = AT.decimal
