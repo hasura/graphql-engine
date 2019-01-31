@@ -19,7 +19,6 @@ export default class Main extends React.Component {
   // set username
   setUsername = (username) => {
     this.setState({
-      ...this.state,
       username
     })
   }
@@ -27,7 +26,6 @@ export default class Main extends React.Component {
   // check usernme and  perform login
   login = (id) => {
     this.setState({
-      ...this.state,
       isLoggedIn: true,
       userId: id
     })

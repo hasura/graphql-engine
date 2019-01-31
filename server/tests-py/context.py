@@ -137,8 +137,8 @@ class HGECtx:
         )
         return resp.status_code, resp.json()
 
-    def v1q(self, q):
-        h = dict()
+    def v1q(self, q, headers = {}):
+        h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Access-Key'] = self.hge_key
         resp = self.http.post(

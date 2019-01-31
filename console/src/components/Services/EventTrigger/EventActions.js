@@ -51,6 +51,11 @@ const loadTriggers = () => (dispatch, getState) => {
             schema: 'hdb_catalog',
           },
           columns: ['*'],
+          order_by: {
+            column: 'name',
+            type: 'asc',
+            nulls: 'last',
+          },
         },
       },
       initQueries.loadSchema,

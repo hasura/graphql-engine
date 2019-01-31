@@ -281,6 +281,11 @@ Using a different database
 
       # type ESC followed by :wq to save and quit
 
+   .. note::
+
+     Hasura GraphQL engine needs access permissions to your Postgres database as described in
+     :doc:`Postgres permissions <../../deployment/postgres-permissions>`
+
 
 Logs
 ----
@@ -307,8 +312,4 @@ Logs
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
-
-License
--------
-The Hasura GraphQL Engine is open source. View license `here <https://github.com/hasura/graphql-engine/blob/master/LICENSE>`_.
 

@@ -1,0 +1,16 @@
+description: Add a remote schema with an object implementing the interface has a field with a different type when compared to the same field in the interface
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    The type of Object field 'Droid'."id" (String!) is not the same type/sub type of Interface field 'Character'."id" (ID!)
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-types
+    definition:
+      url: http://localhost:5000/iface-graphql-err-wrong-field-type
+      headers: []
+      forward_client_headers: true

@@ -5,6 +5,12 @@ import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import Button from '../../Layout/Button/Button';
+import {
+  getPlaceholder,
+  BOOLEAN,
+  JSONB,
+  JSONDTYPE,
+} from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
@@ -25,7 +31,6 @@ class InsertItem extends Component {
     // Since the state variable lifecycle is tired to the instance of the class
     // and making this change using an anonymous function will case errors.
     this.setState({
-      ...this.state,
       insertedRows: this.state.insertedRows + 1,
     });
   }
@@ -109,32 +114,6 @@ class InsertItem extends Component {
         type: 'text',
       };
 
-      const getPlaceholder = type => {
-        switch (type) {
-          case 'integer':
-            return 'integer';
-          case 'bigint':
-            return 'BIG integer';
-          case 'numeric':
-            return 'float';
-          case 'timestamp with time zone':
-            return new Date().toISOString();
-          case 'date':
-            return new Date().toISOString().slice(0, 10);
-          case 'timetz':
-            const time = new Date().toISOString().slice(11, 19);
-            return `${time}Z or ${time}+05:30`;
-          case 'uuid':
-            return 'UUID';
-          case 'json':
-            return '{"name": "foo"} or [12, "asdf"]';
-          case 'jsonb':
-            return '{"name": "foo"} or [12, "asdf"]';
-          default:
-            return 'text';
-        }
-      };
-
       const colType = col.data_type;
       let typedInput = (
         <input {...standardInputProps} placeholder={getPlaceholder(colType)} />
@@ -150,7 +129,7 @@ class InsertItem extends Component {
         );
       }
 
-      if (colType === 'json' || colType === 'jsonb') {
+      if (colType === JSONDTYPE || colType === JSONB) {
         // JSON/JSONB
         typedInput = (
           <input
@@ -163,7 +142,7 @@ class InsertItem extends Component {
         );
       }
 
-      if (colType === 'boolean') {
+      if (colType === BOOLEAN) {
         // Boolean
         typedInput = (
           <select
