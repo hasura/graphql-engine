@@ -305,8 +305,8 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine with restrictive CORS policy (only allow https://example.com:8080)"
         , "graphql-engine --database-url <database-url> serve --cors-domain https://example.com:8080"
         ]
-      , [ "# Start GraphQL Engine with multiple domains for CORS (https://example.com, http://localhost:3000 and *.foo.bar.com)"
-        , "graphql-engine --database-url <database-url> serve --cors-domain \"example.com, *.foo.bar.com, localhost:3000\""
+      , [ "# Start GraphQL Engine with multiple domains for CORS (https://example.com, http://localhost:3000 and https://*.foo.bar.com)"
+        , "graphql-engine --database-url <database-url> serve --cors-domain \"https://example.com, https://*.foo.bar.com, http://localhost:3000\""
         ]
       , [ "# Start GraphQL Engine with Authentication Webhook (GET)"
         , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"

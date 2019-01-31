@@ -12,17 +12,9 @@ import           Hasura.Server.Utils
 import qualified Data.ByteString       as B
 import qualified Data.CaseInsensitive  as CI
 import qualified Data.HashSet          as Set
-import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
-import qualified Network.URI           as URI
 
-
-dropUriScheme :: URI.URI -> Text
-dropUriScheme uri =
-  let dom  = URI.uriRegName <$> URI.uriAuthority uri
-      port = URI.uriPort <$> URI.uriAuthority uri
-  in maybe (T.pack $ show uri) T.pack $ liftA2 (++) dom port
 
 corsMiddleware :: CorsPolicy -> Middleware
 corsMiddleware policy app req sendResp =
