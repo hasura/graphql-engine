@@ -2,7 +2,7 @@ import React from 'react';
 import globals from '../../../../Globals';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { changeTableName } from '../TableModify/ModifyActions';
+import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 
 const tabNameMap = {
@@ -47,7 +47,9 @@ const TableHeader = ({
 
   const saveTableNameChange = newName => {
     dispatch(
-      changeTableName(tableName, newName, () => tableRenameCallback(newName))
+      changeTableOrViewName(true, tableName, newName, () =>
+        tableRenameCallback(newName)
+      )
     );
   };
 

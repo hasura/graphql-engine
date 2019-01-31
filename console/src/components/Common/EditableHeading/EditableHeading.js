@@ -15,6 +15,14 @@ class Heading extends React.Component {
     this.setState({ isEditting: !this.state.isEditting });
   };
 
+  handleKeyPress = e => {
+    if (this.state.isEditting) {
+      if (e.charCode === 13) {
+        this.save();
+      }
+    }
+  };
+
   save = () => {
     if (this.props.loading) {
       return;
@@ -55,6 +63,7 @@ class Heading extends React.Component {
           onChange={this.handleTextChange}
           className={`${styles.add_pad_left} form-control`}
           type="text"
+          onKeyPress={this.handleKeyPress}
           value={text}
         />
         <div className={styles.editable_heading_action}>
@@ -64,16 +73,14 @@ class Heading extends React.Component {
           >
             {loading ? 'Saving...' : 'Save'}
           </div>
-          {
-            !loading && (
-              <div
-                className={styles.editable_heading_action_item}
-                onClick={this.toggleEditting}
-              >
-                Cancel
-              </div>
-            )
-          }
+          {!loading && (
+            <div
+              className={styles.editable_heading_action_item}
+              onClick={this.toggleEditting}
+            >
+              Cancel
+            </div>
+          )}
         </div>
       </div>
     );

@@ -16,6 +16,11 @@ import {
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
+import gqlPattern, {
+  gqlTableErrorNotif,
+  gqlViewErrorNotif,
+  gqlColumnErrorNotif,
+} from '../Common/GraphQLValidation';
 
 const TOGGLE_ACTIVE_COLUMN = 'ModifyTable/TOGGLE_ACTIVE_COLUMN';
 const RESET = 'ModifyTable/RESET';
@@ -35,15 +40,37 @@ const FK_ADD_FORM_ERROR = 'ModifyTable/FK_ADD_FORM_ERROR';
 const FK_RESET = 'ModifyTable/FK_RESET';
 const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 
-const changeTableName = (oldName, newName, callback) => {
+const changeTableOrViewName = (isTable, oldName, newName, callback) => {
   return (dispatch, getState) => {
+    const property = isTable ? 'table' : 'view';
     dispatch({ type: SAVE_NEW_TABLE_NAME });
+    if (oldName === newName) {
+      return dispatch(
+        showErrorNotification(
+          `Renaming ${property} failed`,
+          `The ${property} name is already ${oldName}`
+        )
+      );
+    }
+    if (!gqlPattern.test(newName)) {
+      const gqlValidationError = isTable
+        ? gqlTableErrorNotif
+        : gqlViewErrorNotif;
+      return dispatch(
+        showErrorNotification(
+          gqlValidationError[4],
+          gqlValidationError[1],
+          gqlValidationError[2],
+          gqlValidationError[3]
+        )
+      );
+    }
     const currentSchema = getState().tables.currentSchema;
     const migrateUp = [
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${currentSchema}"."${oldName}" rename to "${newName}";`,
+          sql: `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`,
         },
       },
     ];
@@ -51,16 +78,16 @@ const changeTableName = (oldName, newName, callback) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${currentSchema}"."${newName}" rename to "${oldName}";`,
+          sql: `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`,
         },
       },
     ];
     // apply migrations
-    const migrationName = 'rename_table_' + currentSchema + '_' + oldName;
+    const migrationName = `rename_${property}_` + currentSchema + '_' + oldName;
 
-    const requestMsg = 'Renaming table...';
-    const successMsg = 'Table renamed';
-    const errorMsg = 'Renaming table failed';
+    const requestMsg = `Renaming ${property}...`;
+    const successMsg = `Renaming ${property} successful`;
+    const errorMsg = `Renaming ${property} failed`;
 
     const customOnSuccess = () => {
       callback();
@@ -1277,6 +1304,16 @@ const saveColumnChangesSql = (
 
     /* rename column */
     if (newName && colName !== newName) {
+      if (!gqlPattern.test(newName)) {
+        return dispatch(
+          showErrorNotification(
+            gqlColumnErrorNotif[4],
+            gqlColumnErrorNotif[1],
+            gqlColumnErrorNotif[2],
+            gqlColumnErrorNotif[3]
+          )
+        );
+      }
       schemaChangesUp.push({
         type: 'run_sql',
         args: {
@@ -1912,7 +1949,7 @@ export {
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
   SAVE_NEW_TABLE_NAME,
-  changeTableName,
+  changeTableOrViewName,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,

@@ -9,9 +9,8 @@ import {
 const delRel = (table, relname) => {
   cy.get(getElementFromAlias(table)).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get(getElementFromAlias(`remove-button-${relname}`))
-    .first()
-    .click();
+  cy.get(getElementFromAlias(`relationship-toggle-editor-${relname}`)).click();
+  cy.get(getElementFromAlias(`relationship-remove-${relname}`)).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
