@@ -8,13 +8,9 @@
 package cli
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli/telemetry"
@@ -24,7 +20,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -74,15 +69,6 @@ func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
 	}
 	hgc.ParsedEndpoint = nurl
 	return nil
-}
-
-// GlobalConfig is the configuration object stored in the GlobalConfigFile.
-type GlobalConfig struct {
-	// UUID used for telemetry, generated on first run.
-	UUID string `json:"uuid"`
-
-	// Indicate if telemetry is enabled or not
-	EnableTelemetry bool `json:"enable_telemetry"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -266,36 +252,6 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	return nil
 }
 
-// readGlobalConfig reads the configuration from global config file env vars,
-// through viper.
-func (ec *ExecutionContext) readGlobalConfig() error {
-	// need to get existing viper because https://github.com/spf13/viper/issues/233
-	v := viper.New()
-	v.SetEnvPrefix("HASURA_GRAPHQL")
-	v.AutomaticEnv()
-	v.SetConfigName("config")
-	v.AddConfigPath(ec.GlobalConfigDir)
-	err := v.ReadInConfig()
-	if err != nil {
-		return errors.Wrap(err, "cannor read global config from file/env")
-	}
-	if ec.GlobalConfig == nil {
-		ec.Logger.Debugf("global config is not pre-set, reading from current env")
-		ec.GlobalConfig = &GlobalConfig{
-			UUID:            v.GetString("uuid"),
-			EnableTelemetry: v.GetBool("enable_telemetry"),
-		}
-	} else {
-		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
-	}
-	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
-	ec.Logger.Debugf("global config: enableTelemetry: %v", ec.GlobalConfig.EnableTelemetry)
-	// set if telemetry can be beamed or not
-	ec.Telemetry.CanBeam = ec.GlobalConfig.EnableTelemetry
-	ec.Telemetry.UUID = ec.GlobalConfig.UUID
-	return nil
-}
-
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
@@ -360,172 +316,6 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Telemetry.Logger == nil {
 		ec.Telemetry.Logger = ec.Logger
 	}
-}
-
-// setupGlobConfig ensures that global config directory and file exists and
-// reads it into the GlobalConfig object.
-func (ec *ExecutionContext) setupGlobalConfig() error {
-	if len(ec.GlobalConfigDir) == 0 {
-		ec.Logger.Debug("global config directory is not pre-set, defaulting")
-		home, err := homedir.Dir()
-		if err != nil {
-			return errors.Wrap(err, "cannot get home directory")
-		}
-		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
-		ec.GlobalConfigDir = globalConfigDir
-		ec.Logger.Debugf("global config directory set as '%s'", ec.GlobalConfigDir)
-	}
-	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "cannot create global config directory")
-	}
-	if len(ec.GlobalConfigFile) == 0 {
-		ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
-		ec.Logger.Debugf("global config file set as '%s'", ec.GlobalConfigFile)
-	}
-	_, err = os.Stat(ec.GlobalConfigFile)
-	if os.IsNotExist(err) {
-		// file does not exist, teat as first run and create it
-		ec.Logger.Debug("global config file does not exist, this could be the first run, creating it...")
-		u, err := uuid.NewV4()
-		if err != nil {
-			return errors.Wrap(err, "failed to generate uuid")
-		}
-		gc := GlobalConfig{
-			UUID:            u.String(),
-			EnableTelemetry: true,
-		}
-		data, err := json.MarshalIndent(gc, "", "  ")
-		if err != nil {
-			return errors.Wrap(err, "cannot marshal json for config file")
-		}
-		err = ioutil.WriteFile(ec.GlobalConfigFile, data, 0644)
-		if err != nil {
-			return errors.Wrap(err, "writing global config file failed")
-		}
-		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
-		// also show a notice about telemetry
-		ec.Logger.Info(StrTelemetryNotice)
-	} else if os.IsExist(err) || err == nil {
-		// file exists, verify contents
-		ec.Logger.Debug("global config file exisits, verifying contents")
-		data, err := ioutil.ReadFile(ec.GlobalConfigFile)
-		if err != nil {
-			return errors.Wrap(err, "reading global config file failed")
-		}
-		var gc GlobalConfig
-		err = json.Unmarshal(data, &gc)
-		if err != nil {
-			return errors.Wrap(err, "global config file not a valid json")
-		}
-		_, err = uuid.FromString(gc.UUID)
-		if err != nil {
-			ec.Logger.Debugf("invalid uuid '%s' in global config: %v", gc.UUID, err)
-			// create a new UUID
-			ec.Logger.Debug("global config file exists, but uuid is invalid, creating a new one...")
-			u, err := uuid.NewV4()
-			if err != nil {
-				return errors.Wrap(err, "failed to generate uuid")
-			}
-			gc.UUID = u.String()
-			data, err := json.Marshal(gc)
-			if err != nil {
-				return errors.Wrap(err, "cannot marshal json for config file")
-			}
-			err = ioutil.WriteFile(ec.GlobalConfigFile, data, 0644)
-			if err != nil {
-				return errors.Wrap(err, "writing global config file failed")
-			}
-			ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, string(data))
-		}
-	}
-	return nil
-}
-
-// validateDirectory sets execution directory and validate it to see that or any
-// of the parent directory is a valid project directory. A valid project
-// directory contains the following:
-// 1. migrations directory
-// 2. config.yaml file
-// 3. metadata.yaml (optional)
-// If the current directory or any parent directory (upto filesystem root) is
-// found to have these files, ExecutionDirectory is set as that directory.
-func (ec *ExecutionContext) validateDirectory() error {
-	if len(ec.ExecutionDirectory) == 0 {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return errors.Wrap(err, "error getting current working directory")
-		}
-		ec.ExecutionDirectory = cwd
-	}
-
-	ed, err := os.Stat(ec.ExecutionDirectory)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Wrap(err, "did not find required directory. use 'init'?")
-		} else {
-			return errors.Wrap(err, "error getting directory details")
-		}
-	}
-	if !ed.IsDir() {
-		return errors.Errorf("'%s' is not a directory", ed.Name())
-	}
-	// config.yaml
-	// migrations/
-	// (optional) metadata.yaml
-	dir, err := recursivelyValidateDirectory(ec.ExecutionDirectory)
-	if err != nil {
-		return errors.Wrap(err, "validate")
-	}
-
-	ec.ExecutionDirectory = dir
-	return nil
-}
-
-// filesRequired are the files that are mandatory to qualify for a project
-// directory.
-var filesRequired = []string{
-	"config.yaml",
-	"migrations",
-}
-
-// recursivelyValidateDirectory tries to parse 'startFrom' as a project
-// directory by checking for the 'filesRequired'. If the parent of 'startFrom'
-// (nextDir) is filesystem root, error is returned. Otherwise, 'nextDir' is
-// validated, recursively.
-func recursivelyValidateDirectory(startFrom string) (validDir string, err error) {
-	err = validateDirectory(startFrom)
-	if err != nil {
-		nextDir := filepath.Dir(startFrom)
-		cleaned := filepath.Clean(nextDir)
-		isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
-		// return error if filesystem boundary is hit
-		if cleaned == "/" || isWindowsRoot {
-			return nextDir, errors.Errorf("cannot find [%s] | search stopped at filesystem boundary", strings.Join(filesRequired, ", "))
-
-		}
-		return recursivelyValidateDirectory(nextDir)
-	}
-	return startFrom, nil
-}
-
-// validateDirectory tries to parse dir for the filesRequired and returns error
-// if any one of them is missing.
-func validateDirectory(dir string) error {
-	notFound := []string{}
-	for _, f := range filesRequired {
-		if _, err := os.Stat(filepath.Join(dir, f)); os.IsNotExist(err) {
-			relpath, e := filepath.Rel(dir, f)
-			if e == nil {
-				f = relpath
-			}
-			notFound = append(notFound, f)
-		}
-	}
-	if len(notFound) > 0 {
-		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
-	}
-	return nil
 }
 
 // SetVersion sets the version inside context, according to the variable
