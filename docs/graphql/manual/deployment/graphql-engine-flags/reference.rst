@@ -141,48 +141,30 @@ For ``serve`` subcommand these are the flags and environment variables available
 CORS configuration examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-No scheme (i.e., http/https) is required. Port has to be mentioned. Hasura will
-match both http/https schemes.
+Scheme + host with optional wildcard + optional port has to be mentioned.
+
+The default (if the flag or env var is not specified) is ``*``. Which means CORS
+headers are sent for all domains.
 
 .. code-block:: bash
 
-    # Accepts from https://app.foo.bar.com , http://api.foo.bar.com etc.
-    HASURA_GRAPHQL_CORS_DOMAIN="*.foo.bar.com"
+    # Accepts from https://app.foo.bar.com , https://api.foo.bar.com etc.
+    HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com"
 
     # Accepts from https://app.foo.bar.com:8080 , http://api.foo.bar.com:8080,
     # http://app.localhost, http://api.localhost, http://localhost:3000,
     # http://example.com etc.
-    HASURA_GRAPHQL_CORS_DOMAIN="*.foo.bar.com:8080, *.localhost, localhost:3000, example.com"
+    HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com"
 
     # Accepts from all domain
     HASURA_GRAPHQL_CORS_DOMAIN="*"
 
-    # Accepts only from example.com
-    HASURA_GRAPHQL_CORS_DOMAIN="example.com"
+    # Accepts only from http://example.com
+    HASURA_GRAPHQL_CORS_DOMAIN="http://example.com"
 
 
-..
-    For ``serve`` subcommand these are the flags available
+.. note::
 
-    .. code-block:: none
-
-          --server-port        Port on which graphql-engine should be served (default: 8080)
-          --access-key         Secret access key, required to access this instance.
-                                If specified client needs to send 'X-Hasura-Access-Key'
-                                header
-          --cors-domain        The domain, including sheme and port, to allow CORS for
-          --disable-cors       Disable CORS handling
-          --auth-hook          The authentication webhook, required to authenticate
-                                incoming request
-          --jwt-secret         The JSON containing type and the JWK used for
-                                verifying. e.g: `{"type": "HS256", "key":
-                              "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                              "key": "<your-PEM-RSA-public-key>"}
-      -s, --stripes            Number of stripes
-      -c, --connections        Number of connections that need to be opened to Postgres
-          --timeout            Each connection's idle time before it is closed
-      -i, --tx-iso             Transaction isolation. read-commited / repeatable-read /
-                                serializable
-          --root-dir           This static dir is served at / and takes precedence over
-                                all routes
-          --enable-console     Enable API console. It is served at '/' and '/console'
+  Top-level domains are not considered as part of wildcard domains. You
+  have to add them separately. E.g - ``https://*.foo.com`` doesn't include
+  ``https://foo.com``.

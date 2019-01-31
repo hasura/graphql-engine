@@ -1,26 +1,34 @@
+{-# LANGUAGE DeriveAnyClass #-}
 -- | CORS (Cross Origin Resource Sharing) related configuration
 
 module Hasura.Server.Cors where
+
+import           Hasura.Prelude
+import           Hasura.Server.Utils  (fmapL)
+
+import           Control.Applicative  (optional)
 
 import qualified Data.Aeson           as J
 import qualified Data.Aeson.Casing    as J
 import qualified Data.Aeson.TH        as J
 import qualified Data.Attoparsec.Text as AT
-import qualified Data.ByteString      as B
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
 
-import           Control.Applicative  (optional)
-import           Data.List            (partition)
 
-import           Hasura.Prelude
-import           Hasura.Server.Utils
+data DomainParts =
+  DomainParts
+  { wdScheme :: !Text
+  , wdHost   :: !Text -- the hostname part (without the *.)
+  , wdPort   :: !(Maybe Int)
+  } deriving (Show, Eq, Generic, Hashable)
 
+$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''DomainParts)
 
 data Domains
   = Domains
   { dmFqdns     :: !(Set.HashSet Text)
-  , dmWildcards :: !(Set.HashSet (Text, Text, Maybe Int))
+  , dmWildcards :: !(Set.HashSet DomainParts)
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
@@ -44,27 +52,15 @@ type RawCorsConfig = CorsConfigG (Maybe CorsDomain)
 type CorsConfig = CorsConfigG CorsDomain
 
 
-wildcardDomainRegex :: B.ByteString
-wildcardDomainRegex = "^http(s)?://(\\*\\.)?([a-zA-Z0-9]+\\.)*[a-zA-Z0-9]+(:[0-9]+)*$"
-
-validateDomain :: Text -> Either String Bool
-validateDomain = matchRegex wildcardDomainRegex False
-
 readCorsDomains :: String -> Either String CorsDomain
 readCorsDomains str
   | str == "*"               = Right CDStar
   | str == "" || str == ","  = Left "invalid domain"
   | otherwise = do
       let domains = map T.strip $ T.splitOn "," (T.pack str)
-      forM_ domains $ \dom -> do
-        res <- validateDomain dom
-        bool (Left $ err dom) (Right dom) res
-      let (wcs, fqdns) = partitionDomains domains
-      wcsTriples <- mapM parseWildcardDomain wcs
-      Right $ CDDomains $ Domains (Set.fromList fqdns) (Set.fromList wcsTriples)
-  where
-    err d = "invalid domain: '" <> T.unpack d <> "'"
-    partitionDomains = partition (\d -> T.isPrefixOf "http://*." d || T.isPrefixOf "https://*." d)
+      pDomains <- mapM parseOptWildcardDomain domains
+      let (fqdns, wcs) = (lefts pDomains, rights pDomains)
+      return $ CDDomains $ Domains (Set.fromList fqdns) (Set.fromList wcs)
 
 
 data CorsPolicy
@@ -83,39 +79,62 @@ mkDefaultCorsPolicy cfg =
   }
 
 
-parseOrigin :: Text -> Either String (Text, Text, Maybe Int)
-parseOrigin = runParser originParser
-
-originParser :: AT.Parser (Text, Text, Maybe Int)
-originParser = do
-  scheme <- schemeParser
-  void $ AT.takeTill (== '.')
-  void $ AT.char '.'
-  host <- parseHostWPort <|> AT.takeText
-  port <- optional portParser
-  return (scheme, host, port)
-
-
-parseWildcardDomain :: Text -> Either String (Text, Text, Maybe Int)
-parseWildcardDomain = runParser wildcardDomainParser
-
 runParser :: AT.Parser a -> Text -> Either String a
 runParser = AT.parseOnly
 
-wildcardDomainParser :: AT.Parser (Text, Text, Maybe Int)
+parseOrigin :: Text -> Either String DomainParts
+parseOrigin = runParser originParser
+
+originParser :: AT.Parser DomainParts
+originParser =
+  domainParser (Just ignoreSubdomain)
+  where ignoreSubdomain = do
+          s <- AT.takeTill (== '.')
+          void $ AT.char '.'
+          return s
+
+parseOptWildcardDomain :: Text -> Either String (Either Text DomainParts)
+parseOptWildcardDomain d =
+  fmapL (const errMsg) $ runParser optWildcardDomainParser d
+  where
+    errMsg = "invalid domain: " <> T.unpack d <> ". " <> helpMsg
+    helpMsg = "All domains should have scheme + (optional wildcard) host + "
+              <> "(optional port)"
+
+optWildcardDomainParser :: AT.Parser (Either Text DomainParts)
+optWildcardDomainParser =
+  Right <$> wildcardDomainParser <|> Left <$> fqdnParser
+
+parseWildcardDomain :: Text -> Either String DomainParts
+parseWildcardDomain = runParser wildcardDomainParser
+
+wildcardDomainParser :: AT.Parser DomainParts
 wildcardDomainParser =
-  (,,) <$> schemeParser <*> wildcardHostParser <*> optional portParser
+  domainParser $ Just (AT.string "*" *> AT.string ".")
+  --DomainParts <$> schemeParser <*> wildcardHostParser <*> optional portParser
+
+fqdnParser :: AT.Parser Text
+fqdnParser = do
+  (DomainParts scheme host port) <- domainParser Nothing
+  let sPort = maybe "" (\p -> ":" <> T.pack (show p)) port
+  return $ scheme <> host <> sPort
+
+domainParser :: Maybe (AT.Parser Text) -> AT.Parser DomainParts
+domainParser parser = do
+  scheme <- schemeParser
+  forM_ parser void
+  host <- hostPortParser
+  port <- optional portParser
+  return $ DomainParts scheme host port
 
 schemeParser :: AT.Parser Text
 schemeParser = AT.string "http://" <|> AT.string "https://"
 
-wildcardHostParser :: AT.Parser Text
-wildcardHostParser = do
-  void $ "*" *> "."
-  parseHostWPort <|> AT.takeText
+hostPortParser :: AT.Parser Text
+hostPortParser = hostWithPortParser <|> AT.takeText
 
-parseHostWPort :: AT.Parser Text
-parseHostWPort = do
+hostWithPortParser :: AT.Parser Text
+hostWithPortParser = do
   h <- AT.takeWhile1 (/= ':')
   void $ AT.char ':'
   return h
