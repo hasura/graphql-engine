@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewUpdateCmd checks and update to lastest graphql-engine cli
-func NewUpdateCmd(ec *cli.ExecutionContext) *cobra.Command {
+// NewUpdateCLICmd returns the update-cli command.
+func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &updateOptions{
 		EC: ec,
 	}
 	updateCmd := &cobra.Command{
 		Use:          "update-cli",
-		Short:        "Update the Hasura CLI to latest version",
+		Short:        "Update the CLI to latest version",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()
@@ -34,22 +34,25 @@ type updateOptions struct {
 }
 
 func (o *updateOptions) run() error {
-	currentVersion := o.EC.Version.GetCLIVersion()
-	o.EC.Logger.Infof("Current version: %s", currentVersion)
+	currentVersion := o.EC.Version.CLISemver
+	if currentVersion == nil {
+		return errors.Errorf("cannot update from a non-semver version: %s", o.EC.Version.GetCLIVersion())
+	}
+
 	o.EC.Spin("Checking for update... ")
-	hasUpdate, releaseInfo, asset, err := update.CheckUpdate(currentVersion)
+	hasUpdate, latestVersion, err := update.HasUpdate(currentVersion)
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "command: check update")
 	}
 
 	if !hasUpdate {
-		o.EC.Logger.WithField("version", currentVersion).Info("CLI is up to date")
+		o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
 		return nil
 	}
 
-	o.EC.Spin(fmt.Sprintf("Updating to %s... ", releaseInfo.TagName))
-	err = update.ApplyUpdate(asset)
+	o.EC.Spin(fmt.Sprintf("Updating cli to %s... ", latestVersion.String()))
+	err = update.ApplyUpdate(latestVersion)
 	o.EC.Spinner.Stop()
 	if err != nil {
 		if os.IsPermission(err) {
@@ -58,6 +61,6 @@ func (o *updateOptions) run() error {
 		return errors.Wrap(err, "apply update")
 	}
 
-	o.EC.Logger.WithField("version", releaseInfo.TagName).Info("Updated to latest version")
+	o.EC.Logger.WithField("version", latestVersion.String()).Info("Updated to latest version")
 	return nil
 }

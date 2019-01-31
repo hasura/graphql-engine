@@ -30,7 +30,7 @@ func init() {
 		NewMigrateCmd(ec),
 		NewVersionCmd(ec),
 		NewDocsCmd(ec),
-		NewUpdateCmd(ec),
+		NewUpdateCLICmd(ec),
 	)
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")

@@ -17,7 +17,7 @@ hasCli() {
     if [ "$?" = "0" ]; then
         echo
         echo "You already have the hasura cli!"
-        export n=1
+        export n=3
         echo "Overwriting in $n seconds.. Press Control+C to cancel."
         echo
         sleep $n
@@ -42,10 +42,9 @@ getPackage() {
     ;;
     "Linux")
         arch=$(uname -m)
-        echo $arch
         case $arch in
         "amd64" | "x86_64")
-        suffix="-linux-amd4"
+        suffix="-linux-amd64"
         ;;
         esac
         case $arch in
