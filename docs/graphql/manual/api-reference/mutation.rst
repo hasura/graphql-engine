@@ -380,7 +380,8 @@ ColumnExp
 
 Operator
 ########
-Generic operators (all column types except json, jsonb) :
+
+**Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
 - ``_ne``
@@ -391,7 +392,7 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-Operators for comparing columns (all column types except json, jsonb):
+**Operators for comparing columns (all column types except json, jsonb)**:
 
 - ``_ceq``
 - ``_cneq``
@@ -400,7 +401,7 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``_cgte``
 - ``_cnlte``
 
-Text related operators :
+**Text related operators:**
 
 - ``_like``
 - ``_nlike``
@@ -409,7 +410,7 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
-Checking for ``null`` values :
+**Checking for NULL values:**
 
 - ``_is_null`` (takes true/false as values)
 

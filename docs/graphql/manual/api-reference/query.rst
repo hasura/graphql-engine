@@ -330,7 +330,7 @@ Operator
 - ``_gte``
 - ``_lte``
 
-**Text related operators :**
+**Text related operators:**
 
 - ``_like``
 - ``_nlike``

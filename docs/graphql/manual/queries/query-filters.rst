@@ -404,12 +404,13 @@ Fetch a list of those authors whose names are NOT part of a list:
       }
     }
 
-Text search or pattern matching operators (_like, _ilike, _similar, etc.)
--------------------------------------------------------------------------
+Text search or pattern matching operators (_like, _similar, etc.)
+-----------------------------------------------------------------
 
-The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators behave exactly like
-their `SQL counterparts <https://www.postgresql.org/docs/10/static/functions-matching.html>`__  and are used for
-pattern matching on string/Text fields.
+The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
+pattern matching on string/text fields.
+
+These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
 
 Example: _like
 ^^^^^^^^^^^^^^
@@ -444,10 +445,14 @@ Fetch a list of articles whose titles contain the word “amet”:
         }
       ]
 
+.. note::
+
+  ``_like`` is case-sensitive. Use ``_ilike`` for case-insensitive search.
+
 
 Example: _similar
 ^^^^^^^^^^^^^^^^^
-Fetch a list of authors whose names begin with A or C (``similar`` is case-sensitive):
+Fetch a list of authors whose names begin with A or C:
 
 .. graphiql::
   :view_only:
@@ -484,14 +489,108 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
       }
     }
 
+.. note::
+
+  ``_similar`` is case-sensitive
+
+JSONB operators (_contains, _has_key, etc.)
+-------------------------------------------
+
+The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_key_any`` and ``_has_key_all`` operators are used to filter
+based on ``JSONB`` columns.
+
+For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
+
+Example: _contains
+^^^^^^^^^^^^^^^^^^
+Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_authors_in_pincode ($jsonFilter: jsonb){
+      author(
+        where: {
+          address: {_contains: $jsonFilter }
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Ash",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090",
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "jsonFilter": {
+        "pincode": 560095
+      }
+    }
+
+Example: _has_key
+^^^^^^^^^^^^^^^^^
+Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_authors_if_phone {
+      author(
+        where: {
+          address: {_has_key: "phone" }
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Hasura",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090"
+            }
+          }
+        ]
+      }
+    }
+
+
 PostGIS topology operators (_st_contains, _st_crosses, etc.)
 ------------------------------------------------------------
 
-The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``,
-``_st_touches``, ``_st_within`` and ``_st_d_within`` operators are used to filter ``geometry`` like columns.
+The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
+``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
+
 For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.
 
-Use ``json`` (`GeoJSON <https://tools.ietf.org/html/rfc7946>`__) representation of ``geometry`` values in
+Use JSON (`GeoJSON <https://tools.ietf.org/html/rfc7946>`__) representation of ``geometry`` values in
 ``variables`` as shown in the following examples:
 
 

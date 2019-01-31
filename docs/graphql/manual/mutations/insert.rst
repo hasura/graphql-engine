@@ -310,7 +310,7 @@ To set a field to its ``default`` value, just omit it from the input object, irr
       }
     }
 
-Set a field to null during insert
+Set a field to NULL during insert
 ---------------------------------
 
 If a field is ``nullable`` in the database, to set its value to ``null``, either pass its value as ``null`` or

@@ -177,7 +177,7 @@ You can append any ``jsonb`` column with another json value by using the ``_appe
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Append the json ``{"key1": "value1}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Append the json ``{"key1": "value1"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -220,7 +220,7 @@ You can prepend any ``jsonb`` column with another json value by using the ``_pre
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Prepend the json ``{"key0": "value0}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Prepend the json ``{"key0": "value0"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:
