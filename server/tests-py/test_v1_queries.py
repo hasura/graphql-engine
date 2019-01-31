@@ -461,6 +461,15 @@ class TestRunSQL(DefaultTestQueries):
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
 
+    def test_sql_rename_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
+
+    def test_sql_rename_columns(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns.yaml')
+
+    def test_sql_rename_table_and_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/run_sql"
