@@ -20,7 +20,7 @@ cd "$CLI_ROOT"
 mkdir -p /build/_cli_output
 touch /build/_cli_output/server.log
 
-# start graphql-engine without access key
+# start graphql-engine without admin secret
 /build/_server_output/graphql-engine \
     --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_cli_output/server.log 2>&1 &
 PID=$!
@@ -31,10 +31,10 @@ wait_for_port 8080
 HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" make test
 kill $PID
 
-# start graphql-engine with access key
-psql -U gql_test -h localhost -c 'CREATE DATABASE "gql_test_with_access";'
+# start graphql-engine with admin secret
+psql -U gql_test -h localhost -c 'CREATE DATABASE "gql_test_with_admin_secret";'
 /build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test_with_access serve --access-key "abcd" > /build/_cli_output/server.log 2>&1 &
+    --database-url postgres://gql_test@localhost:5432/gql_test_with_admin_secret serve --admin-secret "abcd" > /build/_cli_output/server.log 2>&1 &
 PID=$!
 
 wait_for_port 8080

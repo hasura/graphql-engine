@@ -96,7 +96,7 @@ refs:
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
           apt-get update
-          apt install --yes jq
+          apt install --yes jq curl
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
         name: Generate coverage report
@@ -134,7 +134,7 @@ jobs:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - restore_cache:
         keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+        - server-app-cache-1-{{ .Branch }}
     - run:
         name: Build the server
         working_directory: ./server
@@ -145,10 +145,17 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, non-optimized build with coverage"
+            echo  >> src-lib/Hasura/Server/Version.hs
+            stack build --only-dependencies --fast --coverage
+            git checkout HEAD -- src-lib/Hasura/Server/Version.hs
             BUILD_FLAGS="--fast --coverage" make ci-binary
           fi
           make ci-image
           make ci-save-image
+    - save_cache:
+        key: server-app-cache-1-{{ .Branch }}
+        paths:
+        - ./server/.stack-work
     - save_cache:
         key: server-app-cache-{{ .Branch }}-{{ .Revision }}
         paths:

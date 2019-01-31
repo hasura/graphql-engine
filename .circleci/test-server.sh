@@ -11,11 +11,11 @@ stop_services() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for _ in $(seq 1 60);
+    for _ in $(seq 1 240);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
-      sleep 1
+      sleep 0.25
     done
     echo "Failed waiting for $PORT" && exit 1
 }
@@ -80,7 +80,7 @@ CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
 cd $CIRCLECI_FOLDER
 CIRCLECI_FOLDER="$PWD"
 
-if ! $CIRCLECI_FOLDER/test-server-flags.sh  ; then
+if ! $CIRCLECI_FOLDER/test-server-flags.sh   ; then
 	echo "Testing GraphQL server flags failed"
 	exit 1
 fi
@@ -119,7 +119,7 @@ WH_PID=""
 trap stop_services ERR
 trap stop_services INT
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ACCESS KEYS ###########################################>\n"
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 
 "$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
@@ -132,22 +132,22 @@ sleep 4
 mv graphql-engine.tix graphql-engine-combined.tix || true
 
 ##########
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY #####################################>\n"
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
 
-export HASURA_GRAPHQL_ACCESS_KEY="HGE$RANDOM$RANDOM"
+export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY"
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"
 
 kill -INT $PID
 sleep 4
 combine_hpc_reports
 
 ##########
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY AND JWT #####################################>\n"
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT #####################################>\n"
 
 init_jwt
 
@@ -155,7 +155,7 @@ export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jw
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key"
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key"
 
 kill -INT $PID
 sleep 4
@@ -172,7 +172,7 @@ fi
 
 if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (GET) #########################>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	init_ssl
@@ -185,20 +185,20 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	wait_for_port 9090
 
-	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
 	kill -INT $PID
 	sleep 4
 	combine_hpc_reports
 
-  echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & WEBHOOK (POST) #########################>\n"
+  echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
   export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
   wait_for_port 8080
 
-	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
 	rm /etc/ssl/certs/webhook.crt
 	update-ca-certificates
@@ -207,27 +207,27 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	sleep 4
 	combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (GET) ########>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
   export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 	wait_for_port 8080
 
-	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
 	kill -INT $PID
 	sleep 4
 	combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY & HTTPS INSECURE WEBHOOK (POST) ########>\n"
+	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK (POST) ########>\n"
   export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 	wait_for_port 8080
 
-	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
 	kill -INT $PID
 	sleep 4
