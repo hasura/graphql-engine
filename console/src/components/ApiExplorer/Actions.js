@@ -248,7 +248,10 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
     totalHeaders.forEach(t => {
       // If header has x-hasura-*
       const lHead = t.toLowerCase();
-      if (lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-') {
+      if (
+        lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
+        lHead !== 'x-hasura-access-key'
+      ) {
         user[lHead] = reqHeaders[t];
         delete reqHeaders[t];
       }
