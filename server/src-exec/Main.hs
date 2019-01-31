@@ -1,6 +1,6 @@
 module Main where
 
--- import           Migrate                    (migrateCatalog)
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Control.Monad.STM          (atomically)

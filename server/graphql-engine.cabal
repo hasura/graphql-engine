@@ -234,6 +234,7 @@ library
                      , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
+                     , Migrate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -319,7 +320,8 @@ executable graphql-engine
                      , connection
                      , string-conversions
 
-  other-modules:     Ops
+  other-modules:       Ops
+                     , Migrate
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

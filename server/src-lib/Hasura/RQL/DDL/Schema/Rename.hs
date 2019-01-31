@@ -31,15 +31,15 @@ data RenameField
   | RFTable !(RenameItem QualifiedTable)
   deriving (Show, Eq)
 
-data TableCtx
-  = TableCtx
-  { tctxTable    :: !QualifiedTable
-  , tctxNewName  :: !(Maybe QualifiedTable)
-  , tctxDepTable :: !QualifiedTable
+data RenameCtx
+  = RenameCtx
+  { rctxTable    :: !QualifiedTable -- ^ current table
+  , rctxNewName  :: !(Maybe QualifiedTable) -- ^ if table renamed
+  , rctxDepTable :: !QualifiedTable -- ^ dependant table
   } deriving (Show, Eq)
 
-getTableForTx :: TableCtx -> QualifiedTable
-getTableForTx (TableCtx qt mNewQT depQT) =
+getTableForTx :: RenameCtx -> QualifiedTable
+getTableForTx (RenameCtx qt mNewQT depQT) =
   bool depQT (fromMaybe qt mNewQT) $ qt == depQT
 
 renameTableInCatalog
@@ -121,12 +121,12 @@ updateSchemaObj qt mNewQT rf = \case
   SOQTemplate _ -> return ()
   _ -> return ()
   where
-    mkTabCtx = TableCtx qt mNewQT
+    mkTabCtx = RenameCtx qt mNewQT
 
 updateRelFlds
   :: (MonadTx m, CacheRM m)
-  => TableCtx -> RelName -> RenameField -> m ()
-updateRelFlds tabCtx relName = \case
+  => RenameCtx -> RelName -> RenameField -> m ()
+updateRelFlds renameCtx relName = \case
   RFCol (RenameItem oCol nCol) ->
     if qt == depQT
       then updateRelNativeCols oCol nCol depQT qtTx relName
@@ -136,8 +136,8 @@ updateRelFlds tabCtx relName = \case
     unless (oldQT == depQT) $ updateRelDefs newQT depQT relName
   RFRel _ -> return ()
   where
-    qtTx = getTableForTx tabCtx
-    TableCtx qt _ depQT = tabCtx
+    qtTx = getTableForTx renameCtx
+    RenameCtx qt _ depQT = renameCtx
 
 -- update table names in relationship definition
 updateRelDefs
@@ -201,25 +201,25 @@ updateRel (QualifiedObject sn tn) rn relDef =
 
 -- | update fields in premissions
 updatePermFlds :: (MonadTx m, CacheRM m)
-  => TableCtx
+  => RenameCtx
   -> RoleName -> PermType -> RenameField -> m ()
-updatePermFlds tabCtx rn pt rf = do
+updatePermFlds renameCtx rn pt rf = do
   Q.AltJ pDef <- liftTx fetchPermDef
   case pt of
     PTInsert -> do
       perm <- decodeValue pDef
-      updateInsPermCols rf tabCtx rn perm
+      updateInsPermCols rf renameCtx rn perm
     PTSelect -> do
       perm <- decodeValue pDef
-      updateSelPermCols rf tabCtx rn perm
+      updateSelPermCols rf renameCtx rn perm
     PTUpdate -> do
       perm <- decodeValue pDef
-      updateUpdPermCols rf tabCtx rn perm
+      updateUpdPermCols rf renameCtx rn perm
     PTDelete -> do
       perm <- decodeValue pDef
-      updateDelPermCols rf tabCtx rn perm
+      updateDelPermCols rf renameCtx rn perm
   where
-    QualifiedObject sn tn = getTableForTx tabCtx
+    QualifiedObject sn tn = getTableForTx renameCtx
     fetchPermDef =
       runIdentity . Q.getRow <$>
         Q.withQE defaultTxErrorHandler [Q.sql|
@@ -231,53 +231,53 @@ updatePermFlds tabCtx rn pt rf = do
                      AND perm_type = $4
                  |] (sn, tn, rn, permTypeToCode pt) True
 
-type PermModifier m a = RenameField -> TableCtx -> RoleName -> a -> m ()
+type PermModifier m a = RenameField -> RenameCtx -> RoleName -> a -> m ()
 
 updateInsPermCols :: (MonadTx m, CacheRM m) => PermModifier m InsPerm
-updateInsPermCols rf tabCtx rn (InsPerm chk preset cols) = do
+updateInsPermCols rf renameCtx rn (InsPerm chk preset cols) = do
   (updBoolExp, updNeededFromBoolExp) <- updateBoolExp qt depQT rf chk
   let updNeeded = updNeededFromPreset || updNeededFromBoolExp || updNeededFromCols
   when updNeeded $
     liftTx $ updatePermDefInCatalog PTInsert tabForTx rn $
       InsPerm updBoolExp updPreset updCols
   where
-    tabForTx = getTableForTx tabCtx
-    TableCtx qt _ depQT = tabCtx
+    tabForTx = getTableForTx renameCtx
+    RenameCtx qt _ depQT = renameCtx
     (updPreset, updNeededFromPreset) = fromM $ updatePreset qt depQT rf <$> preset
     (updCols, updNeededFromCols) = fromM $ updateCols qt depQT rf <$> cols
     fromM = maybe (Nothing, False) (first Just)
 
 updateSelPermCols :: (MonadTx m, CacheRM m) => PermModifier m SelPerm
-updateSelPermCols rf tabCtx rn (SelPerm cols fltr limit aggAllwd) = do
+updateSelPermCols rf renameCtx rn (SelPerm cols fltr limit aggAllwd) = do
   (updBoolExp, updNeededFromBoolExp) <- updateBoolExp qt depQT rf fltr
   when ( updNeededFromCols || updNeededFromBoolExp) $
     liftTx $ updatePermDefInCatalog PTSelect tabForTx rn $
       SelPerm updCols updBoolExp limit aggAllwd
   where
-    tabForTx = getTableForTx tabCtx
-    TableCtx qt _ depQT = tabCtx
+    tabForTx = getTableForTx renameCtx
+    RenameCtx qt _ depQT = renameCtx
     (updCols, updNeededFromCols) = updateCols qt depQT rf cols
 
 updateUpdPermCols :: (MonadTx m, CacheRM m) => PermModifier m UpdPerm
-updateUpdPermCols rf tabCtx rn (UpdPerm cols fltr) = do
+updateUpdPermCols rf renameCtx rn (UpdPerm cols fltr) = do
   (updBoolExp, updNeededFromBoolExp) <- updateBoolExp qt depQT rf fltr
   when ( updNeededFromCols || updNeededFromBoolExp) $
     liftTx $ updatePermDefInCatalog PTUpdate tabForTx rn $
       UpdPerm updCols updBoolExp
   where
-    tabForTx = getTableForTx tabCtx
-    TableCtx qt _ depQT = tabCtx
+    tabForTx = getTableForTx renameCtx
+    RenameCtx qt _ depQT = renameCtx
     (updCols, updNeededFromCols) = updateCols qt depQT rf cols
 
 updateDelPermCols :: (MonadTx m, CacheRM m) => PermModifier m DelPerm
-updateDelPermCols rf tabCtx rn (DelPerm fltr) = do
+updateDelPermCols rf renameCtx rn (DelPerm fltr) = do
   (updBoolExp, updNeededFromBoolExp) <- updateBoolExp qt depQT rf fltr
   when updNeededFromBoolExp $
     liftTx $ updatePermDefInCatalog PTDelete tabForTx rn $
       DelPerm updBoolExp
   where
-    tabForTx = getTableForTx tabCtx
-    TableCtx qt _ depQT = tabCtx
+    tabForTx = getTableForTx renameCtx
+    RenameCtx qt _ depQT = renameCtx
 
 updatePreset
   :: QualifiedTable -> QualifiedTable
