@@ -102,7 +102,15 @@ class ModifyTable extends React.Component {
       let colEditor = null;
       let bg = '';
       const colName = c.column_name;
-      const onSubmit = (type, nullable, unique, def, comment, column) => {
+      const onSubmit = (
+        type,
+        nullable,
+        unique,
+        def,
+        comment,
+        column,
+        newName
+      ) => {
         // dispatch(saveColumnChangesSql(tableName, colName, type, nullable, def, column));
         if (fkAdd.fkCheckBox === true) {
           dispatch(fkLColChange(column.column_name));
@@ -115,7 +123,8 @@ class ModifyTable extends React.Component {
               unique,
               def,
               comment,
-              column
+              column,
+              newName
             )
           );
         } else {
@@ -128,7 +137,8 @@ class ModifyTable extends React.Component {
               unique,
               def,
               comment,
-              column
+              column,
+              newName
             )
           );
         }

@@ -35,6 +35,56 @@ const FK_ADD_FORM_ERROR = 'ModifyTable/FK_ADD_FORM_ERROR';
 const FK_RESET = 'ModifyTable/FK_RESET';
 const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 
+const changeTableName = (oldName, newName, callback) => {
+  return (dispatch, getState) => {
+    dispatch({ type: SAVE_NEW_TABLE_NAME });
+    const currentSchema = getState().tables.currentSchema;
+    const migrateUp = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${oldName}" rename to "${newName}";`,
+        },
+      },
+    ];
+    const migrateDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${newName}" rename to "${oldName}";`,
+        },
+      },
+    ];
+    // apply migrations
+    const migrationName = 'rename_table_' + currentSchema + '_' + oldName;
+
+    const requestMsg = 'Renaming table...';
+    const successMsg = 'Table renamed';
+    const errorMsg = 'Renaming table failed';
+
+    const customOnSuccess = () => {
+      callback();
+    };
+    const customOnError = err => {
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrateUp,
+      migrateDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg,
+      true
+    );
+  };
+};
+
 // TABLE MODIFY
 const deleteTableSql = tableName => {
   return (dispatch, getState) => {
@@ -729,7 +779,8 @@ const saveColumnChangesSql = (
   unique,
   def,
   comment,
-  column
+  column,
+  newName
 ) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
@@ -1224,6 +1275,22 @@ const saveColumnChangesSql = (
       });
     }
 
+    /* rename column */
+    if (newName && colName !== newName) {
+      schemaChangesUp.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" rename column "${colName}" to "${newName}";`,
+        },
+      });
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`,
+        },
+      });
+    }
+
     // Apply migrations
     const migrationName =
       'alter_table_' +
@@ -1271,7 +1338,8 @@ const saveColChangesWithFkSql = (
   unique,
   def,
   comment,
-  column
+  column,
+  newName
 ) => {
   // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
   const colType = type;
@@ -1774,6 +1842,22 @@ const saveColChangesWithFkSql = (
       }
     }
 
+    /* rename column */
+    if (newName && newName !== colName) {
+      schemaChangesUp.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" rename column "${colName}" to "${newName}";`,
+        },
+      });
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`,
+        },
+      });
+    }
+
     // Apply migrations
     const migrationName =
       'alter_table_' +
@@ -1828,6 +1912,7 @@ export {
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
   SAVE_NEW_TABLE_NAME,
+  changeTableName,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,

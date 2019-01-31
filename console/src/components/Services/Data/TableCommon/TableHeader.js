@@ -2,8 +2,8 @@ import React from 'react';
 import globals from '../../../../Globals';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { SAVE_NEW_TABLE_NAME } from '../TableModify/ModifyActions';
-import EditableHeading from '../TableModify/EditableHeading';
+import { changeTableName } from '../TableModify/ModifyActions';
+import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 
 const tabNameMap = {
   view: 'Browse Rows',
@@ -45,6 +45,12 @@ const TableHeader = ({
     );
   };
 
+  const saveTableNameChange = newName => {
+    dispatch(
+      changeTableName(tableName, newName, () => tableRenameCallback(newName))
+    );
+  };
+
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
@@ -71,11 +77,10 @@ const TableHeader = ({
         </div>
         <EditableHeading
           currentValue={tableName}
-          saveAction={SAVE_NEW_TABLE_NAME}
+          save={saveTableNameChange}
           loading={false}
           editable={tabName === 'modify' && allowRename}
           dispatch={dispatch}
-          callback={tableRenameCallback}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">

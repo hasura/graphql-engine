@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/Common.scss';
+import styles from '../Common.scss';
 
 class Heading extends React.Component {
   state = {
@@ -16,14 +16,14 @@ class Heading extends React.Component {
   };
 
   save = () => {
-    const { callback } = this.props;
-    callback(this.state.text);
-    return;
-    // dispatch({ type: saveAction, data: this.state.text }).then(() => {});
+    if (this.props.loading) {
+      return;
+    }
+    this.props.save(this.state.text);
   };
 
   render = () => {
-    const { editable, currentValue, saveAction } = this.props;
+    const { editable, currentValue, save, loading } = this.props;
 
     const { text, isEditting } = this.state;
 
@@ -31,8 +31,8 @@ class Heading extends React.Component {
       return <h2 className={styles.heading_text}>{currentValue}</h2>;
     }
 
-    if (!saveAction) {
-      console.warn('In EditableHeading, please provide a prop saveAction');
+    if (!save) {
+      console.warn('In EditableHeading, please provide a prop save');
     }
 
     if (!isEditting) {
@@ -50,7 +50,7 @@ class Heading extends React.Component {
     }
 
     return (
-      <div className={styles.editable_heading_text}>
+      <div className={styles.editable_heading_textbox}>
         <input
           onChange={this.handleTextChange}
           className={`${styles.add_pad_left} form-control`}
@@ -62,14 +62,18 @@ class Heading extends React.Component {
             className={styles.editable_heading_action_item}
             onClick={this.save}
           >
-            Save
+            {loading ? 'Saving...' : 'Save'}
           </div>
-          <div
-            className={styles.editable_heading_action_item}
-            onClick={this.toggleEditting}
-          >
-            Cancel
-          </div>
+          {
+            !loading && (
+              <div
+                className={styles.editable_heading_action_item}
+                onClick={this.toggleEditting}
+              >
+                Cancel
+              </div>
+            )
+          }
         </div>
       </div>
     );

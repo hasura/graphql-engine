@@ -482,7 +482,8 @@ const makeMigrationCall = (
   customOnError,
   requestMsg,
   successMsg,
-  errorMsg
+  errorMsg,
+  shouldSkipSchemaReload
 ) => {
   const upQuery = {
     type: 'bulk',
@@ -519,14 +520,16 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for server mode
+    if (!shouldSkipSchemaReload) {
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus()); // don't call for server mode
+      }
+      dispatch(loadSchema());
     }
-    dispatch(loadSchema());
-    customOnSuccess();
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
     }
+    customOnSuccess();
   };
 
   const onError = err => {

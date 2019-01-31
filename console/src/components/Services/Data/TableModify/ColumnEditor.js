@@ -268,8 +268,6 @@ const ColumnEditor = ({
     }
   };
 
-  console.log(iname);
-
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form
@@ -282,7 +280,8 @@ const ColumnEditor = ({
             iunique.value,
             idefault.value,
             icomment.value,
-            column
+            column,
+            allowRename ? iname.value : null
           );
         }}
       >

@@ -877,6 +877,12 @@ code
   i {
     cursor: pointer;
   }
+}
+.editable_heading_textbox
+{
+  display: flex;
+  align-items: center;
+  padding-bottom: 12px;
   input {
     width: 30%;
     font-weight: normal;
@@ -887,6 +893,9 @@ code
   margin-left: 10px;
   display: flex;
   align-items: center;
+  i {
+    margin-top: 2px;
+  }
 }
 .editable_heading_action_item
 {
