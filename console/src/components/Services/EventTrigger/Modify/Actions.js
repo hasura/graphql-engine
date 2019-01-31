@@ -6,6 +6,7 @@ import {
   loadProcessedEvents,
 } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+import { showErrorNotification } from '../Notification';
 
 const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
@@ -61,6 +62,16 @@ export const setHeaderValue = (data, index) => ({
 
 export const REQUEST_ONGOING = 'ModifyTrigger/REQUEST_ONGOING';
 export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
+
+export const showValidationError = message => {
+  return dispatch => {
+    dispatch(
+      showErrorNotification('Error modifying trigger!', 'Invalid input', '', {
+        custom: message,
+      })
+    );
+  };
+};
 
 export const save = (property, triggerName) => {
   return (dispatch, getState) => {

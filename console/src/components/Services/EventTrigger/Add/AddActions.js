@@ -115,6 +115,21 @@ const createTrigger = () => {
       payload.args.retry_conf = currentState.retryConf;
     }
 
+    payload.args.retry_conf = {
+      num_retries:
+        currentState.retryConf.num_retries === ''
+          ? 0
+          : parseInt(currentState.retryConf.num_retries, 10),
+      interval_sec:
+        currentState.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(currentState.retryConf.interval_sec, 10),
+      timeout_sec:
+        currentState.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(currentState.retryConf.timeout_sec, 10),
+    };
+
     // create header payload
     const headers = [];
     currentState.headers.map(header => {
@@ -333,7 +348,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          num_retries: parseInt(action.value, 10),
+          num_retries: action.value,
         },
       };
     case SET_RETRY_INTERVAL:
@@ -341,7 +356,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          interval_sec: parseInt(action.value, 10),
+          interval_sec: action.value,
         },
       };
     case SET_RETRY_TIMEOUT:
@@ -349,7 +364,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          timeout_sec: parseInt(action.value, 10),
+          timeout_sec: action.value,
         },
       };
     case SET_TABLENAME:

@@ -1,7 +1,12 @@
 import React from 'react';
 import Editor from './Editor';
 
-import { setRetryNum, setRetryInterval, setRetryTimeout } from './Actions';
+import {
+  setRetryNum,
+  setRetryInterval,
+  setRetryTimeout,
+  showValidationError,
+} from './Actions';
 import Tooltip from './Tooltip';
 
 import semverCheck from '../../../../helpers/semver';
@@ -45,26 +50,33 @@ class RetryConfEditor extends React.Component {
         retryConf: { numRetrys, retryInterval, timeout },
       },
     } = this.props;
-    if (isNaN(numRetrys)) {
-      alert('Number of retries should be an integer!');
-      return;
-    }
-    dispatch(setRetryNum(parseInt(numRetrys, 10)));
 
-    if (isNaN(retryInterval)) {
-      alert('Retry interval should be an integer!');
+    const iNumRetries = numRetrys === '' ? 0 : parseInt(numRetrys, 10);
+    const iRetryInterval =
+      retryInterval === '' ? 10 : parseInt(retryInterval, 10);
+    const iTimeout = timeout === '' ? 60 : parseInt(timeout, 10);
+
+    if (iNumRetries < 0 || isNaN(iNumRetries)) {
+      dispatch(
+        showValidationError('Number of retries must be a non negative number!')
+      );
       return;
     }
-    dispatch(setRetryInterval(parseInt(retryInterval, 10)));
+    dispatch(setRetryNum(iNumRetries));
+
+    if (iRetryInterval <= 0 || isNaN(iRetryInterval)) {
+      dispatch(showValidationError('Retry interval must be a postive number!'));
+      return;
+    }
+    dispatch(setRetryInterval(iRetryInterval));
 
     if (this.state.supportRetryTimeout) {
-      if (isNaN(retryInterval)) {
-        alert('Retry interval should be an integer!');
+      if (isNaN(iTimeout) || iTimeout <= 0) {
+        dispatch(showValidationError('Timeout must be a positive number!'));
         return;
       }
-      dispatch(setRetryTimeout(parseInt(timeout, 10)));
+      dispatch(setRetryTimeout(iTimeout));
     }
-
     this.props.save();
   };
 
