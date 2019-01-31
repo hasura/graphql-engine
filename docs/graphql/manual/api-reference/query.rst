@@ -391,10 +391,10 @@ Operator
 
 .. note::
 
-   1. All operators take a ``json`` representation of ``geometry/geography`` values.
-   2. Input value for ``_st_d_within`` operator is an object:-
+   - All operators take a JSON representation of ``geometry/geography`` values as input value.
+   - Input value for ``_st_d_within`` operator is an object:
 
-   .. parsed-literal::
+     .. parsed-literal::
 
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
