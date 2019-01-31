@@ -138,7 +138,8 @@ mkJwtCtx jwtConf httpManager loggerCtx = do
         Just t -> do
           jwkRefreshCtrl logger httpManager url ref t
           return ref
-  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
+  let strngfd = fromMaybe False (jcIsStringified conf)
+  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) strngfd
   where
     decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 

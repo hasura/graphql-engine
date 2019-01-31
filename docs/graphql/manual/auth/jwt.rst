@@ -119,10 +119,11 @@ JSON object:
      "type": "<standard-JWT-algorithms>",
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
-     "claims_namespace": "<optional-key-name-in-claims>"
+     "claims_namespace": "<optional-key-name-in-claims>",
+     "is_stringified": <optional-boolean>
    }
 
-``key`` or ``jwk_url``, either of them has to be present.
+``key`` or ``jwk_url``, **one of them has to be present**.
 
 ``type``
 ^^^^^^^^
@@ -173,6 +174,52 @@ This is an optional field. You can specify the key name
 inside which the Hasura specific claims will be present. E.g. - ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
+
+
+``is_stringified``
+^^^^^^^^^^^^^^^^^^
+This is an optional boolean field. Default is ``false``.
+
+This is to indicate that if the hasura specific claims are stringified JSON or
+not. Even in the stringified case, the value of the string should be decodable
+as JSON.
+
+This is required because providers like AWS Cognito only allows strings in the
+JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
+
+Example:-
+
+If ``is_stringified`` is ``false`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["editor","user", "mod"],
+      "x-hasura-default-role": "user",
+      "x-hasura-user-id": "1234567890",
+      "x-hasura-org-id": "123",
+      "x-hasura-custom": "custom-value"
+    }
+  }
+
+
+If ``is_stringified`` is ``true`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
+  }
+
 
 Examples
 ^^^^^^^^

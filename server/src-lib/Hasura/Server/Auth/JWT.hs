@@ -39,6 +39,7 @@ import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.String.Conversions         as CS
 import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
@@ -48,23 +49,25 @@ newtype RawJWT = RawJWT BL.ByteString
 
 data JWTConfig
   = JWTConfig
-  { jcType     :: !T.Text
-  , jcKeyOrUrl :: !(Either JWK URI)
-  , jcClaimNs  :: !(Maybe T.Text)
-  , jcAudience :: !(Maybe T.Text)
+  { jcType          :: !T.Text
+  , jcKeyOrUrl      :: !(Either JWK URI)
+  , jcClaimNs       :: !(Maybe T.Text)
+  , jcAudience      :: !(Maybe T.Text)
+  , jcIsStringified :: !(Maybe Bool)
   -- , jcIssuer   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 data JWTCtx
   = JWTCtx
-  { jcxKey      :: !(IORef JWKSet)
-  , jcxClaimNs  :: !(Maybe T.Text)
-  , jcxAudience :: !(Maybe T.Text)
+  { jcxKey           :: !(IORef JWKSet)
+  , jcxClaimNs       :: !(Maybe T.Text)
+  , jcxAudience      :: !(Maybe T.Text)
+  , jcxIsStringified :: !Bool
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM) =
-    show ["<IORef JWKSet>", show nsM, show audM]
+  show (JWTCtx _ nsM audM strfd) =
+    show ["<IORef JWKSet>", show nsM, show audM, show strfd]
 
 data HasuraClaims
   = HasuraClaims
@@ -189,12 +192,14 @@ processAuthZHeader jwtCtx headers authzHeader = do
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
   let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
+      isStrngfd = jcxIsStringified jwtCtx
 
   -- see if the hasura claims key exist in the claims map
   let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
-  -- the value of hasura claims key has to be an object
-  hasuraClaims <- validateIsObject hasuraClaimsV
+
+  -- get hasura claims value as an object. parse from string possibly
+  hasuraClaims <- parseObjectFromString isStrngfd hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
@@ -220,10 +225,19 @@ processAuthZHeader jwtCtx headers authzHeader = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
-    validateIsObject jVal =
+    parseObjectFromString isStrngfd jVal =
       case jVal of
         A.Object x -> return x
+        A.String x
+          | isStrngfd -> either (const $ throw400 JWTInvalidClaims $ strngfdErr <> x) return
+                         $ A.eitherDecodeStrict $ T.encodeUtf8 x
+          | otherwise -> throw400 JWTInvalidClaims "hasura claims should be an object"
+
         _          -> throw400 JWTInvalidClaims "hasura claims should be an object"
+
+    strngfdErr = "Could not parse JSON string under: '"
+                 <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
+                 <> "'. When stringified, the claims inside should be a JSON object, but found: "
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
@@ -314,15 +328,16 @@ instance A.FromJSON JWTConfig where
     claimNs <- o A..:? "claims_namespace"
     aud     <- o A..:? "audience"
     jwkUrl  <- o A..:? "jwk_url"
+    isStrngfd <- o A..:? "is_stringified"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
         key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud
+        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud
+        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd
 
     where
       parseKey keyType rawKey =

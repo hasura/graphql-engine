@@ -1,16 +1,36 @@
-
 from datetime import datetime, timedelta
 import math
+import json
+
 import yaml
 import pytest
 import jwt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+
 from validate import check_query
+
 
 if not pytest.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT basic tests', allow_module_level=True)
 
+if not pytest.config.getoption('--hge-jwt-conf'):
+    pytest.skip('--hge-jwt-key-conf is missing, skipping JWT basic tests', allow_module_level=True)
+
 
 class TestJWTBasic:
+
+    def test_jwt_valid_claims_success(self, hge_ctx):
+        self.claims['https://hasura.io/jwt/claims'] = {
+            'x-hasura-user-id': '1',
+            'x-hasura-allowed-roles': ['user', 'editor'],
+            'x-hasura-default-role': 'user'
+        }
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['status'] = 200
+        check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_invalid_role_in_request_header(self, hge_ctx):
         self.claims['https://hasura.io/jwt/claims'] = {
@@ -92,6 +112,7 @@ class TestJWTBasic:
 
     def test_jwt_expired(self, hge_ctx):
         self.claims['https://hasura.io/jwt/claims'] = {
+            'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         }
@@ -114,6 +135,7 @@ class TestJWTBasic:
 
     def test_jwt_invalid_signature(self, hge_ctx):
         self.claims['https://hasura.io/jwt/claims'] = {
+            'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         }
@@ -131,6 +153,25 @@ class TestJWTBasic:
             }]
         }
         self.conf['status'] = 400
+        check_query(hge_ctx, self.conf, add_auth=False)
+
+    def test_jwt_stringified_claims(self, hge_ctx):
+        print(hge_ctx.hge_jwt_conf)
+        conf = json.loads(hge_ctx.hge_jwt_conf)
+        if 'is_stringified' not in conf:
+            pytest.skip('is_stringified is false, skipping testing stringified claims.')
+        if 'is_stringified' in conf and not conf['is_stringified']:
+            pytest.skip('is_stringified is false, skipping testing stringified claims.')
+
+        self.claims['https://hasura.io/jwt/claims'] = json.dumps({
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['status'] = 200
         check_query(hge_ctx, self.conf, add_auth=False)
 
     @pytest.fixture(autouse=True)
@@ -154,9 +195,6 @@ class TestJWTBasic:
 
 
 def gen_rsa_key():
-    from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import serialization
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
