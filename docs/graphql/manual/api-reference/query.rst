@@ -330,6 +330,19 @@ Operator
 - ``_gte``
 - ``_lte``
 
+**Text related operators :**
+
+- ``_like``
+- ``_nlike``
+- ``_ilike``
+- ``_nilike``
+- ``_similar``
+- ``_nsimilar``
+
+**Checking for NULL values:**
+
+- ``_is_null`` (takes true/false as values)
+
 **JSONB operators:**
 
 .. list-table::
@@ -349,19 +362,6 @@ Operator
      - ``?&``
 
 (For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
-
-**Text related operators :**
-
-- ``_like``
-- ``_nlike``
-- ``_ilike``
-- ``_nilike``
-- ``_similar``
-- ``_nsimilar``
-
-**Checking for NULL values:**
-
-- ``_is_null`` (takes true/false as values)
 
 **PostGIS related operators on GEOMETRY columns:**
 

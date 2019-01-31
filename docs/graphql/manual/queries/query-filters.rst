@@ -6,7 +6,7 @@ Filter query results / search queries
   :depth: 1
   :local:
 
-You can use the :ref:`where <WhereExp>` argument in your queries to filter results based on some field’s values (even
+You can use the ``where`` argument in your queries to filter results based on some field’s values (even
 nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
 ``_or`` operators.
 
@@ -43,13 +43,16 @@ For example, to fetch a list of authors who have articles with a rating greater 
       }
     }
 
-Here ``_eq`` and ``_gt`` are examples of :ref:`comparison operators <Operator>` that can be used in the ``where``
+Here ``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where``
 argument to filter on equality.
 
-Let’s take a look at different operators that can be used to filter results and other advanced use cases:
+You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Equality operators (_eq and _neq)
----------------------------------
+Let’s take a look at different comparision operators that can be used to filter results and other advanced use cases:
+
+Equality operators (_eq, _neq)
+------------------------------
+
 The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
@@ -186,6 +189,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
 
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ----------------------------------------------------------
+
 The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal to),
 ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
@@ -310,6 +314,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 
 List based search operators (_in, _nin)
 ---------------------------------------
+
 The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to comparing field values to a list of values.
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
@@ -399,8 +404,9 @@ Fetch a list of those authors whose names are NOT part of a list:
       }
     }
 
-Text search / filter or pattern matching operators
---------------------------------------------------
+Text search or pattern matching operators (_like, _ilike, _similar, etc.)
+-------------------------------------------------------------------------
+
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators behave exactly like
 their `SQL counterparts <https://www.postgresql.org/docs/10/static/functions-matching.html>`__  and are used for
 pattern matching on string/Text fields.
@@ -478,8 +484,8 @@ Fetch a list of authors whose names begin with A or C (``similar`` is case-sensi
       }
     }
 
-PostGIS topology operators
---------------------------
+PostGIS topology operators (_st_contains, _st_crosses, etc.)
+------------------------------------------------------------
 
 The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``,
 ``_st_touches``, ``_st_within`` and ``_st_d_within`` operators are used to filter ``geometry`` like columns.
@@ -587,8 +593,9 @@ Fetch a list of geometry values which are 3 units from given ``point`` value:
       }
     }
 
-Filter or check for null values
--------------------------------
+Filter or check for null values (_is_null)
+------------------------------------------
+
 Checking for null values can be achieved using the ``_is_null`` operator.
 
 Example: Filter null values in a field
@@ -635,8 +642,8 @@ Fetch a list of articles that have a value in the ``published_on`` field:
       }
     }
 
-Filter based on failure of some criteria
-----------------------------------------
+Filter based on failure of some criteria (_not)
+-----------------------------------------------
 
 The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
 filter set for a condition
@@ -696,8 +703,9 @@ Fetch all authors who don't have any published articles:
       }
     }
 
-Using multiple filters in the same query
-----------------------------------------
+Using multiple filters in the same query (_and, _or)
+----------------------------------------------------
+
 You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
 results based on more than one criteria.
 
@@ -814,6 +822,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 Filter nested objects
 ---------------------
+
 The ``where`` argument can be used in nested objects as well to filter the nested objects
 
 Example:

@@ -26,6 +26,8 @@ This requires the data to be first sorted by the column i.e. the ``distinct_on``
      salary
    }
 
+You can see the complete specification of the ``distinct_on`` argument in the :ref:`API reference <DistinctOnExp>`.
+
 Fetch results with distinct values of a particular field
 --------------------------------------------------------
 
@@ -35,7 +37,7 @@ Fetch results with distinct values of a particular field
    :view_only:
    :query:
       query {
-        employee(
+        employee (
           distinct_on: [department]
           order_by: [
             {department: asc},
