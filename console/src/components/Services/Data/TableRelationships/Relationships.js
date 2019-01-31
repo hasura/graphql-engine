@@ -571,6 +571,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,

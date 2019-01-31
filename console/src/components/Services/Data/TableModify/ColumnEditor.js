@@ -34,11 +34,13 @@ const ColumnEditor = ({
   dispatch,
   currentSchema,
   columnComment,
+  allowRename,
 }) => {
   //  eslint-disable-line no-unused-vars
   const c = column;
   const styles = require('./Modify.scss');
-  let [inullable, iunique, idefault, icomment, itype] = [
+  let [iname, inullable, iunique, idefault, icomment, itype] = [
+    null,
     null,
     null,
     null,
@@ -266,6 +268,8 @@ const ColumnEditor = ({
     }
   };
 
+  console.log(iname);
+
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form
@@ -282,6 +286,20 @@ const ColumnEditor = ({
           );
         }}
       >
+        {allowRename && (
+          <div className={`${styles.display_flex} form-group`}>
+            <label className="col-xs-3 text-right">Name</label>
+            <div className="col-xs-6">
+              <input
+                ref={n => (iname = n)}
+                className="input-sm form-control"
+                defaultValue={column.column_name}
+                type="text"
+                data-test="edit-col-name"
+              />
+            </div>
+          </div>
+        )}
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-3 text-right">Type</label>
           <div className="col-xs-6">

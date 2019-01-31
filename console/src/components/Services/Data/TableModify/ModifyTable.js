@@ -29,6 +29,7 @@ import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import Button from '../../Layout/Button/Button';
 import ColumnEditor from './ColumnEditor';
+import semverCheck from '../../../../helpers/semver';
 
 const alterTypeOptions = dataTypes.map((datatype, index) => (
   <option value={datatype.value} key={index} title={datatype.description}>
@@ -37,12 +38,40 @@ const alterTypeOptions = dataTypes.map((datatype, index) => (
 ));
 
 class ModifyTable extends React.Component {
+  state = {
+    supportTableColumnRename: false,
+  };
+
   componentDidMount() {
-    const { dispatch } = this.props;
+    const { dispatch, serverVersion } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));
+    if (serverVersion) {
+      this.checkTableColumnRenameSupport(serverVersion);
+    }
   }
+
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.serverVersion &&
+      nextProps.serverVersion !== this.props.serverVersion
+    ) {
+      this.checkTableColumnRenameSupport(nextProps.serverVersion);
+    }
+  }
+
+  checkTableColumnRenameSupport = serverVersion => {
+    try {
+      if (semverCheck('tableColumnRename', serverVersion)) {
+        this.setState({
+          supportTableColumnRename: true,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   render() {
     const {
@@ -130,6 +159,7 @@ class ModifyTable extends React.Component {
               allSchemas={allSchemas}
               currentSchema={currentSchema}
               columnComment={columnComment}
+              allowRename={this.state.supportTableColumnRename}
             />
           );
         } else {
@@ -144,6 +174,7 @@ class ModifyTable extends React.Component {
               allSchemas={allSchemas}
               currentSchema={currentSchema}
               columnComment={columnComment}
+              allowRename={this.state.supportTableColumnRename}
             />
           );
         }
@@ -335,6 +366,7 @@ class ModifyTable extends React.Component {
           tabName="modify"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
+          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -490,12 +522,14 @@ ModifyTable.propTypes = {
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   tableComment: state.tables.tableComment,
   columnComment: state.tables.columnComment,

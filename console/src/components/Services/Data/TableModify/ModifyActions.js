@@ -23,6 +23,8 @@ const RESET = 'ModifyTable/RESET';
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
 
+const SAVE_NEW_TABLE_NAME = 'ModifyTable/SAVE_NEW_TABLE_NAME';
+
 const TABLE_COMMENT_EDIT = 'ModifyTable/TABLE_COMMENT_EDIT';
 const TABLE_COMMENT_INPUT_EDIT = 'ModifyTable/TABLE_COMMENT_INPUT_EDIT';
 const FK_SET_REF_TABLE = 'ModifyTable/FK_SET_REF_TABLE';
@@ -1825,6 +1827,7 @@ export {
   TOGGLE_FK_CHECKBOX,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
+  SAVE_NEW_TABLE_NAME,
   fetchViewDefinition,
   handleMigrationErrors,
   saveColumnChangesSql,

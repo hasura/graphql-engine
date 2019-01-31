@@ -859,7 +859,42 @@ code
 {
   font-size: 18px;
   font-weight: bold;
+  padding-bottom: 20px
+}
+
+.editable_heading_text
+{
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
   padding-bottom: 20px;
+  h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  i {
+    cursor: pointer;
+  }
+  input {
+    width: 30%;
+    font-weight: normal;
+  }
+}
+.editable_heading_action
+{
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+.editable_heading_action_item
+{
+  margin-right: 10px;
+  font-size: 14px;
+  text-decoration: underline;
+  font-weight: normal;
+  cursor: pointer;
 }
 .header_project_name
 {
