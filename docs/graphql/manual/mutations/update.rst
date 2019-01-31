@@ -85,6 +85,100 @@ Update based on an object's fields
       }
     }
 
+Update based on an object's fields (using variables)
+----------------------------------------------------
+**Example:** Update the ``title``, ``content`` and ``rating`` of the article with a given ``id``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_article($id: Int, $changes: article_set_input) {
+      update_article(
+        where: {id: {_eq: $id}},
+        _set: $changes
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 3,
+              "title": "lorem ipsum",
+              "content": "dolor sit amet",
+              "rating": 2
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "id": 3,
+      "changes": {
+        "title": "lorem ipsum",
+        "content": "dolor sit amet",
+        "rating": 2
+      }
+    }
+
+OR
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_article($id: Int, $title: String, $content: String, $rating: Int) {
+      update_article(
+        where: {id: {_eq: $id}},
+        _set: {
+          title: $title,
+          content: $content,
+          rating: $rating
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 3,
+              "title": "lorem ipsum",
+              "content": "dolor sit amet",
+              "rating": 2
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "id": 3,
+      "title": "lorem ipsum",
+      "content": "dolor sit amet",
+      "rating": 2
+    }
+
 Update based on a nested object's fields
 ----------------------------------------
 **Example:** Update the ``rating`` of all articles authored by "Sidney":

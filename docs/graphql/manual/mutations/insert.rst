@@ -78,7 +78,9 @@ Insert a single object
       }
     }
 
-OR
+Insert a single object (using variables)
+----------------------------------------
+**Example:** Insert a new ``article`` object and return the inserted article object in the response
 
 .. graphiql::
   :view_only:
