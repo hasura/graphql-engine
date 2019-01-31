@@ -21,7 +21,7 @@ Head to your console and :ref:`create a table <create-tables>` called ``author``
     name TEXT
   )
 
-Now, insert some sample data into the table using the ``Insert Row` tab of the ``author`` table.
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``author`` table.
 
 Try out a query
 ---------------
@@ -46,28 +46,26 @@ accepted with **admin** permissions.
 Add a simple access control rule for a logged in user
 -----------------------------------------------------
 
-Let's say that for our app, logged in users are only allowed to fetch their own data.
+Let's say that we want to restrict users to fetch only their own data.
 
 Head to the ``Permissions`` tab of the ``author`` table.
 
-Let's add a **select** permission for the **user** role on the ``author`` table:
+Now add a ``select`` access control rule for the ``user`` role on the ``author`` table:
 
 .. image:: ../../../img/graphql/manual/auth/author-select-perms.png
 
-This reads as:
+This rule reads as:
 
 .. list-table::
    :header-rows: 1
-   :widths: 15 20 25 40
+   :widths: 25 20 45
 
-   * - Table
-     - Definition
+   * - Definition
      - Condition
      - Representation
 
-   * - author
-     - user's own row
-     - ``id`` in the row is equal to ``user-id`` from the request session
+   * - allow user to access only their own row
+     - ``id`` in the row is equal to ``user-id`` from the request session variable
      -
        .. code-block:: json
 
@@ -90,7 +88,7 @@ You can notice above how the same query now only includes the right slice of dat
   fields if required. You can use the same operators that you use to filter query results to define
   permission rules. See :doc:`filtering query results <../queries/query-filters>` for more details.
 
-  For example, for an ``article`` table with nested ``author`` table, we can define the select permission as:
+  For example, for an ``article`` table with a nested ``author`` table, we can define the select permission as:
 
   .. code-block:: json
 
@@ -107,6 +105,8 @@ You can notice above how the same query now only includes the right slice of dat
           }
         ]
       }
+
+  This rule reads as: allow selecting an article if it was published after "31-12-2018" and its author is the current user.
 
 .. _restrict_columns:
 
