@@ -2,7 +2,7 @@
 
 const fetch = require('node-fetch');
 
-const accessKey = process.env.ACCESS_KEY;
+const adminSecret = process.env.ADMIN_SECRET;
 const hgeEndpoint = process.env.HGE_ENDPOINT;
 
 const query = `
@@ -34,7 +34,7 @@ exports.handler = (event, context, callback) => {
     fetch(hgeEndpoint + '/v1alpha1/graphql', {
         method: 'POST',
         body: JSON.stringify({query: query, variables: qv}),
-        headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': accessKey},
+        headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': adminSecret},
     })
         .then(res => res.json())
         .then(json => {

@@ -20,7 +20,7 @@ class ApiRequest extends Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.state.accessKeyVisible = false;
+    this.state.adminSecretVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
   }
@@ -195,7 +195,7 @@ class ApiRequest extends Component {
               data-test={`header-value-${i}`}
               type={
                 header.key === 'X-Hasura-Admin-Secret' &&
-                !this.state.accessKeyVisible
+                !this.state.adminSecretVisible
                   ? 'password'
                   : 'text'
               }
@@ -205,10 +205,10 @@ class ApiRequest extends Component {
             <td>
               {header.key === 'X-Hasura-Admin-Secret' ? (
                 <i
-                  className={styles.showAccessKey + ' fa fa-eye'}
+                  className={styles.showAdminSecret + ' fa fa-eye'}
                   data-header-id={i}
                   aria-hidden="true"
-                  onClick={this.onShowAccessKeyClicked.bind(this)}
+                  onClick={this.onShowAdminSecretClicked.bind(this)}
                 />
               ) : null}
               <i

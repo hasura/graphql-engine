@@ -26,7 +26,7 @@ const verifyDataImport = () => {
   query({
     query: complexQuery,
     endpoint: `${process.env.TEST_HGE_URL}/v1alpha1/graphql`,
-    headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ACCESS_KEY},
+    headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
   }).then(response => {
     if (
       response.data.f2g_test_Album[0].f2g_test_Album_artist.ArtistId === 1 &&
@@ -40,7 +40,7 @@ const verifyDataImport = () => {
         `${process.env.TEST_HGE_URL}/v1/query`,
         {
           method: 'POST',
-          headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ACCESS_KEY},
+          headers: {'x-hasura-admin-secret': process.env.TEST_X_HASURA_ADMIN_SECRET},
           body: JSON.stringify({
             type: 'run_sql',
             args: {

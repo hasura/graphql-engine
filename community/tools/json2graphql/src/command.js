@@ -14,7 +14,7 @@ class JSON2GraphQL extends Command {
     }
 
     const {db, overwrite} = flags;
-    const key = flags['access-key'];
+    const key = flags['admin-secret'];
 
     if (!url) {
       throw new CLIError('endpoint is required: \'json2graphql <url> -d ./db.js\'');
@@ -53,7 +53,7 @@ class JSON2GraphQL extends Command {
           headers,
         }
       );
-      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
+      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid admin secret'};
     } catch (e) {
       return  {error: true, message: 'invalid URL'};
     }
@@ -63,11 +63,11 @@ class JSON2GraphQL extends Command {
 JSON2GraphQL.description = `JSON Data Import: Import JSON data to Hasura GraphQL Engine
 # Examples:
 
-# Import data from a JSON file to Hasura GraphQL Engine without access key
+# Import data from a JSON file to Hasura GraphQL Engine without admin secret
 json2graphql https://hge.herokuapp.com --db=./path/to/db.js
 
-# Import data from a JSON file to Hasura GraphQL Engine with access key
-json2graphql https://hge.herokuapp.com --access-key='<access-key>' --db=./path/to/db.js
+# Import data from a JSON file to Hasura GraphQL Engine with admin secret
+json2graphql https://hge.herokuapp.com --admin-secret='<admin-secret>' --db=./path/to/db.js
 
 `;
 
@@ -80,10 +80,10 @@ JSON2GraphQL.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
 
-  // Access key to Hasura GraphQL Engine
-  'access-key': flags.string({
+  // Admin secret to Hasura GraphQL Engine
+  'admin-secret': flags.string({
     char: 'k',
-    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Admin-Secret)',
+    description: 'Admin secret to Hasura GraphQL Engine (X-Hasura-Admin-Secret)',
   }),
 
   db: flags.string({

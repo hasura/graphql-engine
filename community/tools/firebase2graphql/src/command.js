@@ -14,7 +14,7 @@ class Firebase2GraphQL extends Command {
       throw new CLIError('endpoint is required: \'firebase2graphql <url>\'');
     }
     const {db, overwrite, normalize} = flags;
-    const key = flags['access-key'];
+    const key = flags['admin-secret'];
 
     if (!url) {
       throw new CLIError('endpoint is required: \'firebase2graphql <url> -d ./db.js\'');
@@ -59,7 +59,7 @@ class Firebase2GraphQL extends Command {
           }),
         }
       );
-      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid access key'};
+      return resp.status === 200 ? {error: false} : {error: true, message: 'invalid admin secret'};
     } catch (e) {
       return  {error: true, message: 'invalid URL'};
     }
@@ -69,11 +69,11 @@ class Firebase2GraphQL extends Command {
 Firebase2GraphQL.description = `firebase2graphql: Import JSON data to Hasura GraphQL Engine
 # Examples:
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine without access key
+# Import data from a Firebase JSON database to Hasura GraphQL Engine without admin secret
 json2graphql https://hge.herokuapp.com --db=./path/to/db.json
 
-# Import data from a Firebase JSON database to Hasura GraphQL Engine with access key
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json -k <access-key>
+# Import data from a Firebase JSON database to Hasura GraphQL Engine with admin secret
+json2graphql https://hge.herokuapp.com --db=./path/to/db.json -k <admin-secret>
 
 # Import data from a Firebase JSON database to Hasura GraphQL Engine while normalizing it
 json2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
@@ -88,10 +88,10 @@ Firebase2GraphQL.flags = {
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
 
-  // Access key to Hasura GraphQL Engine
-  'access-key': flags.string({
+  // Admin secret to Hasura GraphQL Engine
+  'admin-secret': flags.string({
     char: 'k',
-    description: 'Access key to Hasura GraphQL Engine (X-Hasura-Admin-Secret)',
+    description: 'Admin secret to Hasura GraphQL Engine (X-Hasura-Admin-Secret)',
   }),
 
   db: flags.string({

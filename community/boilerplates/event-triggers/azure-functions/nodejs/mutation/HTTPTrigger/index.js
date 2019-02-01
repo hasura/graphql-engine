@@ -1,5 +1,5 @@
 const { query } = require('graphqurl');
-const ACCESS_KEY = process.env.ACCESS_KEY;
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const HGE_ENDPOINT = process.env.HGE_ENDPOINT;
 
 const MUTATION_NOTE_REVISION = `
@@ -28,7 +28,7 @@ module.exports = function (context, req) {
               endpoint: HGE_ENDPOINT + '/v1alpha1/graphql',
               variables: qv,
               headers: {
-                'x-hasura-admin-secret': ACCESS_KEY
+                'x-hasura-admin-secret': ADMIN_SECRET
               }
         }).then((response) => {
             context.log(response);
