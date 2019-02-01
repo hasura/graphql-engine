@@ -42,6 +42,7 @@ data RQLQuery
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
+  | RQRenameRelationship !RenameRel
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -142,6 +143,7 @@ queryNeedsReload qi = case qi of
   RQCreateArrayRelationship  _ -> True
   RQDropRelationship  _        -> True
   RQSetRelationshipComment  _  -> False
+  RQRenameRelationship _       -> True
 
   RQCreateInsertPermission _   -> True
   RQCreateSelectPermission _   -> True
@@ -201,6 +203,7 @@ runQueryM rq = withPathK "args" $ case rq of
   RQCreateArrayRelationship  q -> runCreateArrRel q
   RQDropRelationship  q        -> runDropRel q
   RQSetRelationshipComment  q  -> runSetRelComment q
+  RQRenameRelationship q       -> runRenameRel q
 
   RQCreateInsertPermission q -> runCreatePerm q
   RQCreateSelectPermission q -> runCreatePerm q

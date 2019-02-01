@@ -113,6 +113,21 @@ savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment) True
 
+updatePermDefInCatalog
+  :: (ToJSON a)
+  => PermType
+  -> QualifiedTable
+  -> RoleName
+  -> a
+  -> Q.TxE QErr ()
+updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.hdb_permission
+              SET perm_def = $1 :: jsonb
+             WHERE table_schema = $2 AND table_name = $3
+               AND role_name = $4 AND perm_type = $5
+           |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
+
 dropPermFromCatalog
   :: QualifiedTable
   -> RoleName

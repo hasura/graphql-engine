@@ -1,89 +1,33 @@
-module Hasura.RQL.DDL.Relationship where
+module Hasura.RQL.DDL.Relationship
+  ( objRelP2Setup
+  , objRelP2
+  , arrRelP2Setup
+  , arrRelP2
+  , delRelFromCatalog
+  , runCreateObjRel
+  , runCreateArrRel
+  , runDropRel
+  , runSetRelComment
+  , runRenameRel
+  , module Hasura.RQL.DDL.Relationship.Types
+  )
+where
 
-import qualified Database.PG.Query          as Q
+import qualified Database.PG.Query                 as Q
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission  (purgePerm)
+import           Hasura.RQL.DDL.Permission         (purgePerm)
+import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map.Strict            as M
-import qualified Data.Text                  as T
-import           Data.Tuple                 (swap)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-
-data RelDef a
-  = RelDef
-  { rdName    :: !RelName
-  , rdUsing   :: !a
-  , rdComment :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
-
-$(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
-
-instance (ToJSON a) => ToJSON (RelDef a) where
-  toJSON = object . toAesonPairs
-
-instance (ToJSON a) => ToAesonPairs (RelDef a) where
- toAesonPairs (RelDef rn ru rc) =
-  [ "name" .= rn
-  , "using" .= ru
-  , "comment" .= rc
-  ]
-
-data RelManualConfig
-  = RelManualConfig
-  { rmTable   :: !QualifiedTable
-  , rmColumns :: !(M.Map PGCol PGCol)
-  } deriving (Show, Eq, Lift)
-
-instance FromJSON RelManualConfig where
-  parseJSON (Object v) =
-    RelManualConfig
-    <$> v .:  "remote_table"
-    <*> v .:  "column_mapping"
-
-  parseJSON _ =
-    fail "manual_configuration should be an object"
-
-instance ToJSON RelManualConfig where
-  toJSON (RelManualConfig qt cm) =
-    object [ "remote_table" .= qt
-           , "column_mapping" .= cm
-           ]
-
-data RelUsing a b
-  = RUFKeyOn a
-  | RUManual b
-  deriving (Show, Eq, Lift)
-
-instance (ToJSON a, ToJSON b) => ToJSON (RelUsing a b) where
-  toJSON (RUFKeyOn fkey) =
-    object [ "foreign_key_constraint_on" .= fkey ]
-  toJSON (RUManual manual) =
-    object [ "manual_configuration" .= manual ]
-
-instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
-  parseJSON (Object o) = do
-    let fkeyOnM = HM.lookup "foreign_key_constraint_on" o
-        manualM = HM.lookup "manual_configuration" o
-    let msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
-    case (fkeyOnM, manualM) of
-      (Nothing, Nothing) -> fail $ "atleast " <> msgFrag
-      (Just a, Nothing)  -> RUFKeyOn <$> parseJSON a
-      (Nothing, Just b)  -> RUManual <$> parseJSON b
-      _                  -> fail $ "only " <> msgFrag
-  parseJSON _ =
-    fail "using should be an object"
-
-newtype ObjRelManualConfig =
-  ObjRelManualConfig { getObjRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+import qualified Data.HashMap.Strict               as HM
+import qualified Data.Map.Strict                   as M
+import qualified Data.Text                         as T
+import           Data.Tuple                        (swap)
+import           Instances.TH.Lift                 ()
 
 validateManualConfig
   :: (QErrM m, CacheRM m)
@@ -133,11 +77,6 @@ checkForColConfilct tabInfo f =
       , " already exists"
       ]
     Nothing -> return ()
-
-type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
-type ObjRelDef = RelDef ObjRelUsing
-
-type CreateObjRel = WithTable ObjRelDef
 
 objRelP1
   :: (QErrM m, CacheRM m)
@@ -230,22 +169,6 @@ runCreateObjRel defn = do
   createObjRelP1 defn
   createObjRelP2 defn
 
-data ArrRelUsingFKeyOn
-  = ArrRelUsingFKeyOn
-  { arufTable  :: !QualifiedTable
-  , arufColumn :: !PGCol
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
-
-newtype ArrRelManualConfig =
-  ArrRelManualConfig { getArrRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
-
-type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
-type ArrRelDef = RelDef ArrRelUsing
-type CreateArrRel = WithTable ArrRelDef
-
 createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
 createArrRelP1 (WithTable qt rd) = do
   adminOnly
@@ -333,15 +256,6 @@ runCreateArrRel defn = do
   createArrRelP1 defn
   createArrRelP2 defn
 
-data DropRel
-  = DropRel
-  { drTable        :: !QualifiedTable
-  , drRelationship :: !RelName
-  , drCascade      :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
-
 dropRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => DropRel -> m [SchemaObjId]
 dropRelP1 (DropRel qt rn cascade) = do
   adminOnly
@@ -390,20 +304,13 @@ delRelFromCatalog (QualifiedObject sn tn) rn =
              AND rel_name = $3
                 |] (sn, tn, rn) True
 
-data SetRelComment
-  = SetRelComment
-  { arTable        :: !QualifiedTable
-  , arRelationship :: !RelName
-  , arComment      :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
-
-setRelCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetRelComment -> m ()
-setRelCommentP1 (SetRelComment qt rn _) = do
+validateRelP1
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => QualifiedTable -> RelName -> m RelInfo
+validateRelP1 qt rn = do
   adminOnly
   tabInfo <- askTabInfo qt
-  void $ askRelType (tiFieldInfoMap tabInfo) rn ""
+  askRelType (tiFieldInfoMap tabInfo) rn ""
 
 setRelCommentP2
   :: (QErrM m, MonadTx m)
@@ -416,8 +323,10 @@ runSetRelComment
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
   => SetRelComment -> m RespBody
 runSetRelComment defn = do
-  setRelCommentP1 defn
+  void $ validateRelP1 qt rn
   setRelCommentP2 defn
+  where
+    SetRelComment qt rn _ = defn
 
 setRelComment :: SetRelComment
               -> Q.TxE QErr ()
@@ -429,3 +338,33 @@ setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
              AND table_name = $3
              AND rel_name = $4
                 |] (comment, sn, tn, rn) True
+
+renameRelP2
+  :: (QErrM m, MonadTx m, CacheRWM m)
+  => QualifiedTable -> RelName -> RelInfo -> m ()
+renameRelP2 qt newRN relInfo = do
+  tabInfo <- askTabInfo qt
+  -- check for conflicts in fieldInfoMap
+  case HM.lookup (fromRel newRN) $ tiFieldInfoMap tabInfo of
+    Nothing -> return ()
+    Just _  ->
+      throw400 AlreadyExists $ "cannot rename relationship " <> oldRN
+      <<> " to " <> newRN <<> " in table " <> qt <<>
+      " as a column/relationship with the name already exists"
+  -- update catalog
+  renameRelInCatalog qt oldRN newRN
+  -- update schema cache
+  let newRelInfo = relInfo{riName = newRN}
+  renameRelInCache qt oldRN newRelInfo
+  where
+    oldRN = riName relInfo
+
+runRenameRel
+  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
+  => RenameRel -> m RespBody
+runRenameRel defn = do
+  ri <- validateRelP1 qt rn
+  renameRelP2 qt newRN ri
+  return successMsg
+  where
+    RenameRel qt rn newRN = defn

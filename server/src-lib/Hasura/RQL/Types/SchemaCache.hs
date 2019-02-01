@@ -46,6 +46,8 @@ module Hasura.RQL.Types.SchemaCache
        , delColFromCache
        , delRelFromCache
 
+       , renameRelInCache
+
        , RolePermInfo(..)
        , permIns
        , permSel
@@ -84,6 +86,8 @@ module Hasura.RQL.Types.SchemaCache
        , mkColDep
        , getDependentObjs
        , getDependentObjsWith
+
+       , getAllRelations
 
        , FunctionType(..)
        , FunctionArg(..)
@@ -604,6 +608,15 @@ delRelFromCache rn tn = do
   where
     schObjId = SOTableObj tn $ TORel rn
 
+renameRelInCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> RelName -> RelInfo -> m ()
+renameRelInCache tn oldRN newRelInfo = do
+  delFldFromCache (fromRel oldRN) tn
+  addFldToCache (fromRel newRN) (FIRelationship newRelInfo)  tn
+  where
+    newRN = riName newRelInfo
+
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
   PASelect :: PermAccessor SelPermInfo
@@ -771,9 +784,13 @@ getDependentObjsWith f sc objId =
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
-
     -- induces a b : is b dependent on a
     induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+
+getAllRelations :: TableCache -> [(QualifiedTable, [RelInfo])]
+getAllRelations tc = map getRelInfo $ M.toList tc
+  where
+    getRelInfo (qt, ti) = (qt, getRels $ tiFieldInfoMap ti)
