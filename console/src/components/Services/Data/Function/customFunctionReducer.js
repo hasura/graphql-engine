@@ -318,6 +318,7 @@ const customFunctionReducer = (state = functionData, action) => {
         functionSchema: action.data[0][0].function_schema || null,
         functionDefinition: action.data[1][0].function_definition || null,
         setOffTable: action.data[1][0].return_type_name || null,
+        setOffTableSchema: action.data[1][0].return_type_schema || null,
         isFetching: false,
         isFetchError: null,
       };

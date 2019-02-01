@@ -12,6 +12,7 @@ const functionData = {
   functionSchema: '',
   functionDefinition: '',
   setOffTable: '',
+  setOffTableSchema: '',
   ...asyncState,
 };
 
