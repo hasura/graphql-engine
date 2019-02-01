@@ -242,25 +242,18 @@ fetchFunctionMeta :: Q.Tx [FunctionMeta]
 fetchFunctionMeta = do
   map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
     SELECT
-      row_to_json(
-        (
-          SELECT
-            e
-          FROM
-            (
-              SELECT
-                p.oid::integer AS "oid",
-                f.function_schema AS "schema",
-                f.function_name AS "name",
-                f.function_type AS "type"
-            ) AS e
-        )
-      ) AS "function_meta"
-    FROM hdb_catalog.hdb_function_agg f
-         JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+      json_build_object(
+        'oid', p.oid :: integer,
+        'schema', f.function_schema,
+        'name', f.function_name,
+        'type', f.function_type
+      ) AS function_meta
+    FROM
+      hdb_catalog.hdb_function_agg f
+      JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
     WHERE
-        f.function_schema <> 'hdb_catalog'
-                  |] () False
+      f.function_schema <> 'hdb_catalog'
+    |] () False
 
 data FunctionDiff
   = FunctionDiff
