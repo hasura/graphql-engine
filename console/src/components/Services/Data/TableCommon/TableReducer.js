@@ -487,12 +487,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
     /* Set operations */
     case TOGGLE_PERM_SET_OPERATION_CHECK:
       if (
-        Object.keys(
-          modifyState.permissionsState[action.data.queryType].localSet
-        ).length === 0 ||
-        (Object.keys(
-          modifyState.permissionsState[action.data.queryType].localSet
-        ).length === 1 &&
+        modifyState.permissionsState[action.data.queryType].localSet.length ===
+          0 ||
+        (modifyState.permissionsState[action.data.queryType].localSet.length ===
+          1 &&
           modifyState.permissionsState[action.data.queryType].localSet[0]
             .key === '')
       ) {
