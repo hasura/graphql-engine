@@ -170,17 +170,27 @@ const fetchCustomFunction = (functionName, schema) => {
 const deleteFunctionSql = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const functionName = getState().functions.functionName;
-    const functionDefinition = getState().functions.functionDefinition;
-    const sqlDropFunction =
-      'DROP FUNCTION ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      functionName +
-      '"';
+    const {
+      functionName,
+      functionDefinition,
+      inputArgNames,
+      inputArgTypes,
+    } = getState().functions;
+    let functionWSchemaName = currentSchema + '.' + functionName;
+
+    if (inputArgNames.length > 0 && inputArgTypes.length > 0) {
+      let functionString = '(';
+      inputArgNames.forEach((i, index) => {
+        functionString +=
+          i +
+          ' ' +
+          inputArgTypes[index] +
+          (index === inputArgNames.length - 1 ? ')' : ',');
+      });
+      functionWSchemaName += functionString;
+    }
+    const sqlDropFunction = 'DROP FUNCTION ' + functionWSchemaName;
+
     const sqlUpQueries = [
       {
         type: 'run_sql',
@@ -203,9 +213,11 @@ const deleteFunctionSql = () => {
     const errorMsg = 'Deleting function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push('/'));
+      dispatch(_push(`/schema/${currentSchema}`));
     };
-    const customOnError = () => {};
+    const customOnError = () => {
+      dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
+    };
 
     dispatch({ type: DELETING_CUSTOM_FUNCTION });
     return dispatch(
@@ -319,6 +331,8 @@ const customFunctionReducer = (state = functionData, action) => {
         functionDefinition: action.data[1][0].function_definition || null,
         setOffTable: action.data[1][0].return_type_name || null,
         setOffTableSchema: action.data[1][0].return_type_schema || null,
+        inputArgNames: action.data[1][0].input_arg_names || null,
+        inputArgTypes: action.data[1][0].input_arg_types || null,
         isFetching: false,
         isFetchError: null,
       };

@@ -13,6 +13,8 @@ const functionData = {
   functionDefinition: '',
   setOffTable: '',
   setOffTableSchema: '',
+  inputArgNames: [],
+  inputArgTypes: [],
   ...asyncState,
 };
 
