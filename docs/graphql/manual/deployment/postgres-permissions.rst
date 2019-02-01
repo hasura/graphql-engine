@@ -61,6 +61,6 @@ Here's a sample SQL block that you can run on your database to create the right 
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
 
     -- Similarly add this for other schemas, if you have any.
-    -- GRANT ALL PRIVILEGES ON SCHEMA <schema-name> TO hasurauser;
+    -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
