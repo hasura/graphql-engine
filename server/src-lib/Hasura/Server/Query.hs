@@ -3,18 +3,19 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder        as BB
-import qualified Data.ByteString.Lazy           as BL
-import qualified Data.Vector                    as V
-import qualified Network.HTTP.Client            as HTTP
+import qualified Data.ByteString.Builder            as BB
+import qualified Data.ByteString.Lazy               as BL
+import qualified Data.Vector                        as V
+import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
@@ -23,12 +24,12 @@ import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning       (encodeJSONVector)
+import           Hasura.RQL.DML.Returning           (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 
-import qualified Database.PG.Query              as Q
+import qualified Database.PG.Query                  as Q
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable

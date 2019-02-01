@@ -112,8 +112,8 @@ updateRelFlds
 updateRelFlds qt depQT relName = \case
   RFCol (RenameItem oCol nCol) ->
     if qt == depQT
-      then updateRelNativeCols oCol nCol qt depQT relName
-    else updateRelRemoteCols oCol nCol qt depQT relName
+      then updateRelNativeCols oCol nCol qt relName
+    else updateRelRemoteCols oCol nCol depQT relName
   RFTable (RenameItem oldQT newQT) ->
     -- update only if it is remote table
     unless (oldQT == depQT) $ updateRelDefs newQT depQT relName
@@ -339,18 +339,17 @@ updateBoolExp' qt depQT oFld nFld boolExp =
       return (f $ map unBoolExp exps, or bools)
 
 -- update columns in relations
-type RelColsModifier m = PGCol -> PGCol -> QualifiedTable -> QualifiedTable -> RelName -> m ()
-type RelColsUpdateTx m = PGCol -> PGCol -> QualifiedTable -> RelName -> m ()
+type RelColsModifier m = PGCol -> PGCol -> QualifiedTable -> RelName -> m ()
 
 updateRelRemoteCols :: (MonadTx m, CacheRM m) => RelColsModifier m
-updateRelRemoteCols oCol nCol qt qtTx relName = do
-  fim <- askFieldInfoMap qt
+updateRelRemoteCols oCol nCol depQT relName = do
+  fim <- askFieldInfoMap depQT
   ri <- askRelType fim relName ""
   case riType ri of
-    ObjRel -> updateObjRelRemoteCol oCol nCol qtTx relName
-    ArrRel -> updateArrRelRemoteCol oCol nCol qtTx relName
+    ObjRel -> updateObjRelRemoteCol oCol nCol depQT relName
+    ArrRel -> updateArrRelRemoteCol oCol nCol depQT relName
 
-updateObjRelRemoteCol :: (MonadTx m) => RelColsUpdateTx m
+updateObjRelRemoteCol :: (MonadTx m) => RelColsModifier m
 updateObjRelRemoteCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
@@ -363,7 +362,7 @@ updateObjRelRemoteCol oCol nCol qt rn = do
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
 
-updateArrRelRemoteCol :: (MonadTx m) => RelColsUpdateTx m
+updateArrRelRemoteCol :: (MonadTx m) => RelColsModifier m
 updateArrRelRemoteCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef <- decodeValue oldDefV
@@ -381,14 +380,14 @@ updateArrRelRemoteCol oCol nCol qt rn = do
             (RUManual $ ArrRelManualConfig updatedManualConf :: ArrRelUsing)
 
 updateRelNativeCols :: (MonadTx m, CacheRM m) => RelColsModifier m
-updateRelNativeCols oCol nCol qt qtTx relName = do
+updateRelNativeCols oCol nCol qt relName = do
   fim <- askFieldInfoMap qt
   ri <- askRelType fim relName ""
   case riType ri of
-    ObjRel -> updateObjRelNativeCol oCol nCol qtTx relName
-    ArrRel -> updateArrRelNativeCol oCol nCol qtTx relName
+    ObjRel -> updateObjRelNativeCol oCol nCol qt relName
+    ArrRel -> updateArrRelNativeCol oCol nCol qt relName
 
-updateObjRelNativeCol :: (MonadTx m) => RelColsUpdateTx m
+updateObjRelNativeCol :: (MonadTx m) => RelColsModifier m
 updateObjRelNativeCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
@@ -403,7 +402,7 @@ updateObjRelNativeCol oCol nCol qt rn = do
         liftTx $ updateRel qt rn $ toJSON
           (RUManual $ ObjRelManualConfig updatedManualConf :: ObjRelUsing)
 
-updateArrRelNativeCol :: (MonadTx m) => RelColsUpdateTx m
+updateArrRelNativeCol :: (MonadTx m) => RelColsModifier m
 updateArrRelNativeCol oCol nCol qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ArrRelUsing <- decodeValue oldDefV
