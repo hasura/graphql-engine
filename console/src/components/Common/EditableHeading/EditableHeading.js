@@ -31,7 +31,7 @@ class Heading extends React.Component {
   };
 
   render = () => {
-    const { editable, currentValue, save, loading } = this.props;
+    const { editable, currentValue, save, loading, property } = this.props;
 
     const { text, isEditting } = this.state;
 
@@ -50,6 +50,7 @@ class Heading extends React.Component {
           <div
             onClick={this.toggleEditting}
             className={styles.editable_heading_action}
+            data-test={`heading-edit-${property}`}
           >
             <i className="fa fa-edit" />
           </div>
@@ -65,22 +66,23 @@ class Heading extends React.Component {
           type="text"
           onKeyPress={this.handleKeyPress}
           value={text}
+          data-test={`heading-edit-${property}-input`}
         />
         <div className={styles.editable_heading_action}>
           <div
             className={styles.editable_heading_action_item}
             onClick={this.save}
+            data-test={`heading-edit-${property}-save`}
           >
             {loading ? 'Saving...' : 'Save'}
           </div>
-          {!loading && (
-            <div
-              className={styles.editable_heading_action_item}
-              onClick={this.toggleEditting}
-            >
-              Cancel
-            </div>
-          )}
+          <div
+            className={styles.editable_heading_action_item}
+            onClick={this.toggleEditting}
+            data-test={`heading-edit-${property}-cancel`}
+          >
+            Cancel
+          </div>
         </div>
       </div>
     );

@@ -175,7 +175,7 @@ export const passRTAddSuggestedRel = () => {
     .clear()
     .type('author');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
@@ -188,7 +188,34 @@ export const passRTAddSuggestedRel = () => {
     .clear()
     .type('comments');
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments', columns: ['comment'] }],
+    'success'
+  );
+};
+
+export const passRTRenameRelationship = () => {
+  cy.get(getElementFromAlias('relationship-toggle-editor-comments')).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments'))
+    .clear()
+    .type('comments_renamed');
+  cy.get(getElementFromAlias('relationship-save-comments')).click();
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments_renamed', columns: ['comment'] }],
+    'success'
+  );
+  cy.get(
+    getElementFromAlias('relationship-toggle-editor-comments_renamed')
+  ).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments_renamed'))
+    .clear()
+    .type('comments');
+  cy.get(getElementFromAlias('relationship-save-comments_renamed')).click();
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],

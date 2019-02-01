@@ -83,6 +83,7 @@ const TableHeader = ({
           loading={false}
           editable={tabName === 'modify' && allowRename}
           dispatch={dispatch}
+          property="table"
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">

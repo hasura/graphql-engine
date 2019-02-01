@@ -74,6 +74,7 @@ const ViewHeader = ({
           loading={false}
           editable={tabName === 'modify' && allowRename}
           dispatch={dispatch}
+          property="view"
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
