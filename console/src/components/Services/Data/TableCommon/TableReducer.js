@@ -486,18 +486,30 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
 
     /* Set operations */
     case TOGGLE_PERM_SET_OPERATION_CHECK:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          [action.data.queryType]: {
-            ...modifyState.permissionsState[action.data.queryType],
-            isSetConfigChecked: !modifyState.permissionsState[
-              action.data.queryType
-            ].isSetConfigChecked,
+      if (
+        Object.keys(
+          modifyState.permissionsState[action.data.queryType].localSet
+        ).length === 0 ||
+        (Object.keys(
+          modifyState.permissionsState[action.data.queryType].localSet
+        ).length === 1 &&
+          modifyState.permissionsState[action.data.queryType].localSet[0]
+            .key === '')
+      ) {
+        return {
+          ...modifyState,
+          permissionsState: {
+            ...modifyState.permissionsState,
+            [action.data.queryType]: {
+              ...modifyState.permissionsState[action.data.queryType],
+              isSetConfigChecked: !modifyState.permissionsState[
+                action.data.queryType
+              ].isSetConfigChecked,
+            },
           },
-        },
-      };
+        };
+      }
+      return modifyState;
     case CREATE_NEW_SET_VAL:
       return {
         ...modifyState,

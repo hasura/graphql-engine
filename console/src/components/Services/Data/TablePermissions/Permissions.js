@@ -71,10 +71,9 @@ class Permissions extends Component {
   }
   componentDidMount() {
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion).then(() => {
-        this.checkPrefixVer(this.props.serverVersion);
-        this.checkUpdatePresetVer(this.props.serverVersion);
-      });
+      this.checkSemVer(this.props.serverVersion);
+      this.checkPrefixVer(this.props.serverVersion);
+      this.checkUpdatePresetVer(this.props.serverVersion);
     }
     this.props.dispatch({ type: RESET });
     const currentSchema = this.props.allSchemas.find(
@@ -103,10 +102,9 @@ class Permissions extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion).then(() => {
-        this.checkPrefixVer(nextProps.serverVersion);
-        this.checkUpdatePresetVer(nextProps.serverVersion);
-      });
+      this.checkSemVer(nextProps.serverVersion);
+      this.checkPrefixVer(nextProps.serverVersion);
+      this.checkUpdatePresetVer(nextProps.serverVersion);
     }
   }
 
@@ -212,48 +210,20 @@ class Permissions extends Component {
     }
   }
   checkSemVer(version) {
-    let showAggregation = false;
-    let showUpsertSection = false;
-    try {
-      showAggregation = semverCheck('aggregationPerm', version);
-      showUpsertSection = !semverCheck('permHideUpsertSection', version);
-      this.setState({
-        showAggregation,
-        showUpsertSection,
-      });
-    } catch (e) {
-      console.error(e);
-      this.setState({
-        showAggregation: false,
-        showUpsertSection: false,
-      });
-    }
-    return Promise.resolve();
+    this.setState({
+      showAggregation: semverCheck('aggregationPerm', version),
+      showUpsertSection: !semverCheck('permHideUpsertSection', version),
+    });
   }
   checkPrefixVer(version) {
-    let showInsertPrefix = false;
-    try {
-      showInsertPrefix = semverCheck('insertPrefix', version);
-      if (showInsertPrefix) {
-        this.setState({ showInsertPrefix: true });
-      } else {
-        this.setState({ showInsertPrefix: false });
-      }
-    } catch (e) {
-      console.error(e);
-      this.setState({ showInsertPrefix: false });
-    }
-    return Promise.resolve();
+    this.setState({
+      showInsertPrefix: semverCheck('insertPrefix', version),
+    });
   }
   checkUpdatePresetVer(version) {
-    let showUpdatePresets = false;
-    try {
-      showUpdatePresets = semverCheck('permUpdatePresets', version);
-      this.setState({ showUpdatePresets });
-    } catch (e) {
-      console.error(e);
-    }
-    return Promise.resolve();
+    this.setState({
+      showUpdatePresets: semverCheck('permUpdatePresets', version),
+    });
   }
   deleteSetKeyVal(e, queryType) {
     const deleteIndex = parseInt(e.target.getAttribute('data-index-id'), 10);
@@ -779,13 +749,6 @@ class Permissions extends Component {
           </Tooltip>
         );
 
-        const isDbSet =
-          insertState &&
-          'set' in insertState &&
-          Object.keys(insertState.set).length > 0;
-
-        const disableInput = isDbSet && !isSetValues;
-
         const setOptions =
           insertState && insertState.localSet && insertState.localSet.length > 0
             ? insertState.localSet.map((s, i) => {
@@ -806,7 +769,6 @@ class Permissions extends Component {
                       onChange={e => this.onSetKeyChange(e, 'insert')}
                       data-index-id={i}
                       data-test={'column-presets-column-' + i}
-                      disabled={disableInput}
                     >
                       <option value="" disabled>
                           Column Name
@@ -839,7 +801,6 @@ class Permissions extends Component {
                       data-index-id={i}
                       data-test={'column-presets-type-' + i}
                       value={setConfigValueType(s.value) || ''}
-                      disabled={disableInput}
                     >
                       <option value="" disabled>
                           Select Preset Type
@@ -871,7 +832,6 @@ class Permissions extends Component {
                           }
                           data-index-id={i}
                           data-prefix-val={X_HASURA_CONST}
-                          disabled={disableInput}
                         />
                       </InputGroup>
                     ) : (
@@ -890,7 +850,6 @@ class Permissions extends Component {
                         data-test={'column-presets-value-' + i}
                         indexId={i}
                         data-prefix-val={X_HASURA_CONST}
-                        disabled={disableInput}
                       />
                     )}
                   </div>
@@ -935,11 +894,7 @@ class Permissions extends Component {
                     >
                       <i
                         className="fa-lg fa fa-times"
-                        onClick={
-                          !disableInput
-                            ? e => this.deleteSetKeyVal(e, 'insert')
-                            : ''
-                        }
+                        onClick={e => this.deleteSetKeyVal(e, 'insert')}
                         data-index-id={i}
                       />
                     </div>
@@ -999,7 +954,7 @@ class Permissions extends Component {
                     </div>
                   </label>
                 </div>
-                {isSetValues || isDbSet ? setOptions : null}
+                {isSetValues && setOptions}
               </div>
             </form>
           </div>
@@ -1025,13 +980,6 @@ class Permissions extends Component {
           </Tooltip>
         );
 
-        const isDbSet =
-          updateState &&
-          'set' in updateState &&
-          Object.keys(updateState.set).length > 0;
-
-        const disableInput = isDbSet && !isSetValues;
-
         const setOptions =
           updateState && updateState.localSet && updateState.localSet.length > 0
             ? updateState.localSet.map((s, i) => {
@@ -1052,7 +1000,6 @@ class Permissions extends Component {
                       data-test={'column-presets-column-' + i}
                       onChange={e => this.onSetKeyChange(e, 'update')}
                       data-index-id={i}
-                      disabled={disableInput}
                     >
                       <option value="" disabled>
                           Column Name
@@ -1085,7 +1032,6 @@ class Permissions extends Component {
                       data-index-id={i}
                       data-test={'column-presets-type-' + i}
                       value={setConfigValueType(s.value) || ''}
-                      disabled={disableInput}
                     >
                       <option value="" disabled>
                           Select Preset Type
@@ -1117,7 +1063,6 @@ class Permissions extends Component {
                           data-index-id={i}
                           data-prefix-val={X_HASURA_CONST}
                           data-test={'column-presets-value-' + i}
-                          disabled={disableInput}
                         />
                       </InputGroup>
                     ) : (
@@ -1136,7 +1081,6 @@ class Permissions extends Component {
                         indexId={i}
                         data-prefix-val={X_HASURA_CONST}
                         data-test={'column-presets-value-' + i}
-                        disabled={disableInput}
                       />
                     )}
                   </div>
@@ -1181,11 +1125,7 @@ class Permissions extends Component {
                     >
                       <i
                         className="fa-lg fa fa-times"
-                        onClick={
-                          !disableInput
-                            ? e => this.deleteSetKeyVal(e, 'update')
-                            : ''
-                        }
+                        onClick={e => this.deleteSetKeyVal(e, 'update')}
                         data-index-id={i}
                       />
                     </div>
@@ -1244,7 +1184,7 @@ class Permissions extends Component {
                     </div>
                   </label>
                 </div>
-                {isSetValues || isDbSet ? setOptions : null}
+                {isSetValues && setOptions}
               </div>
             </form>
           </div>
