@@ -203,14 +203,16 @@ module.exports = {
 ```
 
 If you need to do some asynchronous stuff before exporting your data, you can
-also export a function:
+also export an function:
+
+*Note: You can require [node-fetch](https://www.npmjs.com/package/node-fetch) in your function*
 
 ```js
+const fetch = require('node-fetch');
+
 module.exports = async function() {
-  let db = {}
-
-  // do asynchronous stuff
-
+  
+  const db = await fetch (...)
   return db
 }
 ```

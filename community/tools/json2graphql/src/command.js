@@ -36,7 +36,7 @@ class JSON2GraphQL extends Command {
 
   getDbJson(db) {
     const ret = require(resolve(db));
-    return typeof ret === 'function'? ret() : ret
+    return typeof ret === 'function' ? ret() : ret;
   }
 
   getSafeUrl(url) {
