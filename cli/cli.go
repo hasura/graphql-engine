@@ -35,9 +35,9 @@ const (
 	// ENV_ENDPOINT is the name of env var which indicates the Hasura GraphQL
 	// Engine endpoint URL.
 	ENV_ENDPOINT = "HASURA_GRAPHQL_ENDPOINT"
-	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
+	// ENV_ADMIN_SECRET is the name of env var that has the admin secret for GraphQL
 	// Engine endpoint.
-	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
+	ENV_ADMIN_SECRET = "HASURA_GRAPHQL_ADMIN_SECRET"
 )
 
 // Other constants used in the package
@@ -59,11 +59,60 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 // HasuraGraphQLConfig has the config values required to contact the server.
 type HasuraGraphQLConfig struct {
 	// Endpoint for the GraphQL Engine
+	Endpoint string
+	// AdminSecret (optional) required to query the endpoint
+	AdminSecret string
+
+	ParsedEndpoint *url.URL
+}
+
+type HasuraGraphQLConfigCompat struct {
+	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
-	// AccessKey (optional) required to query the endpoint
+	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
+	// AdminSecret (optional) Admin secret required to query the endpoint
+	AdminSecret string `json:"admin_secret,omitempty"`
 
 	ParsedEndpoint *url.URL `json:"-"`
+}
+
+func (this HasuraGraphQLConfigCompat) toHasuraGraphQLConfig() HasuraGraphQLConfig {
+	adminScrt := this.AdminSecret
+	if adminScrt == "" {
+		adminScrt = this.AccessKey
+	}
+	return HasuraGraphQLConfig{
+		Endpoint:       this.Endpoint,
+		AdminSecret:    adminScrt,
+		ParsedEndpoint: this.ParsedEndpoint,
+	}
+}
+
+func (this HasuraGraphQLConfig) toHasuraGraphQLConfigCompat() HasuraGraphQLConfigCompat {
+	return HasuraGraphQLConfigCompat{
+		Endpoint:       this.Endpoint,
+		AccessKey:      "",
+		AdminSecret:    this.AdminSecret,
+		ParsedEndpoint: this.ParsedEndpoint,
+	}
+}
+
+func (this HasuraGraphQLConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(this.toHasuraGraphQLConfigCompat())
+}
+
+func (this HasuraGraphQLConfig) UnmarshalJSON(b []byte) error {
+	var hGQLCompat HasuraGraphQLConfigCompat
+	err := json.Unmarshal(b, &hGQLCompat)
+	if err != nil {
+		return err
+	}
+	hGQL := hGQLCompat.toHasuraGraphQLConfig()
+	this.Endpoint = hGQL.Endpoint
+	this.AdminSecret = hGQL.AdminSecret
+	this.ParsedEndpoint = hGQL.ParsedEndpoint
+	return nil
 }
 
 // ParseEndpoint ensures the endpoint is valid.
@@ -114,7 +163,7 @@ type ExecutionContext struct {
 	// MetadataFile (optional) is a yaml file where Hasura metadata is stored.
 	MetadataFile string
 
-	// Config is the configuration object storing the endpoint and access key
+	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
 	Config *HasuraGraphQLConfig
 
@@ -234,7 +283,7 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
-	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.AdminSecret)
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
@@ -242,7 +291,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
-	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AccessKey, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AdminSecret, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -305,15 +354,20 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config from file/env")
+		return errors.Wrap(err, "cannot read config from file/env")
+	}
+	adminSecret := v.GetString("admin_secret")
+	if adminSecret == "" {
+		adminSecret = v.GetString("access_key")
 	}
 	ec.Config = &HasuraGraphQLConfig{
-		Endpoint:  v.GetString("endpoint"),
-		AccessKey: v.GetString("access_key"),
+		Endpoint:    v.GetString("endpoint"),
+		AdminSecret: adminSecret,
 	}
 	return ec.Config.ParseEndpoint()
 }

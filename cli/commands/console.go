@@ -53,10 +53,13 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "admin secret for Hasura GraphQL Engine")
+	f.MarkHidden("access-key")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return consoleCmd
 }
@@ -90,7 +93,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
+	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -106,7 +109,7 @@ func (o *consoleOptions) run() error {
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":      o.EC.Config.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"accessKey":       o.EC.Config.AccessKey,
+		"adminSecret":     o.EC.Config.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
@@ -160,12 +163,12 @@ type cRouter struct {
 	*gin.Engine
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadataFile string, logger *logrus.Logger) {
+func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger) {
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, accessKey))
+		apis.Use(setDataPath(nurl, adminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -184,9 +187,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadat
 	}
 }
 
-func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, adminSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, accessKey)
+		host := getDataPath(nurl, adminSecret)
 
 		c.Set("dbpath", host)
 		c.Next()

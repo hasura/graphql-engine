@@ -18,8 +18,8 @@ func TestConsoleCmd(t *testing.T) {
 	ec.Logger = logger
 	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 	ec.Config = &cli.HasuraGraphQLConfig{
-		Endpoint:  "http://localhost:8080",
-		AccessKey: "",
+		Endpoint:    "http://localhost:8080",
+		AdminSecret: "",
 	}
 	ec.Version = version.New()
 	err := ec.Prepare()

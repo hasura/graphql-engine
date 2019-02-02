@@ -40,5 +40,5 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-GOCACHE=off HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ACCESS_KEY="abcd" make test
+GOCACHE=off HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
 kill $PID

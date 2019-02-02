@@ -24,7 +24,7 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 			MigrationDir: migrationsDir,
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
+				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
 			},
 		},
@@ -51,7 +51,7 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       ":",
-				AccessKey:      "",
+				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},
 			},
 		},
@@ -71,8 +71,8 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  ":",
-				AccessKey: "",
+				Endpoint:    ":",
+				AdminSecret: "",
 			},
 		},
 		upMigration:   "1",

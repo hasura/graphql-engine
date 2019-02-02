@@ -39,10 +39,13 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := migrateStatusCmd.Flags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "admin secret for Hasura GraphQL Engine")
+	f.MarkHidden("access-key")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return migrateStatusCmd
@@ -53,7 +56,7 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AdminSecret, o.EC.Logger)
 	if err != nil {
 		return nil, err
 	}

@@ -134,7 +134,7 @@ jobs:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - restore_cache:
         keys:
-        - server-app-cache-1-{{ .Branch }}
+        - server-app-cache-{{ .Branch }}-{{ .Revision }}
     - run:
         name: Build the server
         working_directory: ./server
@@ -145,17 +145,10 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, non-optimized build with coverage"
-            echo  >> src-lib/Hasura/Server/Version.hs
-            stack build --only-dependencies --fast --coverage
-            git checkout HEAD -- src-lib/Hasura/Server/Version.hs
             BUILD_FLAGS="--fast --coverage" make ci-binary
           fi
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: server-app-cache-1-{{ .Branch }}
-        paths:
-        - ./server/.stack-work
     - save_cache:
         key: server-app-cache-{{ .Branch }}-{{ .Revision }}
         paths:

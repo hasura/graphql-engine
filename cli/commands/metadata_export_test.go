@@ -20,7 +20,7 @@ func testMetadataExport(t *testing.T, metadataFile string, endpoint *url.URL) {
 			MetadataFile: metadataFile,
 			Config: &cli.HasuraGraphQLConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
+				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
 			},
 		},

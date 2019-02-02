@@ -30,8 +30,8 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-func newMigrate(dir string, db *url.URL, accessKey string, logger *logrus.Logger) (*migrate.Migrate, error) {
-	dbURL := getDataPath(db, accessKey)
+func newMigrate(dir string, db *url.URL, adminSecret string, logger *logrus.Logger) (*migrate.Migrate, error) {
+	dbURL := getDataPath(db, adminSecret)
 	fileURL := getFilePath(dir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), true, logger)
 	if err != nil {
@@ -72,7 +72,7 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 	return status, nil
 }
 
-func getDataPath(nurl *url.URL, accessKey string) *url.URL {
+func getDataPath(nurl *url.URL, adminSecret string) *url.URL {
 	host := &url.URL{
 		Scheme: "hasuradb",
 		Host:   nurl.Host,
@@ -86,8 +86,8 @@ func getDataPath(nurl *url.URL, accessKey string) *url.URL {
 	default:
 		q.Set("sslmode", "disable")
 	}
-	if accessKey != "" {
-		q.Add("headers", "X-Hasura-Admin-Secret:"+accessKey)
+	if adminSecret != "" {
+		q.Add("headers", "X-Hasura-Admin-Secret:"+adminSecret)
 	}
 	host.RawQuery = q.Encode()
 	return host
