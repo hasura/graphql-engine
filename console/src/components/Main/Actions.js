@@ -5,9 +5,9 @@ import Endpoints from '../../Endpoints';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import { globalCookiePolicy } from '../../Endpoints';
-import { saveAccessKeyState } from '../AppState';
+import { saveAdminSecretState } from '../AppState';
 import {
-  ACCESS_KEY_ERROR,
+  ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
 } from '../Services/Data/DataActions';
 import { changeRequestHeader } from '../ApiExplorer/Actions';
@@ -26,7 +26,7 @@ const UPDATE_MIGRATION_MODE = 'Main/UPDATE_MIGRATION_MODE';
 const UPDATE_MIGRATION_MODE_PROGRESS = 'Main/UPDATE_MIGRATION_MODE_PROGRESS';
 const EXPORT_METADATA_SUCCESS = 'Main/EXPORT_METADATA_SUCCESS';
 const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
-const UPDATE_ACCESS_KEY_INPUT = 'Main/UPDATE_ACCESS_KEY_INPUT';
+const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
@@ -136,7 +136,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
     error => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: true });
-      console.error('Failed to validate access key ' + JSON.stringify(error));
+      console.error('Failed to validate admin secret ' + JSON.stringify(error));
       if (error.code !== 'access-denied') {
         alert(JSON.stringify(error));
       }
@@ -147,18 +147,18 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
 const loginClicked = () => (dispatch, getState) => {
   // set localstorage
   dispatch({ type: LOGIN_IN_PROGRESS, data: true });
-  const accessKeyInput = getState().main.accessKeyInput;
-  saveAccessKeyState(accessKeyInput);
-  // redirect to / to test the accessKeyInput;
+  const adminSecretInput = getState().main.adminSecretInput;
+  saveAdminSecretState(adminSecretInput);
+  // redirect to / to test the adminSecretInput;
   const updatedDataHeaders = {
     'Content-Type': 'application/json',
-    'X-Hasura-Admin-Secret': accessKeyInput,
+    'X-Hasura-Admin-Secret': adminSecretInput,
   };
   Promise.all([
-    dispatch({ type: ACCESS_KEY_ERROR, data: false }),
+    dispatch({ type: ADMIN_SECRET_ERROR, data: false }),
     dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
     dispatch(changeRequestHeader(1, 'key', 'X-Hasura-Admin-Secret', true)),
-    dispatch(changeRequestHeader(1, 'value', accessKeyInput, true)),
+    dispatch(changeRequestHeader(1, 'value', adminSecretInput, true)),
     // dispatch(push('/'))
   ]).then(() => {
     // make a sample query. check error code and push to /
@@ -270,8 +270,8 @@ const mainReducer = (state = defaultState, action) => {
     case UPDATE_MIGRATION_MODE:
       const currentMode = state.migrationMode;
       return { ...state, migrationMode: !currentMode };
-    case UPDATE_ACCESS_KEY_INPUT:
-      return { ...state, accessKeyInput: action.data };
+    case UPDATE_ADMIN_SECRET_INPUT:
+      return { ...state, adminSecretInput: action.data };
     case LOGIN_IN_PROGRESS:
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
@@ -287,7 +287,7 @@ export {
   HASURACTL_URL_ENV,
   UPDATE_MIGRATION_STATUS_SUCCESS,
   UPDATE_MIGRATION_STATUS_ERROR,
-  UPDATE_ACCESS_KEY_INPUT,
+  UPDATE_ADMIN_SECRET_INPUT,
   loadMigrationStatus,
   updateMigrationModeStatus,
   loginClicked,

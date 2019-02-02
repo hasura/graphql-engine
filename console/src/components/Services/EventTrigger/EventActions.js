@@ -22,7 +22,7 @@ const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
 const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
 const LOAD_PENDING_EVENTS = 'Event/LOAD_PENDING_EVENTS';
 const LOAD_RUNNING_EVENTS = 'Event/LOAD_RUNNING_EVENTS';
-const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
+const ADMIN_SECRET_ERROR = 'Event/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
@@ -614,8 +614,8 @@ const eventReducer = (state = defaultState, action) => {
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
-    case ACCESS_KEY_ERROR:
-      return { ...state, accessKeyError: action.data };
+    case ADMIN_SECRET_ERROR:
+      return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
     case MODAL_OPEN:
@@ -662,7 +662,7 @@ export {
   setRedeliverEvent,
   loadEventInvocations,
   redeliverEvent,
-  ACCESS_KEY_ERROR,
+  ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   LISTING_TRIGGER,
   MODAL_OPEN,
