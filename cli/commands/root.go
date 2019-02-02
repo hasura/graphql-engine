@@ -4,6 +4,8 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/update"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +20,18 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ec.Telemetry.Command = cmd.CommandPath()
+
+		if cmd.Use != updateCLICmdUse {
+			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification {
+				u := &updateOptions{
+					EC: ec,
+				}
+				err := u.run(true)
+				if err != nil {
+					ec.Logger.WithError(err).Error("auto-update failed, run 'hasura update-cli' to update manually")
+				}
+			}
+		}
 	},
 }
 
@@ -39,7 +53,11 @@ func init() {
 
 // Execute executes the command and returns the error
 func Execute() error {
-	err := rootCmd.Execute()
+	err := ec.Prepare()
+	if err != nil {
+		return errors.Wrap(err, "preparing execution context failed")
+	}
+	err = rootCmd.Execute()
 	if err != nil {
 		ec.Telemetry.IsError = true
 	}

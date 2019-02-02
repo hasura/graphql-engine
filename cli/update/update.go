@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/kardianos/osext"
 
@@ -88,7 +89,11 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 }
 
 // HasUpdate tells us if there is a new update available.
-func HasUpdate(currentVersion *semver.Version) (bool, *semver.Version, error) {
+func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, error) {
+	if timeFile != "" {
+		defer writeTimeToFile(timeFile, time.Now().UTC())
+	}
+
 	latestVersion, err := getLatestVersion()
 	if err != nil {
 		return false, nil, errors.Wrap(err, "get latest version")
@@ -102,7 +107,7 @@ func HasUpdate(currentVersion *semver.Version) (bool, *semver.Version, error) {
 	return c.Check(latestVersion), latestVersion, nil
 }
 
-// ApplyUpdate downloads and applies the update.
+// ApplyUpdate downloads and applies the update indicated by version v.
 func ApplyUpdate(v *semver.Version) error {
 	// get the current executable
 	exe, err := osext.Executable()

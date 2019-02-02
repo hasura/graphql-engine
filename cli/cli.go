@@ -25,22 +25,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Environment variable names recognised by the CLI.
-const (
-	// ENV_ENDPOINT is the name of env var which indicates the Hasura GraphQL
-	// Engine endpoint URL.
-	ENV_ENDPOINT = "HASURA_GRAPHQL_ENDPOINT"
-	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
-	// Engine endpoint.
-	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
-)
-
 // Other constants used in the package
 const (
 	// Name of the global configuration directory
 	GLOBAL_CONFIG_DIR_NAME = ".hasura"
 	// Name of the global configuration file
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
+
+	// Name of the file to store last update check time
+	LastUpdateCheckFileName = "last_update_check_at"
 )
 
 // String constants
@@ -127,6 +120,9 @@ type ExecutionContext struct {
 
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
+
+	// LastUpdateCheckFile is the file where the timestamp of last update check is stored
+	LastUpdateCheckFile string
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -160,17 +156,12 @@ func (ec *ExecutionContext) Prepare() error {
 	// setup global config
 	err := ec.setupGlobalConfig()
 	if err != nil {
-		// TODO(shahidhk): should this be a failure?
-		return errors.Wrap(err, "setting up global config directory failed")
+		return errors.Wrap(err, "setting up global config failed")
 	}
 
-	// read global config
-	err = ec.readGlobalConfig()
-	if err != nil {
-		return errors.Wrap(err, "reading global config failed")
-	}
+	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
-	// initialize a blank config
+	// initialize a blank server config
 	if ec.Config == nil {
 		ec.Config = &HasuraGraphQLConfig{}
 	}
@@ -196,14 +187,9 @@ func (ec *ExecutionContext) Prepare() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// prepare the context
-	err := ec.Prepare()
-	if err != nil {
-		return errors.Wrap(err, "failed preparing context")
-	}
 
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
