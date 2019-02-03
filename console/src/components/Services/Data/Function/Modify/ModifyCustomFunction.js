@@ -46,7 +46,7 @@ class ModifyCustomFunction extends React.Component {
     ]);
   }
   updateDeleteConfirmationError(data) {
-    this.setState({ ...this.state, deleteConfirmationError: data });
+    this.setState({ deleteConfirmationError: data });
   }
   handleUntrackCustomFunction(e) {
     e.preventDefault();

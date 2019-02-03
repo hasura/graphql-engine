@@ -10,7 +10,6 @@ import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Hasura.Logging               as L
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Logging
@@ -21,10 +20,6 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
-
--- clear the hdb_views schema
-initStateTx :: Q.Tx ()
-initStateTx = clearHdbViews
 
 data RawConnParams
   = RawConnParams

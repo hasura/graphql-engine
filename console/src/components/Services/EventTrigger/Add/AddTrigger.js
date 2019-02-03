@@ -83,13 +83,12 @@ class AddTrigger extends Component {
 
   checkWebhookEnvSupport(version) {
     const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
-    this.setState({ ...this.state, supportWebhookEnv });
+    this.setState({ supportWebhookEnv });
     return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      ...this.state,
       supportColumnChangeFeature: val,
     });
   }
@@ -605,51 +604,60 @@ class AddTrigger extends Component {
                   >
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
+                  <br />
+                  <br />
+                  <small>
+                    Note: Specifying the webhook URL via an environmental
+                    variable is recommended if you have different URLs for
+                    multiple environments.
+                  </small>
                 </h4>
-                {this.state.supportWebhookEnv ? (
-                  <div className={styles.dropdown_wrapper}>
-                    <DropdownButton
-                      dropdownOptions={[
-                        { display_text: 'URL', value: 'url' },
-                        { display_text: 'From env var', value: 'env' },
-                      ]}
-                      title={
-                        (webhookUrlType === 'url' && 'URL') ||
-                        (webhookUrlType === 'env' && 'From env var') ||
-                        'Value'
-                      }
-                      dataKey={
-                        (webhookUrlType === 'url' && 'url') ||
-                        (webhookUrlType === 'env' && 'env')
-                      }
-                      onButtonChange={this.updateWebhookUrlType.bind(this)}
-                      onInputChange={e => {
+                <div>
+                  {this.state.supportWebhookEnv ? (
+                    <div className={styles.dropdown_wrapper}>
+                      <DropdownButton
+                        dropdownOptions={[
+                          { display_text: 'URL', value: 'url' },
+                          { display_text: 'From env var', value: 'env' },
+                        ]}
+                        title={
+                          (webhookUrlType === 'url' && 'URL') ||
+                          (webhookUrlType === 'env' && 'From env var') ||
+                          'Value'
+                        }
+                        dataKey={
+                          (webhookUrlType === 'url' && 'url') ||
+                          (webhookUrlType === 'env' && 'env')
+                        }
+                        onButtonChange={this.updateWebhookUrlType.bind(this)}
+                        onInputChange={e => {
+                          dispatch(setWebhookURL(e.target.value));
+                        }}
+                        required
+                        bsClass={styles.dropdown_button}
+                        inputVal={webhookURL}
+                        id="webhook-url"
+                        inputPlaceHolder={
+                          (webhookUrlType === 'url' &&
+                            'http://httpbin.org/post') ||
+                          (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
+                        }
+                        testId="webhook"
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      required
+                      data-test="webhook"
+                      placeholder="webhook url"
+                      className={`${styles.tableNameInput} form-control`}
+                      onChange={e => {
                         dispatch(setWebhookURL(e.target.value));
                       }}
-                      required
-                      bsClass={styles.dropdown_button}
-                      inputVal={webhookURL}
-                      id="webhook-url"
-                      inputPlaceHolder={
-                        (webhookUrlType === 'url' &&
-                          'http://httpbin.org/post') ||
-                        (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
-                      }
-                      testId="webhook"
                     />
-                  </div>
-                ) : (
-                  <input
-                    type="url"
-                    required
-                    data-test="webhook"
-                    placeholder="webhook url"
-                    className={`${styles.tableNameInput} form-control`}
-                    onChange={e => {
-                      dispatch(setWebhookURL(e.target.value));
-                    }}
-                  />
-                )}
+                  )}
+                </div>
               </div>
               <hr />
               <div

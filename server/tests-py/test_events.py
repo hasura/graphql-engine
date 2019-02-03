@@ -66,6 +66,9 @@ class TestCreateAndDelete(DefaultTestQueries):
     def test_create_reset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
 
+    def test_create_operation_spec_not_provider_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err.yaml")
+
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create-delete'

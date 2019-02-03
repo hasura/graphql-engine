@@ -15,7 +15,6 @@ export default class RenderMessagesProxy extends React.Component {
   // Set mutation callback. For instantly adding messages to state after mutation
   setMutationCallback = (mutationCallback) => {
     this.setState({
-      ...this.state,
       mutationCallback
     })
   }
