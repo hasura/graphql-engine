@@ -7,6 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const HasuraASCIIText = `
+    __
+   / /_   ____ _ _____ __  __ _____ ____ _
+  / __ \ / __ ` + "`" + `// ___// / / // ___// __ ` + "`" + `/
+ / / / // /_/ /(__  )/ /_/ // /   / /_/ /
+/_/ /_/ \__,_//____/ \__,_//_/    \__,_/
+
+`
+
 // ec is the Execution Context for the current run.
 var ec *cli.ExecutionContext
 
@@ -14,10 +23,19 @@ var ec *cli.ExecutionContext
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
 	Short:         "Hasura GraphQL Engine command line tool",
+	Long:          HasuraASCIIText,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ec.Telemetry.Command = cmd.CommandPath()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		o := helpOptions{
+			EC:   ec,
+			Cmd:  cmd,
+			Args: args,
+		}
+		o.run()
 	},
 }
 
@@ -30,7 +48,9 @@ func init() {
 		NewMigrateCmd(ec),
 		NewVersionCmd(ec),
 		NewDocsCmd(ec),
+		NewCompletionCmd(ec),
 	)
+	rootCmd.SetHelpCommand(NewHelpCmd(ec))
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed. (default: current dir)")
