@@ -25,6 +25,7 @@ function maybe_sudo() {
     fi
 }
 
+# check for curl
 hasCurl=$(which curl)
 if [ "$?" = "1" ]; then
     die "You need to install curl to use this script."
@@ -48,8 +49,8 @@ fi
 
 log "Latest version is $version"
 
+# check for existing hasura installation
 hasCli=$(which hasura)
-
 if [ "$?" = "0" ]; then
     log ""
     log "${GREEN}You already have the hasura cli at '${hasCli}'${NC}"
@@ -59,8 +60,7 @@ if [ "$?" = "0" ]; then
     sleep $n
 fi
 
-
-
+# get platform and arch
 platform='unknown'
 unamestr=`uname`
 if [[ "$unamestr" == 'Linux' ]]; then
@@ -81,6 +81,7 @@ else
     arch='386'
 fi
 
+# some variables
 suffix="-${platform}-${arch}"
 targetFile="/tmp/cli-hasura$suffix"
 userid=$(id -u)
@@ -95,7 +96,6 @@ fi
 
 log "${PURPLE}Downloading hasura for $platform-$arch to ${targetFile}${NC}"
 url=https://github.com/hasura/graphql-engine/releases/download/$version/cli-hasura$suffix
-
 
 try curl -L# -o $targetFile "$url"
 try chmod +x $targetFile
@@ -143,6 +143,7 @@ fi
 hasura version
 
 if ! $(echo "$PATH" | grep -q "$INSTALL_PATH"); then
+    log
     log "${YELLOW}$INSTALL_PATH not found in \$PATH, you might need to add it${NC}"
     log 
 fi
