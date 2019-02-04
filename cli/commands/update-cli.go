@@ -72,7 +72,7 @@ func (o *updateOptions) run(showPrompt bool) error {
 		}
 	}
 
-	o.EC.Spin(fmt.Sprintf("Updating cli to %s... ", latestVersion.String()))
+	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", latestVersion.String()))
 	err = update.ApplyUpdate(latestVersion)
 	o.EC.Spinner.Stop()
 	if err != nil {
@@ -82,14 +82,14 @@ func (o *updateOptions) run(showPrompt bool) error {
 		return errors.Wrap(err, "apply update")
 	}
 
-	o.EC.Logger.WithField("version", latestVersion.String()).Info("Updated to latest version")
+	o.EC.Logger.WithField("version", "v"+latestVersion.String()).Info("Updated to latest version")
 	return nil
 }
 
 func ask2confirm(v string, log *logrus.Logger) bool {
 	var s string
 
-	log.WithField("vesion", v).Info("A new version is available for CLI, update? (y/N)")
+	log.Infof("A new version (v%s) is available for CLI, update? (y/N)", v)
 	_, err := fmt.Scan(&s)
 	if err != nil {
 		log.Error("unable to take input, skipping update")
