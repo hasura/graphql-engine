@@ -33,8 +33,8 @@ wait_for_port() {
     echo "Failed waiting for $PORT" && exit 1
 }
 
-test_export_metadata_with_admin_secret() {
-  curl -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query -H "X-Hasura-Admin-Secret: $1" > /dev/null
+test_export_metadata_with_access_key() {
+  curl -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query -H "X-Hasura-Access-Key: $1" > /dev/null
 }
 
 cd $SERVER_ROOT
@@ -76,65 +76,30 @@ trap kill_hge INT
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-flags-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
-
-########## Test --use-prepared-statements=false and flag --admin-secret
+################### Test deprecated flag --access-key
 
 key="HGE$RANDOM$RANDOM"
 
-run_hge_with_flags --use-prepared-statements=false --admin-secret="$key"
+run_hge_with_flags --access-key="$key"
 
-echoInfo "Test flag --admin-secret=XXXX"
+echoInfo "Test deprecated flag --access-key=XXXX"
 grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
-test_export_metadata_with_admin_secret "$key"
-
-echoInfo "Test flag --use-prepared-statements=false"
-grep -F '"use_prepared_statements":false' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
+test_export_metadata_with_access_key "$key"
 
 kill_hge
 
-###### Test --use-prepared-statements=true
+################## Test deprecated EnvVar HASURA_GRAPHQL_ACCESS_KEY=XXXX
+
 key="HGE$RANDOM$RANDOM"
 
-run_hge_with_flags --use-prepared-statements=true
-
-echoInfo "Test --use-prepared-statements=true"
-grep -F '"use_prepared_statements":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
-
-kill_hge
-
-######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd
-
-
-export HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd
-
-fail_if_port_busy 8080
-timeout 3 stdbuf -o0 "$GRAPHQL_ENGINE" serve  > "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
-
-wait $PID || true
-
-echoInfo "Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd"
-grep -F 'Not a valid boolean text'  "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
-
-
-######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false and HASURA_GRAPHQL_ADMIN_SECRET=XXXX
-key="HGE$RANDOM$RANDOM"
-
-export HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false
-
-export HASURA_GRAPHQL_ADMIN_SECRET="$key"
+export HASURA_GRAPHQL_ACCESS_KEY="$key"
 
 run_hge_with_flags
 
-echoInfo "Test flag HASURA_GRAPHQL_ADMIN_SECRET=XXXX"
+echoInfo "Test deprecated EnvVar HASURA_GRAPHQL_ACCESS_KEY=XXXX"
 grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
-test_export_metadata_with_admin_secret "$key"
-
-
-echoInfo "Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false"
-grep -F '"use_prepared_statements":false' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
+test_export_metadata_with_access_key "$key"
 
 kill_hge
 
-unset HASURA_GRAPHQL_ADMIN_SECRET
-
-unset HASURA_GRAPHQL_USE_PREPARED_STATEMENTS
+unset $HASURA_GRAPHQL_ACCESS_KEY

@@ -80,8 +80,13 @@ CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
 cd $CIRCLECI_FOLDER
 CIRCLECI_FOLDER="$PWD"
 
-if ! $CIRCLECI_FOLDER/test-server-flags.sh   ; then
+if ! $CIRCLECI_FOLDER/test-server-flags.sh ; then
 	echo "Testing GraphQL server flags failed"
+	exit 1
+fi
+
+if ! $CIRCLECI_FOLDER/test-deprecated-server-flags.sh ; then
+	echo "Testing GraphQL deprecated server flags failed"
 	exit 1
 fi
 
