@@ -251,6 +251,10 @@ fetchFunctionMeta = do
     FROM
       hdb_catalog.hdb_function_agg f
       JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+      JOIN pg_catalog.pg_namespace pn ON (
+        pn.oid = p.pronamespace
+        AND pn.nspname = f.function_schema
+      )
     WHERE
       f.function_schema <> 'hdb_catalog'
     |] () False
