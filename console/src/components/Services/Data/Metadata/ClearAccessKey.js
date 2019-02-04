@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { clearAdminSecretState } from '../../../AppState';
+import { clearAccessKeyState } from '../../../AppState';
 import globals from '../../../../Globals';
 
 import {
@@ -9,7 +9,7 @@ import {
 } from '../Notification';
 import Button from '../../Layout/Button/Button';
 
-class ClearAdminSecret extends Component {
+class ClearAccessKey extends Component {
   constructor() {
     super();
     this.state = {};
@@ -20,17 +20,17 @@ class ClearAdminSecret extends Component {
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
-          data-test="data-clear-admin-secret"
+          data-test="data-clear-access-key"
           className={metaDataStyles.margin_right}
           color="white"
           size="sm"
           onClick={e => {
             e.preventDefault();
             this.setState({ isClearing: true });
-            if (globals.isAdminSecretSet || globals.adminSecret) {
-              clearAdminSecretState();
+            if (globals.isAccessKeySet || globals.accessKey) {
+              clearAccessKeyState();
               this.props.dispatch(
-                showSuccessNotification('Cleared Admin Secret')
+                showSuccessNotification('Cleared Access Key')
               );
               this.setState({ isClearing: false });
               this.props.router.push('/login');
@@ -39,12 +39,12 @@ class ClearAdminSecret extends Component {
               const errorMessage = (
                 <div style={{ padding: '5px' }}>
                   <div style={{ fontSize: '13px' }}>
-                    No admin secret set or admin secret is set but isAdminSecretSet is
+                    No access key set or access key is set but isAccessKeySet is
                     not set by the server
                   </div>
                   <br />
                   <div style={{ fontSize: '13px' }}>
-                    Please look for <code>CONSOLE_ADMIN_SECRET</code> key under
+                    Please look for <code>CONSOLE_ACCESS_KEY</code> key under
                     window storage and delete it if it exists
                   </div>
                 </div>
@@ -53,16 +53,16 @@ class ClearAdminSecret extends Component {
             }
           }}
         >
-          {this.state.isClearing ? 'Clearing...' : 'Clear admin secret (logout)'}
+          {this.state.isClearing ? 'Clearing...' : 'Clear access key (logout)'}
         </Button>
       </div>
     );
   }
 }
 
-ClearAdminSecret.propTypes = {
+ClearAccessKey.propTypes = {
   dispatch: PropTypes.func.isRequired,
   dataHeaders: PropTypes.object.isRequired,
 };
 
-export default ClearAdminSecret;
+export default ClearAccessKey;

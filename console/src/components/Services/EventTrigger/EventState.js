@@ -75,7 +75,7 @@ const defaultState = {
   tableSchemas: [],
   schemaList: ['public'],
   currentSchema: 'public',
-  adminSecretError: false,
+  accessKeyError: false,
   dataHeaders: {
     'Content-Type': 'application/json',
   },

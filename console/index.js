@@ -12,7 +12,7 @@ import {
   loadUntrackedSchema,
   UPDATE_CURRENT_SCHEMA,
   UPDATE_DATA_HEADERS,
-  ADMIN_SECRET_ERROR,
+  ACCESS_KEY_ERROR,
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
@@ -40,7 +40,7 @@ export { GraphiQLWrapper };
 // export Data Tab parts
 export { dataRouter, dataReducer };
 export { fetchSchemaList, loadSchema, loadUntrackedSchema };
-export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ADMIN_SECRET_ERROR };
+export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ACCESS_KEY_ERROR };
 export { dataHeaders };
 
 // export Event Tab parts

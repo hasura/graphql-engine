@@ -4,7 +4,7 @@ const defaultState = {
   migrationMode: true,
   migrationModeProgress: false,
   metadataExport: { error: false, info: null },
-  adminSecretInput: null,
+  accessKeyInput: null,
   loginInProgress: false,
   loginError: false,
   serverVersion: null,

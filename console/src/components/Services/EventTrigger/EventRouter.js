@@ -80,10 +80,10 @@ const makeEventRouter = (
 
 const eventRouter = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    // check if admin secret is available in localstorage. if so use that.
-    // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
-    // if admin secret is not available in localstorage, check if cli is giving it via window.__env
-    // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
+    // check if access key is available in localstorage. if so use that.
+    // if localstorage access key didn't work, redirect to login (meaning value has changed)
+    // if access key is not available in localstorage, check if cli is giving it via window.__env
+    // if access key is not available in localstorage and cli, make a api call to data without access key.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
       triggers: { triggerList },

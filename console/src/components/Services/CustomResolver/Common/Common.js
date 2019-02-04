@@ -24,7 +24,7 @@ const clientHeaderForward = (
 );
 const additionalHeaders = (
   <Tooltip id="tooltip-cascade">
-    Custom headers to be sent to the remote GraphQL server. E.g. an admin secret
+    Custom headers to be sent to the remote GraphQL server. E.g. an access key
   </Tooltip>
 );
 const schema = (

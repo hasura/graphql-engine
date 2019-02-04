@@ -2,12 +2,12 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import { loginClicked, UPDATE_ADMIN_SECRET_INPUT } from '../Main/Actions';
+import { loginClicked, UPDATE_ACCESS_KEY_INPUT } from '../Main/Actions';
 
 class Login extends Component {
-  handleAdminSecret = e => {
+  handleAccessKey = e => {
     this.props.dispatch({
-      type: UPDATE_ADMIN_SECRET_INPUT,
+      type: UPDATE_ACCESS_KEY_INPUT,
       data: e.target.value,
     });
   };
@@ -52,11 +52,11 @@ class Login extends Component {
                 >
                   <div className={'input-group ' + styles.input_group}>
                     <input
-                      onChange={this.handleAdminSecret}
+                      onChange={this.handleAccessKey}
                       className={styles.form_input + ' form-control'}
                       placeholder="Password"
                       type="password"
-                      placeholder="Enter admin secret"
+                      placeholder="Enter access key"
                       name="password"
                     />
                   </div>
@@ -84,7 +84,7 @@ const generatedLoginConnector = connect => {
     return {
       loginInProgress: state.main.loginInProgress,
       loginError: state.main.loginError,
-      adminSecretError: state.tables.adminSecretError,
+      accessKeyError: state.tables.accessKeyError,
     };
   };
   return connect(mapStateToProps)(Login);

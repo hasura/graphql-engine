@@ -2,7 +2,7 @@ import React from 'react';
 // import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
-// import { loadAdminSecretState } from '../../AppState';
+// import { loadAccessKeyState } from '../../AppState';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
@@ -32,7 +32,7 @@ import {
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   // UPDATE_DATA_HEADERS,
-  // ADMIN_SECRET_ERROR,
+  // ACCESS_KEY_ERROR,
 } from './DataActions';
 
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
@@ -131,10 +131,10 @@ const makeDataRouter = (
 
 const dataRouter = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    // check if admin secret is available in localstorage. if so use that.
-    // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
-    // if admin secret is not available in localstorage, check if cli is giving it via window.__env
-    // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
+    // check if access key is available in localstorage. if so use that.
+    // if localstorage access key didn't work, redirect to login (meaning value has changed)
+    // if access key is not available in localstorage, check if cli is giving it via window.__env
+    // if access key is not available in localstorage and cli, make a api call to data without access key.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
       tables: { allSchemas },

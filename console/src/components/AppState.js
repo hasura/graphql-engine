@@ -1,7 +1,7 @@
 import globals from 'Globals';
 
 const stateKey = 'CONSOLE_LOCAL_INFO:' + globals.dataApiUrl;
-const CONSOLE_ADMIN_SECRET = 'CONSOLE_ADMIN_SECRET';
+const CONSOLE_ACCESS_KEY = 'CONSOLE_ACCESS_KEY';
 
 const loadAppState = () => JSON.parse(window.localStorage.getItem(stateKey));
 
@@ -9,24 +9,24 @@ const saveAppState = state => {
   window.localStorage.setItem(stateKey, JSON.stringify(state));
 };
 
-const loadAdminSecretState = () =>
-  window.localStorage.getItem(CONSOLE_ADMIN_SECRET);
+const loadAccessKeyState = () =>
+  window.localStorage.getItem(CONSOLE_ACCESS_KEY);
 
-const saveAdminSecretState = state => {
-  window.localStorage.setItem(CONSOLE_ADMIN_SECRET, state);
+const saveAccessKeyState = state => {
+  window.localStorage.setItem(CONSOLE_ACCESS_KEY, state);
 };
 
-const clearAdminSecretState = () => {
-  window.localStorage.removeItem(CONSOLE_ADMIN_SECRET);
+const clearAccessKeyState = () => {
+  window.localStorage.removeItem(CONSOLE_ACCESS_KEY);
 };
 
 const clearState = () => window.localStorage.removeItem(stateKey);
 
 export {
   saveAppState,
-  saveAdminSecretState,
+  saveAccessKeyState,
   loadAppState,
-  loadAdminSecretState,
+  loadAccessKeyState,
   clearState,
-  clearAdminSecretState,
+  clearAccessKeyState,
 };

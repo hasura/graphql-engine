@@ -124,7 +124,7 @@ export const createView = (viewName, tableName) => {
     const { __env } = win;
     const requestOptions = makeDataAPIOptions(
       __env.dataApiUrl,
-      __env.adminSecret,
+      __env.accessKey,
       reqBody
     );
     cy.request(requestOptions);

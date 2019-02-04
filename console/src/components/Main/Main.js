@@ -147,12 +147,12 @@ class Main extends React.Component {
     } else {
       mainContent = children && React.cloneElement(children);
     }
-    let adminSecretHtml = null;
+    let accessKeyHtml = null;
     if (
-      !globals.isAdminSecretSet &&
-      (globals.adminSecret === '' || globals.adminSecret === null)
+      !globals.isAccessKeySet &&
+      (globals.accessKey === '' || globals.accessKey === null)
     ) {
-      adminSecretHtml = (
+      accessKeyHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
             <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
@@ -284,7 +284,7 @@ class Main extends React.Component {
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
-              {adminSecretHtml}
+              {accessKeyHtml}
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   <i className={styles.question + ' fa fa-cog'} />

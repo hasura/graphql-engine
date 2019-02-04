@@ -19,6 +19,6 @@ export const customresolver = (
 
 export const secureEndpoint = (
   <Tooltip id="tooltip-secure-endpoint">
-    This graphql endpoint is public and you should add an admin secret
+    This graphql endpoint is public and you should add an access key
   </Tooltip>
 );
