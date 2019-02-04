@@ -23,11 +23,12 @@ curCatalogVer = "10"
 
 migrateMetadata
   :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
-  => RQLQuery -> m ()
-migrateMetadata rqlQuery = do
-  -- build schema cache
-  buildSchemaCache
-  -- run the RQL query to migrate metadata
+  => Bool -> RQLQuery -> m ()
+migrateMetadata buildSC rqlQuery = do
+  -- Build schema cache from 'hdb_catalog' only if current
+  -- metadata migration depends on metadata added in previous versions
+  when buildSC $ buildSchemaCache
+  -- run the RQL query to Migrate metadata
   void $ runQueryM rqlQuery
 
 setAsSystemDefinedFor2 :: (MonadTx m) => m ()
@@ -110,11 +111,11 @@ from1To2
   :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
   => m ()
 from1To2 = do
-  -- migrate database
+  -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_1.sql")
-  migrateMetadata migrateMetadataFrom1
-  -- set as system defined
+  migrateMetadata False migrateMetadataFrom1
+  -- Set as system defined
   setAsSystemDefinedFor2
   where
     migrateMetadataFrom1 =
@@ -134,8 +135,8 @@ from4To5
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_4_to_5.sql")
-  migrateMetadata migrateMetadataFrom4
-  -- set as system defined
+  migrateMetadata False migrateMetadataFrom4
+  -- Set as system defined
   setAsSystemDefinedFor5
   where
     migrateMetadataFrom4 =
@@ -169,14 +170,14 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 from5To6 :: (MonadTx m) => m ()
 from5To6 = liftTx $ do
-  -- migrate database
+  -- Migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_5_to_6.sql")
   return ()
 
 from6To7 :: (MonadTx m) => m ()
 from6To7 = liftTx $ do
-  -- migrate database
+  -- Migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_6_to_7.sql")
   return ()
@@ -185,11 +186,13 @@ from7To8
   :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
   => m ()
 from7To8 = do
-  -- migrate database
+  -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_7_to_8.sql")
-  -- migrate metadata
-  migrateMetadata migrateMetadataFrom7
+  -- Migrate metadata
+  -- Building schema cache is required since this metadata migration
+  -- involves in creating object relationship to hdb_catalog.hdb_table
+  migrateMetadata True migrateMetadataFrom7
   setAsSystemDefinedFor8
   where
     migrateMetadataFrom7 =
@@ -202,8 +205,9 @@ from8To9
 from8To9 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_8_to_9.sql")
-  void $ runQueryM migrateMetadataFrom8
-  -- set as system defined
+  -- Migrate metadata
+  migrateMetadata False migrateMetadataFrom8
+  -- Set as system defined
   setAsSystemDefinedFor9
   where
     migrateMetadataFrom8 =
@@ -212,7 +216,7 @@ from8To9 = do
 -- alter foreign keys on hdb_relationship and hdb_permission table to have ON UPDATE CASCADE
 from9To10 :: (MonadTx m) => m ()
 from9To10 = liftTx $ do
-  -- migrate database
+  -- Migrate database
   Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_9_to_10.sql")
   return ()

@@ -115,49 +115,50 @@ updateRelFlds qt depQT relName = \case
       then updateRelNativeCols oCol nCol qt relName
     else updateRelRemoteCols oCol nCol depQT relName
   RFTable (RenameItem oldQT newQT) ->
-    -- update only if it is remote table
-    unless (oldQT == depQT) $ updateRelDefs newQT depQT relName
+    updateRelDefs oldQT newQT depQT relName
   RFRel _ -> return ()
 
+type RelTabModifier m = QualifiedTable -> QualifiedTable -> QualifiedTable -> RelName -> m ()
+
 -- update table names in relationship definition
-updateRelDefs
-  :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> QualifiedTable -> RelName -> m ()
-updateRelDefs newQT qt relName = do
+updateRelDefs :: (MonadTx m, CacheRM m) => RelTabModifier m
+updateRelDefs oldQT newQT qt relName = do
   fim <- askFieldInfoMap qt
   ri <- askRelType fim relName ""
   case riType ri of
-    ObjRel -> updateObjRelDef newQT qt relName
-    ArrRel -> updateArrRelDef newQT qt relName
+    ObjRel -> updateObjRelDef oldQT newQT qt relName
+    ArrRel -> updateArrRelDef oldQT newQT qt relName
 
-updateObjRelDef
-  :: (MonadTx m)
-  => QualifiedTable -> QualifiedTable -> RelName -> m ()
-updateObjRelDef newQT qt rn = do
+updateObjRelDef :: (MonadTx m) => RelTabModifier m
+updateObjRelDef oldQT newQT qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   case oldDef of
     RUFKeyOn _ -> return ()
-    RUManual (ObjRelManualConfig (RelManualConfig _ rmCols)) -> do
+    RUManual (ObjRelManualConfig (RelManualConfig dbQT rmCols)) -> do
       let newDef = mkObjRelUsing rmCols
-      liftTx $ updateRel qt rn $ toJSON (newDef :: ObjRelUsing)
+      when (dbQT == oldQT ) $
+        liftTx $ updateRel qt rn $ toJSON (newDef :: ObjRelUsing)
   where
     mkObjRelUsing colMap = RUManual $ ObjRelManualConfig $
       RelManualConfig newQT colMap
 
-updateArrRelDef
-  :: (MonadTx m)
-  => QualifiedTable -> QualifiedTable -> RelName -> m ()
-updateArrRelDef newQT qt rn = do
+updateArrRelDef :: (MonadTx m) => RelTabModifier m
+updateArrRelDef oldQT newQT qt rn = do
   oldDefV <- liftTx $ getRelDef qt rn
   oldDef  <- decodeValue oldDefV
-  liftTx $ updateRel qt rn $ toJSON $ mkNewArrRelUsing oldDef
+  let (newDef, doUpdate) = mkNewArrRelUsing oldDef
+  when doUpdate $ liftTx $ updateRel qt rn $ toJSON newDef
   where
     mkNewArrRelUsing arrRelUsing = case arrRelUsing of
-      RUFKeyOn (ArrRelUsingFKeyOn _ c) ->
-        RUFKeyOn $ ArrRelUsingFKeyOn newQT c
-      RUManual (ArrRelManualConfig (RelManualConfig _ rmCols)) ->
-        RUManual $ ArrRelManualConfig $ RelManualConfig newQT rmCols
+      RUFKeyOn (ArrRelUsingFKeyOn dbQT c) ->
+        ( RUFKeyOn $ ArrRelUsingFKeyOn newQT c
+        , oldQT == dbQT
+        )
+      RUManual (ArrRelManualConfig (RelManualConfig dbQT rmCols)) ->
+        ( RUManual $ ArrRelManualConfig $ RelManualConfig newQT rmCols
+        , oldQT == dbQT
+        )
 
 getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value
 getRelDef (QualifiedObject sn tn) rn =
