@@ -493,7 +493,7 @@ article ol ol {
 }
 
 .footer-hasura-custom .footer_logo {
-  width: 80px;
+  width: 100px;
   margin-right: 30px;
 }
 
@@ -912,5 +912,13 @@ article ol ol {
 
   .api-tabs .ui.tab {
     padding: 10px
+  }
+
+  .footer-hasura-custom {
+    display: block;
+  }
+
+  .footer-hasura-custom .footer_logo {
+    margin-right: 0;
   }
 }
