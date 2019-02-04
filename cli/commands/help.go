@@ -77,7 +77,7 @@ func (o *helpOptions) run() {
 				w.Flush()
 				fmt.Println("")
 			}
-			fmt.Println(`se "hasura [command] --help" for more information about a command.`)
+			fmt.Println(`Use "hasura [command] --help" for more information about a command.`)
 		} else {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
 			cmd.Help()
