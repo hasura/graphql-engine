@@ -516,9 +516,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
             localSet: [
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localSet.slice(),
+              ...modifyState.permissionsState[action.data.queryType].localSet,
               { ...defaultSetState[action.data.queryType] },
             ],
           },

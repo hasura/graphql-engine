@@ -128,32 +128,6 @@ class Permissions extends Component {
       });
     }
   }
-  onSetValueBlur = (e, indexId, value, queryType) => {
-    // Get the index of the changed value and if both key and value are set create one more object in set
-    const prefixVal =
-      e && e.target.getAttribute('data-prefix-val')
-        ? e.target.getAttribute('data-prefix-val')
-        : '';
-    const actionData = {};
-    actionData.key = 'value';
-    const isSessionPresetType =
-      setConfigValueType(prefixVal) === 'session' || '';
-    if (isSessionPresetType) {
-      // Ignore column input value validation
-      this.addNewPresetColumn(indexId, queryType);
-      return;
-    }
-    const columnType =
-      indexId in this.state.setOperations[queryType].columnTypeMap
-        ? this.state.setOperations[queryType].columnTypeMap[indexId]
-        : '';
-    if (!columnType) {
-      return;
-    }
-    actionData.value = value;
-    actionData.index = indexId;
-    this.addNewPresetColumn(indexId, queryType);
-  };
 
   onSetKeyChange = (e, queryType) => {
     // Get the index of the changed value and if both key and value are set create one more object in set
@@ -175,7 +149,12 @@ class Permissions extends Component {
         type: UPDATE_PERM_SET_KEY_VALUE,
         data: { ...actionData, queryType },
       });
-
+      if (
+        indexId + 1 ===
+        this.props.permissionsState[queryType].localSet.length
+      ) {
+        this.addNewPresetColumn(queryType);
+      }
       this.setState({
         ...this.state,
         setOperations: {
@@ -237,23 +216,8 @@ class Permissions extends Component {
       });
     }
   }
-  addNewPresetColumn(currentIndex, queryType) {
-    const currentIndexPreset =
-      this.props.permissionsState[queryType] &&
-      this.props.permissionsState[queryType].localSet.length > 0 &&
-      this.props.permissionsState[queryType].localSet[currentIndex];
-    const totalPresets = this.props.permissionsState[queryType]
-      ? this.props.permissionsState[queryType].localSet.length
-      : 0;
-    // If both key and value are valid
-    if (
-      currentIndexPreset &&
-      currentIndexPreset.key &&
-      currentIndexPreset.value &&
-      currentIndex === totalPresets - 1
-    ) {
-      this.props.dispatch({ type: CREATE_NEW_SET_VAL, data: { queryType } });
-    }
+  addNewPresetColumn(queryType) {
+    this.props.dispatch({ type: CREATE_NEW_SET_VAL, data: { queryType } });
   }
   togglePresetChecked(queryType) {
     this.props.dispatch({
@@ -455,21 +419,21 @@ class Permissions extends Component {
         const bulkSelect = permsState.bulkSelect;
         const currentInputSelection = bulkSelect.filter(e => e === role)
           .length ? (
-            <input
-              onChange={dispatchBulkSelect}
-              checked="checked"
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          ) : (
-            <input
-              onChange={dispatchBulkSelect}
-              data-role={role}
-              className={styles.bulkSelect}
-              type="checkbox"
-            />
-          );
+          <input
+            onChange={dispatchBulkSelect}
+            checked="checked"
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        ) : (
+          <input
+            onChange={dispatchBulkSelect}
+            data-role={role}
+            className={styles.bulkSelect}
+            type="checkbox"
+          />
+        );
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
@@ -752,166 +716,160 @@ class Permissions extends Component {
         const setOptions =
           insertState && insertState.localSet && insertState.localSet.length > 0
             ? insertState.localSet.map((s, i) => {
-              return (
-                <div className={styles.insertSetConfigRow} key={i}>
-                  <div
-                    className={
-                      styles.display_inline +
+                return (
+                  <div className={styles.insertSetConfigRow} key={i}>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      value={s.key}
-                      onChange={e => this.onSetKeyChange(e, 'insert')}
-                      data-index-id={i}
-                      data-test={'column-presets-column-' + i}
+                      }
                     >
-                      <option value="" disabled>
+                      <select
+                        className="input-sm form-control"
+                        value={s.key}
+                        onChange={e => this.onSetKeyChange(e, 'insert')}
+                        data-index-id={i}
+                        data-test={'column-presets-column-' + i}
+                      >
+                        <option value="" disabled>
                           Column Name
-                      </option>
-                      {columns && columns.length > 0
-                        ? columns.map((c, key) => (
-                          <option
-                            value={c.column_name}
-                            data-column-type={c.data_type}
-                            key={key}
-                          >
-                            {c.column_name}
-                          </option>
-                        ))
-                        : null}
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
+                        </option>
+                        {columns && columns.length > 0
+                          ? columns.map((c, key) => (
+                              <option
+                                value={c.column_name}
+                                data-column-type={c.data_type}
+                                key={key}
+                              >
+                                {c.column_name}
+                              </option>
+                            ))
+                          : null}
+                      </select>
+                    </div>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      onChange={e => this.onSetTypeChange(e, 'insert')}
-                      data-index-id={i}
-                      data-test={'column-presets-type-' + i}
-                      value={setConfigValueType(s.value) || ''}
+                      }
                     >
-                      <option value="" disabled>
+                      <select
+                        className="input-sm form-control"
+                        onChange={e => this.onSetTypeChange(e, 'insert')}
+                        data-index-id={i}
+                        data-test={'column-presets-type-' + i}
+                        value={setConfigValueType(s.value) || ''}
+                      >
+                        <option value="" disabled>
                           Select Preset Type
-                      </option>
-                      <option value="static">static</option>
-                      <option value="session">from session variable</option>
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
+                        </option>
+                        <option value="static">static</option>
+                        <option value="session">from session variable</option>
+                      </select>
+                    </div>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <InputGroup>
-                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                        <input
-                          className={'input-sm form-control '}
+                      }
+                    >
+                      {setConfigValueType(s.value) === 'session' ? (
+                        <InputGroup>
+                          <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                          <input
+                            className={'input-sm form-control '}
+                            placeholder="column_value"
+                            value={s.value.slice(X_HASURA_CONST.length)}
+                            onChange={e => this.onSetValueChange(e, 'insert')}
+                            data-test={'column-presets-value-' + i}
+                            data-index-id={i}
+                            data-prefix-val={X_HASURA_CONST}
+                          />
+                        </InputGroup>
+                      ) : (
+                        <EnhancedInput
                           placeholder="column_value"
-                          value={s.value.slice(X_HASURA_CONST.length)}
+                          type={
+                            i in this.state.setOperations.insert.columnTypeMap
+                              ? this.state.setOperations.insert.columnTypeMap[i]
+                              : ''
+                          }
+                          value={s.value}
                           onChange={e => this.onSetValueChange(e, 'insert')}
                           data-test={'column-presets-value-' + i}
-                          onBlur={e =>
-                            this.onSetValueBlur(e, i, null, 'insert')
-                          }
-                          data-index-id={i}
+                          indexId={i}
                           data-prefix-val={X_HASURA_CONST}
                         />
-                      </InputGroup>
+                      )}
+                    </div>
+                    {setConfigValueType(s.value) === 'session' ? (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                        }
+                      >
+                        e.g. X-Hasura-User-Id
+                      </div>
                     ) : (
-                      <EnhancedInput
-                        placeholder="column_value"
-                        type={
-                          i in this.state.setOperations.insert.columnTypeMap
-                            ? this.state.setOperations.insert.columnTypeMap[i]
-                            : ''
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
                         }
-                        value={s.value}
-                        onChange={e => this.onSetValueChange(e, 'insert')}
-                        onBlur={e =>
-                          this.onSetValueBlur(e, i, null, 'insert')
+                      >
+                        e.g. false, 1, some-text
+                      </div>
+                    )}
+                    {i !== insertState.localSet.length - 1 ? (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
                         }
-                        data-test={'column-presets-value-' + i}
-                        indexId={i}
-                        data-prefix-val={X_HASURA_CONST}
+                      >
+                        <i
+                          className="fa-lg fa fa-times"
+                          onClick={e => this.deleteSetKeyVal(e, 'insert')}
+                          data-index-id={i}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                        }
                       />
                     )}
                   </div>
-                  {setConfigValueType(s.value) === 'session' ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. X-Hasura-User-Id
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. false, 1, some-text
-                    </div>
-                  )}
-                  {i !== insertState.localSet.length - 1 ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    >
-                      <i
-                        className="fa-lg fa fa-times"
-                        onClick={e => this.deleteSetKeyVal(e, 'insert')}
-                        data-index-id={i}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    />
-                  )}
-                </div>
-              );
-            })
+                );
+              })
             : null;
 
         return (
@@ -983,166 +941,160 @@ class Permissions extends Component {
         const setOptions =
           updateState && updateState.localSet && updateState.localSet.length > 0
             ? updateState.localSet.map((s, i) => {
-              return (
-                <div className={styles.insertSetConfigRow} key={i}>
-                  <div
-                    className={
-                      styles.display_inline +
+                return (
+                  <div className={styles.insertSetConfigRow} key={i}>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      value={s.key}
-                      data-test={'column-presets-column-' + i}
-                      onChange={e => this.onSetKeyChange(e, 'update')}
-                      data-index-id={i}
+                      }
                     >
-                      <option value="" disabled>
+                      <select
+                        className="input-sm form-control"
+                        value={s.key}
+                        data-test={'column-presets-column-' + i}
+                        onChange={e => this.onSetKeyChange(e, 'update')}
+                        data-index-id={i}
+                      >
+                        <option value="" disabled>
                           Column Name
-                      </option>
-                      {columns && columns.length > 0
-                        ? columns.map((c, key) => (
-                          <option
-                            value={c.column_name}
-                            data-column-type={c.data_type}
-                            key={key}
-                          >
-                            {c.column_name}
-                          </option>
-                        ))
-                        : null}
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
+                        </option>
+                        {columns && columns.length > 0
+                          ? columns.map((c, key) => (
+                              <option
+                                value={c.column_name}
+                                data-column-type={c.data_type}
+                                key={key}
+                              >
+                                {c.column_name}
+                              </option>
+                            ))
+                          : null}
+                      </select>
+                    </div>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      onChange={e => this.onSetTypeChange(e, 'update')}
-                      data-index-id={i}
-                      data-test={'column-presets-type-' + i}
-                      value={setConfigValueType(s.value) || ''}
+                      }
                     >
-                      <option value="" disabled>
+                      <select
+                        className="input-sm form-control"
+                        onChange={e => this.onSetTypeChange(e, 'update')}
+                        data-index-id={i}
+                        data-test={'column-presets-type-' + i}
+                        value={setConfigValueType(s.value) || ''}
+                      >
+                        <option value="" disabled>
                           Select Preset Type
-                      </option>
-                      <option value="static">static</option>
-                      <option value="session">from session variable</option>
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
+                        </option>
+                        <option value="static">static</option>
+                        <option value="session">from session variable</option>
+                      </select>
+                    </div>
+                    <div
+                      className={
+                        styles.display_inline +
                         ' ' +
                         styles.add_mar_right +
                         ' ' +
                         styles.input_element_wrapper
-                    }
-                  >
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <InputGroup>
-                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                        <input
-                          className={'input-sm form-control '}
+                      }
+                    >
+                      {setConfigValueType(s.value) === 'session' ? (
+                        <InputGroup>
+                          <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                          <input
+                            className={'input-sm form-control '}
+                            placeholder="column_value"
+                            value={s.value.slice(X_HASURA_CONST.length)}
+                            onChange={e => this.onSetValueChange(e, 'update')}
+                            data-index-id={i}
+                            data-prefix-val={X_HASURA_CONST}
+                            data-test={'column-presets-value-' + i}
+                          />
+                        </InputGroup>
+                      ) : (
+                        <EnhancedInput
                           placeholder="column_value"
-                          value={s.value.slice(X_HASURA_CONST.length)}
-                          onChange={e => this.onSetValueChange(e, 'update')}
-                          onBlur={e =>
-                            this.onSetValueBlur(e, i, null, 'update')
+                          type={
+                            i in this.state.setOperations.update.columnTypeMap
+                              ? this.state.setOperations.update.columnTypeMap[i]
+                              : ''
                           }
-                          data-index-id={i}
+                          value={s.value}
+                          onChange={e => this.onSetValueChange(e, 'update')}
+                          indexId={i}
                           data-prefix-val={X_HASURA_CONST}
                           data-test={'column-presets-value-' + i}
                         />
-                      </InputGroup>
+                      )}
+                    </div>
+                    {setConfigValueType(s.value) === 'session' ? (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
+                        }
+                      >
+                        e.g. X-Hasura-User-Id
+                      </div>
                     ) : (
-                      <EnhancedInput
-                        placeholder="column_value"
-                        type={
-                          i in this.state.setOperations.update.columnTypeMap
-                            ? this.state.setOperations.update.columnTypeMap[i]
-                            : ''
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper +
+                          ' ' +
+                          styles.e_g_text
                         }
-                        value={s.value}
-                        onChange={e => this.onSetValueChange(e, 'update')}
-                        onBlur={e =>
-                          this.onSetValueBlur(e, i, null, 'update')
+                      >
+                        e.g. false, 1, some-text
+                      </div>
+                    )}
+                    {i !== updateState.localSet.length - 1 ? (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
                         }
-                        indexId={i}
-                        data-prefix-val={X_HASURA_CONST}
-                        data-test={'column-presets-value-' + i}
+                      >
+                        <i
+                          className="fa-lg fa fa-times"
+                          onClick={e => this.deleteSetKeyVal(e, 'update')}
+                          data-index-id={i}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className={
+                          styles.display_inline +
+                          ' ' +
+                          styles.add_mar_right +
+                          ' ' +
+                          styles.input_element_wrapper
+                        }
                       />
                     )}
                   </div>
-                  {setConfigValueType(s.value) === 'session' ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. X-Hasura-User-Id
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. false, 1, some-text
-                    </div>
-                  )}
-                  {i !== updateState.localSet.length - 1 ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    >
-                      <i
-                        className="fa-lg fa fa-times"
-                        onClick={e => this.deleteSetKeyVal(e, 'update')}
-                        data-index-id={i}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    />
-                  )}
-                </div>
-              );
-            })
+                );
+              })
             : null;
         return (
           <div
