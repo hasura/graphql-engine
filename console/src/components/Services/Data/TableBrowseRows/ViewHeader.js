@@ -4,14 +4,7 @@ import Helmet from 'react-helmet';
 import globals from '../../../../Globals';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
-
-const tabNameMap = {
-  view: 'Browse Rows',
-  insert: 'Insert Row',
-  modify: 'Modify',
-  relationships: 'Relationships',
-  permissions: 'Permissions',
-};
+import { tabNameMap } from '../utils';
 
 const ViewHeader = ({
   tableName,

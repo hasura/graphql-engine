@@ -4,14 +4,7 @@ import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
-
-const tabNameMap = {
-  view: 'Browse Rows',
-  insert: 'Insert Row',
-  modify: 'Modify',
-  relationships: 'Relationships',
-  permissions: 'Permissions',
-};
+import { tabNameMap } from '../utils';
 
 const TableHeader = ({
   tableName,
