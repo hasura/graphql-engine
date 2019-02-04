@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-13.5
+resolver: lts-13.6
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
@@ -16,6 +16,7 @@ extra-deps:
   commit: f3d1e9e67bdfbfa3de85b7cbdb4c557dce7fd84d
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: ff95d9a96aa5ef9e5390f8712958e4118e3831f6
+
 - ginger-0.8.4.0
 
 - primitive-extras-0.7.1

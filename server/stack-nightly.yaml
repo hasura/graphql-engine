@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: nightly-2019-01-28
+resolver: nightly-2019-02-04
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
