@@ -23,7 +23,7 @@ class JSON2GraphQL extends Command {
     if (!db) {
       throw new CLIError('path to sample database is required: \'json2graphql <url> -d ./db.js\'');
     }
-    const dbJson = this.getDbJson(db);
+    const dbJson = await this.getDbJson(db);
     const headers = key ? {'x-hasura-access-key': key} : {};
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
@@ -35,7 +35,8 @@ class JSON2GraphQL extends Command {
   }
 
   getDbJson(db) {
-    return require(resolve(db));
+    const ret = require(resolve(db));
+    return typeof ret === 'function' ? ret() : ret;
   }
 
   getSafeUrl(url) {
