@@ -101,6 +101,83 @@ as follows:
       }
     }
 
+Example: Fuzzy match search functions
+******************************
+
+Let's look at an example of a street address text search with support for misspelled queries.
+
+First install the `pg_trgm <https://www.postgresql.org/docs/current/pgtrgm.html>`__ PostgreSQL extension:
+
+.. code-block:: sql
+
+  CREATE EXTENSION pg_trgm;
+
+Next create a GIN (or GIST) index in your database for the columns you'll be querying:
+
+.. code-block:: sql
+      
+  CREATE INDEX address_gin_idx ON property 
+  USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
+
+And finally create the custom SQL function in the Hasura console:
+
+.. code-block:: plpgsql
+
+  CREATE FUNCTION search_property(search text)
+  RETURNS SETOF property AS $$
+      SELECT *
+      FROM property
+      WHERE 
+        search <% (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)
+      ORDER BY
+        similarity(search, (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)) DESC
+      LIMIT 5;
+  $$ LANGUAGE sql STABLE;
+
+Assuming the ``property`` table is being tracked, you can use the custom function as follows:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      search_property(
+        args: {search: "Unit 2, 25 Foobar St, Sydney NSW 2000"}
+      ){
+        id
+        unit
+        num
+        street
+        city
+        region
+        postcode
+      }
+    }
+  :response:
+    {
+      "data": {
+        "search_property": [
+          {
+            "id": 1,
+            "unit": "UNIT 2",
+            "num": "25",
+            "street": "FOOBAR ST",
+            "city": "SYDNEY",
+            "region": "NSW",
+            "postcode": "2000"
+          },
+          {
+            "id": 2,
+            "unit": "UNIT 12",
+            "num": "25",
+            "street": "FOOBAR ST",
+            "city": "SYDNEY",
+            "region": "NSW",
+            "postcode": "2000"
+          }
+        ]
+      }
+    }
+
 Example: PostGIS functions
 **************************
 
