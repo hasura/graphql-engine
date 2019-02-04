@@ -127,7 +127,6 @@ if [[ "$NEED_SUDO" == '1' ]]; then
     fi
 fi
 
-log
 log "Moving cli from $targetFile to ${INSTALL_PATH}"
 
 try maybe_sudo mv $targetFile ${INSTALL_PATH}/hasura
