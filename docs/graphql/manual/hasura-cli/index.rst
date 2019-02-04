@@ -30,7 +30,6 @@ Commands
 - :doc:`hasura <hasura>`
 - :doc:`hasura completion <hasura_completion>`
 - :doc:`hasura console <hasura_console>`
-- :doc:`hasura example <hasura_example>`
 - :doc:`hasura init <hasura_init>`
 - :doc:`hasura metadata <hasura_metadata>`
 - :doc:`hasura metadata apply <hasura_metadata_apply>`
