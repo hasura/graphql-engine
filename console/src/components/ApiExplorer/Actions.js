@@ -1,4 +1,5 @@
 import defaultState from './state';
+import globals from '../../Globals';
 // import fetch from 'isomorphic-fetch';
 
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -250,7 +251,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
       const lHead = t.toLowerCase();
       if (
         lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
-        lHead !== 'x-hasura-access-key'
+        lHead !== `x-hasura-${globals.adminSecretname}`
       ) {
         user[lHead] = reqHeaders[t];
         delete reqHeaders[t];
