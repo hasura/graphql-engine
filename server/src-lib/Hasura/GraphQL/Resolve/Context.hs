@@ -59,7 +59,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 type RespTx = Q.TxE QErr EncJSON
 
 type LazyRespTx = LazyTx QErr EncJSON
-type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
+type PrepFn m = (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -86,7 +86,7 @@ getArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> m AnnGValue
+  -> m AnnInpVal
 getArg args arg =
   onNothing (Map.lookup arg args) $
   throw500 $ "missing argument: " <> showName arg
@@ -105,7 +105,7 @@ withArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m a
 withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
@@ -114,12 +114,13 @@ withArgM
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m (Maybe a)
 withArgM args arg f = prependArgsInPath $ nameAsPath arg $
   mapM f $ handleNull =<< Map.lookup arg args
   where
-    handleNull v = bool (Just v) Nothing $ hasNullVal v
+    handleNull v = bool (Just v) Nothing $
+                   hasNullVal $ _aivValue v
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
@@ -128,7 +129,7 @@ type Convert =
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
-prepare (colTy, colVal) = do
+prepare (_, colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy

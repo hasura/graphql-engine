@@ -18,11 +18,11 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type OpExp = OpExpG (PGColType, PGColValue)
+type OpExp = OpExpG (Maybe G.Variable, PGColType, PGColValue)
 
 parseOpExps
   :: (MonadError QErr m)
-  => AnnGValue -> m [OpExp]
+  => AnnInpVal -> m [OpExp]
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) -> case k of
@@ -73,7 +73,7 @@ parseOpExps annVal = do
           <> showName k
   return $ catMaybes $ fromMaybe [] opExpsM
   where
-    resolveIsNull v = case v of
+    resolveIsNull v = case _aivValue v of
       AGScalar _ Nothing -> return Nothing
       AGScalar _ (Just (PGValBoolean b)) ->
         return $ Just $ bool ANISNOTNULL ANISNULL b
@@ -91,15 +91,15 @@ parseOpExps annVal = do
 
 parseAsEqOp
   :: (MonadError QErr m)
-  => AnnGValue -> m [OpExp]
+  => AnnInpVal -> m [OpExp]
 parseAsEqOp annVal = do
   annValOpExp <- AEQ True <$> asPGColVal annVal
   return [annValOpExp]
 
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => PrepFn m -> G.NamedType -> G.Name -> AnnGValue
-  -> (AnnGValue -> m [OpExp]) -> m AnnBoolExpFldSQL
+  => PrepFn m -> G.NamedType -> G.Name -> AnnInpVal
+  -> (AnnInpVal -> m [OpExp]) -> m AnnBoolExpFldSQL
 parseColExp f nt n val expParser = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
@@ -112,7 +112,7 @@ parseColExp f nt n val expParser = do
 
 parseBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => PrepFn m -> AnnGValue -> m AnnBoolExpSQL
+  => PrepFn m -> AnnInpVal -> m AnnBoolExpSQL
 parseBoolExp f annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
@@ -125,14 +125,14 @@ parseBoolExp f annGVal = do
           | otherwise   -> BoolFld <$> parseColExp f nt k v parseOpExps
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
-type PGColValMap = Map.HashMap G.Name AnnGValue
+type PGColValMap = Map.HashMap G.Name AnnInpVal
 
 pgColValToBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => PrepFn m -> PGColValMap -> m AnnBoolExpSQL
 pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
-    (ty, _) <- asPGColVal val
+    (_, ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
     BoolFld <$> parseColExp f namedTy name val parseAsEqOp
   return $ BoolAnd colExps

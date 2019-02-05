@@ -92,11 +92,11 @@ mkAnnInsObj relInfoMap annObj =
 traverseInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
-  -> (G.Name, AnnGValue)
+  -> (G.Name, AnnInpVal)
   -> AnnInsObj
   -> m AnnInsObj
 traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
-  case annVal of
+  case _aivValue annVal of
     AGScalar colty mColVal -> do
       let col = PGCol $ G.unName gName
           colVal = fromMaybe (PGNull colty) mColVal
@@ -143,7 +143,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
 parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
-  -> AnnGValue -> m RI.ConflictClauseP1
+  -> AnnInpVal -> m RI.ConflictClauseP1
 parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
@@ -168,7 +168,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
-     => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
+     => [(PGCol, AnnInpVal)] -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
   forM cols $ \(c, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
@@ -180,7 +180,7 @@ mkSQLRow defVals withPGCol =
   Map.elems $ Map.union (Map.fromList withPGCol) defVals
 
 mkInsertQ :: MonadError QErr m => QualifiedTable
-          -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnGValue)]
+          -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnInpVal)]
           -> [PGCol] -> Map.HashMap PGCol S.SQLExp -> RoleName
           -> m InsWithExp
 mkInsertQ vn onConflictM insCols tableCols defVals role = do
@@ -205,7 +205,7 @@ mkBoolExp tn colInfoVals =
   mapM (fmap BoolFld . uncurry f) colInfoVals
   where
     f ci@(PGColInfo _ colTy _) colVal =
-      AVCol ci . pure . AEQ True <$> prepare (colTy, colVal)
+      AVCol ci . pure . AEQ True <$> prepare (Nothing, colTy, colVal)
 
 mkSelQ :: MonadError QErr m => QualifiedTable
        -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp
@@ -512,5 +512,9 @@ mkPGColWithTypeAndVal pgColInfos pgColWithVal =
 
 pgColToAnnGVal
   :: (PGCol, PGColType, PGColValue)
-  -> (PGCol, AnnGValue)
-pgColToAnnGVal (col, colTy, colVal) = (col, pgColValToAnnGVal colTy colVal)
+  -> (PGCol, AnnInpVal)
+pgColToAnnGVal (col, colTy, colVal) =
+  (col, AnnInpVal gTypeFromPGColTy Nothing $ pgColValToAnnGVal colTy colVal)
+  where
+    gTypeFromPGColTy = G.TypeNamed (G.Nullability True) $ G.NamedType $
+                       G.Name $ pgColTyToScalar colTy

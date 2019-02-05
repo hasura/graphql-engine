@@ -93,7 +93,7 @@ explainField userInfo gCtx fld =
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . uncurry toTxtValue
+    txtConverter (_, a, b)= return $ toTxtValue a b
 
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx

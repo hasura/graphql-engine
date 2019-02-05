@@ -143,7 +143,7 @@ parseOrderBy
      , MonadReader r m
      , Has OrdByCtx r
      )
-  => AnnGValue -> m [RS.AnnOrderByItem]
+  => AnnInpVal -> m [RS.AnnOrderByItem]
 parseOrderBy = fmap concat . withArray f
   where
     f _ = mapM (withObject (getAnnObItems id))
@@ -218,9 +218,9 @@ parseOrderByEnum = \case
   G.EnumValue v                   -> throw500 $
     "enum value " <> showName v <> " not found in type order_by"
 
-parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
+parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  (_, pgColVal) <- asPGColVal v
+  (_, _, pgColVal) <- asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -230,7 +230,7 @@ parseLimit v = do
 
 fromFieldByPKey
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
+  => PrepFn m
   -> QualifiedTable -> AnnBoolExpSQL -> Field -> m RS.AnnSel
 fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp f $ _fArguments fld
@@ -257,7 +257,7 @@ convertSelectByPKey qt permFilter fld = do
   return $ RS.selectP2 True (selData, prepArgs)
 
 -- agg select related
-parseColumns :: MonadError QErr m => AnnGValue -> m [PGCol]
+parseColumns :: MonadError QErr m => AnnInpVal -> m [PGCol]
 parseColumns val =
   flip withArray val $ \_ vals ->
     forM vals $ \v -> do
@@ -271,7 +271,7 @@ convertCount args = do
   maybe (return S.CTStar) (mkCType isDistinct) columnsM
   where
     parseDistinct v = do
-      (_, val) <- asPGColVal v
+      (_, _, val) <- asPGColVal v
       case val of
         PGValBoolean b -> return b
         _              ->
@@ -353,7 +353,7 @@ fromFuncQueryField f qf isAgg fld = fieldAsPath fld $ do
 
 parseFunctionArgs
   ::(MonadError QErr m, MonadReader r m, Has FuncArgCtx r)
-  => PrepFn m -> AnnGValue -> m [S.SQLExp]
+  => PrepFn m -> AnnInpVal -> m [S.SQLExp]
 parseFunctionArgs fn val =
   flip withObject val $ \nTy obj -> do
     funcArgCtx :: FuncArgCtx <- asks getter
