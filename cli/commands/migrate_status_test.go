@@ -23,7 +23,7 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
@@ -45,7 +45,7 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       ":",
 				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},

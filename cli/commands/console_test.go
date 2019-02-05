@@ -17,7 +17,7 @@ func TestConsoleCmd(t *testing.T) {
 	ec.Telemetry.Command = "TEST"
 	ec.Logger = logger
 	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-	ec.Config = &cli.HasuraGraphQLConfig{
+	ec.ServerConfig = &cli.ServerConfig{
 		Endpoint:    "http://localhost:8080",
 		AdminSecret: "",
 	}
@@ -35,7 +35,7 @@ func TestConsoleCmd(t *testing.T) {
 		DontOpenBrowser: true,
 	}
 	opts.EC.Spinner.Writer = &fake.FakeWriter{}
-	err = opts.EC.Config.ParseEndpoint()
+	err = opts.EC.ServerConfig.ParseEndpoint()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -51,7 +51,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "admin secret for Hasura GraphQL Engine")
-	f.MarkHidden("access-key")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
 	return initCmd
 }
 
@@ -124,7 +125,7 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.HasuraGraphQLConfig{
+	config := &cli.ServerConfig{
 		Endpoint: "http://localhost:8080",
 	}
 	if o.Endpoint != "" {
