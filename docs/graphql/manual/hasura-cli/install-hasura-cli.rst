@@ -23,10 +23,19 @@ Install
 
          .. code-block:: bash
 
-            curl -L https://cli.hasura.io/install.sh | bash
+            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
 
          This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
+
+         If you'd prefer to install to a different location other than ``/usr/local/bin``, set the
+         env var ``INSTALL_PATH``:
+
+         .. code-block:: bash
+
+            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+
+
 
      - id: mac
        content: |
@@ -34,29 +43,24 @@ Install
 
          .. code-block:: bash
 
-            curl -L https://cli.hasura.io/install.sh | bash
+            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
 
          This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
+         If you'd prefer to install to a different location other than ``/usr/local/bin``, set the
+         env var ``INSTALL_PATH``:
+
+         .. code-block:: bash
+
+            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+
      - id: windows
        content: |
 
-         .. note::
+         Download the binary ``cli-hasura-windows-amd64.exe`` from GitHub release page: https://github.com/hasura/graphql-engine/releases
 
-            You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this
-            `link <https://git-scm.com/download/win>`__. Also, make sure you install it in ``MinTTY`` mode,
-            instead of Windows' default console.
-
-         Download the Hasura installer:
-
-         * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`__
-         * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`__
-         
-         **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still getting
-         a "command not found" error after installing Hasura CLI, please restart ``git bash``.
-
-Alternatively, you can directly download the appropriate binary from: https://github.com/hasura/graphql-engine/releases
+         Rename the downloaded file to ``hasura``.
 
 (Optional) Add shell completion
 -------------------------------
