@@ -38,9 +38,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRun: func(cmd *cobra.Command, args []string) {
 			ec.Viper = viper.New()
-			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
@@ -52,7 +51,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "admin secret for Hasura GraphQL Engine")
-	f.MarkHidden("access-key")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
 	return initCmd
 }
 
@@ -125,7 +125,7 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.HasuraGraphQLConfig{
+	config := &cli.ServerConfig{
 		Endpoint: "http://localhost:8080",
 	}
 	if o.Endpoint != "" {

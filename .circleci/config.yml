@@ -214,6 +214,37 @@ jobs:
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
+  test_cli_with_last_release:
+    docker:
+    - image: hasura/graphql-engine-cli-builder:v0.3
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
+    working_directory: /go/src/github.com/hasura/graphql-engine
+    steps:
+    - checkout
+    - attach_workspace:
+        at: /build
+    - restore_cache:
+        keys:
+        - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+    - run:
+        name: get cli dependencies
+        working_directory: cli
+        command: make deps
+    - save_cache:
+        key: cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
+        paths:
+        - cli/vendor
+    - *wait_for_postgres
+    - run:
+        name: test cli
+        command: .circleci/test-cli-with-last-release.sh
+    - store_artifacts:
+        path: /build/_console_output
+        destination: console
+
   # test and build cli
   test_and_build_cli:
     docker:
@@ -350,6 +381,8 @@ workflows:
         - pytest_server_pg_10.6
         - pytest_server_pg_9.6
         - pytest_server_pg_9.5
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
@@ -358,6 +391,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
+        - test_cli_with_last_release
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:

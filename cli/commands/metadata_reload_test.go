@@ -18,7 +18,7 @@ func testMetadataReload(t *testing.T, metadataFile string, endpoint *url.URL) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MetadataFile: metadataFile,
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,

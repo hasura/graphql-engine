@@ -13,8 +13,10 @@ module Hasura.RQL.DDL.Schema.Diff
   , getSchemaChangeDeps
 
   , FunctionMeta(..)
+  , funcFromMeta
   , fetchFunctionMeta
-  , getDroppedFuncs
+  , FunctionDiff(..)
+  , getFuncDiff
   ) where
 
 import           Hasura.Prelude
@@ -226,25 +228,50 @@ getSchemaChangeDeps schemaDiff = do
 
 data FunctionMeta
   = FunctionMeta
-  { fmOid      :: !Int
-  , fmFunction :: !QualifiedFunction
+  { fmOid    :: !Int
+  , fmSchema :: !SchemaName
+  , fmName   :: !FunctionName
+  , fmType   :: !FunctionType
   } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
+
+funcFromMeta :: FunctionMeta -> QualifiedFunction
+funcFromMeta fm = QualifiedObject (fmSchema fm) (fmName fm)
 
 fetchFunctionMeta :: Q.Tx [FunctionMeta]
 fetchFunctionMeta = do
-  res <- Q.listQ [Q.sql|
+  map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
     SELECT
-        f.function_schema,
-        f.function_name,
-        p.oid
-    FROM hdb_catalog.hdb_function_agg f
-         JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+      json_build_object(
+        'oid', p.oid :: integer,
+        'schema', f.function_schema,
+        'name', f.function_name,
+        'type', f.function_type
+      ) AS function_meta
+    FROM
+      hdb_catalog.hdb_function_agg f
+      JOIN pg_catalog.pg_proc p ON (p.proname = f.function_name)
+      JOIN pg_catalog.pg_namespace pn ON (
+        pn.oid = p.pronamespace
+        AND pn.nspname = f.function_schema
+      )
     WHERE
-        f.function_schema <> 'hdb_catalog'
-                  |] () False
-  forM res $ \(sn, fn, foid) ->
-    return $ FunctionMeta foid $ QualifiedObject sn fn
+      f.function_schema <> 'hdb_catalog'
+    |] () False
 
-getDroppedFuncs :: [FunctionMeta] -> [FunctionMeta] -> [QualifiedFunction]
-getDroppedFuncs oldMeta newMeta =
-  map fmFunction $ getDifference fmOid oldMeta newMeta
+data FunctionDiff
+  = FunctionDiff
+  { fdDropped :: ![QualifiedFunction]
+  , fdAltered :: ![(QualifiedFunction, FunctionType)]
+  } deriving (Show, Eq)
+
+getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
+getFuncDiff oldMeta newMeta =
+  FunctionDiff droppedFuncs alteredFuncs
+  where
+    droppedFuncs = map funcFromMeta $ getDifference fmOid oldMeta newMeta
+    alteredFuncs = mapMaybe mkAltered $ getOverlap fmOid oldMeta newMeta
+    mkAltered (oldfm, newfm) =
+      let isTypeAltered = fmType oldfm /= fmType newfm
+          alteredFunc = (funcFromMeta oldfm, fmType newfm)
+      in bool Nothing (Just alteredFunc) isTypeAltered

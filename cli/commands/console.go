@@ -55,7 +55,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "admin secret for Hasura GraphQL Engine")
-	f.MarkHidden("access-key")
+	f.MarkDeprecated("access-key", "this flag is deprecated, use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
@@ -93,7 +93,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -107,9 +107,9 @@ func (o *consoleOptions) run() error {
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":      o.EC.Config.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"adminSecret":     o.EC.Config.AdminSecret,
+		"adminSecret":     o.EC.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,

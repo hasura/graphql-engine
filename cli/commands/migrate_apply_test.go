@@ -22,7 +22,7 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
@@ -49,7 +49,7 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       ":",
 				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},
@@ -70,7 +70,7 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:    ":",
 				AdminSecret: "",
 			},
@@ -79,7 +79,7 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 		downMigration: "2",
 	}
 
-	err := opts.EC.Config.ParseEndpoint()
+	err := opts.EC.ServerConfig.ParseEndpoint()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}
