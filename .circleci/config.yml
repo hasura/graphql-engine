@@ -124,7 +124,7 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.3
+    - image: hasura/graphql-engine-server-builder:v0.3.3-cabal
     working_directory: ~/graphql-engine
     steps:
     - checkout
@@ -182,7 +182,7 @@ jobs:
     environment:
       PG_VERSION: "11_1"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.3
+    - image: hasura/graphql-engine-server-builder:v0.3.3-cabal
       # TODO: change this to circleci postgis when they have one for pg 11
     - image: mdillon/postgis:11-alpine
       <<: *test_pg_env
@@ -192,7 +192,7 @@ jobs:
     environment:
       PG_VERSION: "10_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.3
+    - image: hasura/graphql-engine-server-builder:v0.3.3-cabal
     - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
@@ -201,7 +201,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.3
+    - image: hasura/graphql-engine-server-builder:v0.3.3-cabal
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -210,7 +210,7 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.3
+    - image: hasura/graphql-engine-server-builder:v0.3.3-cabal
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
