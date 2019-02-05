@@ -20,7 +20,7 @@ Examples
 
 ::
 
-  # Bash
+    # Bash
       # Linux
         # Add Bash completion file using:
         $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
