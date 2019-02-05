@@ -173,22 +173,20 @@ const deleteFunctionSql = () => {
     const {
       functionName,
       functionDefinition,
-      inputArgNames,
       inputArgTypes,
     } = getState().functions;
-    let functionWSchemaName = currentSchema + '.' + functionName;
+    let functionWSchemaName =
+      '"' + currentSchema + '"' + '.' + '"' + functionName + '"';
 
-    if (inputArgNames.length > 0 && inputArgTypes.length > 0) {
+    if (inputArgTypes.length > 0) {
       let functionString = '(';
-      inputArgNames.forEach((i, index) => {
+      inputArgTypes.forEach((i, index) => {
         functionString +=
-          i +
-          ' ' +
-          inputArgTypes[index] +
-          (index === inputArgNames.length - 1 ? ')' : ',');
+          i + ' ' + (index === inputArgTypes.length - 1 ? ')' : ',');
       });
       functionWSchemaName += functionString;
     }
+
     const sqlDropFunction = 'DROP FUNCTION ' + functionWSchemaName;
 
     const sqlUpQueries = [
