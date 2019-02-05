@@ -16,14 +16,18 @@ wait_for_port() {
     echo "Failed waiting for $PORT" && exit 1
 }
 
+# get latest cli
+wget -O /bin/graphql-engine https://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
+chmod +x /bin/graphql-engine
+
 cd "$CLI_ROOT"
 mkdir -p /build/_cli_output
-touch /build/_cli_output/server.log
-touch /build/_cli_output/server-secret.log
+touch /build/_cli_output/server-last-release.log
+touch /build/_cli_output/server-last-release-secret.log
 
 # start graphql-engine without admin secret
-/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_cli_output/server.log 2>&1 &
+/bin/graphql-engine \
+    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_cli_output/server-last-release.log 2>&1 &
 PID=$!
 
 wait_for_port 8080
@@ -34,8 +38,8 @@ kill $PID
 
 # start graphql-engine with admin secret
 psql -U gql_test -h localhost -c 'CREATE DATABASE "gql_test_with_admin_secret";'
-/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test_with_admin_secret serve --admin-secret "abcd" > /build/_cli_output/server-secret.log 2>&1 &
+/bin/graphql-engine \
+    --database-url postgres://gql_test@localhost:5432/gql_test_with_admin_secret serve --admin-secret "abcd" > /build/_cli_output/server-last-release-secret.log 2>&1 &
 PID=$!
 
 wait_for_port 8080
