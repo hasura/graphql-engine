@@ -51,11 +51,6 @@
   line-height: 1.7;
 }
 
-.hcl_half {
-  width: 50%;
-  float: left;
-}
-
 .box_wrapper {
   width: 89%;
   margin: 0 auto;
@@ -234,6 +229,18 @@
 .wd_80 {
   margin: 0 auto;
   width: 80%;
+}
+
+.hcl_half {
+  width: 50%;
+  float: left;
+}
+
+@media (max-width: 1024px) {
+  .hcl_half {
+    width: 100%;
+    float: left;
+  }
 }
 
 /*** landing.html END ***/

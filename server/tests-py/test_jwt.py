@@ -171,25 +171,6 @@ class TestJWTBasic:
         self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    # def test_jwt_stringified_claims(self, hge_ctx):
-    #     print(hge_ctx.hge_jwt_conf)
-    #     conf = json.loads(hge_ctx.hge_jwt_conf)
-    #     if 'claims_format' not in conf:
-    #         pytest.skip('claims_format is not stringified_json, skipping testing stringified claims.')
-    #     if 'claims_format' in conf and conf['claims_format'] != 'stringified_json':
-    #         pytest.skip('claims_format is not stringified_json, skipping testing stringified claims.')
-
-    #     self.claims['https://hasura.io/jwt/claims'] =  mk_claims(hge_ctx.hge_jwt_conf, {
-    #         'x-hasura-user-id': '1',
-    #         'x-hasura-default-role': 'user',
-    #         'x-hasura-allowed-roles': ['user'],
-    #     })
-
-    #     token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
-    #     self.conf['headers']['Authorization'] = 'Bearer ' + token
-    #     self.conf['status'] = 200
-    #     check_query(hge_ctx, self.conf, add_auth=False)
-
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
