@@ -80,6 +80,10 @@ infixr 6 <<>
   T.dquote (dquoteTxt a) <> rTxt
 {-# INLINE (<<>) #-}
 
+fromL :: (DQuote a) => [a] -> T.Text
+fromL =
+  T.intercalate ", " . map (T.dquote . dquoteTxt)
+
 instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
@@ -143,7 +147,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -159,7 +163,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -174,7 +178,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =

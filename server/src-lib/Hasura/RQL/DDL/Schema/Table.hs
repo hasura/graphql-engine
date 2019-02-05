@@ -442,6 +442,12 @@ execWithMDCheck (RunSQL t cascade _) = do
       existingFuncs = M.keys $ scFunctions sc
       oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
+      overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
+
+  -- Do not allow overloading functions
+  unless (null overloadedFuncs) $
+    throw400 NotSupported $ fromL overloadedFuncs
+      <> " functions are being overloaded and it is not allowed"
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -495,7 +501,7 @@ isAltrDropReplace :: QErrM m => T.Text -> m Bool
 isAltrDropReplace = either throwErr return . matchRegex regex False
   where
     throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-    regex = "alter|drop|replace"
+    regex = "alter|drop|replace|create function"
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)

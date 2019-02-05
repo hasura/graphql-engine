@@ -1,0 +1,20 @@
+description: Create a new SQL function with same name (error)
+url: /v1/query
+status: 400
+reponse:
+  path: "$.args"
+  error: '"search_posts" functions are being overloaded and it is not allowed'
+  code: not-supported
+query:
+  type: run_sql
+  args:
+    sql: |
+      create function search_posts(search text, id integer)
+      returns setof post as $$
+          select *
+          from post
+          where
+          title ilike ('%' || search || '%') or
+          content ilike ('%' || search || '%') or
+          id = id
+      $$ language sql stable;
