@@ -322,7 +322,7 @@ class ApiRequest extends Component {
               data-test={`header-value-${i}`}
               type={
                 header.key.toLowerCase() ===
-                  `x-hasura-${globals.adminSecretName}` &&
+                  `x-hasura-${globals.adminSecretLabel}` &&
                 !this.state.adminSecretVisible
                   ? 'password'
                   : 'text'
@@ -332,9 +332,9 @@ class ApiRequest extends Component {
           {header.isNewHeader ? null : (
             <td>
               {header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretName}` ? (
+              `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                    className={styles.showAccessKey + ' fa fa-eye'}
+                    className={styles.showAdminSecret + ' fa fa-eye'}
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={this.onShowAdminSecretClicked.bind(this)}

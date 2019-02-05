@@ -28,7 +28,7 @@ const globals = {
   adminSecret: window.__env.adminSecret || window.__env.accessKey,
   isAdminSecretSet:
     window.__env.isAdminSecretSet || window.__env.isAccessKeySet,
-  adminSecretName:
+  adminSecretLabel:
     window.__env.isAdminSecretSet !== undefined ||
     window.__env.adminSecret !== undefined
       ? 'admin-secret'

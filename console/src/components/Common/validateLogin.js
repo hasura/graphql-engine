@@ -19,7 +19,7 @@ const checkValidity = adminSecret => {
     const currentSchema = 'public';
     const headers = {
       'content-type': 'application/json',
-      [`x-hasura-${globals.adminSecretName}`]: adminSecret,
+      [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
     };
     const options = {
       credentials: globalCookiePolicy,
@@ -60,14 +60,14 @@ const validateLogin = ({ dispatch }) => {
               type: UPDATE_DATA_HEADERS,
               data: {
                 'content-type': 'application/json',
-                [`x-hasura-${globals.adminSecretName}`]: adminSecret,
+                [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
               },
             }),
             dispatch(
               changeRequestHeader(
                 1,
                 'key',
-                `x-hasura-${globals.adminSecretName}`,
+                `x-hasura-${globals.adminSecretLabel}`,
                 true
               )
             ),

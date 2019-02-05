@@ -251,7 +251,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
       const lHead = t.toLowerCase();
       if (
         lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
-        lHead !== `x-hasura-${globals.adminSecretName}`
+        lHead !== `x-hasura-${globals.adminSecretLabel}`
       ) {
         user[lHead] = reqHeaders[t];
         delete reqHeaders[t];

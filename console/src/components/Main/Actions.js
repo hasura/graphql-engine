@@ -137,7 +137,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: true });
       console.error(
-        `Failed to validate ${globals.adminSecretName} + JSON.stringify(error)`
+        `Failed to validate ${globals.adminSecretLabel} + JSON.stringify(error)`
       );
       if (error.code !== 'access-denied') {
         alert(JSON.stringify(error));
@@ -154,13 +154,18 @@ const loginClicked = () => (dispatch, getState) => {
   // redirect to / to test the adminSecretInput;
   const updatedDataHeaders = {
     'content-type': 'application/json',
-    [`x-hasura-${globals.adminSecretName}`]: adminSecretInput,
+    [`x-hasura-${globals.adminSecretLabel}`]: adminSecretInput,
   };
   Promise.all([
     dispatch({ type: ADMIN_SECRET_ERROR, data: false }),
     dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
     dispatch(
-      changeRequestHeader(1, 'key', `x-hasura-${globals.adminSecretName}`, true)
+      changeRequestHeader(
+        1,
+        'key',
+        `x-hasura-${globals.adminSecretLabel}`,
+        true
+      )
     ),
     dispatch(changeRequestHeader(1, 'value', adminSecretInput, true)),
     // dispatch(push('/'))
