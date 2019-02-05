@@ -55,7 +55,7 @@ if [ "$?" = "0" ]; then
     log ""
     log "${GREEN}You already have the hasura cli at '${hasCli}'${NC}"
     export n=3
-    log "${YELLOW}Downloading again in $n seconds.. Press Ctrl+C to cancel.${NC}"
+    log "${YELLOW}Downloading again in $n seconds... Press Ctrl+C to cancel.${NC}"
     log ""
     sleep $n
 fi
@@ -84,11 +84,6 @@ fi
 # some variables
 suffix="-${platform}-${arch}"
 targetFile="/tmp/cli-hasura$suffix"
-userid=$(id -u)
-
-if [ "$userid" != "0" ]; then
-    targetFile="$(pwd)/cli-hasura$suffix"
-fi
 
 if [ -e $targetFile ]; then
     rm $targetFile
@@ -112,18 +107,16 @@ rm ${INSTALL_PATH}/.hasurainstall &> /dev/null
 if [[ "$NEED_SUDO" == '1' ]]; then
     log
     log "${YELLOW}Path '$INSTALL_PATH' requires root access to write."
-    log "${YELLOW}The script will attempt to execute the move command with sudo.${NC}"
-    log "${YELLOW}If you don't want to to do that, press Ctrl+C (or type n) to exit the script.${NC}"
-    log "${YELLOW}Run the following command manually to move the binary:${NC}"
-    log
-    log "  ${BLUE}sudo mv cli-hasura$suffix ${INSTALL_PATH}/hasura${NC}"
-    log
-    log "${PURPLE}Type y and press Enter to continue ${NC}"
+    log "${YELLOW}This script will attempt to execute the move command with sudo.${NC}"
+    log "${YELLOW}Are you ok with that? (y/N)${NC}"
     read a
     if [[ $a == "Y" || $a == "y" || $a = "" ]]; then
         log
     else
-        die "Please move the file manually using the command above."
+        log
+        log "  ${BLUE}sudo mv $targetFile ${INSTALL_PATH}/hasura${NC}"
+        log
+        die "Please move the binary manually using the command above."
     fi
 fi
 
