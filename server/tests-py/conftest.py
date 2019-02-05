@@ -23,6 +23,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
     )
+    parser.addoption(
+        "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
+    )
 
 
 @pytest.fixture(scope='session')
@@ -34,8 +37,17 @@ def hge_ctx(request):
     hge_webhook = request.config.getoption('--hge-webhook')
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
+    hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
     try:
-        hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url, hge_key=hge_key, hge_webhook=hge_webhook, hge_jwt_key_file=hge_jwt_key_file, webhook_insecure = webhook_insecure )
+        hge_ctx = HGECtx(
+            hge_url=hge_url,
+            pg_url=pg_url,
+            hge_key=hge_key,
+            hge_webhook=hge_webhook,
+            webhook_insecure=webhook_insecure,
+            hge_jwt_key_file=hge_jwt_key_file,
+            hge_jwt_conf=hge_jwt_conf
+        )
     except HGECtxError as e:
         pytest.exit(str(e))
     yield hge_ctx  # provide the fixture value
