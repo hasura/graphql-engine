@@ -3,12 +3,12 @@ import { migrateModeUrl } from '../../helpers/common';
 import { toggleOnMigrationMode } from '../data/migration-mode/utils';
 // ***************** UTIL FUNCTIONS **************************
 
-let accessKey;
+let adminSecret;
 let dataApiUrl;
 
 export const setMetaData = () => {
   cy.window().then(win => {
-    accessKey = win.__env.accessKey;
+    adminSecret = win.__env.adminSecret;
     dataApiUrl = win.__env.dataApiUrl;
     const { consoleMode } = win.__env;
     if (consoleMode === 'cli') {
@@ -24,7 +24,7 @@ export const createView = sql => {
       sql,
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions);
 };
 
@@ -45,7 +45,7 @@ export const validateRS = (remoteSchemaName, result) => {
       },
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(
@@ -75,7 +75,7 @@ export const validateCFunc = (functionName, functionSchema, result) => {
       },
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(
@@ -106,7 +106,7 @@ export const validateUntrackedFunc = (functionName, functionSchema, result) => {
       },
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(response.body.length === 0).to.be.true;
@@ -117,7 +117,7 @@ export const validateUntrackedFunc = (functionName, functionSchema, result) => {
 };
 
 export const dataRequest = (reqBody, result) => {
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(
@@ -136,7 +136,7 @@ export const dataRequest = (reqBody, result) => {
 };
 
 export const dropTableRequest = (reqBody, result) => {
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(
@@ -160,7 +160,7 @@ export const validateCT = (tableName, result) => {
       columns: ['*'],
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(response.status === 200).to.be.true;
@@ -186,7 +186,7 @@ export const validateColumn = (tableName, column, result) => {
       columns: column,
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(response.status === 200).to.be.true;
@@ -205,7 +205,7 @@ export const validateColumnWhere = (tableName, column, where, result) => {
       where,
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     cy.log(JSON.stringify(response));
     if (result === 'success') {
@@ -225,7 +225,7 @@ export const validateInsert = (tableName, rows) => {
       table: tableName,
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     cy.log(JSON.stringify(response));
     expect(response.body.count === rows).to.be.true;
@@ -305,7 +305,7 @@ export const validatePermission = (
       },
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     cy.log(JSON.stringify(response));
     const tableSchema = response.body.find(
@@ -343,7 +343,7 @@ export const validateCTrigger = (triggerName, result) => {
       where: { name: triggerName },
     },
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
       expect(response.status === 200).to.be.true;
