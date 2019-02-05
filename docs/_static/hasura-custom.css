@@ -913,4 +913,12 @@ article ol ol {
   .api-tabs .ui.tab {
     padding: 10px
   }
+
+  .footer-hasura-custom {
+    display: block;
+  }
+
+  .footer-hasura-custom .footer_logo {
+    margin-right: 0;
+  }
 }
