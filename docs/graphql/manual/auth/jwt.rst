@@ -120,7 +120,7 @@ JSON object:
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
-     "is_stringified": <optional-boolean>
+     "claims_format": "json|stringified_json"
    }
 
 ``key`` or ``jwk_url``, **one of them has to be present**.
@@ -176,20 +176,23 @@ inside which the Hasura specific claims will be present. E.g. - ``https://mydoma
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
 
-``is_stringified``
+``claims_format``
 ^^^^^^^^^^^^^^^^^^
-This is an optional boolean field. Default is ``false``.
+This is an optional field, with only the following possible values:
+- ``json``
+- ``stringified_json``
 
-This is to indicate that if the hasura specific claims are stringified JSON or
-not. Even in the stringified case, the value of the string should be decodable
-as JSON.
+Default is ``json``.
+
+This is to indicate that if the hasura specific claims are a regular JSON object
+or stringified JSON
 
 This is required because providers like AWS Cognito only allows strings in the
 JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
 
 Example:-
 
-If ``is_stringified`` is ``false`` then JWT claims should look like:
+If ``claims_format`` is ``json`` then JWT claims should look like:
 
 .. code-block:: json
 
@@ -208,7 +211,7 @@ If ``is_stringified`` is ``false`` then JWT claims should look like:
   }
 
 
-If ``is_stringified`` is ``true`` then JWT claims should look like:
+If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
 
 .. code-block:: json
 

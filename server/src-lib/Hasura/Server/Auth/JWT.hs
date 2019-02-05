@@ -4,6 +4,7 @@ module Hasura.Server.Auth.JWT
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
+  , JWTClaimsFormat (..)
   , updateJwkRef
   , jwkRefreshCtrl
   ) where
@@ -47,22 +48,31 @@ import qualified Network.Wreq                    as Wreq
 
 newtype RawJWT = RawJWT BL.ByteString
 
+data JWTClaimsFormat
+  = JCFJson
+  | JCFStringifiedJson
+  deriving (Show, Eq)
+
+$(A.deriveJSON A.defaultOptions { A.sumEncoding = A.ObjectWithSingleField
+                                , A.constructorTagModifier = A.snakeCase . drop 3
+                                } ''JWTClaimsFormat)
+
 data JWTConfig
   = JWTConfig
-  { jcType          :: !T.Text
-  , jcKeyOrUrl      :: !(Either JWK URI)
-  , jcClaimNs       :: !(Maybe T.Text)
-  , jcAudience      :: !(Maybe T.Text)
-  , jcIsStringified :: !(Maybe Bool)
+  { jcType         :: !T.Text
+  , jcKeyOrUrl     :: !(Either JWK URI)
+  , jcClaimNs      :: !(Maybe T.Text)
+  , jcAudience     :: !(Maybe T.Text)
+  , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
   -- , jcIssuer   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 data JWTCtx
   = JWTCtx
-  { jcxKey           :: !(IORef JWKSet)
-  , jcxClaimNs       :: !(Maybe T.Text)
-  , jcxAudience      :: !(Maybe T.Text)
-  , jcxIsStringified :: !Bool
+  { jcxKey          :: !(IORef JWKSet)
+  , jcxClaimNs      :: !(Maybe T.Text)
+  , jcxAudience     :: !(Maybe T.Text)
+  , jcxClaimsFormat :: !JWTClaimsFormat
   } deriving (Eq)
 
 instance Show JWTCtx where
@@ -191,15 +201,15 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-  let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
-      isStrngfd = jcxIsStringified jwtCtx
+  let claimsNs  = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
+      claimsFmt = jcxClaimsFormat jwtCtx
 
   -- see if the hasura claims key exist in the claims map
   let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
 
   -- get hasura claims value as an object. parse from string possibly
-  hasuraClaims <- parseObjectFromString isStrngfd hasuraClaimsV
+  hasuraClaims <- parseObjectFromString claimsFmt hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
@@ -225,15 +235,16 @@ processAuthZHeader jwtCtx headers authzHeader = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
-    parseObjectFromString isStrngfd jVal =
-      case jVal of
-        A.Object x -> return x
-        A.String x
-          | isStrngfd -> either (const $ throw400 JWTInvalidClaims $ strngfdErr <> x) return
-                         $ A.eitherDecodeStrict $ T.encodeUtf8 x
-          | otherwise -> throw400 JWTInvalidClaims "hasura claims should be an object"
-
-        _          -> throw400 JWTInvalidClaims "hasura claims should be an object"
+    parseObjectFromString claimsFmt jVal =
+      case (claimsFmt, jVal) of
+        (JCFStringifiedJson, A.String v) ->
+          either (const $ throw400 JWTInvalidClaims $ strngfdErr <> v) return
+          $ A.eitherDecodeStrict $ T.encodeUtf8 v
+        (JCFStringifiedJson, _) ->
+          throw400 JWTInvalidClaims "expecting a string when claims_format is stringified_json"
+        (JCFJson, A.Object o) -> return o
+        (JCFJson, _) ->
+          throw400 JWTInvalidClaims "expecting a json object when claims_format is json"
 
     strngfdErr = "Could not parse JSON string under: '"
                  <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
@@ -328,7 +339,7 @@ instance A.FromJSON JWTConfig where
     claimNs <- o A..:? "claims_namespace"
     aud     <- o A..:? "audience"
     jwkUrl  <- o A..:? "jwk_url"
-    isStrngfd <- o A..:? "is_stringified"
+    isStrngfd <- o A..:? "claims_format"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"

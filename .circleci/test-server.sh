@@ -165,7 +165,7 @@ unset HASURA_GRAPHQL_JWT_SECRET
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ACCESS KEY AND JWT (in stringified mode) #####################################>\n"
 
-export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , is_stringified: true}')"
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
 
