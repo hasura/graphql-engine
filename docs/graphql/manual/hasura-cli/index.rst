@@ -34,6 +34,7 @@ Commands
 - :doc:`hasura metadata <hasura_metadata>`
 - :doc:`hasura metadata apply <hasura_metadata_apply>`
 - :doc:`hasura metadata export <hasura_metadata_export>`
+- :doc:`hasura metadata reload <hasura_metadata_reload>`
 - :doc:`hasura metadata reset <hasura_metadata_reset>`
 - :doc:`hasura migrate <hasura_migrate>`
 - :doc:`hasura migrate apply <hasura_migrate_apply>`
@@ -56,7 +57,6 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura <hasura>
    hasura completion <hasura_completion>
    hasura console <hasura_console>
-   hasura example <hasura_example>
    hasura init <hasura_init>
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>
