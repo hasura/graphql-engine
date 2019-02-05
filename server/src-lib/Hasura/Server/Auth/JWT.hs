@@ -76,8 +76,8 @@ data JWTCtx
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM strfd) =
-    show ["<IORef JWKSet>", show nsM, show audM, show strfd]
+  show (JWTCtx _ nsM audM cf) =
+    show ["<IORef JWKSet>", show nsM, show audM, show cf]
 
 data HasuraClaims
   = HasuraClaims
@@ -238,17 +238,19 @@ processAuthZHeader jwtCtx headers authzHeader = do
     parseObjectFromString claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, A.String v) ->
-          either (const $ throw400 JWTInvalidClaims $ strngfdErr <> v) return
+          either (const $ claimsErr $ strngfyErr v) return
           $ A.eitherDecodeStrict $ T.encodeUtf8 v
         (JCFStringifiedJson, _) ->
-          throw400 JWTInvalidClaims "expecting a string when claims_format is stringified_json"
+          claimsErr "expecting a string when claims_format is stringified_json"
         (JCFJson, A.Object o) -> return o
         (JCFJson, _) ->
-          throw400 JWTInvalidClaims "expecting a json object when claims_format is json"
+          claimsErr "expecting a json object when claims_format is json"
 
-    strngfdErr = "Could not parse JSON string under: '"
-                 <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
-                 <> "'. When stringified, the claims inside should be a JSON object, but found: "
+    strngfyErr v = "expecting stringified json at: '"
+                   <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
+                   <> "', but found: " <> v
+
+    claimsErr = throw400 JWTInvalidClaims
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
