@@ -10,16 +10,17 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 ## Usage
 
 - Clone this repo on a machine where you'd like to deploy graphql engine
-- Edit `docker-compose.yaml` and change `DEFAULT_USER` and `DEFAULT_PASSWORD` to something secure (default pgAdmin login email/password) default value for above variables are:
-    - **DEFAULT_USER:** `pgadmin@hasura.io`
-    - **DEFAULT_PASSWORD:** `admin`
+- Edit `docker-compose.yaml` and change `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD` to something secure (default pgAdmin login email/password) default value for above variables are:
+    - **PGADMIN_DEFAULT_EMAIL:** `pgadmin@hasura.io`
+    - **PGADMIN_DEFAULT_PASSWORD:** `admin`
+- Read more `Environment Variables` here: https://hub.docker.com/r/dpage/pgadmin4/
 - Edit `docker-compose.yaml` and change `HASURA_GRAPHQL_ACCESS_KEY` to something secure
 - `docker-compose up -d`
 
 ## Important endpoints
 - GraphQL endpoint will be `https://<your-domain.com>:8080/v1alpha1/graphql`
 - Console will be available on `https://<your-domain.com>:8080/console`
-- pgAdmin will be available on `https://<your-domain.com>:5050/browser`
+- pgAdmin will be available on `https://<your-domain.com>/browser`
 
 ## Connecting to External Postgres
 

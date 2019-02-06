@@ -17,7 +17,7 @@ services:
       DEFAULT_USER: pgadmin@hasura.io
       DEFAULT_PASSWORD: admin
   graphql-engine:
-    image: hasura/graphql-engine:v1.0.0-alpha35
+    image: hasura/graphql-engine:v1.0.0-alpha37
     ports:
     - "8080:8080"
     depends_on:
