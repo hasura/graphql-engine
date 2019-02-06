@@ -108,15 +108,15 @@ Upsert in nested mutations
 --------------------------
 You can specify ``on_conflict`` clause while inserting nested objects
 
-
 .. graphiql::
   :view_only:
   :query:
     mutation upsert_author_article {
       insert_author(
         objects: [
-          { name: "John",
+          {
             id: 10,
+            name: "John",
             articles: {
               data: [
                 {
@@ -146,9 +146,15 @@ You can specify ``on_conflict`` clause while inserting nested objects
     }
 
 
-.. note::
+.. admonition:: Edge-cases
 
-  Inserting nested objects fails when:
+  Nested upserts will fail when:
 
-  - Any of upsert in object relationships does not affect any rows (``update_columns: []``)
-  - Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []``)
+  - In case of an array relationship, parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
+    and a conflict occurs)
+  - In case of an object relationship, nested object upsert does not affect any row (i.e. ``update_columns: []`` for
+    nested object and a conflict occurs)
+
+  To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a
+  conflict, the conflicted column will be updated with the new value (which is the same value it had before and hence
+  will effectively leave it unchanged) and will allow the upsert to go through.

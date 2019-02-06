@@ -15,16 +15,14 @@ Create a table
 Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 
-+----------+----------+
-|   **profile**       |
-+----------+----------+
-| id       | integer  |
-+----------+----------+
-| name     | text     |
-+----------+----------+
+.. code-block:: sql
+
+  profile (
+    id INT PRIMARY KEY,
+    name TEXT
+  )
 
 .. image:: ../../../img/graphql/manual/getting-started/create-profile-table.png
-
 
 Setup an event trigger
 ----------------------
@@ -44,7 +42,7 @@ This sets up our webhook ``https://httpbin.org/post`` to receive database change
 Watch the trigger in action
 ---------------------------
 
-1. Insert some sample data into the ``profile`` table.
+1. Insert some sample data into the ``profile`` table using the ``Insert Row`` tab.
 2. Now navigate to the ``Events`` tab and click on the ``echo`` trigger in the left sidebar.
 3. Expand the details of an event to see the response from the webhook.
 
