@@ -51,11 +51,16 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- tables/schemas - you want give to hasura. If you want expose the public
     -- schema for GraphQL query then give permissions on public schema to the
     -- hasura user.
+    -- Be careful to use these in your production db. Consult the postgres manual or
+    -- your DBA and give appropriate permissions.
 
     -- grant all privileges on all tables in the public schema. This can be customised:
     -- For example, if you only want to use GraphQL regular queries and not mutations,
-    -- then you can: GRANT SELECT ON ALL TABLES...
+    -- then you can set: GRANT SELECT ON ALL TABLES...
     GRANT ALL ON ALL TABLES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
 
-    -- Similarly repeat this for other schemas, if you have.
+    -- Similarly add this for other schemas, if you have any.
+    -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
