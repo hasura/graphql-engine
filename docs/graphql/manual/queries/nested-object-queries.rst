@@ -207,4 +207,4 @@ Fetch an author whose id is ``1`` and a nested list of articles with aggregated 
 
 .. note::
 
-    The name of the :ref:`aggregate field <aggregate_object>` is of the form ``field-name + _aggregate``
+    The name of the :ref:`aggregate field <AggregateObject>` is of the form ``<field-name> + _aggregate``
