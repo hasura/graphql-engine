@@ -233,7 +233,7 @@ v1QueryHandler query = do
       liftIO $ writeIORef scRef newSc'
       return resp
 
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler EncJSON
+v1Alpha1GQHandler :: GH.GQLReqParsed -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody

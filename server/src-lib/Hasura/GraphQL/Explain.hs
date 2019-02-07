@@ -30,7 +30,7 @@ import qualified Hasura.RQL.DML.Select                  as RS
 
 data GQLExplain
   = GQLExplain
-  { _gqeQuery :: !GH.GraphQLRequest
+  { _gqeQuery :: !GH.GQLReqParsed
   , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
   } deriving (Show, Eq)
 

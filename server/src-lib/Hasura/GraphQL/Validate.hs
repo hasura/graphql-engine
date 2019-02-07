@@ -1,9 +1,9 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , getTypedOp
-  , GraphQLRequest
   , QueryParts (..)
   , getQueryParts
+  , getAnnVarVals
   ) where
 
 import           Data.Has
@@ -154,9 +154,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)
-  => GraphQLRequest
+  => GQLReqParsed
   -> m QueryParts
-getQueryParts (GraphQLRequest opNameM q varValsM) = do
+getQueryParts (GQLReq opNameM q varValsM) = do
   -- get the operation that needs to be evaluated
   opDef <- getTypedOp opNameM selSets opDefs
   ctx <- ask
@@ -170,4 +170,4 @@ getQueryParts (GraphQLRequest opNameM q varValsM) = do
       onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
   return $ QueryParts opDef opRoot fragDefsL varValsM
   where
-    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q
+    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
