@@ -31,7 +31,7 @@
 table: `article`
 columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`) and `created_at`
 
-  ![Create foreign key for author_id column to author's id][./assets/author_fk.png]
+  ![Create foreign key for author_id column to author's id](./assets/author_fk.png)
 
 - Now create a relationship from article table to author table by going to the Relationships tab.
 
