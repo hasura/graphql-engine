@@ -23,7 +23,7 @@ import           Hasura.RQL.Types
 data LiveQuery
   = LiveQuery
   { _lqUser    :: !UserInfo
-  , _lqRequest :: !GraphQLRequest
+  , _lqRequest :: !GQLReqParsed
   } deriving (Show, Eq, Generic)
 
 instance Hashable LiveQuery

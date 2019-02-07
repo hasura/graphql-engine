@@ -25,7 +25,7 @@ runGQ
   -> SchemaCache
   -> HTTP.Manager
   -> [N.Header]
-  -> GraphQLRequest
+  -> GQLReqParsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
 runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
