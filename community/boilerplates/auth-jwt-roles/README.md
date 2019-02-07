@@ -1,6 +1,5 @@
 # Authentication with JWT, Hasura claims and multiple roles
 
-Note: the original repository can be found [here](https://github.com/platyplus/authentication-server).
 This is a sample auth JWT service for authenticating requests to the Hasura GraphQL Engine. This also exposes login and signup endpoints. Note that this repository can also be used in webhook mode in using the `/webhook` endpoint. The specifics of this repository is that it maps a `user_role` table to generate `x-hasura-allowed-roles` in the JWT claim so multiple roles can work with the Hasura Grapqh Engine as a backend of the application.
 
 The endpoints to manage users are very limited (it is only possible to create a new user through the `/signup` endpoint). This is kind of a choice as this service is meant to be used for authentication only. The user and roles management can be done through the Hasura Graphql Engine or any other service accessing to the same database.
@@ -199,5 +198,11 @@ The endpoint (say `http://localhost:8080/webhook`) can be given as an environmen
 - This server is not (yet?) designed to handle authentication through other services such as Google, Github... It would be nice to do so, but to keep this server as a proxy that would add the Hasura claims in querying the database about the roles of the user. Comments or any contribution are welcome as well on this one.
 - No automated tests.
 - another cool feature to be would be to expose the endpoints through hasura remote schema, and not directly to the client
+
+## Credits
+
+The original repository can be found [here](https://github.com/platyplus/authentication-server).
+
+This repository is inspired from the original [auth-webhooks/passport-js repo](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/passport-js).
 
 Contributions are welcome!
