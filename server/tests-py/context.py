@@ -41,7 +41,7 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
             self.server.error_queue.put({"path": req_path,
                                          "body": req_json,
                                          "headers": req_headers})
-        elif req_path == "/timeout_small":
+        elif req_path == "/timeout_short":
             time.sleep(5)
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()

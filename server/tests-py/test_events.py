@@ -140,7 +140,7 @@ class TestRetryConf(object):
         tries = hge_ctx.get_error_queue_size()
         assert tries == 5, tries
 
-    def test_timeout_small(self, hge_ctx):
+    def test_timeout_short(self, hge_ctx):
         table = {"schema": "hge_tests", "name": "test_t2"}
 
         init_row = {"c1": 1, "c2": "hello"}

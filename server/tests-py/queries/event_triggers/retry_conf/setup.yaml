@@ -45,7 +45,7 @@ args:
       interval_sec: 2
 - type: create_event_trigger
   args:
-    name: t2_timeout_small
+    name: t2_timeout_short
     table:
       schema: hge_tests
       name: test_t2
@@ -55,7 +55,7 @@ args:
       columns: "*"
     delete:
       columns: "*"
-    webhook: http://127.0.0.1:5592/timeout_small
+    webhook: http://127.0.0.1:5592/timeout_short
     retry_conf:
       num_retries: 2
       interval_sec: 2
