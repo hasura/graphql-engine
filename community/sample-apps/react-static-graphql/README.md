@@ -29,7 +29,7 @@
 
 - Similarly, create an article table with the following data model:
 table: `article`
-columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`)
+columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`) and `created_at`
 
 - Now create a relationship from article table to 
 
