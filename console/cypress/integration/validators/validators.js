@@ -345,7 +345,7 @@ export const validateCTrigger = (triggerName, result) => {
     type: 'select',
     args: {
       table: { name: 'event_triggers', schema: 'hdb_catalog' },
-      columns: ['*', 'table_name'],
+      columns: ['*'],
       where: { name: triggerName },
     },
   };

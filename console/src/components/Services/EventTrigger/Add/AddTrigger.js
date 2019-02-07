@@ -22,7 +22,7 @@ import {
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
-  UPDATE_WEBHOOK_URL_TYPE
+  UPDATE_WEBHOOK_URL_TYPE,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
@@ -58,7 +58,7 @@ class AddTrigger extends Component {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion).then(() => {
         this.checkWebhookEnvSupport(nextProps.serverVersion);
-        this.checkRetryTimeoutSupport(this.props.serverVersion);
+        this.checkRetryTimeoutSupport(nextProps.serverVersion);
       });
     }
   }
@@ -99,7 +99,7 @@ class AddTrigger extends Component {
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      supportColumnChangeFeature: val
+      supportColumnChangeFeature: val,
     });
   }
 
@@ -130,23 +130,36 @@ class AddTrigger extends Component {
       errorMsg = 'Webhook URL cannot be empty';
       customMsg = 'Webhook URL cannot be empty. Please add a valid URL';
     } else if (this.props.retryConf) {
-      if (isNaN(parseInt(this.props.retryConf.num_retries, 10))) {
+      const iNumRetries =
+        this.props.retryConf.num_retries === ''
+          ? 0
+          : parseInt(this.props.retryConf.num_retries, 10);
+      const iRetryInterval =
+        this.props.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(this.props.retryConf.interval_sec, 10);
+      const iTimeout =
+        this.props.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(this.props.retryConf.timeout_sec, 10);
+
+      if (iNumRetries < 0 || isNaN(iNumRetries)) {
         isValid = false;
         errorMsg = 'Number of retries is not valid';
-        customMsg = 'Numer of retries cannot be empty and can only be numbers';
+        customMsg = 'Numer of retries must be a non-negative number';
       }
-      if (isNaN(parseInt(this.props.retryConf.interval_sec, 10))) {
+      if (iRetryInterval <= 0 || isNaN(iRetryInterval)) {
         isValid = false;
         errorMsg = 'Retry interval is not valid';
-        customMsg = 'Retry interval cannot be empty and can only be numbers';
+        customMsg = 'Retry interval must be a postiive number';
       }
       if (
         this.state.supportRetryTimeout &&
-        isNaN(parseInt(this.props.retryConf.timeout_sec, 10))
+        (isNaN(iTimeout) || iTimeout <= 0)
       ) {
         isValid = false;
         errorMsg = 'Timeout is not valid';
-        customMsg = 'Timeout cannot be empty and can only be numbers';
+        customMsg = 'Timeout must be a positive number';
       }
     } else if (this.props.selectedOperations.insert) {
       // check if columns are selected.
@@ -191,7 +204,7 @@ class AddTrigger extends Component {
     } else {
       this.props.dispatch(
         showErrorNotification('Error creating trigger!', errorMsg, '', {
-          custom: customMsg
+          custom: customMsg,
         })
       );
     }
@@ -214,7 +227,7 @@ class AddTrigger extends Component {
       internalError,
       headers,
       webhookURL,
-      webhookUrlType
+      webhookUrlType,
     } = this.props;
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
@@ -320,7 +333,7 @@ class AddTrigger extends Component {
               className={styles.display_inline + ' ' + styles.add_mar_right}
               style={{
                 marginTop: '10px',
-                marginBottom: '10px'
+                marginBottom: '10px',
               }}
             >
               Applicable to update operation only.
@@ -419,7 +432,7 @@ class AddTrigger extends Component {
             <DropdownButton
               dropdownOptions={[
                 { display_text: 'Value', value: 'static' },
-                { display_text: 'From env var', value: 'env' }
+                { display_text: 'From env var', value: 'env' },
               ]}
               title={
                 (header.type === 'static' && 'Value') ||
@@ -636,7 +649,7 @@ class AddTrigger extends Component {
                       <DropdownButton
                         dropdownOptions={[
                           { display_text: 'URL', value: 'url' },
-                          { display_text: 'From env var', value: 'env' }
+                          { display_text: 'From env var', value: 'env' },
                         ]}
                         title={
                           (webhookUrlType === 'url' && 'URL') ||
@@ -831,14 +844,14 @@ AddTrigger.propTypes = {
   lastError: PropTypes.object,
   internalError: PropTypes.string,
   lastSuccess: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 

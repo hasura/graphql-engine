@@ -7,7 +7,11 @@ const defaultState = {
   selectedOperations: { insert: false, update: false, delete: false },
   webhookURL: '',
   webhookUrlType: 'url',
-  retryConf: {},
+  retryConf: {
+    num_retries: 0,
+    interval_sec: 10,
+    timeout_sec: 60,
+  },
   ongoingRequest: false,
   lastError: null,
   internalError: null,
