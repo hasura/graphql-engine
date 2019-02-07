@@ -13,17 +13,17 @@ module Hasura.GraphQL.Resolve.InputValue
   , withArrayM
   , parseMany
   , asPGColText
+  , AnnPGVal
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
-import           Hasura.GraphQL.Utils
+import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 withNotNull
@@ -42,17 +42,20 @@ tyMismatch expectedTy v =
 
 asPGColValM
   :: (MonadError QErr m)
-  => AnnInpVal -> m (Maybe (Maybe G.Variable, PGColType, PGColValue))
+  => AnnInpVal -> m (Maybe AnnPGVal)
 asPGColValM v = case _aivValue v of
-  AGScalar colTy valM -> return $ fmap (_aivVariable v, colTy,) valM
-  _                   -> tyMismatch "pgvalue" v
+  AGScalar colTy valM ->
+    return $ fmap (_aivVariable v, G.isNullable (_aivType v), colTy,) valM
+  _                   ->
+    tyMismatch "pgvalue" v
 
 asPGColVal
   :: (MonadError QErr m)
-  => AnnInpVal -> m (Maybe G.Variable, PGColType, PGColValue)
+  => AnnInpVal -> m AnnPGVal
 asPGColVal v = case _aivValue v of
-  AGScalar colTy (Just val) -> return (_aivVariable v, colTy, val)
-  AGScalar colTy Nothing ->
+  AGScalar colTy (Just val) ->
+    return (_aivVariable v, G.isNullable (_aivType v), colTy, val)
+  AGScalar colTy Nothing    ->
     throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   _            -> tyMismatch "pgvalue" v
@@ -125,7 +128,7 @@ asPGColText
   :: (MonadError QErr m)
   => AnnInpVal -> m Text
 asPGColText val = do
-  (_, _, pgColVal) <- asPGColVal val
+  (_, _, _, pgColVal) <- asPGColVal val
   case pgColVal of
     PGValText t -> return t
     _           -> throw500 "expecting text for asPGColText"

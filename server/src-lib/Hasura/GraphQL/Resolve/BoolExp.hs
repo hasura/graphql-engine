@@ -14,11 +14,9 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-
-import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-type OpExp = OpExpG (Maybe G.Variable, PGColType, PGColValue)
+type OpExp = OpExpG AnnPGVal
 
 parseOpExps
   :: (MonadError QErr m)
@@ -132,7 +130,7 @@ pgColValToBoolExp
   => PrepFn m -> PGColValMap -> m AnnBoolExpSQL
 pgColValToBoolExp f colValMap = do
   colExps <- forM colVals $ \(name, val) -> do
-    (_, ty, _) <- asPGColVal val
+    (_, _, ty, _) <- asPGColVal val
     let namedTy = mkScalarTy ty
     BoolFld <$> parseColExp f namedTy name val parseAsEqOp
   return $ BoolAnd colExps

@@ -11,6 +11,7 @@ module Hasura.GraphQL.Resolve.Context
   , InsCtxMap
   , RespTx
   , LazyRespTx
+  , AnnPGVal
   , PrepFn
   , InsertTxConflictCtx(..)
   , getFldInfo
@@ -59,7 +60,10 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 type RespTx = Q.TxE QErr EncJSON
 
 type LazyRespTx = LazyTx QErr EncJSON
-type PrepFn m = (Maybe G.Variable, PGColType, PGColValue) -> m S.SQLExp
+
+-- Bool: is nullable
+type AnnPGVal = (Maybe G.Variable, Bool, PGColType, PGColValue)
+type PrepFn m = AnnPGVal -> m S.SQLExp
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -129,7 +133,7 @@ type Convert =
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
-prepare (_, colTy, colVal) = do
+prepare (_, _, colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy

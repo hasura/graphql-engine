@@ -69,7 +69,7 @@ convObjWithOp
   => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  (_, _, colVal) <- asPGColVal v
+  (_, _, _, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
@@ -81,14 +81,14 @@ convDeleteAtPathObj
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . thrd) vals
+    let valExps = map (txtEncoder . fourth) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
                  [S.SEIden $ toIden pgCol, annEncVal]
     return (pgCol, sqlExp)
   where
-    thrd (_, _, c) = c
+    fourth (_, _, _, c) = c
 
 convertUpdate
   :: QualifiedTable -- table

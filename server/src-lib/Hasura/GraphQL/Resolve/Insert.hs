@@ -205,7 +205,7 @@ mkBoolExp tn colInfoVals =
   mapM (fmap BoolFld . uncurry f) colInfoVals
   where
     f ci@(PGColInfo _ colTy _) colVal =
-      AVCol ci . pure . AEQ True <$> prepare (Nothing, colTy, colVal)
+      AVCol ci . pure . AEQ True <$> prepare (Nothing, True, colTy, colVal)
 
 mkSelQ :: MonadError QErr m => QualifiedTable
        -> [PGColInfo] -> [PGColWithValue] -> m InsWithExp

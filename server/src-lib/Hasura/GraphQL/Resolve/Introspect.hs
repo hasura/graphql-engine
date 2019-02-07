@@ -334,7 +334,7 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- withArg args "name" $ \arg -> do
-    (_, _, pgColVal) <- asPGColVal arg
+    (_, _, _, pgColVal) <- asPGColVal arg
     case pgColVal of
       PGValText t -> return t
       _           -> throw500 "expecting string for name arg of __type"

@@ -220,7 +220,7 @@ parseOrderByEnum = \case
 
 parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  (_, _, pgColVal) <- asPGColVal v
+  (_, _, _, pgColVal) <- asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -271,7 +271,7 @@ convertCount args = do
   maybe (return S.CTStar) (mkCType isDistinct) columnsM
   where
     parseDistinct v = do
-      (_, _, val) <- asPGColVal v
+      (_, _, _, val) <- asPGColVal v
       case val of
         PGValBoolean b -> return b
         _              ->
