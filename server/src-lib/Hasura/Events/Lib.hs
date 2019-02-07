@@ -65,7 +65,6 @@ data TriggerMeta
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
 
-
 data DeliveryInfo
   = DeliveryInfo
   { diCurrentRetry :: Int
@@ -86,27 +85,27 @@ data Event
 
 $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
+newtype QualifiedTableStrict = QualifiedTableStrict
+  { getQualifiedTable :: QualifiedTable
+  } deriving (Show, Eq)
+
+instance ToJSON QualifiedTableStrict where
+  toJSON (QualifiedTableStrict (QualifiedObject sn tn)) =
+     object [ "schema" .= sn
+            , "name"  .= tn
+           ]
+
 data EventPayload
   = EventPayload
   { epId           :: EventId
-  , epTable        :: QualifiedTable
+  , epTable        :: QualifiedTableStrict
   , epTrigger      :: TriggerMeta
   , epEvent        :: Value
   , epDeliveryInfo :: DeliveryInfo
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-instance ToJSON EventPayload where
-  toJSON (EventPayload eid (QualifiedObject sn tn) trigger event  deliveryInfo created)=
-    object [ "id"      .= eid
-           , "table"   .= object [ "schema" .= sn
-                                 , "name"  .= tn
-                                 ]
-           , "trigger" .= trigger
-           , "event"   .= event
-           , "delivery_info" .= deliveryInfo
-           , "created_at"    .= created
-           ]
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
 data WebhookRequest
   = WebhookRequest
@@ -288,7 +287,7 @@ tryWebhook logenv pool e = do
           headers = map encodeHeader headerInfos
           eventPayload = EventPayload
             { epId           = eId e
-            , epTable        = eTable e
+            , epTable        = QualifiedTableStrict { getQualifiedTable = eTable e}
             , epTrigger      = eTrigger e
             , epEvent        = eEvent e
             , epDeliveryInfo =  DeliveryInfo
