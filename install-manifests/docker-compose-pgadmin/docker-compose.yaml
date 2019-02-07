@@ -6,16 +6,16 @@ services:
     volumes:
     - db_data:/var/lib/postgresql/data
   pgadmin:
-    image: fenglc/pgadmin4
-    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
     depends_on:
-      - postgres
+    - postgres
     ports:
-      - 5050:5050
+    - 5050:80
     ## you can change pgAdmin default username/password with below environment variables
     environment:
-      DEFAULT_USER: pgadmin@hasura.io
-      DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: pgadmin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
   graphql-engine:
     image: hasura/graphql-engine:v1.0.0-alpha37
     ports:
