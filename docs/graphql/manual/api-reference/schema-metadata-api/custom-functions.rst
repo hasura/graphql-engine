@@ -6,20 +6,23 @@ Schema/Metadata API Reference: Custom Functions
   :depth: 1
   :local:
 
-Add or remove a custom SQL function to Hasura GraphQL Engine's metadata using following API.
+Track/untrack a custom SQL function in Hasura GraphQL engine.
 
-.. Note::
-
-   Only custom functions added to metadata are available for ``querying/subscribing`` data over **GraphQL** API.
+Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
 
 .. _track_function:
 
 track_function
 --------------
 
-``track_function`` is used to add a custom SQL function.
+``track_function`` is used to add a custom SQL function to the GraphQL schema.
 
-Refer :ref:`this <supported_sql_functions>` for constraints on supported functions.
+Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
+(*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
+
+- **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
+- **Return type**: MUST be ``SETOF <table-name>``
+- **Argument modes**: ONLY ``IN``
 
 Add a SQL function ``search_articles``:
 
@@ -42,7 +45,7 @@ Add a SQL function ``search_articles``:
 untrack_function
 ----------------
 
-``untrack_function`` is used to remove a SQL function from metadata.
+``untrack_function`` is used to remove a SQL function from the GraphQL schema.
 
 Remove a SQL function ``search_articles``:
 
