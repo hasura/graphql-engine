@@ -1,6 +1,7 @@
 module Hasura.Server.Version
   ( currentVersion
   , consoleVersion
+  , isDevVersion
   )
 where
 
@@ -28,3 +29,7 @@ mkVersion ver = T.pack $ "v" ++ show major ++ "." ++ show minor
 
 currentVersion :: T.Text
 currentVersion = version
+
+isDevVersion :: Bool
+isDevVersion = either (const True) (const False) $
+               V.fromText $ T.dropWhile (== 'v') version

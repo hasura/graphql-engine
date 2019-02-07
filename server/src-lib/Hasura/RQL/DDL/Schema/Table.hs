@@ -277,6 +277,8 @@ buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
   => m ()
 buildSchemaCache = do
+  -- clean hdb_views
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
@@ -438,8 +440,8 @@ execWithMDCheck (RunSQL t cascade _) = do
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
       existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
-      droppedFuncs = getDroppedFuncs oldFuncMeta newFuncMeta
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -458,6 +460,12 @@ execWithMDCheck (RunSQL t cascade _) = do
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf
     delFunctionFromCache qf
+
+  -- Process altered functions
+  forM_ alteredFuncs $ \(qf, newTy) ->
+    when (newTy == FTVOLATILE) $
+      throw400 NotSupported $
+      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
   -- update the schema cache with the changes
   processSchemaChanges schemaDiff

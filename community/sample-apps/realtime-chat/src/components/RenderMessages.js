@@ -95,7 +95,6 @@ export default class RenderMessages extends React.Component {
       }
     });
     this.setState({
-      ...this.state,
       newMessages
     })
   }
@@ -104,7 +103,6 @@ export default class RenderMessages extends React.Component {
   addOldMessages = (messages) => {
     const oldMessages = [ ...this.state.messages, ...messages];
     this.setState({
-      ...this.state,
       messages: oldMessages,
       newMessages: []
     })
@@ -115,7 +113,6 @@ export default class RenderMessages extends React.Component {
     const messages = [ ...this.state.messages, ...this.state.newMessages ];
     messages.push(message);
     this.setState({
-      ...this.state,
       messages,
       newMessages: []
     });
@@ -158,13 +155,11 @@ export default class RenderMessages extends React.Component {
     const windowBottom = windowHeight + window.pageYOffset;
     if (windowBottom >= docHeight) {
       this.setState({
-        ...this.state,
         bottom: true
       })
     } else {
       if (this.state.bottom) {
         this.setState({
-          ...this.state,
           bottom: false
         });
       }
@@ -211,7 +206,6 @@ export default class RenderMessages extends React.Component {
               // set refetch in local state to make a custom refetch
               if (!this.state.refetch) {
                 this.setState({
-                  ...this.state,
                   refetch
                 });
               }

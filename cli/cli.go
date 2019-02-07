@@ -11,35 +11,37 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/briandowns/spinner"
+	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-// Environment variable names recognised by the CLI.
-const (
-	// ENV_ENDPOINT is the name of env var which indicates the Hasura GraphQL
-	// Engine endpoint URL.
-	ENV_ENDPOINT = "HASURA_GRAPHQL_ENDPOINT"
-	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
-	// Engine endpoint.
-	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
-)
-
 // Other constants used in the package
 const (
 	// Name of the global configuration directory
-	GLOBAL_CONFIG_DIR_NAME = ".hasura-graphql"
+	GLOBAL_CONFIG_DIR_NAME = ".hasura"
 	// Name of the global configuration file
 	GLOBAL_CONFIG_FILE_NAME = "config.json"
+
+	// Name of the file to store last update check time
+	LastUpdateCheckFileName = "last_update_check_at"
+)
+
+// String constants
+const (
+	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
+allow us to keep improving Hasura at warp speed. To opt-out or read more,
+visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
+`
 )
 
 // HasuraGraphQLConfig has the config values required to contact the server.
@@ -71,6 +73,12 @@ type ExecutionContext struct {
 	// correctly render example strings etc.
 	CMDName string
 
+	// ID is a unique ID for this Execution
+	ID string
+
+	// ServerUUID is the unique ID for the server this execution is contacting.
+	ServerUUID string
+
 	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
 	// Logger is the global logger object to print logs.
@@ -96,6 +104,9 @@ type ExecutionContext struct {
 	// stored.
 	GlobalConfigFile string
 
+	// GlobalConfig holds all the configuration options.
+	GlobalConfig *GlobalConfig
+
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
 	// Version indicates the version object
@@ -106,6 +117,20 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+
+	// Telemetry collects the telemetry data throughout the execution
+	Telemetry *telemetry.Data
+
+	// LastUpdateCheckFile is the file where the timestamp of last update check is stored
+	LastUpdateCheckFile string
+}
+
+// NewExecutionContext returns a new instance of execution context
+func NewExecutionContext() *ExecutionContext {
+	ec := &ExecutionContext{}
+	ec.Telemetry = telemetry.BuildEvent()
+	ec.Telemetry.Version = version.BuildVersion
+	return ec
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -128,14 +153,32 @@ func (ec *ExecutionContext) Prepare() error {
 	// populate version
 	ec.setVersion()
 
-	// setup global config directory
-	err := ec.setupGlobalConfigDir()
+	// setup global config
+	err := ec.setupGlobalConfig()
 	if err != nil {
-		return errors.Wrap(err, "setting up config directory failed")
+		return errors.Wrap(err, "setting up global config failed")
 	}
 
-	// initialize a blank config
-	ec.Config = &HasuraGraphQLConfig{}
+	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
+
+	// initialize a blank server config
+	if ec.Config == nil {
+		ec.Config = &HasuraGraphQLConfig{}
+	}
+
+	// generate an execution id
+	if ec.ID == "" {
+		id := "00000000-0000-0000-0000-000000000000"
+		u, err := uuid.NewV4()
+		if err == nil {
+			id = u.String()
+		} else {
+			ec.Logger.Debugf("generating uuid for execution ID failed, %v", err)
+		}
+		ec.ID = id
+		ec.Logger.Debugf("execution id: %v", ec.ID)
+	}
+	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
 }
@@ -144,14 +187,9 @@ func (ec *ExecutionContext) Prepare() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// prepare the context
-	err := ec.Prepare()
-	if err != nil {
-		return errors.Wrap(err, "failed preparing context")
-	}
 
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -171,7 +209,17 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
 
 	// get version from the server and match with the cli version
-	return ec.checkServerVersion()
+	err = ec.checkServerVersion()
+	if err != nil {
+		return errors.Wrap(err, "version check")
+	}
+
+	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AccessKey, ec.Version.ServerSemver, ec.Logger)
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+
+	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
@@ -180,6 +228,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 		return errors.Wrap(err, "failed to get version from server")
 	}
 	ec.Version.SetServerVersion(v)
+	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
@@ -194,22 +243,21 @@ func (ec *ExecutionContext) checkServerVersion() error {
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetDefault("endpoint", "http://localhost:8080")
-	v.SetDefault("access_key", "")
 	v.SetEnvPrefix("HASURA_GRAPHQL")
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config file")
+		return errors.Wrap(err, "cannor read config from file/env")
 	}
 	ec.Config = &HasuraGraphQLConfig{
 		Endpoint:  v.GetString("endpoint"),
 		AccessKey: v.GetString("access_key"),
 	}
-	err = ec.Config.ParseEndpoint()
-	return err
+	return ec.Config.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -249,111 +297,11 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
-}
 
-// setupGlobalConfigDir ensures that global config directory exists and the
-// paths are correctly set.
-func (ec *ExecutionContext) setupGlobalConfigDir() error {
-	if len(ec.GlobalConfigDir) == 0 {
-		home, err := homedir.Dir()
-		if err != nil {
-			return errors.Wrap(err, "cannot get home directory")
-		}
-		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
-		ec.GlobalConfigDir = globalConfigDir
+	// set the logger for telemetry
+	if ec.Telemetry.Logger == nil {
+		ec.Telemetry.Logger = ec.Logger
 	}
-	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "cannot create config directory")
-	}
-	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
-	return nil
-}
-
-// validateDirectory sets execution directory and validate it to see that or any
-// of the parent directory is a valid project directory. A valid project
-// directory contains the following:
-// 1. migrations directory
-// 2. config.yaml file
-// 3. metadata.yaml (optional)
-// If the current directory or any parent directory (upto filesystem root) is
-// found to have these files, ExecutionDirectory is set as that directory.
-func (ec *ExecutionContext) validateDirectory() error {
-	if len(ec.ExecutionDirectory) == 0 {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return errors.Wrap(err, "error getting current working directory")
-		}
-		ec.ExecutionDirectory = cwd
-	}
-
-	ed, err := os.Stat(ec.ExecutionDirectory)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Wrap(err, "did not find required directory. use 'init'?")
-		} else {
-			return errors.Wrap(err, "error getting directory details")
-		}
-	}
-	if !ed.IsDir() {
-		return errors.Errorf("'%s' is not a directory", ed.Name())
-	}
-	// config.yaml
-	// migrations/
-	// (optional) metadata.yaml
-	dir, err := recursivelyValidateDirectory(ec.ExecutionDirectory)
-	if err != nil {
-		return errors.Wrap(err, "validate")
-	}
-
-	ec.ExecutionDirectory = dir
-	return nil
-}
-
-// filesRequired are the files that are mandatory to qualify for a project
-// directory.
-var filesRequired = []string{
-	"config.yaml",
-	"migrations",
-}
-
-// recursivelyValidateDirectory tries to parse 'startFrom' as a project
-// directory by checking for the 'filesRequired'. If the parent of 'startFrom'
-// (nextDir) is filesystem root, error is returned. Otherwise, 'nextDir' is
-// validated, recursively.
-func recursivelyValidateDirectory(startFrom string) (validDir string, err error) {
-	err = validateDirectory(startFrom)
-	if err != nil {
-		nextDir := filepath.Dir(startFrom)
-		cleaned := filepath.Clean(nextDir)
-		isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
-		// return error if filesystem boundary is hit
-		if cleaned == "/" || isWindowsRoot {
-			return nextDir, errors.Errorf("cannot find [%s] | search stopped at filesystem boundary", strings.Join(filesRequired, ", "))
-
-		}
-		return recursivelyValidateDirectory(nextDir)
-	}
-	return startFrom, nil
-}
-
-// validateDirectory tries to parse dir for the filesRequired and returns error
-// if any one of them is missing.
-func validateDirectory(dir string) error {
-	notFound := []string{}
-	for _, f := range filesRequired {
-		if _, err := os.Stat(filepath.Join(dir, f)); os.IsNotExist(err) {
-			relpath, e := filepath.Rel(dir, f)
-			if e == nil {
-				f = relpath
-			}
-			notFound = append(notFound, f)
-		}
-	}
-	if len(notFound) > 0 {
-		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
-	}
-	return nil
 }
 
 // SetVersion sets the version inside context, according to the variable

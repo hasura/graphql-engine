@@ -5,7 +5,8 @@ args:
     sql: |
       CREATE TABLE person (
         id SERIAL PRIMARY KEY,
-        name TEXT
+        name TEXT,
+        created TIMESTAMPTZ
       );
 
 - type: track_table

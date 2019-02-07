@@ -4,6 +4,7 @@ module Hasura.RQL.Types.BoolExp
        , gBoolExpToJSON
        , parseGBoolExp
 
+       , WithinOp(..)
        , OpExpG(..)
 
        , AnnBoolExpFld(..)
@@ -22,7 +23,9 @@ import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Internal
+import           Data.Aeson.TH
 import qualified Data.Aeson.Types           as J
 import qualified Data.HashMap.Strict        as M
 import           Instances.TH.Lift          ()
@@ -90,6 +93,13 @@ foldBoolExp f (BoolNot notExp) =
 foldBoolExp f (BoolFld ce)  =
   f ce
 
+data WithinOp a =
+  WithinOp
+  { woDistance :: !a
+  , woFrom     :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 2 snakeCase) ''WithinOp)
+
 data OpExpG a
   = AEQ !Bool !a
   | ANE !Bool !a
@@ -119,7 +129,7 @@ data OpExpG a
 
   | ASTContains !a
   | ASTCrosses !a
-  | ASTDWithin !S.SQLExp !a
+  | ASTDWithin !(WithinOp a)
   | ASTEquals !a
   | ASTIntersects !a
   | ASTOverlaps !a
@@ -168,7 +178,7 @@ opExpToJPair f = \case
 
   ASTContains a   -> ("_st_contains", f a)
   ASTCrosses a    -> ("_st_crosses", f a)
-  ASTDWithin _ a  -> ("_st_d_within", f a)
+  ASTDWithin o    -> ("_st_d_within", toJSON $ f <$> o)
   ASTEquals a     -> ("_st_equals", f a)
   ASTIntersects a -> ("_st_intersects", f a)
   ASTOverlaps a   -> ("_st_overlaps", f a)

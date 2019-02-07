@@ -190,6 +190,7 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
         },
         columns: ['*.*'],
         where: { table_schema: schemaName },
+        order_by: ['+table_name'],
       },
     }),
   };
