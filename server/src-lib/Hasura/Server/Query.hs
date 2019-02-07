@@ -3,12 +3,15 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Time                      (getCurrentTime)
+import           Data.UUID
 import           Language.Haskell.TH.Syntax     (Lift)
 
 import qualified Data.ByteString.Builder        as BB
 import qualified Data.ByteString.Lazy           as BL
 import qualified Data.Vector                    as V
 import qualified Network.HTTP.Client            as HTTP
+
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
@@ -109,6 +112,16 @@ instance UserInfoM Run where
 instance HasHttpManager Run where
   askHttpManager = asks snd
 
+recordCacheUpdate :: UUID -> Run ()
+recordCacheUpdate serverId = do
+  currTime <- liftIO getCurrentTime
+  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+             INSERT INTO
+                  hdb_catalog.hdb_cache_update_event
+                  (server_id, occurred_at)
+             VALUES ($1::uuid, $2)
+            |] (toText serverId, currTime) True
+
 peelRun
   :: SchemaCache
   -> UserInfo
@@ -122,12 +135,16 @@ peelRun sc userInfo httMgr pgPool txIso (Run m) =
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
+  => Q.PGPool -> Q.TxIsolation -> UUID
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr query = do
+runQuery pool isoL serverId userInfo sc hMgr query = do
   res <- liftIO $ runExceptT $
-         peelRun sc userInfo hMgr pool isoL $ runQueryM query
+         peelRun sc userInfo hMgr pool isoL $ do
+           r <- runQueryM query
+           when (queryNeedsReload query) $
+             recordCacheUpdate serverId
+           return r
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool

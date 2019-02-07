@@ -23,7 +23,7 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "9"
+curCatalogVer = "10"
 
 initCatalogSafe
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
@@ -318,6 +318,12 @@ from8To9 = do
     migrateMetadataFrom8 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_8_to_9.yaml" :: Q (TExp RQLQuery)))
 
+from9To10 :: MonadTx m => m ()
+from9To10 = do
+  -- migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_9_to_10.sql")
+  return ()
 
 migrateCatalog
   :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
@@ -335,12 +341,17 @@ migrateCatalog migrationTime = do
      | preVer == "6"   -> from6ToCurrent
      | preVer == "7"   -> from7ToCurrent
      | preVer == "8"   -> from8ToCurrent
+     | preVer == "9"   -> from9ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
+    from9ToCurrent = do
+      from9To10
+      postMigrate
+
     from8ToCurrent = do
       from8To9
-      postMigrate
+      from9ToCurrent
 
     from7ToCurrent = do
       from7To8

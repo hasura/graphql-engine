@@ -8,28 +8,32 @@ import           Options.Applicative
 import           System.Environment         (getEnvironment, lookupEnv)
 import           System.Exit                (exitFailure)
 
+
 import qualified Control.Concurrent         as C
+import qualified Control.Concurrent.STM     as STM
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
+import qualified Data.UUID.V4               as UUID
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Events.Lib
-import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
-                                             mkLogger, mkLoggerCtx)
+import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types           (QErr, adminUserInfo,
                                              emptySchemaCache)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
+import           Hasura.Server.CacheUpdate
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
+import           Hasura.Server.Logging
 import           Hasura.Server.Query        (peelRun)
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
@@ -100,6 +104,7 @@ main =  do
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
+  serverId <- UUID.nextRandom
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
@@ -117,6 +122,14 @@ main =  do
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
 
+      -- create empty cache update events queue
+      eventsQueue <- STM.newTQueueIO
+
+      -- start postgres cache update events listener thread in background
+      listenerPool <- getMinimalPool ci
+      listenerTId <- C.forkIO $ cacheUpdateEventListener listenerPool logger eventsQueue
+      unLogger logger $ mkThreadLog listenerTId serverId TTListener
+
       -- safe init catalog
       initRes <- initialise logger ci httpManager
 
@@ -124,8 +137,15 @@ main =  do
       prepareEvents logger ci
 
       pool <- Q.initPGPool ci cp
-      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole enableTelemetry
+
+      (app, cacheRef, cacheLk, cacheBuiltTime) <-
+        mkWaiApp isoL loggerCtx pool httpManager am corsCfg enableConsole
+          enableTelemetry serverId
+
+      -- start cache update events processor thread in background
+      procTId <- C.forkIO $ cacheUpdateEventProcessor pool logger httpManager
+                              eventsQueue cacheRef cacheLk serverId cacheBuiltTime
+      unLogger logger $ mkThreadLog procTId serverId TTProcessor
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -208,6 +228,14 @@ main =  do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx ci unlockAllEvents
       either printErrJExit return res
+
+    mkThreadLog threadId serverId threadType =
+      let msg = T.pack (show threadType) <> " thread started"
+      in StartupLog LevelInfo "threads" $
+           A.object [ "server_id" A..= serverId
+                    , "thread_id" A..= show threadId
+                    , "message" A..= msg
+                    ]
 
     getUniqIds ci = do
       eDbId <- runTx ci getDbId

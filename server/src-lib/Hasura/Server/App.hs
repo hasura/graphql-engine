@@ -10,6 +10,7 @@ import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Data.UUID                              (UUID)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           Web.Spock.Core
@@ -96,6 +97,7 @@ data ServerCtx
   , scCacheLock :: MVar ()
   , scAuthMode  :: AuthMode
   , scManager   :: HTTP.Manager
+  , scServerId  :: UUID
   }
 
 data HandlerCtx
@@ -214,7 +216,8 @@ v1QueryHandler query = do
       httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo schemaCache httpMgr query
+      serverId <- scServerId . hcServerCtx <$> ask
+      runQuery pool isoL serverId userInfo schemaCache httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -289,18 +292,24 @@ mkWaiApp
   -> CorsConfig
   -> Bool
   -> Bool
-  -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
-    cacheRef <- do
+  -> UUID
+  -> IO (Wai.Application, IORef SchemaCache, MVar (), UTCTime)
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg
+         enableConsole enableTelemetry serverId = do
+    (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager pool Q.Serializable buildSchemaCache
-      either initErrExit return pgResp >>= newIORef . snd
+                httpManager pool Q.Serializable $ do
+                  buildSchemaCache
+                  liftIO getCurrentTime
+      (time, sc) <- either initErrExit return pgResp
+      scRef <- newIORef sc
+      return (scRef, time)
 
     cacheLock <- newMVar ()
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager serverId
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
@@ -309,7 +318,11 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
-    return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
+    return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
+           , cacheRef
+           , cacheLock
+           , cacheBuiltTime
+           )
 
 httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole enableTelemetry = do
