@@ -37,7 +37,7 @@ getExecPlan
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
-  -> GraphQLRequest
+  -> GQLReqParsed
   -> m GQExecPlan
 getExecPlan userInfo sc req = do
 
