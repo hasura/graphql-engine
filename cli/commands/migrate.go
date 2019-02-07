@@ -9,13 +9,17 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	// Initialize migration drivers
+	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
 )
 
+// NewMigrateCmd returns the migrate command
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:          "migrate",
@@ -30,8 +34,8 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-func newMigrate(dir string, db *url.URL, adminSecret string, logger *logrus.Logger) (*migrate.Migrate, error) {
-	dbURL := getDataPath(db, adminSecret)
+func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version) (*migrate.Migrate, error) {
+	dbURL := getDataPath(db, adminSecretHeader, adminSecretValue)
 	fileURL := getFilePath(dir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), true, logger)
 	if err != nil {
@@ -40,6 +44,7 @@ func newMigrate(dir string, db *url.URL, adminSecret string, logger *logrus.Logg
 	return t, nil
 }
 
+// ExecuteMigration runs the actual migration
 func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
 	var err error
 
@@ -72,7 +77,7 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 	return status, nil
 }
 
-func getDataPath(nurl *url.URL, adminSecret string) *url.URL {
+func getDataPath(nurl *url.URL, adminSecretHeader, adminSecretValue string) *url.URL {
 	host := &url.URL{
 		Scheme: "hasuradb",
 		Host:   nurl.Host,
@@ -86,8 +91,8 @@ func getDataPath(nurl *url.URL, adminSecret string) *url.URL {
 	default:
 		q.Set("sslmode", "disable")
 	}
-	if adminSecret != "" {
-		q.Add("headers", "X-Hasura-Admin-Secret:"+adminSecret)
+	if adminSecretValue != "" {
+		q.Add("headers", fmt.Sprintf("%s:%s", adminSecretHeader, adminSecretValue))
 	}
 	host.RawQuery = q.Encode()
 	return host

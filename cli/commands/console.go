@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -93,7 +94,7 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
 
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
@@ -163,7 +164,8 @@ type cRouter struct {
 	*gin.Engine
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger) {
+func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
+
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))

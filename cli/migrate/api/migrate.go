@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,10 +51,32 @@ func MigrateAPI(c *gin.Context) {
 		return
 	}
 
+	// Get version
+	versionPtr, ok := c.Get("version")
+	if !ok {
+		// c.JSON
+		return
+	}
+
+	adminSecretPtr, ok := c.Get("adminSecret")
+	if !ok {
+		// c.JSON
+		return
+	}
+
 	// Convert to url.URL
 	databaseURL := databasePtr.(*url.URL)
 	sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
+
+	version := versionPtr.(*version.Version)
+	adminSecret := adminSecretPtr.(string)
+
+	adminSecretHeaderName, err := getAdminSecretHeaderName(version)
+	if err != nil {
+		//c.JSON
+		return
+	}
 
 	// Create new migrate
 	t, err := migrate.New(sourceURL.String(), databaseURL.String(), false, logger)
@@ -134,4 +158,16 @@ func MigrateAPI(c *gin.Context) {
 	default:
 		c.JSON(http.StatusMethodNotAllowed, &gin.H{"message": "Method not allowed"})
 	}
+}
+
+func getAdminSecretHeaderName(v *version.Version) (string, error) {
+	flags, err := v.GetServerFeatureFlags()
+	if err != nil {
+		return "", errors.Wrap(err, "get server feature flags")
+	}
+	adminSecretHeader := "X-Hasura-Access-Key"
+	if flags.HasAdminSecret {
+		adminSecretHeader = "X-Hasura-Admin-Secret"
+	}
+	return adminSecretHeader, nil
 }
