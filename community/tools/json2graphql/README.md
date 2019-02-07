@@ -202,6 +202,21 @@ module.exports = {
 };
 ```
 
+If you need to do some asynchronous stuff before exporting your data, you can
+also export an function:
+
+*Note: You can require [node-fetch](https://www.npmjs.com/package/node-fetch) in your function*
+
+```js
+const fetch = require('node-fetch');
+
+module.exports = async function() {
+  
+  const db = await fetch (...)
+  return db
+}
+```
+
 ## Use cases
 
 ### Play with GraphQL on your MongoDB data

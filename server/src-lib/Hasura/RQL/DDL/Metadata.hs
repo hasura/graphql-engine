@@ -32,7 +32,6 @@ import qualified Data.Text                      as T
 
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

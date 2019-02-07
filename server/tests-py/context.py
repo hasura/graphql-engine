@@ -74,7 +74,7 @@ class WebhookServer(http.server.HTTPServer):
 
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, hge_jwt_key_file, webhook_insecure):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -97,6 +97,7 @@ class HGECtx:
         else:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
+        self.hge_jwt_conf = hge_jwt_conf
         self.webhook_insecure = webhook_insecure
         self.may_skip_test_teardown = False
 

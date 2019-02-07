@@ -65,6 +65,14 @@ data TriggerMeta
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
 
+data DeliveryInfo
+  = DeliveryInfo
+  { diCurrentRetry :: Int
+  , diMaxRetries   :: Int
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+
 data Event
   = Event
   { eId        :: EventId
@@ -75,18 +83,29 @@ data Event
   , eCreatedAt :: Time.UTCTime
   } deriving (Show, Eq)
 
-instance ToJSON Event where
-  toJSON (Event eid (QualifiedObject sn tn) trigger event _ created)=
-    object [ "id" .= eid
-           , "table"  .= object [ "schema" .= sn
-                                , "name"  .= tn
-                                ]
-           , "trigger" .= trigger
-           , "event" .= event
-           , "created_at" .= created
+$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+
+newtype QualifiedTableStrict = QualifiedTableStrict
+  { getQualifiedTable :: QualifiedTable
+  } deriving (Show, Eq)
+
+instance ToJSON QualifiedTableStrict where
+  toJSON (QualifiedTableStrict (QualifiedObject sn tn)) =
+     object [ "schema" .= sn
+            , "name"  .= tn
            ]
 
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+data EventPayload
+  = EventPayload
+  { epId           :: EventId
+  , epTable        :: QualifiedTableStrict
+  , epTrigger      :: TriggerMeta
+  , epEvent        :: Value
+  , epDeliveryInfo :: DeliveryInfo
+  , epCreatedAt    :: Time.UTCTime
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
 data WebhookRequest
   = WebhookRequest
@@ -264,12 +283,23 @@ tryWebhook logenv pool e = do
       let webhook = wciCachedValue $ etiWebhookInfo eti
           createdAt = eCreatedAt e
           eventId =  eId e
-          headerInfos = etiHeaders eti
-          etHeaders = map encodeHeader headerInfos
-          headers = addDefaultHeaders etHeaders
           retryConf = etiRetryConf eti
           timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
           responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+          headerInfos = etiHeaders eti
+          etHeaders = map encodeHeader headerInfos
+          headers = addDefaultHeaders etHeaders
+          eventPayload = EventPayload
+            { epId           = eId e
+            , epTable        = QualifiedTableStrict { getQualifiedTable = eTable e}
+            , epTrigger      = eTrigger e
+            , epEvent        = eEvent e
+            , epDeliveryInfo =  DeliveryInfo
+              { diCurrentRetry = eTries e
+              , diMaxRetries   = rcNumRetries $  etiRetryConf eti
+              }
+            , epCreatedAt    = eCreatedAt e
+            }
       eeCtx <- asks getter
       -- wait for counter and then increment beforing making http
       liftIO $ atomically $ do
@@ -286,7 +316,7 @@ tryWebhook logenv pool e = do
           let req = initReq
                 { HTTP.method = "POST"
                 , HTTP.requestHeaders = headers
-                , HTTP.requestBody = HTTP.RequestBodyLBS (encode e)
+                , HTTP.requestBody = HTTP.RequestBodyLBS (encode eventPayload)
                 , HTTP.responseTimeout = responseTimeout
                 }
               decodedHeaders = map (decodeHeader headerInfos) $ HTTP.requestHeaders req
@@ -301,32 +331,32 @@ tryWebhook logenv pool e = do
             Left err ->
               case err of
                 HClient excp -> let errMsg = TBS.fromLBS $ encode $ show excp
-                                in runFailureQ pool $ mkInvo e 1000 decodedHeaders errMsg []
+                                in runFailureQ pool $ mkInvo eventPayload 1000 decodedHeaders errMsg []
                 HParse _ detail -> let errMsg = TBS.fromLBS $ encode detail
-                                   in runFailureQ pool $ mkInvo e 1001 decodedHeaders errMsg []
+                                   in runFailureQ pool $ mkInvo eventPayload 1001 decodedHeaders errMsg []
                 HStatus errResp -> let respPayload = hrsBody errResp
                                        respHeaders = hrsHeaders errResp
                                        respStatus = hrsStatus errResp
-                                   in runFailureQ pool $ mkInvo e respStatus decodedHeaders respPayload respHeaders
+                                   in runFailureQ pool $ mkInvo eventPayload respStatus decodedHeaders respPayload respHeaders
                 HOther detail -> let errMsg = (TBS.fromLBS $ encode detail)
-                                 in runFailureQ pool $ mkInvo e 500 decodedHeaders errMsg []
+                                 in runFailureQ pool $ mkInvo eventPayload 500 decodedHeaders errMsg []
             Right resp -> let respPayload = hrsBody resp
                               respHeaders = hrsHeaders resp
                               respStatus = hrsStatus resp
-                          in runSuccessQ pool e $ mkInvo e respStatus decodedHeaders respPayload respHeaders
+                          in runSuccessQ pool e $ mkInvo eventPayload respStatus decodedHeaders respPayload respHeaders
           case finally of
             Left err -> liftIO $ logger $ L.toEngineLog $ EventInternalErr err
             Right _  -> return ()
           return eitherResp
   where
-    mkInvo :: Event -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
-    mkInvo e' status reqHeaders respBody respHeaders
+    mkInvo :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
+    mkInvo ep status reqHeaders respBody respHeaders
       = let resp = if isClientError status then mkClientErr respBody else mkResp status respBody respHeaders
         in
           Invocation
-          (eId e')
+          (epId ep)
           status
-          (mkWebhookReq (toJSON e) reqHeaders)
+          (mkWebhookReq (toJSON ep) reqHeaders)
           resp
     encodeHeader :: EventHeaderInfo -> HTTP.Header
     encodeHeader (EventHeaderInfo hconf cache) =

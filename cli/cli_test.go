@@ -66,6 +66,10 @@ func TestValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("execution failed: %v", err)
 	}
+	err = ec.Prepare()
+	if err != nil {
+		t.Fatalf("prepare failed: %v", err)
+	}
 	err = ec.Validate()
 	if err != nil {
 		t.Fatalf("validate failed: %v", err)
