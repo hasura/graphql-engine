@@ -51,12 +51,11 @@ if (!window.__env.urlPrefix) {
 if (!window.__env.consoleMode) {
   globals.consoleMode = SERVER_CONSOLE_MODE;
 }
-
-if (!window.__env.adminSecret) {
+if (!globals.adminSecret) {
   globals.adminSecret = null;
 }
 
-if (!window.__env.isAdminSecretSet) {
+if (globals.isAdminSecretSet === undefined) {
   globals.isAdminSecretSet = false;
 }
 
