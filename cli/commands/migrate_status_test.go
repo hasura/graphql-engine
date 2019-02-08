@@ -12,6 +12,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,6 +31,13 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 			},
 		},
 	}
+
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	opts.EC.Version.SetServerVersion(v)
 
 	status, err := opts.run()
 	if err != nil {
@@ -53,6 +61,8 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 		},
 	}
 
+	opts.EC.Version = version.New()
+	opts.EC.Version.SetServerVersion("")
 	_, err := opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")

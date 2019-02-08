@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -93,15 +94,18 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
-
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
+
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
+
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
+
+	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
@@ -109,6 +113,7 @@ func (o *consoleOptions) run() error {
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
+		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
 		"adminSecret":     o.EC.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
@@ -163,12 +168,12 @@ type cRouter struct {
 	*gin.Engine
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger) {
+func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, adminSecret))
+		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -187,9 +192,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 	}
 }
 
-func setDataPath(nurl *url.URL, adminSecret string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, adminSecret)
+		host := getDataPath(nurl, adminSecretHeader, adminSecret)
 
 		c.Set("dbpath", host)
 		c.Next()

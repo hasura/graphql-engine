@@ -56,7 +56,7 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
 	if err != nil {
 		return nil, err
 	}
