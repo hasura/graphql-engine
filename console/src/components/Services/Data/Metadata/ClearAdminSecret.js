@@ -30,7 +30,7 @@ class ClearAdminSecret extends Component {
             if (globals.isAdminSecretSet || globals.adminSecret) {
               clearAdminSecretState();
               this.props.dispatch(
-                showSuccessNotification(`Cleared ${globals.adminSecretName}`)
+                showSuccessNotification(`Cleared ${globals.adminSecretLabel}`)
               );
               this.setState({ isClearing: false });
               this.props.router.push('/login');
@@ -39,12 +39,12 @@ class ClearAdminSecret extends Component {
               const errorMessage = (
                 <div style={{ padding: '5px' }}>
                   <div style={{ fontSize: '13px' }}>
-                    No {globals.adminSecretName} set
+                    No {globals.adminSecretLabel} set
                   </div>
                   <br />
                   <div style={{ fontSize: '13px' }}>
-                    Please look for <code>{CONSOLE_ADMIN_SECRET}</code> key under
-                    window storage and delete it if it exists
+                    Please look for <code>{CONSOLE_ADMIN_SECRET}</code> key
+                    under window storage and delete it if it exists
                   </div>
                 </div>
               );
@@ -52,7 +52,9 @@ class ClearAdminSecret extends Component {
             }
           }}
         >
-          {this.state.isClearing ? 'Clearing...' : `Clear ${globals.adminSecretName} (logout)`}
+          {this.state.isClearing
+            ? 'Clearing...'
+            : `Clear ${globals.adminSecretLabel} (logout)`}
         </Button>
       </div>
     );

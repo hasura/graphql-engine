@@ -90,8 +90,8 @@ mkAuthMode
   -> H.Manager
   -> LoggerCtx
   -> m AuthMode
-mkAuthMode mAccessKey mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
-  case (mAccessKey, mWebHook, mJwtSecret) of
+mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
+  case (mAdminSecret, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAdminSecret key mUnAuthRole
     (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
@@ -137,7 +137,8 @@ mkJwtCtx jwtConf httpManager loggerCtx = do
         Just t -> do
           jwkRefreshCtrl logger httpManager url ref t
           return ref
-  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf)
+  let claimsFmt = fromMaybe JCFJson (jcClaimsFormat conf)
+  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt
   where
     decodeErr e = throwError . T.pack $ "Fatal Error: JWT conf: " <> e
 

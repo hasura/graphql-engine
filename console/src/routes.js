@@ -40,7 +40,7 @@ const routes = store => {
             } else {
               alert(
                 `Looks like CLI is not configured with the ${
-                  globals.adminSecretName
+                  globals.adminSecretLabel
                 }. Please configure and try again`
               );
             }

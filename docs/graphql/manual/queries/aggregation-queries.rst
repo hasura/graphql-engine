@@ -11,7 +11,7 @@ Available aggregation functions are ``count``, ``sum``, ``avg``, ``max`` and ``m
 
 .. note::
 
-  The name of the :ref:`aggregate field <aggregate_object>` is of the form ``field-name + _aggregate``
+  The name of the :ref:`aggregate field <AggregateObject>` is of the form ``<field-name> + _aggregate``
 
 Fetch aggregated data of an object
 ----------------------------------

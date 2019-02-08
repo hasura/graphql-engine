@@ -64,7 +64,7 @@ const requestAction = (
                   data: {
                     'content-type': 'application/json',
                     [`x-hasura-${
-                      globals.adminSecretName
+                      globals.adminSecretLabel
                     }`]: globals.adminSecret,
                   },
                 });

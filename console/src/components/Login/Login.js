@@ -56,7 +56,7 @@ class Login extends Component {
                       className={styles.form_input + ' form-control'}
                       placeholder="Password"
                       type="password"
-                      placeholder={`Enter ${globals.adminSecretName}`}
+                      placeholder={`Enter ${globals.adminSecretLabel}`}
                       name="password"
                     />
                   </div>

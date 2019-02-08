@@ -120,15 +120,15 @@ class Metadata extends Component {
               key="access_key_reset_1"
               className={metaDataStyles.intro_note}
             >
-              <h4>Clear {globals.adminSecretName} (logout)</h4>
+              <h4>Clear {globals.adminSecretLabel} (logout)</h4>
               <div className={metaDataStyles.content_width}>
-                  The console caches the {globals.adminSecretName} (
-                {globals.adminSecretName === 'access-key'
+                  The console caches the {globals.adminSecretLabel} (
+                {globals.adminSecretLabel === 'access-key'
                   ? 'HASURA_GRAPHQL_ACCESS_KEY'
                   : 'HASURA_GRAPHQL_ADMIN_SECRET'}
                   ) in the browser. You can clear this cache to force a prompt
-                  for the {globals.adminSecretName} when the console is accessed
-                  next using this browser.
+                  for the {globals.adminSecretLabel} when the console is
+                  accessed next using this browser.
               </div>
             </div>,
             <div key="access_key_reset_2">

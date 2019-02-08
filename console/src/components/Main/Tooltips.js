@@ -21,6 +21,6 @@ export const customresolver = (
 export const secureEndpoint = (
   <Tooltip id="tooltip-secure-endpoint">
     This graphql endpoint is public and you should add an{' '}
-    {globals.adminSecretName}
+    {globals.adminSecretLabel}
   </Tooltip>
 );
