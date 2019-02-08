@@ -67,13 +67,13 @@ type rawServerConfig struct {
 }
 
 func (r rawServerConfig) toServerConfig() ServerConfig {
-	adminScrt := r.AdminSecret
-	if adminScrt == "" {
-		adminScrt = r.AccessKey
+	s := r.AdminSecret
+	if s == "" {
+		s = r.AccessKey
 	}
 	return ServerConfig{
 		Endpoint:       r.Endpoint,
-		AdminSecret:    adminScrt,
+		AdminSecret:    s,
 		ParsedEndpoint: r.ParsedEndpoint,
 	}
 }
