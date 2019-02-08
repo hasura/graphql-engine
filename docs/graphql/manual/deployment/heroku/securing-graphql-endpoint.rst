@@ -11,7 +11,7 @@ configure an admin secret key.
 
 
 Add the HASURA_GRAPHQL_ADMIN_SECRET env var
------------------------------------------
+-------------------------------------------
 
 Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
 
@@ -24,7 +24,7 @@ prompted for the admin secret key.
 
 
 (optional) Use the admin secret with the CLI
-------------------------------------------
+--------------------------------------------
 
 In case you're using the CLI to open the Hasura console, use the ``admin-secret`` flag when you open the console:
 
