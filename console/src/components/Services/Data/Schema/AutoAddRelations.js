@@ -32,13 +32,11 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
-    const untrackData = untrackedRelations.map(obj => {
+    const untrackData = untrackedRelations.map((obj, i) => {
       return (
         <div
           className={styles.padd_top_medium}
-          key={`untracked-rel-${obj.data.tableName}-${obj.data.lcol}-${
-            obj.data.rcol
-          }-${obj.data.rTable}`}
+          key={`${obj.data.tableName}-${obj.data.rTable}-${i}`}
         >
           <Button
             className={`${styles.display_inline}`}
