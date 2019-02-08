@@ -21,8 +21,14 @@ func TestConsoleCmd(t *testing.T) {
 		Endpoint:    "http://localhost:8080",
 		AdminSecret: "",
 	}
+
 	ec.Version = version.New()
-	err := ec.Prepare()
+	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	ec.Version.SetServerVersion(v)
+	err = ec.Prepare()
 	if err != nil {
 		t.Fatalf("prepare failed: %v", err)
 	}
