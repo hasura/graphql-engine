@@ -36,7 +36,9 @@ class AutoAddRelations extends Component {
       return (
         <div
           className={styles.padd_top_medium}
-          key={'untrackedIndiv' + obj.data.tableName}
+          key={`untracked-rel-${obj.data.tableName}-${obj.data.lcol}-${
+            obj.data.rcol
+          }-${obj.data.rTable}`}
         >
           <Button
             className={`${styles.display_inline}`}
