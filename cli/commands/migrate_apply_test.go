@@ -11,11 +11,12 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, version string, versionType string) {
+func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, v string, vType string) {
 	logger, hook := test.NewNullLogger()
 	opts := &migrateApplyOptions{
 		EC: &cli.ExecutionContext{
@@ -30,11 +31,18 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 		},
 		upMigration:      up,
 		downMigration:    down,
-		versionMigration: version,
-		migrationType:    versionType,
+		versionMigration: v,
+		migrationType:    vType,
 	}
 
-	err := opts.run()
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	opts.EC.Version.SetServerVersion(v)
+
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed applying migration: %v", err)
 	}
@@ -57,7 +65,13 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 		},
 	}
 
-	err := opts.run()
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err == nil {
+		t.Fatalf("expected error to be not nil")
+	}
+	opts.EC.Version.SetServerVersion(v)
+	err = opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}
@@ -78,6 +92,9 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 		upMigration:   "1",
 		downMigration: "2",
 	}
+
+	opts.EC.Version = version.New()
+	opts.EC.Version.SetServerVersion("")
 
 	err := opts.EC.ServerConfig.ParseEndpoint()
 	if err == nil {

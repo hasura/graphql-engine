@@ -8,7 +8,7 @@ import (
 // ServerFeatureFlags indicates what features are supported by this
 // version of server.
 type ServerFeatureFlags struct {
-	HasAdminSecret bool
+	HasAccessKey bool
 }
 
 const adminSecretVersion = "v1.0.0-alpha38"
@@ -18,12 +18,12 @@ func (v *Version) GetServerFeatureFlags() (*ServerFeatureFlags, error) {
 	flags := &ServerFeatureFlags{}
 
 	// create a constraint to check if the current server version has admin secret
-	adminSecretConstraint, err := semver.NewConstraint(">= " + adminSecretVersion)
+	adminSecretConstraint, err := semver.NewConstraint("< " + adminSecretVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "building admin secret constraint failed")
 	}
 	// check the current version with the constraint
-	flags.HasAdminSecret = adminSecretConstraint.Check(v.ServerSemver)
+	flags.HasAccessKey = adminSecretConstraint.Check(v.ServerSemver)
 
 	return flags, nil
 }

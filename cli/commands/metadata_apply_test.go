@@ -8,6 +8,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -27,7 +28,14 @@ func testMetadataApply(t *testing.T, metadataFile string, endpoint *url.URL) {
 		actionType: "apply",
 	}
 
-	err := opts.run()
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	opts.EC.Version.SetServerVersion(v)
+
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed exporting metadata: %v", err)
 	}
