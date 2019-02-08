@@ -122,7 +122,7 @@ instance FromJSON CreateEventTriggerQuery where
       else fail "only alphanumeric and underscore and hyphens allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
-      Nothing -> fail "must provide operation spec(s)"
+      Nothing -> fail "at least one among the insert/update/delete operation specs must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()

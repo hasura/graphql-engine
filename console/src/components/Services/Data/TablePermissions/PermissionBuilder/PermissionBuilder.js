@@ -71,10 +71,7 @@ class PermissionBuilder extends React.Component {
       } else if (isNotOperator(operator)) {
         const newPath = pathSplit.slice(1).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
-      } else if (
-        isColumnOperator(operator) ||
-        isArrayColumnOperator(operator)
-      ) {
+      } else if (isColumnOperator(operator) || isArrayColumnOperator(operator)) {
         // no missing schemas
       } else {
         const { allTableSchemas } = this.props;

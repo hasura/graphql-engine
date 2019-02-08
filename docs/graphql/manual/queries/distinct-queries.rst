@@ -6,8 +6,10 @@ Distinct query results
   :depth: 1
   :local:
 
-You can fetch rows with only distinct values of a column using the ``distinct_on`` argument. The first ``order_by``
-columns must match the ``distinct_on`` column. See :doc:`sort queries <sorting>` for more info on ``order_by``.
+You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
+
+This requires the data to be first sorted by the column i.e. the ``distinct_on`` column should also be the first
+``order_by`` column. See :doc:`sort queries <sorting>` for more info on using ``order_by``.
 
 .. code-block:: graphql
 
@@ -24,6 +26,8 @@ columns must match the ``distinct_on`` column. See :doc:`sort queries <sorting>`
      salary
    }
 
+You can see the complete specification of the ``distinct_on`` argument in the :ref:`API reference <DistinctOnExp>`.
+
 Fetch results with distinct values of a particular field
 --------------------------------------------------------
 
@@ -33,10 +37,13 @@ Fetch results with distinct values of a particular field
    :view_only:
    :query:
       query {
-        employee(
+        employee (
           distinct_on: [department]
-          order_by: [{department: asc}, {salary: desc}]
-        ){
+          order_by: [
+            {department: asc},
+            {salary: desc}
+          ]
+        ) {
           id
           name
           department
