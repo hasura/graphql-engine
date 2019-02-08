@@ -1,6 +1,5 @@
 # react-static-graphql
-
-    Boilerplate to get started with react-static site generator, Hasura GraphQL engine and postgres as database using the [react-static](https://github.com/nozzle/react-static) framework.
+> A sample app to get started with react-static site generator, Hasura GraphQL engine and postgres as database using the [react-static](https://github.com/nozzle/react-static) framework.
 
 # Tutorial
 
