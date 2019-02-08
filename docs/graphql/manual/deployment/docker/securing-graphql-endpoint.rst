@@ -10,7 +10,7 @@ To make sure that your GraphQL endpoint and the Hasura console are not publicly 
 configure an admin secret key.
 
 Run the docker command with an admin-secret env var
--------------------------------------------------
+---------------------------------------------------
 
 .. code-block:: bash
    :emphasize-lines: 5

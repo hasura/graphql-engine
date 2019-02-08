@@ -11,7 +11,7 @@ configure an admin secret key.
 
 
 Add the HASURA_GRAPHQL_ADMIN_SECRET env var
------------------------------------------
+-------------------------------------------
 
 Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
 
@@ -37,7 +37,7 @@ Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` enviro
 
 
 (optional) Use the admin secret key with the CLI
-------------------------------------------
+------------------------------------------------
 
 In case you're using the CLI to open the Hasura console, use the ``admin-secret`` flag when you open the console:
 
