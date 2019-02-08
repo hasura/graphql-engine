@@ -56,6 +56,7 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.SQL.DML                     as S
 
+import           Control.Arrow                      (first)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -69,7 +70,7 @@ import qualified Data.Text                          as T
 data InsPerm
   = InsPerm
   { icCheck   :: !BoolExp
-  , icSet     :: !(Maybe Object)
+  , icSet     :: !(Maybe ColVals)
   , icColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
@@ -103,11 +104,10 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe Object -> m (PreSetCols, [Text], [SchemaDependency])
+  => TableInfo -> Maybe ColVals -> m (PreSetCols, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   setColsSQL <- withPathK "set" $
-    fmap HM.fromList $ forM (HM.toList setObj) $ \(t, val) -> do
-      let pgCol = PGCol t
+    fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
       sqlExp <- valueParser ty val
@@ -118,7 +118,8 @@ procSetObj ti mObj = do
     fieldInfoMap = tiFieldInfoMap ti
     tn = tiName ti
     setObj = fromMaybe mempty mObj
-    depHeaders = getDepHeadersFromVal $ Object setObj
+    depHeaders = getDepHeadersFromVal $ Object $
+      HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
 
 buildInsPermInfo
   :: (QErrM m, CacheRM m)
@@ -265,7 +266,7 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe Object) -- Preset columns
+  , ucSet     :: !(Maybe ColVals) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
   } deriving (Show, Eq, Lift)
 

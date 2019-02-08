@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+       , ColVals
        , PreSetCols
        ) where
 
@@ -137,4 +138,5 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
+type ColVals = HM.HashMap PGCol Value
 type PreSetCols = HM.HashMap PGCol S.SQLExp
