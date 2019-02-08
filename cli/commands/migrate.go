@@ -35,7 +35,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version) (*migrate.Migrate, error) {
-	dbURL := getDataPath(db, adminSecretHeader, adminSecretValue)
+	dbURL := getDataPath(db, getAdminSecretHeaderName(v), adminSecretValue)
 	fileURL := getFilePath(dir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), true, logger)
 	if err != nil {
@@ -109,4 +109,16 @@ func getFilePath(dir string) *url.URL {
 		host.Path = "/" + host.Path
 	}
 	return host
+}
+
+func getAdminSecretHeaderName(v *version.Version) string {
+	adminSecretHeader := "X-Hasura-Access-Key"
+	flags, err := v.GetServerFeatureFlags()
+	if err != nil {
+		return adminSecretHeader
+	}
+	if flags.HasAdminSecret {
+		adminSecretHeader = "X-Hasura-Admin-Secret"
+	}
+	return adminSecretHeader
 }

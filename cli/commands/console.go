@@ -165,12 +165,11 @@ type cRouter struct {
 }
 
 func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
-
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, adminSecret))
+		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -189,9 +188,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 	}
 }
 
-func setDataPath(nurl *url.URL, adminSecret string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, adminSecret)
+		host := getDataPath(nurl, adminSecretHeader, adminSecret)
 
 		c.Set("dbpath", host)
 		c.Next()
