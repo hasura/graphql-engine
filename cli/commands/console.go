@@ -226,7 +226,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders("X-Hasura-Admin-Secret")
+	config.AddAllowHeaders(XHasuraAccessKey)
+	config.AddAllowHeaders(XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")
