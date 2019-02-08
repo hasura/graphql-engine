@@ -111,17 +111,21 @@ func getFilePath(dir string) *url.URL {
 	return host
 }
 
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
+)
+
 func getAdminSecretHeaderName(v *version.Version) string {
-	adminSecretHeader := "X-Hasura-Admin-Secret"
 	if v.ServerSemver == nil {
-		return adminSecretHeader
+		return XHasuraAdminSecret
 	}
 	flags, err := v.GetServerFeatureFlags()
 	if err != nil {
-		return adminSecretHeader
+		return XHasuraAdminSecret
 	}
 	if flags.HasAccessKey {
-		adminSecretHeader = "X-Hasura-Access-Key"
+		return XHasuraAccessKey
 	}
-	return adminSecretHeader
+	return XHasuraAdminSecret
 }

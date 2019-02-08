@@ -94,15 +94,18 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
-
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
+
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
+
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
+
+	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
@@ -110,6 +113,7 @@ func (o *consoleOptions) run() error {
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
+		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
 		"adminSecret":     o.EC.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
