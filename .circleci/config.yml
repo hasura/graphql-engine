@@ -242,8 +242,8 @@ jobs:
         name: test cli
         command: .circleci/test-cli-with-last-release.sh
     - store_artifacts:
-        path: /build/_console_output
-        destination: console
+        path: /build/_cli_output
+        destination: cli
 
   # test and build cli
   test_and_build_cli:
