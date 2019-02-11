@@ -14,8 +14,8 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
-import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.Parser as G
+import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 

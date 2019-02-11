@@ -315,17 +315,26 @@ ordByEnumTy =
 defaultTypes :: [TypeInfo]
 defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
 
+mutQueryTy :: G.NamedType
+mutQueryTy = G.NamedType "mutation_query"
+
+mutQueryDesc :: G.Description
+mutQueryDesc = "queries in mutation response"
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
 mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
                   (G.NamedType "query_root") Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
+      mutQueryRoot = mkHsraObjTyInfo (Just mutQueryDesc)
+                     mutQueryTy Set.empty $ mapFromL _fiName qFlds
+      mutQueryRootM = bool Nothing (Just mutQueryRoot) $ isJust mutRootM
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
       allTys    = Map.union tyInfos $ mkTyInfoMap $
                   catMaybes [ Just $ TIObj queryRoot
+                            , TIObj <$> mutQueryRootM
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
