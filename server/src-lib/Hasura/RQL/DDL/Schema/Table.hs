@@ -446,8 +446,8 @@ execWithMDCheck (RunSQL t cascade _) = do
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
-    throw400 NotSupported $ reportFuncs overloadedFuncs
-      <> " functions are being overloaded and it is not allowed"
+    throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
+    <> reportFuncs overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 

@@ -1,9 +1,9 @@
 description: Create a new SQL function with same name (error)
 url: /v1/query
 status: 400
-reponse:
+response:
   path: "$.args"
-  error: '"search_posts" functions are being overloaded and it is not allowed'
+  error: 'the following tracked function(s) cannot be overloaded: search_posts'
   code: not-supported
 query:
   type: run_sql
