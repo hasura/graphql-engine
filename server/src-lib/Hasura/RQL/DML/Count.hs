@@ -115,12 +115,10 @@ countQToTx
   :: (QErrM m, MonadTx m)
   => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 countQToTx (u, p) = do
-  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
-          (Q.fromBuilder countSQL) (toList p) True
+  qRes <- liftTx $ execSingleRowAndCol p $ mkSQLCount u
   return $ BB.toLazyByteString $ encodeCount qRes
   where
-    countSQL = toSQL $ mkSQLCount u
-    encodeCount (Q.SingleRow (Identity c)) =
+    encodeCount c =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
 runCount

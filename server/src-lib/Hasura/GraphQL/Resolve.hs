@@ -17,7 +17,6 @@ import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Resolve.Insert          as RI
 import qualified Hasura.GraphQL.Resolve.Mutation        as RM
@@ -27,31 +26,37 @@ import qualified Hasura.GraphQL.Resolve.Select          as RS
 buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
 buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
+  join $ fmap fst $ runConvert ( fldMap
+                               , orderByCtx
+                               , insCtxMap
+                               , funcArgCtx
+                               , opCtxMap
+                               , userInfo
+                               ) $ case opCxt of
 
     OCSelect tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+      validateHdrs' hdrs >> RS.convertSelect tn permFilter permLimit fld
 
     OCSelectPkey tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
+      validateHdrs' hdrs >> RS.convertSelectByPKey tn permFilter fld
 
     OCSelectAgg tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
+      validateHdrs' hdrs >> RS.convertAggSelect tn permFilter permLimit fld
 
     OCFuncQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
+      validateHdrs' hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
 
     OCFuncAggQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
+      validateHdrs' hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
 
     OCInsert tn hdrs    ->
-      validateHdrs hdrs >> RI.convertInsert roleName tn fld
+      validateHdrs' hdrs >> RI.convertInsert roleName tn fld
 
     OCUpdate tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
+      validateHdrs' hdrs >> RM.convertUpdate tn permFilter fld
 
     OCDelete tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertDelete tn permFilter fld
+      validateHdrs' hdrs >> RM.convertDelete tn permFilter fld
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
@@ -64,11 +69,7 @@ buildTx userInfo gCtx fld = do
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
 
-    validateHdrs hdrs = do
-      let receivedVars = userVars userInfo
-      forM_ hdrs $ \hdr ->
-        unless (isJust $ getVarVal hdr receivedVars) $
-        throw400 NotFound $ hdr <<> " header is expected but not found"
+    validateHdrs' = validateHdrs userInfo
 
 -- {-# SCC resolveFld #-}
 resolveFld

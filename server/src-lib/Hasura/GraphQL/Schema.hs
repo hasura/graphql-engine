@@ -650,7 +650,7 @@ mkMutRespObj
   -> ObjTyInfo
 mkMutRespObj tn sel =
   mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) Set.empty $ mapFromL _fiName
-    $ affectedRowsFld : bool [] [returningFld] sel
+    $ [affectedRowsFld, queryFld] <> bool [] [returningFld] sel
   where
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
@@ -664,6 +664,11 @@ mkMutRespObj tn sel =
         G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
+    queryFld =
+      mkHsraObjFldInfo (Just desc) "query" Map.empty $
+        G.toGT $ G.toNT $ G.NamedType "query_root"
+      where
+        desc = "the query root"
 
 -- table_bool_exp
 mkBoolExpInp

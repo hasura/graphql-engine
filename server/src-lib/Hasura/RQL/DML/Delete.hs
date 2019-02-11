@@ -97,10 +97,7 @@ validateDeleteQ =
 
 deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 deleteQueryToTx (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
-  where
-    deleteSQL = toSQL $ mkSQLDelete u
+  execSingleRowAndCol p $ mkSQLDelete u
 
 runDelete
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)

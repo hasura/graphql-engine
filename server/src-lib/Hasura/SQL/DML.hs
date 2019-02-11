@@ -255,6 +255,7 @@ data SQLExp
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
+  | SESelectWith !SelectWith
   | SEStar
   | SEIden !Iden
   -- iden and row identifier are distinguished for easier rewrite rules
@@ -298,6 +299,8 @@ instance ToSQL SQLExp where
     TB.text t
   toSQL (SESelect se) =
     paren $ toSQL se
+  toSQL (SESelectWith selWith) =
+    paren $ toSQL selWith
   toSQL SEStar =
     TB.char '*'
   toSQL (SEIden iden) =

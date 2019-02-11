@@ -19,7 +19,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 import qualified Hasura.GraphQL.Transport.HTTP          as TH
@@ -69,15 +68,15 @@ explainField userInfo gCtx fld =
       builderSQL <- runExplain (fldMap, orderByCtx, funcArgCtx) $
         case opCxt of
           OCSelect tn permFilter permLimit hdrs -> do
-            validateHdrs hdrs
+            validateHdrs' hdrs
             toSQL . RS.mkSQLSelect False <$>
               RS.fromField txtConverter tn permFilter permLimit fld
           OCSelectPkey tn permFilter hdrs -> do
-            validateHdrs hdrs
+            validateHdrs' hdrs
             toSQL . RS.mkSQLSelect True <$>
               RS.fromFieldByPKey txtConverter tn permFilter fld
           OCSelectAgg tn permFilter permLimit hdrs -> do
-            validateHdrs hdrs
+            validateHdrs' hdrs
             toSQL . RS.mkAggSelect <$>
               RS.fromAggField txtConverter tn permFilter permLimit fld
           OCFuncQuery tn fn permFilter permLimit hdrs ->
@@ -93,7 +92,6 @@ explainField userInfo gCtx fld =
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . uncurry toTxtValue
 
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
@@ -105,18 +103,14 @@ explainField userInfo gCtx fld =
       "lookup failed: opctx: " <> showName f
 
     procFuncQuery tn fn permFilter permLimit hdrs isAgg = do
-      validateHdrs hdrs
+      validateHdrs' hdrs
       (tabArgs, eSel, frmItem) <-
         RS.fromFuncQueryField txtConverter fn isAgg fld
-      return $ toSQL $
-        RS.mkFuncSelectWith fn tn
-        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
+      let tabPerm = RS.TablePerm permFilter permLimit
+          funcSel = RS.SQLFunctionSel fn tn eSel tabArgs tabPerm frmItem
+      return $ toSQL $ RS.mkFuncSelectWith funcSel
 
-    validateHdrs hdrs = do
-      let receivedHdrs = userVars userInfo
-      forM_ hdrs $ \hdr ->
-        unless (isJust $ getVarVal hdr receivedHdrs) $
-        throw400 NotFound $ hdr <<> " header is expected but not found"
+    validateHdrs' = validateHdrs userInfo
 
 explainGQLQuery
   :: (MonadError QErr m, MonadIO m)

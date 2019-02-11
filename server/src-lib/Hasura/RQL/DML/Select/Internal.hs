@@ -610,11 +610,9 @@ mkSQLSelect isSingleObject annSel =
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
-mkFuncSelectWith
-  :: QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs -> Either TableAggFlds AnnFlds
-  -> S.FromItem -> S.SelectWith
-mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
+mkFuncSelectWith :: SQLFunctionSel -> S.SelectWith
+mkFuncSelectWith (SQLFunctionSel qf tn eSelFlds tabArgs tabPerm frmItem) =
+  selWith
   where
     -- SELECT * FROM function_name(args)
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]

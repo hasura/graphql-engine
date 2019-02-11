@@ -178,10 +178,7 @@ validateUpdateQuery =
 
 updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 updateQueryToTx (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
-  where
-    updateSQL = toSQL $ mkSQLUpdate u
+  execSingleRowAndCol p $ mkSQLUpdate u
 
 runUpdate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)

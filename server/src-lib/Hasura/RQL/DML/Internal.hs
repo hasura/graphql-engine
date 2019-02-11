@@ -282,3 +282,13 @@ simplifyError txErr = do
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
 onlyPositiveInt i = when (i < 0) $ throw400 NotSupported
   "unexpected negative value"
+
+-- execute sql statement which returns single row and single column
+execSingleRowAndCol
+  :: (ToSQL a, Q.FromCol r)
+  => DS.Seq Q.PrepArg -> a -> Q.TxE QErr r
+execSingleRowAndCol p stmnt =
+  runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
+  where
+    sqlBuilder = toSQL stmnt

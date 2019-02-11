@@ -11,6 +11,7 @@ module Hasura.GraphQL.Resolve.Select
   , fromFieldByPKey
   , fromAggField
   , fromFuncQueryField
+  , toFields
   ) where
 
 import           Control.Arrow                     (first)
@@ -84,7 +85,7 @@ fromAggSelSet fn fldTy selSet = fmap toFields $
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
-fieldAsPath = nameAsPath . _fName
+fieldAsPath = nameAsPath . G.unAlias . _fAlias
 
 parseTableArgs
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
@@ -372,5 +373,6 @@ convertFuncQuery qt qf permFilter permLimit isAgg fld = do
   (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
     fromFuncQueryField prepare qf isAgg fld
   let tabPerm = RS.TablePerm permFilter permLimit
+      funcSel = RS.SQLFunctionSel qf qt sel tableArgs tabPerm frmItem
   prepArgs <- get
-  return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs (sel, prepArgs)
+  return $ RS.funcQueryTx funcSel prepArgs

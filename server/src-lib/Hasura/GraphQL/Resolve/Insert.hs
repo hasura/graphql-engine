@@ -29,7 +29,7 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
+import           Hasura.RQL.DML.Internal           (execSingleRowAndCol)
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -228,11 +228,15 @@ execWithExp
   -> Q.TxE QErr RespBody
 execWithExp tn (InsWithExp withExp ccM args) flds = do
   RI.setConflictCtx ccM
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
-  where
-    sqlBuilder = toSQL $ RR.mkSelWith tn withExp flds True
+  execSingleRowAndCol args $ RR.mkSelWith tn withExp flds True
 
+fetchMutQueryObject :: [(T.Text, RR.MutQFlds)] -> Q.TxE QErr J.Object
+fetchMutQueryObject mutQFlds =
+  Q.getAltJ <$> execSingleRowAndCol Seq.Empty sel
+  where
+    sel = S.mkSelect{S.selExtr = [S.Extractor mutQueryExp Nothing]}
+    mutQueryExp = S.applyJsonBuildObj $ flip concatMap mutQFlds
+      $ \(t, qFlds) -> [S.SELit t, RR.mkMutQueryExp qFlds]
 
 insertAndRetCols
   :: QualifiedTable
@@ -430,23 +434,29 @@ insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
       let affRows = sum $ map fst insResps
           withExps = map snd insResps
           retFlds = mapMaybe getRet mutFlds
+          queryFlds = mapMaybe getQuery mutFlds
       rawResps <- forM withExps
         $ \withExp -> execWithExp tn withExp retFlds
       respVals :: [J.Object] <- mapM decodeFromBS rawResps
+      queryRespObj <- fetchMutQueryObject queryFlds
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
           RR.MCount   -> return $ J.toJSON affRows
           RR.MExp txt -> return $ J.toJSON txt
           RR.MRet _   -> J.toJSON <$> mapM (fetchVal t) respVals
+          RR.MQuery _ -> J.toJSON <$> fetchVal t queryRespObj
         return (t, jsonVal)
       return $ J.encode $ OMap.fromList respTups
 
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
 
+    getQuery (t, RR.MQuery qFlds) = Just (t, qFlds)
+    getQuery _                    = Nothing
+
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
-  withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
+  withPathK "selectionSet" . fieldAsPath fld
 
 convertInsert
   :: RoleName
@@ -454,11 +464,15 @@ convertInsert
   -> Field -- the mutation field
   -> Convert RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
+  -- Not easy to keep track of prepared arguments generated in
+  -- resolving mutation fields. Hence, using txtConverter
+  mutFlds <- convertMutResp txtConverter (_fType fld) $ _fSelSet fld
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFlds) (buildEmptyMutResp mutFlds) $ null annVals
+  bool (withNonEmptyObjs annVals mutFlds)
+       (buildEmptyMutResp mutFlds Seq.Empty)
+       $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
@@ -466,8 +480,8 @@ convertInsert role tn fld = prefixErrPath fld $ do
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
       let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
-      return $ prefixErrPath fld $ insertMultipleObjects role tn
-        multiObjIns [] mutFlds "objects"
+      return $ prefixErrPath fld $ withPathK "args" $
+        insertMultipleObjects role tn multiObjIns [] mutFlds "objects"
 
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments

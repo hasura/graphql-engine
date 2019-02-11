@@ -288,31 +288,18 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
 funcQueryTx
-  :: S.FromItem -> QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs
-  -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr RespBody
-funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
-  where
-    sqlBuilder = toSQL $
-      mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
+  :: SQLFunctionSel -> DS.Seq Q.PrepArg -> Q.TxE QErr RespBody
+funcQueryTx sqlFuncSel p =
+  execSingleRowAndCol p $ mkFuncSelectWith sqlFuncSel
 
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
-  where
-    selectSQL = toSQL $ mkAggSelect sel
+  execSingleRowAndCol p $ mkAggSelect sel
 
 -- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectP2 asSingleObject (sel, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
-  where
-    selectSQL = toSQL $ mkSQLSelect asSingleObject sel
+  execSingleRowAndCol p $ mkSQLSelect asSingleObject sel
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m)

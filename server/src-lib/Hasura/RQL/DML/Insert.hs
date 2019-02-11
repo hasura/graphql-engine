@@ -236,10 +236,7 @@ convInsQ =
 
 insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 insertP2 (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder insertSQL) (toList p) True
-  where
-    insertSQL = toSQL $ mkSQLInsert u
+  execSingleRowAndCol p $ mkSQLInsert u
 
 data ConflictCtx
   = CCUpdate !ConstraintName ![PGCol] !S.BoolExp

@@ -11,18 +11,28 @@ import qualified Data.Text               as T
 import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
 
+data MutQueryFld
+  = MQFSimple !Bool !AnnSel
+  | MQFAgg !AnnAggSel
+  | MQFFunc !SQLFunctionSel
+  | MQFExp !T.Text
+  deriving (Show, Eq)
+type MutQFlds = Fields MutQueryFld
+
 data MutFld
   = MCount
   | MExp !T.Text
   | MRet ![(FieldName, AnnFld)]
+  | MQuery !MutQFlds
   deriving (Show, Eq)
 
 type MutFlds = [(T.Text, MutFld)]
 
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
-  MCount -> []
-  MExp _ -> []
+  MCount   -> []
+  MExp _   -> []
+  MQuery _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
     FCol (PGColInfo col colTy _) -> Just (col, colTy)
@@ -44,6 +54,22 @@ qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden qt =
   Iden $ snakeCaseTable qt <> "__mutation_result_alias"
 
+mkMutQueryExp :: MutQFlds -> S.SQLExp
+mkMutQueryExp qFlds =
+  S.applyJsonBuildObj jsonBuildObjArgs
+  where
+    jsonBuildObjArgs =
+      flip concatMap qFlds $
+      \(k, qFld) -> [S.SELit $ getFieldNameTxt k, mkSQL qFld]
+    mkSQL = \case
+      MQFSimple singleObj annSel ->
+        S.SESelect $ mkSQLSelect singleObj annSel
+      MQFAgg annAggSel           ->
+        S.SESelect $ mkAggSelect annAggSel
+      MQFFunc sqlFuncSel         ->
+        S.SESelectWith $ mkFuncSelectWith sqlFuncSel
+      MQFExp e                   -> S.SELit e
+
 mkMutFldExp :: QualifiedTable -> Bool -> MutFld -> S.SQLExp
 mkMutFldExp qt singleObj = \case
   MCount -> S.SESelect $
@@ -58,6 +84,7 @@ mkMutFldExp qt singleObj = \case
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect singleObj $
        AnnSelG selFlds tabFrom tabPerm noTableArgs
+  MQuery qFlds -> mkMutQueryExp qFlds
   where
     frmItem = S.FIIden $ qualTableToAliasIden qt
 
@@ -69,7 +96,7 @@ mkSelWith qt cte mutFlds singleObj =
     alias = S.Alias $ qualTableToAliasIden qt
     sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
 
-    extrExp = S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
+    extrExp = S.applyJsonBuildObj jsonBuildObjArgs
 
     jsonBuildObjArgs =
       flip concatMap mutFlds $

@@ -225,3 +225,13 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+data SQLFunctionSel
+  = SQLFunctionSel
+  { _sfsFunction  :: !QualifiedFunction
+  , _sfsTable     :: !QualifiedTable
+  , _sfsFields    :: !(Either TableAggFlds AnnFlds)
+  , _sfsTableArgs :: !TableArgs
+  , _sfsPerm      :: !TablePerm
+  , _sfsFromItem  :: !S.FromItem
+  } deriving (Show, Eq)

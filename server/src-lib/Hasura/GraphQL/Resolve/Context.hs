@@ -23,6 +23,8 @@ module Hasura.GraphQL.Resolve.Context
   , Convert
   , runConvert
   , prepare
+  , txtConverter
+  , validateHdrs
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -40,6 +42,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -124,7 +127,15 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) (Except QErr))
+  StateT PrepArgs (ReaderT ( FieldMap
+                           , OrdByCtx
+                           , InsCtxMap
+                           , FuncArgCtx
+                           , OpCtxMap
+                           , UserInfo
+                           )
+                    (Except QErr)
+                  )
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
@@ -133,9 +144,26 @@ prepare (colTy, colVal) = do
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
 
+txtConverter :: Monad m => PrepFn m
+txtConverter = return . uncurry toTxtValue
+
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) -> Convert a -> m (a, PrepArgs)
+  => ( FieldMap
+     , OrdByCtx
+     , InsCtxMap
+     , FuncArgCtx
+     , OpCtxMap
+     , UserInfo
+     )
+  -> Convert a -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx
+
+validateHdrs :: MonadError QErr m => UserInfo -> [Text] -> m ()
+validateHdrs userInfo hdrs = do
+  let receivedVars = userVars userInfo
+  forM_ hdrs $ \hdr ->
+    unless (isJust $ getVarVal hdr receivedVars) $
+      throw400 NotFound $ hdr <<> " header is expected but not found"

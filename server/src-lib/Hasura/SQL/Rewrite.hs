@@ -140,6 +140,8 @@ uSqlExp = restoringIdens . \case
   S.SELit t                     -> return $ S.SELit t
   S.SEUnsafe t                  -> return $ S.SEUnsafe t
   S.SESelect s                  -> S.SESelect <$> uSelect s
+  -- all selects in selectWith are already prefixed with numeric aliases
+  S.SESelectWith sw             -> return $ S.SESelectWith sw
   S.SEStar                      -> return S.SEStar
   -- this is for row expressions
   -- todo: check if this is always okay

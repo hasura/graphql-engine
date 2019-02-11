@@ -5,37 +5,93 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
+import           Data.Has                          (getter)
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.Sequence                     as Seq
+import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import qualified Hasura.RQL.DML.Delete             as RD
+import qualified Hasura.RQL.DML.Internal           as RI
 import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
+import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-convertMutResp
-  :: G.NamedType -> SelSet -> Convert RR.MutFlds
-convertMutResp ty selSet =
+convertMutQuery
+  :: PrepFn Convert -> G.NamedType -> SelSet -> Convert RR.MutQFlds
+convertMutQuery f ty selSet = fmap toFields $
   withSelSet selSet $ \fld -> case _fName fld of
+    "__typename" -> return $ RR.MQFExp $ G.unName $ G.unNamedType ty
+    fName -> do
+      opCtxMap <- asks getter
+      userInfo <- asks getter
+      let validateHdrs' = validateHdrs userInfo
+      opCtx <- getOpCtx opCtxMap fName
+      fieldAsPath fld $ case opCtx of
+
+        OCSelect tn permFilter permLimit hdrs -> do
+          validateHdrs' hdrs
+          RR.MQFSimple False <$>
+            fromField f tn permFilter permLimit fld
+
+        OCSelectPkey tn permFilter hdrs -> do
+          validateHdrs' hdrs
+          RR.MQFSimple True <$>
+            fromFieldByPKey f tn permFilter fld
+
+        OCSelectAgg tn permFilter permLimit hdrs -> do
+          validateHdrs' hdrs
+          RR.MQFAgg <$>
+            fromAggField f tn permFilter permLimit fld
+
+        OCFuncQuery tn fn permFilter permLimit hdrs -> do
+          validateHdrs' hdrs
+          resolveFuncQuery tn fn permFilter permLimit False fld
+
+        OCFuncAggQuery tn fn permFilter permLimit hdrs -> do
+          validateHdrs' hdrs
+          resolveFuncQuery tn fn permFilter permLimit True fld
+
+        _ -> throw500 "mutations are not supported"
+
+  where
+    getOpCtx opCtxMap fld =
+      onNothing (Map.lookup fld opCtxMap) $ throw500 $
+      "lookup failed: opctx: " <> showName fld
+
+    resolveFuncQuery tn fn permFilter permLimit isAgg fld = do
+      (tableArgs, sel, frmItem) <- fromFuncQueryField f fn isAgg fld
+      let tabPerm = RS.TablePerm permFilter permLimit
+      return $ RR.MQFFunc $
+        RS.SQLFunctionSel fn tn sel tableArgs tabPerm frmItem
+
+convertMutResp
+  :: PrepFn Convert -> G.NamedType -> SelSet -> Convert RR.MutFlds
+convertMutResp f ty selSet =
+  withSelSet selSet $ \fld -> fieldAsPath fld $
+  case _fName fld of
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
     "affected_rows" -> return RR.MCount
     "returning"     -> fmap RR.MRet $
-                       fromSelSet prepare (_fType fld) $ _fSelSet fld
+                       fromSelSet f (_fType fld) $ _fSelSet fld
+    "query"         -> fmap RR.MQuery $
+                       convertMutQuery f (_fType fld) $ _fSelSet fld
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
@@ -115,7 +171,7 @@ convertUpdate tn filterExp fld = do
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
 
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp prepare (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
@@ -127,7 +183,7 @@ convertUpdate tn filterExp fld = do
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds
       whenNonEmptyItems = return $ RU.updateQueryToTx (p1, prepArgs)
-      whenEmptyItems = buildEmptyMutResp mutFlds
+      whenEmptyItems = buildEmptyMutResp mutFlds prepArgs
   -- if there are not set items then do not perform
   -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null setItems
@@ -141,18 +197,29 @@ convertDelete
   -> Convert RespTx
 convertDelete tn filterExp fld = do
   whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFlds  <- convertMutResp prepare (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
   return $ RD.deleteQueryToTx (p1, args)
 
 -- | build mutation response for empty objects
-buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
-buildEmptyMutResp = return . mkTx
+buildEmptyMutResp
+  :: Monad m
+  => RR.MutFlds -> Seq.Seq Q.PrepArg -> m RespTx
+buildEmptyMutResp mutFlds p = return tx
   where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
+    tx = RI.execSingleRowAndCol p sel
+
+    sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
+
+    extrExp = S.applyJsonBuildObj jsonBuildObjArgs
+    jsonBuildObjArgs =
+      flip concatMap mutFlds $
+      \(k, fld) -> [S.SELit k, mkFldExp fld]
+
     -- generate empty mutation response
-    convMutFld = \case
-      RR.MCount -> J.toJSON (0 :: Int)
-      RR.MExp e -> J.toJSON e
-      RR.MRet _ -> J.toJSON ([] :: [J.Value])
+    mkFldExp = \case
+      RR.MCount       -> S.SEUnsafe "0"
+      RR.MExp t       -> S.SELit t
+      RR.MRet _       -> S.SETyAnn (S.SELit "[]") S.jsonbType
+      RR.MQuery qFlds -> RR.mkMutQueryExp qFlds
