@@ -9,7 +9,7 @@ Update mutation
 Auto-generated update mutation schema
 -------------------------------------
 
-Here’s the schema for the update mutation field for a table ``article``:
+**For example**, the auto-generated schema for the update mutation field for a table ``article`` looks like this:
 
 .. code-block:: graphql
 
@@ -32,6 +32,8 @@ As you can see from the schema:
 - ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+
+See the :ref:`update mutation API reference <update_syntax>` for the full specifications
 
 .. note::
 
@@ -81,6 +83,100 @@ Update based on an object's fields
           ]
         }
       }
+    }
+
+Update based on an object's fields (using variables)
+----------------------------------------------------
+**Example:** Update the ``title``, ``content`` and ``rating`` of the article with a given ``id``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_article($id: Int, $changes: article_set_input) {
+      update_article(
+        where: {id: {_eq: $id}},
+        _set: $changes
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 3,
+              "title": "lorem ipsum",
+              "content": "dolor sit amet",
+              "rating": 2
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "id": 3,
+      "changes": {
+        "title": "lorem ipsum",
+        "content": "dolor sit amet",
+        "rating": 2
+      }
+    }
+
+OR
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_article($id: Int, $title: String, $content: String, $rating: Int) {
+      update_article(
+        where: {id: {_eq: $id}},
+        _set: {
+          title: $title,
+          content: $content,
+          rating: $rating
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 3,
+              "title": "lorem ipsum",
+              "content": "dolor sit amet",
+              "rating": 2
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "id": 3,
+      "title": "lorem ipsum",
+      "content": "dolor sit amet",
+      "rating": 2
     }
 
 Update based on a nested object's fields
@@ -175,7 +271,7 @@ You can append any ``jsonb`` column with another json value by using the ``_appe
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Append the json ``{"key1": "value1}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Append the json ``{"key1": "value1"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:
@@ -218,7 +314,7 @@ You can prepend any ``jsonb`` column with another json value by using the ``_pre
 
 Since the input is a json value, it should be provided through a variable.
 
-**Example:** Prepend the json ``{"key0": "value0}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
+**Example:** Prepend the json ``{"key0": "value0"}`` to ``jsonb`` column ``extra_info`` of ``article`` table:
 
 .. graphiql::
   :view_only:

@@ -122,27 +122,30 @@ export function getTableDef(tableName, schema) {
 export function getRefTable(rel, tableSchema) {
   let _refTable = null;
 
-  if (rel.rel_type === 'array') {
-    if (rel.rel_def.foreign_key_constraint_on) {
-      _refTable = rel.rel_def.foreign_key_constraint_on.table;
-    } else if (rel.rel_def.manual_configuration) {
-      _refTable = rel.rel_def.manual_configuration.remote_table;
-    }
+  // if manual relationship
+  if (rel.rel_def.manual_configuration) {
+    _refTable = rel.rel_def.manual_configuration.remote_table;
   }
 
-  if (rel.rel_type === 'object') {
-    if (rel.rel_def.foreign_key_constraint_on) {
+  // if foreign-key based relationship
+  if (rel.rel_def.foreign_key_constraint_on) {
+    // if array relationship
+    if (rel.rel_type === 'array') {
+      _refTable = rel.rel_def.foreign_key_constraint_on.table;
+    }
+
+    // if object relationship
+    if (rel.rel_type === 'object') {
       const fkCol = rel.rel_def.foreign_key_constraint_on;
 
       for (let i = 0; i < tableSchema.foreign_key_constraints.length; i++) {
         const fkConstraint = tableSchema.foreign_key_constraints[i];
-        if (fkCol === Object.keys(fkConstraint.column_mapping)[0]) {
-          _refTable = fkConstraint.ref_table;
+        const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
+        if (fkCol === fkConstraintCol) {
+          _refTable = getTableDef(fkConstraint.ref_table, fkConstraint.ref_table_table_schema);
           break;
         }
       }
-    } else if (rel.rel_def.manual_configuration) {
-      _refTable = rel.rel_def.manual_configuration.remote_table;
     }
   }
 
