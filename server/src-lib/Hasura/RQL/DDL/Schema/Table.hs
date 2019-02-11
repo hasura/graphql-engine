@@ -446,7 +446,7 @@ execWithMDCheck (RunSQL t cascade _) = do
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
-    throw400 NotSupported $ fromL overloadedFuncs
+    throw400 NotSupported $ reportFuncs overloadedFuncs
       <> " functions are being overloaded and it is not allowed"
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
@@ -496,6 +496,8 @@ execWithMDCheck (RunSQL t cascade _) = do
   refreshGCtxMapInSchema
 
   return res
+  where
+    reportFuncs = T.intercalate ", " . map dquoteTxt
 
 isAltrDropReplace :: QErrM m => T.Text -> m Bool
 isAltrDropReplace = either throwErr return . matchRegex regex False

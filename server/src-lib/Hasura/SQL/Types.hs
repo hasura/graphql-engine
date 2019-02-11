@@ -80,10 +80,6 @@ infixr 6 <<>
   T.dquote (dquoteTxt a) <> rTxt
 {-# INLINE (<<>) #-}
 
-fromL :: (DQuote a) => [a] -> T.Text
-fromL =
-  T.intercalate ", " . map (T.dquote . dquoteTxt)
-
 instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
