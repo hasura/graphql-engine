@@ -44,7 +44,7 @@ data RawServeOptions
   , rsoAuthHook        :: !RawAuthHook
   , rsoJwtSecret       :: !(Maybe Text)
   , rsoUnAuthRole      :: !(Maybe RoleName)
-  , rsoCorsConfig      :: !RawCorsConfig
+  , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
@@ -127,7 +127,7 @@ instance FromEnv Bool where
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
 
-instance FromEnv CorsDomain where
+instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
 
 parseStrAsBool :: String -> Either String Bool
@@ -241,9 +241,8 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig (CorsConfigG mDom isDis) = do
-      domEnv <- fromMaybe CDStar <$> withEnv mDom (fst corsDomainEnv)
-      return $ CorsConfigG domEnv isDis
+    mkCorsConfig mCfg =
+      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -601,21 +600,23 @@ parseUnAuthRole = optional $
                           help (snd unAuthRoleEnv)
                         )
 
-parseCorsConfig :: Parser RawCorsConfig
-parseCorsConfig =
-  CorsConfigG <$> corsDomain <*> disableCors
+parseCorsConfig :: Parser (Maybe CorsConfig)
+parseCorsConfig = mapCC <$> disableCors <*> corsDomain
   where
     corsDomain = optional $
       option (eitherReader readCorsDomains)
-                 ( long "cors-domain" <>
-                   metavar "<DOMAINS>" <>
-                   help (snd corsDomainEnv)
-                 )
+      ( long "cors-domain" <>
+        metavar "<DOMAINS>" <>
+        help (snd corsDomainEnv)
+      )
 
     disableCors =
       switch ( long "disable-cors" <>
                help "Disable CORS. Do not send any CORS headers on any request"
              )
+
+    mapCC isDisabled domains =
+      bool domains (Just CCDisabled) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -650,8 +651,7 @@ serveOptsToLog so =
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
                        , "unauth_role" J..= soUnAuthRole so
-                       , "cors_domains" J..= (ccDomain . soCorsConfig) so
-                       , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
+                       , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so

@@ -21,9 +21,10 @@ corsMiddleware policy app req sendResp =
   maybe (app req sendResp) handleCors $ getRequestHeader "Origin" req
 
   where
-    handleCors origin = case cpDomains policy of
-      CDStar -> sendCors origin
-      CDDomains ds
+    handleCors origin = case cpConfig policy of
+      CCDisabled -> app req sendResp
+      CCAllowAll -> sendCors origin
+      CCAllowedOrigins ds
         -- if the origin is in our cors domains, send cors headers
         | bsToTxt origin `elem` dmFqdns ds   -> sendCors origin
         -- if current origin is part of wildcard domain list, send cors

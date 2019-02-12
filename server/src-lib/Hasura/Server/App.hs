@@ -314,7 +314,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
 httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- cors middleware
-    unless (ccDisabled corsCfg) $
+    unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
