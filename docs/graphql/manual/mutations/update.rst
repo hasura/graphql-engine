@@ -25,6 +25,27 @@ Auto-generated update mutation schema
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
+    #queries in mutation response
+    query: mutation_query!
+  }
+  # perform queries in mutation response
+  type mutation_query {
+    # author table
+    author (
+      distinct_on: [author_select_column]
+      where: author_bool_exp
+      limit: Int
+      offset: Int
+      order_by:  [author_order_by!]
+    ): [author]
+    # article table
+    article (
+      distinct_on: [article_select_column]
+      where: article_bool_exp
+      limit: Int
+      offset: Int
+      order_by:  [article_order_by!]
+    ): [article]
   }
 
 As you can see from the schema:
@@ -32,6 +53,8 @@ As you can see from the schema:
 - ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+- You can query any object (except fields and types) present in ``query root`` through ``query`` field.
+  See :doc:`Queries <../queries/index>` for more details.
 
 See the :ref:`update mutation API reference <update_syntax>` for the full specifications
 
@@ -66,6 +89,12 @@ Update based on an object's fields
           content
           rating
         }
+        query {
+          author(where: {id: {_eq: 1}){
+            id
+            name
+          }
+        }
       }
     }
   :response:
@@ -80,7 +109,15 @@ Update based on an object's fields
               "content": "dolor sit amet",
               "rating": 2
             }
-          ]
+          ],
+          "query": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Author 1"
+              }
+            ]
+          }
         }
       }
     }
