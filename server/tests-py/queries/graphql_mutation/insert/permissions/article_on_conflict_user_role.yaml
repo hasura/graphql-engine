@@ -12,19 +12,24 @@ response:
       - title: Article 1
         content: Updated Article 1 content
         author_id: 1
+      query:
+        author:
+        - id: 1
+          name: Author 1
 query:
   query: |
     mutation insert_article {
-      insert_article (
-        objects: [
+      insert_article(
+        objects: 
+        [
           {
-            id: 1
-            content: "Updated Article 1 content"
+            id: 1,
+            content: "Updated Article 1 content",
             author_id: 1
           }
-          ],
+        ],
         on_conflict: {
-          constraint: article_pkey
+          constraint: article_pkey,
           update_columns: [content]
         }
       ) {
@@ -33,6 +38,12 @@ query:
           title
           content
           author_id
+        }
+        query {
+          author {
+            id
+            name
           }
         }
       }
+    }

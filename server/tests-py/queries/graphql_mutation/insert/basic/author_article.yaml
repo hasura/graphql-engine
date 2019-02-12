@@ -9,26 +9,39 @@
           name: Author 1
         - id: 2
           name: Author 2
+        query:
+          article: []
   status: 200
   query:
     query: |
-      mutation insert_author {
-        insert_author(
-          objects: [
-            {
-              name: "Author 1"
-            },
-            {
-              name: "Author 2"
-            }
-          ]
-        ) {
-          returning {
-            id
-            name
-          }
-        }
-      }
+     mutation insert_author {
+       insert_author(
+         objects: [
+           {
+             name: "Author 1"
+           }, 
+           {
+             name: "Author 2"
+           }
+         ]
+       ) {
+         returning {
+           id
+           name
+         }
+         query {
+           article {
+             id
+             title
+             content
+             author {
+               id
+               name
+             }
+           }
+         }
+       }
+     }
 
 #Inserting empty objects
 - description: Inserts empty objects via GraphQL mutation
@@ -39,6 +52,21 @@
       insert_author:
         affected_rows: 0
         returning: []
+        query:
+          author_1:
+          - id: 1
+            name: Author 1
+            articles: []
+            articles_aggregate:
+              aggregate:
+                count: 0
+          author_2:
+          - id: 2
+            name: Author 2
+            articles: []
+            articles_aggregate:
+              aggregate:
+                count: 0
   query:
     query: |
       mutation insert_empty_objects {
@@ -49,6 +77,36 @@
           returning{
             id
             name
+          }
+          query{
+            author_1: author(where: {id: {_eq: 1}}){
+              id
+              name
+              articles{
+                id
+                title
+                content
+              }
+              articles_aggregate{
+                aggregate{
+                  count
+                }
+              }
+            }
+            author_2: author(where: {id: {_eq: 2}}){
+              id
+              name
+              articles{
+                id
+                title
+                content
+              }
+              articles_aggregate{
+                aggregate{
+                  count
+                }
+              }
+            }
           }
         }
       }

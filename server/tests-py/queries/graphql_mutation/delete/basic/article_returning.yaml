@@ -8,6 +8,12 @@ response:
       returning:
       - id: 5
         content: Sample article content 5
+      query:
+        author:
+        - id: 1
+          name: Author 1
+        - id: 2
+          name: Author 2
 query:
   query: |
     mutation delete_article {
@@ -18,6 +24,12 @@ query:
           returning{
             id
             content
+          }
+          query {
+            author{
+              id
+              name
+            }
           }
       }
     }
