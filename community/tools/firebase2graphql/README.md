@@ -212,7 +212,7 @@ firebase2graphql https://hge.herokuapp.com -d ./path/to/db.json
 **With admin secret**
 
 ```
-firebase2graphql https://hge.herokuapp.com -k <admin-secret> -d ./path/to/db.json
+firebase2graphql https://hge.herokuapp.com -s <admin-secret> -d ./path/to/db.json
 ```
 
 ## Command
