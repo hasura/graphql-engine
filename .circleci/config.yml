@@ -1,5 +1,10 @@
 # anchor refs to be used elsewhere
 refs:
+  disable_telemetry: &disable_telemetry
+    HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+  common_env: &common_env
+    environment:
+      <<: *disable_telemetry
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -123,6 +128,7 @@ jobs:
 
   # build the server binary, and package into docker image
   build_server:
+    <<: *common_env
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3
     working_directory: ~/graphql-engine
@@ -181,6 +187,7 @@ jobs:
     <<: *pytest_server
     environment:
       PG_VERSION: "11_1"
+      <<: *disable_telemetry
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
       # TODO: change this to circleci postgis when they have one for pg 11
@@ -191,6 +198,7 @@ jobs:
     <<: *pytest_server
     environment:
       PG_VERSION: "10_6"
+      <<: *disable_telemetry
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
     - image: circleci/postgres:10.6-alpine-postgis
@@ -200,6 +208,7 @@ jobs:
     <<: *pytest_server
     environment:
       PG_VERSION: "9_6"
+      <<: *disable_telemetry
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
     - image: circleci/postgres:9.6-alpine-postgis
@@ -209,6 +218,7 @@ jobs:
     <<: *pytest_server
     environment:
       PG_VERSION: "9_5"
+      <<: *disable_telemetry
     docker:
     - image: hasura/graphql-engine-server-builder:v0.3.2
     - image: circleci/postgres:9.5-alpine-postgis
@@ -216,6 +226,7 @@ jobs:
 
   # test and build cli
   test_and_build_cli:
+    <<: *common_env
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.3
     - image: circleci/postgres:10-alpine
@@ -259,6 +270,7 @@ jobs:
 
   # test and build console
   test_and_build_console:
+    <<: *common_env
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
@@ -306,6 +318,7 @@ jobs:
           - _console_output
 
   deploy:
+    <<: *common_env
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
     working_directory: ~/graphql-engine
