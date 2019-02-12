@@ -1,6 +1,17 @@
 - description: Insert into order table with a null value
   url: /v1alpha1/graphql
   status: 200
+  response:
+    data:
+      insert_orders:
+        returning:
+        - id: 4
+        affected_rows: 1
+        query:
+          get_orders:
+          - id: 2
+          - id: 3
+          - id: 4
   query:
     query: |
       mutation insert_orders{
@@ -16,6 +27,13 @@
             id
           }
           affected_rows
+          query {
+            get_orders(
+            args: {arg_1: "2017-08-16 14:22:11.802755+02"}
+            ){
+              id
+            }
+          }
         }
       }
 - description: Delete the inserted orders

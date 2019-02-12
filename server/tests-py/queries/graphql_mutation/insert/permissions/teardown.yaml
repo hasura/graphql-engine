@@ -11,10 +11,10 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table address;
-      drop table resident;
-      drop table article;
-      drop table blog;
-      drop table author;
-      drop table "Company";
+      DROP TABLE address;
+      DROP TABLE resident;
+      DROP TABLE article;
+      DROP TABLE blog;
+      DROP TABLE author;
+      DROP TABLE "Company";
     cascade: true

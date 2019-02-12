@@ -3,9 +3,17 @@ url: /v1alpha1/graphql
 status: 200
 response:
   data:
-   update_author:
-     affected_rows: 0
-     returning: []
+    update_author:
+      affected_rows: 0
+      returning: []
+      query:
+        person:
+        - id: 1
+          details:
+            name:
+              last: bar
+              first: foo
+            address: foobar
 query:
   variables:
     set: {}
@@ -24,6 +32,12 @@ query:
             title
             content
             is_published
+          }
+        }
+        query{
+          person{
+            id
+            details
           }
         }
       }

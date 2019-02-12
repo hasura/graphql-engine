@@ -1,11 +1,28 @@
 description: Updated person data using _inc operator
 url: /v1alpha1/graphql
 status: 200
+response:
+  data:
+    update_person:
+      affected_rows: 1
+      returning:
+      - id: 2
+        details:
+          name:
+            last: bar
+            first: foo
+          address: foobar
+      query:
+        author:
+        - id: 1
+          name: Author 1
+        - id: 2
+          name: Author 2
 query:
   query: |
-    mutation update_person($value: jsonb) {
+    mutation update_person {
       update_person(
-        where: {id: {_eq: 2}},
+        where: {id: {_eq: 1}},
         _inc: {
           id: 1
         }
@@ -14,6 +31,12 @@ query:
         returning{
           id
           details
+        }
+        query {
+          author{
+            id
+            name
+          }
         }
       }
     }
