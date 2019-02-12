@@ -265,7 +265,7 @@ getUserInfo logger manager rawHeaders = \case
         Nothing -> mkUserInfo adminRole usrVars
 
     userInfoWhenAdminSecret key reqKey = do
-      when (reqKey /= getAdminSecret key) $ throw401 $ "invalid " <> adminSecretHeader
+      when (reqKey /= getAdminSecret key) $ throw401 $ "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
       return userInfoFromHeaders
 
     userInfoWhenNoAdminSecret = \case
