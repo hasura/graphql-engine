@@ -52,8 +52,8 @@ buildTx userInfo gCtx fld = do
     OCInsert tn hdrs    ->
       validateHdrs' hdrs >> RI.convertInsert roleName tn fld
 
-    OCUpdate tn permFilter hdrs ->
-      validateHdrs' hdrs >> RM.convertUpdate tn permFilter fld
+    OCUpdate tn preSetCols permFilter hdrs ->
+      validateHdrs' hdrs >> RM.convertUpdate tn preSetCols permFilter fld
 
     OCDelete tn permFilter hdrs ->
       validateHdrs' hdrs >> RM.convertDelete tn permFilter fld

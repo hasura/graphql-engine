@@ -145,10 +145,11 @@ convDeleteAtPathObj val =
 
 convertUpdate
   :: QualifiedTable -- table
+  -> PreSetCols -- the preset cols
   -> AnnBoolExpSQL -- the filter expression
   -> Field -- the mutation field
   -> Convert RespTx
-convertUpdate tn filterExp fld = do
+convertUpdate tn preSetCols filterExp fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   -- where bool expression to filter column
@@ -176,9 +177,10 @@ convertUpdate tn filterExp fld = do
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
                  ]
-      setItems = concat $ catMaybes updExpsM
+      setItems = preSetItems ++ concat (catMaybes updExpsM)
   -- atleast one of update operators is expected
-  unless (any isJust updExpsM) $ throwVE $
+  -- or preSetItems shouldn't be empty
+  unless (any isJust updExpsM || not (null preSetItems)) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds
@@ -189,6 +191,7 @@ convertUpdate tn filterExp fld = do
   bool whenNonEmptyItems whenEmptyItems $ null setItems
   where
     args = _fArguments fld
+    preSetItems = Map.toList preSetCols
 
 convertDelete
   :: QualifiedTable -- table
