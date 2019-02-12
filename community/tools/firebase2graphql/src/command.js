@@ -30,8 +30,8 @@ class Firebase2GraphQL extends Command {
     }
     const dbJson = this.getDbJson(db);
     const headers = {
-      [secret ? 'x-hasura-admin-secret' : 'x-hasura-access-key']: secret || key
-    }
+      [secret ? 'x-hasura-admin-secret' : 'x-hasura-access-key']: secret || key,
+    };
     const urlVerification = await this.verifyUrl(safeUrl, headers);
     if (urlVerification.error) {
       throwError(`Message: ${urlVerification.message}`);
@@ -101,6 +101,7 @@ Firebase2GraphQL.flags = {
     description: 'Admin secret to Hasura GraphQL Engine (X-Hasura-Admin-Secret). Use the flag --access-key if GraphQL Engine version is older than v1.0.0-alpha38',
   }),
 
+  // Access key to Hasura GraphQL Engine
   'access-key': flags.string({
     char: 'k',
     description: 'Access key to Hasura GraphQL Engine (X-Hasura-Access-Key). Use the flag --admin-secret if GraphQL Engine version is greater than v1.0.0-alpha37',
