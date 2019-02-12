@@ -50,6 +50,10 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
       return {
             httpLinkOptions: {
                 uri: 'https://my-app.herokuapp.com/v1alpha1/graphql',
+                // if you have secured the Hasura GraphQL endpoint
+                // headers: {
+                //   'x-hasura-access-key': '<YOUR_SECRET_KEY>'
+                // },
                 credentials: 'same-origin'
             },
             cache: new InMemoryCache(),
