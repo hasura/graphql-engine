@@ -65,7 +65,7 @@ Environment variables accepted in `server` mode:
 1. `PORT`: Configure the port where Hasura console will run locally.
 2. `NODE_ENV`: `development`
 3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku, your url will look like <app-name>.herokuapp.com.
-4. `ADMIN_SECRET`: Set access key if Hasura GraphQL engine is configured to run with ADMIN_SECRET.
+4. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET.
 5. `CONSOLE_MODE`: `server`
 6. `URL_PREFIX`: `/` (forward slash)
 
@@ -87,7 +87,7 @@ NODE_ENV=development
 DATA_API_URL=http://localhost:8080
 API_HOST=http://localhost
 API_PORT=9693
-ACCESS_KEY=xyz
+ADMIN_SECRET=xyz
 CONSOLE_MODE=cli
 URL_PREFIX=/
 ```
@@ -98,7 +98,7 @@ Environment variables accepted in `cli` mode:
 3. `DATA_API_URL`: Configure it with the Hasura GraphQL Engine url. If you are running it on Heroku. Your url will look like <app-name>.herokuapp.com
 4. `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
 5. `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
-6. `ACCESS_KEY`: Set access key if Hasura GraphQL engine is configured to run with ACCESS_KEY
+6. `ADMIN_SECRET`: Set admin secret if Hasura GraphQL engine is configured to run with ADMIN_SECRET
 7. `CONSOLE_MODE`: `cli`
 8. `URL_PREFIX`: ‘/’ (forward slash)
 
