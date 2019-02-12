@@ -55,8 +55,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "admin secret for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "this flag is deprecated, use --admin-secret instead")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
