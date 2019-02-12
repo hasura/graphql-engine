@@ -52,10 +52,9 @@ class Main extends React.Component {
           );
           if (isClosedBefore === 'true') {
             isUpdateAvailable = false;
-            this.setState({ ...this.state, showBannerNotification: false });
+            this.setState({ showBannerNotification: false });
           } else {
             this.setState({
-              ...this.state,
               showBannerNotification: isUpdateAvailable,
             });
           }
@@ -78,7 +77,7 @@ class Main extends React.Component {
   checkEventsTab() {
     const showEvents = semverCheck('eventsTab', this.props.serverVersion);
     if (showEvents) {
-      this.setState({ ...this.state, showEvents: true });
+      this.setState({ showEvents: true });
     }
     return Promise.resolve();
   }
@@ -111,7 +110,7 @@ class Main extends React.Component {
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ ...this.state, showBannerNotification: false });
+    this.setState({ showBannerNotification: false });
   }
 
   render() {

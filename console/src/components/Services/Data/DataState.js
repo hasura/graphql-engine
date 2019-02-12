@@ -33,9 +33,15 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultInsertSetState = {
-  key: '',
-  value: '',
+const defaultSetState = {
+  insert: {
+    key: '',
+    value: '',
+  },
+  update: {
+    key: '',
+    value: '',
+  },
 };
 const defaultQueryPermissions = {
   insert: {
@@ -45,7 +51,7 @@ const defaultQueryPermissions = {
     columns: [],
     localSet: [
       {
-        ...defaultInsertSetState,
+        ...defaultSetState.insert,
       },
     ],
     isSetConfigChecked: false,
@@ -59,6 +65,13 @@ const defaultQueryPermissions = {
   update: {
     columns: [],
     filter: {},
+    set: {},
+    localSet: [
+      {
+        ...defaultSetState.update,
+      },
+    ],
+    isSetConfigChecked: false,
   },
   delete: {
     filter: {},
@@ -153,5 +166,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultInsertSetState,
+  defaultSetState,
 };
