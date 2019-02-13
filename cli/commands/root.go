@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 		ec.Telemetry.Command = cmd.CommandPath()
 
 		if cmd.Use != updateCLICmdUse {
-			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification {
+			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
 				u := &updateOptions{
 					EC: ec,
 				}
@@ -69,6 +69,7 @@ func init() {
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed. (default: current dir)")
+	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip update check")
 }
 
 // Execute executes the command and returns the error
