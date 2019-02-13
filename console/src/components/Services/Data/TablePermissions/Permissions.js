@@ -42,7 +42,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
-import { legacyOperatorsMap } from './PermissionBuilder/utils';
+import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import semverCheck from '../../../../helpers/semver';
 import Button from '../../Layout/Button/Button';
 
@@ -1337,9 +1337,10 @@ class Permissions extends Component {
       }
 
       // replace legacy operator values
-      Object.keys(legacyOperatorsMap).forEach(legacyOperator => {
-        const legacyString = '"' + legacyOperator + '"';
-        const currentString = '"' + legacyOperatorsMap[legacyOperator] + '"';
+      allOperators.forEach(operator => {
+        const currentString = '"' + operator + '"';
+        const legacyString = '"' + getLegacyOperator(operator) + '"';
+
         filterString = filterString.replace(
           new RegExp(escapeRegExp(legacyString), 'g'),
           currentString
