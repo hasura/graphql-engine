@@ -40,13 +40,15 @@ resolveMutationFld userInfo gCtx fld =
     "__typename" -> return $ encJFromJ $ mkRootTypeName G.OperationTypeMutation
     _            -> liftTx $ do
       opCxt <- getOpCtx $ _fName fld
-      join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
+      join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $
+        case opCxt of
 
         OCInsert tn hdrs    ->
           validateHdrs userInfo hdrs >> RI.convertInsert roleName tn fld
 
-        OCUpdate tn permFilter hdrs ->
-          validateHdrs userInfo hdrs >> RM.convertUpdate tn permFilter fld
+        OCUpdate tn preSetCols permFilter hdrs ->
+          validateHdrs userInfo hdrs >>
+          RM.convertUpdate tn preSetCols permFilter fld
 
         OCDelete tn permFilter hdrs ->
           validateHdrs userInfo hdrs >> RM.convertDelete tn permFilter fld

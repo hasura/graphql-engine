@@ -29,13 +29,12 @@ class EditItem extends Component {
   }
 
   onTextChange = (e, colName) => {
-    const textValue = e.target.value;
-    const tempState = {
-      ...this.state,
-    };
-    tempState.editorColumnMap = { ...this.state.editorColumnMap };
-    tempState.editorColumnMap[colName] = textValue;
-    this.setState({ ...tempState });
+    this.setState({
+      editorColumnMap: {
+        ...this.state.editorColumnMap,
+        [colName]: e.target.value,
+      },
+    });
   };
 
   onModalClose = () => {

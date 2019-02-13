@@ -93,12 +93,15 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 convOp
   :: (UserInfoM m, QErrM m)
   => FieldInfoMap
+  -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
   -> (PGCol -> PGColType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
-convOp fieldInfoMap updPerm objs conv =
+convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
+    -- if column has predefined value then throw error
+    when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
     checkPermOnCol PTUpdate allowedCols pgCol
     colType <- askPGType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
@@ -107,6 +110,10 @@ convOp fieldInfoMap updPerm objs conv =
   where
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
+    throwNotUpdErr c = do
+      role <- userRole <$> askUserInfo
+      throw400 NotSupported $ "column " <> c <<> " is not updatable"
+        <> " for role " <> role <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -132,25 +139,28 @@ validateUpdateQueryWith f uq = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      preSetObj = upiSet updPerm
+      preSetCols = M.keys preSetObj
 
   -- convert the object to SQL set expression
   setItems <- withPathK "$set" $
-    convOp fieldInfoMap updPerm (M.toList $ uqSet uq) $ convSet f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet f
 
   incItems <- withPathK "$inc" $
-    convOp fieldInfoMap updPerm (M.toList $ uqInc uq) $ convInc f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc f
 
   mulItems <- withPathK "$mul" $
-    convOp fieldInfoMap updPerm (M.toList $ uqMul uq) $ convMul f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul f
 
   defItems <- withPathK "$default" $
-    convOp fieldInfoMap updPerm (zip (uqDefault uq) [()..]) convDefault
+    convOp fieldInfoMap preSetCols updPerm (zip (uqDefault uq) [()..]) convDefault
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
+  let preSetItems = M.toList preSetObj
+      setExpItems = preSetItems ++ setItems ++ incItems ++ mulItems ++ defItems
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"

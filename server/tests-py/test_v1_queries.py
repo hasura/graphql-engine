@@ -360,6 +360,16 @@ class TestV1UpdatePermissions(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
 
+    def test_user_update_resident_preset_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_error.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset.yaml")
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_session_var.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/update/permissions"

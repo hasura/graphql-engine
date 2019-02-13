@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -169,22 +170,23 @@ procBoolExp tn fieldInfoMap be = do
 isReqUserId :: T.Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
-getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders (BoolExp boolExp) =
-  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
+getDepHeadersFromVal :: Value -> [T.Text]
+getDepHeadersFromVal val = case val of
+  Object o -> parseObject o
+  _        -> parseOnlyString val
   where
-    parseValue val = case val of
-      (Object o) -> parseObject o
-      _          -> parseOnlyString val
-
-    parseOnlyString val = case val of
+    parseOnlyString v = case v of
       (String t)
         | isUserVar t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap parseValue (M.elems o)
+      concatMap getDepHeadersFromVal (M.elems o)
+
+getDependentHeaders :: BoolExp -> [T.Text]
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
