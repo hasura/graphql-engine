@@ -422,7 +422,8 @@ removeFromDepMap =
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !TableCache
+  { scVersion           :: !Word64 -- the number of times the cache is modified
+  , scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
   , scRemoteResolvers   :: !RemoteSchemaMap
@@ -493,7 +494,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
+  SchemaCache 0 M.empty M.empty
+  M.empty M.empty M.empty GC.emptyGCtx mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do

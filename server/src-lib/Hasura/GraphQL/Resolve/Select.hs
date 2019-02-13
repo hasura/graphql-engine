@@ -1,8 +1,16 @@
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
+  , convertSelectWithPlan
+
   , convertSelectByPKey
+  , convertSelectByPKeyWithPlan
+
   , convertAggSelect
+  , convertAggSelectWithPlan
+
   , convertFuncQuery
+  , convertFuncQueryWithPlan
+
   , parseColumns
   , withSelSet
   , fromSelSet
@@ -11,6 +19,7 @@ module Hasura.GraphQL.Resolve.Select
   , fromFieldByPKey
   , fromAggField
   , fromFuncQueryField
+  , runPlanM
   ) where
 
 import           Control.Arrow                     (first)
@@ -18,11 +27,14 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.IntMap                       as IntMap
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.List.NonEmpty                as NE
 import qualified Data.Text                         as T
+import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
+import qualified Hasura.GraphQL.Execute.Plan       as Plan
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
@@ -36,6 +48,64 @@ import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+
+data PlanningSt
+  = PlanningSt
+  { _psArgNumber :: !Int
+  , _psVariables :: !Plan.PlanVariables
+  , _psPrepped   :: !Plan.PrepArgMap
+  }
+
+initPlanningSt :: PlanningSt
+initPlanningSt = PlanningSt 1 Map.empty IntMap.empty
+
+type PlanM =
+  StateT PlanningSt (ReaderT (FieldMap, OrdByCtx, FuncArgCtx) (Except QErr))
+
+runPlanM
+  :: (MonadError QErr m)
+  => (FieldMap, OrdByCtx, FuncArgCtx)
+  -> PlanM Q.Query -> m Plan.RootFieldPlan
+runPlanM ctx m = do
+  (q, PlanningSt _ vars prepped) <- either throwError return $
+    runExcept $ runReaderT (runStateT m initPlanningSt) ctx
+  return $ Plan.RFPPostgres $ Plan.PGPlan q vars prepped
+
+getVarArgNum
+  :: (MonadState PlanningSt m)
+  => G.Variable -> m Int
+getVarArgNum var = do
+  PlanningSt curArgNum vars prepped <- get
+  case Map.lookup var vars of
+    Just argNum -> return argNum
+    Nothing     -> do
+      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
+      return curArgNum
+
+addPrepArg
+  :: (MonadState PlanningSt m)
+  => Int -> Q.PrepArg -> m ()
+addPrepArg argNum arg = do
+  PlanningSt curArgNum vars prepped <- get
+  put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
+
+getNextArgNum
+  :: (MonadState PlanningSt m)
+  => m Int
+getNextArgNum = do
+  PlanningSt curArgNum vars prepped <- get
+  put $ PlanningSt (curArgNum + 1) vars prepped
+  return curArgNum
+
+prepareWithPlan
+  :: (MonadState PlanningSt m)
+  => AnnPGVal -> m S.SQLExp
+prepareWithPlan (varM, isNullable, colTy, colVal) = do
+  argNum <- case (varM, isNullable) of
+    (Just var, False) -> getVarArgNum var
+    _                 -> getNextArgNum
+  addPrepArg argNum $ binEncoder colVal
+  return $ toPrepParam argNum colTy
 
 withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
 withSelSet selSet f =
@@ -248,6 +318,14 @@ convertSelect qt permFilter permLimit fld = do
   prepArgs <- get
   return $ RS.selectP2 False (selData, prepArgs)
 
+convertSelectWithPlan
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field
+  -> PlanM Q.Query
+convertSelectWithPlan qt permFilter permLimit fld = do
+  selData <- withPathK "selectionSet" $
+             fromField prepareWithPlan qt permFilter permLimit fld
+  return $ Q.fromBuilder $ toSQL $ RS.mkSQLSelect False selData
+
 convertSelectByPKey
   :: QualifiedTable -> AnnBoolExpSQL -> Field -> Convert RespTx
 convertSelectByPKey qt permFilter fld = do
@@ -255,6 +333,13 @@ convertSelectByPKey qt permFilter fld = do
              fromFieldByPKey prepare qt permFilter fld
   prepArgs <- get
   return $ RS.selectP2 True (selData, prepArgs)
+
+convertSelectByPKeyWithPlan
+  :: QualifiedTable -> AnnBoolExpSQL -> Field -> PlanM Q.Query
+convertSelectByPKeyWithPlan qt permFilter fld = do
+  selData <- withPathK "selectionSet" $
+             fromFieldByPKey prepareWithPlan qt permFilter fld
+  return $ Q.fromBuilder $ toSQL $ RS.mkSQLSelect True selData
 
 -- agg select related
 parseColumns :: MonadError QErr m => AnnInpVal -> m [PGCol]
@@ -330,6 +415,13 @@ convertAggSelect qt permFilter permLimit fld = do
   prepArgs <- get
   return $ RS.selectAggP2 (selData, prepArgs)
 
+convertAggSelectWithPlan
+  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> PlanM Q.Query
+convertAggSelectWithPlan qt permFilter permLimit fld = do
+  selData <- withPathK "selectionSet" $
+             fromAggField prepareWithPlan qt permFilter permLimit fld
+  return $ Q.fromBuilder $ toSQL $ RS.mkAggSelect selData
+
 fromFuncQueryField
   ::( MonadError QErr m, MonadReader r m, Has FieldMap r
     , Has OrdByCtx r, Has FuncArgCtx r
@@ -374,3 +466,13 @@ convertFuncQuery qt qf permFilter permLimit isAgg fld = do
   let tabPerm = RS.TablePerm permFilter permLimit
   prepArgs <- get
   return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs (sel, prepArgs)
+
+convertFuncQueryWithPlan
+  :: QualifiedTable -> QualifiedFunction -> AnnBoolExpSQL
+  -> Maybe Int -> Bool -> Field -> PlanM Q.Query
+convertFuncQueryWithPlan qt qf permFilter permLimit isAgg fld = do
+  (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
+    fromFuncQueryField prepareWithPlan qf isAgg fld
+  let tabPerm = RS.TablePerm permFilter permLimit
+      sql = RS.mkFuncSelectWith qf qt tabPerm tableArgs sel frmItem
+  return $ Q.fromBuilder $ toSQL sql

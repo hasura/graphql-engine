@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , getTypedOp
+  , ValidationRes
   , QueryParts (..)
   , getQueryParts
   , getAnnVarVals
@@ -110,29 +111,19 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
+type ValidationRes = ([G.VariableDefinition], G.OperationType, SelSet)
+
 -- {-# SCC validateGQ #-}
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
-  -- => GraphQLRequest
   => QueryParts
-  -> m (G.OperationType, SelSet)
+  -> m ValidationRes
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
-  -- get the operation that needs to be evaluated
-  --opDef <- getTypedOp opNameM selSets opDefs
-
   ctx <- ask
-  -- -- get the operation root
-  -- opRoot <- case G._todType opDef of
-  --   G.OperationTypeQuery        -> return $ _gQueryRoot ctx
-  --   G.OperationTypeMutation     ->
-  --     onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
-  --   G.OperationTypeSubscription ->
-  --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
-
+  let varDefs = G._todVariableDefinitions opDef
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
-                fromMaybe Map.empty varValsM
+  annVarVals <- getAnnVarVals varDefs $ fromMaybe Map.empty varValsM
 
   -- annotate the fragments
   fragDefs <- onLeft (mkMapWith G._fdName fragDefsL) $ \dups ->
@@ -149,11 +140,10 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   when (G._todType opDef == G.OperationTypeSubscription && length selSet > 1) $
     throwVE "subscription must select only one top level field"
 
-  return (G._todType opDef, selSet)
-
+  return (varDefs, G._todType opDef, selSet)
 
 getQueryParts
-  :: ( MonadError QErr m, MonadReader GCtx m)
+  :: (MonadError QErr m, MonadReader GCtx m)
   => GQLReqParsed
   -> m QueryParts
 getQueryParts (GQLReq opNameM q varValsM) = do

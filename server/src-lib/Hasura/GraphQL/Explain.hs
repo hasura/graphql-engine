@@ -21,8 +21,8 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+import qualified Hasura.GraphQL.Execute                 as GE
 import qualified Hasura.GraphQL.Resolve.Select          as RS
-import qualified Hasura.GraphQL.Transport.HTTP          as TH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Types          as VT
@@ -128,28 +128,23 @@ explainGQLQuery
 explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   queryParts <- runReaderT (GV.getQueryParts query) gCtx
-  let topLevelNodes = TH.getTopLevelNodes (GV.qpOpDef queryParts)
 
-  unless (allHasuraNodes gCtx topLevelNodes) $
-    throw400 InvalidParams "only hasura queries can be explained"
+  tyLoc <- GE.assertSameLocationNodes $ GE.gatherTypeLocs gCtx $
+           GE.getTopLevelNodes (GV.qpOpDef queryParts)
 
-  (opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
-  unless (opTy == G.OperationTypeQuery) $
-    throw400 InvalidParams "only queries can be explained"
-  let tx = mapM (explainField userInfo gCtx) (toList selSet)
-  plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ encJFromJ plans
-
+  case tyLoc of
+    VT.RemoteType _ _ ->
+      throw400 InvalidParams "only hasura queries can be explained"
+    VT.HasuraType     -> do
+      (_, opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
+      unless (opTy == G.OperationTypeQuery) $
+        throw400 InvalidParams "only queries can be explained"
+      let tx = mapM (explainField userInfo gCtx) (toList selSet)
+      plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
+      return $ encJFromJ plans
   where
     gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
 
     runTx tx = runLazyTx pool iso $ withUserInfo userInfo tx
-
-    allHasuraNodes gCtx nodes =
-      let typeLocs = TH.gatherTypeLocs gCtx nodes
-          isHasuraNode = \case
-            VT.HasuraType     -> True
-            VT.RemoteType _ _ -> False
-      in all isHasuraNode typeLocs

@@ -25,7 +25,8 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
 
-import           Hasura.GraphQL.Resolve                      (resolveSelSet)
+import           Hasura.EncJSON
+import qualified Hasura.GraphQL.Execute                      as E
 import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (getGCtx)
@@ -33,13 +34,8 @@ import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (QueryParts (..),
-                                                              getQueryParts,
-                                                              validateGQ)
-import qualified Hasura.GraphQL.Validate.Types               as VT
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
-import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
@@ -115,12 +111,13 @@ instance L.ToEngineLog WSLog where
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger   :: !L.Logger
-  , _wseServer   :: !WSServer
-  , _wseRunTx    :: !TxRunner
-  , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef SchemaCache)
-  , _wseHManager :: !H.Manager
+  { _wseLogger     :: !L.Logger
+  , _wseServer     :: !WSServer
+  , _wseRunTx      :: !TxRunner
+  , _wseLiveQMap   :: !LiveQueryMap
+  , _wseGCtxMap    :: !(IORef.IORef SchemaCache)
+  , _wseHManager   :: !H.Manager
+  , _wseQueryCache :: !E.QueryCache
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
@@ -173,42 +170,59 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   -- validate and build tx
   sc <- liftIO $ IORef.readIORef gCtxMapRef
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
 
-  res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  queryParts <- case res of
-    Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
-    Right vals              -> return vals
+  gCtx <- fmap fst $ flip runStateT sc $
+          getGCtx (userRole userInfo) (scGCtxMap sc)
 
-  let opDef = qpOpDef queryParts
-      topLevelNodes = TH.getTopLevelNodes opDef
-      typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
+  let schemaVer = scVersion sc
 
-  res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
+  execPlanE <- runExceptT $ E.getGQExecPlan queryCache userInfo schemaVer gCtx q
+  (q', execPlan)  <- either (withComplete . preExecErr) return execPlanE
 
-  case typeLocs of
-    [] -> runHasuraQ userInfo gCtx queryParts
+  case execPlan of
+    E.GExPHasura opTy tx   -> runHasuraQ q' userInfo opTy tx
+    E.GExPRemote rsi opDef -> do
+      when (G._todType opDef == G.OperationTypeSubscription) $ withComplete $
+        sendConnErr "subscription to remote server is not supported"
+      resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+              msgRaw rsi opDef
+      either postExecErr sendSuccResp resp
+      sendCompleted
 
-    (typeLoc:_) -> case typeLoc of
-      VT.HasuraType ->
-        runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType _ rsi -> do
-        when (G._todType opDef == G.OperationTypeSubscription) $
-          withComplete $ sendConnErr "subscription to remote server is not supported"
-        resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-                             msgRaw rsi opDef
-        either postExecErr sendSuccResp resp
-        sendCompleted
+  -- res <- runExceptT $ runReaderT (getQueryParts q) gCtx
+  -- queryParts <- case res of
+  --   Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
+  --   Right vals              -> return vals
+
+  -- let opDef = qpOpDef queryParts
+  --     topLevelNodes = TH.getTopLevelNodes opDef
+  --     typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
+
+  -- res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
+  -- either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
+
+  -- case typeLocs of
+  --   [] -> runHasuraQ userInfo gCtx queryParts
+
+  --   (typeLoc:_) -> case typeLoc of
+  --     VT.HasuraType ->
+  --       runHasuraQ userInfo gCtx queryParts
+  --     VT.RemoteType _ rsi -> do
+  --       when (G._todType opDef == G.OperationTypeSubscription) $
+  --         withComplete $ sendConnErr "subscription to remote server is not supported"
+  --       resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+  --                            msgRaw rsi opDef
+  --       either postExecErr sendSuccResp resp
+  --       sendCompleted
 
   where
-    runHasuraQ userInfo gCtx queryParts = do
-      (opTy, fields) <- either (withComplete . preExecErr) return $
-                        runReaderT (validateGQ queryParts) gCtx
-      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx opTy fields
+    runHasuraQ q' userInfo opTy tx = do
+      -- (opTy, fields) <- either (withComplete . preExecErr) return $
+      --                   runReaderT (validateGQ queryParts) gCtx
+      let qTx = withUserInfo userInfo $ liftTx tx
       case opTy of
         G.OperationTypeSubscription -> do
-          let lq = LQ.LiveQuery userInfo q
+          let lq = LQ.LiveQuery userInfo q'
           liftIO $ STM.atomically $ STMMap.insert lq opId opMap
           liftIO $ LQ.addLiveQuery runTx lqMap lq
             qTx (wsId, opId) liveQOnChange
@@ -219,7 +233,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
-    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr queryCache = serverEnv
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
@@ -354,12 +368,15 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef SchemaCache
+  -> H.Manager
+  -> E.QueryCache
+  -> IORef.IORef SchemaCache
   -> TxRunner -> IO WSServerEnv
-createWSServerEnv logger httpManager cacheRef runTx = do
+createWSServerEnv logger httpManager queryCache cacheRef runTx = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager
+  return $ WSServerEnv logger wsServer runTx lqMap
+    cacheRef httpManager queryCache
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

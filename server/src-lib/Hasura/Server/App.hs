@@ -30,6 +30,7 @@ import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Explain                 as GE
+import qualified Hasura.GraphQL.Execute                 as GEx
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -90,13 +91,14 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
+  { scIsolation  :: Q.TxIsolation
+  , scPGPool     :: Q.PGPool
+  , scLogger     :: L.Logger
+  , scCacheRef   :: IORef SchemaCache
+  , scCacheLock  :: MVar ()
+  , scAuthMode   :: AuthMode
+  , scManager    :: HTTP.Manager
+  , scQueryCache :: GEx.QueryCache
   }
 
 data HandlerCtx
@@ -233,7 +235,7 @@ v1QueryHandler query = do
       liftIO $ writeIORef scRef newSc'
       return resp
 
-v1Alpha1GQHandler :: GH.GQLReqParsed -> Handler EncJSON
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
@@ -243,7 +245,8 @@ v1Alpha1GQHandler query = do
   sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
+  queryCache <- scQueryCache . hcServerCtx <$> ask
+  GH.runGQ pool isoL queryCache userInfo sc manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
@@ -287,13 +290,15 @@ mkWaiApp
   :: Q.TxIsolation
   -> L.LoggerCtx
   -> Q.PGPool
+  -> GEx.QueryCache
   -> HTTP.Manager
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
+mkWaiApp isoLevel loggerCtx pool queryCache httpManager mode
+  corsCfg enableConsole enableTelemetry = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager pool Q.Serializable buildSchemaCache
@@ -303,14 +308,15 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager queryCache
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx)
+                   httpManager queryCache cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 

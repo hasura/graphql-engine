@@ -1,11 +1,9 @@
 module Hasura.GraphQL.Resolve
-  ( resolveSelSet
+  ( resolveMutationSelSet
+  , resolveQuerySelSet
   ) where
 
-import           Hasura.Prelude
-
 import qualified Data.HashMap.Strict               as Map
-import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.EncJSON
@@ -13,87 +11,145 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Execute.Plan       as Plan
 import qualified Hasura.GraphQL.Resolve.Insert     as RI
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 
--- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr EncJSON
-buildTx userInfo gCtx fld = do
-  opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
+validateHdrs
+  :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
+validateHdrs userInfo hdrs = do
+  let receivedVars = userVars userInfo
+  forM_ hdrs $ \hdr ->
+    unless (isJust $ getVarVal hdr receivedVars) $
+    throw400 NotFound $ hdr <<> " header is expected but not found"
 
-    OCSelect tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+-- {-# SCC resolveMutationFld #-}
+resolveMutationFld
+  :: (MonadTx m)
+  => UserInfo
+  -> GCtx
+  -> Field
+  -> m EncJSON
+resolveMutationFld userInfo gCtx fld =
+  case _fName fld of
+    "__typename" -> return $ encJFromJ $ mkRootTypeName G.OperationTypeMutation
+    _            -> liftTx $ do
+      opCxt <- getOpCtx $ _fName fld
+      join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
 
-    OCSelectPkey tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
+        OCInsert tn hdrs    ->
+          validateHdrs userInfo hdrs >> RI.convertInsert roleName tn fld
 
-    OCSelectAgg tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
+        OCUpdate tn permFilter hdrs ->
+          validateHdrs userInfo hdrs >> RM.convertUpdate tn permFilter fld
 
-    OCFuncQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
+        OCDelete tn permFilter hdrs ->
+          validateHdrs userInfo hdrs >> RM.convertDelete tn permFilter fld
 
-    OCFuncAggQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
+        OCSelect {} ->
+          throw500 "unexpected OCSelect in mutation root"
 
-    OCInsert tn hdrs    ->
-      validateHdrs hdrs >> RI.convertInsert roleName tn fld
+        OCSelectPkey {} ->
+          throw500 "unexpected OCSelectPkey in mutation root"
 
-    OCUpdate tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
+        OCSelectAgg {} ->
+          throw500 "unexpected OCSelectAgg in mutation root"
 
-    OCDelete tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertDelete tn permFilter fld
+        OCFuncQuery {} ->
+          throw500 "unexpected OCFuncQuery in mutation root"
+
+        OCFuncAggQuery {} ->
+          throw500 "unexpected OCFuncAggQuery in mutation root"
+
+      where
+        roleName = userRole userInfo
+        opCtxMap = _gOpCtxMap gCtx
+        fldMap = _gFields gCtx
+        orderByCtx = _gOrdByCtx gCtx
+        insCtxMap = _gInsCtxMap gCtx
+        funcArgCtx = _gFuncArgCtx gCtx
+
+        getOpCtx f =
+          onNothing (Map.lookup f opCtxMap) $ throw500 $
+          "lookup failed: opctx: " <> showName f
+
+mkRootTypeName :: G.OperationType -> Text
+mkRootTypeName = \case
+  G.OperationTypeQuery        -> "query_root"
+  G.OperationTypeMutation     -> "mutation_root"
+  G.OperationTypeSubscription -> "subscription_root"
+
+resolveMutationSelSet
+  :: (MonadTx m)
+  => UserInfo
+  -> GCtx
+  -> SelSet
+  -> m EncJSON
+resolveMutationSelSet userInfo gCtx fields =
+  fmap encJFromAL $ forM (toList fields) $ \fld -> do
+    fldResp <- resolveMutationFld userInfo gCtx fld
+    return (G.unName $ G.unAlias $ _fAlias fld, fldResp)
+
+resolveQuerySelSet
+  :: (MonadError QErr m)
+  => UserInfo
+  -> GCtx
+  -> SelSet
+  -> m [(G.Alias, Plan.RootFieldPlan)]
+resolveQuerySelSet userInfo gCtx fields =
+  forM (toList fields) $ \fld -> do
+    fldResp <- resolveQueryFld userInfo gCtx fld
+    return (_fAlias fld, fldResp)
+
+resolveQueryFld
+  :: (MonadError QErr m)
+  => UserInfo
+  -> GCtx
+  -> Field
+  -> m Plan.RootFieldPlan
+resolveQueryFld userInfo gCtx fld =
+  case _fName fld of
+    "__type"     -> Plan.RFPRaw . encJFromJ <$> runReaderT (typeR fld) gCtx
+    "__schema"   -> Plan.RFPRaw . encJFromJ <$> runReaderT (schemaR fld) gCtx
+    "__typename" -> return $ Plan.RFPRaw $ encJFromJ queryRoot
+    _ -> do
+      opCxt <- getOpCtx $ _fName fld
+      RS.runPlanM (fldMap, orderByCtx, funcArgCtx) $ case opCxt of
+        OCSelect tn permFilter permLimit hdrs -> do
+          validateHdrs userInfo hdrs
+          RS.convertSelectWithPlan tn permFilter permLimit fld
+        OCSelectPkey tn permFilter hdrs -> do
+          validateHdrs userInfo hdrs
+          RS.convertSelectByPKeyWithPlan tn permFilter fld
+        OCSelectAgg tn permFilter permLimit hdrs ->
+          validateHdrs userInfo hdrs >>
+          RS.convertAggSelectWithPlan tn permFilter permLimit fld
+        OCFuncQuery tn fn permFilter permLimit hdrs ->
+          validateHdrs userInfo hdrs >>
+          RS.convertFuncQueryWithPlan tn fn permFilter permLimit False fld
+        OCFuncAggQuery tn fn permFilter permLimit hdrs ->
+          validateHdrs userInfo hdrs >>
+          RS.convertFuncQueryWithPlan tn fn permFilter permLimit True fld
+        OCInsert {}    ->
+          throw500 "unexpected OCInsert in query_root"
+        OCUpdate {} ->
+          throw500 "unexpected OCUpdate in query_root"
+        OCDelete {} ->
+          throw500 "unexpected OCDelete in query_root"
   where
-    roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
-    insCtxMap = _gInsCtxMap gCtx
     funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
 
-    validateHdrs hdrs = do
-      let receivedVars = userVars userInfo
-      forM_ hdrs $ \hdr ->
-        unless (isJust $ getVarVal hdr receivedVars) $
-        throw400 NotFound $ hdr <<> " header is expected but not found"
-
--- {-# SCC resolveFld #-}
-resolveFld
-  :: (MonadTx m)
-  => UserInfo -> GCtx
-  -> G.OperationType
-  -> Field
-  -> m EncJSON
-resolveFld userInfo gCtx opTy fld =
-  case _fName fld of
-    "__type"     -> encJFromJ <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> encJFromJ <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ encJFromJ $ mkRootTypeName opTy
-    _            -> liftTx $ buildTx userInfo gCtx fld
-  where
-    mkRootTypeName :: G.OperationType -> Text
-    mkRootTypeName = \case
-      G.OperationTypeQuery        -> "query_root"
-      G.OperationTypeMutation     -> "mutation_root"
-      G.OperationTypeSubscription -> "subscription_root"
-
-resolveSelSet
-  :: (MonadTx m)
-  => UserInfo -> GCtx
-  -> G.OperationType
-  -> SelSet
-  -> m EncJSON
-resolveSelSet userInfo gCtx opTy fields =
-  fmap encJFromAL $ forM (toList fields) $ \fld -> do
-    fldResp <- resolveFld userInfo gCtx opTy fld
-    return (G.unName $ G.unAlias $ _fAlias fld, fldResp)
+    queryRoot :: Text
+    queryRoot = "query_root"

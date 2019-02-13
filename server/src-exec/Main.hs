@@ -20,6 +20,7 @@ import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
 import           Hasura.Events.Lib
+import qualified Hasura.GraphQL.Execute     as GE
 import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
                                              mkLogger, mkLoggerCtx)
 import           Hasura.Prelude
@@ -124,7 +125,8 @@ main =  do
       prepareEvents logger ci
 
       pool <- Q.initPGPool ci cp
-      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
+      queryCache <- GE.initQueryCache
+      (app, cacheRef) <- mkWaiApp isoL loggerCtx pool queryCache httpManager
                          am corsCfg enableConsole enableTelemetry
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
