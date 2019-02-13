@@ -94,14 +94,33 @@ You can also set the access key using a flag to the command:
 Configure CORS
 --------------
 
-By default, all CORS requests are allowed. To run Hasura with more restrictive CORS settings, use the ``--cors-domain`` flag.
+By default, all CORS requests to Hasura GraphQL engine are allowed. To run with more restrictive CORS settings,
+use the ``--cors-domain`` flag or the ``HASURA_GRAPHQL_CORS_DOMAIN`` ENV variable. The default value is ``*``,
+which means CORS headers are sent for all domains.
 
-For example:
+Scheme + host with optional wildcard + optional port has to be mentioned.
+
+Examples:
 
 .. code-block:: bash
 
-   docker run -P -d hasura/graphql-engine:latest graphql-engine \
-              --database-url postgres://username:password@host:5432/dbname \
-                serve \
-                --access-key XXXXXXXXXXXXXXXX
-                --cors-domain https://mywebsite.com:8090
+    # Accepts from https://app.foo.bar.com , https://api.foo.bar.com etc.
+    HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com"
+
+    # Accepts from https://app.foo.bar.com:8080 , http://api.foo.bar.com:8080,
+    # http://app.localhost, http://api.localhost, http://localhost:3000,
+    # http://example.com etc.
+    HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com"
+
+    # Accepts from all domain
+    HASURA_GRAPHQL_CORS_DOMAIN="*"
+
+    # Accepts only from http://example.com
+    HASURA_GRAPHQL_CORS_DOMAIN="http://example.com"
+
+
+.. note::
+
+  Top-level domains are not considered as part of wildcard domains. You
+  have to add them separately. E.g - ``https://*.foo.com`` doesn't include
+  ``https://foo.com``.
