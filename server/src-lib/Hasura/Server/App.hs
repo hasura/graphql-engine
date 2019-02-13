@@ -233,6 +233,8 @@ v1QueryHandler query = do
       let newSc' =
             newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
       liftIO $ writeIORef scRef newSc'
+      queryCache <- scQueryCache . hcServerCtx <$> ask
+      liftIO $ GEx.clearQueryCache queryCache
       return resp
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
