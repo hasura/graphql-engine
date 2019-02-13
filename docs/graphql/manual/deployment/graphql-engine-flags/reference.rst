@@ -138,3 +138,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+
+
+.. note::
+  When the equivalent flags for environment variables are used, the flags will take precedence.
