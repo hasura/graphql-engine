@@ -333,7 +333,14 @@ executable graphql-engine
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  ghc-options: -O2 -Wall -threaded
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
+               -threaded
+               -rtsopts -with-rtsopts=-N
 
 test-suite graphql-engine-test
   type:               exitcode-stdio-1.0
