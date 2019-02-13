@@ -5,3 +5,4 @@ npm-debug.log
 test-server-output
 test-server-flags-output
 .vscode
+.idea
