@@ -67,7 +67,6 @@ isCorsDisabled = \case
 readCorsDomains :: String -> Either String CorsConfig
 readCorsDomains str
   | str == "*"               = pure CCAllowAll
-  | str == "" || str == ","  = Left "invalid domain"
   | otherwise = do
       let domains = map T.strip $ T.splitOn "," (T.pack str)
       pDomains <- mapM parseOptWildcardDomain domains
@@ -115,7 +114,7 @@ parseOptWildcardDomain d =
     optWildcardDomainParser =
       Right <$> wildcardDomainParser <|> Left <$> fqdnParser
 
-    errMsg = "invalid domain: " <> T.unpack d <> ". " <> helpMsg
+    errMsg = "invalid domain: '" <> T.unpack d <> "'. " <> helpMsg
     helpMsg = "All domains should have scheme + (optional wildcard) host + "
               <> "(optional port)"
 
