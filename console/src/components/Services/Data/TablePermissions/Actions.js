@@ -53,9 +53,9 @@ export const SET_TYPE_CONFIG = 'ModifyTable/SET_TYPE_CONFIG';
 
 /* */
 
-const getQueriesWithPermColumns = insert => {
+const getQueriesWithPermColumns = allowInsert => {
   const queries = ['select', 'update'];
-  if (insert) {
+  if (allowInsert) {
     queries.push('insert');
   }
   return queries;

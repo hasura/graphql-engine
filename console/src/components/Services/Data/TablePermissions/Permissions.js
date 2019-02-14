@@ -1193,6 +1193,8 @@ class Permissions extends Component {
     };
 
     const getColumnList = (tableSchema, permsState) => {
+      const _columnList = [];
+
       const query = permsState.query;
 
       const dispatchToggleColumn = e => {
@@ -1200,13 +1202,11 @@ class Permissions extends Component {
         dispatch(permToggleColumn(column));
       };
 
-      return tableSchema.columns.map((colObj, i) => {
+      tableSchema.columns.forEach((colObj, i) => {
         const column = colObj.column_name;
-        const checked = permsState[query]
-          ? permsState[query].columns.includes(column)
-          : false;
+        const checked = permsState[query] ? permsState[query].columns.includes(column) : false;
 
-        return (
+        _columnList.push(
           <div key={i} className={styles.columnListElement}>
             <div className="checkbox">
               <label>
@@ -1222,32 +1222,60 @@ class Permissions extends Component {
           </div>
         );
       });
+
+      _columnList.push(
+        <div key={-1} className={styles.clear_fix} />
+      );
+
+      return _columnList;
+    };
+
+    const getRelationshipsMsg = (tableSchema) => {
+      let _relationshipsMsg = '';
+
+      const relationships = tableSchema.relationships.map(relObj => relObj.rel_name);
+
+      if (relationships.length) {
+        _relationshipsMsg = (
+          <div className={styles.add_mar_top}>
+            For relationship{relationships.length !== 1 ? 's' : ''} <i>{relationships.join(', ')}</i> set permissions
+            on the corresponding remote table/view.
+          </div>
+        );
+      }
+
+      return _relationshipsMsg;
     };
 
     const getColumnSection = (tableSchema, permsState) => {
+      const { serverVersion } = this.props;
+
       let _columnSection = '';
+
       const query = permsState.query;
-      if (
-        getQueriesWithPermColumns(
-          semverCheck('insertPermRestrictColumns', this.props.serverVersion)
-        ).includes(query)
-      ) {
+
+      const allowInsertPermColumns = semverCheck('insertPermRestrictColumns', serverVersion);
+      const queriesWithPermColumns = getQueriesWithPermColumns(allowInsertPermColumns);
+
+      if (queriesWithPermColumns.includes(query)) {
         const dispatchToggleAllColumns = () => {
           const allColumns = tableSchema.columns.map(c => c.column_name);
           dispatch(permToggleAllColumns(allColumns));
         };
+
         let accessText;
         if (query === 'insert') {
-          accessText = 'Allow input for';
+          accessText = 'input for';
         } else if (query === 'select') {
-          accessText = 'Allow access to';
+          accessText = 'access to';
         } else {
-          accessText = 'Allow updates to';
+          accessText = 'updates to';
         }
+
         _columnSection = (
           <div className={styles.editPermissionsSection}>
             <div>
-              {accessText} these <b>columns</b>:
+              Allow {accessText} these <b>columns</b>:
               <span
                 className={styles.toggleAll}
                 onClick={dispatchToggleAllColumns}
@@ -1255,8 +1283,11 @@ class Permissions extends Component {
                 Toggle all
               </span>
             </div>
-            {getColumnList(tableSchema, permsState)}
-            <div className={styles.clear_fix} />
+
+            { getColumnList(tableSchema, permsState) }
+
+            { getRelationshipsMsg(tableSchema) }
+
           </div>
         );
       }
