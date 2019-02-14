@@ -70,9 +70,9 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_ENABLE_CONSOLE``
      - Enable the Hasura Console (served by the server on ``/`` and ``/console``)
 
-   * - ``--access-key <SECRET_ACCESS_KEY>``
-     - ``HASURA_GRAPHQL_ACCESS_KEY``
-     - Secret access key, for admin access to this instance. This is mandatory
+   * - ``--admin-secret <ADMIN_SECRET_KEY>``
+     - ``HASURA_GRAPHQL_ADMIN_SECRET``
+     - Admin secret key, required to access this instance. This is mandatory
        when you use webhook or JWT.
 
    * - ``--auth-hook <WEBHOOK_URL>``
