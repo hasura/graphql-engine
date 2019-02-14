@@ -8,26 +8,31 @@ own machine and how to contribute.
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 - A Postgres server (Recommended: Use docker to run a local postgres instance)
 - GNU Make (optional)
+- npm
+- libpq-dev
 
 ## Development workflow
 
 ### Fork and clone
 - Fork the repo on GitHub
 - Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
+- `cd graphql-engine`
 
 ### Compile
-- `cd graphql-engine/server`
-- `stack build --fast --flag graphql-engine:local-console`
-- To enable console for local development, if the folder `../console/node_modules/` is not present
-
-```
-  cd ../console
-  npm install
-  cd ../server
-```
+- compile console assets
+  ```
+  cd console
+  npm ci
+  cd ..
+  ```
+- compile the server
+  ```
+  cd server
+  stack build --fast --flag graphql-engine:local-console
+  ```
 
 ### Run
-- Make sure postgres is running
+- Make sure postgres is running (Postgres >= 9.5)
 - Create a database on postgres
 - Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
 
