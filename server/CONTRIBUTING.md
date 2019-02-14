@@ -51,7 +51,7 @@ pip3 install -r tests-py/requirements.txt
 - Run the graphql-engine:
 
 ```
-stack exec graphql-engine -- --database-url=<database-url> serve`
+stack exec graphql-engine -- --database-url=<database-url> serve --enable-console
 ```
 
 - Set the environmental variables for event-trigger tests
