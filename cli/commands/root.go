@@ -68,8 +68,8 @@ func init() {
 	rootCmd.SetHelpCommand(NewHelpCmd(ec))
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
-	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed. (default: current dir)")
-	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip update check")
+	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
+	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
 }
 
 // Execute executes the command and returns the error

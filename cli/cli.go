@@ -124,7 +124,7 @@ type ExecutionContext struct {
 	// LastUpdateCheckFile is the file where the timestamp of last update check is stored
 	LastUpdateCheckFile string
 
-	// SkipUpdateCheck will skip update check
+	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
 }
 
