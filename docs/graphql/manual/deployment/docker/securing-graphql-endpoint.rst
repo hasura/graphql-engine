@@ -26,4 +26,4 @@ Run the docker command with an admin-secret env var
 .. note::
 
   If you're looking at adding access control rules for your data to your GraphQL API then head
-  to :doc:`Authentication / access control <../auth/index>`.
+  to :doc:`Authentication / access control <../../auth/index>`.
