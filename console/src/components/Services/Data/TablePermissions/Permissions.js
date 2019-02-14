@@ -618,14 +618,9 @@ class Permissions extends Component {
 
     const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
       const permissionsSymbols = {
-        // <i className="fa fa-star" aria-hidden="true"/>
         fullAccess: <i className="fa fa-check" aria-hidden="true" />,
-        // <i className="fa fa-star-o" aria-hidden="true"/>
         noAccess: <i className="fa fa-times" aria-hidden="true" />,
-        // <i className="fa fa-star-half-o" aria-hidden="true"/>
-        partialAccess: (
-          <i className="fa fa-pencil-square-o" aria-hidden="true" />
-        ),
+        partialAccess: <i className="fa fa-filter" aria-hidden="true" />,
       };
 
       return (
