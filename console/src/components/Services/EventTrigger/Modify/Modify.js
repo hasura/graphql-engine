@@ -91,6 +91,7 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             styles={styles}
             save={() => dispatch(save('retry', modifyTriggerName))}
+            serverVersion={this.props.serverVersion}
             dispatch={dispatch}
           />
           <HeadersEditor
