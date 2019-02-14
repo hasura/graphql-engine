@@ -129,3 +129,8 @@ matchRegex regex caseSensitive src =
       }
     execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
     compiledRegexE = TDFA.compile compOpt execOption regex
+
+
+fmapL :: (a -> a') -> Either a b -> Either a' b
+fmapL fn (Left e) = Left (fn e)
+fmapL _ (Right x) = pure x

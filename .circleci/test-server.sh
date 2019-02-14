@@ -182,7 +182,24 @@ combine_hpc_reports
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-##########
+# test with CORS modes
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
+export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, https://*.foo.bar.com"
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --test-cors test_cors.py
+
+kill -INT $PID
+sleep 4
+combine_hpc_reports
+unset HASURA_GRAPHQL_CORS_DOMAIN
+
+
+# webhook tests
 
 if [ $EUID != 0 ] ; then
 	echo -e "SKIPPING webhook based tests, as \nroot permission is required for running webhook tests (inorder to trust certificate authority)."
@@ -253,6 +270,8 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	combine_hpc_reports
 
 	kill $WH_PID
+
+
 fi
 
 mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true
