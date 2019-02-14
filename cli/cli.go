@@ -8,6 +8,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -28,9 +29,9 @@ import (
 // Other constants used in the package
 const (
 	// Name of the global configuration directory
-	GLOBAL_CONFIG_DIR_NAME = ".hasura"
+	GlobalConfigDirName = ".hasura"
 	// Name of the global configuration file
-	GLOBAL_CONFIG_FILE_NAME = "config.json"
+	GlobalConfigFileName = "config.json"
 
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
@@ -44,23 +45,74 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 `
 )
 
-// HasuraGraphQLConfig has the config values required to contact the server.
-type HasuraGraphQLConfig struct {
+// ServerConfig has the config values required to contact the server.
+type ServerConfig struct {
+	// Endpoint for the GraphQL Engine
+	Endpoint string
+	// AdminSecret (optional) required to query the endpoint
+	AdminSecret string
+
+	ParsedEndpoint *url.URL
+}
+
+type rawServerConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
-	// AccessKey (optional) required to query the endpoint
+	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
+	// AdminSecret (optional) Admin secret required to query the endpoint
+	AdminSecret string `json:"admin_secret,omitempty"`
 
 	ParsedEndpoint *url.URL `json:"-"`
 }
 
+func (r rawServerConfig) toServerConfig() ServerConfig {
+	s := r.AdminSecret
+	if s == "" {
+		s = r.AccessKey
+	}
+	return ServerConfig{
+		Endpoint:       r.Endpoint,
+		AdminSecret:    s,
+		ParsedEndpoint: r.ParsedEndpoint,
+	}
+}
+
+func (s ServerConfig) toRawServerConfig() rawServerConfig {
+	return rawServerConfig{
+		Endpoint:       s.Endpoint,
+		AccessKey:      "",
+		AdminSecret:    s.AdminSecret,
+		ParsedEndpoint: s.ParsedEndpoint,
+	}
+}
+
+// MarshalJSON converts s to JSON
+func (s ServerConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.toRawServerConfig())
+}
+
+// UnmarshalJSON converts b to struct s
+func (s ServerConfig) UnmarshalJSON(b []byte) error {
+	var r rawServerConfig
+	err := json.Unmarshal(b, &r)
+	if err != nil {
+		return errors.Wrap(err, "unmarshal error")
+	}
+	sc := r.toServerConfig()
+	s.Endpoint = sc.Endpoint
+	s.AdminSecret = sc.AdminSecret
+	s.ParsedEndpoint = sc.ParsedEndpoint
+	return nil
+}
+
 // ParseEndpoint ensures the endpoint is valid.
-func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
-	nurl, err := url.Parse(hgc.Endpoint)
+func (s *ServerConfig) ParseEndpoint() error {
+	nurl, err := url.Parse(s.Endpoint)
 	if err != nil {
 		return err
 	}
-	hgc.ParsedEndpoint = nurl
+	s.ParsedEndpoint = nurl
 	return nil
 }
 
@@ -93,9 +145,9 @@ type ExecutionContext struct {
 	// MetadataFile (optional) is a yaml file where Hasura metadata is stored.
 	MetadataFile string
 
-	// Config is the configuration object storing the endpoint and access key
+	// ServerConfig is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
-	Config *HasuraGraphQLConfig
+	ServerConfig *ServerConfig
 
 	// GlobalConfigDir is the ~/.hasura-graphql directory to store configuration
 	// globally.
@@ -165,8 +217,8 @@ func (ec *ExecutionContext) Prepare() error {
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
-	if ec.Config == nil {
-		ec.Config = &HasuraGraphQLConfig{}
+	if ec.ServerConfig == nil {
+		ec.ServerConfig = &ServerConfig{}
 	}
 
 	// generate an execution id
@@ -208,8 +260,8 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
-	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
+	ec.Logger.Debug("graphql engine endpoint: ", ec.ServerConfig.Endpoint)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.ServerConfig.AdminSecret)
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
@@ -217,7 +269,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
-	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AccessKey, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.ServerConfig.Endpoint, ec.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -226,7 +278,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.Endpoint)
+	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -250,17 +302,22 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config from file/env")
+		return errors.Wrap(err, "cannot read config from file/env")
 	}
-	ec.Config = &HasuraGraphQLConfig{
-		Endpoint:  v.GetString("endpoint"),
-		AccessKey: v.GetString("access_key"),
+	adminSecret := v.GetString("admin_secret")
+	if adminSecret == "" {
+		adminSecret = v.GetString("access_key")
 	}
-	return ec.Config.ParseEndpoint()
+	ec.ServerConfig = &ServerConfig{
+		Endpoint:    v.GetString("endpoint"),
+		AdminSecret: adminSecret,
+	}
+	return ec.ServerConfig.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have

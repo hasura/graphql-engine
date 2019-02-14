@@ -23,10 +23,10 @@ Examples
     # Create a directory to store migrations
     hasura init
 
-    # Now, edit <my-directory>/config.yaml to add endpoint and access key
+    # Now, edit <my-directory>/config.yaml to add endpoint and admin secret key
 
-    # Create a directory with endpoint and access key configured:
-    hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --access-key secretaccesskey
+    # Create a directory with endpoint and admin secret key configured:
+    hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
     # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details
 
@@ -35,10 +35,10 @@ Options
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --directory string    name of directory where files will be created
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-  -h, --help                help for init
+      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --directory string      name of directory where files will be created
+      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                  help for init
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

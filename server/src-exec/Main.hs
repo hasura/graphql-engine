@@ -64,7 +64,7 @@ parseHGECommand =
                 <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseAccessKey
+                <*> (parseAdminSecret <|> parseAccessKey)
                 <*> parseWebHook
                 <*> parseJwtSecret
                 <*> parseUnAuthRole
@@ -100,13 +100,13 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
-      authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
+      authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes

@@ -58,9 +58,9 @@ consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 boolToText :: Bool -> T.Text
 boolToText = bool "false" "true"
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = boolToText False
-isAccessKeySet _        = boolToText True
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
@@ -77,7 +77,7 @@ mkConsoleHTML path authMode enableTelemetry =
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAccessKeySet" .= isAccessKeySet authMode
+                         , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
                          , "enableTelemetry" .= boolToText enableTelemetry
                          ]

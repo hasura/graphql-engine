@@ -40,7 +40,7 @@ data RawServeOptions
   , rsoHost            :: !(Maybe HostPreference)
   , rsoConnParams      :: !RawConnParams
   , rsoTxIso           :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey       :: !(Maybe AccessKey)
+  , rsoAdminSecret     :: !(Maybe AdminSecret)
   , rsoAuthHook        :: !RawAuthHook
   , rsoJwtSecret       :: !(Maybe Text)
   , rsoUnAuthRole      :: !(Maybe RoleName)
@@ -55,7 +55,7 @@ data ServeOptions
   , soHost            :: !HostPreference
   , soConnParams      :: !Q.ConnParams
   , soTxIso           :: !Q.TxIsolation
-  , soAccessKey       :: !(Maybe AccessKey)
+  , soAdminSecret     :: !(Maybe AdminSecret)
   , soAuthHook        :: !(Maybe AuthHook)
   , soJwtSecret       :: !(Maybe Text)
   , soUnAuthRole      :: !(Maybe RoleName)
@@ -115,8 +115,8 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AccessKey where
-  fromEnv = Right . AccessKey . T.pack
+instance FromEnv AdminSecret where
+  fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
   fromEnv = Right . RoleName . T.pack
@@ -169,9 +169,16 @@ considerEnv envVar = do
     throwErr s = throwError $
       "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
+considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
+considerEnvs envVars = fmap (foldl1 (<|>)) $ mapM considerEnv envVars
+
 withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
   maybe (considerEnv envVar) returnJust mVal
+
+withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
+withEnvs mVal envVars =
+  maybe (considerEnvs envVars) returnJust mVal
 
 withEnvBool :: Bool -> String -> WithEnv Bool
 withEnvBool bVal envVar =
@@ -210,7 +217,7 @@ mkServeOptions rso = do
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
-  accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
+  adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
@@ -220,7 +227,7 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
 
-  return $ ServeOptions port host connParams txIso accKey authHook jwtSecret
+  return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole enableTelemetry
   where
     mkConnParams (RawConnParams s c i p) = do
@@ -298,8 +305,8 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine on a different port (say 9090) with console disabled"
         , "graphql-engine --database-url <database-url> serve --server-port 9090"
         ]
-      , [ "# Start GraphQL Engine with access key"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+      , [ "# Start GraphQL Engine with admin secret key"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
         ]
       , [ "# Start GraphQL Engine with restrictive CORS policy (only allow https://example.com:8080)"
         , "graphql-engine --database-url <database-url> serve --cors-domain https://example.com:8080"
@@ -308,11 +315,11 @@ serveCmdFooter =
         , "graphql-engine --database-url <database-url> serve --cors-domain \"https://example.com, https://*.foo.bar.com, http://localhost:3000\""
         ]
       , [ "# Start GraphQL Engine with Authentication Webhook (GET)"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
           <> " --auth-hook https://mywebhook.com/get"
         ]
       , [ "# Start GraphQL Engine with Authentication Webhook (POST)"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
           <> " --auth-hook https://mywebhook.com/post --auth-hook-mode POST"
         ]
       , [ "# Start GraphQL Engine with telemetry enabled/disabled"
@@ -323,8 +330,8 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , pgUsePrepareEnv, txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
-      , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
+      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv, accessKeyEnv, authHookEnv, authHookModeEnv
+      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv
       ]
 
@@ -381,7 +388,13 @@ txIsoEnv =
 accessKeyEnv :: (String, String)
 accessKeyEnv =
   ( "HASURA_GRAPHQL_ACCESS_KEY"
-  , "Secret access key, required to access this instance"
+  , "Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)"
+  )
+
+adminSecretEnv :: (String, String)
+adminSecretEnv =
+  ( "HASURA_GRAPHQL_ADMIN_SECRET"
+  , "Admin Secret key, required to access this instance"
   )
 
 authHookEnv :: (String, String)
@@ -405,7 +418,7 @@ jwtSecretEnv =
 unAuthRoleEnv :: (String, String)
 unAuthRoleEnv =
   ( "HASURA_GRAPHQL_UNAUTHORIZED_ROLE"
-  , "Unauthorized role, used when access-key is not sent in access-key only mode "
+  , "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
                                  ++ "or \"Authorization\" header is absent in JWT mode"
   )
 
@@ -548,12 +561,20 @@ parseServerHost = optional $ strOption ( long "server-host" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AccessKey)
+parseAccessKey :: Parser (Maybe AdminSecret)
 parseAccessKey =
-  optional $ AccessKey <$>
+  optional $ AdminSecret <$>
     strOption ( long "access-key" <>
-                metavar "<SECRET ACCESS KEY>" <>
-                help (snd accessKeyEnv)
+                metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
+                help (snd adminSecretEnv)
+              )
+
+parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret =
+  optional $ AdminSecret <$>
+    strOption ( long "admin-secret" <>
+                metavar "ADMIN SECRET KEY" <>
+                help (snd adminSecretEnv)
               )
 
 readHookType :: String -> Either String AuthHookType
@@ -647,7 +668,7 @@ serveOptsToLog so =
   StartupLog L.LevelInfo "serve_options" infoVal
   where
     infoVal = J.object [ "port" J..= soPort so
-                       , "accesskey_set" J..= isJust (soAccessKey so)
+                       , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
                        , "unauth_role" J..= soUnAuthRole so

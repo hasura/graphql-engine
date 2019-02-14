@@ -15,6 +15,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
 } from './Actions';
+import globals from '../../Globals';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
 
@@ -26,7 +27,7 @@ class ApiRequest extends Component {
     this.state = {
       deletedHeader: false,
     };
-    this.state.accessKeyVisible = false;
+    this.state.adminSecretVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
     this.timer = null;
@@ -72,8 +73,8 @@ class ApiRequest extends Component {
     this.props.dispatch(removeRequestHeader(index));
   }
 
-  onShowAccessKeyClicked() {
-    this.setState({ accessKeyVisible: !this.state.accessKeyVisible });
+  onShowAdminSecretClicked() {
+    this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
   }
 
   onNewHeaderKeyChanged(e) {
@@ -320,8 +321,9 @@ class ApiRequest extends Component {
               onBlur={this.handleBlur}
               data-test={`header-value-${i}`}
               type={
-                header.key.toLowerCase() === 'x-hasura-access-key' &&
-                !this.state.accessKeyVisible
+                header.key.toLowerCase() ===
+                  `x-hasura-${globals.adminSecretLabel}` &&
+                !this.state.adminSecretVisible
                   ? 'password'
                   : 'text'
               }
@@ -329,14 +331,15 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() === 'x-hasura-access-key' ? (
+              {header.key.toLowerCase() ===
+              `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                  className={styles.showAccessKey + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAccessKeyClicked.bind(this)}
-                />
-              ) : null}
+                    className={styles.showAdminSecret + ' fa fa-eye'}
+                    data-header-id={i}
+                    aria-hidden="true"
+                    onClick={this.onShowAdminSecretClicked.bind(this)}
+                  />
+                ) : null}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
