@@ -244,12 +244,18 @@ const compareChecks = (permObj, check, query, columns) => {
   if (check === 'none') {
     if (query === 'insert') {
       expect(Object.keys(permObj.check).length === 0).to.be.true;
+      expect(permObj.set[getColName(0)] === '1').to.be.true;
+      expect(permObj.set[getColName(1)] === 'x-hasura-user-id').to.be.true;
     } else {
       expect(Object.keys(permObj.filter).length === 0).to.be.true;
       if (query === 'select' || query === 'update') {
         [0, 1, 2].forEach(index => {
           expect(permObj.columns.includes(getColName(index)));
         });
+        if (query === 'update') {
+          expect(permObj.set[getColName(0)] === '1').to.be.true;
+          expect(permObj.set[getColName(1)] === 'x-hasura-user-id').to.be.true;
+        }
       }
     }
   } else if (query === 'insert') {
