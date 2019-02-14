@@ -1239,7 +1239,7 @@ class Permissions extends Component {
         _relationshipsMsg = (
           <div className={styles.add_mar_top}>
             For relationship{relationships.length !== 1 ? 's' : ''} <i>{relationships.join(', ')}</i> set permissions
-            on the corresponding remote table/view.
+            on the corresponding table/view.
           </div>
         );
       }
