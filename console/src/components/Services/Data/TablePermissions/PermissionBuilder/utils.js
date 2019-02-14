@@ -249,6 +249,10 @@ export function getColumnType(columnName, tableSchema) {
 
   if (columnSchema) {
     _columnType = columnSchema.data_type;
+
+    if (_columnType === 'USER-DEFINED') {
+      _columnType = columnSchema.udt_name;
+    }
   }
 
   return _columnType;
