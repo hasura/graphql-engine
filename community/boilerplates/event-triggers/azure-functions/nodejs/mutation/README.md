@@ -32,7 +32,7 @@ func azure subscriptions set 'Free Trial'
 func azure functionapp publish 'myfunctionsapp'
 ```
 
-2. Set Environment variables `ACCESS_KEY` and `HGE_ENDPOINT`
+2. Set Environment variables `ADMIN_SECRET` and `HGE_ENDPOINT`
 3. Add a X-Function-Key header if Authorization level is enabled
 
 # Running locally

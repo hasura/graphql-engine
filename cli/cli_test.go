@@ -40,12 +40,12 @@ func TestPrepare(t *testing.T) {
 		t.Fatal("got empty logger")
 	}
 	if ec.GlobalConfigDir == "" {
-		t.Fatalf("global config dir: expected $HOME/%s, got %s", cli.GLOBAL_CONFIG_DIR_NAME, ec.GlobalConfigDir)
+		t.Fatalf("global config dir: expected $HOME/%s, got %s", cli.GlobalConfigDirName, ec.GlobalConfigDir)
 	}
 	if ec.GlobalConfigFile == "" {
-		t.Fatalf("global config file: expected $HOME/%s/%s, got %s", cli.GLOBAL_CONFIG_DIR_NAME, cli.GLOBAL_CONFIG_FILE_NAME, ec.GlobalConfigFile)
+		t.Fatalf("global config file: expected $HOME/%s/%s, got %s", cli.GlobalConfigDirName, cli.GlobalConfigFileName, ec.GlobalConfigFile)
 	}
-	if ec.Config == nil {
+	if ec.ServerConfig == nil {
 		t.Fatal("got empty Config")
 	}
 }

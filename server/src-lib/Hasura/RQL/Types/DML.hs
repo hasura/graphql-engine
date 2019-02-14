@@ -295,7 +295,7 @@ instance ToJSON SelectQueryT where
   toJSON (DMLQuery qt selQ) =
     object $ "table" .= qt : selectGToPairs selQ
 
-type InsObj = M.HashMap PGCol Value
+type InsObj = ColVals
 
 data ConflictAction
   = CAIgnore
@@ -350,7 +350,7 @@ data InsertTxConflictCtx
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
-type UpdVals = M.HashMap PGCol Value
+type UpdVals = ColVals
 
 data UpdateQuery
   = UpdateQuery

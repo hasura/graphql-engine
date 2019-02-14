@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { clearAccessKeyState } from '../../../AppState';
+import { clearAdminSecretState, CONSOLE_ADMIN_SECRET } from '../../../AppState';
 import globals from '../../../../Globals';
 
 import {
@@ -9,7 +9,7 @@ import {
 } from '../Notification';
 import Button from '../../Layout/Button/Button';
 
-class ClearAccessKey extends Component {
+class ClearAdminSecret extends Component {
   constructor() {
     super();
     this.state = {};
@@ -27,10 +27,10 @@ class ClearAccessKey extends Component {
           onClick={e => {
             e.preventDefault();
             this.setState({ isClearing: true });
-            if (globals.isAccessKeySet || globals.accessKey) {
-              clearAccessKeyState();
+            if (globals.isAdminSecretSet || globals.adminSecret) {
+              clearAdminSecretState();
               this.props.dispatch(
-                showSuccessNotification('Cleared Access Key')
+                showSuccessNotification(`Cleared ${globals.adminSecretLabel}`)
               );
               this.setState({ isClearing: false });
               this.props.router.push('/login');
@@ -39,13 +39,12 @@ class ClearAccessKey extends Component {
               const errorMessage = (
                 <div style={{ padding: '5px' }}>
                   <div style={{ fontSize: '13px' }}>
-                    No access key set or access key is set but isAccessKeySet is
-                    not set by the server
+                    No {globals.adminSecretLabel} set
                   </div>
                   <br />
                   <div style={{ fontSize: '13px' }}>
-                    Please look for <code>CONSOLE_ACCESS_KEY</code> key under
-                    window storage and delete it if it exists
+                    Please look for <code>{CONSOLE_ADMIN_SECRET}</code> key
+                    under window storage and delete it if it exists
                   </div>
                 </div>
               );
@@ -53,16 +52,18 @@ class ClearAccessKey extends Component {
             }
           }}
         >
-          {this.state.isClearing ? 'Clearing...' : 'Clear access key (logout)'}
+          {this.state.isClearing
+            ? 'Clearing...'
+            : `Clear ${globals.adminSecretLabel} (logout)`}
         </Button>
       </div>
     );
   }
 }
 
-ClearAccessKey.propTypes = {
+ClearAdminSecret.propTypes = {
   dispatch: PropTypes.func.isRequired,
   dataHeaders: PropTypes.object.isRequired,
 };
 
-export default ClearAccessKey;
+export default ClearAdminSecret;

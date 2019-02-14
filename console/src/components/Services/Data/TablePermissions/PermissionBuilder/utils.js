@@ -224,7 +224,10 @@ export function getRefTable(rel, tableSchema) {
         const fkConstraint = tableSchema.foreign_key_constraints[i];
         const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
         if (fkCol === fkConstraintCol) {
-          _refTable = getTableDef(fkConstraint.ref_table, fkConstraint.ref_table_table_schema);
+          _refTable = getTableDef(
+            fkConstraint.ref_table,
+            fkConstraint.ref_table_table_schema
+          );
           break;
         }
       }

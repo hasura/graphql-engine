@@ -31,10 +31,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example: `  # Create a directory to store migrations
   hasura init
 
-  # Now, edit <my-directory>/config.yaml to add endpoint and access key
+  # Now, edit <my-directory>/config.yaml to add endpoint and admin secret
 
-  # Create a directory with endpoint and access key configured:
-  hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --access-key secretaccesskey
+  # Create a directory with endpoint and admin secret configured:
+  hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
@@ -49,16 +49,19 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := initCmd.Flags()
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.StringVar(&opts.AccessKey, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
 	return initCmd
 }
 
 type initOptions struct {
 	EC *cli.ExecutionContext
 
-	Endpoint  string
-	AccessKey string
-	InitDir   string
+	Endpoint    string
+	AdminSecret string
+	InitDir     string
 }
 
 func (o *initOptions) run() error {
@@ -122,14 +125,14 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.HasuraGraphQLConfig{
+	config := &cli.ServerConfig{
 		Endpoint: "http://localhost:8080",
 	}
 	if o.Endpoint != "" {
 		config.Endpoint = o.Endpoint
 	}
-	if o.AccessKey != "" {
-		config.AccessKey = o.AccessKey
+	if o.AdminSecret != "" {
+		config.AdminSecret = o.AdminSecret
 	}
 
 	// write the config file

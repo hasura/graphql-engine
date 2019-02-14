@@ -25,8 +25,14 @@ const globals = {
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
   devDataApiUrl: window.__env.devDataApiUrl,
   nodeEnv: window.__env.nodeEnv,
-  accessKey: window.__env.accessKey,
-  isAccessKeySet: window.__env.isAccessKeySet,
+  adminSecret: window.__env.adminSecret || window.__env.accessKey,
+  isAdminSecretSet:
+    window.__env.isAdminSecretSet || window.__env.isAccessKeySet,
+  adminSecretLabel:
+    window.__env.isAdminSecretSet !== undefined ||
+    window.__env.adminSecret !== undefined
+      ? 'admin-secret'
+      : 'access-key',
   consoleMode:
     window.__env.consoleMode === 'hasuradb'
       ? 'server'
@@ -45,13 +51,12 @@ if (!window.__env.urlPrefix) {
 if (!window.__env.consoleMode) {
   globals.consoleMode = SERVER_CONSOLE_MODE;
 }
-
-if (!window.__env.accessKey) {
-  globals.accessKey = null;
+if (!globals.adminSecret) {
+  globals.adminSecret = null;
 }
 
-if (!window.__env.isAccessKeySet) {
-  globals.isAccessKeySet = false;
+if (globals.isAdminSecretSet === undefined) {
+  globals.isAdminSecretSet = false;
 }
 
 if (

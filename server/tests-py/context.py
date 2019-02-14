@@ -9,6 +9,7 @@ import json
 import queue
 import socket
 import subprocess
+import time
 
 import yaml
 import requests
@@ -40,13 +41,26 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
             self.server.error_queue.put({"path": req_path,
                                          "body": req_json,
                                          "headers": req_headers})
+        elif req_path == "/timeout_short":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.error_queue.put({"path": req_path,
+                                         "body": req_json,
+                                         "headers": req_headers})
+        elif req_path == "/timeout_long":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
             self.server.resp_queue.put({"path": req_path,
                                         "body": req_json,
                                         "headers": req_headers})
-
 
 class WebhookServer(http.server.HTTPServer):
     def __init__(self, resp_queue, error_queue, server_address):
@@ -141,7 +155,7 @@ class HGECtx:
     def v1q(self, q, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
-            h['X-Hasura-Access-Key'] = self.hge_key
+            h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
             json=q,

@@ -2,13 +2,12 @@ module Hasura.GraphQL.Resolve.ContextTypes where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.Sequence                     as Seq
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.Sequence                 as Seq
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
 
@@ -42,7 +41,7 @@ data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
   , icColumns   :: ![PGColInfo]
-  , icSet       :: !InsSetCols
+  , icSet       :: !PreSetCols
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
   } deriving (Show, Eq)

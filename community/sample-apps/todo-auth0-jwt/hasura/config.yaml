@@ -1,2 +1,2 @@
 endpoint: https://hasura-todo-auth0-jwt.herokuapp.com
-access_key: xxxxxxxxx
+admin_secret: xxxxxxxxx
