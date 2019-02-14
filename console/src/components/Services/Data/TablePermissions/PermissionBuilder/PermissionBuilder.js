@@ -338,7 +338,7 @@ class PermissionBuilder extends React.Component {
           <option
             value={optionVal}
             key={i}
-            disabled={disabledValues.indexOf(val) !== -1}
+            disabled={disabledValues.includes(val)}
           >
             {val || '--'}
           </option>
@@ -561,7 +561,7 @@ class PermissionBuilder extends React.Component {
       }
 
       let _columnExp = '';
-      if (tableRelationships.indexOf(column) !== -1) {
+      if (tableRelationships.includes(column)) {
         const rel = getTableRelationship(tableSchema, column);
         const refTable = getRefTable(rel, tableSchema);
 

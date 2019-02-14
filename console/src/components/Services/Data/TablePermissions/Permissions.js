@@ -321,7 +321,7 @@ class Permissions extends Component {
 
       if (role === 'admin') {
         _permission = permissionsSymbols.fullAccess;
-      } else if (Object.keys(rolePermissions).indexOf(role) === -1) {
+      } else if (!Object.keys(rolePermissions).includes(role)) {
         _permission = permissionsSymbols.noAccess;
       } else {
         const permissions = rolePermissions[role][queryType];
@@ -342,7 +342,7 @@ class Permissions extends Component {
               if (JSON.stringify(permissions[filterKey]) === '{}') {
                 if (
                   checkColumns &&
-                  permissions.columns.indexOf('*') === -1 &&
+                  !permissions.columns.includes('*') &&
                   permissions.columns.length !== tableSchema.columns.length
                 ) {
                   _permission = permissionsSymbols.partialAccess;
@@ -1208,7 +1208,7 @@ class Permissions extends Component {
       return tableSchema.columns.map((colObj, i) => {
         const column = colObj.column_name;
         const checked = permsState[query]
-          ? permsState[query].columns.indexOf(column) !== -1
+          ? permsState[query].columns.includes(column)
           : false;
 
         return (
@@ -1235,7 +1235,7 @@ class Permissions extends Component {
       if (
         getQueriesWithPermColumns(
           semverCheck('insertPermRestrictColumns', this.props.serverVersion)
-        ).indexOf(query) !== -1
+        ).includes(query)
       ) {
         const dispatchToggleAllColumns = () => {
           const allColumns = tableSchema.columns.map(c => c.column_name);
@@ -1593,7 +1593,7 @@ class Permissions extends Component {
       };
       const roleList = [];
       currentPermissions.map(perm => {
-        if (roleList.indexOf(perm.role_name) === -1) {
+        if (!roleList.includes(perm.role_name)) {
           roleList.push(perm.role_name);
         }
       });
