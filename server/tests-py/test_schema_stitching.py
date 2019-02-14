@@ -2,6 +2,8 @@
 
 import pytest
 import yaml
+import json
+import queue
 import requests
 
 from validate import check_query_f, check_query
@@ -234,6 +236,78 @@ class TestAddRemoteSchemaTbls:
         assert st_code == 200, resp
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "person-graphql"}})
         assert st_code == 200, resp
+
+
+class TestRemoteSchemaQueriesOverWebsocket:
+    dir = 'queries/remote_schemas'
+    teardown = {"type": "clear_metadata", "args": {}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_setup.yaml')
+        assert st_code == 200, resp
+        yield
+        # teardown
+        st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q(self.teardown)
+        assert st_code == 200, resp
+
+    def _init(self, hge_ctx):
+        hge_ctx.ws.send(json.dumps({'type': 'connection_init', 'payload': {}}))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'connection_ack', ev
+
+    def _stop(self, hge_ctx, id):
+        data = {'id': id, 'type': 'stop'}
+        hge_ctx.ws.send(json.dumps(data))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'complete', ev
+
+    def test_remote_query(self, hge_ctx):
+        self._init(hge_ctx)
+        query = """
+        query {
+          user(id: 2) {
+            id
+            username
+          }
+        }
+        """
+        frame = {
+            'id': '123',
+            'type': 'start',
+            'payload': {'query': query},
+        }
+        hge_ctx.ws.send(json.dumps(frame))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'data' and ev['id'] == '123', ev
+        assert ev['payload']['data']['data']['user']['username'] == 'john'
+        self._stop(hge_ctx, '123')
+
+    def test_remote_mutation(self, hge_ctx):
+        self._init(hge_ctx)
+        query = """
+        mutation {
+          createUser(id: 42, username: "foobar") {
+            user {
+              id
+              username
+            }
+          }
+        }
+        """
+        frame = {
+            'id': '124',
+            'type': 'start',
+            'payload': {'query': query},
+        }
+        hge_ctx.ws.send(json.dumps(frame))
+        ev = hge_ctx.get_ws_event(3)
+        assert ev['type'] == 'data' and ev['id'] == '124', ev
+        assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
+        assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
+        self._stop(hge_ctx, '124')
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:
