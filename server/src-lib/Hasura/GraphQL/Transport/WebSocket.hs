@@ -33,6 +33,7 @@ import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import           Hasura.GraphQL.Utils                        (onLeft)
 import           Hasura.GraphQL.Validate                     (QueryParts (..),
                                                               getQueryParts,
                                                               validateGQ)
@@ -152,6 +153,7 @@ onConn (L.Logger logger) wsId requestHead = do
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
+
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
@@ -190,13 +192,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     [] -> runHasuraQ userInfo gCtx queryParts
 
     (typeLoc:_) -> case typeLoc of
-      VT.HasuraType ->
-        runHasuraQ userInfo gCtx queryParts
+      VT.HasuraType -> runHasuraQ userInfo gCtx queryParts
       VT.RemoteType _ rsi -> do
         when (G._todType opDef == G.OperationTypeSubscription) $
           withComplete $ sendConnErr "subscription to remote server is not supported"
+        -- try to parse the (apollo protocol) websocket frame and get only the payload
+        sockPayload <- onLeft (J.eitherDecode msgRaw) $
+          const $ withComplete $ sendConnErr "invalid websocket payload"
+        let payload = J.encode $ _wpPayload sockPayload
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-                             msgRaw rsi opDef
+                payload rsi opDef
         either postExecErr sendSuccResp resp
         sendCompleted
 
@@ -367,3 +372,18 @@ createWSServerApp authMode serverEnv =
       (onConn $ _wseLogger serverEnv)
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
+
+
+-- | TODO:
+-- | The following ADT is required, so that we can parse the incoming websocket
+-- | frame, and only pick the payload, for remote schema queries.
+-- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
+-- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
+-- | get only the payload
+data WebsocketPayload
+  = WebsocketPayload
+  { _wpId      :: !Text
+  , _wpType    :: !Text
+  , _wpPayload :: !J.Value
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
