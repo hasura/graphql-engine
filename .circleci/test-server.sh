@@ -191,7 +191,7 @@ export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, ht
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ACCESS_KEY" --test-cors test_cors.py
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-cors test_cors.py
 
 kill -INT $PID
 sleep 4
