@@ -1229,7 +1229,7 @@ class Permissions extends Component {
 
       if (relationships.length) {
         _relationshipsMsg = (
-          <div className={styles.add_mar_top}>
+          <div className={styles.add_mar_top_small}>
             For relationship{relationships.length !== 1 ? 's' : ''} <i>{relationships.join(', ')}</i> set permissions
             on the corresponding table/view.
           </div>
