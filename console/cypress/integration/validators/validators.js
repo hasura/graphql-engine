@@ -260,9 +260,9 @@ const compareChecks = (permObj, check, query, columns) => {
     }
   } else if (query === 'insert') {
     // eslint-disable-line no-lonely-if
-    expect(permObj.check[getColName(0)]._eq === '1').to.be.true; // eslint-dsable-line eqeqeq
+    expect(permObj.check[getColName(0)]._eq === 1).to.be.true;
   } else {
-    expect(permObj.filter[getColName(0)]._eq === '1').to.be.true;
+    expect(permObj.filter[getColName(0)]._eq === 1).to.be.true;
     if (query === 'select' || query === 'update') {
       columns.forEach((col, index) => {
         expect(permObj.columns.includes(getColName(index)));
@@ -319,7 +319,6 @@ export const validatePermission = (
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    cy.log(JSON.stringify(response));
     const tableSchema = response.body.find(
       table => table.table_name === tableName
     );
