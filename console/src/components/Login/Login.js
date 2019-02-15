@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-
-import { loginClicked, UPDATE_ACCESS_KEY_INPUT } from '../Main/Actions';
 import Button from '../Common/Button/Button';
+import globals from '../../Globals';
+import { loginClicked, UPDATE_ADMIN_SECRET_INPUT } from '../Main/Actions';
 
 class Login extends Component {
-  handleAccessKey = e => {
+  handleAdminSecret = e => {
     this.props.dispatch({
-      type: UPDATE_ACCESS_KEY_INPUT,
+      type: UPDATE_ADMIN_SECRET_INPUT,
       data: e.target.value,
     });
   };
@@ -53,11 +53,11 @@ class Login extends Component {
                 >
                   <div className={'input-group ' + styles.input_group}>
                     <input
-                      onChange={this.handleAccessKey}
+                      onChange={this.handleAdminSecret}
                       className={styles.form_input + ' form-control'}
                       placeholder="Password"
                       type="password"
-                      placeholder="Enter access key"
+                      placeholder={`Enter ${globals.adminSecretLabel}`}
                       name="password"
                     />
                   </div>
@@ -85,7 +85,7 @@ const generatedLoginConnector = connect => {
     return {
       loginInProgress: state.main.loginInProgress,
       loginError: state.main.loginError,
-      accessKeyError: state.tables.accessKeyError,
+      adminSecretError: state.tables.adminSecretError,
     };
   };
   return connect(mapStateToProps)(Login);

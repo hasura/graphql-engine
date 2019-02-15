@@ -78,11 +78,11 @@ Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you 
 
 .. code-block:: bash
 
-   # Without access key
+   # Without admin secret key
    hasura console
 
-   # With access key
-   hasura console --access-key mysecretkey
+   # With admin secret key
+   hasura console --admin-secret-key myadminsecretkey
 
 Step 4: Disable database schema modifications
 ---------------------------------------------

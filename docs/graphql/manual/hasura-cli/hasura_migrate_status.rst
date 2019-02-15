@@ -20,9 +20,9 @@ Options
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-  -h, --help                help for status
+      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                  help for status
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

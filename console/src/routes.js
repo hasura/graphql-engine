@@ -35,11 +35,13 @@ const routes = store => {
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.accessKey) {
+            if (globals.adminSecret) {
               alert('Hasura CLI: ' + r.message);
             } else {
               alert(
-                'Looks like CLI is not configured with the access key. Please configure and try again'
+                `Looks like CLI is not configured with the ${
+                  globals.adminSecretLabel
+                }. Please configure and try again`
               );
             }
           } else {

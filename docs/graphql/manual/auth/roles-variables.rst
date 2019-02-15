@@ -106,7 +106,7 @@ the request:
 
 .. note::
 
-  If you've enabled Hasura GraphQL engine with an access key, make sure you add the ACCESS_KEY header as well.
+  If you've enabled Hasura GraphQL engine with an admin secret key, make sure you add the ADMIN_SECRET header as well.
 
 
 Option 2: In production, from apps
