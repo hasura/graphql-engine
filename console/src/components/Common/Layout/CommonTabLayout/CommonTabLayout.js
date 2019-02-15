@@ -1,7 +1,7 @@
 import React from 'react';
 
-import BreadCrumb from '../../Layout/BreadCrumb/BreadCrumb';
-import Tabs from '../../Layout/ReusableTabs/ReusableTabs';
+import BreadCrumb from '../BreadCrumb/BreadCrumb';
+import Tabs from '../ReusableTabs/ReusableTabs';
 
 class CommonTabLayout extends React.Component {
   render() {

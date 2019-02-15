@@ -14,7 +14,7 @@ import {
   trackableFunctions,
   // nonTrackableFunctions,
 } from './Tooltips';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import {
   setTableName,
   addExistingTableSql,

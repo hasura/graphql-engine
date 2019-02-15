@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Helmet from 'react-helmet';
-import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 // import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
@@ -9,7 +9,7 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../Layout/Button/Button';
+import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 

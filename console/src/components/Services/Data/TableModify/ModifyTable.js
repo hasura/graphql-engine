@@ -47,7 +47,7 @@ import {
   TIMESTAMP,
   TIME,
 } from '../../../../constants';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const appPrefix = '/data';
 

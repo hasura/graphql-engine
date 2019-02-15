@@ -2,9 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router';
-
-import { LISTING_SCHEMA } from '../../Data/DataActions';
-import Button from '../Button/Button';
+import Button from '../../Button/Button';
 
 const LeftNavBar = ({
   appPrefix,

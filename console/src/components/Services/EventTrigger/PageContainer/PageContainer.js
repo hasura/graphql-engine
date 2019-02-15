@@ -4,7 +4,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import { LISTING_TRIGGER } from '../EventActions';
 

@@ -3,18 +3,18 @@ import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 
 import _push from '../../push';
 import { pageTitle, appPrefix } from './constants';
 
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../Layout/Button/Button';
+import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
-import ReusableTextAreaWithCopy from '../../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import ReusableTextAreaWithCopy from '../../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 
 import {
   fetchCustomFunction,

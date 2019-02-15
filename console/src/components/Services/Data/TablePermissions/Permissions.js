@@ -44,7 +44,7 @@ import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, escapeRegExp } from '../utils';
 import { legacyOperatorsMap } from './PermissionBuilder/utils';
 import semverCheck from '../../../../helpers/semver';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 /* */
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';

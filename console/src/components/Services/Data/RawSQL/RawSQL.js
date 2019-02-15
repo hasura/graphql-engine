@@ -5,7 +5,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
 import ModalButton from 'react-bootstrap/lib/Button';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';

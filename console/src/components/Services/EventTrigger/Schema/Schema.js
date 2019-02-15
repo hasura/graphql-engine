@@ -8,7 +8,7 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const appPrefix = globals.urlPrefix + '/events';
 
