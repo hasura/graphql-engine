@@ -1230,8 +1230,8 @@ class Permissions extends Component {
       if (relationships.length) {
         _relationshipsMsg = (
           <div className={styles.add_mar_top_small}>
-            For relationship{relationships.length !== 1 ? 's' : ''} <i>{relationships.join(', ')}</i> set permissions
-            on the corresponding table/view.
+            For <b>relationship{relationships.length !== 1 ? 's' : ''}</b>: <i>{relationships.join(', ')}</i>.
+            <span className={styles.mar_left}>Set permissions on the corresponding table/view.</span>
           </div>
         );
       }
@@ -1647,25 +1647,15 @@ class Permissions extends Component {
             <hr />
             <div>Apply same {permsState.query} permissions to other roles</div>
             <div className={styles.add_mar_top_small}>{roleListHtml}</div>
-            {permsState.applySamePermissions.length ? (
-              <Button
-                onClick={applySameBulk}
-                className={styles.bulkApplyBtn}
-                color="white"
-                size="sm"
-              >
-                Apply
-              </Button>
-            ) : (
-              <Button
-                color="white"
-                className={styles.bulkApplyBtn}
-                size="sm"
-                disabled
-              >
-                Apply
-              </Button>
-            )}
+            <Button
+              onClick={applySameBulk}
+              className={styles.bulkApplyBtn}
+              color="white"
+              size="sm"
+              disabled={!permsState.applySamePermissions.length}
+            >
+              Apply
+            </Button>
           </div>
         );
       }
