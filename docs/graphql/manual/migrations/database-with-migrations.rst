@@ -35,7 +35,7 @@ Skip this step if you already have a project directory.
 Step 3: Open the console via the CLI & disable Postgres schema changes
 ----------------------------------------------------------------------
 
-Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you xshould now use the console by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you should now use the console by running:
 
 .. code-block:: bash
 
