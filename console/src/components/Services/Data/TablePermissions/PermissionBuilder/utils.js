@@ -35,7 +35,6 @@ export const PGTypes = {
   ],
   postgis: [
     'geometry',
-    'geography'
   ]
 };
 
