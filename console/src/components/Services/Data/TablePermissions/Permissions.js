@@ -417,18 +417,10 @@ class Permissions extends Component {
         _permissionsRowHtml.push(<td key={-1} />);
       } else {
         const bulkSelect = permsState.bulkSelect;
-        const currentInputSelection = bulkSelect.filter(e => e === role)
-          .length ? (
+        const currentInputSelection = (
           <input
             onChange={dispatchBulkSelect}
-            checked="checked"
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        ) : (
-          <input
-            onChange={dispatchBulkSelect}
+            checked={bulkSelect.filter(e => e === role).length}
             data-role={role}
             className={styles.bulkSelect}
             type="checkbox"
@@ -1726,7 +1718,7 @@ class Permissions extends Component {
       }
       // const currentPermissions = tableSchema.permissions;
       const bulkSelect = permsState.bulkSelect;
-      const bulkDeleteClicked = () => {
+      const handleBulkRemoveClick = () => {
         if (window.confirm('Are you sure?')) {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
@@ -1750,8 +1742,8 @@ class Permissions extends Component {
             })}
           </div>
           <div className={styles.padd_bottom}>
-            <Button onClick={bulkDeleteClicked} color="red" size="sm">
-              Delete
+            <Button onClick={handleBulkRemoveClick} color="red" size="sm">
+              Remove Permissions
             </Button>
           </div>
         </div>
@@ -1808,8 +1800,8 @@ class Permissions extends Component {
           <div className={`${styles.padd_remove} col-xs-12`}>
             <h4 className={styles.subheading_text}>Permissions</h4>
             {getPermissionsTable(tSchema, qTypes, permissionsState)}
-            {getEditSection(tSchema, qTypes, permissionsState)}
             {getBulkSection(tSchema, qTypes, permissionsState)}
+            {getEditSection(tSchema, qTypes, permissionsState)}
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>
