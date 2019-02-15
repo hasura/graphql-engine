@@ -9,6 +9,7 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
+import Button from '../../../Layout/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -83,12 +84,9 @@ class Permission extends React.Component {
         </p>
         <div className={styles.commonBtn}>
           <a href={permissionTableUrl}>
-            <button
-              className={styles.yellow_button}
-              data-test={'custom-function-permission-btn'}
-            >
+            <Button color="yellow" data-test={'custom-function-permission-btn'}>
               {`${setOffTable} Permissions`}
-            </button>
+            </Button>
           </a>
         </div>
       </div>

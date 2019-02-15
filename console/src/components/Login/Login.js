@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
 import { loginClicked, UPDATE_ACCESS_KEY_INPUT } from '../Main/Actions';
+import Button from '../Common/Button/Button';
 
 class Login extends Component {
   handleAccessKey = e => {
@@ -62,9 +63,9 @@ class Login extends Component {
                   </div>
                 </div>
                 <div className={styles.signin_btn}>
-                  <button type="submit" className="form-control">
+                  <Button type="submit" color="green" className="form-control">
                     {loginText}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
