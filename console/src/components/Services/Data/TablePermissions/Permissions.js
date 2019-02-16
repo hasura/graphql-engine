@@ -243,33 +243,23 @@ class Permissions extends Component {
     const { showAggregation, showInsertPrefix, showUpdatePresets } = this.state;
     const styles = require('../TableModify/Modify.scss');
 
-    let qTypes;
-    if (tableType === 'table') {
-      qTypes = ['insert', 'select', 'update', 'delete'];
-    } else if (tableType === 'view') {
-      qTypes = [];
-      // Add insert/update permission if it is insertable/updatable as returned by pg
-      if (
-        this.state.viewInfo &&
-        'is_insertable_into' in this.state.viewInfo &&
-        this.state.viewInfo.is_insertable_into === 'YES'
-      ) {
-        qTypes.push('insert');
-      }
+    const getAllRoles = (allTableSchemas) => {
+      const _allRoles = [];
 
-      qTypes.push('select');
+      allTableSchemas.forEach(tableSchema => {
+        if (tableSchema.permissions) {
+          tableSchema.permissions.forEach(p => {
+            if (!_allRoles.includes(p.role_name)) {
+              _allRoles.push(p.role_name);
+            }
+          });
+        }
+      });
 
-      if (
-        this.state.viewInfo &&
-        'is_updatable' in this.state.viewInfo &&
-        this.state.viewInfo.is_updatable === 'YES'
-      ) {
-        qTypes.push('update');
-        qTypes.push('delete');
-      }
-    }
+      _allRoles.sort();
 
-    const tSchema = allSchemas.find(t => t.table_name === tableName);
+      return _allRoles;
+    };
 
     const getAlertHtml = (
       _ongoingRequest,
@@ -377,35 +367,31 @@ class Permissions extends Component {
         if (isNewPerm && permsState.newRole !== '') {
           dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
         } else if (role !== '') {
-          dispatch(
-            permOpenEdit(
-              tableSchema,
-              role,
-              queryType,
-              semverCheck('insertPermRestrictColumns', this.props.serverVersion)
-            )
-          );
+          const allowInsertPermColumns = semverCheck('insertPermRestrictColumns', this.props.serverVersion);
+
+          dispatch(permOpenEdit(tableSchema, role, queryType, allowInsertPermColumns));
         } else {
-          window.alert('Please enter a role name');
+          document.getElementById('newRoleInput').focus();
         }
       };
 
       const dispatchCloseEdit = () => {
         dispatch(permCloseEdit());
       };
+
       const dispatchRoleNameChange = e => {
         dispatch(permSetRoleName(e.target.value));
       };
+
       const dispatchBulkSelect = e => {
         const isChecked = e.target.checked;
         const selectedRole = e.target.getAttribute('data-role');
         dispatch(permSetBulkSelect(isChecked, selectedRole));
       };
+
       const dispatchDeletePermission = () => {
         const isConfirm = window.confirm(
-          'Are you sure you want to delete the permission for role ' +
-            role +
-            '?'
+          'Are you sure you want to delete the permission for role ' + role + '?'
         );
         if (isConfirm) {
           dispatch(permRemoveRole(tableSchema, role));
@@ -444,6 +430,7 @@ class Permissions extends Component {
         _permissionsRowHtml.push(
           <td key={-2}>
             <input
+              id="newRoleInput"
               className={`form-control ${styles.newRoleInput}`}
               onChange={dispatchRoleNameChange}
               type="text"
@@ -476,10 +463,14 @@ class Permissions extends Component {
           }
         }
 
+        if (role === '') {
+          className += ` ${styles.newRoleTd}`;
+        }
+
         _permissionsRowHtml.push(
           <td
             key={i}
-            className={className + (role === '' ? ' ' + styles.newRoleTd : '')}
+            className={className}
             onClick={onClick}
             title="Click to edit permissions"
             data-test={`${role}-${queryType}`}
@@ -502,28 +493,20 @@ class Permissions extends Component {
       tableSchema,
       queryTypes,
       permissionsSymbols,
-      permsState
+      permsState,
+      roleList
     ) => {
       const _permissionsRowsHtml = [];
 
-      // admin role by default
-      _permissionsRowsHtml.push(
-        <tr key="adminPerm">
-          {getPermissionsTableRow(
-            tableSchema,
-            'admin',
-            queryTypes,
-            permissionsSymbols,
-            permsState
-          )}
-        </tr>
-      );
-      tableSchema.permissions.forEach((perm, i) => {
+      // add admin to roles
+      const _roleList = ['admin'].concat(roleList);
+
+      _roleList.forEach((role, i) => {
         _permissionsRowsHtml.push(
           <tr key={i}>
             {getPermissionsTableRow(
               tableSchema,
-              perm.role_name,
+              role,
               queryTypes,
               permissionsSymbols,
               permsState
@@ -531,6 +514,8 @@ class Permissions extends Component {
           </tr>
         );
       });
+
+      // new role row
       _permissionsRowsHtml.push(
         <tr key="newPerm">
           {getPermissionsTableRow(
@@ -608,7 +593,7 @@ class Permissions extends Component {
       );
     };
 
-    const getPermissionsTable = (tableSchema, queryTypes, permsState) => {
+    const getPermissionsTable = (tableSchema, queryTypes, permsState, roleList) => {
       const permissionsSymbols = {
         fullAccess: <i className="fa fa-check" aria-hidden="true" />,
         noAccess: <i className="fa fa-times" aria-hidden="true" />,
@@ -625,7 +610,8 @@ class Permissions extends Component {
               tableSchema,
               queryTypes,
               permissionsSymbols,
-              permsState
+              permsState,
+              roleList
             )}
           </table>
         </div>
@@ -1541,9 +1527,7 @@ class Permissions extends Component {
       );
     };
 
-    const getBulkApplySection = (tableSchema, permsState) => {
-      const currentPermissions = tableSchema.permissions;
-
+    const getBulkApplySection = (tableSchema, permsState, roleList) => {
       const applySameSelected = e => {
         const isChecked = e.target.checked;
         const selectedRole = e.target.getAttribute('data-role');
@@ -1556,52 +1540,46 @@ class Permissions extends Component {
         }
       };
 
-      const roleList = [];
-      currentPermissions.map(perm => {
-        if (!roleList.includes(perm.role_name)) {
-          roleList.push(perm.role_name);
-        }
-      });
-
       const rolePermissions = tableSchema.permissions.find(
         p => p.role_name === permsState.role
       );
-      const currQueryPermissions = rolePermissions
-        ? rolePermissions.permissions[permsState.query]
-        : undefined;
+      const currQueryPermissions = rolePermissions ? rolePermissions.permissions[permsState.query] : null;
 
-      // get list of unique names
       const roleListHtml = [];
-      roleList.map(role => {
-        if (role !== permsState.role && currQueryPermissions) {
-          roleListHtml.push(
-            <div
-              key={role}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-            >
-              <input
-                data-role={role}
-                onChange={applySameSelected}
-                className={
-                  'form-control ' +
-                  styles.samePermissionRole +
-                  ' ' +
-                  styles.add_mar_small
-                }
-                type="checkbox"
-              />
-              <label className={styles.display_inline}>{role}</label>
-            </div>
-          );
-        }
-      });
+      if (currQueryPermissions) {
+        roleList.forEach(role => {
+          if (role !== permsState.role) {
+            roleListHtml.push(
+              <div
+                key={role}
+                className={styles.display_inline + ' checkbox ' + styles.add_mar_right}
+              >
+                <label>
+                  <input
+                    data-role={role}
+                    onChange={applySameSelected}
+                    className={
+                      'form-control ' +
+                      styles.samePermissionRole +
+                      ' ' +
+                      styles.add_mar_small
+                    }
+                    type="checkbox"
+                  />
+                  {role}
+                </label>
+              </div>
+            );
+          }
+        });
+      }
 
       let applyBulkPermissions = null;
       if (roleListHtml.length) {
         applyBulkPermissions = (
           <div className={styles.editPermissionsSection + ' ' + styles.removePadding}>
             <hr />
-            <div>Apply same {permsState.query} permissions to other roles</div>
+            <div>Apply same {permsState.query} permissions to other roles:</div>
             <div className={styles.add_mar_top_small}>{roleListHtml}</div>
             <Button
               onClick={applySameBulk}
@@ -1685,7 +1663,7 @@ class Permissions extends Component {
       );
     };
 
-    const getEditPermissions = (tableSchema, queryTypes, permsState) => (
+    const getEditPermissions = (tableSchema, queryTypes, permsState, roleList) => (
       <div className={styles.activeEdit}>
         <div className={styles.editPermissionsHeading}>
           Role: {permsState.role}
@@ -1701,16 +1679,16 @@ class Permissions extends Component {
           {showInsertPrefix && getInsertSetPermission(tableSchema, permsState)}
           {showUpdatePresets && getUpdateSetSection(tableSchema, permsState)}
           {getButtonsSection(tableSchema, permsState)}
-          {getBulkApplySection(tableSchema, permsState)}
+          {getBulkApplySection(tableSchema, permsState, roleList)}
         </div>
       </div>
     );
 
-    const getEditSection = (tableSchema, queryTypes, permsState) => {
+    const getEditSection = (tableSchema, queryTypes, permsState, roleList) => {
       let _editSection = '';
 
       if (permsState.role && permsState.query) {
-        _editSection = getEditPermissions(tableSchema, queryTypes, permsState);
+        _editSection = getEditPermissions(tableSchema, queryTypes, permsState, roleList);
       }
 
       return _editSection;
@@ -1727,7 +1705,8 @@ class Permissions extends Component {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
-      const _bulkSection = (
+
+      return (
         <div className={styles.activeEdit}>
           <div className={styles.editPermissionsHeading}>
             Apply Bulk Actions
@@ -1752,7 +1731,6 @@ class Permissions extends Component {
           </div>
         </div>
       );
-      return _bulkSection;
     };
 
     /*
@@ -1796,6 +1774,38 @@ class Permissions extends Component {
       return _header;
     };
 
+    /********************/
+
+    let qTypes;
+    if (tableType === 'table') {
+      qTypes = ['insert', 'select', 'update', 'delete'];
+    } else if (tableType === 'view') {
+      qTypes = [];
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (
+        this.state.viewInfo &&
+        'is_insertable_into' in this.state.viewInfo &&
+        this.state.viewInfo.is_insertable_into === 'YES'
+      ) {
+        qTypes.push('insert');
+      }
+
+      qTypes.push('select');
+
+      if (
+        this.state.viewInfo &&
+        'is_updatable' in this.state.viewInfo &&
+        this.state.viewInfo.is_updatable === 'YES'
+      ) {
+        qTypes.push('update');
+        qTypes.push('delete');
+      }
+    }
+
+    const tSchema = allSchemas.find(t => t.table_name === tableName);
+
+    const allRolesList = getAllRoles(allSchemas);
+
     return (
       <div className={styles.container}>
         {getHeader(tSchema)}
@@ -1803,9 +1813,9 @@ class Permissions extends Component {
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
             <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(tSchema, qTypes, permissionsState)}
+            {getPermissionsTable(tSchema, qTypes, permissionsState, allRolesList)}
             {getBulkSection(tSchema, qTypes, permissionsState)}
-            {getEditSection(tSchema, qTypes, permissionsState)}
+            {getEditSection(tSchema, qTypes, permissionsState, allRolesList)}
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>
