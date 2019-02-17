@@ -40,9 +40,6 @@ class Main extends React.Component {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          this.checkEventsTab().then(() => {
-            this.checkSchemaStitch();
-          });
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -62,8 +59,12 @@ class Main extends React.Component {
           console.error(e);
         }
       });
+      this.checkEventsTab().then(() => {
+        this.checkSchemaStitch();
+      });
     });
   }
+
   checkSchemaStitch() {
     const showSchemaStitch = semverCheck(
       'schemaStitching',

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import { env } from './localDev';
 /**
  * Wrapper component containing HTML metadata and boilerplate tags.
  * Used in server-side code only to wrap the string output of the
@@ -20,7 +21,6 @@ export default class Html extends Component {
   render() {
     const { assets } = this.props;
     const head = Helmet.rewind();
-
     return (
       <html lang="en-us">
         <head>
@@ -38,19 +38,7 @@ export default class Html extends Component {
 
           <script
             dangerouslySetInnerHTML={{
-              __html: `window.__env={
-                apiHost: '${process.env.API_HOST}',
-                apiPort: '${process.env.API_PORT}',
-                dataApiUrl: '${process.env.DATA_API_URL}',
-                devDataApiUrl: '${process.env.DEV_DATA_API_URL}',
-                adminSecret: '${process.env.ACCESS_KEY}',
-                isAdminKeySet: ${process.env.IS_ADMIN_SECRET_SET ||
-                  process.env.IS_ACCESS_KEY_SET},
-                consoleMode: '${process.env.CONSOLE_MODE}',
-                nodeEnv: '${process.env.NODE_ENV}',
-                urlPrefix: '${process.env.URL_PREFIX}',
-                enableTelemetry: ${process.env.ENABLE_TELEMETRY}
-              };`,
+              __html: env,
             }}
           />
         </head>
