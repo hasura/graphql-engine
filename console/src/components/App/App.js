@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import Modal from 'react-bootstrap/lib/Modal';
+import { hot } from 'react-hot-loader';
 import './progress-bar.scss';
 import { NOTIF_EXPANDED } from './Actions';
 import AceEditor from 'react-ace';
@@ -168,4 +169,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(App);
+export default hot(module)(connect(mapStateToProps)(App));

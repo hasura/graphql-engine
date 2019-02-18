@@ -1,8 +1,6 @@
 /**
  * THIS IS THE ENTRY POINT FOR THE CLIENT, JUST LIKE server.js IS THE ENTRY POINT FOR THE SERVER.
  */
-// import 'babel-polyfill';
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { createLogger } from 'redux-logger';
@@ -155,9 +153,12 @@ const history = syncHistoryWithStore(browserHistory, store);
 
 // Enable hot reloading
 if (__DEVELOPMENT__ && module.hot) {
+  /*
   module.hot.accept('./reducer', () => {
     store.replaceReducer(require('./reducer'));
   });
+  */
+  module.hot.accept();
 }
 
 // Main routes and rendering
