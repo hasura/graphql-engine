@@ -2,7 +2,7 @@
   "name": "graphql-engine-console",
   "description": "Console for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
-  "license": "AGPLv3",
+  "license": "AGPL-3.0-only",
   "version": "0.1.0",
   "repository": {
     "type": "git",

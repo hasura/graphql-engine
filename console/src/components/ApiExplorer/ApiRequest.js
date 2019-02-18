@@ -6,7 +6,6 @@ import {
   changeRequestMethod,
   changeRequestUrl,
   changeRequestParams,
-  sendExplorerReq,
   addRequestHeader,
   changeRequestHeader,
   removeRequestHeader,
@@ -41,11 +40,6 @@ class ApiRequest extends Component {
 
   onGenerateApiCodeClicked = () => {
     this.props.dispatch(generateApiCodeClicked());
-  };
-
-  onSendButtonClick = () => {
-    // check the request type
-    this.props.dispatch(sendExplorerReq(this.props.bodyType));
   };
 
   onUrlChanged = e => {
@@ -113,8 +107,6 @@ class ApiRequest extends Component {
   };
 
   getUrlBar() {
-    const { explorerData, bodyType } = this.props;
-
     return (
       <div
         id="stickyHeader"
@@ -149,39 +141,6 @@ class ApiRequest extends Component {
             />
           </div>
         </div>
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-2 ' + styles.wd16}>
-            <div className={styles.sendBtn}>
-              {!explorerData.sendingRequest ? (
-                <button
-                  onClick={() => {
-                    this.onSendButtonClick();
-                  }}
-                >
-                  {bodyType === 'download' ? 'Download' : 'Send'}
-                </button>
-              ) : (
-                <button
-                  style={{ opacity: 0.4 }}
-                  className="btn"
-                  disabled={explorerData.sendingRequest}
-                >
-                  Sending...
-                </button>
-              )}
-            </div>
-          </div>
-        ) : null}
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-3 ' + styles.padd_remove + ' ' + styles.wd16}>
-            <div
-              onClick={this.onGenerateApiCodeClicked}
-              className={styles.generateBtn}
-            >
-              <button className="btn">Generate API code</button>
-            </div>
-          </div>
-        ) : null}
         <div className={styles.stickySeparator} />
       </div>
     );
@@ -334,12 +293,12 @@ class ApiRequest extends Component {
               {header.key.toLowerCase() ===
               `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                    className={styles.showAdminSecret + ' fa fa-eye'}
-                    data-header-id={i}
-                    aria-hidden="true"
-                    onClick={this.onShowAdminSecretClicked.bind(this)}
-                  />
-                ) : null}
+                  className={styles.showAdminSecret + ' fa fa-eye'}
+                  data-header-id={i}
+                  aria-hidden="true"
+                  onClick={this.onShowAdminSecretClicked.bind(this)}
+                />
+              ) : null}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
