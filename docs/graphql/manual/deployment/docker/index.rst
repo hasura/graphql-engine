@@ -18,8 +18,8 @@ Prerequisites
 Step 1: Get the **docker-run.sh** bash script
 ---------------------------------------------
 
-The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/master/install-manifests>`_ repo
-contains all installation manifests required to deploy Hasura anywhere.
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/master/install-manifests>`_
+repo contains all installation manifests required to deploy Hasura anywhere.
 
 Get the docker run bash script from there:
 
@@ -30,10 +30,13 @@ Get the docker run bash script from there:
 Step 2: Configure the **docker-run.sh** script
 ----------------------------------------------
 
-The ``docker-run.sh`` script has a sample docker run command in it. The following are the changes needed to be
+The ``docker-run.sh`` script has a sample docker run command in it. The following changes are needed to be
 made to the command:
 
-Database url
+- Database URL
+- Network config
+
+Database URL
 ^^^^^^^^^^^^
 
 Edit the ``HASURA_GRAPHQL_DATABASE_URL`` env var value, so that you can connect to your Postgres instance.
@@ -115,7 +118,7 @@ command to allow the Docker container to access the host's network:
           hasura/graphql-engine:latest
           
 
-Step 3: Run the hasura docker container
+Step 3: Run the Hasura docker container
 ---------------------------------------
 
 Execute ``docker-run.sh`` & check if everything is running well:
@@ -128,12 +131,12 @@ Execute ``docker-run.sh`` & check if everything is running well:
    CONTAINER ID  IMAGE                    ...  CREATED  STATUS  PORTS           ...
    097f58433a2b  hasura/graphql-engine..  ...  1m ago   Up 1m   8080->8080/tcp  ...
 
-Step 3: Open the hasura console
+Step 4: Open the Hasura console
 -------------------------------
 
 Head to http://localhost:8080/console to open the Hasura console.
 
-Step 4: Track existing tables and relationships
+Step 5: Track existing tables and relationships
 -----------------------------------------------
 
 See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
