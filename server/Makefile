@@ -12,7 +12,11 @@ build_output := /build/_server_output
 
 dev: src-lib src-exec src-rsr
 	stack build --fast
-	stack exec graphql-engine -- --database-url postgres://postgres:@localhost:5432/hge serve --enable-console
+	stack exec graphql-engine -- \
+		--database-url postgres://postgres:@localhost:5432/hge \
+		serve \
+		--enable-telemetry false \
+		--enable-console
 
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(version)" \

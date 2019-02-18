@@ -191,6 +191,7 @@ library
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Transport.WebSocket.Client
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils

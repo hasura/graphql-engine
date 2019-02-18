@@ -32,6 +32,7 @@ import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Schema                       (getGCtx)
 import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import qualified Hasura.GraphQL.Transport.WebSocket.Client   as WS
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import           Hasura.GraphQL.Utils                        (onLeft)
@@ -218,22 +219,25 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
                -> G.TypedOperationDefinition -> RemoteSchemaInfo
                -> ExceptT () IO ()
     runRemoteQ userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        -- TODO: open a subscription to the remote server from here
-        -- that means going through the whole protocol setup for gql-ws
-        withComplete $ sendConnErr "subscription to remote server is not supported"
-
-      -- if it's not a subscription, use HTTP to execute the query on the remote
-      -- server
-      -- try to parse the (apollo protocol) websocket frame and get only the
-      -- payload
       sockPayload <- onLeft (J.eitherDecode msgRaw) $
         const $ withComplete $ sendConnErr "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
-      either postExecErr sendSuccResp resp
-      sendCompleted
+
+      case G._todType opDef of
+        G.OperationTypeSubscription -> do
+          let gqClient = WS.mkGraphqlClient wsConn sockPayload
+          res <- liftIO $ runExceptT $ WS.runGqlClient (rsUrl rsi) gqClient
+          onLeft res $ sendConnErr . T.pack . show
+          liftIO $ putStrLn "after setting up the proxy..."
+
+        _ -> do
+          -- if it's not a subscription, use HTTP to execute the query on the
+          -- remote server try to parse the (apollo protocol) websocket frame
+          -- and get only the payload
+          let payload = J.encode $ WS._wpPayload sockPayload
+          resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+                  payload rsi opDef
+          either postExecErr sendSuccResp resp
+          sendCompleted
 
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
@@ -385,18 +389,3 @@ createWSServerApp authMode serverEnv =
       (onConn $ _wseLogger serverEnv)
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
-
-
--- | TODO:
--- | The following ADT is required so that we can parse the incoming websocket
--- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
--- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
--- | get only the payload
-data WebsocketPayload
-  = WebsocketPayload
-  { _wpId      :: !Text
-  , _wpType    :: !Text
-  , _wpPayload :: !J.Value
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
