@@ -19,6 +19,7 @@ const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
 const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
 const SET_RETRY_NUM = 'AddTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'AddTrigger/SET_RETRY_INTERVAL';
+const SET_RETRY_TIMEOUT = 'AddTrigger/SET_RETRY_TIMEOUT';
 const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
@@ -40,6 +41,7 @@ const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
+const setRetryTimeout = value => ({ type: SET_RETRY_TIMEOUT, value });
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const addHeader = () => ({ type: ADD_HEADER });
 const removeHeader = i => ({ type: REMOVE_HEADER, index: i });
@@ -112,6 +114,21 @@ const createTrigger = () => {
     if (currentState.retryConf) {
       payload.args.retry_conf = currentState.retryConf;
     }
+
+    payload.args.retry_conf = {
+      num_retries:
+        currentState.retryConf.num_retries === ''
+          ? 0
+          : parseInt(currentState.retryConf.num_retries, 10),
+      interval_sec:
+        currentState.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(currentState.retryConf.interval_sec, 10),
+      timeout_sec:
+        currentState.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(currentState.retryConf.timeout_sec, 10),
+    };
 
     // create header payload
     const headers = [];
@@ -331,7 +348,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          num_retries: parseInt(action.value, 10),
+          num_retries: action.value,
         },
       };
     case SET_RETRY_INTERVAL:
@@ -339,7 +356,15 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          interval_sec: parseInt(action.value, 10),
+          interval_sec: action.value,
+        },
+      };
+    case SET_RETRY_TIMEOUT:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          timeout_sec: action.value,
         },
       };
     case SET_TABLENAME:
@@ -383,6 +408,7 @@ export {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   createTrigger,
   fetchTableListBySchema,
   operationToggleColumn,

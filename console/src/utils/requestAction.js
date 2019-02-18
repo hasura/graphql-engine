@@ -62,8 +62,10 @@ const requestAction = (
                 dispatch({
                   type: UPDATE_DATA_HEADERS,
                   data: {
-                    'Content-Type': 'application/json',
-                    'X-Hasura-Access-Key': globals.accessKey,
+                    'content-type': 'application/json',
+                    [`x-hasura-${
+                      globals.adminSecretLabel
+                    }`]: globals.adminSecret,
                   },
                 });
                 dispatch({ type: LOGIN_IN_PROGRESS, data: false });

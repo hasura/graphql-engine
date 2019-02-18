@@ -11,7 +11,7 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
     parser.addoption(
-        "--hge-key", metavar="HGE_KEY", help="access key for graphql-engine", required=False
+        "--hge-key", metavar="HGE_KEY", help="admin secret key for graphql-engine", required=False
     )
     parser.addoption(
         "--hge-webhook", metavar="HGE_WEBHOOK", help="url for graphql-engine's access control webhook", required=False
@@ -27,6 +27,12 @@ def pytest_addoption(parser):
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
     )
 
+    parser.addoption(
+        "--test-cors", action="store_true",
+        required=False,
+        help="Run testcases for CORS configuration"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -38,6 +44,7 @@ def hge_ctx(request):
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
+    test_cors = request.config.getoption('--test-cors')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -50,6 +57,7 @@ def hge_ctx(request):
         )
     except HGECtxError as e:
         pytest.exit(str(e))
+
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()

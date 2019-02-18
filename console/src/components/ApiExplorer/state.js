@@ -2,7 +2,7 @@ import globals from '../../Globals';
 
 const defaultHeader = [
   {
-    key: 'Content-Type',
+    key: 'content-type',
     value: 'application/json',
     isActive: true,
     isNewHeader: false,

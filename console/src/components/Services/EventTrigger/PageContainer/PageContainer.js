@@ -115,11 +115,7 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/events/manage/triggers/add'}
               >
-                <Button
-                  color="white"
-                  size="xs"
-                  data-test="sidebar-add-table"
-                >
+                <Button color="white" size="xs" data-test="sidebar-add-table">
                   Add Trigger
                 </Button>
               </Link>

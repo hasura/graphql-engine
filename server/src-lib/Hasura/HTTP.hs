@@ -3,7 +3,7 @@ module Hasura.HTTP
   , HttpException(..)
   ) where
 
-import           Control.Lens hiding ((.=))
+import           Control.Lens          hiding ((.=))
 import           Hasura.Prelude
 
 import qualified Data.Aeson            as J

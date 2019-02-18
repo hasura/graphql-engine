@@ -26,8 +26,11 @@ jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
-accessKeyHeader :: T.Text
-accessKeyHeader = "x-hasura-access-key"
+deprecatedAccessKeyHeader :: T.Text
+deprecatedAccessKeyHeader = "x-hasura-access-key"
+
+adminSecretHeader :: T.Text
+adminSecretHeader = "x-hasura-admin-secret"
 
 userIdHeader :: T.Text
 userIdHeader = "x-hasura-user-id"
@@ -126,3 +129,8 @@ matchRegex regex caseSensitive src =
       }
     execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
     compiledRegexE = TDFA.compile compOpt execOption regex
+
+
+fmapL :: (a -> a') -> Either a b -> Either a' b
+fmapL fn (Left e) = Left (fn e)
+fmapL _ (Right x) = pure x
