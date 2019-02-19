@@ -75,8 +75,8 @@ class App extends Component {
           className={styles.alertDanger + ' alert alert-danger'}
         >
           <strong>
-            Hey there! Console is not able to reach your cluster. Please check
-            if hasura console server is running. Restart and try again.
+            Hasura console is not able to reach your Hasura GraphQL engine instance.
+            Please ensure that your instance is running and the endpoint is configured correctly.
           </strong>
         </div>
       );
