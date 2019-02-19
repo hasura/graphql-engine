@@ -4,10 +4,13 @@
 
 A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartjs.org) API thus leveraging Realtime GraphQL API to build Realtime charts.
 
+*Made with love by [Hasura](https://hasura.io)*
+
 ## Contents
 
 - [Realtime](#realtime)
-- [Getting started](#getting-started)
+- [Live demo](#live-demo)
+- [Getting started](#quick-start-with-react)
 - [How it works](#how-it-works)
     + [Motivation](#motivation)
     + [GraphQL Aliasing](#graphql-aliasing)
@@ -22,13 +25,21 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
     + [Doughnut](#doughnut)
     + [Bubble](#bubble)
     + [Scatter](#scatter)
+- [Using views for aggregation](#using-views-for-aggregation)
 - [Limitations](#limitations)
 
 ## Realtime
 
-This 
+Realtime charts can be very useful in visualising live data trends. Two of the major use cases of realtime charts are:
+
+1. Time series with a short time window
+2. Realtime poll
+
+You can see these two use cases implemented in [this section](#live-demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can [create custom views](#using-views-for-aggregation) that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
 
 ## Live demo
+
+**WIP**: An app running at some external URL showing a live query and a time series chart.
 
 ## Quickstart with React
 
@@ -54,11 +65,14 @@ This
     ```
 
 4. **Set constants in the app**: Go to `src/constants.js` and set HGE_URL to your GraphQL Engine URL.
+
 5. **Run the app**:
     ```
     yarn start
     ```
     
+The app opens at `localhost:3000` rendering the realtime bar chart.
+
 ## How it works
 
 ### Motivation
@@ -775,4 +789,14 @@ var myChart = new Chart(ctx, {
 
 ![readme example scatter](assets/readme-scatter-chart-example.png)
 
+## Using views for aggregation
 
+Sometimes you would want to aggregate data from your tables in Postgres.
+/WIP
+
+
+## Limitations
+
+1. The response structure of your GraphQL query is opinionated. This is however not a limitation as you use GraphQL aliasing to renaeme the fields to achieve the required structure.
+
+2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions and form a custom GraphQL response from the subscription responses.

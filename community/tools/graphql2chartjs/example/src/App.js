@@ -2,15 +2,15 @@ import React, { Component } from 'react';
 import './App.css';
 import convert from 'graphql2chartjs';
 import { Bar } from 'react-chartjs-2';
-import { Query } from 'react-apollo';
+import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
 
 class App extends Component {
   render() {
     return (
-      <Query
-        query={gql`
-          query {
+      <Subscription
+        subscription={gql`
+          subscription {
             Followers: video_games (
               order_by: {
                 name: asc
@@ -39,7 +39,7 @@ class App extends Component {
             )
           }
         }
-      </Query>
+      </Subscription>
     );
   }
 }
