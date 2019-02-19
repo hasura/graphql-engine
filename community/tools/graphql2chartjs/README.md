@@ -7,27 +7,63 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 ## Contents
 
 - [Realtime](#realtime)
-- [Examples](#examples)
-    + [Line](#line)
-    + [Bar](#bar)
-    + [Radar](#radar)
-    + [Doughnut](#doughnut)
-   + [Pie](#pie)
-    + [Polar Area](#polar-area)
-    + [Bubble](#bubble)
-    + [Scatter]
+- [Getting started](#getting-started)
 - [How it works](#how-it-works)
+    + [Motivation](#motivation)
+    + [GraphQL Aliasing](#graphql-aliasing)
+    + [ChartJS API](#chartjs-api)
+    + [The convert function](#the-convert-function)
+    + [How the restructuring works](#how-the-restructuring-works)
+- [Reference examples](#reference-examples)
+    + [Bar](#bar)
+    + [Line](#line)
+    + [Radar](#radar)
+    + [Pie](#pie)
+    + [Doughnut](#doughnut)
+    + [Bubble](#bubble)
+    + [Scatter](#scatter)
 - [Limitations](#limitations)
 
 ## Realtime
 
-## Examples
+This 
 
+## Live demo
+
+## Quickstart with React
+
+1. Clone the example from the `examples` directory and install the dependencies.
+    
+    ```
+    yarn install
+    ```
+
+2. **Run GraphQL Engine**: Run the Hasura GraphQL Engine and Postgres on Heroku's free tier (no credit card required) by clicking this button:
+
+   [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+
+   Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`. Let's say it's `graphql2chartjs.herokuapp.com`.
+   For instructions on how to deploy Hasura in other environments, head to the [docs](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+
+3. **Populate sample data**: Run the following two commands. (Replace `graphql-engine-url` with the URL you obtained above)
+   
+    ```sh
+    export SAMPLE_JSON='{"video_games": [{ "id": 1, "name": "Dota", "followers": 427014, "color": "red"},{ "id": 2, "name": "CS:GO", "followers": 220006, "color": "yellow"},{ "id": 3, "name": "NFS", "followers": 71004, "color": "#3366ff"},{ "id": 4, "name": "PUBG", "followers": 129769, "color": "#330000"},{ "id": 5, "name": "Quake 3", "followers": 90808, "color": "green"}]}'
+    echo $SAMPLE_JSON > db.json
+    npx json2graphql <graphql-engine-url> -d db.json
+    ```
+
+4. **Set constants in the app**: Go to `src/constants.js` and set HGE_URL to your GraphQL Engine URL.
+5. **Run the app**:
+    ```
+    yarn start
+    ```
+    
 ## How it works
 
 ### Motivation
 
-We started using ChartJS with GraphQL so that could leverage GraphQL's realtime subscriptions to build realtime charts. Soon enough we realised that we can automate this tedious procedure of restructuring the GraphQL data to a form that ChartJS expects.
+We started using ChartJS with GraphQL so that we could leverage GraphQL's realtime subscriptions to build realtime charts. Soon enough we realised that we can automate this tedious procedure of restructuring the GraphQL data to a form that ChartJS expects.
 
 The idea behind this tool is to generate ChartJS compliant `data` object from your GraphQL response by simply adding a few aliases in your GraphQL query.
 
@@ -52,8 +88,8 @@ The response to this query would be of the form:
     "data": {
         "rootField": [
             {
-                "field1": 'value 1',
-                "field2": 'value 2'
+                "field1": "value 1",
+                "field2": "value 2"
             }
         ]
     }
@@ -95,7 +131,8 @@ Most of the ChartJS charts expect a data object of the form:
         {
             "data": [1334, 4314, ..., 2356],
             "backgroundColor": ['red', "blue", ..., "brown"],
-            "borderColor": ['red', "blue", ..., "brown"] 
+            "borderColor": ['red', "blue", ..., "brown"],
+            "fill": false
         } 
     ]
 }
@@ -105,7 +142,7 @@ Most of the ChartJS charts expect a data object of the form:
 
 The `convert` function i.e. the default export of this library accepts two arguments:
 1. **type**: (String) Type of the chart; Eg. `bra`, `line`, `pie`
-2. **graphqlData**: [Object] This should be a list of fields.
+2. **graphqlData**: [Object] This should be an object with each field having its value as a list of data points.
 
 You can directly feed the output of the `convert` function to your ChartJS instance.
 
@@ -377,7 +414,7 @@ var myChart = new Chart(ctx, {
 
 ```
 
-![line chart readme example](readme-line-chart-example.png)
+![line-chart-example](assets/readme-line-chart-example.png)
 
 ### Radar
 
