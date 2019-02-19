@@ -6,7 +6,8 @@
 {
   /* position: relative;
   padding: 10px 20px; */
-  background-color: white;
+  /* background-color: white; */
+  background-color: rgb(253, 249, 237);
   /* margin: 20px;
   width: 100%; */
   width: auto;
@@ -15,6 +16,7 @@
   overflow: auto;
   margin-top: 0px;
   // min-height: calc(100% - 60px);
+  position: relative;
 }
 
 .codeBlockCustom pre {
@@ -41,13 +43,18 @@
 .codeBlockCustom .formattedCode {
   padding: 0px 0px !important;
 }
-
+.schemaPreWrapper
+{
+  position: relative;
+  min-height: 72px;
+}
 .copyGenerated
 {
   position: absolute;
   bottom: 15px;
   right: 30px;
   cursor: pointer;
+  z-index: 100;
 }
 .copyGenerated img, .copyExecution img
 {

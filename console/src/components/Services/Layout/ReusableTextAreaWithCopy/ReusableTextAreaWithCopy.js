@@ -6,7 +6,8 @@ class ReusableTextAreaWithCopy extends React.Component {
   copyToClip(type, id) {
     let text = '';
     if (this.props.copyText.length > 0) {
-      text = window.sqlFormatter
+
+      text = window.sqlFormatter && this.props.textLanguage && this.props.textLanguage.toLowerCase() === 'sql'
         ? window.sqlFormatter.format(this.props.copyText, {
           language: this.props.textLanguage,
         })
@@ -61,7 +62,7 @@ class ReusableTextAreaWithCopy extends React.Component {
           </div>
         </div>
 
-        {window && window.sqlFormatter && window.hljs ? (
+        {window && window.sqlFormatter && window.hljs && this.props.textLanguage && this.props.textLanguage.toLowerCase() === 'sql' ? (
           <pre>
             <code
               className={style.formattedCode}
@@ -76,7 +77,7 @@ class ReusableTextAreaWithCopy extends React.Component {
             />
           </pre>
         ) : (
-          <pre>
+          <pre className={style.schemaPreWrapper}>
             <code className={style.formattedCode}>{copyText}</code>
           </pre>
         )}

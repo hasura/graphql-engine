@@ -5,7 +5,7 @@ import { push } from 'react-router-redux';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../Layout/Button/Button';
-
+import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
@@ -13,6 +13,7 @@ class CustomResolver extends React.Component {
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
     const { dispatch, migrationMode } = this.props;
+    const queryDefinition = 'query { hello }';
     return (
       <div
         className={`${styles.padd_left_remove} ${
@@ -39,6 +40,47 @@ class CustomResolver extends React.Component {
               </Button>
             ) : null}
             <hr />
+            <div className={styles.subheading_text}>
+              Try it out
+            </div>
+            <p>1.
+              <a className={styles.add_mar_left_small} href="https://hasura-sample-remote-schema-4.glitch.me/" target="_blank"><button className={'btn btn-sm ' + styles.yellow_button}>Deploy with Glitch</button></a>
+              <span className={styles.add_pad_left}>click to deploy an example GraphQL service to Glitch</span>
+            </p>
+            <p>
+              2. Add the GraphQL service as a remote schema:
+            </p>
+            <p className={styles.add_pad_left}>
+              - Click on the show button in the Glitch console and copy the URL
+            </p>
+            <p className={styles.add_pad_left}>
+              - Add the URL as a remote schema by clicking on the <b>Add</b> button at the top of this page
+            </p>
+            <p className={styles.add_pad_left}>
+              - Set the name as “Sample Remote Schema” and enter the above URL as the <b>GraphQL server URL</b>
+            </p>
+            <p className={styles.add_pad_left}>
+              - click on the <b>Add Remote Schema</b> button - That’s it!
+            </p>
+            <p>3. Head to the GraphQL tab and try out the following query:</p>
+            <ReusableTextAreaWithCopy
+              copyText={queryDefinition}
+              textLanguage={'graphql'}
+            />
+            <p className={styles.add_pad_top}>You just added a remote schema and queried it. Yay!</p>
+            <hr />
+            <div className={styles.subheading_text}>
+              Get Started
+            </div>
+            <p>
+              Read the docs for more information
+            </p>
+            <p>
+              Boilerplates
+            </p>
+            <p>
+              Check out the individual READMEs for detailed deployment instructions
+            </p>
           </div>
           {/*
             <div className={styles.resolverContent}>
