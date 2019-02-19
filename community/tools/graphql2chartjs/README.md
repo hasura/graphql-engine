@@ -32,7 +32,7 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 Realtime charts can be very useful in visualising live data trends. Two of the major use cases of realtime charts are:
 
-1. Time series with a short time window
+1. Live time series
 2. Realtime poll
 
 You can see these two use cases implemented in [this section](#live-demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can [create custom views](#using-views-for-aggregation) that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
