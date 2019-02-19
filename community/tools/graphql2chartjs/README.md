@@ -4,7 +4,7 @@
 
 A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartjs.org) API thus leveraging Realtime GraphQL API to build Realtime charts.
 
-![how convert works](assets/how_convert_works)
+![how convert works](assets/how_convert_works.png)
 
 *Made with love by [Hasura](https://hasura.io)*
 
