@@ -52,6 +52,23 @@
     text-align: center;
   }
 }
+.iconWrapper
+{
+  padding: 20px 0;
+  .icon
+  {
+    padding-right: 20px;
+    img
+    {
+      width: 80%;
+    }
+  }
+}
+.removePadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
 .CommonWrapper
 {
   .check_box {

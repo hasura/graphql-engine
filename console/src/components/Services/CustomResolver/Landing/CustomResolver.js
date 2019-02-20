@@ -10,6 +10,7 @@ import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/Reus
 class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
+    const node = require('./Node.svg');
     // const landingImage = require('./schema-stitching-color.png');
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
@@ -88,6 +89,36 @@ class CustomResolver extends React.Component {
               Check out the individual READMEs for detailed deployment
               instructions
             </p>
+            <div className={styles.iconWrapper}>
+              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
+                <div className={styles.icon}>
+                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
+                    <img className={'img-responsive'} src={node} alt={'node'} />
+                  </a>
+                </div>
+              </div>
+              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
+                <div className={styles.icon}>
+                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
+                    <img className={'img-responsive'} src={node} alt={'node'} />
+                  </a>
+                </div>
+              </div>
+              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
+                <div className={styles.icon}>
+                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
+                    <img className={'img-responsive'} src={node} alt={'node'} />
+                  </a>
+                </div>
+              </div>
+              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
+                <div className={styles.icon}>
+                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
+                    <img className={'img-responsive'} src={node} alt={'node'} />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
           {/*
             <div className={styles.resolverContent}>
