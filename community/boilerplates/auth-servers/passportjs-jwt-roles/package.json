@@ -36,7 +36,7 @@
     "passport-http-bearer": "^1.0.1",
     "passport-local": "^1.0.0",
     "pg": "^7.4.3",
-    "rsa-pem-to-jwk": "^1.1.3",
+    "rasha": "^1.2.1",
     "util": "^0.11.0"
   }
 }

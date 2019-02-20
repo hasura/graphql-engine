@@ -1,22 +1,24 @@
 const passport = require('../config/passport')
 const { User } = require('../db/schema')
 const { errorHandler } = require('../db/errors')
-const rsaPemToJwk = require('rsa-pem-to-jwk')
+const rasha = require('rasha')
 const jwtConfig = require('../config/jwt')
 
 /**
- * TODO: NOT WORKING - see below todos
- * https://tools.ietf.org/html/rfc7517
- * https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+ * Sends the JWT key set
  */
 exports.getJwks = async (req, res, next) => {
-  // TODO: doesn't work with Hasura: "Error in $.keys[0].n: leading null byte"
-  // TODO: why does rsaPemToJwk work with a file but not with a variable?
-  const jwks = {
-    keys: [
-      rsaPemToJwk(jwtConfig.key, { use: 'sig', kid: jwtConfig.kid }, 'public')
-    ]
+  const jwk = {
+    ...rasha.importSync({ pem: jwtConfig.publicKey }),
+    alg: 'RS256',
+    use: 'sig',
+    kid: jwtConfig.publicKey
   }
+  const jwks = {
+    keys: [jwk]
+  }
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(jwks, null, 2) + '\n')
   handleResponse(res, 200, jwks)
 }
 

@@ -123,13 +123,19 @@ TODO: test deployment with heroku, and rewrite this part
 
 ### Configure the Hasura GraphQL Engine
 
-Run the Hasura GraphQL engine with the `HASURA_GRAPHQL_JWT_SECRET` set like this:
+Run the Hasura GraphQL engine with `HASURA_GRAPHQL_JWT_SECRET` set like this:
 
 ```json
 { "type": "RS256", "key": "<AUTH_PUBLIC_KEY>" }
 ```
 
 Where `<AUTH_PUBLIC_KEY>` is your RSA public key in PEM format, with the line breaks escaped with "\n".
+
+You can also configure the server in JWKS mode and set `HASURA_GRAPHQL_JWT_SECRET` like this:
+
+```json
+{ "type": "RS256", "jwk_url": "hostname:port/jwks" }
+```
 
 More information in the [Hasura documentation](https://docs.hasura.io/1.0/graphql/manual/auth/jwt.html).
 
@@ -176,23 +182,10 @@ curl -H "Content-Type: application/json" \
      http://localhost:8080/login
 ```
 
-<!-- ### JWKS for GraphQL Engine
-
-Auth webhook that can be configured with Hasura GraphQl Engine is available at `/webhook`. It accepts Authorization header to validate the token against an user.
-
-The client just need to add `Authorization: Bearer <token>` to the request sending to GraphQL Engine.
-
-The endpoint (say `http://localhost:8080/webhook`) can be given as an environment variable `HASURA_GRAPHQL_AUTH_HOOK` to GraphQL Engine.
-
-[Read more about webhook here](https://docs.hasura.io/1.0/graphql/manual/auth/webhook.html). -->
-
-<!-- TODO: JWKS endpoint -->
-
 ## Limitations
 
 - Not tested with Heroku
 - There is no user and role management except to create a single user with no specific role. I myself do this part with a frontend app that access the database through a Hasura GraphQL endpoint.
-- The JWKS endpoint `/jwks` is not working, I could not find a way to format the modulus (n) part of the JWK that is read by the Hasura graphql-engine without error. A contribution would be much appreciated!
 - This server is designed to work with one RSA key only, and does not handle its regular rotation.
 - No handling of JWT expiration and key turnover.
 - This server is not (yet?) designed to handle authentication through other services such as Google, Github... It would be nice to do so, but to keep this server as a proxy that would add the Hasura claims in querying the database about the roles of the user. Comments or any contribution are welcome as well on this one.
