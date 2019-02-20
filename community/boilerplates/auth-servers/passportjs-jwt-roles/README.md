@@ -61,7 +61,7 @@ The port the server will listen to.
 First you need to build the image and to tag it:
 
 ```bash
-docker build . -t platyplus/authentication:latest
+docker build . -t hasura/passportjs-jwt-roles:latest
 ```
 
 TODO: document on how to deploy on docker.
@@ -72,10 +72,10 @@ You can also have a look at [this docker-compose gist](https://gist.github.com/p
 
 ```bash
 # Clone the repo
-git clone https://github.com/platyplus/authentication-server
+git clone https://github.com/hasura/graphql-engine
 
 # Change directory
-cd authentication-server
+cd community/boilerplates/auth-servers/passportjs-jwt-roles
 
 # Install NPM dependencies
 npm install
