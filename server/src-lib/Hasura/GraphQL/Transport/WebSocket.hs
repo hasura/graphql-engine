@@ -189,36 +189,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
-  -- res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  -- queryParts <- case res of
-  --   Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
-  --   Right vals              -> return vals
-
-  -- let opDef = qpOpDef queryParts
-  --     topLevelNodes = TH.getTopLevelNodes opDef
-  --     typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
-
-  -- res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  -- either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
-
-  -- case typeLocs of
-  --   [] -> runHasuraQ userInfo gCtx queryParts
-
-  --   (typeLoc:_) -> case typeLoc of
-  --     VT.HasuraType ->
-  --       runHasuraQ userInfo gCtx queryParts
-  --     VT.RemoteType _ rsi -> do
-  --       when (G._todType opDef == G.OperationTypeSubscription) $
-  --         withComplete $ sendConnErr "subscription to remote server is not supported"
-  --       resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-  --                            msgRaw rsi opDef
-  --       either postExecErr sendSuccResp resp
-  --       sendCompleted
-
   where
     runHasuraQ q' userInfo opTy tx = do
-      -- (opTy, fields) <- either (withComplete . preExecErr) return $
-      --                   runReaderT (validateGQ queryParts) gCtx
       let qTx = withUserInfo userInfo $ liftTx tx
       case opTy of
         G.OperationTypeSubscription -> do
