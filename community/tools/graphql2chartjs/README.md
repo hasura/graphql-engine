@@ -38,15 +38,15 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 ### Doughnut chart
 
-![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/piechart.gif)
+![dougnut](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/piechart.gif)
 
 ### Bar chart
 
-![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/barchart.gif)
+![bar](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/barchart.gif)
 
 ### Line chart
 
-![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/line.gif)
+![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/linechart.gif)
 
 ## Realtime
 
