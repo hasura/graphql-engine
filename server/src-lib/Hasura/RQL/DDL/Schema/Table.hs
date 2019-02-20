@@ -10,10 +10,12 @@ import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.DDL.Schema.PGType
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
+import           Hasura.GraphQL.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -27,6 +29,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as S
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
@@ -45,16 +48,36 @@ saveTableToCatalog (QualifiedObject sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
+data PGColInfo'
+  = PGColInfo'
+  { pgipName       :: !PGCol
+  , pgipType       :: !PGColOidInfo
+  , pgipIsNullable :: !Bool
+  } deriving (Show, Eq)
+
+
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGColInfo')
+
 -- Build the TableInfo with all its columns
-getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
+getTableInfo :: (QErrM m, CacheRWM m, MonadTx m) =>
+  QualifiedTable -> Bool -> m TableInfo
 getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
-  tableData <- Q.catchE defaultTxErrorHandler $
+  tableData <- liftTx $ Q.catchE defaultTxErrorHandler $
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+    [(Q.AltJ cols', Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] -> do
+      cols <- toPGColTypes cols'
       return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
+
+toPGColTypes :: (CacheRWM m, MonadTx m) => [PGColInfo'] -> m [PGColInfo]
+toPGColTypes cols' = do
+  pgTysMap <- addPGTysToCache $ S.fromList $ map pgipType cols'
+  forM cols' $ \(PGColInfo' na t nu) -> PGColInfo na <$> toColTy t pgTysMap <*> return nu
+  where
+    toColTy ci' typesMap = onNothing (M.lookup ci' typesMap) $ throw500 $
+      "Could not find Postgres type with oid" <> T.pack (show $ pcoiOid ci')
 
 newtype TrackTable
   = TrackTable
@@ -73,7 +96,7 @@ trackExistingTableOrViewP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> Bool -> m ()
 trackExistingTableOrViewP2Setup tn isSystemDefined = do
-  ti <- liftTx $ getTableInfo tn isSystemDefined
+  ti <- getTableInfo tn isSystemDefined
   addTableToCache ti
 
 trackExistingTableOrViewP2

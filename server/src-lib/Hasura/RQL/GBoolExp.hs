@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.RQL.GBoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
@@ -17,6 +18,8 @@ import           Data.Aeson
 
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
+
+pattern PGGeomTy a b c  = PGColType a b c (PGTyBase PGGeometry)
 
 parseOpExp
   :: (MonadError QErr m)
@@ -77,8 +80,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
     "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
     "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
-    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseBuiltInTy PGText)
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseBuiltInTy PGText)
 
     --FIXME:- Parse a session variable as text array values
     --TODO:- Add following commented operators after fixing above said
@@ -154,16 +157,16 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     parseCgte     = CGTE <$> decodeAndValidateRhsCol
     parseClte     = CLTE <$> decodeAndValidateRhsCol
 
-    jsonbOnlyOp m = case colTy of
-      PGJSONB -> m
-      ty      -> throwError $ buildMsg ty [PGJSONB]
+    jsonbOnlyOp m = case pgColTyDetails colTy of
+      PGTyBase PGJSONB -> m
+      _               -> throwError $ buildMsg colTy [baseBuiltInTy PGJSONB]
 
     parseGeometryOp f =
       geometryOnlyOp colTy >> f <$> parseOne
 
     parseSTDWithinObj = do
       WithinOp distVal fromVal <- parseVal
-      dist <- withPathK "distance" $ parser PGFloat distVal
+      dist <- withPathK "distance" $ parser (baseBuiltInTy PGFloat) distVal
       from <- withPathK "from" $ parser colTy fromVal
       return $ ASTDWithin $ WithinOp dist from
 
@@ -178,9 +181,9 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
              "incompatible column types : " <> cn <<> ", " <>> rhsCol
         else return rhsCol
 
-    geometryOnlyOp PGGeometry = return ()
+    geometryOnlyOp (PGGeomTy{}) = return ()
     geometryOnlyOp ty =
-      throwError $ buildMsg ty [PGGeometry]
+      throwError $ buildMsg ty [baseBuiltInTy PGGeometry]
 
     parseWithTy ty = parser ty val
     parseOne = parseWithTy colTy
@@ -213,11 +216,14 @@ buildMsg ty expTys =
   , T.intercalate "/" $ map (T.dquote . T.pack . show) expTys
   ]
 
-textOnlyOp :: (MonadError QErr m) => PGColType -> m ()
-textOnlyOp PGText    = return ()
-textOnlyOp PGVarchar = return ()
-textOnlyOp ty =
-  throwError $ buildMsg ty [PGVarchar, PGText]
+textOnlyOp colTy = case  pgColTyDetails colTy of
+  PGTyBase b -> textOnlyOp' b
+  _          -> onlyTxtTyErr
+  where
+    textOnlyOp' PGText    = return ()
+    textOnlyOp' PGVarchar = return ()
+    textOnlyOp' ty        = onlyTxtTyErr
+    onlyTxtTyErr = throwError $ buildMsg colTy $ baseBuiltInTy <$> [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -244,6 +250,8 @@ annBoolExp
 annBoolExp valParser fim (BoolExp boolExp) =
   traverse (annColExp valParser fim) boolExp
 
+pattern JSONCol a b x y z = PGColInfo a (PGColType x y z (PGTyBase PGJSON)) b
+  
 annColExp
   :: (QErrM m, CacheRM m)
   => ValueParser m a
@@ -253,7 +261,7 @@ annColExp
 annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColInfo _ PGJSON _) ->
+    FIColumn (JSONCol{}) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     -- FIColumn (PGColInfo _ PGJSONB _) ->
     --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
@@ -359,7 +367,7 @@ mkColCompExp qual lhsCol = \case
     lhs = mkQCol lhsCol
 
     toTextArray arr =
-      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+      S.SETyAnn (S.SEArray $ map (txtEncoder' . PGValKnown . PGValText) arr) textArrType
 
     mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 

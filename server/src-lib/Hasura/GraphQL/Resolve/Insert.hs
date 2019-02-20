@@ -96,11 +96,11 @@ traverseInsObj
   -> m AnnInsObj
 traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
   case annVal of
-    AGScalar colty mColVal -> do
+    AGPGVal colty mColVal -> do
       let col = PGCol $ G.unName gName
-          colVal = fromMaybe (PGNull colty) mColVal
+          colVal = fromMaybe (PGColValue (pgColTyOid colty) PGNull) mColVal
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
-
+    --AGArray (G.ListType g) mVal ->
     _ -> do
       objM <- asObjectM annVal
       -- if relational insert input is 'null' then ignore

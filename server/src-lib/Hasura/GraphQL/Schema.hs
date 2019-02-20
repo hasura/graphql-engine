@@ -334,7 +334,7 @@ mkTableByPKeyTy tn = qualObjectToName tn <> "_by_pk"
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n Map.empty ty
+  mkHsraObjFldInfo Nothing n Map.empty (Just colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
@@ -348,12 +348,12 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 -- distinct_on: [table_select_column!]
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
-  [ InpValInfo (Just whereDesc) "where" Nothing $ G.toGT $ mkBoolExpTy tn
-  , InpValInfo (Just limitDesc) "limit" Nothing $ G.toGT $ mkScalarTy PGInteger
-  , InpValInfo (Just offsetDesc) "offset" Nothing $ G.toGT $ mkScalarTy PGInteger
-  , InpValInfo (Just orderByDesc) "order_by" Nothing $ G.toGT $ G.toLT $ G.toNT $
+  [ InpValInfo (Just whereDesc) "where" Nothing Nothing $ G.toGT $ mkBoolExpTy tn
+  , InpValInfo (Just limitDesc) "limit" Nothing Nothing $ G.toGT $ mkScalarBaseTy PGInteger
+  , InpValInfo (Just offsetDesc) "offset" Nothing Nothing $ G.toGT $ mkScalarBaseTy PGInteger
+  , InpValInfo (Just orderByDesc) "order_by" Nothing Nothing $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
-  , InpValInfo (Just distinctDesc) "distinct_on" Nothing $ G.toGT $ G.toLT $
+  , InpValInfo (Just distinctDesc) "distinct_on" Nothing Nothing $ G.toGT $ G.toLT $
     G.toNT $ mkSelColumnInpTy tn
   ]
   where
@@ -391,17 +391,17 @@ mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
-      (G.Name $ getRelTxt rn) Map.empty objRelTy
+      (G.Name $ getRelTxt rn) Map.empty Nothing objRelTy
     objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
     isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
 
     arrRelFld =
       mkHsraObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
-      (fromInpValL $ mkSelArgs remTab) arrRelTy
+      (fromInpValL $ mkSelArgs remTab) Nothing arrRelTy
     arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
-      (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
+      (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) Nothing $
       G.toGT $ G.toNT $ mkTableAggTy remTab
 
 {-
@@ -439,9 +439,9 @@ mkTableAggObj tn =
     desc = G.Description $
       "aggregated selection of " <>> tn
 
-    aggFld = mkHsraObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
+    aggFld = mkHsraObjFldInfo Nothing "aggregate" Map.empty Nothing $ G.toGT $
              mkTableAggFldsTy tn
-    nodesFld = mkHsraObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
+    nodesFld = mkHsraObjFldInfo Nothing "nodes" Map.empty Nothing $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
 {-
@@ -466,20 +466,18 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = mkHsraObjFldInfo Nothing "count" countParams $ G.toGT $
-               mkScalarTy PGInteger
+    countFld = mkHsraObjFldInfo Nothing "count" countParams (Just $ baseBuiltInTy PGInteger) $ G.toGT $ mkScalarBaseTy PGInteger
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
-    countColInpVal = InpValInfo Nothing "columns" Nothing $ G.toGT $
+    countColInpVal = InpValInfo Nothing "columns" Nothing Nothing $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
-    distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
-                     mkScalarTy PGBoolean
+    distinctInpVal = InpValInfo Nothing "distinct" Nothing (Just $ baseBuiltInTy PGBoolean) $ G.toGT $ mkScalarBaseTy PGBoolean
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
     compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
 
-    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
+    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty Nothing $ G.toGT $
                     mkTableColAggFldsTy op tn
 
 {-
@@ -501,8 +499,9 @@ mkTableColAggFldsObj tn op f cols =
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
-    mkColObjFld c = mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-                    Map.empty $ G.toGT $ f $ pgiType c
+    mkColObjFld c = let colTy = pgiType c in
+      mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
+      Map.empty (Just colTy) $ G.toGT $ f colTy
 
 {-
 
@@ -517,7 +516,7 @@ mkSelFld
   :: QualifiedTable
   -> ObjFldInfo
 mkSelFld tn =
-  mkHsraObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args Nothing ty
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
     fldName = qualObjectToName tn
@@ -536,7 +535,7 @@ mkSelFldPKey
   :: QualifiedTable -> [PGColInfo]
   -> ObjFldInfo
 mkSelFldPKey tn cols =
-  mkHsraObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args Nothing ty
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
@@ -544,7 +543,7 @@ mkSelFldPKey tn cols =
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing $ G.toGT $ G.toNT $ mkScalarTy typ
+      InpValInfo Nothing (mkColName n) Nothing (Just typ) $ G.toGT $ G.toNT $ mkScalarTy typ
 
 {-
 
@@ -559,7 +558,7 @@ mkAggSelFld
   :: QualifiedTable
   -> ObjFldInfo
 mkAggSelFld tn =
-  mkHsraObjFldInfo (Just desc) fldName args ty
+  mkHsraObjFldInfo (Just desc) fldName args Nothing ty
   where
     desc = G.Description $ "fetch aggregated fields from the table: "
            <>> tn
@@ -587,14 +586,14 @@ mkFuncArgs funInfo =
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName
-    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $ G.toGT $ G.toNT $
+    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing Nothing $ G.toGT $ G.toNT $
                  mkFuncArgsTy funcName
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
 
 mkFuncQueryFld
   :: FunctionInfo -> ObjFldInfo
 mkFuncQueryFld funInfo =
-  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) Nothing ty
   where
     retTable = fiReturnType funInfo
     funcName = fiName funInfo
@@ -619,7 +618,7 @@ function_aggregate(
 mkFuncAggQueryFld
   :: FunctionInfo -> ObjFldInfo
 mkFuncAggQueryFld funInfo =
-  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) Nothing ty
   where
     funcName = fiName funInfo
     retTable = fiReturnType funInfo
@@ -655,12 +654,12 @@ mkMutRespObj tn sel =
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
-      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty $
-        G.toGT $ G.toNT $ mkScalarTy PGInteger
+      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty (Just $ baseBuiltInTy PGInteger) $
+        G.toGT $ G.toNT $ mkScalarBaseTy PGInteger
       where
         desc = "number of affected rows by the mutation"
     returningFld =
-      mkHsraObjFldInfo (Just desc) "returning" Map.empty $
+      mkHsraObjFldInfo (Just desc) "returning" Map.empty Nothing $
         G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
@@ -685,26 +684,27 @@ mkBoolExpInp tn fields =
     -- all the fields of this input object
     inpValues = combinators <> map mkFldExpInp fields
 
-    mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
+    mk n pgTy ty = InpValInfo Nothing n Nothing pgTy $ G.toGT ty
 
     boolExpListTy = G.toLT boolExpTy
 
     combinators =
-      [ mk "_not" boolExpTy
-      , mk "_and" boolExpListTy
-      , mk "_or"  boolExpListTy
+      [ mk "_not" Nothing boolExpTy
+      , mk "_and" Nothing boolExpListTy
+      , mk "_or"  Nothing boolExpListTy
       ]
 
     mkFldExpInp = \case
       Left (PGColInfo colName colTy _) ->
-        mk (mkColName colName) (mkCompExpTy colTy)
+        mk (mkColName colName) Nothing (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
-        mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+        mk (G.Name $ getRelTxt relName) Nothing (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
-  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing $
-  G.toGT $ mkScalarTy colTy
+  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing (Just colTy) $
+  mkPGColGTy colTy
+  --G.toGT $ mkScalarTy colTy
 
 {-
 input function_args {
@@ -732,14 +732,14 @@ mkFuncArgsInp funcInfo =
       case nameM of
         Just argName ->
           let argGName = G.Name $ getFuncArgNameTxt argName
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
+              inpVal = InpValInfo Nothing argGName Nothing (Just ty) $
+                       G.toGT $ G.toNT $ mkPGColGTy ty
               argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo)
         Nothing ->
           let argGName = G.Name $ "arg_" <> T.pack (show argNo)
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
+              inpVal = InpValInfo Nothing argGName Nothing (Just ty) $
+                       G.toGT $ G.toNT $ mkPGColGTy ty
               argCtxItem = FuncArgItem argGName
           in (items <> pure (inpVal, argCtxItem), argNo + 1)
 
@@ -793,6 +793,7 @@ mkUpdIncInp tn = maybe Nothing mkType
 
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
+
 mkJSONOpTy tn op =
   G.NamedType $ qualObjectToName tn <> op <> "_input"
 
@@ -889,19 +890,19 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
+    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGText) $
       G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
+    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGInteger) $
       G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing $
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGText) $
       G.toGT $ G.toLT $ G.NamedType "String"
 
 {-
@@ -924,7 +925,7 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     intCols = onlyIntCols cols
     incArgDesc = "increments the integer columns with given value of the filtered values"
     incArg =
-      InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
+      InpValInfo (Just incArgDesc) "_inc" Nothing Nothing $ G.toGT $ mkUpdIncTy tn
 
 mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
@@ -933,27 +934,27 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
     jsonbOpArgs = [appendArg, prependArg, deleteKeyArg, deleteElemArg, deleteAtPathArg]
 
     appendArg =
-      InpValInfo (Just appendDesc) appendOp Nothing $ G.toGT $ mkJSONOpTy tn appendOp
+      InpValInfo (Just appendDesc) appendOp Nothing Nothing $ G.toGT $ mkJSONOpTy tn appendOp
 
     prependArg =
-      InpValInfo (Just prependDesc) prependOp Nothing $ G.toGT $ mkJSONOpTy tn prependOp
+      InpValInfo (Just prependDesc) prependOp Nothing Nothing $ G.toGT $ mkJSONOpTy tn prependOp
 
     deleteKeyArg =
-      InpValInfo (Just deleteKeyDesc) deleteKeyOp Nothing $
+      InpValInfo (Just deleteKeyDesc) deleteKeyOp Nothing Nothing $
       G.toGT $ mkJSONOpTy tn deleteKeyOp
 
     deleteElemArg =
-      InpValInfo (Just deleteElemDesc) deleteElemOp Nothing $
+      InpValInfo (Just deleteElemDesc) deleteElemOp Nothing Nothing $
       G.toGT $ mkJSONOpTy tn deleteElemOp
 
     deleteAtPathArg =
-      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
+      InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
 mkUpdMutFld
   :: QualifiedTable -> [PGColInfo] -> ObjFldInfo
 mkUpdMutFld tn cols =
-  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) Nothing $
     G.toGT $ mkMutRespTy tn
   where
     inputValues = [filterArg, setArg] <> incArg
@@ -964,12 +965,12 @@ mkUpdMutFld tn cols =
 
     filterArgDesc = "filter the rows which have to be updated"
     filterArg =
-      InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
+      InpValInfo (Just filterArgDesc) "where" Nothing Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
 
     setArgDesc = "sets the columns of the filtered rows to the given values"
     setArg =
-      InpValInfo (Just setArgDesc) "_set" Nothing $ G.toGT $ mkUpdSetTy tn
+      InpValInfo (Just setArgDesc) "_set" Nothing Nothing $ G.toGT $ mkUpdSetTy tn
 
     incArg = maybeToList $ mkIncInpVal tn cols
 
@@ -984,7 +985,7 @@ delete_table(
 mkDelMutFld
   :: QualifiedTable -> ObjFldInfo
 mkDelMutFld tn =
-  mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) $
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL [filterArg]) Nothing $
     G.toGT $ mkMutRespTy tn
   where
     desc = G.Description $ "delete data from the table: " <>> tn
@@ -993,7 +994,7 @@ mkDelMutFld tn =
 
     filterArgDesc = "filter the rows which have to be deleted"
     filterArg =
-      InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
+      InpValInfo (Just filterArgDesc) "where" Nothing Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
 
 -- table_insert_input
@@ -1057,14 +1058,14 @@ mkRelInsInps
 mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
   where
     onConflictInpVal =
-      InpValInfo Nothing "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+      InpValInfo Nothing "on_conflict" Nothing Nothing $ G.toGT $ mkOnConflictInpTy tn
 
     onConflictInp = bool [] [onConflictInpVal] upsertAllowed
 
     objRelDesc = G.Description $
       "input type for inserting object relation for remote table " <>> tn
 
-    objRelDataInp = InpValInfo Nothing "data" Nothing $ G.toGT $
+    objRelDataInp = InpValInfo Nothing "data" Nothing Nothing $ G.toGT $
                     G.toNT $ mkInsInpTy tn
     objRelInsInp = mkHsraInpTyInfo (Just objRelDesc) (mkObjInsInpTy tn)
                    $ fromInpValL $ objRelDataInp : onConflictInp
@@ -1072,7 +1073,7 @@ mkRelInsInps tn upsertAllowed = [objRelInsInp, arrRelInsInp]
     arrRelDesc = G.Description $
       "input type for inserting array relation for remote table " <>> tn
 
-    arrRelDataInp = InpValInfo Nothing "data" Nothing $ G.toGT $
+    arrRelDataInp = InpValInfo Nothing "data" Nothing Nothing $ G.toGT $
                     G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
     arrRelInsInp = mkHsraInpTyInfo (Just arrRelDesc) (mkArrInsInpTy tn)
                    $ fromInpValL $ arrRelDataInp : onConflictInp
@@ -1106,9 +1107,9 @@ mkInsInp tn insCtx =
          let rty = riType relInfo
              remoteQT = riRTable relInfo
          in case rty of
-            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
+            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing Nothing $
                       G.toGT $ mkObjInsInpTy remoteQT
-            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
+            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing Nothing $
                       G.toGT $ mkArrInsInpTy remoteQT
 
 {-
@@ -1129,10 +1130,10 @@ mkOnConflictInp tn =
     desc = G.Description $
       "on conflict condition type for table " <>> tn
 
-    constraintInpVal = InpValInfo Nothing (G.Name "constraint") Nothing $
+    constraintInpVal = InpValInfo Nothing (G.Name "constraint") Nothing Nothing $
       G.toGT $ G.toNT $ mkConstraintInpTy tn
 
-    updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") Nothing $
+    updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") Nothing Nothing $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
 {-
 
@@ -1145,7 +1146,7 @@ insert_table(
 mkInsMutFld
   :: QualifiedTable -> Bool -> ObjFldInfo
 mkInsMutFld tn isUpsertable =
-  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
+  mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) Nothing $
     G.toGT $ mkMutRespTy tn
   where
     inputVals = catMaybes [Just objectsArg , onConflictInpVal]
@@ -1156,14 +1157,14 @@ mkInsMutFld tn isUpsertable =
 
     objsArgDesc = "the rows to be inserted"
     objectsArg =
-      InpValInfo (Just objsArgDesc) "objects" Nothing $ G.toGT $
+      InpValInfo (Just objsArgDesc) "objects" Nothing Nothing $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
 
     onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
 
     onConflictDesc = "on conflict condition"
     onConflictArg =
-      InpValInfo (Just onConflictDesc) "on_conflict" Nothing $ G.toGT $ mkOnConflictInpTy tn
+      InpValInfo (Just onConflictDesc) "on_conflict" Nothing Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstriantTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstriantTy tn cons = enumTyInfo
@@ -1262,7 +1263,7 @@ mkTabAggOpOrdByInpObjs tn numCols compCols =
     mkInpObjTy cols op = mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
                          fromInpValL $ map mkColInpVal cols
 
-    mkColInpVal c = InpValInfo Nothing (mkColName c) Nothing $ G.toGT
+    mkColInpVal c = InpValInfo Nothing (mkColName c) Nothing Nothing $ G.toGT
                     ordByTy
 
 mkTabAggOrdByTy :: QualifiedTable -> G.NamedType
@@ -1287,10 +1288,10 @@ mkTabAggOrdByInpObj tn numCols compCols =
 
     numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
     compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
-    mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
+    mkInpValInfo op = InpValInfo Nothing op Nothing Nothing $ G.toGT $
                      mkTabAggOpOrdByTy tn op
 
-    countInpVal = InpValInfo Nothing "count" Nothing $ G.toGT ordByTy
+    countInpVal = InpValInfo Nothing "count" Nothing Nothing $ G.toGT ordByTy
 
 mkOrdByTy :: QualifiedTable -> G.NamedType
 mkOrdByTy tn =
@@ -1326,14 +1327,14 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
-    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) Nothing $
+    mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) Nothing Nothing $
                     G.toGT ordByTy
     mkObjRelOrdBy (ri, _, _, _, _) =
-      InpValInfo Nothing (mkRelName $ riName ri) Nothing $
+      InpValInfo Nothing (mkRelName $ riName ri) Nothing Nothing $
       G.toGT $ mkOrdByTy $ riRTable ri
 
     mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
-      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
+      let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing Nothing $
             G.toGT $ mkTabAggOrdByTy $ riRTable ri
       in bool Nothing (Just ivi) isAggAllowed
 
@@ -1522,7 +1523,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
 
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
-    onlyFloat = const $ mkScalarTy PGFloat
+    onlyFloat = const $ mkScalarBaseTy PGFloat
 
     mkTypeMaker "sum" = mkScalarTy
     mkTypeMaker _     = onlyFloat

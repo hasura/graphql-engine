@@ -20,6 +20,7 @@ import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
 import           Hasura.GraphQL.Utils
+import           Hasura.SQL.Types
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -36,13 +37,20 @@ pVal = return . P . Just . Right
 resolveVar
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => G.Variable -> m AnnGValue
-resolveVar var = do
+  => Maybe PGColType -> G.Variable -> m AnnGValue
+resolveVar pgTy var = do
   varVals <- _vcVarVals <$> ask
   -- TODO typecheck
-  onNothing (Map.lookup var varVals) $
+  (ty,defM,inpValM) <- onNothing (Map.lookup var varVals) $
     throwVE $ "no such variable defined in the operation: "
     <> showName (G.unVariable var)
+  annDefM <- withPathK "defaultValue" $
+    mapM (validateInputValue constValueParser ty pgTy) defM
+  annInpValM <- withPathK "variableValues" $
+    mapM (validateInputValue jsonParser ty pgTy) inpValM
+  let annValM = annInpValM <|> annDefM
+  onNothing annValM $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
+    --return annValF
   where
     typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
       -- named types
@@ -54,9 +62,9 @@ resolveVar var = do
 pVar
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => G.Variable -> m (P a)
-pVar var = do
-  annInpVal <- resolveVar var
+  => Maybe PGColType -> G.Variable -> m (P a)
+pVar pgTy var = do
+  annInpVal <- resolveVar pgTy var
   return . P . Just . Left $ annInpVal
 
 data InputValueParser a m
@@ -106,28 +114,28 @@ toJValue = \case
 valueParser
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => InputValueParser G.Value m
-valueParser =
+  => Maybe PGColType -> InputValueParser G.Value m
+valueParser pgTy =
   InputValueParser pScalar pList pObject pEnum
   where
-    pEnum (G.VVariable var) = pVar var
+    pEnum (G.VVariable var) = pVar pgTy var
     pEnum (G.VEnum e)       = pVal e
     pEnum G.VNull           = pNull
     pEnum _                 = throwVE "expecting an enum"
 
-    pList (G.VVariable var) = pVar var
+    pList (G.VVariable var) = pVar pgTy var
     pList (G.VList lv)      = pVal $ G.unListValue lv
     pList G.VNull           = pNull
     pList v                 = pVal [v]
 
-    pObject (G.VVariable var)    = pVar var
+    pObject (G.VVariable var)    = pVar pgTy var
     pObject (G.VObject ov)       = pVal
       [(G._ofName oFld, G._ofValue oFld) | oFld <- G.unObjectValue ov]
     pObject G.VNull = pNull
     pObject _                    = throwVE "expecting an object"
 
     -- scalar json
-    pScalar (G.VVariable var) = pVar var
+    pScalar (G.VVariable var) = pVar pgTy var
     pScalar G.VNull           = pNull
     pScalar (G.VInt v)        = pVal $ J.Number $ fromIntegral v
     pScalar (G.VFloat v)      = pVal $ J.Number $ fromFloatDigits v
@@ -219,8 +227,8 @@ validateObject valParser tyInfo flds = do
 
   fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
-      fldTy <- getInpFieldInfo tyInfo fldName
-      convFldVal <- validateInputValue valParser fldTy fldVal
+      fldInfo <- getInpFieldInfo tyInfo fldName
+      convFldVal <- validateInputValue valParser (_iviType fldInfo) (_iviPGTy fldInfo) fldVal
       return (fldName, convFldVal)
 
   where
@@ -248,20 +256,18 @@ validateNamedTypeVal inpValParser nt val = do
     TIEnum eti ->
       withParsed (getEnum inpValParser) val $
       fmap (AGEnum nt) . mapM (validateEnum eti)
-    TIScalar (ScalarTyInfo _ pgColTy _) ->
-      withParsed (getScalar inpValParser) val $
-      fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
+    TIScalar (ScalarTyInfo _ t _)->
+      throwUnexpNoPGTyErr t
   where
     throwUnexpTypeErr ty = throw500 $ "unexpected " <> ty <> " type info for: "
       <> showNamedTy nt
+    throwUnexpNoPGTyErr ty = throw500 $ "No PGColType found for type " <>       (G.unName ty)
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)
       then return enumVal
       else throwVE $ "unexpected value " <>
            showName (G.unEnumValue enumVal) <>
            " for enum: " <> showNamedTy nt
-    validateScalar pgColTy =
-      runAesonParser (parsePGValue pgColTy)
 
 validateList
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -273,7 +279,7 @@ validateList inpValParser listTy val =
   withParsed (getList inpValParser) val $ \lM -> do
     let baseTy = G.unListType listTy
     AGArray listTy <$>
-      mapM (indexedMapM (validateInputValue inpValParser baseTy)) lM
+      mapM (indexedMapM (validateInputValue inpValParser baseTy Nothing)) lM
 
 -- validateNonNull
 --   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -293,13 +299,17 @@ validateInputValue
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> G.GType
+  -> Maybe PGColType
   -> a
   -> m AnnGValue
-validateInputValue inpValParser ty val =
+validateInputValue inpValParser ty Nothing val =
   case ty of
     G.TypeNamed _ nt -> validateNamedTypeVal inpValParser nt val
     G.TypeList _ lt  -> validateList inpValParser lt val
-    --G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
+validateInputValue inpValParser _ (Just pgColTy) val =
+  withParsed (getScalar inpValParser) val $
+    fmap (AGPGVal pgColTy) . mapM (validatePGVal pgColTy)
+  where validatePGVal pct = runAesonParser (parsePGValue pct)
 
 withParsed
   :: (Monad m)

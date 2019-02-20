@@ -20,6 +20,7 @@ module Hasura.RQL.Types.SchemaCache
        , mkTableInfo
        , addTableToCache
        , modTableInCache
+       , modPGTyCache
        , delTableFromCache
 
        , WithDeps
@@ -95,6 +96,8 @@ module Hasura.RQL.Types.SchemaCache
        , addFunctionToCache
        , askFunctionInfo
        , delFunctionFromCache
+
+       , PGTyCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -183,6 +186,7 @@ partitionFieldInfosWith fns =
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
 type FieldInfoMap = M.HashMap FieldName FieldInfo
+--type FieldInfoMap' = M.HashMap FieldName FieldInfo'
 
 getCols :: FieldInfoMap -> [PGColInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
@@ -402,6 +406,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
+type PGTyCache = M.HashMap PGColOidInfo PGColType
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -429,6 +434,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
+  , scTyMap             :: !PGTyCache
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -452,7 +458,6 @@ instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
-
   -- Get the schema cache
   writeSchemaCache :: SchemaCache -> m ()
 
@@ -493,12 +498,18 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
+  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
   sc <- askSchemaCache
   writeSchemaCache $ sc { scTables = tc }
+
+modPGTyCache :: (CacheRWM m) => PGTyCache -> m ()
+modPGTyCache tm = do
+  sc <- askSchemaCache
+  writeSchemaCache $ sc { scTyMap = tm }
+
 
 addTableToCache :: (QErrM m, CacheRWM m)
                 => TableInfo -> m ()

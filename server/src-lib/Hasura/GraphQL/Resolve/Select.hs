@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
   , convertSelectByPKey
@@ -264,6 +265,8 @@ parseColumns val =
       (_, enumVal) <- asEnumVal v
       return $ PGCol $ G.unName $ G.unEnumValue enumVal
 
+pattern PGBoolVal o b = PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
+
 convertCount :: MonadError QErr m => ArgsMap -> m S.CountType
 convertCount args = do
   columnsM <- withArgM args "columns" parseColumns
@@ -273,7 +276,7 @@ convertCount args = do
     parseDistinct v = do
       (_, val) <- asPGColVal v
       case val of
-        PGValBoolean b -> return b
+        PGBoolVal _ b -> return b
         _              ->
           throw500 "expecting Boolean for \"distinct\""
 

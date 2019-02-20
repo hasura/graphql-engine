@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Validate.Field
   ( ArgsMap
   , Field(..)
@@ -109,6 +110,8 @@ data FieldGroup
 -- throwGE :: (MonadError QErr m) => Text -> m a
 -- throwGE msg = throwError $ QErr msg []
 
+pattern PGBoolVal o b <- PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
+
 withDirectives
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m)
@@ -141,7 +144,7 @@ withDirectives dirs act = do
       val <- onNothing (Map.lookup "if" m) $ throw500
               "missing if argument in the directive"
       case val of
-        AGScalar _ (Just (PGValBoolean v)) -> return v
+        AGPGVal _ (Just (PGBoolVal _ v)) -> return v
         _ -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
@@ -166,6 +169,8 @@ denormSel visFrags parObjTyInfo sel = case sel of
 
 processArgs
   :: ( MonadReader ValidationCtx m
+    --      onNothing annValM $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
+    --return annValF
      , MonadError QErr m)
   => ParamMap
   -> [G.Argument]
@@ -181,7 +186,7 @@ processArgs fldParams argsL = do
   inpArgs <- forM args $ \(G.Argument argName argVal) ->
     withPathK (G.unName argName) $ do
       argTy <- getArgTy argName
-      validateInputValue valueParser argTy argVal
+      validateInputValue (valueParser $ _iviPGTy argTy) (_iviType argTy) (_iviPGTy argTy) argVal
 
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef
@@ -192,7 +197,7 @@ processArgs fldParams argsL = do
 
   where
     getArgTy argName =
-      onNothing (_iviType <$> Map.lookup argName fldParams) $ throwVE $
+      onNothing (Map.lookup argName fldParams) $ throwVE $
       "no such argument " <> showName argName <> " is expected"
 
 denormFld
@@ -204,7 +209,7 @@ denormFld
   -> m (Maybe Field)
 denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
-  let fldTy = _fiTy fldInfo
+  let fldTy     = _fiTy fldInfo
       fldBaseTy = getBaseTy fldTy
 
   fldTyInfo <- getTyInfo fldBaseTy

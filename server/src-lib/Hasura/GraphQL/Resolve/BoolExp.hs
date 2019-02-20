@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExp
@@ -19,6 +20,8 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 type OpExp = OpExpG (PGColType, PGColValue)
+
+pattern PGBoolVal o b = PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
 
 parseOpExps
   :: (MonadError QErr m)
@@ -74,10 +77,10 @@ parseOpExps annVal = do
   return $ catMaybes $ fromMaybe [] opExpsM
   where
     resolveIsNull v = case v of
-      AGScalar _ Nothing -> return Nothing
-      AGScalar _ (Just (PGValBoolean b)) ->
+      AGPGVal _ Nothing -> return Nothing
+      AGPGVal _ (Just (PGBoolVal _ b)) ->
         return $ Just $ bool ANISNOTNULL ANISNULL b
-      AGScalar _ _ -> throw500 "boolean value is expected"
+      AGPGVal _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
     parseAsSTDWithinObj obj = do

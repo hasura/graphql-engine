@@ -221,16 +221,22 @@ dmlTxErrorHandler p2Res =
   where err = simplifyError p2Res
 
 toJSONableExp :: PGColType -> S.SQLExp -> S.SQLExp
-toJSONableExp colTy expn
+toJSONableExp colTy expn = case pgColTyDetails colTy of
+  PGTyBase b -> toJSONableExp' b expn
+  --TODO Handle the case with an array of geometry types
+  _          -> expn
+
+toJSONableExp' :: PGBaseColType -> S.SQLExp -> S.SQLExp
+toJSONableExp' colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
       , S.SEUnsafe "15" -- max decimal digits
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
-      `S.SETyAnn` S.jsonType
+      `S.SETyAnn` jsonType
   | colTy == PGBigInt || colTy == PGBigSerial =
-      expn `S.SETyAnn` S.textType
+      expn `S.SETyAnn` textType
   | otherwise = expn
 
 -- validate headers

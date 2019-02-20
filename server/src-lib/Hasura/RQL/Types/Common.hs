@@ -14,6 +14,12 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+
+       , mkPGTyMaps
+       , PGTyInfoMaps
+       , PGColOidInfo(..)
+       , PGTyInfo(..)
+       , getPGColTy
        ) where
 
 import           Hasura.Prelude
@@ -22,11 +28,94 @@ import           Hasura.SQL.Types
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import qualified Data.HashMap.Strict        as Map
+import qualified Data.HashMap.Strict.InsOrd as OMap
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
+import qualified Database.PostgreSQL.LibPQ  as PQ (Oid)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
+
+newtype PGColOid = PGColOid { getOid :: Text }
+  deriving(Show, Eq, FromJSON, ToJSON)
+
+data PGDomBaseTyInfo
+  = PGDomBaseTyInfo
+  { pcdbDimension :: Integer } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 4 camelCase) ''PGDomBaseTyInfo )
+
+
+type PGCompTyFldMap = [Map.HashMap PGTyFldName PGColOidInfo]
+
+data PGTyInfo'
+  = PGTBase
+  | PGTRange
+  | PGTPseudo
+  | PGTArray     { pgtaElemOid        :: !PQ.Oid         }
+  | PGTDomain    { pgtdBaseType       :: !PGColOidInfo   }
+  | PGTEnum      { pgtePossibleValues :: ![EnumVal]      }
+  | PGTComposite { pgtcFields         :: !PGCompTyFldMap }
+  deriving (Show, Eq)
+
+data PGTyInfo
+  = PGTyInfo
+  { ptiName    :: !QualifiedType
+  , ptiOid     :: !PQ.Oid
+  , ptiSqlName :: !AnnType
+  , ptiDetail  :: !PGTyInfo'
+  } deriving (Show, Eq)
+
+data PGColOidInfo
+  = PGColOidInfo
+  { pcoiOid        :: PQ.Oid
+  , pcoiDimension  :: Integer
+  } deriving (Show, Eq, Generic)
+
+instance Hashable PGColOidInfo
+
+instance ToJSONKey PGColOidInfo
+
+type PGTyInfoMaps =
+  ( Map.HashMap PQ.Oid QualifiedType
+  , Map.HashMap QualifiedType PGTyInfo
+  )
+
+mkPGTyMaps :: [PGTyInfo] -> PGTyInfoMaps
+mkPGTyMaps x =
+  ( Map.fromList $ flip map x $ \y -> (ptiOid y, ptiName y)
+  , Map.fromList $ flip map x $ \y -> (ptiName y, y)
+  )
+
+getPGColTy :: PGTyInfoMaps  -> PGColOidInfo -> Maybe PGColType
+getPGColTy maps@(oidNameMap,nameTyMap) (PGColOidInfo oid dims) = do
+  PGTyInfo name _ sqlName tyDtls <- getTyOfOid oid
+  fmap (PGColType name sqlName oid) $ case tyDtls of
+    PGTRange       -> return PGTyRange
+    PGTPseudo      -> return PGTyPseudo
+    PGTBase        -> return $ PGTyBase $ txtToPgBaseColTy $ getTyText $ qName name
+    PGTEnum x      -> return $ PGTyEnum x
+    PGTComposite x -> fmap PGTyComposite $ mapM getSubTy $ OMap.fromList $ concatMap Map.toList x
+    PGTDomain bct  -> fmap PGTyDomain $ getSubTy bct
+    PGTArray bOid  -> do
+      let asDimArray n y
+            | n > 1     = PGTyArray $ PGColType name sqlName oid $ asDimArray (n-1) y
+            | otherwise = PGTyArray y
+      fmap (asDimArray dims) $ getSubTy (PGColOidInfo bOid 0)
+  where
+    getTyOfOid  = (flip Map.lookup oidNameMap) >=> (flip Map.lookup nameTyMap)
+    getSubTy = getPGColTy maps
+
+
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGColOidInfo)
+$(deriveJSON
+  (aesonDrop 4 snakeCase)
+    { constructorTagModifier = snakeCase . drop 3
+    , sumEncoding = TaggedObject "type" "detail"
+    }
+  ''PGTyInfo')
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGTyInfo)
 
 data PGColInfo
   = PGColInfo

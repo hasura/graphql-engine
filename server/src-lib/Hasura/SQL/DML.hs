@@ -218,25 +218,6 @@ jsonbDeleteOp = SQLOp "-"
 jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
-newtype AnnType
-  = AnnType {unAnnType :: T.Text}
-  deriving (Show, Eq)
-
-intType :: AnnType
-intType = AnnType "int"
-
-textType :: AnnType
-textType = AnnType "text"
-
-textArrType :: AnnType
-textArrType = AnnType "text[]"
-
-jsonType :: AnnType
-jsonType = AnnType "json"
-
-jsonbType :: AnnType
-jsonbType = AnnType "jsonb"
-
 data CountType
   = CTStar
   | CTSimple ![PGCol]
@@ -331,7 +312,7 @@ intToSQLExp =
 
 annotateExp :: SQLExp -> PGColType -> SQLExp
 annotateExp sqlExp =
-  SETyAnn sqlExp . AnnType . T.pack . show
+  SETyAnn sqlExp . pgColTySqlName
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)

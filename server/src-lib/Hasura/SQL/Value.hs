@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.SQL.Value where
 
 import           Hasura.SQL.GeoJSON
@@ -20,12 +21,36 @@ import qualified Data.Aeson.Types           as AT
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
+import qualified Data.Vector                as V
 
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
+import Foreign.C.Types
+
+
+data PGColValue = PGColValue !PQ.Oid PGColValue'
+  deriving (Show, Eq)
+
+type PGElemOid = PQ.Oid
+
+data PGColValue'
+  = PGValBase      !PGBaseColValue
+  | PGValDomain    !PGColValue
+  | PGValArray     !PGElemOid !(V.Vector PGColValue)
+  | PGValEnum      !Text
+  | PGValRange     !Text
+  -- TODO Change this to HashMap, field -> maybe PGColValue
+  | PGValComposite !Text
+  | PGNull
+  deriving (Show, Eq)
 
 --  Binary value. Used in prepared sq
-data PGColValue
+data PGBaseColValue
+  = PGValKnown !PGBCKnown
+  | PGValUnknown !T.Text
+  deriving (Show, Eq)
+
+data PGBCKnown
   = PGValInteger !Int32
   | PGValSmallInt !Int16
   | PGValBigInt !Int64
@@ -39,15 +64,49 @@ data PGColValue
   | PGValDate !Day
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
-  | PGNull !PGColType
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
-  | PGValUnknown !T.Text
   deriving (Show, Eq)
 
+data PGColValueBin = PGColValueBin PQ.Oid PGColValueBin'
+
+type ElemOid = PQ.Oid
+
+data PGColValueBin'
+  = PGValBaseBin   !PGBCKnown
+  | PGValDomainBin !PGColValueBin
+  | PGValArrayBin  ElemOid !(V.Vector PGColValueBin)
+  | PGNullBin
+
+toPGBinVal :: PGColValue -> Maybe PGColValueBin
+toPGBinVal (PGColValue oid x) = fmap (PGColValueBin oid) $ case x of
+  PGNull             -> Just PGNullBin
+  PGValComposite _   -> Nothing
+  PGValEnum _        -> Nothing
+  PGValDomain b      -> fmap PGValDomainBin $ toPGBinVal b
+  PGValArray eOid v  -> fmap (PGValArrayBin eOid) $ mapM toPGBinVal v
+  PGValBase b        -> case b of
+                        PGValKnown kb   -> Just (PGValBaseBin kb)
+                        PGValUnknown{} -> Nothing
+
+--binTyM :: PGColValue -> Maybe PGColValueBin
+--binTyM
+
+txtEncoderG :: (PGBaseColValue -> S.SQLExp) -> PGColValue -> S.SQLExp
+txtEncoderG f (PGColValue _ x) = case x of
+  PGValBase b      -> f b
+  PGValDomain b    -> txtEncoder b
+  PGValComposite a -> S.SELit a
+  PGValEnum a      -> S.SELit a
+  PGValArray _ as  -> S.SEArray $ map (txtEncoderG f) $ V.toList as
+  PGNull           -> S.SEUnsafe "NULL"
+
 txtEncoder :: PGColValue -> S.SQLExp
-txtEncoder colVal = case colVal of
+txtEncoder = txtEncoderG txtEncoder'
+
+txtEncoder' :: PGBaseColValue -> S.SQLExp
+txtEncoder' (PGValKnown colVal) = case colVal of
   PGValInteger i  -> S.SELit $ T.pack $ show i
   PGValSmallInt i -> S.SELit $ T.pack $ show i
   PGValBigInt i   -> S.SELit $ T.pack $ show i
@@ -63,114 +122,210 @@ txtEncoder colVal = case colVal of
     S.SELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
     S.SELit $ T.pack (show tod ++ timeZoneOffsetString tz)
-  PGNull _ ->
-    S.SEUnsafe "NULL"
+  --PGNull _ ->
+  --  S.SEUnsafe "NULL"
   PGValJSON (Q.JSON j)    -> S.SELit $ TL.toStrict $
     AE.encodeToLazyText j
   PGValJSONB (Q.JSONB j)  -> S.SELit $ TL.toStrict $
     AE.encodeToLazyText j
   PGValGeo o    -> S.SELit $ TL.toStrict $
     AE.encodeToLazyText o
-  PGValUnknown t -> S.SELit t
+txtEncoder' (PGValUnknown t) = S.SELit t
 
-binEncoder :: PGColValue -> Q.PrepArg
-binEncoder colVal = case colVal of
-  PGValInteger i ->
-    Q.toPrepVal i
-  PGValSmallInt i ->
-    Q.toPrepVal i
-  PGValBigInt i ->
-    Q.toPrepVal i
-  PGValFloat f ->
-    Q.toPrepVal f
-  PGValDouble d ->
-    Q.toPrepVal d
-  PGValNumeric sc ->
-    Q.toPrepVal sc
-  PGValBoolean b ->
-    Q.toPrepVal b
-  PGValChar t ->
-    Q.toPrepVal t
-  PGValVarchar t ->
-    Q.toPrepVal t
-  PGValText t ->
-    Q.toPrepVal t
-  PGValDate d ->
-    Q.toPrepVal d
-  PGValTimeStampTZ u ->
-    Q.toPrepVal u
+
+paTxtEncBase :: PGBCKnown -> (PQ.Oid, T.Text)
+paTxtEncBase c = case c of
+  PGValInteger i     -> (oidBuiltIn i, T.pack $ show i)
+  PGValSmallInt i    -> (oidBuiltIn i, T.pack $ show i)
+  PGValBigInt i      -> (oidBuiltIn i, T.pack $ show i)
+  PGValFloat i       -> (oidBuiltIn i, T.pack $ show i)
+  PGValDouble i      -> (oidBuiltIn i, T.pack $ show i)
+  PGValNumeric i     -> (oidBuiltIn i, T.pack $ show i)
+  PGValBoolean i     -> (oidBuiltIn i, T.pack $ show i)
+  PGValChar i        -> (oidBuiltIn i, T.pack $ show i)
+  PGValVarchar t     -> (oidBuiltIn t, t)
+  PGValText t        -> (oidBuiltIn t, t)
+  PGValDate d        -> (oidBuiltIn d, T.pack $ showGregorian d)
+  PGValTimeStampTZ i -> (oidBuiltIn i, T.pack $ show i)
+  PGValTimeTZ (ZonedTimeOfDay tod tz) ->
+    (PTI.timetz  , T.pack (show tod ++ timeZoneOffsetString tz))
+  PGValJSON t@(Q.JSON j)   -> (oidBuiltIn t, TL.toStrict $ AE.encodeToLazyText j)
+  PGValJSONB t@(Q.JSONB j) -> (oidBuiltIn t, TL.toStrict $ AE.encodeToLazyText j)
+  PGValGeo o               -> paTxtEncBase $ PGValText $ TL.toStrict $ AE.encodeToLazyText o
+
+data TxtEncInfo
+  = TxtEncInfo
+  { teiOid            :: PQ.Oid
+  -- Should be double quoted if this encoding is for an element of array/composite etc
+  , teiToDoubleQuote  :: Bool
+  , teiEnc            :: Text
+  }
+
+paTxtEnc :: PGColValue -> TxtEncInfo
+paTxtEnc (PGColValue oid v) = case v of
+  PGValBase (PGValKnown x)   -> let y = paTxtEncBase x in TxtEncInfo (fst y) True (snd y)
+  PGValBase (PGValUnknown x) -> TxtEncInfo oid True $ T.pack $ show x
+  PGValDomain x              -> paTxtEnc x
+  PGValComposite x           -> TxtEncInfo oid True x
+  PGValEnum x                -> TxtEncInfo oid True x
+  PGNull                     -> TxtEncInfo oid False "NULL"
+  PGValArray _ x             -> TxtEncInfo oid True $ asPGArr $ V.toList x
+  where
+    asPGArr a = curly $ T.intercalate "," $ map encAndDoubleQuote a
+    encAndDoubleQuote x =
+      let TxtEncInfo _ q enc = paTxtEnc x in
+          bool id doubleQuoted q $ enc
+    doubleQuoted a = "\"" <> escaped a  <> "\""
+    escaped a = T.replace "\"" "\\\"" $ T.replace "\\" "\\\\" a
+    curly a = "{" <> a <> "}"
+
+
+binEncKnown :: PGBCKnown -> (PQ.Oid, Maybe PE.Encoding)
+binEncKnown c = case c of
+  PGValInteger i     -> paBinEncBuiltIn i
+  PGValSmallInt i    -> paBinEncBuiltIn i
+  PGValBigInt i      -> paBinEncBuiltIn i
+  PGValFloat i       -> paBinEncBuiltIn i
+  PGValDouble i      -> paBinEncBuiltIn i
+  PGValNumeric i     -> paBinEncBuiltIn i
+  PGValBoolean i     -> paBinEncBuiltIn i
+  PGValChar t        -> paBinEncBuiltIn t
+  PGValVarchar t     -> paBinEncBuiltIn t
+  PGValText t        -> paBinEncBuiltIn t
+  PGValDate d        -> paBinEncBuiltIn d
+  PGValTimeStampTZ d -> paBinEncBuiltIn d
   PGValTimeTZ (ZonedTimeOfDay t z) ->
-    Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
-  PGNull ty ->
-    (pgTypeOid ty, Nothing)
-  PGValJSON u ->
-    Q.toPrepVal u
-  PGValJSONB u ->
-    Q.toPrepVal u
-  PGValGeo o ->
-    Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
-  PGValUnknown t ->
-    (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+    (PTI.timetz  , Just $ PE.timetz_int (t,z))
+  PGValJSON u        -> paBinEncBuiltIn u
+  PGValJSONB u       -> paBinEncBuiltIn u
+  PGValGeo o         -> paBinEncBuiltIn $ TL.toStrict $ AE.encodeToLazyText o
 
-parsePGValue' :: PGColType
+binEnc :: PGColValueBin -> (PQ.Oid, Maybe PE.Encoding)
+binEnc x@(PGColValueBin oid c) = case c of
+  PGNullBin               -> (oid, Nothing)
+  PGValBaseBin b          -> binEncKnown b
+  PGValDomainBin b        -> binEnc b
+  PGValArrayBin elemOid _ -> (oid, Just $ PE.array (toWord32 elemOid) $ arrEnc x)
+    where
+      toWord32 (PQ.Oid (CUInt z)) = z
+      arrEnc :: PGColValueBin -> PE.Array
+      arrEnc (PGColValueBin _ z) = case z of
+        (PGValArrayBin _ y) -> PE.dimensionArray foldl' arrEnc y
+        PGNullBin         -> PE.nullArray
+        PGValDomainBin b  -> arrEnc b
+        PGValBaseBin t    -> maybe PE.nullArray PE.encodingArray $ snd $ binEncKnown t
+
+paBinEncBuiltIn :: Q.BinaryEncBuiltInTy a => a -> (PQ.Oid, Maybe PE.Encoding)
+paBinEncBuiltIn x = (o,encF x)
+  where (PTI.ElemOid o, _,encF) = Q.btBinaryEncInfo
+
+oidBuiltIn :: Q.BinaryEncBuiltInTy a => a -> PQ.Oid
+oidBuiltIn = fst . paBinEncBuiltIn
+
+parseKnownValAs :: FromJSON a => (a -> PGBCKnown) -> Value -> AT.Parser PGBaseColValue
+parseKnownValAs a v =  PGValKnown . a <$> parseJSON v
+
+parsePGValue' :: PGBaseColType
              -> Value
-             -> AT.Parser PGColValue
-parsePGValue' ty Null =
-  return $ PGNull ty
+             -> AT.Parser PGBaseColValue
 parsePGValue' PGSmallInt val =
-  PGValSmallInt <$> parseJSON val
+  parseKnownValAs PGValSmallInt val
 parsePGValue' PGInteger val =
-  PGValInteger <$> parseJSON val
+  parseKnownValAs PGValInteger val
 parsePGValue' PGBigInt val =
-  PGValBigInt <$> parseJSON val
+  parseKnownValAs PGValBigInt val
 parsePGValue' PGSerial val =
-  PGValInteger <$> parseJSON val
+  parseKnownValAs PGValInteger val
 parsePGValue' PGBigSerial val =
-  PGValBigInt <$> parseJSON val
+  parseKnownValAs PGValBigInt val
 parsePGValue' PGFloat val =
-  PGValFloat <$> parseJSON val
+  parseKnownValAs PGValFloat val
 parsePGValue' PGDouble val =
-  PGValDouble <$> parseJSON val
+  parseKnownValAs PGValDouble val
 parsePGValue' PGNumeric val =
-  PGValNumeric <$> parseJSON val
+  parseKnownValAs PGValNumeric val
 parsePGValue' PGBoolean val =
-  PGValBoolean <$> parseJSON val
+  parseKnownValAs PGValBoolean val
 parsePGValue' PGChar val =
-  PGValChar <$> parseJSON val
+  parseKnownValAs PGValChar val
 parsePGValue' PGVarchar val =
-  PGValVarchar <$> parseJSON val
+  parseKnownValAs PGValVarchar val
 parsePGValue' PGText val =
-  PGValText <$> parseJSON val
+  parseKnownValAs PGValText val
 parsePGValue' PGDate val =
-  PGValDate <$> parseJSON val
+  parseKnownValAs PGValDate val
 parsePGValue' PGTimeStampTZ val =
-  PGValTimeStampTZ <$> parseJSON val
+  parseKnownValAs PGValTimeStampTZ val
 parsePGValue' PGTimeTZ val =
-  PGValTimeTZ <$> parseJSON val
+  parseKnownValAs PGValTimeTZ val
 parsePGValue' PGJSON val =
-  PGValJSON . Q.JSON <$> parseJSON val
+  parseKnownValAs (PGValJSON . Q.JSON) val
 parsePGValue' PGJSONB val =
-  PGValJSONB . Q.JSONB <$> parseJSON val
+  parseKnownValAs (PGValJSONB . Q.JSONB) val
 parsePGValue' PGGeometry val =
-  PGValGeo <$> parseJSON val
+  parseKnownValAs PGValGeo val
 parsePGValue' PGGeography val =
-  PGValGeo <$> parseJSON val
+  parseKnownValAs PGValGeo val
 parsePGValue' (PGUnknown _) (String t) =
   return $ PGValUnknown t
 parsePGValue' (PGUnknown tyName) _ =
   fail $ "A string is expected for type : " ++ T.unpack tyName
 
 parsePGValue :: PGColType -> Value -> AT.Parser PGColValue
-parsePGValue pct val =
-  case val of
-    String t -> parsePGValue' pct val <|> return (PGValUnknown t)
-    _        -> parsePGValue' pct val
+parsePGValue pct Null = return $ PGColValue (pgColTyOid pct) PGNull
+parsePGValue pct val = case pgColTyDetails pct of
+  PGTyPseudo{}    -> fail "Column types do not return psuedo types"
+  PGTyArray pbct  -> parseAsArray pbct val
+  PGTyEnum{}      -> parseAsEnum val
+  PGTyDomain dom  -> parsePGValue dom val
+  PGTyComposite{} -> parseAsComposite val
+  PGTyRange{}     -> parseAsRange val
+  PGTyBase pbct   -> case val of
+    String t -> parseAsBase pbct val <|> return (asUnknown pct t)
+    _        -> parseAsBase pbct val
+  where
+    parseAsVal :: (FromJSON a) => (a -> PGColValue') -> Value -> AT.Parser PGColValue
+    parseAsVal g v =
+      let oid = pgColTyOid pct
+          asVal = PGColValue oid . g in
+      fmap asVal $ parseJSON v
+    parseAsComposite = parseAsVal PGValComposite
+    parseAsEnum      = parseAsVal PGValEnum
+    parseAsRange     = parseAsVal PGValRange
+    parseAsArray bct v = (flip $ withArray "PGValArray (V.Vector PGColValue)") v $ \a -> do
+      let oid   = pgColTyOid pct
+      eOid <-  maybe (fail "Array types must return base element type") return $ getArrayBaseTy pct
+      let asArr = PGColValue oid . PGValArray (pgColTyOid eOid)
+      fmap asArr $ mapM (parsePGValue bct) a
+
+    asUnknown bct v = PGColValue (pgColTyOid bct) $ PGValBase $ PGValUnknown v
+
+    parseAsBase bct v =
+      let oid' = pgTypeOid bct
+          oidCol = pgColTyOid pct
+          -- For PGUnknown take oid from Column type
+          -- For PGKnown take from type of PGColValue
+          oid = bool oid' oidCol $ oid' == PTI.auto
+          asBaseColVal = PGColValue oid . PGValBase in
+      fmap asBaseColVal $ parsePGValue' bct v
+
 
 convToBin :: PGColType
           -> Value
           -> AT.Parser Q.PrepArg
-convToBin ty val =
-  binEncoder <$> parsePGValue ty val
+convToBin ty val = do
+  colVal <- parsePGValue ty val
+  return $ binEncoder colVal
+
+binEncoder :: PGColValue -> Q.PrepArg
+binEncoder colVal= maybe (asTxtPrepArg colVal) asBinPrepArg $ toPGBinVal colVal
+  where
+    asTxtPrepArg v
+      = let TxtEncInfo oid _ enc = paTxtEnc v in
+      (oid, Just (TE.encodeUtf8 enc, PQ.Text))
+    asBinPrepArg vb
+      = let (oid, enc) = binEnc vb in
+      (oid, fmap (\x -> (PE.encodingBytes x,PQ.Binary)) enc )
 
 convToTxt :: PGColType
           -> Value
@@ -188,30 +343,54 @@ iresToEither (ISuccess a)   = return a
 pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
-withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
-withGeoVal ty v =
-  bool v applyGeomFromGeoJson isGeoTy
-  where
-    applyGeomFromGeoJson =
-      S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+pattern PGGeogVal :: GeometryWithCRS -> PGBaseColValue
+pattern PGGeogVal x = PGValKnown (PGValGeo x)
 
-    isGeoTy = case ty of
-      PGGeometry  -> True
-      PGGeography -> True
-      _           -> False
+
+txtEncWithGeoVal :: PGColValue -> S.SQLExp
+txtEncWithGeoVal = txtEncoderG txtEncGeoJson
+  where
+    txtEncGeoJson v = bool id applyGeomFromGeoJson (isGeoTy v) $ txtEncoder' v
+
+    isGeoTy v = case v of
+      (PGGeogVal _) -> True
+      _             -> False
+
+applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
+applyGeomFromGeoJson v = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 
 toPrepParam :: Int -> PGColType -> S.SQLExp
-toPrepParam i ty =
-  withGeoVal ty $ S.SEPrep i
+toPrepParam i ty = withGeom ty $ S.SEPrep i
+  where
+    isGeoTy d = case d of
+        PGGeometry  -> True
+        PGGeography -> True
+        _           -> False
+    --TODO : Change this to (select array_agg(ST_GeomFromGeoJSON(a) from unnest($1 :: ty[]) as a). Will work only for 1d array of Geometric types
+    applyArrGeomFromGeoJson = id
+    withGeom (PGColType _ _ _ d) = case d of
+      PGTyBase x -> bool id applyGeomFromGeoJson $ isGeoTy x
+      PGTyArray a -> case getArrayBaseTy a of
+        Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $ isGeoTy b
+        _ -> id
+      _ -> id
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
   S.annotateExp txtVal ty
   where
-    txtVal = withGeoVal ty $ txtEncoder val
+    txtVal = txtEncWithGeoVal val
 
 pgColValueToInt :: PGColValue -> Maybe Int
-pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
-pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
-pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
-pgColValueToInt _                 = Nothing
+pgColValueToInt (PGColValue _ x) = case x of
+  (PGValBase i)   -> pgColValueToInt' i
+  (PGValDomain i) -> pgColValueToInt i
+  _               -> Nothing
+
+pgColValueToInt' :: PGBaseColValue -> Maybe Int
+pgColValueToInt' (PGValUnknown{}) = Nothing
+pgColValueToInt' (PGValKnown x)   = case x of
+  (PGValInteger i)  -> Just $ fromIntegral i
+  (PGValSmallInt i) -> Just $ fromIntegral i
+  (PGValBigInt i)   -> Just $ fromIntegral i
+  _                 -> Nothing

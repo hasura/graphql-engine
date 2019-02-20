@@ -38,6 +38,7 @@ data OpCtx
   | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
   deriving (Show, Eq)
 
+
 data GCtx
   = GCtx
   { _gTypes      :: !TypeMap
@@ -125,10 +126,11 @@ mkHsraObjFldInfo
   :: Maybe G.Description
   -> G.Name
   -> ParamMap
+  -> Maybe PGColType
   -> G.GType
   -> ObjFldInfo
-mkHsraObjFldInfo descM name params ty =
-  ObjFldInfo descM name params ty HasuraType
+mkHsraObjFldInfo descM name params pgTy ty =
+  ObjFldInfo descM name params pgTy ty HasuraType
 
 mkHsraObjTyInfo
   :: Maybe G.Description
@@ -156,14 +158,14 @@ mkHsraEnumTyInfo descM ty enumVals =
   EnumTyInfo descM ty enumVals HasuraType
 
 mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty HasuraType
+mkHsraScalarTyInfo ty = ScalarTyInfo Nothing (G.Name $ pgColTyToScalar ty) HasuraType
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
 
 mkCompExpName :: PGColType -> G.Name
 mkCompExpName pgColTy =
-  G.Name $ T.pack (show pgColTy) <> "_comparison_exp"
+  G.Name $ pgColTyToScalar pgColTy <> "_comparison_exp"
 
 mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
@@ -181,15 +183,17 @@ stDWithinInpTy = G.NamedType "st_d_within_input"
 
 
 --- | make compare expression input type
+-- TODO Nizar, how does _in comparison work with arrays
 mkCompExpInp :: PGColType -> InpObjTyInfo
-mkCompExpInp colTy =
+mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk colScalarTy) typedOps
-  , map (mk $ G.toLT colScalarTy) listOps
-  , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
+  [ map (mk (Just colTy) colGQLTy) typedOps
+  -- TODO Nizar: Fix me , use an array of PGCol type here
+  , map (mk Nothing $ G.toLT colGQLTy) listOps
+  , bool [] (map (mk (Just $ baseBuiltInTy PGText) $ mkScalarBaseTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , [InpValInfo Nothing "_is_null" Nothing (Just $ baseBuiltInTy PGBoolean) $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
     tyDesc = mconcat
@@ -197,12 +201,15 @@ mkCompExpInp colTy =
       , G.Description (T.pack $ show colTy)
       , ". All fields are combined with logical 'AND'."
       ]
-    isStringTy = case colTy of
-      PGVarchar -> True
-      PGText    -> True
-      _         -> False
-    mk t n = InpValInfo Nothing n Nothing $ G.toGT t
-    colScalarTy = mkScalarTy colTy
+    baseTy = case colDtls of
+      PGTyBase b -> return b
+      _          -> Nothing
+    isStringTy = case baseTy of
+      Just PGVarchar -> True
+      Just PGText    -> True
+      _              -> False
+    mk pt t n = InpValInfo Nothing n Nothing pt $ G.toGT t
+    colGQLTy = mkPGColGTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
        ["_eq", "_neq", "_gt", "_lt", "_gte", "_lte"]
@@ -216,45 +223,45 @@ mkCompExpInp colTy =
       , "_similar", "_nsimilar"
       ]
 
-    isJsonbTy = case colTy of
-      PGJSONB -> True
-      _       -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing ty
+    isJsonbTy = case baseTy of
+      Just PGJSONB -> True
+      _            -> False
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing (Just $ baseBuiltInTy PGJSONB) ty
     jsonbOps =
       [ ( "_contains"
-        , G.toGT $ mkScalarTy PGJSONB
+        , G.toGT $ mkScalarBaseTy PGJSONB
         , "does the column contain the given json value at the top level"
         )
       , ( "_contained_in"
-        , G.toGT $ mkScalarTy PGJSONB
+        , G.toGT $ mkScalarBaseTy PGJSONB
         , "is the column contained in the given json value"
         )
       , ( "_has_key"
-        , G.toGT $ mkScalarTy PGText
+        , G.toGT $ mkScalarBaseTy PGText
         , "does the string exist as a top-level key in the column"
         )
       , ( "_has_keys_any"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , G.toGT $ G.toLT $ G.toNT $ mkScalarBaseTy PGText
         , "do any of these strings exist as top-level keys in the column"
         )
       , ( "_has_keys_all"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
+        , G.toGT $ G.toLT $ G.toNT $ mkScalarBaseTy PGText
         , "do all of these strings exist as top-level keys in the column"
         )
       ]
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing $ G.toGT stDWithinInpTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
-    isGeometryTy = case colTy of
-      PGGeometry -> True
-      _          -> False
+    isGeometryTy = case baseTy of
+      Just PGGeometry -> True
+      _               -> False
 
     geomOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeometry
+      InpValInfo (Just desc) op Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT $ mkScalarBaseTy PGGeometry
     geomOps =
       [
         ( "_st_contains"
@@ -313,7 +320,7 @@ ordByEnumTy =
       ]
 
 defaultTypes :: [TypeInfo]
-defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
+defaultTypes = $(fromSchemaDocQ defaultSchema defaultPGColTyMap HasuraType)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
@@ -347,21 +354,21 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap 
       (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
-    schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
+    schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty Nothing $
                   G.toGT $ G.toNT $ G.NamedType "__Schema"
-    typeFld = mkHsraObjFldInfo Nothing "__type" typeFldArgs $
+    typeFld = mkHsraObjFldInfo Nothing "__type" typeFldArgs Nothing $
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          InpValInfo (Just "name of the type") "name" Nothing
+          InpValInfo (Just "name of the type") "name" Nothing Nothing
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
-    stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
+    stDWithinInpM = bool Nothing (Just stDWithinInp) (PGTyBase PGGeometry `elem` map pgColTyDetails colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "distance" Nothing $ G.toNT $ G.toNT $ mkScalarTy PGFloat
+      [ InpValInfo Nothing "from" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT $ G.toNT $ mkScalarBaseTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toNT $ G.toNT $ mkScalarBaseTy PGFloat
       ]
 
 emptyGCtx :: GCtx

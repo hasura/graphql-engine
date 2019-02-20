@@ -3,6 +3,7 @@ module Hasura.GraphQL.Utils
   , showName
   , showNamedTy
   , throwVE
+  , getArrDim
   , getBaseTy
   , mapFromL
   , groupTuples
@@ -39,6 +40,11 @@ throwVE = throw400 ValidationFailed
 showNamedTy :: G.NamedType -> Text
 showNamedTy nt =
   "'" <> G.showNT nt <> "'"
+
+getArrDim :: G.GType -> Integer
+getArrDim = \case
+  G.TypeNamed{}   -> 0
+  G.TypeList _ lt -> 1 + getArrDim (G.unListType lt)
 
 getBaseTy :: G.GType -> G.NamedType
 getBaseTy = \case

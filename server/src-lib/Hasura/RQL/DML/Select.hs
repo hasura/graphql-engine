@@ -112,7 +112,10 @@ convOrderByElem (flds, spi) = \case
       FIColumn colInfo -> do
         checkSelOnCol spi (pgiName colInfo)
         let ty = pgiType colInfo
-        if ty == PGGeography || ty == PGGeometry
+        let asBaseTy = case pgColTyDetails ty of
+               PGTyBase b -> Just b
+               _          -> Nothing
+        if asBaseTy `elem` map Just [PGGeography, PGGeometry]
           then throw400 UnexpectedPayload $ mconcat
            [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"

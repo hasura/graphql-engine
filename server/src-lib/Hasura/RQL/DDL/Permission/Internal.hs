@@ -20,7 +20,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value           (withGeoVal)
+import           Hasura.SQL.Value           (txtEncWithGeoVal)
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
@@ -196,9 +196,10 @@ valueParser columnType = \case
   val -> txtRHSBuilder columnType val
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
+    --TODO Nizar, Put the correct modification here
+    fromCurSess hdr = withAnnTy $ id $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
+    withAnnTy v = S.SETyAnn v $ AnnType $ T.pack $ show columnType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

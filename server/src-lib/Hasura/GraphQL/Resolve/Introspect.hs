@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.Introspect
   ( schemaR
   , typeR
@@ -60,13 +61,13 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType _) fld =
+scalarR (ScalarTyInfo descM name _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKSCALAR
     "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ $ pgColTyToScalar pgColType
+    "name"        -> retJ $ G.unName name
     _             -> return J.Null
 
 -- 4.5.2.2
@@ -237,7 +238,7 @@ fieldR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => ObjFldInfo -> Field -> m J.Object
-fieldR (ObjFldInfo descM n params ty _) fld =
+fieldR (ObjFldInfo descM n params _ ty _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__Field"
@@ -254,7 +255,7 @@ inputValueR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => Field -> InpValInfo -> m J.Object
-inputValueR fld (InpValInfo descM n defM ty) =
+inputValueR fld (InpValInfo descM n defM _ ty) =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__InputValue"
@@ -328,6 +329,8 @@ schemaR fld =
                       (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null
 
+pattern PGTxtVal o t = PGColValue o (PGValBase (PGValKnown (PGValText t)))
+
 typeR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
@@ -336,7 +339,7 @@ typeR fld = do
   name <- withArg args "name" $ \arg -> do
     (_, pgColVal) <- asPGColVal arg
     case pgColVal of
-      PGValText t -> return t
+      PGTxtVal _ t -> return t
       _           -> throw500 "expecting string for name arg of __type"
   typeR' (G.Name name) fld
   where

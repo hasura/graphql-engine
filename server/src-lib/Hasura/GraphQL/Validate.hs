@@ -56,14 +56,14 @@ getTypedOp opNameM selSets opDefs =
 
 -- For all the variables defined there will be a value in the final map
 -- If no default, not in variables and nullable, then null value
-getAnnVarVals
+getVarVals
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m
      )
   => [G.VariableDefinition]
   -> VariableValues
-  -> m AnnVarVals
-getAnnVarVals varDefsL inpVals = do
+  -> m VarVals
+getVarVals varDefsL inpVals = do
 
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
     throwVE $ "the following variables are defined more than once: " <>
@@ -82,14 +82,19 @@ getAnnVarVals varDefsL inpVals = do
     when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
 
     let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
-    annDefM <- withPathK "defaultValue" $
-               mapM (validateInputValue constValueParser ty) defM'
     let inpValM = Map.lookup var inpVals
-    annInpValM <- withPathK "variableValues" $
-                  mapM (validateInputValue jsonParser ty) inpValM
-    let varValM = annInpValM <|> annDefM
-    onNothing varValM $ throwVE $ "expecting a value for non-null type: "
-      <> G.showGT ty <> " in variableValues"
+    when (isNothing inpValM && isNothing defM') $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
+    return (ty,defM',inpValM)
+    --let annValF pgTy = do
+    --      annDefM <- withPathK "defaultValue" $
+    --        mapM (validateInputValue constValueParser ty pgTy) defM'
+
+    --      annInpValM <- withPathK "variableValues" $
+    --        mapM (validateInputValue jsonParser ty pgTy) inpValM
+
+    --      let annValM = annInpValM <|> annDefM
+    --      onNothing annValM $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
+    --return annValF
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
@@ -131,7 +136,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
   -- annotate the variables of this operation
-  annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
+  annVarVals <- getVarVals (G._todVariableDefinitions opDef) $
                 fromMaybe Map.empty varValsM
 
   -- annotate the fragments

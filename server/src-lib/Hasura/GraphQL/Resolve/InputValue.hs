@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
@@ -44,15 +45,15 @@ asPGColValM
   :: (MonadError QErr m)
   => AnnGValue -> m (Maybe (PGColType, PGColValue))
 asPGColValM = \case
-  AGScalar colTy valM -> return $ fmap (colTy,) valM
+  AGPGVal colTy valM -> return $ fmap (colTy,) valM
   v            -> tyMismatch "pgvalue" v
 
 asPGColVal
   :: (MonadError QErr m)
   => AnnGValue -> m (PGColType, PGColValue)
 asPGColVal = \case
-  AGScalar colTy (Just val) -> return (colTy, val)
-  AGScalar colTy Nothing ->
+  AGPGVal colTy (Just val) -> return (colTy, val)
+  AGPGVal colTy Nothing ->
     throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
   v            -> tyMismatch "pgvalue" v
@@ -121,11 +122,13 @@ parseMany fn v = case v of
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
 
+pattern PGTxtVal o x = PGColValue o (PGValBase (PGValKnown (PGValText x)))
+
 asPGColText
   :: (MonadError QErr m)
   => AnnGValue -> m Text
 asPGColText val = do
   (_, pgColVal) <- asPGColVal val
   case pgColVal of
-    PGValText t -> return t
+    (PGTxtVal _ t) -> return t
     _           -> throw500 "expecting text for asPGColText"

@@ -14,13 +14,55 @@ from
           'name',
           column_name,
           'type',
-          udt_name,
+          json_build_object(
+            'name',
+            json_build_object(
+              'name',
+              ty.typname,
+              'schema',
+              ty.typnamespace::regnamespace::text
+            ),
+            'oid',
+            ty.oid :: int ,
+            'sqlName',
+            pg_catalog.format_type(td.atttypid, td.atttypmod),
+            'dimension',
+            td.attndims
+          ),
           'is_nullable',
           is_nullable :: boolean
         )
       ) as columns
     from
       information_schema.columns c
+      left outer join (
+         select pc.relnamespace,
+                pc.relname,
+                pa.attname,
+                pa.attndims,
+                pa.atttypid,
+                pa.atttypmod
+         from pg_attribute pa
+         left join pg_class pc
+         on pa.attrelid = pc.oid
+      ) td on
+      ( c.table_schema::regnamespace::oid = td.relnamespace
+        AND c.table_name = td.relname
+        AND c.column_name = td.attname
+      )
+      left outer join pg_type ty
+      on
+      ( ty.typname =
+          case
+            when c.domain_name is not null then c.domain_name
+            else c.udt_name
+          end
+        AND ty.typnamespace::regnamespace::text =
+          case
+            when c.domain_name is not null then c.domain_schema
+            else c.udt_schema
+          end
+      )
     group by
       c.table_schema,
       c.table_name

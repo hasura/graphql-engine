@@ -1,20 +1,26 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Hasura.SQL.Types where
 
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
 
 import           Hasura.Prelude
+import           Hasura.RQL.Instances       ()
 
 import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Aeson.Casing
 import           Data.Aeson.Encoding        (text)
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.HashMap.Strict.InsOrd as OMap
 import qualified Data.Text.Extended         as T
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Decoding as PD
 import qualified Text.Builder               as TB
+
 
 class ToSQL a where
   toSQL :: a -> TB.Builder
@@ -164,6 +170,9 @@ newtype SchemaName
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
 
+catalogSchema :: SchemaName
+catalogSchema = SchemaName "catalog"
+
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
 
@@ -207,6 +216,7 @@ instance (ToSQL a) => ToSQL (QualifiedObject a) where
 
 qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
 qualObjectToText (QualifiedObject sn o)
+  | sn == catalogSchema = toTxt o
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
@@ -240,7 +250,43 @@ showPGCols :: (Foldable t) => t PGCol -> T.Text
 showPGCols cols =
   T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
 
-data PGColType
+newtype AnnType
+  = AnnType {unAnnType :: T.Text}
+  deriving (Show, Eq, Generic, Lift, ToJSON, FromJSON)
+
+instance Hashable AnnType
+
+intType :: AnnType
+intType = AnnType "int"
+
+textType :: AnnType
+textType = AnnType "text"
+
+textArrType :: AnnType
+textArrType = AnnType "text[]"
+
+jsonType :: AnnType
+jsonType = AnnType "json"
+
+jsonbType :: AnnType
+jsonbType = AnnType "jsonb"
+
+newtype PGTyFldName = PGTyFldName { getTyFldText :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+
+
+newtype EnumVal = EnumVal { getEnumVal :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+
+newtype PGTyName = PGTyName { getTyText :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+
+instance ToTxt PGTyName where
+  toTxt = getTyText
+
+type QualifiedType = QualifiedObject PGTyName
+
+data PGBaseColType
   = PGSmallInt
   | PGInteger
   | PGBigInt
@@ -263,39 +309,16 @@ data PGColType
   | PGUnknown !T.Text
   deriving (Eq, Lift, Generic)
 
-instance Hashable PGColType
+instance Hashable PGBaseColType
 
-instance Show PGColType where
-  show PGSmallInt    = "smallint"
-  show PGInteger     = "integer"
-  show PGBigInt      = "bigint"
-  show PGSerial      = "serial"
-  show PGBigSerial   = "bigserial"
-  show PGFloat       = "real"
-  show PGDouble      = "float8"
-  show PGNumeric     = "numeric"
-  show PGBoolean     = "boolean"
-  show PGChar        = "character"
-  show PGVarchar     = "varchar"
-  show PGText        = "text"
-  show PGDate        = "date"
-  show PGTimeStampTZ = "timestamptz"
-  show PGTimeTZ      = "timetz"
-  show PGJSON        = "json"
-  show PGJSONB       = "jsonb"
-  show PGGeometry    = "geometry"
-  show PGGeography   = "geography"
-  show (PGUnknown t) = T.unpack t
-
-instance ToJSON PGColType where
+instance ToJSON PGBaseColType where
   toJSON pct = String $ T.pack $ show pct
 
-instance ToSQL PGColType where
+instance ToSQL PGBaseColType where
   toSQL pct = fromString $ show pct
 
-
-txtToPgColTy :: Text -> PGColType
-txtToPgColTy t = case t of
+txtToPgBaseColTy :: Text -> PGBaseColType
+txtToPgBaseColTy t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
 
@@ -343,13 +366,75 @@ txtToPgColTy t = case t of
   "geography"                -> PGGeography
   _                          -> PGUnknown t
 
+instance FromJSON PGBaseColType where
+  parseJSON (String t) = return $ txtToPgBaseColTy t
+  parseJSON _          = fail "Expecting a string for PGBaseColType"
 
-instance FromJSON PGColType where
-  parseJSON (String t) = return $ txtToPgColTy t
-  parseJSON _          = fail "Expecting a string for PGColType"
+instance Show PGBaseColType where
+  show PGSmallInt    = "smallint"
+  show PGInteger     = "integer"
+  show PGBigInt      = "bigint"
+  show PGSerial      = "serial"
+  show PGBigSerial   = "bigserial"
+  show PGFloat       = "real"
+  show PGDouble      = "float8"
+  show PGNumeric     = "numeric"
+  show PGBoolean     = "boolean"
+  show PGChar        = "character"
+  show PGVarchar     = "varchar"
+  show PGText        = "text"
+  show PGDate        = "date"
+  show PGTimeStampTZ = "timestamptz"
+  show PGTimeTZ      = "timetz"
+  show PGJSON        = "json"
+  show PGJSONB       = "jsonb"
+  show PGGeometry    = "geometry"
+  show PGGeography   = "geography"
+  show (PGUnknown t) = T.unpack t
 
+data PGColTyDetails
+  = PGTyComposite !(OMap.InsOrdHashMap PGTyFldName PGColType)
+  | PGTyArray  !PGColType
+  | PGTyDomain !PGColType
+  | PGTyBase   !PGBaseColType
+  | PGTyEnum   ![EnumVal]
+  | PGTyRange
+  | PGTyPseudo
+  deriving (Show, Eq, Lift, Generic)
 
-pgTypeOid :: PGColType -> PQ.Oid
+instance Hashable PGColTyDetails
+
+getArrayBaseTy :: PGColType -> Maybe PGColType
+getArrayBaseTy (PGColType _ _ _ x) = case x of
+  PGTyArray a@(PGColType _ _ _ y) -> case y of
+    PGTyArray{} -> getArrayBaseTy a
+    _ -> Just a
+  _ -> Nothing
+
+data PGColType
+  = PGColType
+  { pgColTyName    :: !QualifiedType
+  , pgColTySqlName :: !AnnType
+  , pgColTyOid     :: !PQ.Oid
+  , pgColTyDetails :: !PGColTyDetails
+  } deriving (Show, Eq, Lift, Generic)
+
+$(deriveJSON
+  defaultOptions { constructorTagModifier = snakeCase . drop 4
+                 , sumEncoding = TaggedObject "type" "detail"
+                 }
+  ''PGColTyDetails)
+$(deriveJSON (aesonDrop 7 camelCase) ''PGColType)
+
+baseBuiltInTy :: PGBaseColType -> PGColType
+baseBuiltInTy b = PGColType qualfdType (AnnType name) (pgTypeOid b)$ PGTyBase b
+  where
+    qualfdType = QualifiedObject (SchemaName "pg_catalog") (PGTyName name)
+    name = T.pack $ show b
+
+instance Hashable PGColType
+
+pgTypeOid :: PGBaseColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
 pgTypeOid PGInteger     = PTI.int4
 pgTypeOid PGBigInt      = PTI.int8
@@ -372,27 +457,53 @@ pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
+
 isIntegerType :: PGColType -> Bool
-isIntegerType PGInteger  = True
-isIntegerType PGSmallInt = True
-isIntegerType PGBigInt   = True
-isIntegerType _          = False
+isIntegerType = onBaseUDT False isIntegerType'
 
 isNumType :: PGColType -> Bool
-isNumType PGFloat   = True
-isNumType PGDouble  = True
-isNumType PGNumeric = True
-isNumType ty        = isIntegerType ty
+isNumType = onBaseUDT False isNumType'
 
 isJSONBType :: PGColType -> Bool
-isJSONBType PGJSONB = True
-isJSONBType _       = False
+isJSONBType = onBaseUDT False isJSONBType'
 
+--any numeric, string, date/time, network, or enum type, or arrays of these types
 isComparableType :: PGColType -> Bool
-isComparableType PGJSON        = False
-isComparableType PGJSONB       = False
-isComparableType PGGeometry    = False
-isComparableType PGGeography   = False
-isComparableType PGBoolean     = False
-isComparableType (PGUnknown _) = False
-isComparableType _             = True
+isComparableType t = case pgColTyDetails t of
+  PGTyArray a  ->  isComparableType a
+  PGTyDomain a -> isComparableType a
+  PGTyBase   b -> isComparableType' b
+  PGTyEnum{}   -> True
+  _            -> False
+
+-- Apply the function if the underlying data type is a base data type. Otherwise return the default value
+onBaseUDT :: a -> (PGBaseColType -> a) -> PGColType -> a
+onBaseUDT def f t = case pgColTyDetails t of
+  PGTyBase   b -> f b
+  PGTyDomain a -> onBaseUDT def f a
+  _            -> def
+
+isIntegerType' :: PGBaseColType -> Bool
+isIntegerType' PGInteger  = True
+isIntegerType' PGSmallInt = True
+isIntegerType' PGBigInt   = True
+isIntegerType' _          = False
+
+isNumType' :: PGBaseColType -> Bool
+isNumType' PGFloat   = True
+isNumType' PGDouble  = True
+isNumType' PGNumeric = True
+isNumType' ty        = isIntegerType' ty
+
+isJSONBType' :: PGBaseColType -> Bool
+isJSONBType' PGJSONB = True
+isJSONBType' _       = False
+
+isComparableType' :: PGBaseColType -> Bool
+isComparableType' PGJSON        = False
+isComparableType' PGJSONB       = False
+isComparableType' PGGeometry    = False
+isComparableType' PGGeography   = False
+isComparableType' PGBoolean     = False
+isComparableType' (PGUnknown _) = False
+isComparableType' _             = True
