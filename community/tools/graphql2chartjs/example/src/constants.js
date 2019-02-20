@@ -1,1 +1,1 @@
-export const HGE_URL = 'https://testtttttttttt.herokuapp.com';
+export const HGE_URL = 'https://graphql2chartjs.herokuapp.com';

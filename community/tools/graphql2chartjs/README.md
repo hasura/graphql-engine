@@ -10,8 +10,8 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 ## Contents
 
+- [Demo](#demo)
 - [Realtime](#realtime)
-- [Live demo](#live-demo)
 - [Getting started](#quick-start-with-react)
 - [How it works](#how-it-works)
     + [Motivation](#motivation)
@@ -30,6 +30,24 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 - [Using views for aggregation](#using-views-for-aggregation)
 - [Limitations](#limitations)
 
+## Demo
+
+### Time series
+
+![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/timeseries.gif)
+
+### Doughnut chart
+
+![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/piechart.gif)
+
+### Bar chart
+
+![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/barchart.gif)
+
+### Line chart
+
+![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/line.gif)
+
 ## Realtime
 
 Realtime charts can be very useful in visualising live data trends. Two of the major use cases of realtime charts are:
@@ -37,18 +55,16 @@ Realtime charts can be very useful in visualising live data trends. Two of the m
 1. Live time series
 2. Realtime poll
 
-You can see these two use cases implemented in [this section](#live-demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can [create custom views](#using-views-for-aggregation) that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
-
-## Live demo
-
-**WIP**: An app running at some external URL showing a live query and a time series chart.
+You can see the time series chart in action [here](#demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can [create custom views](#using-views-for-aggregation) that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
 
 ## Quickstart with React
 
-1. Clone the example from the `examples` directory and install the dependencies.
+1. Clone a boilerplate from the CDN and install the dependencies.
     
-    ```
-    yarn install
+    ```sh
+    wget https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/graphql2chartjs-example.zip
+    unzip graphql2chartjs-example.zip && cd example
+    yarn
     ```
 
 2. **Run GraphQL Engine**: Run the Hasura GraphQL Engine and Postgres on Heroku's free tier (no credit card required) by clicking this button:
@@ -58,7 +74,7 @@ You can see these two use cases implemented in [this section](#live-demo). We ha
    Note the URL. It will be of the form: `https://<app-name>.herokuapp.com`. Let's say it's `graphql2chartjs.herokuapp.com`.
    For instructions on how to deploy Hasura in other environments, head to the [docs](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
 
-3. **Populate sample data**: Run the following two commands. (Replace `graphql-engine-url` with the URL you obtained above)
+3. **Populate sample data**: Run the following commands. (Replace `graphql-engine-url` with the URL you obtained above)
    
     ```sh
     export SAMPLE_JSON='{"video_games": [{ "id": 1, "name": "Dota", "followers": 427014, "color": "red"},{ "id": 2, "name": "CS:GO", "followers": 220006, "color": "yellow"},{ "id": 3, "name": "NFS", "followers": 71004, "color": "#3366ff"},{ "id": 4, "name": "PUBG", "followers": 129769, "color": "#330000"},{ "id": 5, "name": "Quake 3", "followers": 90808, "color": "green"}]}'
@@ -157,7 +173,7 @@ Most of the ChartJS charts expect a data object of the form:
 ### The convert function
 
 The `convert` function i.e. the default export of this library accepts two arguments:
-1. **type**: (String) Type of the chart; Eg. `bra`, `line`, `pie`
+1. **type**: (String) Type of the chart; Eg. `bar`, `line`, `pie`
 2. **graphqlData**: [Object] This should be an object with each field having its value as a list of data points.
 
 You can directly feed the output of the `convert` function to your ChartJS instance.
