@@ -46,7 +46,8 @@ const routes = store => {
             }
           } else {
             alert(
-              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+              'instance is running and the endpoint is configured correctly.'
             );
           }
         }
