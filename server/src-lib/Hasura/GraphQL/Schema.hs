@@ -174,6 +174,11 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
     notNullTy = G.toGT $ G.toNT scalarTy
     nullTy = G.toGT scalarTy
 
+mkPGColFldMap :: [PGColInfo] -> FieldMap
+mkPGColFldMap cols =
+  Map.fromList $ flip map cols $ \ci@(PGColInfo col ty _) ->
+    ((mkScalarTy ty, mkColName col), Left ci)
+
 -- where: table_bool_exp
 -- limit: Int
 -- offset: Int
@@ -546,9 +551,11 @@ input function_args {
   argn: arg-typen!
 }
 -}
-mkFuncArgsInp :: FunctionInfo -> Maybe (InpObjTyInfo, FuncArgCtx)
+mkFuncArgsInp
+  :: FunctionInfo
+  -> Maybe (InpObjTyInfo, FuncArgCtx, FieldMap)
 mkFuncArgsInp funcInfo =
-  bool (Just (inpObj, funcArgCtx)) Nothing $ null funcArgs
+  bool (Just (inpObj, funcArgCtx, fldMap)) Nothing $ null funcArgs
   where
     funcName = fiName funcInfo
     funcArgs = fiInputArgs funcInfo
@@ -557,23 +564,28 @@ mkFuncArgsInp funcInfo =
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    (argInps, ctxItems) = unzip $ fst $ foldl mkArgInps ([], 1::Int) funcArgs
-    funcArgCtx = Map.singleton funcArgsTy $ Seq.fromList ctxItems
+    (argInps, ctxItems, argCols) = unzip3 $ fst $
+      foldl mkArgItems ([], 1::Int) funcArgs
 
-    mkArgInps (items, argNo) (FunctionArg nameM ty) =
+    funcArgCtx = Map.singleton funcArgsTy $ Seq.fromList ctxItems
+    fldMap = mkPGColFldMap argCols
+
+    mkArgItems (items, argNo) (FunctionArg nameM ty) =
       case nameM of
         Just argName ->
-          let argGName = G.Name $ getFuncArgNameTxt argName
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName
-          in (items <> pure (inpVal, argCtxItem), argNo)
+          let argT = getFuncArgNameTxt argName
+          in (items <> pure (mkArgItem ty argT), argNo)
         Nothing ->
-          let argGName = G.Name $ "arg_" <> T.pack (show argNo)
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName
-          in (items <> pure (inpVal, argCtxItem), argNo + 1)
+          let argT = "arg_" <> T.pack (show argNo)
+          in (items <> pure (mkArgItem ty argT), argNo + 1)
+
+    mkArgItem ty t =
+      let argGName = G.Name t
+          argColInfo = PGColInfo (PGCol t) ty False
+          argCtxItem = FuncArgItem argGName
+          inpVal = InpValInfo Nothing argGName Nothing $
+                   G.toGT $ G.toNT $ mkScalarTy ty
+      in (inpVal, argCtxItem, argColInfo)
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
@@ -1268,7 +1280,7 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
 
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
-               , selObjFldsM, Just selByPKeyObjFlds
+               , selObjFldsM, Just selByPKeyObjFlds, Just funcArgFldMap
                ]
 
     -- helper
@@ -1307,8 +1319,9 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
         else Nothing
 
     -- funcargs input type
-    (funcArgInpObjs, funcArgCtxs) = unzip $ mapMaybe mkFuncArgsInp funcs
+    (funcArgInpObjs, funcArgCtxs, funcArgFlds) = unzip3 $ mapMaybe mkFuncArgsInp funcs
     funcArgCtx = Map.unions funcArgCtxs
+    funcArgFldMap = Map.unions funcArgFlds
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -1370,14 +1383,12 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
     -- the field used in table_by_pkey object
-    selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
-      \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
+    selByPKeyObjFlds = mkPGColFldMap pkeyCols
 
     ordByInpCtxM = mkOrdByInpObj tn <$> selFldsM
     (ordByInpObjM, ordByCtxM) = case ordByInpCtxM of
       Just (a, b) -> (Just a, Just b)
       Nothing     -> (Nothing, Nothing)
-
 
 getRootFldsRole'
   :: QualifiedTable
@@ -1602,7 +1613,8 @@ mkGCtxMapTable tableCache funcCache (TableInfo tn _ fields rolePerms constraints
     colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
-    tabFuncs = getFuncsOfTable tn funcCache
+    tabFuncs = filter (isValidObjectName . fiName) $
+               getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
