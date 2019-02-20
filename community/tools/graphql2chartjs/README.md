@@ -27,7 +27,6 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
     + [Doughnut](#doughnut)
     + [Bubble](#bubble)
     + [Scatter](#scatter)
-- [Using views for aggregation](#using-views-for-aggregation)
 - [Limitations](#limitations)
 
 ## Demo
@@ -46,7 +45,7 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 ### Line chart
 
-![timeseries](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/linechart.gif)
+![linechart](https://graphql-engine-cdn.hasura.io/assets/graphql2chartjs/linechart.gif)
 
 ## Realtime
 
@@ -55,7 +54,7 @@ Realtime charts can be very useful in visualising live data trends. Two of the m
 1. Live time series
 2. Realtime poll
 
-You can see the time series chart in action [here](#demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can [create custom views](#using-views-for-aggregation) that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
+You can see the time series chart in action [here](#demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can create custom views that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
 
 ## Quickstart with React
 
@@ -284,7 +283,7 @@ The above GraphQL response is restructured to the ChartJS `data` as follows:
         "datasets": [
             {
                 "data": [427014],
-                "pointBackgroundColor": ["red"]
+                "pointBackgroundColor": ["red"],
                 "fill": false
             }
         ]
@@ -807,14 +806,11 @@ var myChart = new Chart(ctx, {
 
 ![readme example scatter](assets/readme-scatter-chart-example.png)
 
-## Using views for aggregation
-
-Sometimes you would want to aggregate data from your tables in Postgres.
-/WIP
-
-
 ## Limitations
 
 1. The response structure of your GraphQL query is opinionated. This is however not a limitation as you use GraphQL aliasing to renaeme the fields to achieve the required structure.
 
 2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions and form a custom GraphQL response from the subscription responses.
+
+---
+*Only sample data has been used in this readme and any resemblance to reality is purely coincidental*
