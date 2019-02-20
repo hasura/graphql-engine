@@ -35,9 +35,9 @@
   box-shadow: none;
   border: none;
 }
-.ReactTable .rt-thead .rt-th,
-.ReactTable .rt-thead .rt-td {
-  padding: 10px !important;
+.ReactTable .rt-table .rt-thead .rt-th,
+.ReactTable .rt-table .rt-thead .rt-td {
+  padding-right: 15px !important;
   border-right: 1px solid rgba(0,0,0,0.1);
 }
 

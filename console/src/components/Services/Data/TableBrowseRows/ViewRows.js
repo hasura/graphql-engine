@@ -91,16 +91,39 @@ const ViewRows = ({
     }
 
     _columns.map(col => {
+      const columnName = col.column_name;
+
+      let sortIcon = 'fa-sort';
+      if (curQuery.order_by && curQuery.order_by.length) {
+        sortIcon = '';
+
+        curQuery.order_by.forEach(orderBy => {
+          if (orderBy.column === columnName) {
+            sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
+          }
+        });
+      }
+
       _gridHeadings.push({
-        Header: col.column_name,
-        accessor: col.column_name,
+        Header: (
+          <span className={styles.tableHeaderCell}>
+            { columnName } <i className={'fa ' + sortIcon} />
+          </span>
+        ),
+        accessor: columnName,
       });
     });
 
     _relationships.map(rel => {
+      const relName = rel.rel_name;
+
       _gridHeadings.push({
-        Header: rel.rel_name,
-        accessor: rel.rel_name,
+        Header: (
+          <span className={styles.tableHeaderCell}>
+            { relName }
+          </span>
+        ),
+        accessor: relName,
       });
     });
 
@@ -508,9 +531,9 @@ const ViewRows = ({
       onClick: () => {
         if (
           !disableSortColumn &&
-          column.Header
+          column.id
         ) {
-          sortByColumn(column.Header);
+          sortByColumn(column.id);
         }
 
         disableSortColumn = false;

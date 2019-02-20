@@ -62,6 +62,13 @@
   padding-right: 5px;
 }
 
+.tableHeaderCell i {
+  font-size: 12px;
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 8px;
+}
+
 .insertContainer {
   button {
     margin: 0 10px;
