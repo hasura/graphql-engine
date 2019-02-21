@@ -7,6 +7,7 @@ import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
 import qualified Data.String                  as DataString
+import qualified Data.HashSet                 as Set
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
@@ -47,6 +48,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoAllowedIFaces   :: !(Maybe [ServerIFace])
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -62,6 +64,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soAllowedIFaces   :: !(Set.HashSet ServerIFace)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -82,6 +85,13 @@ data HGECommandG a
   | HCExecute
   | HCVersion
   deriving (Show, Eq)
+
+data ServerIFace
+  = RQL
+  | GRAPHQL
+  deriving (Show, Eq, Read, Generic)
+
+instance Hashable ServerIFace
 
 type HGECommand = HGECommandG ServeOptions
 type RawHGECommand = HGECommandG RawServeOptions
@@ -129,6 +139,9 @@ instance FromEnv Q.TxIsolation where
 
 instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
+
+instance FromEnv [ServerIFace] where
+  fromEnv = mapM (readServerIFace . T.unpack) . T.splitOn "," . T.pack
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -226,9 +239,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  allowedIFaces <- Set.fromList . fromMaybe [RQL,GRAPHQL] <$>
+                     withEnv (rsoAllowedIFaces rso) (fst allowedIFacesEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry
+                        unAuthRole corsCfg enableConsole enableTelemetry allowedIFaces
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -442,6 +457,13 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
+allowedIFacesEnv :: (String,String)
+allowedIFacesEnv =
+  ( "HASURA_GRAPHQL_ALLOWED_INTERFACES"
+  -- TODO: better description
+  , "List of comma separated allowed interfaces. (default: rql,graphql)"
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -584,6 +606,12 @@ readHookType tyS =
     "POST" -> Right AHTPost
     _      -> Left "Only expecting GET / POST"
 
+readServerIFace :: String -> Either String ServerIFace
+readServerIFace si = case T.toUpper $ T.strip $ T.pack si of
+  "RQL"     -> Right RQL
+  "GRAPHQL" -> Right GRAPHQL
+  _         -> Left "Only expecting interface types RQL / GRAPHQL"
+
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
   AuthHookG <$> url <*> urlType
@@ -651,6 +679,14 @@ parseEnableTelemetry = optional $
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
          )
+
+parseAllowedIFaces :: Parser (Maybe [ServerIFace])
+parseAllowedIFaces = fmap (\x -> bool (Just x) Nothing $ null x ) $ many $
+  option (eitherReader readServerIFace)
+         ( long "interface" <>
+           help "Name of interface to be enabled. Accepts RQL / GRAPHQL"
+         )
+
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
