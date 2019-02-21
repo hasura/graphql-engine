@@ -114,9 +114,10 @@ pages/about.js => .next/serverless/pages/about.js
 Deploy it to the cloud with [now](https://zeit.co/now) ([download](https://zeit.co/download)):
 
 ```bash
-now
+$ npm install -g now
+$ now
 ```
-
+Note: Older versions of now-cli doesn't support serverless mode.
 Once the deployment is successful, you will be able to navigate to pages `/` and `/about`, with each one internally being a lambda function which `now` manages.
 
 
