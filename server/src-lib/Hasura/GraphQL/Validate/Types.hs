@@ -462,7 +462,7 @@ extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
 extrObjTyInfoM :: TypeMap -> G.NamedType -> Maybe ObjTyInfo
 extrObjTyInfoM tyMap tn = case Map.lookup tn tyMap of
   Just (TIObj o) -> return o
-  _ -> Nothing
+  _              -> Nothing
 
 validateIsSubType :: Map.HashMap G.NamedType TypeInfo -> G.GType -> G.GType -> Either Text ()
 validateIsSubType tyMap subFldTy supFldTy = do
@@ -538,10 +538,10 @@ fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
 validateTypeMap :: TypeMap -> Either Text ()
 validateTypeMap tyMap =  mapM_ validateTy $ Map.elems tyMap
   where
-    validateTy (TIObj o)    = validateObj tyMap o
-    validateTy (TIUnion u)  = validateUnion tyMap u
-    validateTy (TIIFace i)  = validateIFace i
-    validateTy _            = return ()
+    validateTy (TIObj o)   = validateObj tyMap o
+    validateTy (TIUnion u) = validateUnion tyMap u
+    validateTy (TIIFace i) = validateIFace i
+    validateTy _           = return ()
 
 fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
 fromTyDefQ tyDef loc = case fromTyDef tyDef loc of

@@ -30,7 +30,7 @@ newtype FuncArgItem
   = FuncArgItem {getArgName :: G.Name}
   deriving (Show, Eq)
 
-type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
+type FuncArgSeq = Seq.Seq FuncArgItem
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
@@ -47,3 +47,5 @@ data InsCtx
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
+
+type PGColArgMap = Map.HashMap G.Name PGColInfo
