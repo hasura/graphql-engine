@@ -10,7 +10,6 @@ import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
-import           Data.UUID                              (UUID)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           Web.Spock.Core
@@ -88,16 +87,37 @@ mkConsoleHTML path authMode enableTelemetry =
 
     errMsg = "console template rendering failed: " ++ show errs
 
+data SchemaCacheRef
+  = SchemaCacheRef
+  { _scrLock  :: MVar ()
+  , _scrCache :: IORef SchemaCache
+  }
+
+withSCUpdate
+  :: (MonadIO m, MonadError e m)
+  => SchemaCacheRef -> m (a, SchemaCache) -> m a
+withSCUpdate scr action = do
+  acquireLock
+  (res, newSC) <- action `catchError` onError
+  -- update schemacache in IO reference
+  liftIO $ writeIORef cacheRef newSC
+  releaseLock
+  return res
+  where
+    SchemaCacheRef lk cacheRef = scr
+    onError e   = releaseLock >> throwError e
+    acquireLock = liftIO $ takeMVar lk
+    releaseLock = liftIO $ putMVar lk ()
+
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
-  , scServerId  :: UUID
+  { scIsolation  :: Q.TxIsolation
+  , scPGPool     :: Q.PGPool
+  , scLogger     :: L.Logger
+  , scCacheRef   :: SchemaCacheRef
+  , scAuthMode   :: AuthMode
+  , scManager    :: HTTP.Manager
+  , scInstanceId :: InstanceId
   }
 
 data HandlerCtx
@@ -128,7 +148,7 @@ buildQCtx ::  Handler QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
-  cache <- liftIO $ readIORef scRef
+  cache <- liftIO $ readIORef $ _scrCache scRef
   return $ QCtx userInfo cache
 
 logResult
@@ -190,39 +210,26 @@ mkSpockAction qErrEncoder serverCtx handler = do
       uncurry setHeader jsonHeader
       lazyBytes resp
 
-withLock :: (MonadIO m, MonadError e m)
-         => MVar () -> m a -> m a
-withLock lk action = do
-  acquireLock
-  res <- action `catchError` onError
-  releaseLock
-  return res
-  where
-    onError e   = releaseLock >> throwError e
-    acquireLock = liftIO $ takeMVar lk
-    releaseLock = liftIO $ putMVar lk ()
-
 v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
-  lk <- scCacheLock . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withLock lk dbActionReload) $
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  bool (fst <$> dbAction) (withSCUpdate scRef dbActionReload) $
     queryNeedsReload query
   where
     -- Hit postgres
     dbAction = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
-      schemaCache <- liftIO $ readIORef scRef
+      schemaCache <- liftIO $ readIORef $ _scrCache scRef
       httpMgr <- scManager . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      serverId <- scServerId . hcServerCtx <$> ask
-      runQuery pool isoL serverId userInfo schemaCache httpMgr query
+      instanceId <- scInstanceId . hcServerCtx <$> ask
+      runQuery pool isoL instanceId userInfo schemaCache httpMgr query
 
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
-      scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
       newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
@@ -230,8 +237,7 @@ v1QueryHandler query = do
         mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       let newSc' =
             newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
-      liftIO $ writeIORef scRef newSc'
-      return resp
+      return (resp, newSc')
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
@@ -240,7 +246,7 @@ v1Alpha1GQHandler query = do
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef $ _scrCache scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
@@ -249,7 +255,7 @@ gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef scRef
+  sc <- liftIO $ readIORef $ _scrCache scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
   GE.explainGQLQuery pool isoL sc query
@@ -284,32 +290,26 @@ legacyQueryHandler tn queryType =
 
 
 mkWaiApp
-  :: Q.TxIsolation
-  -> L.LoggerCtx
-  -> Q.PGPool
-  -> HTTP.Manager
-  -> AuthMode
-  -> CorsConfig
-  -> Bool
-  -> Bool
-  -> UUID
-  -> IO (Wai.Application, IORef SchemaCache, MVar (), UTCTime)
+  :: Q.TxIsolation -> L.LoggerCtx -> Q.PGPool
+  -> HTTP.Manager -> AuthMode -> CorsConfig
+  -> Bool -> Bool -> InstanceId
+  -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg
-         enableConsole enableTelemetry serverId = do
+         enableConsole enableTelemetry instanceId = do
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager pool Q.Serializable $ do
                   buildSchemaCache
-                  liftIO getCurrentTime
+                  fetchLastUpdateTime
       (time, sc) <- either initErrExit return pgResp
       scRef <- newIORef sc
       return (scRef, time)
 
     cacheLock <- newMVar ()
 
-    let serverCtx =
-          ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager serverId
+    let schemaCacheRef = SchemaCacheRef cacheLock cacheRef
+        serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
+            schemaCacheRef mode httpManager instanceId
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
@@ -319,8 +319,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
-           , cacheRef
-           , cacheLock
+           , schemaCacheRef
            , cacheBuiltTime
            )
 

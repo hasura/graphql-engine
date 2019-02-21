@@ -16,7 +16,6 @@ import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
-import qualified Data.UUID.V4               as UUID
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
@@ -26,15 +25,14 @@ import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (QErr, adminUserInfo,
-                                             emptySchemaCache)
-import           Hasura.Server.App          (mkWaiApp)
+import           Hasura.RQL.Types           (adminUserInfo, emptySchemaCache)
+import           Hasura.Server.App          (SchemaCacheRef (..), mkWaiApp)
 import           Hasura.Server.Auth
-import           Hasura.Server.CacheUpdate
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Query        (peelRun)
+import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
 
@@ -98,14 +96,19 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
+mkPGLogger :: Logger -> Q.PGLogger
+mkPGLogger (Logger logger) msg =
+  logger $ PGLog LevelWarn msg
+
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
   -- global http manager
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
-  serverId <- UUID.nextRandom
+  instanceId <- mkInstanceId
   let logger = mkLogger loggerCtx
+      pgLogger = mkPGLogger logger
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
@@ -125,10 +128,11 @@ main =  do
       -- create empty cache update events queue
       eventsQueue <- STM.newTQueueIO
 
+      pool <- Q.initPGPool ci cp pgLogger
+
       -- start postgres cache update events listener thread in background
-      listenerPool <- getMinimalPool ci
-      listenerTId <- C.forkIO $ cacheUpdateEventListener listenerPool logger eventsQueue
-      unLogger logger $ mkThreadLog listenerTId serverId TTListener
+      listenerTId <- C.forkIO $ schemaUpdateEventListener pool logger eventsQueue
+      unLogger logger $ mkThreadLog listenerTId instanceId TTListener
 
       -- safe init catalog
       initRes <- initialise logger ci httpManager
@@ -136,16 +140,16 @@ main =  do
       -- prepare event triggers data
       prepareEvents logger ci
 
-      pool <- Q.initPGPool ci cp
-
-      (app, cacheRef, cacheLk, cacheBuiltTime) <-
+      (app, cacheRef, cacheBuiltTime) <-
         mkWaiApp isoL loggerCtx pool httpManager am corsCfg enableConsole
-          enableTelemetry serverId
+          enableTelemetry instanceId
+
+      let scRef = _scrCache cacheRef
 
       -- start cache update events processor thread in background
-      procTId <- C.forkIO $ cacheUpdateEventProcessor pool logger httpManager
-                              eventsQueue cacheRef cacheLk serverId cacheBuiltTime
-      unLogger logger $ mkThreadLog procTId serverId TTProcessor
+      procTId <- C.forkIO $ schemaUpdateEventProcessor pool logger httpManager
+                              eventsQueue cacheRef instanceId cacheBuiltTime
+      unLogger logger $ mkThreadLog procTId instanceId TTProcessor
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -158,7 +162,7 @@ main =  do
 
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool scRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -166,7 +170,7 @@ main =  do
       -- start a background thread for telemetry
       when enableTelemetry $ do
         unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
-        void $ C.forkIO $ runTelemetry logger httpManager cacheRef initRes
+        void $ C.forkIO $ runTelemetry logger httpManager scRef initRes
 
       unLogger logger $
         mkGenericStrLog "server" "starting API server"
@@ -174,30 +178,29 @@ main =  do
 
     HCExport -> do
       ci <- procConnInfo rci
-      res <- runTx ci fetchMetadata
+      res <- runTx pgLogger ci fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
       ci <- procConnInfo rci
-      res <- runTx ci cleanCatalog
+      res <- runTx pgLogger ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
       queryBs <- BL.getContents
       ci <- procConnInfo rci
-      res <- runAsAdmin ci httpManager $ execQuery queryBs
+      res <- runAsAdmin pgLogger ci httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
 
-    runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
-    runTx ci tx = do
-      pool <- getMinimalPool ci
+    runTx pgLogger ci tx = do
+      pool <- getMinimalPool pgLogger ci
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
-    runAsAdmin ci httpManager m = do
-      pool <- getMinimalPool ci
+    runAsAdmin pgLogger ci httpManager m = do
+      pool <- getMinimalPool pgLogger ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
               httpManager pool Q.Serializable m
       return $ fmap fst res
@@ -206,39 +209,40 @@ main =  do
       either (printErrExit . connInfoErrModifier) return $
         mkConnInfo rci
 
-    getMinimalPool ci = do
+    getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      Q.initPGPool ci connParams
+      Q.initPGPool ci connParams pgLogger
 
     initialise (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
-
+      let pgLogger = mkPGLogger $ Logger logger
       -- initialise the catalog
-      initRes <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
+      initRes <- runAsAdmin pgLogger ci httpMgr $ initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
+      migRes <- runAsAdmin pgLogger ci httpMgr $ migrateCatalog currentTime
       either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
 
       -- generate and retrieve uuids
-      getUniqIds ci
+      getUniqIds pgLogger ci
 
     prepareEvents (Logger logger) ci = do
+      let pgLogger = mkPGLogger $ Logger logger
       logger $ mkGenericStrLog "event_triggers" "preparing data"
-      res <- runTx ci unlockAllEvents
+      res <- runTx pgLogger ci unlockAllEvents
       either printErrJExit return res
 
-    mkThreadLog threadId serverId threadType =
+    mkThreadLog threadId instanceId threadType =
       let msg = T.pack (show threadType) <> " thread started"
       in StartupLog LevelInfo "threads" $
-           A.object [ "server_id" A..= serverId
+           A.object [ "instance_id" A..= getInstanceId instanceId
                     , "thread_id" A..= show threadId
                     , "message" A..= msg
                     ]
 
-    getUniqIds ci = do
-      eDbId <- runTx ci getDbId
+    getUniqIds pgLogger ci = do
+      eDbId <- runTx pgLogger ci getDbId
       dbId <- either printErrJExit return eDbId
       fp <- liftIO generateFingerprint
       return (dbId, fp)
