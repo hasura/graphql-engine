@@ -28,6 +28,10 @@
 .ReactTable .rt-thead .rt-resizable-header-content {
   font-weight: bold;
 }
+.ReactTable .rt-thead .rt-resizable-header .rt-resizer {
+  width: 10px;
+  right: -5px;
+}
 .ReactTable .rt-thead.-header {
   box-shadow: none;
 }
