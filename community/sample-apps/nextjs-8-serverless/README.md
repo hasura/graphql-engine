@@ -98,9 +98,9 @@ module.exports = {
 
 That's it! Now build the serverless app by running the following command:
 
-    ```bash
-    npm run build
-    ```
+```
+$ npm run build
+```
 
 In the `.next` folder, you will see a `serverless` folder generated after the build. Inside that there is a `pages` folder, which will have outputs of lambda per page.
 
