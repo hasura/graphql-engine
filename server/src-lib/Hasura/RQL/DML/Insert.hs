@@ -27,7 +27,7 @@ data ConflictTarget
 
 data ConflictClauseP1
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !S.BoolExp
+  | CP1Update !ConflictTarget ![PGCol] !PreSetCols !S.BoolExp
   deriving (Show, Eq)
 
 data InsertQueryP1
@@ -51,8 +51,8 @@ toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
   CP1DoNothing Nothing          -> S.DoNothing Nothing
   CP1DoNothing (Just ct)        -> S.DoNothing $ Just $ toSQLCT ct
-  CP1Update ct inpCols filtr    -> S.Update (toSQLCT ct)
-    (S.buildSEWithExcluded inpCols) $ Just $ S.WhereFrag filtr
+  CP1Update ct inpCols preSet filtr    -> S.Update (toSQLCT ct)
+    (S.buildUpsertSetExp inpCols preSet) $ Just $ S.WhereFrag filtr
 
   where
     toSQLCT ct = case ct of
@@ -125,13 +125,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
-      updFiltr <- getUpdFilter
-      return $ CP1Update (Column $ getPGCols col) inpCols $
+      (updFiltr, preSet) <- getUpdPerm
+      return $ CP1Update (Column $ getPGCols col) inpCols preSet $
         toSQLBool updFiltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
-      updFiltr <- getUpdFilter
-      return $ CP1Update (Constraint cons) inpCols $
+      (updFiltr, preSet) <- getUpdPerm
+      return $ CP1Update (Constraint cons) inpCols preSet $
         toSQLBool updFiltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
@@ -152,12 +152,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
                    <<> " for table " <> tiName tableInfo
                    <<> " does not exist"
 
-    getUpdFilter = do
+    getUpdPerm = do
       upi <- askUpdPermInfo tableInfo
       let updFiltr = upiFilter upi
+          preSet = upiSet upi
           updCols = HS.toList $ upiCols upi
       validateInpCols inpCols updCols
-      return updFiltr
+      return (updFiltr, preSet)
 
 
 convInsertQuery
@@ -242,7 +243,7 @@ insertP2 (u, p) =
     insertSQL = toSQL $ mkSQLInsert u
 
 data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol] !S.BoolExp
+  = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
@@ -261,9 +262,9 @@ extractConflictCtx cp =
     (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
       return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols filtr) -> do
+    (CP1Update conflictTar inpCols preSet filtr) -> do
       constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols filtr
+      return $ CCUpdate constraintName inpCols preSet filtr
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -281,9 +282,9 @@ setConflictCtx conflictCtxM = do
 
     conflictCtxToJSON (CCDoNothing constrM) =
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols filtr) =
+    conflictCtxToJSON (CCUpdate constr updCols preSet filtr) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ toSQLTxt (S.buildSEWithExcluded updCols)
+        Just $ toSQLTxt (S.buildUpsertSetExp updCols preSet)
                <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 runInsert
