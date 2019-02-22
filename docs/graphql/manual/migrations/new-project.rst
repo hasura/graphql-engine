@@ -26,47 +26,7 @@ In case you've deployed this using Docker the URL might be ``http://xx.xx.xx.xx:
 Step 1: Install the Hasura CLI
 ------------------------------
 
-.. rst-class:: api_tabs
-.. tabs::
-
-   .. tab:: Mac
-
-      In your terminal enter the following command:
-
-      .. code-block:: bash
-
-         curl -L https://cli.hasura.io/install.sh | bash
-
-      This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
-      your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-   .. tab:: Linux
-
-      Open your linux shell and run the following command:
-
-      .. code-block:: bash
-
-         curl -L https://cli.hasura.io/install.sh | bash
-
-      This will install the Hasura CLI tool in ``/usr/local/bin``. You might have to provide
-      your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-   .. tab:: Windows
-
-      .. note::
-
-         You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this `link
-         <https://git-scm.com/download/win>`__. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
-         default console.
-
-      Download the ``hasura`` installer:
-
-      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`__
-      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`__
-
-      **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still
-      getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
-
+Follow the instructions in :doc:`../hasura-cli/install-hasura-cli`
 
 Step 2: Setup a project directory
 ---------------------------------
@@ -84,11 +44,11 @@ Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you 
 
 .. code-block:: bash
 
-   # Without access key
+   # Without admin secret key
    hasura console
 
-   # With access key
-   hasura console --access-key mysecretkey
+   # With admin secret key
+   hasura console --admin-secret adminsecretkey
 
 Step 4: Add a new table and see how a migration is added
 --------------------------------------------------------

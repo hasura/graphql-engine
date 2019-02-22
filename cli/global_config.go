@@ -98,7 +98,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 		if err != nil {
 			return errors.Wrap(err, "cannot get home directory")
 		}
-		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
+		globalConfigDir := filepath.Join(home, GlobalConfigDirName)
 		ec.GlobalConfigDir = globalConfigDir
 		ec.Logger.Debugf("global config directory set as '%s'", ec.GlobalConfigDir)
 	}
@@ -111,7 +111,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 
 	// check if the filename is set, else default
 	if len(ec.GlobalConfigFile) == 0 {
-		ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
+		ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GlobalConfigFileName)
 		ec.Logger.Debugf("global config file set as '%s'", ec.GlobalConfigFile)
 	}
 

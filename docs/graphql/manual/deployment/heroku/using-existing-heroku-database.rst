@@ -11,7 +11,7 @@ like add GraphQL on it.
 
 .. note::
 
-   In case you're exposing an existing database (esp. if it is production), please configure an access key
+   In case you're exposing an existing database (esp. if it is production), please configure an admin secret key
    for the console and the GraphQL endpoint.
 
 Step 1: Deploy Hasura on Heroku
@@ -40,7 +40,7 @@ Head to your Heroku dashboard and delete the Postgres add-on created in the prev
 Step 3: Configure environment variables
 ---------------------------------------
 
-Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ACCESS_KEY``
+Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
 if you want to secure your endpoint.
 
 .. image:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png

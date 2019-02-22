@@ -11,14 +11,15 @@ import qualified Data.Text                    as T
 import qualified Data.UUID                    as UUID
 import qualified Data.UUID.V4                 as UUID
 import qualified Hasura.Logging               as L
+import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
+import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 newtype InstanceId
   = InstanceId {getInstanceId :: UUID.UUID}
@@ -49,23 +50,14 @@ data RawServeOptions
   , rsoHost            :: !(Maybe HostPreference)
   , rsoConnParams      :: !RawConnParams
   , rsoTxIso           :: !(Maybe Q.TxIsolation)
-  , rsoAccessKey       :: !(Maybe AccessKey)
+  , rsoAdminSecret     :: !(Maybe AdminSecret)
   , rsoAuthHook        :: !RawAuthHook
   , rsoJwtSecret       :: !(Maybe Text)
   , rsoUnAuthRole      :: !(Maybe RoleName)
-  , rsoCorsConfig      :: !RawCorsConfig
+  , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   } deriving (Show, Eq)
-
-data CorsConfigG a
-  = CorsConfigG
-  { ccDomain   :: !a
-  , ccDisabled :: !Bool
-  } deriving (Show, Eq)
-
-type RawCorsConfig = CorsConfigG (Maybe T.Text)
-type CorsConfig = CorsConfigG T.Text
 
 data ServeOptions
   = ServeOptions
@@ -73,7 +65,7 @@ data ServeOptions
   , soHost            :: !HostPreference
   , soConnParams      :: !Q.ConnParams
   , soTxIso           :: !Q.TxIsolation
-  , soAccessKey       :: !(Maybe AccessKey)
+  , soAdminSecret     :: !(Maybe AdminSecret)
   , soAuthHook        :: !(Maybe AuthHook)
   , soJwtSecret       :: !(Maybe Text)
   , soUnAuthRole      :: !(Maybe RoleName)
@@ -134,8 +126,8 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AccessKey where
-  fromEnv = Right . AccessKey . T.pack
+instance FromEnv AdminSecret where
+  fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
   fromEnv = Right . RoleName . T.pack
@@ -145,6 +137,9 @@ instance FromEnv Bool where
 
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
+
+instance FromEnv CorsConfig where
+  fromEnv = readCorsDomains
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -185,9 +180,16 @@ considerEnv envVar = do
     throwErr s = throwError $
       "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
+considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
+considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
+
 withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
   maybe (considerEnv envVar) returnJust mVal
+
+withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
+withEnvs mVal envVars =
+  maybe (considerEnvs envVars) returnJust mVal
 
 withEnvBool :: Bool -> String -> WithEnv Bool
 withEnvBool bVal envVar =
@@ -230,7 +232,7 @@ mkServeOptions rso = do
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$>
            withEnv (rsoTxIso rso) (fst txIsoEnv)
-  accKey <- withEnv (rsoAccessKey rso) $ fst accessKeyEnv
+  adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
@@ -240,7 +242,7 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
 
-  return $ ServeOptions port host connParams txIso accKey authHook jwtSecret
+  return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole enableTelemetry
   where
     mkConnParams (RawConnParams s c i p) = do
@@ -261,9 +263,8 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig (CorsConfigG mDom isDis) = do
-      domEnv <- fromMaybe "*" <$> withEnv mDom (fst corsDomainEnv)
-      return $ CorsConfigG domEnv isDis
+    mkCorsConfig mCfg =
+      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -319,18 +320,21 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine on a different port (say 9090) with console disabled"
         , "graphql-engine --database-url <database-url> serve --server-port 9090"
         ]
-      , [ "# Start GraphQL Engine with access key"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+      , [ "# Start GraphQL Engine with admin secret key"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
         ]
       , [ "# Start GraphQL Engine with restrictive CORS policy (only allow https://example.com:8080)"
         , "graphql-engine --database-url <database-url> serve --cors-domain https://example.com:8080"
         ]
+      , [ "# Start GraphQL Engine with multiple domains for CORS (https://example.com, http://localhost:3000 and https://*.foo.bar.com)"
+        , "graphql-engine --database-url <database-url> serve --cors-domain \"https://example.com, https://*.foo.bar.com, http://localhost:3000\""
+        ]
       , [ "# Start GraphQL Engine with Authentication Webhook (GET)"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
           <> " --auth-hook https://mywebhook.com/get"
         ]
       , [ "# Start GraphQL Engine with Authentication Webhook (POST)"
-        , "graphql-engine --database-url <database-url> serve --access-key <secretaccesskey>"
+        , "graphql-engine --database-url <database-url> serve --admin-secret <adminsecretkey>"
           <> " --auth-hook https://mywebhook.com/post --auth-hook-mode POST"
         ]
       , [ "# Start GraphQL Engine with telemetry enabled/disabled"
@@ -342,7 +346,7 @@ serveCmdFooter =
     envVars =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv , txIsoEnv
-      , accessKeyEnv, authHookEnv , authHookModeEnv , jwtSecretEnv
+      , pgUsePrepareEnv, adminSecretEnv, accessKeyEnv, authHookEnv , authHookModeEnv , jwtSecretEnv
       , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv , enableTelemetryEnv
       ]
 
@@ -393,7 +397,7 @@ pgTimeoutEnv =
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
-  , "Use prepared statements for queries (default: True)"
+  , "Use prepared statements for queries (default: true)"
   )
 
 txIsoEnv :: (String, String)
@@ -405,19 +409,25 @@ txIsoEnv =
 accessKeyEnv :: (String, String)
 accessKeyEnv =
   ( "HASURA_GRAPHQL_ACCESS_KEY"
-  , "Secret access key, required to access this instance"
+  , "Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)"
+  )
+
+adminSecretEnv :: (String, String)
+adminSecretEnv =
+  ( "HASURA_GRAPHQL_ADMIN_SECRET"
+  , "Admin Secret key, required to access this instance"
   )
 
 authHookEnv :: (String, String)
 authHookEnv =
   ( "HASURA_GRAPHQL_AUTH_HOOK"
-  , "The authentication webhook, required to authenticate requests"
+  , "URL of the authorization webhook required to authorize requests"
   )
 
 authHookModeEnv :: (String, String)
 authHookModeEnv =
   ( "HASURA_GRAPHQL_AUTH_HOOK_MODE"
-  , "The authentication webhook mode (default: GET)"
+  , "HTTP method to use for authorization webhook (default: GET)"
   )
 
 jwtSecretEnv :: (String, String)
@@ -429,14 +439,15 @@ jwtSecretEnv =
 unAuthRoleEnv :: (String, String)
 unAuthRoleEnv =
   ( "HASURA_GRAPHQL_UNAUTHORIZED_ROLE"
-  , "Unauthorized role, used when access-key is not sent in access-key only mode "
+  , "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
                                  ++ "or \"Authorization\" header is absent in JWT mode"
   )
 
 corsDomainEnv :: (String, String)
 corsDomainEnv =
   ( "HASURA_GRAPHQL_CORS_DOMAIN"
-  , "The domain, including scheme and port, to allow CORS for"
+  , "CSV of list of domains, excluding scheme (http/https) and including  port, "
+    ++ "to allow CORS for. Wildcard domains are allowed. See docs for details."
   )
 
 enableConsoleEnv :: (String, String)
@@ -460,24 +471,24 @@ parseRawConnInfo =
   where
     host = optional $
       strOption ( long "host" <>
-                  metavar "HOST" <>
+                  metavar "<HOST>" <>
                   help "Postgres server host" )
 
     port = optional $
       option auto ( long "port" <>
                   short 'p' <>
-                  metavar "PORT" <>
+                  metavar "<PORT>" <>
                   help "Postgres server port" )
 
     user = optional $
       strOption ( long "user" <>
                   short 'u' <>
-                  metavar "USER" <>
+                  metavar "<USER>" <>
                   help "Database user name" )
 
     password =
       strOption ( long "password" <>
-                  metavar "PASSWORD" <>
+                  metavar "<PASSWORD>" <>
                   value "" <>
                   help "Password of the user"
                 )
@@ -485,14 +496,14 @@ parseRawConnInfo =
     dbUrl = optional $
       strOption
                 ( long "database-url" <>
-                  metavar "DATABASE-URL" <>
+                  metavar "<DATABASE-URL>" <>
                   help (snd databaseUrlEnv)
                 )
 
     dbName = optional $
       strOption ( long "dbname" <>
                   short 'd' <>
-                  metavar "NAME" <>
+                  metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
     retries = optional $
@@ -528,7 +539,7 @@ parseTxIsolation = optional $
   option (eitherReader readIsoLevel)
            ( long "tx-iso" <>
              short 'i' <>
-             metavar "TXISO" <>
+             metavar "<TXISO>" <>
              help (snd txIsoEnv)
            )
 
@@ -540,7 +551,7 @@ parseConnParams =
       option auto
               ( long "stripes" <>
                  short 's' <>
-                 metavar "NO OF STRIPES" <>
+                 metavar "<NO OF STRIPES>" <>
                  help (snd pgStripesEnv)
               )
 
@@ -548,20 +559,20 @@ parseConnParams =
       option auto
             ( long "connections" <>
                short 'c' <>
-               metavar "NO OF CONNS" <>
+               metavar "<NO OF CONNS>" <>
                help (snd pgConnsEnv)
             )
 
     timeout = optional $
       option auto
               ( long "timeout" <>
-                metavar "SECONDS" <>
+                metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
       option (eitherReader parseStrAsBool)
               ( long "use-prepared-statements" <>
-                metavar "USE PREPARED STATEMENTS" <>
+                metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
               )
 
@@ -569,22 +580,30 @@ parseServerPort :: Parser (Maybe Int)
 parseServerPort = optional $
   option auto
        ( long "server-port" <>
-         metavar "PORT" <>
+         metavar "<PORT>" <>
          help (snd servePortEnv)
        )
 
 parseServerHost :: Parser (Maybe HostPreference)
 parseServerHost = optional $ strOption ( long "server-host" <>
-                metavar "HOST" <>
+                metavar "<HOST>" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AccessKey)
+parseAccessKey :: Parser (Maybe AdminSecret)
 parseAccessKey =
-  optional $ AccessKey <$>
+  optional $ AdminSecret <$>
     strOption ( long "access-key" <>
-                metavar "SECRET ACCESS KEY" <>
-                help (snd accessKeyEnv)
+                metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
+                help (snd adminSecretEnv)
+              )
+
+parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret =
+  optional $ AdminSecret <$>
+    strOption ( long "admin-secret" <>
+                metavar "ADMIN SECRET KEY" <>
+                help (snd adminSecretEnv)
               )
 
 readHookType :: String -> Either String AuthHookType
@@ -600,13 +619,13 @@ parseWebHook =
   where
     url = optional $
       strOption ( long "auth-hook" <>
-                  metavar "AUTHENTICATION WEB HOOK" <>
+                  metavar "<WEB HOOK URL>" <>
                   help (snd authHookEnv)
                 )
     urlType = optional $
       option (eitherReader readHookType)
                   ( long "auth-hook-mode" <>
-                    metavar "GET|POST" <>
+                    metavar "<GET|POST>" <>
                     help (snd authHookModeEnv)
                   )
 
@@ -615,7 +634,7 @@ parseJwtSecret :: Parser (Maybe Text)
 parseJwtSecret =
   optional $ strOption
              ( long "jwt-secret" <>
-               metavar "JWK" <>
+               metavar "<JSON CONFIG>" <>
                help (snd jwtSecretEnv)
              )
 
@@ -627,25 +646,27 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
 parseUnAuthRole :: Parser (Maybe RoleName)
 parseUnAuthRole = optional $
   RoleName <$> strOption ( long "unauthorized-role" <>
-                          metavar "UNAUTHORIZED ROLE" <>
+                          metavar "<ROLE>" <>
                           help (snd unAuthRoleEnv)
                         )
 
-parseCorsConfig :: Parser RawCorsConfig
-parseCorsConfig =
-  CorsConfigG <$> corsDomain <*> disableCors
+parseCorsConfig :: Parser (Maybe CorsConfig)
+parseCorsConfig = mapCC <$> disableCors <*> corsDomain
   where
-    corsDomain =
-      optional (strOption
-                 ( long "cors-domain" <>
-                   metavar "CORS DOMAIN" <>
-                   help (snd corsDomainEnv)
-                 )
-               )
+    corsDomain = optional $
+      option (eitherReader readCorsDomains)
+      ( long "cors-domain" <>
+        metavar "<DOMAINS>" <>
+        help (snd corsDomainEnv)
+      )
+
     disableCors =
       switch ( long "disable-cors" <>
-               help "Disable CORS handling"
+               help "Disable CORS. Do not send any CORS headers on any request"
              )
+
+    mapCC isDisabled domains =
+      bool domains (Just CCDisabled) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -677,12 +698,11 @@ serveOptsToLog so =
   StartupLog L.LevelInfo "serve_options" infoVal
   where
     infoVal = J.object [ "port" J..= soPort so
-                       , "accesskey_set" J..= isJust (soAccessKey so)
+                       , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
                        , "unauth_role" J..= soUnAuthRole so
-                       , "cors_domain" J..= (ccDomain . soCorsConfig) so
-                       , "cors_disabled" J..= (ccDisabled . soCorsConfig) so
+                       , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so

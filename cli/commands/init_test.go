@@ -29,10 +29,10 @@ func TestInitCmd(t *testing.T) {
 		err  error
 	}{
 		{"only-init-dir", &initOptions{
-			EC:        ec,
-			Endpoint:  "",
-			AccessKey: "",
-			InitDir:   filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
+			EC:          ec,
+			Endpoint:    "",
+			AdminSecret: "",
+			InitDir:     filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
 		}, nil},
 	}
 

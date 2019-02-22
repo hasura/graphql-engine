@@ -40,9 +40,17 @@ class ModifyCustomFunction extends React.Component {
   }
   componentWillReceiveProps(nextProps) {
     const { functionName, schema } = this.props.params;
-    if (functionName !== nextProps.params.functionName || schema !== nextProps.params.schema) {
+    if (
+      functionName !== nextProps.params.functionName ||
+      schema !== nextProps.params.schema
+    ) {
       Promise.all([
-        this.props.dispatch(fetchCustomFunction(nextProps.params.functionName, nextProps.params.schema)),
+        this.props.dispatch(
+          fetchCustomFunction(
+            nextProps.params.functionName,
+            nextProps.params.schema
+          )
+        ),
       ]);
     }
   }

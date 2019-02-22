@@ -42,7 +42,7 @@ import {
   BIGINT,
   BIGSERIAL,
   UUID,
-  JSON,
+  JSONDTYPE,
   JSONB,
   TIMESTAMP,
   TIME,
@@ -282,7 +282,7 @@ const ColumnEditor = ({
       case UUID:
         return generateAlterOptions(uuidOptions);
 
-      case JSON:
+      case JSONDTYPE:
         return generateAlterOptions(jsonOptions);
 
       case JSONB:
@@ -722,7 +722,7 @@ class ModifyTable extends Component {
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div
             className={
-              `col-xs-9 ${styles.padd_left_remove}` +
+              `col-xs-10 ${styles.padd_left_remove}` +
               ' ' +
               styles.modifyMinWidth
             }

@@ -1,0 +1,23 @@
+description: Update resident using preset
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: user1
+response:
+  returning:
+  - id: 3
+    name: clarke
+    age: 21
+    city: melbourne
+  affected_rows: 1
+query:
+  type: update
+  args:
+    table: resident
+    where:
+      name: clarke
+    returning:
+    - id
+    - name
+    - age
+    - city

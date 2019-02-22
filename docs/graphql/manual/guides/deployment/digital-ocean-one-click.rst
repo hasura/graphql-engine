@@ -108,12 +108,12 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 Secure the GraphQL endpoint
 ---------------------------
 
-By default Hasura is exposed without any access key. Anyone can read and write
+By default Hasura is exposed without any secret key. Anyone can read and write
 to your database using GraphQL. When deploying to production, you should secure
-the endpoint by adding an access key and then setting up permission rules on
+the endpoint by adding an admin secret key and then setting up permission rules on
 tables.
 
-To add an access key, follow the steps given below:
+To add an admin secret key, follow the steps given below:
 
 1. Connect to the Droplet via SSH:
 
@@ -129,7 +129,7 @@ To add an access key, follow the steps given below:
       cd /etc/hasura
 
 
-3. Edit ``docker-compose.yaml`` and un-comment the line that mentions access key.
+3. Edit ``docker-compose.yaml`` and un-comment the line that mentions admin secret key.
    Also change it to some unique secret:
 
    .. code-block:: bash
@@ -137,8 +137,8 @@ To add an access key, follow the steps given below:
       vim docker-compose.yaml
 
       ...
-      # un-comment next line to add an access key
-      HASURA_GRAPHQL_ACCESS_KEY: mysecretaccesskey
+      # un-comment next line to add an admin secret key
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
       ...
 
       # type ESC followed by :wq to save and quit
@@ -152,12 +152,12 @@ To add an access key, follow the steps given below:
 
 
 That's it. Visit the console at ``http://your_droplet_ip/console`` and it should
-prompt for the access key. Further API requests can be made by adding the
+prompt for the admin secret key. Further API requests can be made by adding the
 following header:
 
 .. code-block:: bash
 
-   X-Hasura-Access-Key: mysecretaccesskey
+   X-Hasura-Admin-Secret: myadminsecretkey
 
 
 Adding a domain & Enabling HTTPS

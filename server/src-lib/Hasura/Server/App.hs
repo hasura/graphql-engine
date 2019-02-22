@@ -43,10 +43,10 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Middleware               (corsMiddleware,
-                                                         mkDefaultCorsPolicy)
+import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -58,9 +58,9 @@ consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 boolToText :: Bool -> T.Text
 boolToText = bool "false" "true"
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = boolToText False
-isAccessKeySet _        = boolToText True
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
@@ -77,7 +77,7 @@ mkConsoleHTML path authMode enableTelemetry =
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAccessKeySet" .= isAccessKeySet authMode
+                         , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
                          , "enableTelemetry" .= boolToText enableTelemetry
                          ]
@@ -326,8 +326,8 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg
 httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
 httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- cors middleware
-    unless (ccDisabled corsCfg) $
-      middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
+    unless (isCorsDisabled corsCfg) $
+      middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
     when enableConsole serveApiConsole
