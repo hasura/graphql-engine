@@ -213,124 +213,95 @@ processEvent logenv pool e = do
           headerInfos = etiHeaders eti
           etHeaders = map encodeHeader headerInfos
           headers = addDefaultHeaders etHeaders
-      ep <- createEventPayload retryConf e
+          ep = createEventPayload retryConf e
       res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
-      let decodedHeaders = map (decodeHeader headerInfos) headers
-      finally <- either (processError retryConf decodedHeaders ep) (processSuccess decodedHeaders ep) res
+      let decodedHeaders = map (decodeHeader logenv headerInfos) headers
+      finally <- either (processError pool e retryConf decodedHeaders ep) (processSuccess pool e decodedHeaders ep) res
       either logQErr return finally
+
+createEventPayload :: RetryConf -> Event ->  EventPayload
+createEventPayload retryConf e = EventPayload
+    { epId           = eId e
+    , epTable        = QualifiedTableStrict { getQualifiedTable = eTable e}
+    , epTrigger      = eTrigger e
+    , epEvent        = eEvent e
+    , epDeliveryInfo =  DeliveryInfo
+      { diCurrentRetry = eTries e
+      , diMaxRetries   = rcNumRetries retryConf
+      }
+    , epCreatedAt    = eCreatedAt e
+    }
+
+processSuccess
+  :: ( MonadIO m
+     )
+  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp -> m (Either QErr ())
+processSuccess pool e decodedHeaders ep resp = do
+  let respBody = hrsBody resp
+      respHeaders = hrsHeaders resp
+      respStatus = hrsStatus resp
+      invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
+  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    insertInvocation invocation
+    clearNextRetry e
+    markDelivered e
+    unlockEvent e
+
+processError
+  :: ( MonadIO m
+     , MonadReader r m
+     , Has HLogger r
+     )
+  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr -> m (Either QErr ())
+processError pool e retryConf decodedHeaders ep err = do
+  logHTTPErr err
+  let invocation = case err of
+        HClient excp -> do
+          let errMsg = TBS.fromLBS $ encode $ show excp
+          mkInvo ep 1000 decodedHeaders errMsg []
+        HParse _ detail -> do
+          let errMsg = TBS.fromLBS $ encode detail
+          mkInvo ep 1001 decodedHeaders errMsg []
+        HStatus errResp -> do
+          let respPayload = hrsBody errResp
+              respHeaders = hrsHeaders errResp
+              respStatus = hrsStatus errResp
+          mkInvo ep respStatus decodedHeaders respPayload respHeaders
+        HOther detail -> do
+          let errMsg = (TBS.fromLBS $ encode detail)
+          mkInvo ep 500 decodedHeaders errMsg []
+  liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+    insertInvocation invocation
+    setError e retryConf err
+
+setError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
+setError e retryConf err = do
+  let mretryHeader = getRetryAfterHeaderFromError err
+      tries = eTries e
+      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      triesExhausted = tries >= rcNumRetries retryConf
+      noRetryHeader = isNothing mretryHeaderSeconds
+  if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+    then do
+      markError e
+      clearNextRetry e
+      unlockEvent e
+    else do
+      currentTime <- liftIO getCurrentTime
+      let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
+          diff = fromIntegral delay
+          retryTime = addUTCTime diff currentTime
+      setNextRetry e retryTime
+      unlockEvent e
   where
-    createEventPayload :: (Monad m) => RetryConf -> Event -> m EventPayload
-    createEventPayload retryConf e' =  do
-      return EventPayload
-        { epId           = eId e'
-        , epTable        = QualifiedTableStrict { getQualifiedTable = eTable e'}
-        , epTrigger      = eTrigger e'
-        , epEvent        = eEvent e'
-        , epDeliveryInfo =  DeliveryInfo
-          { diCurrentRetry = eTries e'
-          , diMaxRetries   = rcNumRetries retryConf
-          }
-        , epCreatedAt    = eCreatedAt e'
-        }
-
-    processSuccess
-      :: ( MonadIO m
-         )
-      => [HeaderConf] -> EventPayload -> HTTPResp -> m (Either QErr ())
-    processSuccess decodedHeaders ep resp = do
-      let respBody = hrsBody resp
-          respHeaders = hrsHeaders resp
-          respStatus = hrsStatus resp
-          invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
-      liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-        insertInvocation invocation
-        clearNextRetry e
-        markDelivered e
-        unlockEvent e
-
-    processError
-      :: ( MonadIO m
-         , MonadReader r m
-         , Has HLogger r
-         )
-      => RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr -> m (Either QErr ())
-    processError retryConf decodedHeaders ep err = do
-      logHTTPErr err
-      let invocation = case err of
-            HClient excp -> do
-              let errMsg = TBS.fromLBS $ encode $ show excp
-              mkInvo ep 1000 decodedHeaders errMsg []
-            HParse _ detail -> do
-              let errMsg = TBS.fromLBS $ encode detail
-              mkInvo ep 1001 decodedHeaders errMsg []
-            HStatus errResp -> do
-              let respPayload = hrsBody errResp
-                  respHeaders = hrsHeaders errResp
-                  respStatus = hrsStatus errResp
-              mkInvo ep respStatus decodedHeaders respPayload respHeaders
-            HOther detail -> do
-              let errMsg = (TBS.fromLBS $ encode detail)
-              mkInvo ep 500 decodedHeaders errMsg []
-      liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-        insertInvocation invocation
-        setError retryConf err
-
-    setError :: RetryConf -> HTTPErr -> Q.TxE QErr ()
-    setError retryConf err = do
-      let mretryHeader = getRetryAfterHeaderFromError err
-          tries = eTries e
-          mretryHeaderSeconds = parseRetryHeader mretryHeader
-          triesExhausted = tries >= rcNumRetries retryConf
-          noRetryHeader = isNothing mretryHeaderSeconds
-      if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
-        then do
-          markError e
-          clearNextRetry e
-          unlockEvent e
-        else do
-          currentTime <- liftIO getCurrentTime
-          let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
-              diff = fromIntegral delay
-              retryTime = addUTCTime diff currentTime
-          setNextRetry e retryTime
-          unlockEvent e
-
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
-    getRetryAfterHeaderFromError _ = Nothing
+    getRetryAfterHeaderFromError _              = Nothing
 
     getRetryAfterHeaderFromResp resp
       = let mHeader = find (\(HeaderConf name _) -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
         in case mHeader of
              Just (HeaderConf _ (HVValue value)) -> Just value
              _                                   -> Nothing
-
-    encodeHeader :: EventHeaderInfo -> HTTP.Header
-    encodeHeader (EventHeaderInfo hconf cache) =
-      let (HeaderConf name _) = hconf
-          ciname = CI.mk $ T.encodeUtf8 name
-          value = T.encodeUtf8 cache
-      in  (ciname, value)
-
-    decodeHeader :: [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString) -> HeaderConf
-    decodeHeader headerInfos (hdrName, hdrVal)
-      = let name = decodeBS $ CI.original hdrName
-            getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
-                          in name'
-            mehi = find (\hi -> getName hi == name) headerInfos
-        in case mehi of
-             Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-             Just ehi -> if logenv
-                         then HeaderConf name (HVValue (ehiCachedValue ehi))
-                         else ehiHeaderConf ehi
-       where
-         decodeBS = TE.decodeUtf8With TE.lenientDecode
-
-    addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
-    addDefaultHeaders hdrs = hdrs ++
-      [ (CI.mk "Content-Type", "application/json")
-      , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion )
-      ]
-
     parseRetryHeader Nothing = Nothing
     parseRetryHeader (Just hValue)
       = let seconds = readMaybe $ T.unpack hValue
@@ -338,45 +309,72 @@ processEvent logenv pool e = do
              Nothing  -> Nothing
              Just sec -> if sec > 0 then Just sec else Nothing
 
-    mkInvo :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
-    mkInvo ep status reqHeaders respBody respHeaders
-      = let resp = if isClientError status then mkClientErr respBody else mkResp status respBody respHeaders
-        in
-          Invocation
-          (epId ep)
-          status
-          (mkWebhookReq (toJSON ep) reqHeaders)
-          resp
+encodeHeader :: EventHeaderInfo -> HTTP.Header
+encodeHeader (EventHeaderInfo hconf cache) =
+  let (HeaderConf name _) = hconf
+      ciname = CI.mk $ T.encodeUtf8 name
+      value = T.encodeUtf8 cache
+  in  (ciname, value)
 
-    mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
-    mkResp status payload headers =
-      let wr = WebhookResponse payload (mkMaybe headers) status
-      in ResponseType1 wr
+decodeHeader :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString) -> HeaderConf
+decodeHeader logenv headerInfos (hdrName, hdrVal)
+  = let name = decodeBS $ CI.original hdrName
+        getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
+                      in name'
+        mehi = find (\hi -> getName hi == name) headerInfos
+    in case mehi of
+         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+         Just ehi -> if logenv
+                     then HeaderConf name (HVValue (ehiCachedValue ehi))
+                     else ehiHeaderConf ehi
+   where
+     decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-    mkClientErr :: TBS.TByteString -> Response
-    mkClientErr message =
-      let cerr = ClientError message
-      in ResponseType2 cerr
+addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
+addDefaultHeaders hdrs = hdrs ++
+  [ (CI.mk "Content-Type", "application/json")
+  , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion )
+  ]
 
-    mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
-    mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
+mkInvo :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
+mkInvo ep status reqHeaders respBody respHeaders
+  = let resp = if isClientError status then mkClientErr respBody else mkResp status respBody respHeaders
+    in
+      Invocation
+      (epId ep)
+      status
+      (mkWebhookReq (toJSON ep) reqHeaders)
+      resp
 
-    isClientError :: Int -> Bool
-    isClientError status = status >= 1000
+mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
+mkResp status payload headers =
+  let wr = WebhookResponse payload (mkMaybe headers) status
+  in ResponseType1 wr
 
-    mkMaybe :: [a] -> Maybe [a]
-    mkMaybe [] = Nothing
-    mkMaybe x  = Just x
+mkClientErr :: TBS.TByteString -> Response
+mkClientErr message =
+  let cerr = ClientError message
+  in ResponseType2 cerr
 
-    logQErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => QErr -> m ()
-    logQErr err = do
-      (logger:: HLogger) <- asks getter
-      liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
+mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
 
-    logHTTPErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => HTTPErr -> m ()
-    logHTTPErr err = do
-      (logger:: HLogger) <- asks getter
-      liftIO $ logger $ L.toEngineLog err
+isClientError :: Int -> Bool
+isClientError status = status >= 1000
+
+mkMaybe :: [a] -> Maybe [a]
+mkMaybe [] = Nothing
+mkMaybe x  = Just x
+
+logQErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => QErr -> m ()
+logQErr err = do
+  (logger:: HLogger) <- asks getter
+  liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+
+logHTTPErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => HTTPErr -> m ()
+logHTTPErr err = do
+  (logger:: HLogger) <- asks getter
+  liftIO $ logger $ L.toEngineLog err
 
 tryWebhook
   :: ( MonadReader r m
