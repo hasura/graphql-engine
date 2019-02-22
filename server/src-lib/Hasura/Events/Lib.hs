@@ -243,9 +243,7 @@ processSuccess pool e decodedHeaders ep resp = do
       invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
-    clearNextRetry e
-    markDelivered e
-    unlockEvent e
+    setSuccess e
 
 processError
   :: ( MonadIO m
@@ -272,10 +270,10 @@ processError pool e retryConf decodedHeaders ep err = do
           mkInvo ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
-    setError e retryConf err
+    retryOrSetError e retryConf err
 
-setError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
-setError e retryConf err = do
+retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
+retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
       mretryHeaderSeconds = parseRetryHeader mretryHeader
@@ -283,16 +281,13 @@ setError e retryConf err = do
       noRetryHeader = isNothing mretryHeaderSeconds
   if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
     then do
-      markError e
-      clearNextRetry e
-      unlockEvent e
+      setError e
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
-      setNextRetry e retryTime
-      unlockEvent e
+      setRetry e retryTime
   where
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
     getRetryAfterHeaderFromError _              = Nothing
@@ -450,29 +445,28 @@ insertInvocation invo = do
           WHERE id = $1
           |] (Identity $ iEventId invo) True
 
-markDelivered :: Event -> Q.TxE QErr ()
-markDelivered e =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET delivered = 't', error = 'f'
-          WHERE id = $1
-          |] (Identity $ eId e) True
+setSuccess :: Event -> Q.TxE QErr ()
+setSuccess e = Q.unitQE defaultTxErrorHandler [Q.sql|
+                        UPDATE hdb_catalog.event_log
+                        SET delivered = 't', next_retry_at = NULL, locked = 'f'
+                        WHERE id = $1
+                        |] (Identity $ eId e) True
 
-markError :: Event -> Q.TxE QErr ()
-markError e =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET error = 't'
-          WHERE id = $1
-          |] (Identity $ eId e) True
 
-unlockEvent :: Event -> Q.TxE QErr ()
-unlockEvent e =
+setError :: Event -> Q.TxE QErr ()
+setError e = Q.unitQE defaultTxErrorHandler [Q.sql|
+                        UPDATE hdb_catalog.event_log
+                        SET error = 't', next_retry_at = NULL, locked = 'f'
+                        WHERE id = $1
+                        |] (Identity $ eId e) True
+
+setRetry :: Event -> UTCTime -> Q.TxE QErr ()
+setRetry e time =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
-          SET locked = 'f'
-          WHERE id = $1
-          |] (Identity $ eId e) True
+          SET next_retry_at = $1, locked = 'f'
+          WHERE id = $2
+          |] (time, eId e) True
 
 unlockAllEvents :: Q.TxE QErr ()
 unlockAllEvents =
@@ -480,22 +474,6 @@ unlockAllEvents =
           UPDATE hdb_catalog.event_log
           SET locked = 'f'
           |] () False
-
-setNextRetry :: Event -> UTCTime -> Q.TxE QErr ()
-setNextRetry e time =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET next_retry_at = $1
-          WHERE id = $2
-          |] (time, eId e) True
-
-clearNextRetry :: Event -> Q.TxE QErr ()
-clearNextRetry e =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET next_retry_at = NULL
-          WHERE id = $1
-          |] (Identity $ eId e) True
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
