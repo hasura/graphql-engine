@@ -238,6 +238,8 @@ wait_for_port 8080
 
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-rql-disabled test_server_interfaces.py
 
+kill_hge_and_combine_hpc_reports
+
 # webhook tests
 
 if [ $EUID != 0 ] ; then
