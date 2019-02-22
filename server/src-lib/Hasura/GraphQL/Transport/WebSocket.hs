@@ -33,7 +33,6 @@ import           Hasura.GraphQL.Schema                         (getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
-import           Hasura.GraphQL.Utils                          (onJust, onLeft)
 import           Hasura.GraphQL.Validate                       (QueryParts (..),
                                                                 getQueryParts,
                                                                 validateGQ)

@@ -19,7 +19,7 @@ args:
     sql: |
       INSERT INTO hello (code, name) VALUES
       ('felu', 'Pradosh C Mitter'),
-      ('holmes', 'Sherlock Holmes'),
+      ('holmes', 'Sherlock Holmes')
 
 - type: add_remote_schema
   args:

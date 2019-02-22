@@ -1,11 +1,7 @@
 module Hasura.GraphQL.Transport.WebSocket.Client
-  ( mkGraphqlProxy
-  , runGqlClient
+  ( runGqlClient
   , clearState
   , WebsocketPayload (..)
-  , WebsocketProxyState
-  , RemoteConnState
-  , sendInit
   )
   where
 
@@ -16,8 +12,6 @@ import           Control.Exception                             (SomeException,
 
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId)
-import           Hasura.GraphQL.Utils                          (onJust, onLeft)
-
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
