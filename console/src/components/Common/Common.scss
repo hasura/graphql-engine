@@ -70,6 +70,9 @@ table thead tr th
       a
       {
         color: #767E93;
+        border-bottom: 1px solid #E6E6E6;
+        background-color: #f0f0f0;
+        width: 100%;
         word-wrap: break-word;
         padding: 15px 0px;
         padding-left: 20px;
@@ -86,8 +89,8 @@ table thead tr th
         padding-left: 20px;
       }
     }
-    .schemaBorder {
-      border-bottom: 1px solid #E6E6E6;
+    .linkBorder {
+      border-bottom: 1px solid #e6e6e6;
     }
     li:last-child {
       border-bottom: 0px;
