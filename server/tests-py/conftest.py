@@ -33,6 +33,16 @@ def pytest_addoption(parser):
         help="Run testcases for CORS configuration"
     )
 
+    parser.addoption(
+        "--test-rql-disabled", action="store_true",
+        help="Run Test cases with RQL queries being disabled"
+    )
+
+    parser.addoption(
+        "--test-graphql-disabled", action="store_true",
+        help="Run Test cases with GraphQL queries being disabled"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -45,6 +55,7 @@ def hge_ctx(request):
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
     test_cors = request.config.getoption('--test-cors')
+    rql_disabled = request.config.getoption('--test-rql-disabled')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -53,7 +64,8 @@ def hge_ctx(request):
             hge_webhook=hge_webhook,
             webhook_insecure=webhook_insecure,
             hge_jwt_key_file=hge_jwt_key_file,
-            hge_jwt_conf=hge_jwt_conf
+            hge_jwt_conf=hge_jwt_conf,
+            rql_disabled=rql_disabled
         )
     except HGECtxError as e:
         pytest.exit(str(e))
