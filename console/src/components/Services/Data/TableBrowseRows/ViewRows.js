@@ -493,47 +493,79 @@ const ViewRows = ({
 
     let disableSortColumn = false;
 
-    const sortByColumn = col => {
+    const sortByColumn = (col, clearExisting = true) => {
       const columnNames = tableColumnsSorted.map(column => column.column_name);
       if (!columnNames.includes(col)) {
         return;
       }
 
-      // Remove all the existing order_bys
       const numOfOrderBys = curFilter.order_by.length;
-      for (let i = 0; i < numOfOrderBys - 1; i++) {
-        dispatch(removeOrder(1));
-      }
 
-      let orderType;
-      if (
-        curFilter.order_by.length !== 0 &&
-        curFilter.order_by[0].column === col &&
-        curFilter.order_by[0].type === 'asc'
-      ) {
-        orderType = 'desc';
-      } else {
-        orderType = 'asc';
+      let orderByCol = col;
+      let orderByPos = numOfOrderBys - 1;
+      let orderType = 'asc';
+
+      let isExistingColumn = false;
+      for (let i = 0; i < numOfOrderBys; i++) {
+        const orderBy = curFilter.order_by[i];
+
+        if (orderBy.column === col) {
+          isExistingColumn = true;
+
+          if (orderBy.type === 'asc') {
+            orderByPos = i;
+            orderType = 'desc';
+          } else {
+            orderByPos = i;
+            orderByCol = null;
+          }
+          break;
+        }
       }
 
       // Go back to the first page
       dispatch(setOffset(0));
-      // Set the filter
-      dispatch(setOrderCol(col, 0));
-      dispatch(setOrderType(orderType, 0));
+
+      if (orderByCol) {
+        // Set the order_by
+        dispatch(setOrderCol(col, orderByPos));
+        dispatch(setOrderType(orderType, orderByPos));
+      }
+
+      // remove order_bys
+      if (clearExisting) {
+        let clearIndex = 0;
+        for (let i = 0; i < numOfOrderBys; i++) {
+          if (i !== orderByPos || !orderByCol) {
+            dispatch(removeOrder(clearIndex));
+          } else {
+            clearIndex = 1;
+          }
+        }
+      } else {
+        if (isExistingColumn) {
+          dispatch(removeOrder(numOfOrderBys - 1));
+        }
+
+        if (!orderByCol) {
+          dispatch(removeOrder(orderByPos));
+        }
+      }
+
       // Run query
       dispatch(runQuery(tableSchema));
-      // Add a new empty filter
+
+      // Add a new empty order_by
       dispatch(addOrder());
     };
 
     const getTheadThProps = (finalState, some, column) => ({
-      onClick: () => {
+      onClick: (e) => {
         if (
           !disableSortColumn &&
           column.id
         ) {
-          sortByColumn(column.id);
+          sortByColumn(column.id, !e.shiftKey);
         }
 
         disableSortColumn = false;
