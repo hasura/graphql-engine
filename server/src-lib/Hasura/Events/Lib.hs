@@ -129,8 +129,16 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
 data Response = ResponseType1 WebhookResponse | ResponseType2 ClientError
 
 instance ToJSON Response where
-  toJSON (ResponseType1 resp) = object ["type" .= String "webhook_response", "data" .= toJSON resp, "version" .= invocationVersion]
-  toJSON (ResponseType2 err)  = object ["type" .= String "client_error", "data" .= toJSON err, "version" .= invocationVersion]
+  toJSON (ResponseType1 resp) = object
+    [ "type" .= String "webhook_response"
+    , "data" .= toJSON resp
+    , "version" .= invocationVersion
+    ]
+  toJSON (ResponseType2 err)  = object
+    [ "type" .= String "client_error"
+    , "data" .= toJSON err
+    , "version" .= invocationVersion
+    ]
 
 data Invocation
   = Invocation
@@ -163,7 +171,9 @@ initEventEngineCtx maxT fetchI = do
   c <- newTVar 0
   return $ EventEngineCtx q c maxT fetchI
 
-processEventQueue :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+processEventQueue
+  :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool -> CacheRef -> EventEngineCtx
+  -> IO ()
 processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
   threads <- mapM async [fetchThread , consumeThread]
   void $ waitAny threads
@@ -182,7 +192,8 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: HLogger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx -> IO ()
+  :: HLogger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
+  -> IO ()
 consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
@@ -216,7 +227,9 @@ processEvent logenv pool e = do
           ep = createEventPayload retryConf e
       res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
       let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-      finally <- either (processError pool e retryConf decodedHeaders ep) (processSuccess pool e decodedHeaders ep) res
+      finally <- either
+        (processError pool e retryConf decodedHeaders ep)
+        (processSuccess pool e decodedHeaders ep) res
       either logQErr return finally
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
@@ -233,9 +246,9 @@ createEventPayload retryConf e = EventPayload
     }
 
 processSuccess
-  :: ( MonadIO m
-     )
-  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp -> m (Either QErr ())
+  :: ( MonadIO m )
+  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp
+  -> m (Either QErr ())
 processSuccess pool e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
@@ -250,7 +263,8 @@ processError
      , MonadReader r m
      , Has HLogger r
      )
-  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr -> m (Either QErr ())
+  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
+  -> m (Either QErr ())
 processError pool e retryConf decodedHeaders ep err = do
   logHTTPErr err
   let invocation = case err of
@@ -279,7 +293,8 @@ retryOrSetError e retryConf err = do
       mretryHeaderSeconds = parseRetryHeader mretryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
-  if triesExhausted && noRetryHeader -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+  -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+  if triesExhausted && noRetryHeader
     then do
       setError e
     else do
@@ -293,7 +308,8 @@ retryOrSetError e retryConf err = do
     getRetryAfterHeaderFromError _              = Nothing
 
     getRetryAfterHeaderFromResp resp
-      = let mHeader = find (\(HeaderConf name _) -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
+      = let mHeader = find (\(HeaderConf name _)
+                            -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
         in case mHeader of
              Just (HeaderConf _ (HVValue value)) -> Just value
              _                                   -> Nothing
@@ -311,7 +327,9 @@ encodeHeader (EventHeaderInfo hconf cache) =
       value = T.encodeUtf8 cache
   in  (ciname, value)
 
-decodeHeader :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString) -> HeaderConf
+decodeHeader
+  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
+  -> HeaderConf
 decodeHeader logenv headerInfos (hdrName, hdrVal)
   = let name = decodeBS $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
@@ -328,12 +346,16 @@ decodeHeader logenv headerInfos (hdrName, hdrVal)
 addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
 addDefaultHeaders hdrs = hdrs ++
   [ (CI.mk "Content-Type", "application/json")
-  , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion )
+  , (CI.mk "User-Agent", "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion)
   ]
 
-mkInvo :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf] -> Invocation
+mkInvo
+  :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
+  -> Invocation
 mkInvo ep status reqHeaders respBody respHeaders
-  = let resp = if isClientError status then mkClientErr respBody else mkResp status respBody respHeaders
+  = let resp = if isClientError status
+          then mkClientErr respBody
+          else mkResp status respBody respHeaders
     in
       Invocation
       (epId ep)
@@ -379,7 +401,8 @@ tryWebhook
      , Has HLogger r
      , Has EventEngineCtx r
      )
-  => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String -> m HTTPResp
+  => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
+  -> m HTTPResp
 tryWebhook headers responseTimeout ep webhook = do
   let createdAt = epCreatedAt ep
       eventId =  epId ep
@@ -425,18 +448,30 @@ fetchEvents =
                     FROM hdb_catalog.event_log l
                     JOIN hdb_catalog.event_triggers e
                     ON (l.trigger_id = e.id)
-                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f' and (l.next_retry_at is NULL or l.next_retry_at <= now())
+                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
+                          and (l.next_retry_at is NULL or l.next_retry_at <= now())
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) = Event id' (QualifiedObject sn tn) (TriggerMeta trid trn) payload tries created
+  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) =
+          Event
+          { eId        = id'
+          , eTable     = QualifiedObject sn tn
+          , eTrigger   = TriggerMeta trid trn
+          , eEvent     = payload
+          , eTries     = tries
+          , eCreatedAt = created
+          }
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
-          |] (iEventId invo, toInt64 $ iStatus invo, Q.AltJ $ toJSON $ iRequest invo, Q.AltJ $ toJSON $ iResponse invo) True
+          |] ( iEventId invo
+             , toInt64 $ iStatus invo
+             , Q.AltJ $ toJSON $ iRequest invo
+             , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
           SET tries = tries + 1
