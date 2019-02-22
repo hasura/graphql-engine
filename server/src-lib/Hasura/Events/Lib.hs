@@ -199,7 +199,7 @@ processEvent
      )
   => LogEnvHeaders -> Q.PGPool -> Event -> m ()
 processEvent logenv pool e = do
-  cacheRef::CacheRef <- asks getter
+  cacheRef <- asks getter
   cache <- liftIO $ readIORef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
@@ -363,12 +363,12 @@ mkMaybe x  = Just x
 
 logQErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => QErr -> m ()
 logQErr err = do
-  (logger:: HLogger) <- asks getter
+  logger <- asks getter
   liftIO $ logger $ L.toEngineLog $ EventInternalErr err
 
 logHTTPErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => HTTPErr -> m ()
 logHTTPErr err = do
-  (logger:: HLogger) <- asks getter
+  logger <- asks getter
   liftIO $ logger $ L.toEngineLog err
 
 tryWebhook
@@ -409,9 +409,7 @@ tryWebhook headers responseTimeout ep webhook = do
         let EventEngineCtx _ c _ _ = eeCtx
         modifyTVar' c (\v -> v - 1)
 
-      case eitherResp of
-        Left err   -> throwError err
-        Right resp -> return resp
+      onLeft eitherResp throwError
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
@@ -451,7 +449,6 @@ setSuccess e = Q.unitQE defaultTxErrorHandler [Q.sql|
                         SET delivered = 't', next_retry_at = NULL, locked = 'f'
                         WHERE id = $1
                         |] (Identity $ eId e) True
-
 
 setError :: Event -> Q.TxE QErr ()
 setError e = Q.unitQE defaultTxErrorHandler [Q.sql|
