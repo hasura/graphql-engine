@@ -26,6 +26,7 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -229,32 +230,42 @@ parseLimit v = do
     noIntErr = throwVE "expecting Integer value for \"limit\""
 
 fromFieldByPKey
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
-  => ((PGColType, PGColValue) -> m S.SQLExp)
-  -> QualifiedTable -> AnnBoolExpSQL -> Field -> m RS.AnnSel
-fromFieldByPKey f tn permFilter fld = fieldAsPath fld $ do
-  boolExp <- pgColValToBoolExp f $ _fArguments fld
-  annFlds <- fromSelSet f (_fType fld) $ _fSelSet fld
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     )
+  => PrepFn m -> QualifiedTable -> PGColArgMap
+  -> AnnBoolExpSQL -> Field -> m RS.AnnSel
+fromFieldByPKey f tn colArgMap permFilter fld = fieldAsPath fld $ do
+  boolExp <- pgColValToBoolExp f colArgMap $ _fArguments fld
+  annFlds <- fromSelSet f fldTy $ _fSelSet fld
   let tabFrom = RS.TableFrom tn Nothing
       tabPerm = RS.TablePerm permFilter Nothing
   return $ RS.AnnSelG annFlds tabFrom tabPerm $
     RS.noTableArgs { RS._taWhere = Just boolExp}
+  where
+    fldTy = _fType fld
 
 convertSelect
-  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
-convertSelect qt permFilter permLimit fld = do
+  :: SelOpCtx -> Field -> Convert RespTx
+convertSelect opCtx fld = do
   selData <- withPathK "selectionSet" $
              fromField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectP2 False (selData, prepArgs)
+  where
+    SelOpCtx qt _ permFilter permLimit = opCtx
 
 convertSelectByPKey
-  :: QualifiedTable -> AnnBoolExpSQL -> Field -> Convert RespTx
-convertSelectByPKey qt permFilter fld = do
+  :: SelPkOpCtx -> Field -> Convert RespTx
+convertSelectByPKey opCtx fld = do
   selData <- withPathK "selectionSet" $
-             fromFieldByPKey prepare qt permFilter fld
+             fromFieldByPKey prepare qt colArgMap permFilter fld
   prepArgs <- get
   return $ RS.selectP2 True (selData, prepArgs)
+  where
+    SelPkOpCtx qt _ permFilter colArgMap = opCtx
 
 -- agg select related
 parseColumns :: MonadError QErr m => AnnGValue -> m [PGCol]
@@ -322,22 +333,23 @@ fromAggField f tn permFilter permLimit fld = fieldAsPath fld $ do
   where
     args = _fArguments fld
 
-convertAggSelect
-  :: QualifiedTable -> AnnBoolExpSQL -> Maybe Int -> Field -> Convert RespTx
-convertAggSelect qt permFilter permLimit fld = do
+convertAggSelect :: SelOpCtx -> Field -> Convert RespTx
+convertAggSelect opCtx fld = do
   selData <- withPathK "selectionSet" $
              fromAggField prepare qt permFilter permLimit fld
   prepArgs <- get
   return $ RS.selectAggP2 (selData, prepArgs)
+  where
+    SelOpCtx qt _ permFilter permLimit = opCtx
 
 fromFuncQueryField
   ::( MonadError QErr m, MonadReader r m, Has FieldMap r
-    , Has OrdByCtx r, Has FuncArgCtx r
+    , Has OrdByCtx r
     )
-  => PrepFn m -> QualifiedFunction -> Bool -> Field
+  => PrepFn m -> QualifiedFunction -> FuncArgSeq -> Bool -> Field
   -> m (RS.TableArgs, Either RS.TableAggFlds RS.AnnFlds, S.FromItem)
-fromFuncQueryField f qf isAgg fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM args "args" $ parseFunctionArgs f
+fromFuncQueryField f qf argSeq isAgg fld = fieldAsPath fld $ do
+  funcArgsM <- withArgM args "args" $ parseFunctionArgs f argSeq
   let funcArgs = fromMaybe [] funcArgsM
       funcFrmItem = S.mkFuncFromItem qf funcArgs
   tableArgs <- parseTableArgs f args
@@ -352,13 +364,10 @@ fromFuncQueryField f qf isAgg fld = fieldAsPath fld $ do
       fromAggSelSet f (_fType fld) (_fSelSet fld)
 
 parseFunctionArgs
-  ::(MonadError QErr m, MonadReader r m, Has FuncArgCtx r)
-  => PrepFn m -> AnnGValue -> m [S.SQLExp]
-parseFunctionArgs fn val =
-  flip withObject val $ \nTy obj -> do
-    funcArgCtx :: FuncArgCtx <- asks getter
-    argSeq <- onNothing (Map.lookup nTy funcArgCtx) $ throw500 $
-              "namedType " <> showNamedTy nTy <> " not found in args context"
+  ::(MonadError QErr m)
+  => PrepFn m -> FuncArgSeq -> AnnGValue -> m [S.SQLExp]
+parseFunctionArgs fn argSeq val =
+  flip withObject val $ \nTy obj ->
     fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
       argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
                 "argument " <> showName argName <> " required in input type "
@@ -366,11 +375,12 @@ parseFunctionArgs fn val =
       fn =<< asPGColVal argVal
 
 convertFuncQuery
-  :: QualifiedTable -> QualifiedFunction -> AnnBoolExpSQL
-  -> Maybe Int -> Bool -> Field -> Convert RespTx
-convertFuncQuery qt qf permFilter permLimit isAgg fld = do
+  :: FuncQOpCtx -> Bool -> Field -> Convert RespTx
+convertFuncQuery funcOpCtx isAgg fld = do
   (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
-    fromFuncQueryField prepare qf isAgg fld
+    fromFuncQueryField prepare qf argSeq isAgg fld
   let tabPerm = RS.TablePerm permFilter permLimit
   prepArgs <- get
   return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs (sel, prepArgs)
+  where
+    FuncQOpCtx qt _ permFilter permLimit qf argSeq = funcOpCtx
