@@ -389,38 +389,41 @@ class Permissions extends Component {
         dispatch(permSetBulkSelect(isChecked, selectedRole));
       };
 
-      const dispatchDeletePermission = () => {
-        const isConfirm = window.confirm(
-          'Are you sure you want to delete the permission for role ' + role + '?'
-        );
-        if (isConfirm) {
-          dispatch(permRemoveRole(tableSchema, role));
-        }
-      };
+      // const dispatchDeletePermission = () => {
+      //   const isConfirm = window.confirm(
+      //     'Are you sure you want to delete the permission for role ' + role + '?'
+      //   );
+      //   if (isConfirm) {
+      //     dispatch(permRemoveRole(tableSchema, role));
+      //   }
+      // };
 
       const _permissionsRowHtml = [];
       if (role === 'admin' || role === '') {
         _permissionsRowHtml.push(<td key={-1} />);
       } else {
         const bulkSelect = permsState.bulkSelect;
-        const currentInputSelection = (
-          <input
-            onChange={dispatchBulkSelect}
-            checked={bulkSelect.filter(e => e === role).length}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+
+        // const deleteIcon = (
+        //   <i
+        //     onClick={dispatchDeletePermission}
+        //     className={styles.permissionDelete + ' fa fa-close'}
+        //     title="Remove all permissions"
+        //     aria-hidden="true"
+        //   />
+        // );
+
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
-              {currentInputSelection}
-              <i
-                onClick={dispatchDeletePermission}
-                className={styles.permissionDelete + ' fa fa-trash'}
-                aria-hidden="true"
+              <input
+                onChange={dispatchBulkSelect}
+                checked={bulkSelect.filter(e => e === role).length}
+                data-role={role}
+                title="Select for bulk actions"
+                type="checkbox"
               />
+              {/*{deleteIcon}*/}
             </div>
           </td>
         );
@@ -472,7 +475,7 @@ class Permissions extends Component {
             key={i}
             className={className}
             onClick={onClick}
-            title="Click to edit permissions"
+            title="Edit permissions"
             data-test={`${role}-${queryType}`}
           >
             {getRoleQueryPermission(
@@ -595,9 +598,9 @@ class Permissions extends Component {
 
     const getPermissionsTable = (tableSchema, queryTypes, permsState, roleList) => {
       const permissionsSymbols = {
-        fullAccess: <i className="fa fa-check" aria-hidden="true" />,
-        noAccess: <i className="fa fa-times" aria-hidden="true" />,
-        partialAccess: <i className="fa fa-filter" aria-hidden="true" />,
+        fullAccess: <i className={'fa fa-check ' + styles.permissionSymbolFA} aria-hidden="true" />,
+        noAccess: <i className={'fa fa-times ' + styles.permissionSymbolNA} aria-hidden="true" />,
+        partialAccess: <i className={'fa fa-filter ' + styles.permissionSymbolPA} aria-hidden="true" />,
       };
 
       return (
@@ -1726,7 +1729,7 @@ class Permissions extends Component {
           </div>
           <div className={styles.padd_bottom}>
             <Button onClick={handleBulkRemoveClick} color="red" size="sm">
-              Remove Permissions
+              Remove All Permissions
             </Button>
           </div>
         </div>
