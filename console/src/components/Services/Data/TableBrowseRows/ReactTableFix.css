@@ -41,8 +41,14 @@
 }
 .ReactTable .rt-table .rt-thead .rt-th,
 .ReactTable .rt-table .rt-thead .rt-td {
-  padding-right: 15px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
   border-right: 1px solid rgba(0,0,0,0.1);
+}
+.ReactTable .rt-table .rt-thead .rt-th.collapsed,
+.ReactTable .rt-table .rt-thead .rt-td.collapsed {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
 }
 
 .ReactTable .rt-tbody .rt-th,
@@ -51,8 +57,8 @@
   border-right: 1px solid rgba(0,0,0,0.1);
 }
 
-.ReactTable .rt-th > div,
-.ReactTable .rt-td > div{
+.ReactTable .rt-th .ellipsis,
+.ReactTable .rt-td > div {
   overflow: hidden;
   text-overflow: ellipsis;
 }

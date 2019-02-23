@@ -1,8 +1,8 @@
 import React from 'react';
-import ReactTable from 'react-table';
 import { Link } from 'react-router';
 import 'react-table/react-table.css';
 import './ReactTableFix.css';
+import DragFoldTable from './DragFoldTable';
 
 import {
   vExpandRel,
@@ -87,6 +87,7 @@ const ViewRows = ({
       _gridHeadings.push({
         Header: '',
         accessor: 'actions',
+        id: 'actions',
       });
     }
 
@@ -111,6 +112,8 @@ const ViewRows = ({
           </span>
         ),
         accessor: columnName,
+        id: columnName,
+        foldable: true
       });
     });
 
@@ -124,6 +127,8 @@ const ViewRows = ({
           </span>
         ),
         accessor: relName,
+        id: relName,
+        foldable: true
       });
     });
 
@@ -595,7 +600,7 @@ const ViewRows = ({
     };
 
     return (
-      <ReactTable
+      <DragFoldTable
         className="-highlight"
         data={_gridRows}
         columns={_gridHeadings}
