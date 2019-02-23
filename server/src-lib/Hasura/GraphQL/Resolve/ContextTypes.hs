@@ -35,7 +35,12 @@ type FuncArgSeq = Seq.Seq FuncArgItem
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
-type UpdPermForIns = ([PGCol], AnnBoolExpSQL)
+data UpdPermForIns
+  = UpdPermForIns
+  { upfiCols   :: ![PGCol]
+  , upfiFilter :: !AnnBoolExpSQL
+  , upfiSet    :: !PreSetCols
+  } deriving (Show, Eq)
 
 data InsCtx
   = InsCtx

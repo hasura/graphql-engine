@@ -1522,9 +1522,9 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
     rels = getValidRels fields
     iView = ipiView insPermInfo
     setCols = ipiSet insPermInfo
-    mkUpdPermForIns upi =
-      (Set.toList $ upiCols upi, upiFilter upi)
     updPermForIns = mkUpdPermForIns <$> updPermM
+    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi)
+                          (upiFilter upi) (upiSet upi)
 
     isInsertable Nothing _          = False
     isInsertable (Just _) viewInfoM = isMutable viIsInsertable viewInfoM
@@ -1542,7 +1542,7 @@ mkAdminInsCtx tn tc fields = do
       isMutable viIsInsertable viewInfoM
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-      updPerm = (map pgiName cols, noFilter)
+      updPerm = UpdPermForIns (map pgiName cols) noFilter Map.empty
 
   return $ InsCtx tn cols Map.empty relInfoMap $ Just updPerm
   where

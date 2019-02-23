@@ -7,7 +7,7 @@ module Hasura.GraphQL.Resolve.Context
   , OrdByItem(..)
   , FuncArgSeq
   , PGColArgMap
-  , UpdPermForIns
+  , UpdPermForIns(..)
   , InsCtx(..)
   , InsCtxMap
   , RespTx
