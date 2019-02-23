@@ -358,13 +358,14 @@ class Permissions extends Component {
     const getPermissionsTableRow = (
       tableSchema,
       role,
+      roleList,
       queryTypes,
       permissionsSymbols,
       permsState,
-      isNewPerm
+      newPermRow
     ) => {
       const dispatchOpenEdit = queryType => () => {
-        if (isNewPerm && permsState.newRole !== '') {
+        if (newPermRow && permsState.newRole !== '') {
           dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
         } else if (role !== '') {
           const allowInsertPermColumns = semverCheck('insertPermRestrictColumns', this.props.serverVersion);
@@ -429,7 +430,9 @@ class Permissions extends Component {
         );
       }
 
-      if (isNewPerm) {
+      if (newPermRow) {
+        const isNewRole = !roleList.includes(permsState.newRole);
+
         _permissionsRowHtml.push(
           <td key={-2}>
             <input
@@ -438,7 +441,7 @@ class Permissions extends Component {
               onChange={dispatchRoleNameChange}
               type="text"
               placeholder="Enter new role"
-              value={permsState.newRole}
+              value={isNewRole ? permsState.newRole : ''}
               data-test="role-textbox"
             />
           </td>
@@ -510,6 +513,7 @@ class Permissions extends Component {
             {getPermissionsTableRow(
               tableSchema,
               role,
+              roleList,
               queryTypes,
               permissionsSymbols,
               permsState
@@ -524,6 +528,7 @@ class Permissions extends Component {
           {getPermissionsTableRow(
             tableSchema,
             '',
+            roleList,
             queryTypes,
             permissionsSymbols,
             permsState,
