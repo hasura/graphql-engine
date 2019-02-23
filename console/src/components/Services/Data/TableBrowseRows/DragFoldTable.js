@@ -65,7 +65,7 @@ class DragFoldTable extends Component {
 
     const cols = columns.map(col => ({
       ...col,
-      Header: <div className="draggable-header ellipsis">{col.Header}</div>
+      Header: <div className="draggable-header">{col.Header}</div>
     }));
 
     //run all reorder events

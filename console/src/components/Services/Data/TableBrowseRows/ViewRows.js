@@ -107,9 +107,11 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <span className={styles.tableHeaderCell}>
-            { columnName } <i className={'fa ' + sortIcon} />
-          </span>
+          <div className="ellipsis">
+            <span className={styles.tableHeaderCell}>
+              { columnName } <i className={'fa ' + sortIcon} />
+            </span>
+          </div>
         ),
         accessor: columnName,
         id: columnName,
@@ -122,9 +124,11 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <span className={styles.tableHeaderCell}>
-            { relName }
-          </span>
+          <div className="ellipsis">
+            <span className={styles.tableHeaderCell}>
+              { relName }
+            </span>
+          </div>
         ),
         accessor: relName,
         id: relName,
