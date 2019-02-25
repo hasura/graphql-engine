@@ -197,7 +197,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           withComplete $ sendConnErr "subscription to remote server is not supported"
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
                              msgRaw rsi opDef
-        either postExecErr sendSuccResp resp
+        -- ignore headers when sending response on websocket
+        either postExecErr sendSuccResp (fst <$> resp)
         sendCompleted
 
   where

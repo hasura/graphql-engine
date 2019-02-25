@@ -14,6 +14,7 @@ import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Types           as HTTP
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
@@ -134,3 +135,29 @@ matchRegex regex caseSensitive src =
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
 fmapL _ (Right x) = pure x
+
+
+-- ignore the following request headers from the client
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders = filterHeaders reqHeaders
+  where
+    reqHeaders = [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+                 , "Origin", "Referer" , "Accept", "Accept-Encoding"
+                 , "Accept-Language", "Accept-Datetime"
+                 , "Cache-Control", "Connection", "DNT"
+                 ]
+
+
+-- ignore the following response headers from remote
+filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterResponseHeaders = filterHeaders respHeaders
+  where
+    respHeaders = [ "Server", "Transfer-Encoding", "Cache-Control"
+                  , "Access-Control-Allow-Credentials"
+                  , "Access-Control-Allow-Methods"
+                  , "Access-Control-Allow-Origin"
+                  , "Content-Type"
+                  ]
+
+filterHeaders :: [HTTP.HeaderName] -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> n `notElem` list)
