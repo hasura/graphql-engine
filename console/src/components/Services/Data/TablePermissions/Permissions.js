@@ -316,40 +316,37 @@ class Permissions extends Component {
       } else {
         const permissions = rolePermissions[role][queryType];
 
-        /* eslint-disable no-fallthrough */
         if (permissions) {
-          let checkColumns = false;
+          let checkColumns;
           let filterKey;
-          switch (queryType) {
-            case 'select':
-            case 'update':
-              checkColumns = true;
-            case 'delete':
-              filterKey = 'filter';
-            case 'insert':
-              filterKey = filterKey || 'check';
 
-              if (JSON.stringify(permissions[filterKey]) === '{}') {
-                if (
-                  checkColumns &&
-                  !permissions.columns.includes('*') &&
-                  permissions.columns.length !== tableSchema.columns.length
-                ) {
-                  _permission = permissionsSymbols.partialAccess;
-                } else {
-                  _permission = permissionsSymbols.fullAccess;
-                }
-              } else {
-                _permission = permissionsSymbols.partialAccess;
-              }
-              break;
-            default:
-              _permission = permissionsSymbols.noAccess;
+          if (queryType === 'select' || queryType === 'update') {
+            checkColumns = true;
+            filterKey = 'filter';
+          } else if (queryType === 'insert') {
+            checkColumns = true;
+            filterKey = 'check';
+          } else if (queryType === 'delete') {
+            checkColumns = false;
+            filterKey = 'filter';
+          }
+
+          if (JSON.stringify(permissions[filterKey]) === '{}') {
+            if (
+              checkColumns &&
+              !permissions.columns.includes('*') &&
+              permissions.columns.length !== tableSchema.columns.length
+            ) {
+              _permission = permissionsSymbols.partialAccess;
+            } else {
+              _permission = permissionsSymbols.fullAccess;
+            }
+          } else {
+            _permission = permissionsSymbols.partialAccess;
           }
         } else {
           _permission = permissionsSymbols.noAccess;
         }
-        /* eslint-enable no-fallthrough */
       }
 
       return _permission;
