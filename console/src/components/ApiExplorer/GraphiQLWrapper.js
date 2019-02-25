@@ -12,6 +12,8 @@ import './GraphiQL.css';
 
 import semverCheck from '../../helpers/semver';
 
+import isJSON from 'is-valid-json';
+
 class GraphiQLWrapper extends Component {
   constructor(props) {
     super(props);
@@ -23,13 +25,34 @@ class GraphiQLWrapper extends Component {
       queries: null,
       supportAnalyze: false,
       analyzeApiChange: false,
+      variables: null,
+      onEditQuery: null,
+      onEditVariables: null,
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
       : null;
+    const queryString = this.props.queryParams
+      ? this.props.queryParams.query_string
+      : null;
+    const queryVariables = this.props.queryParams
+      ? this.props.queryParams.query_variables
+      : null;
     if (queryFile) {
       getRemoteQueries(queryFile, queries => this.setState({ queries }));
     }
+
+    if (queryString) {
+      this.state.queries = queryString;
+    }
+
+    if (queryVariables) {
+      this.state.variables = queryVariables;
+    }
+
+    this.onEditQuery = this.onEditQuery.bind(this);
+    this.onEditVariables = this.onEditVariables.bind(this);
+    this.updateURL = this.updateURL.bind(this);
   }
 
   componentDidMount() {
@@ -51,20 +74,20 @@ class GraphiQLWrapper extends Component {
     return !nextProps.headerFocus;
   }
 
-  checkSemVer(version) {
-    try {
-      const showAnalyze = semverCheck('sqlAnalyze', version);
-      if (showAnalyze) {
-        this.updateAnalyzeState(true);
-      } else {
-        this.updateAnalyzeState(false);
-      }
-    } catch (e) {
-      this.updateAnalyzeState(false);
-      console.error(e);
-    }
-    return Promise.resolve();
+  onEditQuery(newQuery) {
+    this.setState({ ...this.state, onEditQuery: newQuery, queries: newQuery });
+    this.updateURL();
   }
+
+  onEditVariables(newVariables) {
+    this.setState({
+      ...this.state,
+      onEditVariables: newVariables,
+      variables: newVariables,
+    });
+    this.updateURL();
+  }
+
   checkNewAnalyzeVersion(version) {
     try {
       const analyzeApiChange = semverCheck('analyzeApiChange', version);
@@ -90,9 +113,71 @@ class GraphiQLWrapper extends Component {
     });
   }
 
+  checkSemVer(version) {
+    try {
+      const showAnalyze = semverCheck('sqlAnalyze', version);
+      if (showAnalyze) {
+        this.updateAnalyzeState(true);
+      } else {
+        this.updateAnalyzeState(false);
+      }
+    } catch (e) {
+      this.updateAnalyzeState(false);
+      console.error(e);
+    }
+    return Promise.resolve();
+  }
+
+  updateURL() {
+    const search = window.location.search;
+    const parameters = {};
+
+    search
+      .substr(1)
+      .split('&')
+      .forEach(entry => {
+        const eq = entry.indexOf('=');
+        if (eq >= 0) {
+          parameters[
+            decodeURIComponent(entry.slice(0, eq))
+          ] = decodeURIComponent(entry.slice(eq + 1));
+        }
+      });
+
+    parameters.query_string = this.state.onEditQuery;
+    if (isJSON(this.state.onEditVariables)) {
+      parameters.query_variables = JSON.stringify(
+        JSON.parse(this.state.onEditVariables),
+        null,
+        2
+      );
+    }
+
+    const newSearch =
+      '?' +
+      Object.keys(parameters)
+        .filter(key => {
+          return Boolean(parameters[key]);
+        })
+        .map(key => {
+          return (
+            encodeURIComponent(key) + '=' + encodeURIComponent(parameters[key])
+          );
+        })
+        .join('&');
+
+    history.replaceState(null, null, newSearch);
+  }
+
   render() {
     const styles = require('../Common/Common.scss');
     const { supportAnalyze, analyzeApiChange } = this.state;
+    const noTableQuery =
+      '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+    const checkTables =
+      this.props.numberOfTables === 0 && this.state.queries !== null
+        ? this.state.queries
+        : noTableQuery;
     const graphQLFetcher = graphQLParams => {
       if (this.state.headerFocus) {
         return null;
@@ -123,6 +208,9 @@ class GraphiQLWrapper extends Component {
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
             query={this.state.queries}
+            variables={this.state.variables}
+            onEditQuery={this.onEditQuery}
+            onEditVariables={this.onEditVariables}
           />
         );
       } else {
@@ -131,6 +219,8 @@ class GraphiQLWrapper extends Component {
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
+            onEditQuery={this.onEditQuery}
+            onEditVariables={this.onEditVariables}
           />
         );
       }
@@ -140,10 +230,10 @@ class GraphiQLWrapper extends Component {
           fetcher={graphQLFetcher}
           supportAnalyze={supportAnalyze}
           analyzeFetcher={analyzeFetcherInstance}
-          query={
-            '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
-          }
+          query={checkTables}
           schema={undefined}
+          onEditQuery={this.onEditQuery}
+          onEditVariables={this.onEditVariables}
         />
       );
     } else if (this.state.error) {
