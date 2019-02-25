@@ -449,7 +449,7 @@ enableTelemetryEnv =
 stringifyNumEnv :: (String, String)
 stringifyNumEnv =
   ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC"
-  , "Stringify numeric types"
+  , "Stringify numeric types (default: false)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo

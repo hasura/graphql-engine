@@ -139,6 +139,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
+   * - ``--stringify-numeric``
+     - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC``
+     - Stringify numeric types (default: false)
+
 
 .. note::
-  When the equivalent flags for environment variables are used, the flags will take precedence.
+  1. When the equivalent flags for environment variables are used, the flags will take precedence.
+  2. If ``--stringify-numeric`` flag or ``HASURA_GRAPHQL_STRINGIFY_NUMERIC`` is set to ``true`` then
+     GraphQL Engine sends numeric data types which do not fit into `IEEE 754 <https://tools.ietf.org/html/rfc7159#ref-IEEE754>`_
+     ``binary64`` (double precision) range as ``String``.
