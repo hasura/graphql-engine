@@ -23,7 +23,7 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (accessKeyHeader, userRoleHeader)
+import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader, userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -89,7 +89,7 @@ data UserInfo
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
   UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
-  Map.delete accessKeyHeader v
+  foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 instance Hashable UserInfo
 

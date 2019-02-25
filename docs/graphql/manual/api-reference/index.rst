@@ -18,13 +18,13 @@ Request types
 
 The following types of requests can be made using the GraphQL API:
 
-- :doc:`Query/Subscription <query>`
+- :doc:`Query / Subscription <query>`
 - :doc:`Mutation <mutation>`
 
-Schema/Metadata API
--------------------
+Schema / Metadata API
+---------------------
 
-Hasura exposes a Schema/Metadata API for managing metadata for permissions/relationships or for directly
+Hasura exposes a Schema / Metadata API for managing metadata for permissions/relationships or for directly
 executing SQL on the underlying Postgres.
 
 This is primarily intended to be used as an ``admin`` API to manage Hasura schema and metadata.
@@ -36,7 +36,7 @@ Request types
 
 The following lists all the types of requests that can be made using the Schema/Metadata API:
 
-- :ref:`Schema/Metadata API query types <query_syntax>`
+- :ref:`Schema / Metadata API query types <Query>`
 
 Supported PostgreSQL types
 --------------------------
@@ -48,7 +48,7 @@ You can refer to the following to know about all PostgreSQL types supported by t
   :maxdepth: 1
   :hidden:
 
-  Query/Subscription <query>
+  Query / Subscription <query>
   Mutation <mutation>
-  Schema/Metadata APIs <schema-metadata-api/index>
+  Schema / Metadata APIs <schema-metadata-api/index>
   Supported PostgreSQL types <postgresql-types>

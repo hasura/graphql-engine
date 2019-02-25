@@ -23,19 +23,23 @@ Step 1: Clone the Hasura GraphQL engine Heroku app
 The Hasura app with Heroku buildpack/configuration is available at:
 https://github.com/hasura/graphql-engine-heroku
 
+Clone the above repository.
+
 If you already have this, then pull the latest changes which will have the updated GraphQL engine docker image.
 
 Step 2: Attach your Heroku app
 ------------------------------
 
 Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
+
 Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
 to be able to push to this app.
 
 .. code-block:: bash
 
-   # Replace hasura-heroku with your Heroku app's name
-   $ heroku git:remote -a hasura-heroku
+   # Replace <hasura-heroku> with your Heroku app's name
+   $ heroku git:remote -a <hasura-heroku>
+   $ heroku stack:set container -a <hasura-heroku>
 
 Step 3: Git push to deploy the latest Hasura GraphQL engine
 -----------------------------------------------------------

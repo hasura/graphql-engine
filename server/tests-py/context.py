@@ -9,6 +9,7 @@ import json
 import queue
 import socket
 import subprocess
+import time
 
 import yaml
 import requests
@@ -40,13 +41,26 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
             self.server.error_queue.put({"path": req_path,
                                          "body": req_json,
                                          "headers": req_headers})
+        elif req_path == "/timeout_short":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.error_queue.put({"path": req_path,
+                                         "body": req_json,
+                                         "headers": req_headers})
+        elif req_path == "/timeout_long":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
             self.server.resp_queue.put({"path": req_path,
                                         "body": req_json,
                                         "headers": req_headers})
-
 
 class WebhookServer(http.server.HTTPServer):
     def __init__(self, resp_queue, error_queue, server_address):
@@ -60,7 +74,7 @@ class WebhookServer(http.server.HTTPServer):
 
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, hge_jwt_key_file, webhook_insecure):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -83,6 +97,7 @@ class HGECtx:
         else:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
+        self.hge_jwt_conf = hge_jwt_conf
         self.webhook_insecure = webhook_insecure
         self.may_skip_test_teardown = False
 
@@ -140,7 +155,7 @@ class HGECtx:
     def v1q(self, q, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
-            h['X-Hasura-Access-Key'] = self.hge_key
+            h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
             json=q,

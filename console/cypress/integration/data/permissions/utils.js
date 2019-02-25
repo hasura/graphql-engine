@@ -33,6 +33,21 @@ export const permNoCheck = (tableName, query, first) => {
       .contains('Toggle all')
       .click();
   }
+  if (query === 'insert' || query === 'update') {
+    cy.get(getElementFromAlias('toggle-column-presets')).click();
+    cy.get(getElementFromAlias('column-presets-column-0')).select(
+      getColName(0)
+    );
+    cy.get(getElementFromAlias('column-presets-type-0')).select('static');
+    cy.get(getElementFromAlias('column-presets-value-0'))
+      .type('1')
+      .blur();
+    cy.get(getElementFromAlias('column-presets-column-1')).select(
+      getColName(1)
+    );
+    cy.get(getElementFromAlias('column-presets-type-1')).select('session');
+    cy.get(getElementFromAlias('column-presets-value-1')).type('user-id');
+  }
   // Save
   savePermission();
   // Validate
@@ -124,7 +139,7 @@ export const createView = (viewName, tableName) => {
     const { __env } = win;
     const requestOptions = makeDataAPIOptions(
       __env.dataApiUrl,
-      __env.accessKey,
+      __env.adminSecret,
       reqBody
     );
     cy.request(requestOptions);

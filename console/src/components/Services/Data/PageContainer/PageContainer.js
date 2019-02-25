@@ -215,11 +215,7 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/data/schema/' + schemaName + '/table/add'}
               >
-                <Button
-                  size="xs"
-                  color="white"
-                  data-test="sidebar-add-table"
-                >
+                <Button size="xs" color="white" data-test="sidebar-add-table">
                   Add Table
                 </Button>
               </Link>

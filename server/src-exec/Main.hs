@@ -35,8 +35,6 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Client.TLS    as TLS
-import qualified Network.Wreq.Session       as WrqS
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
@@ -66,7 +64,7 @@ parseHGECommand =
                 <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseAccessKey
+                <*> (parseAdminSecret <|> parseAccessKey)
                 <*> parseWebHook
                 <*> parseJwtSecret
                 <*> parseUnAuthRole
@@ -103,13 +101,13 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
              mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
-      authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
+      authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes
@@ -135,11 +133,10 @@ main =  do
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-      httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool cacheRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager

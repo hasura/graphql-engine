@@ -260,7 +260,6 @@ from4To5 = do
     migrateMetadataFrom4 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_4_to_5.yaml" :: Q (TExp RQLQuery)))
 
-
 from3To4 :: (MonadTx m) => m ()
 from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "ALTER TABLE hdb_catalog.event_triggers ADD COLUMN configuration JSON" () False
@@ -278,7 +277,7 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
           \, DROP COLUMN headers" () False
   where
     uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
-      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
+      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
                                          UPDATE hdb_catalog.event_triggers
                                          SET

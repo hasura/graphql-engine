@@ -66,6 +66,9 @@ class TestCreateAndDelete(DefaultTestQueries):
     def test_create_reset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
 
+    def test_create_operation_spec_not_provider_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err.yaml")
+
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create-delete'
@@ -137,6 +140,32 @@ class TestRetryConf(object):
         tries = hge_ctx.get_error_queue_size()
         assert tries == 5, tries
 
+    def test_timeout_short(self, hge_ctx):
+        table = {"schema": "hge_tests", "name": "test_t2"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        time.sleep(20)
+        tries = hge_ctx.get_error_queue_size()
+        assert tries == 3, tries
+
+    def test_timeout_long(self, hge_ctx):
+        table = {"schema": "hge_tests", "name": "test_t3"}
+
+        init_row = {"c1": 1, "c2": "hello"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        time.sleep(15)
+        check_event(hge_ctx, "t3_timeout_long", table, "INSERT", exp_ev_data, webhook_path = "/timeout_long")
 
 class TestEvtHeaders(object):
 
