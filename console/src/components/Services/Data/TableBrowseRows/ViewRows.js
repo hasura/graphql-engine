@@ -107,7 +107,7 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis">
+          <div className="ellipsis" title="Click to sort">
             <span className={styles.tableHeaderCell}>
               { columnName } <i className={'fa ' + sortIcon} />
             </span>

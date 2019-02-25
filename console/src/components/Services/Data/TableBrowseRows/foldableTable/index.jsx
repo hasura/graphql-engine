@@ -1,8 +1,18 @@
 import React from 'react';
 
 const defaultFoldIconComponent = ({ collapsed }) => {
-  if (collapsed) { return <i className="fa fa-caret-right" />; }
-  return <i className="fa fa-caret-left" />;
+  let icon;
+  let title;
+
+  if (collapsed) {
+    icon = 'fa-caret-right';
+    title = 'Expand column';
+  } else {
+    icon = 'fa-caret-left';
+    title = 'Collapse column';
+  }
+
+  return <i className={'fa ' + icon} title={title} />;
 };
 
 const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
