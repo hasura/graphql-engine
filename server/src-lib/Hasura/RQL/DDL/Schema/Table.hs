@@ -274,7 +274,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP2 q
 
 buildSchemaCache
-  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
 buildSchemaCache = do
   -- clean hdb_views
@@ -282,6 +282,7 @@ buildSchemaCache = do
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
+  strfyNum <- stringifyNum <$> askSQLGenCtx
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
@@ -304,16 +305,16 @@ buildSchemaCache = do
 
   forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) ->
     modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
-    PTInsert -> permHelper sn tn rn pDef PAInsert
-    PTSelect -> permHelper sn tn rn pDef PASelect
-    PTUpdate -> permHelper sn tn rn pDef PAUpdate
-    PTDelete -> permHelper sn tn rn pDef PADelete
+    PTInsert -> permHelper strfyNum sn tn rn pDef PAInsert
+    PTSelect -> permHelper strfyNum sn tn rn pDef PASelect
+    PTUpdate -> permHelper strfyNum sn tn rn pDef PAUpdate
+    PTDelete -> permHelper strfyNum sn tn rn pDef PADelete
 
   -- Fetch all the query templates
   qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
     qtDef <- decodeValue qtDefVal
-    qCtx <- mkAdminQCtx <$> askSchemaCache
+    qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache
     (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
     addQTemplateToCache qti deps
@@ -325,7 +326,7 @@ buildSchemaCache = do
     let qt = QualifiedObject sn tn
     subTableP2Setup qt trid etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
+    liftTx $ mkTriggerQ trid trn qt allCols strfyNum (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
@@ -346,8 +347,8 @@ buildSchemaCache = do
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
   where
-    permHelper sn tn rn pDef pa = do
-      qCtx <- mkAdminQCtx <$> askSchemaCache
+    permHelper strfyNum sn tn rn pDef pa = do
+      qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache
       perm <- decodeValue pDef
       let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
@@ -417,7 +418,7 @@ execRawSQL =
       in e {qeInternal = Just $ toJSON txe}
 
 execWithMDCheck
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => RunSQL -> m RunSQLRes
 execWithMDCheck (RunSQL t cascade _) = do
 
@@ -478,7 +479,8 @@ execWithMDCheck (RunSQL t cascade _) = do
     forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
       let opsDef = etiOpsDef eti
           trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn cols opsDef
+      strfyNum <- stringifyNum <$> askSQLGenCtx
+      liftTx $ mkTriggerQ trid trn tn cols strfyNum opsDef
 
   -- refresh the gCtxMap in schema cache
   refreshGCtxMapInSchema
@@ -492,7 +494,7 @@ isAltrDropReplace = either throwErr return . matchRegex regex False
     regex = "alter|drop|replace"
 
 runRunSQL
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => RunSQL -> m RespBody
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly

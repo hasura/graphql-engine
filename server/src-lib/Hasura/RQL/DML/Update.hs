@@ -33,9 +33,9 @@ data UpdateQueryP1
   } deriving (Show, Eq)
 
 mkSQLUpdate
-  :: UpdateQueryP1 -> S.SelectWith
-mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds False
+  :: Bool -> UpdateQueryP1 -> S.SelectWith
+mkSQLUpdate strfyNum (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
+  mkSelWith tn (S.CTEUpdate update) mutFlds False strfyNum
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -171,20 +171,21 @@ validateUpdateQueryWith f uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-updateQueryToTx (u, p) =
+updateQueryToTx :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx strfyNum (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
   where
-    updateSQL = toSQL $ mkSQLUpdate u
+    updateSQL = toSQL $ mkSQLUpdate strfyNum u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m RespBody
-runUpdate q =
-  validateUpdateQuery q >>= liftTx . updateQueryToTx
+runUpdate q = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum

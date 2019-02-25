@@ -113,6 +113,7 @@ mkdir -p "$OUTPUT_FOLDER"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export HGE_URL="http://localhost:8080"
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+export HASURA_GRAPHQL_STRINGIFY_NUMERIC=true
 
 PID=""
 WH_PID=""

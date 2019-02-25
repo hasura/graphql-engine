@@ -26,7 +26,9 @@ curCatalogVer :: T.Text
 curCatalogVer = "9"
 
 initCatalogSafe
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
   hdbCatalogExists <- liftTx $ Q.catchE defaultTxErrorHandler $
@@ -59,7 +61,9 @@ initCatalogSafe initTime =  do
                     |] (Identity sn) False
 
 initCatalogStrict
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -117,7 +121,9 @@ initCatalogStrict createSchema initTime =  do
 
 
 migrateMetadata
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m, HasHttpManager m, CacheRWM m
+     , UserInfoM m, MonadIO m, HasSQLGenCtx m
+     )
   => RQLQuery -> m ()
 migrateMetadata rqlQuery = do
   -- build schema cache
@@ -216,7 +222,9 @@ from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                 |] () False
 
 from1To2
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m, HasHttpManager m, CacheRWM m
+     , UserInfoM m, MonadIO m, HasSQLGenCtx m
+     )
   => m ()
 from1To2 = do
   -- migrate database
@@ -238,7 +246,9 @@ from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 -- custom resolver
 from4To5
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m, HasHttpManager m, CacheRWM m
+     , UserInfoM m, MonadIO m, HasSQLGenCtx m
+     )
   => m ()
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -291,7 +301,9 @@ from6To7 = liftTx $ do
   return ()
 
 from7To8
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m, HasHttpManager m, CacheRWM m
+     , UserInfoM m, MonadIO m, HasSQLGenCtx m
+     )
   => m ()
 from7To8 = do
   -- migrate database
@@ -306,7 +318,9 @@ from7To8 = do
 
 -- alter hdb_version table and track it (telemetry changes)
 from8To9
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m, HasHttpManager m, CacheRWM m
+     , UserInfoM m, MonadIO m, HasSQLGenCtx m
+     )
   => m ()
 from8To9 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -320,7 +334,9 @@ from8To9 = do
 
 
 migrateCatalog
-  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: ( MonadTx m, CacheRWM m, MonadIO m
+     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+     )
   => UTCTime -> m String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
@@ -389,7 +405,9 @@ migrateCatalog migrationTime = do
                     |] (curCatalogVer, migrationTime) False
 
 execQuery
-  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: ( MonadTx m, CacheRWM m, MonadIO m
+     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+     )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do
   query <- case A.decode queryBs of

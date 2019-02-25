@@ -44,6 +44,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !RawCorsConfig
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoStringifyNum    :: !Bool
   } deriving (Show, Eq)
 
 data CorsConfigG a
@@ -68,6 +69,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soStringifyNum    :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -222,9 +224,10 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
 
   return $ ServeOptions port host connParams txIso accKey authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -326,7 +329,7 @@ serveCmdFooter =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , txIsoEnv, accessKeyEnv, authHookEnv , authHookModeEnv
       , jwtSecretEnv , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv
-      , enableTelemetryEnv
+      , enableTelemetryEnv, stringifyNumEnv
       ]
 
     eventEnvs =
@@ -427,6 +430,12 @@ enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
   , "Enable anonymous telemetry (default: true)"
+  )
+
+stringifyNumEnv :: (String, String)
+stringifyNumEnv =
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC"
+  , "Stringify numeric types"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -629,6 +638,12 @@ parseEnableTelemetry = optional $
            help (snd enableTelemetryEnv)
          )
 
+parseStringifyNum :: Parser Bool
+parseStringifyNum =
+  switch ( long "stringify-numeric" <>
+           help (snd stringifyNumEnv)
+         )
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog (Q.ConnInfo host port user _ db _) =
@@ -654,6 +669,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+                       , "stringify_numeric" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

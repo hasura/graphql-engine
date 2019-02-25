@@ -40,9 +40,9 @@ data InsertQueryP1
   , iqp1MutFlds  :: !MutFlds
   } deriving (Show, Eq)
 
-mkSQLInsert :: InsertQueryP1 -> S.SelectWith
-mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith tn (S.CTEInsert insert) mutFlds False
+mkSQLInsert :: Bool -> InsertQueryP1 -> S.SelectWith
+mkSQLInsert strfyNum (InsertQueryP1 tn vn cols vals c mutFlds) =
+  mkSelWith tn (S.CTEInsert insert) mutFlds False strfyNum
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
@@ -227,30 +227,30 @@ decodeInsObjs v = do
   return objs
 
 convInsQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
 convInsQ =
   liftDMLP1 .
   convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
-insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-insertP2 (u, p) =
+insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+insertP2 strfyNum (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder insertSQL) (toList p) True
   where
-    insertSQL = toSQL $ mkSQLInsert u
+    insertSQL = toSQL $ mkSQLInsert strfyNum u
 
 data ConflictCtx
   = CCUpdate !ConstraintName ![PGCol] !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
-nonAdminInsert :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-nonAdminInsert (insQueryP1, args) = do
+nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+nonAdminInsert strfyNum (insQueryP1, args) = do
   conflictCtxM <- mapM extractConflictCtx conflictClauseP1
   setConflictCtx conflictCtxM
-  insertP2 (withoutConflictClause, args)
+  insertP2 strfyNum (withoutConflictClause, args)
   where
     withoutConflictClause = insQueryP1{iqp1Conflict=Nothing}
     conflictClauseP1 = iqp1Conflict insQueryP1
@@ -287,10 +287,11 @@ setConflictCtx conflictCtxM = do
                <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 runInsert
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => InsertQuery
   -> m RespBody
 runInsert q = do
   res <- convInsQ q
   role <- userRole <$> askUserInfo
-  liftTx $ bool (nonAdminInsert res) (insertP2 res) $ isAdmin role
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  liftTx $ bool (nonAdminInsert strfyNum res) (insertP2 strfyNum res) $ isAdmin role

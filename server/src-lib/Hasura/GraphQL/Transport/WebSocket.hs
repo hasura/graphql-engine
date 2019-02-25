@@ -120,6 +120,7 @@ data WSServerEnv
   , _wseLiveQMap :: !LiveQueryMap
   , _wseGCtxMap  :: !(IORef.IORef SchemaCache)
   , _wseHManager :: !H.Manager
+  , _wseSQLCtx   :: !SQLGenCtx
   }
 
 onConn :: L.Logger -> WS.OnConnH WSConnData
@@ -204,7 +205,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
-      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx opTy fields
+      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx sqlGenCtx opTy fields
       case opTy of
         G.OperationTypeSubscription -> do
           let lq = LQ.LiveQuery userInfo q
@@ -218,7 +219,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
-    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr sqlGenCtx = serverEnv
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
@@ -351,12 +352,12 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> IORef.IORef SchemaCache
+  -> H.Manager -> SQLGenCtx -> IORef.IORef SchemaCache
   -> TxRunner -> IO WSServerEnv
-createWSServerEnv logger httpManager cacheRef runTx = do
+createWSServerEnv logger httpManager sqlGenCtx cacheRef runTx = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager
+  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager sqlGenCtx
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

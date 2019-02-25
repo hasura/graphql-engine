@@ -89,13 +89,14 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
+  { scIsolation    :: Q.TxIsolation
+  , scPGPool       :: Q.PGPool
+  , scLogger       :: L.Logger
+  , scCacheRef     :: IORef SchemaCache
+  , scCacheLock    :: MVar ()
+  , scAuthMode     :: AuthMode
+  , scManager      :: HTTP.Manager
+  , scStringifyNum :: Bool
   }
 
 data HandlerCtx
@@ -127,7 +128,8 @@ buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
   cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo cache
+  strfyNum <- scStringifyNum . hcServerCtx <$> ask
+  return $ QCtx userInfo cache $ SQLGenCtx strfyNum
 
 logResult
   :: (MonadIO m)
@@ -212,9 +214,10 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef scRef
       httpMgr <- scManager . hcServerCtx <$> ask
+      strfyNum <- scStringifyNum . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo schemaCache httpMgr query
+      runQuery pool isoL userInfo schemaCache httpMgr strfyNum query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -240,7 +243,8 @@ v1Alpha1GQHandler query = do
   sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
+  strfyNum <- scStringifyNum . hcServerCtx <$> ask
+  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
@@ -249,7 +253,8 @@ gqlExplainHandler query = do
   sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc query
+  strfyNum <- scStringifyNum . hcServerCtx <$> ask
+  GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -285,29 +290,31 @@ mkWaiApp
   -> L.LoggerCtx
   -> Q.PGPool
   -> HTTP.Manager
+  -> Bool
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
+mkWaiApp isoLevel loggerCtx pool httpManager strfyNum mode corsCfg enableConsole enableTelemetry = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager pool Q.Serializable buildSchemaCache
+                httpManager strfyNum pool Q.Serializable buildSchemaCache
       either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager strfyNum
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
+        sqlGenCtx = SQLGenCtx strfyNum
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager sqlGenCtx cacheRef runTx
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
