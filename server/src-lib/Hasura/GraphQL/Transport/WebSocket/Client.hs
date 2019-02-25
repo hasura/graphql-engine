@@ -134,16 +134,15 @@ runGqlClient
   -> WebsocketPayload
   -> ExceptT WebSocketClientErr IO ()
 runGqlClient url wsConn stRef rn opId payload = do
-  --st <- liftIO $ IORef.readIORef stRef
   mState <- getWsProxyState stRef rn
   case mState of
     Nothing ->
       runGqlClient' url wsConn stRef rn opId payload
     Just st -> do
-      -- send init message and the raw message on this conn
+      -- send init message and the raw message on the existing conn
       let conn     = _wpsRemoteConn st
           opids    = _wpsOperations st
-          newState = st{_wpsOperations = opids ++ [opId]}
+          newState = st { _wpsOperations = opids ++ [opId] }
       liftIO $ updateState stRef rn newState
       liftIO $ sendInit conn payload
       liftIO $ WS.sendTextData conn $ J.encode payload
@@ -176,6 +175,7 @@ getWsProxyState ref rn = do
 --stopOperation :: OperationId -> RemoteConnState
 clearState :: WebsocketProxyState -> IO ()
 clearState (WebsocketProxyState rmOp thrId _ _) = do
+  -- TODO: use logger
   putStrLn "cancelling async operations.."
   A.cancel rmOp
   onJust thrId killThread

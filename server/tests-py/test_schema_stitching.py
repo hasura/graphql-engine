@@ -314,6 +314,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         self._stop(hge_ctx, '124')
 
 
+@pytest.mark.skip(reason='does not have proper env')
 class TestRemoteSchemaSubscriptions():
     dir = 'queries/remote_schemas'
     #remote_url = 'ws://localhost:8080/v1alpha1/graphql'
