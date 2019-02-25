@@ -145,6 +145,9 @@ const ViewRows = ({
     curRows.forEach((row, rowIndex) => {
       const newRow = {};
 
+      const rowCellIndex = `${curTableName}-${rowIndex}`;
+      const isExpanded = expandedRow === rowCellIndex;
+
       const getPKClause = () => {
         const pkClause = {};
 
@@ -165,25 +168,52 @@ const ViewRows = ({
         let editButton;
         let cloneButton;
         let deleteButton;
+        let expandButton;
 
-        const getButton = (type, handleClick) => {
+        const getButton = (type, icon, title, handleClick) => {
           return (
             <Button
               className={styles.add_mar_right_small}
               color="white"
               size="xs"
               onClick={handleClick}
-              data-test={`row-${type.toLowerCase()}-button-${rowIndex}`}
+              title={title}
+              data-test={`row-${type}-button-${rowIndex}`}
             >
-              { type }
+              { icon }
             </Button>
           );
         };
 
-        const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
+        const getExpandButton = () => {
+          let icon;
+          let title;
+          let handleClick;
 
-        if (allowModify) {
-          const pkClause = getPKClause();
+          const handleExpand = () => dispatch(vExpandRow(rowCellIndex));
+          const handleCollapse = () => dispatch(vCollapseRow());
+
+          if (isExpanded) {
+            icon = 'fa-compress';
+            title = 'Collapse row';
+            handleClick = handleCollapse;
+          } else {
+            icon = 'fa-expand';
+            title = 'Expand row';
+            handleClick = handleExpand;
+          }
+
+          const expanderIcon = (
+            <i className={`fa ${icon}`} />
+          );
+
+          return getButton('expand', expanderIcon, title, handleClick);
+        };
+
+        const getEditButton = (pkClause) => {
+          const editIcon = (
+            <i className="fa fa-edit" />
+          );
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -192,6 +222,30 @@ const ViewRows = ({
             );
           };
 
+          const editTitle = 'Edit row';
+
+          return getButton('edit', editIcon, editTitle, handleEditClick);
+        };
+
+        const getDeleteButton = (pkClause) => {
+          const deleteIcon = (
+            <i className="fa fa-trash" />
+          );
+
+          const handleDeleteClick = () => {
+            dispatch(deleteItem(pkClause));
+          };
+
+          const deleteTitle = 'Delete row';
+
+          return getButton('delete', deleteIcon, deleteTitle, handleDeleteClick);
+        };
+
+        const getCloneButton = () => {
+          const cloneIcon = (
+            <i className="fa fa-clone" />
+          );
+
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
@@ -199,20 +253,30 @@ const ViewRows = ({
             );
           };
 
-          const handleDeleteClick = () => {
-            dispatch(deleteItem(pkClause));
-          };
+          const cloneTitle = 'Clone row';
 
-          editButton = getButton('Edit', handleEditClick);
-          cloneButton = getButton('Clone', handleCloneClick);
-          deleteButton = getButton('Delete', handleDeleteClick);
+          return getButton('clone', cloneIcon, cloneTitle, handleCloneClick);
+        };
+
+        const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
+
+        if (allowModify) {
+          const pkClause = getPKClause();
+
+          editButton = getEditButton(pkClause);
+          deleteButton = getDeleteButton(pkClause);
+          cloneButton = getCloneButton();
         }
+
+        // eslint-disable-next-line prefer-const
+        expandButton = getExpandButton();
 
         return (
           <div className={styles.tableCellCenterAligned}>
             {cloneButton}
             {editButton}
             {deleteButton}
+            {expandButton}
           </div>
         );
       };
@@ -226,9 +290,6 @@ const ViewRows = ({
 
         const getColCellContent = () => {
           const rowColumnValue = row[columnName];
-
-          const cellIndex = `${curTableName}-${col}-${rowIndex}`;
-          const isExpanded = expandedRow === cellIndex;
 
           const getCellValue = () => {
             let cellValue = '';
@@ -246,33 +307,11 @@ const ViewRows = ({
             return cellValue;
           };
 
-          const getCellExpander = (cellValue) => {
-            const cellCapacity = 15; // depends on smallest possible cell size
-            const needsExpander = (typeof cellValue === 'string') && cellValue.length > cellCapacity;
-
-            let expandOrCollapseBtn = '';
-            if (needsExpander) {
-              const handleExpand = () => dispatch(vExpandRow(cellIndex));
-              const handleCollapse = () => dispatch(vCollapseRow());
-
-              expandOrCollapseBtn = (
-                <i
-                  className={`${styles.cellExpander} fa ${isExpanded ? 'fa-compress' : 'fa-expand'}`}
-                  onClick={isExpanded ? handleCollapse : handleExpand}
-                />
-              );
-            }
-
-            return expandOrCollapseBtn;
-          };
-
           const cellValue = getCellValue();
-
-          const cellExpander = getCellExpander(cellValue);
 
           return (
             <div className={isExpanded ? styles.tableCellExpanded : ''}>
-              {cellExpander} {cellValue}
+              {cellValue}
             </div>
           );
         };
