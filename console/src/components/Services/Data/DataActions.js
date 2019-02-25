@@ -717,6 +717,9 @@ const dataReducer = (state = defaultState, action) => {
 
 export default dataReducer;
 export {
+  MAKE_REQUEST,
+  REQUEST_SUCCESS,
+  REQUEST_ERROR,
   setTable,
   loadSchema,
   loadUntrackedSchema,

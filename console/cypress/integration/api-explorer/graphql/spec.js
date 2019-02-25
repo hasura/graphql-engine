@@ -65,8 +65,13 @@ export const checkExecuteQueryButton = () => {
 };
 
 export const checkQuery = () => {
-  cy.get(getElementFromAlias('header-key-2')).type('someKey');
-  cy.get(getElementFromAlias('header-value-2')).type('someValue');
+  if (adminSecret) {
+    cy.get(getElementFromAlias('header-key-2')).type('someKey');
+    cy.get(getElementFromAlias('header-value-2')).type('someValue');
+  } else {
+    cy.get(getElementFromAlias('header-key-1')).type('someKey');
+    cy.get(getElementFromAlias('header-value-1')).type('someValue');
+  }
 
   cy.get('textarea')
     .first()

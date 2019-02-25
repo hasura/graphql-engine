@@ -37,7 +37,7 @@ import {
 import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
 
 import {
-  listDulplicate,
+  listDuplicate,
   // convertListToDictUsingKV,
 } from '../../../../utils/data';
 
@@ -119,7 +119,7 @@ class AddTable extends Component {
       }
     } else if (this.props.columns.length > 1) {
       // check for repeatition
-      const listOfRepeats = listDulplicate(
+      const listOfRepeats = listDuplicate(
         this.props.columns.map(column => column.name)
       );
       if (listOfRepeats.length > 0) {

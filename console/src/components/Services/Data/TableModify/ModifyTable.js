@@ -42,7 +42,7 @@ import {
   BIGINT,
   BIGSERIAL,
   UUID,
-  JSON,
+  JSONDTYPE,
   JSONB,
   TIMESTAMP,
   TIME,
@@ -282,7 +282,7 @@ const ColumnEditor = ({
       case UUID:
         return generateAlterOptions(uuidOptions);
 
-      case JSON:
+      case JSONDTYPE:
         return generateAlterOptions(jsonOptions);
 
       case JSONB:

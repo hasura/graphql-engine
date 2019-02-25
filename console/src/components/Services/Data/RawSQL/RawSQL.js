@@ -19,6 +19,7 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import semverCheck from '../../../../helpers/semver';
+import './AceEditorFix.css';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">

@@ -26,9 +26,7 @@ class QueryBuilderJson extends React.Component {
     const wrapSquareBrackets = value => {
       return (
         <span>
-          [
-          <div className={styles.qb_nested}>{value}</div>
-          ]
+          [<div className={styles.qb_nested}>{value}</div>]
         </span>
       );
     };
@@ -109,14 +107,14 @@ class QueryBuilderJson extends React.Component {
         Object.keys(object).forEach((key, i) => {
           objectArray.push({ key: key, value: object[key] });
           // replace unselected key with array position
-          if (unselectedElements.indexOf(key) !== -1) {
+          if (unselectedElements.includes(key)) {
             unselectedElements[unselectedElements.indexOf(key)] = i;
           }
         });
       }
 
       objectArray.forEach((_object, i) => {
-        const unselected = unselectedElements.indexOf(i) !== -1;
+        const unselected = unselectedElements.includes(i);
         _jsonObject.push(
           <div
             key={i}
@@ -138,7 +136,7 @@ class QueryBuilderJson extends React.Component {
 
       elements.forEach((element, i) => {
         /* eslint-disable no-use-before-define */
-        const unselected = unselectedElements.indexOf(i) !== -1;
+        const unselected = unselectedElements.includes(i);
         _jsonArray.push(
           <div
             key={i}

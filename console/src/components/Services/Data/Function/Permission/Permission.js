@@ -2,7 +2,7 @@ import React from 'react';
 
 import Helmet from 'react-helmet';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-// import { Link } from 'react-router';
+import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
 import { pageTitle, appPrefix } from '../Modify/constants';
@@ -83,11 +83,11 @@ class Permission extends React.Component {
           applicable to the data returned by this function
         </p>
         <div className={styles.commonBtn}>
-          <a href={permissionTableUrl}>
+          <Link to={permissionTableUrl}>
             <Button color="yellow" data-test={'custom-function-permission-btn'}>
               {`${setOffTable} Permissions`}
             </Button>
-          </a>
+          </Link>
         </div>
       </div>
     );
