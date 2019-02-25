@@ -44,6 +44,15 @@ withSelSet selSet f =
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
+paramsToAnnArgs :: ArgsMap -> RS.AnnArgs
+paramsToAnnArgs = concatMap toArg . Map.toList
+  where
+    toArg (name, val) = case val of
+      AGScalar _ Nothing  -> []
+      AGScalar _ (Just v) -> [(FieldName $ G.unName name, v)]
+      _                   -> []
+
+
 fromSelSet
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
   => PrepFn m -> G.NamedType -> SelSet -> m RS.AnnFlds
@@ -56,7 +65,10 @@ fromSelSet f fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left colInfo -> return $ RS.FCol colInfo
+          Left colInfo -> if (null $ _fArguments fld)
+            then return $ RS.FCol colInfo
+            else return $ RS.FColArg colInfo (paramsToAnnArgs $ _fArguments fld)
+            -- let jsonCol = return $ RS.FCol $ colInfo { pgiName = PGCol $ T.pack "metadata->'name'" }
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo

@@ -384,6 +384,10 @@ isNumType PGDouble  = True
 isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
+isJSONType :: PGColType -> Bool
+isJSONType PGJSON = True
+isJSONType _       = False
+
 isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True
 isJSONBType _       = False

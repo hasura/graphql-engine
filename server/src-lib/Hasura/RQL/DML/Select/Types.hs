@@ -12,9 +12,9 @@ import qualified Data.Text                  as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
 import qualified Hasura.SQL.DML             as S
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value           (PGColValue (..))
 
 type SelectQExt = SelectG ExtCol BoolExp Int
 -- Columns in RQL
@@ -76,9 +76,11 @@ data ArrSel
   deriving (Show, Eq)
 
 type ArrSelFlds = Fields ArrSel
+type AnnArgs = Fields PGColValue
 
 data AnnFld
   = FCol !PGColInfo
+  | FColArg !PGColInfo !AnnArgs
   | FObj !ObjSel
   | FArr !ArrSel
   | FExp !T.Text
@@ -225,3 +227,16 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+getJSONArgumentPath :: AnnArgs -> Maybe T.Text
+getJSONArgumentPath args
+  | length pathArgs == 0 = Nothing
+  | otherwise = getPathValue $ head pathArgs
+  where
+    hasPath ((FieldName argName), _) = argName == "path"
+    pathArgs = filter hasPath args
+    getPathValue (_, pgVal) = case pgVal of
+      PGValText t -> Just t
+      _           -> Nothing
+
+

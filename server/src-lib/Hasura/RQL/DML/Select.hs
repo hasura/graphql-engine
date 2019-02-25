@@ -241,6 +241,7 @@ partAnnFlds
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
   FCol c -> Just $ Left (pgiName c, pgiType c)
+  FColArg c _ -> Just $ Left (pgiName c, pgiType c)
   FObj o -> Just $ Right $ Left o
   FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing
