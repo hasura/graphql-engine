@@ -36,6 +36,10 @@ mkdir -p $SERVER_OUTPUT_DIR
 touch $LATEST_SERVER_LOG
 touch $CURRENT_SERVER_LOG
 
+# updating hasura cli
+log "updating hasura cli"
+hasura update-cli
+
 # start api server for event triggers and remote schemas
 log "starting api server for triggers and remote schemas"
 PORT 3000 yarn --cwd api-server start-prod > $API_SERVER_LOG 2>&1 &
