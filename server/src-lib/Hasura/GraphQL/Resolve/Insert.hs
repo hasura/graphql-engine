@@ -143,16 +143,17 @@ parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
   -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
+parseOnConflict tn updPermM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint
       _  -> do
-          (_, updFiltr) <- onNothing updFiltrM $ throw500
+          UpdPermForIns _ updFiltr preSet <- onNothing updPermM $ throw500
             "cannot update columns since update permission is not defined"
-          return $ RI.CP1Update constraint updCols $ toSQLBoolExp (S.mkQual tn) updFiltr
+          return $ RI.CP1Update constraint updCols preSet $
+            toSQLBoolExp (S.mkQual tn) updFiltr
 
   where
     getUpdCols o = do
@@ -167,7 +168,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
-     => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
+          => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
   forM cols $ \(c, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
