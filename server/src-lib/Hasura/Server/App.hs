@@ -343,6 +343,10 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         query <- parseBody
         v1QueryHandler query
 
+      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+        mkSpockAction encodeQErr serverCtx $
+        legacyQueryHandler (TableName tableName) queryType
+
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
         expQuery <- parseBody
@@ -354,10 +358,6 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
         -- get "v1alpha1/graphql/schema" $
         --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
-    when enableRQL $  do
-      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr serverCtx $
-        legacyQueryHandler (TableName tableName) queryType
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
