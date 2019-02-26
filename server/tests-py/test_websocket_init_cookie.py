@@ -1,0 +1,59 @@
+import json
+import threading
+from urllib.parse import urlparse
+
+import websocket
+import pytest
+from validate import check_query
+
+if not pytest.config.getoption("--test-ws-init-cookie"):
+    pytest.skip("--test-ws-init-cookie flag is missing, skipping tests", allow_module_level=True)
+
+
+def url(hge_ctx):
+    ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws', path='/v1alpha1/graphql')
+    return ws_url.geturl()
+
+class TestWebsocketInitCookie():
+    """
+    test if cookie is sent when initing the websocket connection, is our auth
+    webhook receiving the cookie
+    """
+    dir = 'queries/remote_schemas'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
+        assert st_code == 200, resp
+        yield
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
+
+    def test_websocket_init_cookie_used(self, hge_ctx):
+        ws_url = url(hge_ctx)
+        ws = websocket.create_connection(ws_url, header={'cookie': 'foo=bar;'})
+        init_payload = {
+            'type': 'connection_init',
+            'payload': {'headers': {}}
+        }
+        ws.send(json.dumps(init_payload))
+        payload = {
+            'type': 'start',
+            'id': '1',
+            'payload': {'query': 'query { person {name}}'}
+        }
+        ws.send(json.dumps(payload))
+        it = 0
+        while True:
+            raw = ws.recv()
+            frame = json.loads(raw)
+            if frame['type'] == 'data':
+                assert 'person' in frame['payload']['data']
+                break
+            elif it == 10:
+                assert False
+                break
+            else:
+                assert False
+                break
+            it = it + 1

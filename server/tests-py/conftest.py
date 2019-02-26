@@ -33,6 +33,12 @@ def pytest_addoption(parser):
         help="Run testcases for CORS configuration"
     )
 
+    parser.addoption(
+        "--test-ws-init-cookie", action="store_true",
+        required=False,
+        help="Run testcases for testing cookie sending over websockets"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -44,7 +50,7 @@ def hge_ctx(request):
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
-    test_cors = request.config.getoption('--test-cors')
+    #test_cors = request.config.getoption('--test-cors')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,

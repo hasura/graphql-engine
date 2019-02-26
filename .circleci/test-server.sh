@@ -198,6 +198,27 @@ sleep 4
 combine_hpc_reports
 unset HASURA_GRAPHQL_CORS_DOMAIN
 
+# test websocket transport with initial cookie header
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+
+wait_for_port 9876
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie test_websocket_init_cookie.py
+
+kill -INT $PID
+kill -INT $WHC_PID
+sleep 4
+combine_hpc_reports
+unset HASURA_GRAPHQL_AUTH_HOOK
+
 
 # webhook tests
 
