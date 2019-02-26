@@ -9,7 +9,7 @@ const testQuery = {
 
 const testResponse = {
   data: {
-    author1: []
+    author: []
   }
 };
 
