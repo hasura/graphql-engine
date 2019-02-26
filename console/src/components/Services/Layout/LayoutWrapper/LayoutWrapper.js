@@ -10,8 +10,11 @@ import PropTypes from 'prop-types';
 class LayoutWrapper extends React.Component {
   render() {
     const styles = require('../../Data/TableCommon/Table.scss');
+
     const { appPrefix, children } = this.props;
-    // const currentLocation = location ? location.pathname : '';
+
+    const currentLocation = location.pathname;
+
     return (
       <div>
         <Helmet title={'Custom Resolvers | Hasura'} />
@@ -21,20 +24,25 @@ class LayoutWrapper extends React.Component {
           >
             <div>
               <ul>
-                <li role="presentation">
-                  <div className={styles.schemaWrapper}>
-                    <div
-                      className={styles.schemaSidebarSection}
-                      data-test="schema"
-                    >
-                      <Link
-                        className={styles.schemaBorder}
-                        to={appPrefix + '/manage'}
+                <li
+                  role="presentation"
+                  className={
+                    currentLocation.includes('remote-schemas/manage') ? styles.active : ''
+                  }
+                >
+                  <Link
+                    className={styles.linkBorder}
+                    to={appPrefix + '/manage'}
+                  >
+                    <div className={styles.schemaWrapper}>
+                      <div
+                        className={styles.schemaSidebarSection}
+                        data-test="schema"
                       >
                         Manage
-                      </Link>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                   <LeftNavBar {...this.props} />
                 </li>
               </ul>

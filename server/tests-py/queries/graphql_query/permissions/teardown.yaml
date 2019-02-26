@@ -9,4 +9,5 @@ args:
       DROP TABLE "Artist";
       DROP TABLE geom_table;
       DROP TABLE jsonb_table;
+      DROP TABLE gpa cascade;
     cascade: true
