@@ -29,6 +29,7 @@ log() { echo -e "--> $*"; }
 
 LATEST_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-latest-release-server.log
 CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
+API_SERVER_LOG=$SERVER_OUTPUT_DIR/api-server.log
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
@@ -37,10 +38,12 @@ touch $CURRENT_SERVER_LOG
 
 # start api server for event triggers and remote schemas
 log "starting api server for triggers and remote schemas"
-PORT 3000 yarn --cwd api-server start-prod &
+PORT 3000 yarn --cwd api-server start-prod > $API_SERVER_LOG 2>&1 &
 API_SERVER_PID=$!
 
 wait_for_port 3000
+
+export API_SERVER_ENDPOINT=http://localhost:3000
 
 # download latest graphql engine release
 log "downloading latest release of graphql engine"
