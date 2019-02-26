@@ -6,6 +6,8 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 ![how convert works](assets/how_convert_works.png)
 
+Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
+
 *Made with love by [Hasura](https://hasura.io)*
 
 ## Contents
