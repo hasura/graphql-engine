@@ -1,11 +1,12 @@
 {
   "name": "graphql2chartjs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "./node_modules/.bin/babel src --out-dir lib"
+    "compile": "rm -rf lib && ./node_modules/.bin/babel src --out-dir lib",
+    "launch": "yarn compile && yarn publish"
   },
   "author": "Hasura",
   "repository": "hasura/graphql-engine",
