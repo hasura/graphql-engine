@@ -55,7 +55,7 @@ hasura update-cli
 # start api server for event triggers and remote schemas
 log "starting api server for triggers and remote schemas"
 yarn --cwd $API_SERVER_DIR install
-PORT=$API_SERVER_PORT yarn --cwd $API_SERVER_DIR start-prod > $API_SERVER_LOG 2>&1 &
+stdbuf -o0 PORT=$API_SERVER_PORT yarn --cwd $API_SERVER_DIR start-prod > $API_SERVER_LOG 2>&1 &
 API_SERVER_PID=$!
 
 wait_for_port $API_SERVER_PORT
@@ -67,7 +67,7 @@ chmod +x $LATEST_SERVER_BINARY
 
 # start graphql engine
 log "starting latest graphql engine"
-$LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
+stdbuf -o0 $LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
 LAST_REL_HGE_PID=$!
 
 wait_for_port $HASURA_GRAPHQL_SERVER_PORT
@@ -89,7 +89,7 @@ wait $LAST_REL_HGE_PID || true
 
 # start the current build
 log "start the current build"
-$SERVER_BINARY serve > $CURRENT_SERVER_LOG 2>&1 &
+stdbuf -o0 $SERVER_BINARY serve > $CURRENT_SERVER_LOG 2>&1 &
 CURR_HGE_PID=$!
 
 wait_for_port $HASURA_GRAPHQL_SERVER_PORT
