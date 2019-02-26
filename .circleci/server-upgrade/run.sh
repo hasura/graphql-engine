@@ -79,7 +79,7 @@ hasura --project $HASURA_PROJECT_DIR migrate apply --endpoint $HGE_ENDPOINT
 
 # make a test query
 log "executing the test query"
-node make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
+node $ROOT/make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
 log
 
 # kill graphql engine
@@ -97,7 +97,7 @@ log "server started"
 
 # make a test query
 log "executing test query"
-node make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
+node $ROOT/make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
 log
 
 log "kill the server"
