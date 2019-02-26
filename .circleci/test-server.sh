@@ -199,7 +199,7 @@ unset HASURA_GRAPHQL_CORS_DOMAIN
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
 
-export HASURA_GRAPHQL_ALLOWED_INTERFACES="rql"
+export HASURA_GRAPHQL_ENABLED_APIS="rql"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
@@ -209,9 +209,9 @@ pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-ke
 
 kill_hge_and_combine_hpc_reports
 
-unset HASURA_GRAPHQL_ALLOWED_INTERFACES
+unset HASURA_GRAPHQL_ENABLED_APIS
 
-"$GRAPHQL_ENGINE" serve --interface rql >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+"$GRAPHQL_ENGINE" serve --enabled-apis rql >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 wait_for_port 8080
 
@@ -221,7 +221,7 @@ kill_hge_and_combine_hpc_reports
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH RQL DISABLED ########>\n"
 
-export HASURA_GRAPHQL_ALLOWED_INTERFACES="graphql"
+export HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
@@ -230,9 +230,9 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-rql-disabled test_server_interfaces.py
 
 kill_hge_and_combine_hpc_reports
-unset HASURA_GRAPHQL_ALLOWED_INTERFACES
+unset HASURA_GRAPHQL_ENABLED_APIS
 
-"$GRAPHQL_ENGINE" serve --interface graphql >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+"$GRAPHQL_ENGINE" serve --enabled-apis graphql >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 wait_for_port 8080
 

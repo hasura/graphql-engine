@@ -97,7 +97,7 @@ data ServerCtx
   , scCacheLock     :: MVar ()
   , scAuthMode      :: AuthMode
   , scManager       :: HTTP.Manager
-  , scAllowedIFaces :: S.HashSet ServerIFace
+  , scEnabledAPIs   :: S.HashSet API
   }
 
 data HandlerCtx
@@ -111,10 +111,10 @@ data HandlerCtx
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 isRQLEnabled :: ServerCtx -> Bool
-isRQLEnabled sc = S.member RQL $ scAllowedIFaces sc
+isRQLEnabled sc = S.member RQL $ scEnabledAPIs sc
 
 isGraphQLEnabled :: ServerCtx -> Bool
-isGraphQLEnabled sc = S.member GRAPHQL $ scAllowedIFaces sc
+isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -297,9 +297,9 @@ mkWaiApp
   -> CorsConfig
   -> Bool
   -> Bool
-  -> S.HashSet ServerIFace
+  -> S.HashSet API
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry ifaces = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry apis = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager pool Q.Serializable buildSchemaCache
@@ -309,7 +309,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager ifaces
+          cacheLock mode httpManager apis
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry

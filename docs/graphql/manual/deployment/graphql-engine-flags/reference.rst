@@ -139,13 +139,9 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
-   * - ``--interface <rql|graphql>``
-     - N/A
-     - Enable the given server interface. (default: Both RQL/GraphQL interfaces are enabled)
-
-   * - N/A
-     - ``HASURA_GRAPHQL_ALLOWED_INTERFACES``
-     - Comma separated list of allowed interfaces. (default: ``rql,graphql``)
+   * - ``--enabled-apis <APIS>``
+     - ``HASURA_GRAPHQL_ENABLED_APIS``
+     - Comma separated list of APIs to be enabled. (default: ``rql,graphql``)
 
 .. note::
   When the equivalent flags for environment variables are used, the flags will take precedence.

@@ -48,7 +48,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
-  , rsoAllowedIFaces   :: !(Maybe [ServerIFace])
+  , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -64,7 +64,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
-  , soAllowedIFaces   :: !(Set.HashSet ServerIFace)
+  , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -86,12 +86,12 @@ data HGECommandG a
   | HCVersion
   deriving (Show, Eq)
 
-data ServerIFace
+data API
   = RQL
   | GRAPHQL
   deriving (Show, Eq, Read, Generic)
 
-instance Hashable ServerIFace
+instance Hashable API
 
 type HGECommand = HGECommandG ServeOptions
 type RawHGECommand = HGECommandG RawServeOptions
@@ -140,8 +140,8 @@ instance FromEnv Q.TxIsolation where
 instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
 
-instance FromEnv [ServerIFace] where
-  fromEnv = mapM (readServerIFace . T.unpack) . T.splitOn "," . T.pack
+instance FromEnv [API] where
+  fromEnv = readAPIs
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -239,11 +239,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  allowedIFaces <- Set.fromList . fromMaybe [RQL,GRAPHQL] <$>
-                     withEnv (rsoAllowedIFaces rso) (fst allowedIFacesEnv)
+  enabledAPIs <- Set.fromList . fromMaybe [RQL,GRAPHQL] <$>
+                     withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry allowedIFaces
+                        unAuthRole corsCfg enableConsole enableTelemetry enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -457,11 +457,10 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
-allowedIFacesEnv :: (String,String)
-allowedIFacesEnv =
-  ( "HASURA_GRAPHQL_ALLOWED_INTERFACES"
-  -- TODO: better description
-  , "List of comma separated allowed interfaces. (default: rql,graphql)"
+enabledAPIsEnv :: (String,String)
+enabledAPIsEnv =
+  ( "HASURA_GRAPHQL_ENABLED_APIS"
+  , "List of comma separated list of allowed APIs. (default: rql,graphql)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -606,11 +605,12 @@ readHookType tyS =
     "POST" -> Right AHTPost
     _      -> Left "Only expecting GET / POST"
 
-readServerIFace :: String -> Either String ServerIFace
-readServerIFace si = case T.toUpper $ T.strip $ T.pack si of
-  "RQL"     -> Right RQL
-  "GRAPHQL" -> Right GRAPHQL
-  _         -> Left "Only expecting interface types RQL / GRAPHQL"
+readAPIs :: String -> Either String [API]
+readAPIs = mapM readAPI . T.splitOn "," . T.pack
+  where readAPI si = case T.toUpper $ T.strip si of
+          "RQL"     -> Right RQL
+          "GRAPHQL" -> Right GRAPHQL
+          _         -> Left "Only expecting list of comma separated API types RQL / GRAPHQL"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
@@ -680,13 +680,12 @@ parseEnableTelemetry = optional $
            help (snd enableTelemetryEnv)
          )
 
-parseAllowedIFaces :: Parser (Maybe [ServerIFace])
-parseAllowedIFaces = fmap (\x -> bool (Just x) Nothing $ null x ) $ many $
-  option (eitherReader readServerIFace)
-         ( long "interface" <>
-           help "Name of interface to be enabled. Accepts RQL / GRAPHQL"
+parseEnabledAPIs :: Parser (Maybe [API])
+parseEnabledAPIs = optional $
+  option (eitherReader readAPIs)
+         ( long "enabled-apis" <>
+           help (snd enabledAPIsEnv)
          )
-
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
