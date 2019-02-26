@@ -9,6 +9,7 @@ import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString              as B
+import qualified Data.HashSet                 as Set
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
@@ -141,7 +142,8 @@ fmapL _ (Right x) = pure x
 filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterRequestHeaders = filterHeaders reqHeaders
   where
-    reqHeaders = [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+    reqHeaders = Set.fromList
+                 [ "Content-Length", "Content-MD5", "User-Agent", "Host"
                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
                  , "Accept-Language", "Accept-Datetime"
                  , "Cache-Control", "Connection", "DNT"
@@ -152,12 +154,13 @@ filterRequestHeaders = filterHeaders reqHeaders
 filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterResponseHeaders = filterHeaders respHeaders
   where
-    respHeaders = [ "Server", "Transfer-Encoding", "Cache-Control"
+    respHeaders = Set.fromList
+                  [ "Server", "Transfer-Encoding", "Cache-Control"
                   , "Access-Control-Allow-Credentials"
                   , "Access-Control-Allow-Methods"
                   , "Access-Control-Allow-Origin"
                   , "Content-Type"
                   ]
 
-filterHeaders :: [HTTP.HeaderName] -> [HTTP.Header] -> [HTTP.Header]
-filterHeaders list = filter (\(n, _) -> n `notElem` list)
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> n `Set.member` list)
