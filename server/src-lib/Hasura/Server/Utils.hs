@@ -163,4 +163,4 @@ filterResponseHeaders = filterHeaders respHeaders
                   ]
 
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
-filterHeaders list = filter (\(n, _) -> n `Set.member` list)
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)

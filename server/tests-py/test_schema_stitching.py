@@ -248,6 +248,7 @@ class TestRemoteSchemaResponseHeaders():
         resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1alpha1/graphql', json=q,
                                  headers=headers)
         assert resp.status_code == 200
+        print(resp.headers)
         assert ('Set-Cookie' in resp.headers and
                 resp.headers['Set-Cookie'] == 'abcd')
         res = resp.json()
