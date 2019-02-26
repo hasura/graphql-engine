@@ -199,27 +199,27 @@ unset HASURA_GRAPHQL_CORS_DOMAIN
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
 
-export HASURA_GRAPHQL_ENABLED_APIS="rql"
+export HASURA_GRAPHQL_ENABLED_APIS="metadata"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_server_interfaces.py
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
 
 unset HASURA_GRAPHQL_ENABLED_APIS
 
-"$GRAPHQL_ENGINE" serve --enabled-apis rql >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+"$GRAPHQL_ENGINE" serve --enabled-apis metadata >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_server_interfaces.py
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH RQL DISABLED ########>\n"
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH METADATA DISABLED ########>\n"
 
 export HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
@@ -227,7 +227,7 @@ export HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-rql-disabled test_server_interfaces.py
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
 unset HASURA_GRAPHQL_ENABLED_APIS
@@ -236,7 +236,7 @@ unset HASURA_GRAPHQL_ENABLED_APIS
 
 wait_for_port 8080
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-rql-disabled test_server_interfaces.py
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
 

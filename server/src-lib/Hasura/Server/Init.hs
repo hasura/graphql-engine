@@ -87,7 +87,7 @@ data HGECommandG a
   deriving (Show, Eq)
 
 data API
-  = RQL
+  = METADATA
   | GRAPHQL
   deriving (Show, Eq, Read, Generic)
 
@@ -239,7 +239,7 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  enabledAPIs <- Set.fromList . fromMaybe [RQL,GRAPHQL] <$>
+  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
@@ -460,7 +460,7 @@ enableTelemetryEnv =
 enabledAPIsEnv :: (String,String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: rql,graphql)"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -608,9 +608,9 @@ readHookType tyS =
 readAPIs :: String -> Either String [API]
 readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
-          "RQL"     -> Right RQL
-          "GRAPHQL" -> Right GRAPHQL
-          _         -> Left "Only expecting list of comma separated API types RQL / GRAPHQL"
+          "METADATA" -> Right METADATA
+          "GRAPHQL"  -> Right GRAPHQL
+          _          -> Left "Only expecting list of comma separated API types metadata / graphql"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =

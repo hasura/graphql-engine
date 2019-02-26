@@ -11,17 +11,17 @@ def check_post_404(hge_ctx,url):
    })
 
 
-@pytest.mark.skipif(not pytest.config.getoption("--test-rql-disabled"),
-                    reason="flag --test-rql-disabled is not set. Cannot run tests for RQL disabled")
-class TestRQLDisabled:
+@pytest.mark.skipif(not pytest.config.getoption("--test-metadata-disabled"),
+                    reason="flag --test-metadata-disabled is not set. Cannot run tests for metadata disabled")
+class TestMetadataDisabled:
 
-    def test_rql_v1_query_disabled(self, hge_ctx):
+    def test_metadata_v1_query_disabled(self, hge_ctx):
         check_post_404(hge_ctx,'/v1/query')
 
-    def test_rql_v1_template_disabled(self, hge_ctx):
+    def test_metadata_v1_template_disabled(self, hge_ctx):
         check_post_404(hge_ctx,'/v1/template/foo')
 
-    def test_rql_api_1_disabled(self, hge_ctx):
+    def test_metadata_api_1_disabled(self, hge_ctx):
         check_post_404(hge_ctx,'/api/1/table/foo/select')
 
 
@@ -44,9 +44,9 @@ class TestGraphQLEnabled:
         check_query_f(hge_ctx, "queries/graphql_introspection/introspection_only_kind_of_queryType.yaml")
 
 
-@pytest.mark.skipif(pytest.config.getoption("--test-rql-disabled"),
-                    reason="--test-rql-disabled is set. Cannot run RQL enabled tests")
-class TestRQLEnabled:
+@pytest.mark.skipif(pytest.config.getoption("--test-metadata-disabled"),
+                    reason="--test-metadata-disabled is set. Cannot run metadata enabled tests")
+class TestMetadataEnabled:
 
     def test_reload_metadata(self, hge_ctx):
         check_query_f(hge_ctx, "queries/v1/metadata/reload_metadata.yaml")

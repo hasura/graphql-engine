@@ -34,8 +34,8 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "--test-rql-disabled", action="store_true",
-        help="Run Test cases with RQL queries being disabled"
+        "--test-metadata-disabled", action="store_true",
+        help="Run Test cases with metadata queries being disabled"
     )
 
     parser.addoption(
@@ -55,7 +55,7 @@ def hge_ctx(request):
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
     test_cors = request.config.getoption('--test-cors')
-    rql_disabled = request.config.getoption('--test-rql-disabled')
+    metadata_disabled = request.config.getoption('--test-metadata-disabled')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -65,7 +65,7 @@ def hge_ctx(request):
             webhook_insecure=webhook_insecure,
             hge_jwt_key_file=hge_jwt_key_file,
             hge_jwt_conf=hge_jwt_conf,
-            rql_disabled=rql_disabled
+            metadata_disabled=metadata_disabled
         )
     except HGECtxError as e:
         pytest.exit(str(e))

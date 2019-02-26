@@ -110,8 +110,8 @@ data HandlerCtx
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
-isRQLEnabled :: ServerCtx -> Bool
-isRQLEnabled sc = S.member RQL $ scEnabledAPIs sc
+isMetadataEnabled :: ServerCtx -> Bool
+isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
@@ -327,13 +327,13 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when (enableConsole && enableRQL) serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    when enableRQL $ do
+    when enableMetadata $ do
       get    ("v1/template" <//> var) tmpltGetOrDeleteH
       post   ("v1/template" <//> var) tmpltPutOrPostH
       put    ("v1/template" <//> var) tmpltPutOrPostH
@@ -365,7 +365,7 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
   where
     enableGraphQL = isGraphQLEnabled serverCtx
-    enableRQL = isRQLEnabled serverCtx
+    enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs

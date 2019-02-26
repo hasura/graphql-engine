@@ -74,7 +74,7 @@ class WebhookServer(http.server.HTTPServer):
 
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf, rql_disabled):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf, metadata_disabled):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -99,7 +99,7 @@ class HGECtx:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = hge_jwt_conf
         self.webhook_insecure = webhook_insecure
-        self.rql_disabled = rql_disabled
+        self.metadata_disabled = metadata_disabled
         self.may_skip_test_teardown = False
 
         self.ws_url = urlparse(hge_url)
@@ -117,7 +117,7 @@ class HGECtx:
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
-        if not self.rql_disabled:
+        if not self.metadata_disabled:
           try:
               st_code, resp = self.v1q_f('queries/clear_db.yaml')
           except requests.exceptions.RequestException as e:
