@@ -390,3 +390,41 @@ args:
         age: 7
     - jsonb_col:
         name: Cross
+
+#Create grade_point table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE gpa (
+        id serial primary key,
+        student_name text not null,
+        gpa_score double precision not null
+        );
+
+      INSERT INTO gpa (student_name, gpa_score) VALUES
+        ('clarke', 9.24), ('george', 8.32),
+        ('blake', 7.34), ('leonel', 9.56);
+
+      CREATE FUNCTION passed_students (pass_gpa double precision)
+      RETURNS SETOF gpa as $$
+        SELECT * FROM gpa WHERE
+          gpa_score >= pass_gpa
+      $$ language SQL STABLE;
+
+- type: track_table
+  args:
+    name: gpa
+    schema: public
+- type: track_function
+  args:
+    name: passed_students
+    schema: public
+- type: create_select_permission
+  args:
+    table: gpa
+    role: staff
+    permission:
+      columns:
+      - id
+      - student_name
+      filter: {}
