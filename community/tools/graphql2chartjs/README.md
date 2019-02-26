@@ -14,7 +14,7 @@ Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
 
 - [Demo](#demo)
 - [Realtime](#realtime)
-- [Getting started](#quick-start-with-react)
+- [Getting started](#quickstart-with-react)
 - [How it works](#how-it-works)
     + [Motivation](#motivation)
     + [GraphQL Aliasing](#graphql-aliasing)
@@ -27,8 +27,8 @@ Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
     + [Radar](#radar)
     + [Pie](#pie)
     + [Doughnut](#doughnut)
-    + [Bubble](#bubble)
-    + [Scatter](#scatter)
+    + [Bubble](#bubble-multiple-datasets)
+    + [Scatter](#scatter-multiple-datasets)
 - [Limitations](#limitations)
 
 ## Demo
@@ -810,9 +810,9 @@ var myChart = new Chart(ctx, {
 
 ## Limitations
 
-1. The response structure of your GraphQL query is opinionated. This is however not a limitation as you use GraphQL aliasing to renaeme the fields to achieve the required structure.
+1. The response structure of your GraphQL query is opinionated. This is however not a limitation as you use GraphQL aliasing to rename the fields to achieve the required structure.
 
-2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions and form a custom GraphQL response from the subscription responses.
+2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions, form a custom GraphQL response from the subscription responses and then pass the response to the convert function.
 
 ---
 *Only sample data has been used in this readme and any resemblance to reality is purely coincidental*
