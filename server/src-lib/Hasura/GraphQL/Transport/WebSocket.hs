@@ -52,7 +52,7 @@ type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
 
 data WSConnState
-  = CSNotInitialised
+  = CSNotInitialised !(Maybe H.Header)
   | CSInitError Text
   | CSInitialised UserInfo [H.Header]
 
@@ -134,8 +134,9 @@ onConn (L.Logger logger) wsId requestHead = do
 
     accept _ = do
       logger $ WSLog wsId Nothing EAccepted
+      let cookie = getCookieHeader
       connData <- WSConnData
-                  <$> IORef.newIORef CSNotInitialised
+                  <$> IORef.newIORef (CSNotInitialised cookie)
                   <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
@@ -152,6 +153,9 @@ onConn (L.Logger logger) wsId requestHead = do
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
+    getCookieHeader =
+      find (\(n, _) -> n == "Cookie") (WS.requestHeaders requestHead)
+
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
@@ -166,7 +170,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     CSInitError initErr -> do
       let connErr = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendConnErr connErr
-    CSNotInitialised -> do
+    CSNotInitialised _ -> do
       let connErr = "start received before the connection is initialised"
       withComplete $ sendConnErr connErr
 
@@ -314,6 +318,7 @@ onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
+  headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscUser $ WS.getData wsConn))
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  -> do
@@ -330,9 +335,14 @@ onConnInit logger manager wsConn authMode connParamsM = do
       -- ping/pong frames of websocket spec?
       sendMsg wsConn SMConnKeepAlive
   where
-    headers = [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
-              | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
-              ]
+    mkHeaders st =
+      [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
+      | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
+      ] ++ maybeToList (getCookie st)
+
+    getCookie st = case st of
+      CSNotInitialised c -> c
+      _                  -> Nothing
 
 onClose
   :: L.Logger
