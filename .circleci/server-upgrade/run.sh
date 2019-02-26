@@ -3,10 +3,10 @@
 # exit when any command fails
 set -e
 
-# keep track of the last executed command
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-# echo an error message before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+# # keep track of the last executed command
+# trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# # echo an error message before exiting
+# trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 wait_for_port() {
     local PORT=$1
@@ -23,13 +23,19 @@ wait_for_port() {
 log() { echo -e "--> $*"; }
 
 # env HASURA_GRAPHQL_DATABASE_URL
+: ${HASURA_GRAPHQL_SERVER_PORT:=8080}
+: ${API_SERVER_PORT:=3000}
 : ${HASURA_PROJECT_DIR:=/hasura}
 : ${SERVER_OUTPUT_DIR:=/build/_server_output}
-: ${SERVER_BINARY_LOC:=/build/_server_output/graphql-engine}
+: ${SERVER_BINARY:=/build/_server_output/graphql-engine}
+: ${LATEST_SERVER_BINARY:=/bin/graphql-engine-latest}
 
 LATEST_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-latest-release-server.log
 CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
 API_SERVER_LOG=$SERVER_OUTPUT_DIR/api-server.log
+
+API_SERVER_ENDPOINT=http://localhost:$API_SERVER_PORT
+HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
@@ -42,49 +48,59 @@ hasura update-cli
 
 # start api server for event triggers and remote schemas
 log "starting api server for triggers and remote schemas"
-PORT 3000 yarn --cwd api-server start-prod > $API_SERVER_LOG 2>&1 &
+PORT=$API_SERVER_PORT yarn --cwd api-server start-prod > $API_SERVER_LOG 2>&1 &
 API_SERVER_PID=$!
 
-wait_for_port 3000
-
-export API_SERVER_ENDPOINT=http://localhost:3000
+wait_for_port $API_SERVER_PORT
 
 # download latest graphql engine release
 log "downloading latest release of graphql engine"
-curl -Lo /bin/graphql-engine-latest https://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
-chmod +x /bin/graphql-engine-latest
+curl -Lo $LATEST_SERVER_BINARY https://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
+chmod +x $LATEST_SERVER_BINARY
 
 # start graphql engine
 log "starting latest graphql engine"
-graphql-engine-latest serve > $LATEST_SERVER_LOG 2>&1 &
+$LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
 LAST_REL_HGE_PID=$!
 
-wait_for_port 8080
+wait_for_port $HASURA_GRAPHQL_SERVER_PORT
 log "graphql engine started"
 
 # apply migrations
 log "applying migrations"
-hasura --project $HASURA_PROJECT_DIR migrate apply
+hasura --project $HASURA_PROJECT_DIR migrate apply --endpoint $HGE_ENDPOINT
 
 # make a test query
 log "executing the test query"
-curl -d@test_query.json http://localhost:8080/v1alpha1/graphql
+curl -d@test_query.json $HGE_ENDPOINT/v1alpha1/graphql
+log
 
-# kill graphql enginej
+# kill graphql engine
 log "kill the server"
 kill $LAST_REL_HGE_PID || true
 wait $LAST_REL_HGE_PID || true
 
 # start the current build
 log "start the current build"
-$SERVER_BINARY_LOC serve > $CURRENT_SERVER_LOG 2>&1 &
+$SERVER_BINARY serve > $CURRENT_SERVER_LOG 2>&1 &
 CURR_HGE_PID=$!
 
-wait_for_port 8080
+wait_for_port $HASURA_GRAPHQL_SERVER_PORT
 log "server started"
 
 # make a test query
 log "executing test query"
-curl -d@test_query.json http://localhost:8080/v1alpha1/graphql
+curl -d@test_query.json $HGE_ENDPOINT/v1alpha1/graphql
+log
+
+log "kill the server"
+kill $CURR_HGE_PID || true
+wait $CURR_HGE_PID || true
+
+log "kill the api server"
+kill $API_SERVER_PID || true
+wait $API_SERVER_PID || true
 
 log "server upgrade succeeded"
+
+exit 0

@@ -354,10 +354,9 @@ jobs:
     - run:
         name: upgrade_test 
         command: .circleci/server-upgrade/run.sh
-    - persist_to_workspace:
-        root: /build
-        paths:
-          - _server_output
+    - store_artifacts:
+        path: /build/_server_output
+        destination: server
     
   deploy:
     docker:
