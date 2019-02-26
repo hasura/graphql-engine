@@ -233,7 +233,7 @@ class AddTrigger extends Component {
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -476,7 +476,7 @@ class AddTrigger extends Component {
       >
         <Helmet title="Add Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>Add a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />

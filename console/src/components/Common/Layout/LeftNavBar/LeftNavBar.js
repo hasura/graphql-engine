@@ -37,7 +37,7 @@ const LeftNavBar = ({
             type="text"
             onChange={tableSearch.bind(this)}
             className="form-control"
-            placeholder="Search remote schemas"
+            placeholder="search remote schemas"
             data-test="search-remote-schemas"
           />
         </div>

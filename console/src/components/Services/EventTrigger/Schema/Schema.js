@@ -48,7 +48,7 @@ class Schema extends Component {
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
                 }}
               >
-                Create Trigger
+                Add
               </Button>
             ) : null}
           </div>
