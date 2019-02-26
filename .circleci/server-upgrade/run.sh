@@ -1,12 +1,13 @@
 #! /usr/bin/env bash
 
-# exit when any command fails
-set -e
+set -euo pipefail
 
 # # keep track of the last executed command
 # trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # # echo an error message before exiting
 # trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
+ROOT="${BASH_SOURCE[0]%/*}"
 
 wait_for_port() {
     local PORT=$1
@@ -25,7 +26,8 @@ log() { echo -e "--> $*"; }
 # env HASURA_GRAPHQL_DATABASE_URL
 : ${HASURA_GRAPHQL_SERVER_PORT:=8080}
 : ${API_SERVER_PORT:=3000}
-: ${HASURA_PROJECT_DIR:=/hasura}
+: ${HASURA_PROJECT_DIR:=$ROOT/hasura}
+: ${API_SERVER_DIR:=$ROOT/api-server}
 : ${SERVER_OUTPUT_DIR:=/build/_server_output}
 : ${SERVER_BINARY:=/build/_server_output/graphql-engine}
 : ${LATEST_SERVER_BINARY:=/bin/graphql-engine-latest}
@@ -48,7 +50,8 @@ hasura update-cli
 
 # start api server for event triggers and remote schemas
 log "starting api server for triggers and remote schemas"
-PORT=$API_SERVER_PORT yarn --cwd api-server start-prod > $API_SERVER_LOG 2>&1 &
+yarn --cwd $API_SERVER_DIR install
+PORT=$API_SERVER_PORT yarn --cwd $API_SERVER_DIR start-prod > $API_SERVER_LOG 2>&1 &
 API_SERVER_PID=$!
 
 wait_for_port $API_SERVER_PORT
