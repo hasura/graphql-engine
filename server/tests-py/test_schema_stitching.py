@@ -241,8 +241,12 @@ class TestRemoteSchemaResponseHeaders():
         hge_ctx.v1q(self.teardown)
 
     def test_response_headers_from_remote(self, hge_ctx):
+        headers = {}
+        if hge_ctx.hge_key:
+            headers = {'x-hasura-admin-secret': hge_ctx.hge_key}
         q = {'query': 'query { hello (arg: "me") }'}
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1alpha1/graphql', json=q)
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1alpha1/graphql', json=q,
+                                 headers=headers)
         assert resp.status_code == 200
         assert ('Set-Cookie' in resp.headers and
                 resp.headers['Set-Cookie'] == 'abcd')

@@ -27,7 +27,8 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (filterRequestHeaders,
+import           Hasura.Server.Utils                    (bsToTxt,
+                                                         filterRequestHeaders,
                                                          filterResponseHeaders)
 
 import qualified Hasura.GraphQL.Resolve                 as R
@@ -140,7 +141,7 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
-  let respHdrs = map (\(k, v) -> (CS.cs $ CI.original k, CS.cs v)) $
+  let respHdrs = map (\(k, v) -> (bsToTxt $ CI.original k, bsToTxt v)) $
                  filterResponseHeaders $ resp ^. Wreq.responseHeaders
   return (resp ^. Wreq.responseBody, pure respHdrs)
 
