@@ -51,9 +51,11 @@ class TestWebsocketInitCookie():
                 assert 'person' in frame['payload']['data']
                 break
             elif it == 10:
+                print('max try over')
                 assert False
                 break
-            else:
+            elif frame['type'] == 'connection_error' or frame['type'] == 'error':
+                print(frame)
                 assert False
                 break
             it = it + 1
