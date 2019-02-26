@@ -44,6 +44,10 @@ mkdir -p $SERVER_OUTPUT_DIR
 touch $LATEST_SERVER_LOG
 touch $CURRENT_SERVER_LOG
 
+# installing deps
+log "installing deps"
+yarn --cwd $ROOT install
+
 # updating hasura cli
 log "updating hasura cli"
 hasura update-cli
@@ -75,7 +79,7 @@ hasura --project $HASURA_PROJECT_DIR migrate apply --endpoint $HGE_ENDPOINT
 
 # make a test query
 log "executing the test query"
-curl -d@test_query.json $HGE_ENDPOINT/v1alpha1/graphql
+node make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
 log
 
 # kill graphql engine
@@ -93,7 +97,7 @@ log "server started"
 
 # make a test query
 log "executing test query"
-curl -d@test_query.json $HGE_ENDPOINT/v1alpha1/graphql
+node make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
 log
 
 log "kill the server"
