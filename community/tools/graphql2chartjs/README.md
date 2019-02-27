@@ -322,62 +322,39 @@ Now you can pass this data object to your ChartJS instance and you will have a c
 [Try in Codesandbox](https://codesandbox.io/s/7y5wmpz6k6)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-    {
-      "data": {
-        "VideoGameFollowers": [
-          {
-            "id": 1,
-            "label": "Dota",
-            "data": 427014,
-            "backgroundColor": "red",
-          },
-          {
-            "id": 2,
-            "label": "CS:GO",
-            "data": 220006,
-            "backgroundColor": "yellow",
-          },
-          {
-            "id": 3,
-            "label": "NFS",
-            "data": 71004,
-            "backgroundColor": "#3366ff",
-          },
-          {
-            "id": 4,
-            "label": "PUBG",
-            "data": 129769,
-            "backgroundColor": "#330000",
-          },
-          {
-            "id": 5,
-            "label": "Quake 3",
-            "data": 90808,
-            "backgroundColor": "green",
-          }
-        ]
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+  query: `
+    query {
+      video_games (
+        order_by: {
+          name: asc
+        }
+      ) {
+        id
+        label:name
+        data: followers
+        backgroundColor:color
       }
     }
-*/
-
-var chartJSData = convert('bar', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'bar',
-    data: chartJSData,
-    options: {
-        responsive: true,
+  `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("bar", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "bar",
+      data: chartJsData,
+      options: {
         legend: {
-            labels: {
-                boxWidth: 0,
-                hidden: true
-            }
+          labels: { boxWidth: 0 }
         }
-    }
-})
+      }
+    });
+  });
+});
 ```
 
 ![readme bar chart example](assets/readme-bar-chart-example.png)
@@ -387,68 +364,40 @@ var myChart = new Chart(ctx, {
 [Try out in codesandbox](https://codesandbox.io/s/1qp1w7m58l)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-    {
-      "data": {
-        "VideoGameFollowers": [
-          {
-            "id": 1,
-            "label": "Dota",
-            "data": 427014,
-            "pointBackgroundColor": "red",
-            "fill": false
-          },
-          {
-            "id": 2,
-            "label": "CS:GO",
-            "data": 220006,
-            "pointBackgroundColor": "yellow",
-            "fill": false
-          },
-          {
-            "id": 3,
-            "label": "NFS",
-            "data": 71004,
-            "pointBackgroundColor": "#3366ff",
-            "fill": false
-          },
-          {
-            "id": 4,
-            "label": "PUBG",
-            "data": 129769,
-            "pointBackgroundColor": "#330000",
-            "fill": false
-          },
-          {
-            "id": 5,
-            "label": "Quake 3",
-            "data": 90808,
-            "pointBackgroundColor": "green",
-            "fill": false
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+      query {
+        video_games (
+          order_by: {
+            name: asc
           }
-        ]
-      }
-    }
-*/
-
-var chartJSData = convert('line', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'line',
-    data: chartJSData,
-    options: {
-        responsive: true,
-        legend: {
-            labels: {
-                boxWidth: 0,
-                hidden: true
-            }
+        ) {
+          id
+          label:name
+          data: followers
+          pointBackgroundColor: color
+          fill: false_flag
         }
-    }
+      }
+    `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("line", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "line",
+      data: chartJsData,
+      options: {
+        legend: {
+          labels: { boxWidth: 0 }
+        }
+      }
+    });
+  });
 })
-
 ```
 
 ![line-chart-example](assets/readme-line-chart-example.png)
@@ -459,71 +408,39 @@ var myChart = new Chart(ctx, {
 
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-   {
-    "data": {
-      "VideoGameFollowers": [
-        {
-          "id": 1,
-          "label": "Dota",
-          "data": 427014,
-          "backgroundColor": "rgba(100, 0, 0, 0.3)",
-          "pointBackgroundColor": "red",
-          "fill": true
-        },
-        {
-          "id": 2,
-          "label": "CS:GO",
-          "data": 220006,
-          "backgroundColor": "rgba(100, 0, 0, 0.3)",
-          "pointBackgroundColor": "yellow",
-          "fill": true
-        },
-        {
-          "id": 3,
-          "label": "NFS",
-          "data": 71004,
-          "backgroundColor": "rgba(100, 0, 0, 0.3)",
-          "pointBackgroundColor": "#3366ff",
-          "fill": true
-        },
-        {
-          "id": 4,
-          "label": "PUBG",
-          "data": 129769,
-          "backgroundColor": "rgba(100, 0, 0, 0.3)",
-          "pointBackgroundColor": "#330000",
-          "fill": true
-        },
-        {
-          "id": 5,
-          "label": "Quake 3",
-          "data": 90808,
-          "backgroundColor": "rgba(100, 0, 0, 0.3)",
-          "pointBackgroundColor": "green",
-          "fill": true
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+    query {
+      video_games (
+        order_by: {
+          name: asc
         }
-      ]
+      ) {
+        id
+        label:name
+        data: followers
+        pointBackgroundColor: color
+        fill: false_flag
+      }
     }
-  }
-*/
-
-var chartJSData = convert('radar', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'radar',
-    data: chartJSData,
-    options: {
-        responsive: true,
+        `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("radar", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "radar",
+      data: chartJsData,
+      options: {
         legend: {
-            labels: {
-                boxWidth: 0,
-                hidden: true
-            }
+          labels: { boxWidth: 0 }
         }
-    }
+      }
+    });
+  });
 })
 ```
 
@@ -534,211 +451,111 @@ var myChart = new Chart(ctx, {
 [Try out in codesandbox](https://codesandbox.io/s/pwo9w71q47)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-   {
-    "data": {
-      "VideoGameFollowers": [
-        {
-          "id": 1,
-          "label": "Dota",
-          "data": 427014,
-          "backgroundColor": "red",
-          "borderColor": "lightred"
-        },
-        {
-          "id": 2,
-          "label": "CS:GO",
-          "data": 220006,
-          "backgroundColor": "yellow",
-          "borderColor": "lightyellow"
-        },
-        {
-          "id": 3,
-          "label": "NFS",
-          "data": 71004,
-          "backgroundColor": "#3366ff",
-          "borderColor": "lightgreen"
-        },
-        {
-          "id": 4,
-          "label": "PUBG",
-          "data": 129769,
-          "backgroundColor": "#330000",
-          "borderColor": "#42SF22"
-        },
-        {
-          "id": 5,
-          "label": "Quake 3",
-          "data": 90808,
-          "backgroundColor": "green",
-          "borderColor": "#5ACD23"
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+        query {
+          video_games (
+            order_by: {
+              name: asc
+            }
+          ) {
+            id
+            label:name
+            data: followers
+            backgroundColor:color
+          }
         }
-      ]
-    }
-  }
-*/
-
-var chartJSData = convert('pie', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'pie',
-    data: chartJSData,
-    options: {
-        responsive: true
-    }
-})
+    `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("pie", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "pie",
+      data: chartJsData
+    });
+  });
+});
 ```
 
-![readme example radar](assets/readme-pie-chart-example.png)
+![readme example pie](assets/readme-pie-chart-example.png)
 
 ### Doughnut
 
 [Try out in codesandbox](https://codesandbox.io/s/1yo9m5z173)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-   {
-    "data": {
-      "VideoGameFollowers": [
-        {
-          "id": 1,
-          "label": "Dota",
-          "data": 427014,
-          "backgroundColor": "red",
-          "borderColor": "lightred"
-        },
-        {
-          "id": 2,
-          "label": "CS:GO",
-          "data": 220006,
-          "backgroundColor": "yellow",
-          "borderColor": "lightyellow"
-        },
-        {
-          "id": 3,
-          "label": "NFS",
-          "data": 71004,
-          "backgroundColor": "#3366ff",
-          "borderColor": "lightgreen"
-        },
-        {
-          "id": 4,
-          "label": "PUBG",
-          "data": 129769,
-          "backgroundColor": "#330000",
-          "borderColor": "#42SF22"
-        },
-        {
-          "id": 5,
-          "label": "Quake 3",
-          "data": 90808,
-          "backgroundColor": "green",
-          "borderColor": "#5ACD23"
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+        query {
+          video_games (
+            order_by: {
+              name: asc
+            }
+          ) {
+            id
+            label:name
+            data: followers
+            backgroundColor:color
+          }
         }
-      ]
-    }
-  }
-*/
-
-var chartJSData = convert('doughnut', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: chartJSData,
-    options: {
-        responsive: true
-    }
+      `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("doughnut", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "doughnut",
+      data: chartJsData
+    });
+  });
 })
 ```
 
-![readme example radar](assets/readme-dougnut-chart-example.png)
+![readme example doughnut](assets/readme-dougnut-chart-example.png)
 
 ### Bubble (multiple datasets)
 
 [Try out in codesandbox](https://codesandbox.io/s/23ozw02200)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-  {
-    "data": {
-      "DatSet1": [
-        {
-          "id": 1,
-          "data_x": 24,
-          "data_y": 45,
-          "data_r": 11,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 54,
-          "data_y": 34,
-          "data_r": 9,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 14,
-          "data_y": 67,
-          "data_r": 12,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 54,
-          "data_y": 5,
-          "data_r": 16,
-          "backgroundColor": "red"
-        },
-      ],
-      "DatSet2": [
-        {
-          "id": 1,
-          "data_x": 92,
-          "data_y": 55,
-          "data_r": 4,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 32,
-          "data_y": 87,
-          "data_r": 17,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 45,
-          "data_y": 85,
-          "data_r": 9,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 24,
-          "data_y": 50,
-          "data_r": 12,
-          "backgroundColor": "green"
-        },
-      ]
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+    query {
+      DataSet1: scatter {
+        id
+        data_r: r1
+        data_x: x1
+        data_y: x2
+        backgroundColor: backgroundColor1
+      }
+      DataSet2: scatter {
+        id
+        data_r: r2
+        data_x: x2
+        data_y: y2
+        backgroundColor: backgroundColor2
+      }
     }
-  }  
-*/
-
-var chartJSData = convert('bubble', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'bubble',
-    data: chartJSData,
-    options: {
-        responsive: true
-    }
+                    `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("bubble", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "bubble",
+      data: chartJsData
+    });
+  });
 })
 ```
 
@@ -749,76 +566,36 @@ var myChart = new Chart(ctx, {
 [Try out in codesandbox](https://codesandbox.io/s/64pqlm3v0n)
 
 ```js
-var graphQLResponse = makeGraphQLQuery(...);
-
-/*
-  {
-    "data": {
-      "DatSet1": [
-        {
-          "id": 1,
-          "data_x": 24,
-          "data_y": 45,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 54,
-          "data_y": 34,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 14,
-          "data_y": 67,
-          "backgroundColor": "red"
-        },
-        {
-          "id": 1,
-          "data_x": 54,
-          "data_y": 5,
-          "backgroundColor": "red"
-        },
-      ],
-      "DatSet2": [
-        {
-          "id": 1,
-          "data_x": 92,
-          "data_y": 55,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 32,
-          "data_y": 87,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 45,
-          "data_y": 85,
-          "backgroundColor": "green"
-        },
-        {
-          "id": 1,
-          "data_x": 24,
-          "data_y": 50,
-          "backgroundColor": "green"
+fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+        query {
+          DataSet1: scatter {
+            id
+            data_x: x1
+            data_y: x2
+            backgroundColor: backgroundColor1
+          }
+          DataSet2: scatter {
+            id
+            data_x: x2
+            data_y: y2
+            backgroundColor: backgroundColor2
+          }
         }
-      ]
-    }
-  }  
-*/
-
-var chartJSData = convert('scatter', graphQLResponse.data)
-
-var myChart = new Chart(ctx, {
-    type: 'scatter',
-    data: chartJSData,
-    options: {
-        responsive: true
-    }
-})
+                        `
+  })
+}).then(function(resp) {
+  resp.json().then(function(respObj) {
+    const chartJsData = graphql2chartjs("scatter", respObj.data);
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var myChart = new Chart(ctx, {
+      type: "scatter",
+      data: chartJsData
+    });
+  });
+});
 ```
 
 ![readme example scatter](assets/readme-scatter-chart-example.png)
