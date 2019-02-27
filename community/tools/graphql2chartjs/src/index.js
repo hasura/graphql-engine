@@ -6,7 +6,7 @@ const scatter = require('./scatter');
 const polarArea = require('./polar-area');
 const doughnutPie = require('./doughnut-pie');
 
-function convert (type, graphqlData) {
+window.graphql2chartjs = function convert (type, graphqlData) {
   switch(type) {
     case 'line':
       return line(graphqlData);
@@ -34,4 +34,4 @@ function convert (type, graphqlData) {
   }
 }
 
-module.exports = convert
+module.exports = window.graphql2chartjs

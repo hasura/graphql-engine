@@ -16,7 +16,15 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.3.1"
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "browserify": "^16.2.3",
+    "eslint-plugin-react": "^7.12.4",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-filesize": "^6.0.1",
+    "rollup-plugin-multi-entry": "^2.1.0",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-progress": "^1.0.0"
   }
 }
