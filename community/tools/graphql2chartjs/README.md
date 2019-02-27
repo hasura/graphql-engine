@@ -319,6 +319,8 @@ Now you can pass this data object to your ChartJS instance and you will have a c
 
 ### Bar
 
+[Try in Codesandbox](https://codesandbox.io/s/7y5wmpz6k6)
+
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
 
@@ -381,6 +383,8 @@ var myChart = new Chart(ctx, {
 ![readme bar chart example](assets/readme-bar-chart-example.png)
 
 ### Line
+
+[Try out in codesandbox](https://codesandbox.io/s/1qp1w7m58l)
 
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
@@ -450,6 +454,9 @@ var myChart = new Chart(ctx, {
 ![line-chart-example](assets/readme-line-chart-example.png)
 
 ### Radar
+
+[Try out in codesandbox](https://codesandbox.io/s/0qnm9jr550)
+
 
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
@@ -524,6 +531,8 @@ var myChart = new Chart(ctx, {
 
 ### Pie
 
+[Try out in codesandbox](https://codesandbox.io/s/pwo9w71q47)
+
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
 
@@ -586,6 +595,8 @@ var myChart = new Chart(ctx, {
 
 ### Doughnut
 
+[Try out in codesandbox](https://codesandbox.io/s/1yo9m5z173)
+
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
 
@@ -647,6 +658,8 @@ var myChart = new Chart(ctx, {
 ![readme example radar](assets/readme-dougnut-chart-example.png)
 
 ### Bubble (multiple datasets)
+
+[Try out in codesandbox](https://codesandbox.io/s/23ozw02200)
 
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
@@ -732,6 +745,8 @@ var myChart = new Chart(ctx, {
 ![readme example bubble](assets/readme-bubble-chart-example.png)
 
 ### Scatter (multiple datasets)
+
+[Try out in codesandbox](https://codesandbox.io/s/64pqlm3v0n)
 
 ```js
 var graphQLResponse = makeGraphQLQuery(...);
