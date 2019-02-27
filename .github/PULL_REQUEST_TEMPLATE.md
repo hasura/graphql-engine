@@ -2,7 +2,7 @@
 <!-- Provide a general summary of your changes in the Title above ^, end with (close #<issue-no>) or (fix #<issue-no>) -->
 
 ### Description
-<!-- The title might not be enough to convery how this change affects the user. -->
+<!-- The title might not be enough to convey how this change affects the user. -->
 <!-- Describe the changes from a user's perspective -->
 
 ### Related Issue
@@ -24,3 +24,4 @@
 - [ ] Community Content
 - [ ] Build System
 - [ ] Tests
+- [ ] Other
