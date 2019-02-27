@@ -6,7 +6,7 @@ A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartj
 
 Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
 
-![how convert works](assets/how_convert_works.png)
+![how graphql2chartjs works](assets/how_convert_works.png)
 
 *Made with love by [Hasura](https://hasura.io)*
 
@@ -19,7 +19,7 @@ Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
     + [Motivation](#motivation)
     + [GraphQL Aliasing](#graphql-aliasing)
     + [ChartJS API](#chartjs-api)
-    + [The convert function](#the-convert-function)
+    + [The graphql2chartjs function](#the-graphql2chartjs-function)
     + [How the restructuring works](#how-the-restructuring-works)
 - [Reference examples](#reference-examples)
     + [Bar](#bar)
@@ -171,13 +171,13 @@ Most of the ChartJS charts expect a data object of the form:
 }
 ```
 
-### The convert function
+### The graphql2chartjs function
 
-The `convert` function i.e. the default export of this library accepts two arguments:
+The `graphql2chartjs` function i.e. the default export of this library accepts two arguments:
 1. **type**: (String) Type of the chart; Eg. `bar`, `line`, `pie`
 2. **graphqlData**: [Object] This should be an object with each field having its value as a list of data points.
 
-You can directly feed the output of the `convert` function to your ChartJS instance.
+You can directly feed the output of the `graphql2chartjs` function to your ChartJS instance.
 
 ```js
 
@@ -186,7 +186,7 @@ var chartType = 'bar';
 
 var myChart = new Chart(ctx, {
     type: chartType,
-    data: convert(chartType, graphQLResponse),
+    data: graphql2chartjs(chartType, graphQLResponse),
     options: {...} //custom options
 });
 
@@ -194,7 +194,7 @@ var myChart = new Chart(ctx, {
 
 ### How the restructuring works
 
-The convert function understands the API for each kind of chart that it supports. It constructs appropriate arrays mapping the indices of labels with other dataset properties.
+The `graphql2chartjs` function understands the API for each kind of chart that it supports. It constructs appropriate arrays mapping the indices of labels with other dataset properties.
 
 Lets consider this GraphQL response:
 
@@ -292,7 +292,7 @@ The above GraphQL response is restructured to the ChartJS `data` as follows:
     }
     ```
 
-    As you see, `pointBackgroundColor` and `data` get pushed in an array while `fill` gets set as a top level field. This is because `convert` function understands that the ChartJS API expects `pointBackgroundColor` to be an array and `fill` to be a simple flag.
+    As you see, `pointBackgroundColor` and `data` get pushed in an array while `fill` gets set as a top level field. This is because `graphql2chartjs` function understands that the ChartJS API expects `pointBackgroundColor` to be an array and `fill` to be a simple flag.
 
 4. It repeats the step above for every data point. The final `data` object would be:
 
@@ -604,7 +604,7 @@ fetch("https://graphql2chartjs.herokuapp.com/v1alpha1/graphql", {
 
 1. The response structure of your GraphQL query is opinionated. This is however not a limitation as you use GraphQL aliasing to rename the fields to achieve the required structure.
 
-2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions, form a custom GraphQL response from the subscription responses and then pass the response to the convert function.
+2. GraphQL spec for subscriptions allows subscribing to just one root field. This doesn't allow for having multiple datasets in the chart. The workaround for this is to open multiple subscriptions, form a custom GraphQL response from the subscription responses and then pass the response to the `graphql2chartjs` function.
 
 ---
 *Only sample data has been used in this readme and any resemblance to reality is purely coincidental*
