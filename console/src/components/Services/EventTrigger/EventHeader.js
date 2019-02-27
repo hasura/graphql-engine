@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import {Link} from 'react-router';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 
@@ -13,7 +13,9 @@ const EventHeader = ({
   dispatch,
 }) => {
   const styles = require('../Data/TableCommon/Table.scss');
+
   const currentLocation = location.pathname;
+
   return (
     <div>
       <Helmet title={'Events | Hasura'} />
@@ -26,22 +28,23 @@ const EventHeader = ({
               <li
                 role="presentation"
                 className={
-                  currentLocation.indexOf('schema') !== -1 ? styles.active : ''
+                  currentLocation.includes('events/manage') ? styles.active : ''
                 }
               >
-                <div className={styles.schemaWrapper}>
-                  <div
-                    className={styles.schemaSidebarSection}
-                    data-test="schema"
-                  >
-                    <Link
-                      className={styles.schemaBorder}
-                      to={appPrefix + '/manage'}
+                <Link
+                  className={styles.linkBorder}
+                  to={appPrefix + '/manage'}
+                >
+                  <div className={styles.schemaWrapper}>
+                    <div
+                      className={styles.schemaSidebarSection}
+                      data-test="schema"
                     >
+
                       Manage
-                    </Link>
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <PageContainer
                   location={location}
                   schema={schema}
