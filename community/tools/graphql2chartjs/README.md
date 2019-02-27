@@ -21,7 +21,7 @@ Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
     + [ChartJS API](#chartjs-api)
     + [The graphql2chartjs function](#the-graphql2chartjs-function)
     + [How the restructuring works](#how-the-restructuring-works)
-- [Reference examples](#reference-examples)
+- [Reference examples with CodeSandbox links](#reference-examples)
     + [Bar](#bar)
     + [Line](#line)
     + [Radar](#radar)
