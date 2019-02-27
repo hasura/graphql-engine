@@ -32,12 +32,21 @@ log() { echo -e "--> $*"; }
 : ${SERVER_BINARY:=/build/_server_output/graphql-engine}
 : ${LATEST_SERVER_BINARY:=/bin/graphql-engine-latest}
 
+
 LATEST_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-latest-release-server.log
 CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
 API_SERVER_LOG=$SERVER_OUTPUT_DIR/api-server.log
 
 API_SERVER_ENDPOINT=http://localhost:$API_SERVER_PORT
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
+
+# event trigger and remote schema urls
+: ${ET_ECHO_URL:=$API_SERVER_ENDPOINT/trigger/echo}
+: ${RS_HELLO_URL:=$API_SERVER_ENDPOINT/remote-schema/hello}
+
+# export them so that GraphQL Engine can use it
+export ET_ECHO_URL=$ET_ECHO_URL
+export RS_HELLO_URL=$RS_HELLO_URL
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
