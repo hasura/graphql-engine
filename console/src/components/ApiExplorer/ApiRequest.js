@@ -6,7 +6,6 @@ import {
   changeRequestMethod,
   changeRequestUrl,
   changeRequestParams,
-  sendExplorerReq,
   addRequestHeader,
   changeRequestHeader,
   removeRequestHeader,
@@ -15,6 +14,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
 } from './Actions';
+import globals from '../../Globals';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
 
@@ -26,7 +26,7 @@ class ApiRequest extends Component {
     this.state = {
       deletedHeader: false,
     };
-    this.state.accessKeyVisible = false;
+    this.state.adminSecretVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
     this.timer = null;
@@ -40,11 +40,6 @@ class ApiRequest extends Component {
 
   onGenerateApiCodeClicked = () => {
     this.props.dispatch(generateApiCodeClicked());
-  };
-
-  onSendButtonClick = () => {
-    // check the request type
-    this.props.dispatch(sendExplorerReq(this.props.bodyType));
   };
 
   onUrlChanged = e => {
@@ -72,8 +67,8 @@ class ApiRequest extends Component {
     this.props.dispatch(removeRequestHeader(index));
   }
 
-  onShowAccessKeyClicked() {
-    this.setState({ accessKeyVisible: !this.state.accessKeyVisible });
+  onShowAdminSecretClicked() {
+    this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
   }
 
   onNewHeaderKeyChanged(e) {
@@ -112,8 +107,6 @@ class ApiRequest extends Component {
   };
 
   getUrlBar() {
-    const { explorerData, bodyType } = this.props;
-
     return (
       <div
         id="stickyHeader"
@@ -144,46 +137,10 @@ class ApiRequest extends Component {
               value={this.props.url}
               type="text"
               readOnly
-              className={
-                styles.inputGroupInput +
-                ' form-control '
-              }
+              className={styles.inputGroupInput + ' form-control '}
             />
           </div>
         </div>
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-2 ' + styles.wd16}>
-            <div className={styles.sendBtn}>
-              {!explorerData.sendingRequest ? (
-                <button
-                  onClick={() => {
-                    this.onSendButtonClick();
-                  }}
-                >
-                  {bodyType === 'download' ? 'Download' : 'Send'}
-                </button>
-              ) : (
-                <button
-                  style={{ opacity: 0.4 }}
-                  className="btn"
-                  disabled={explorerData.sendingRequest}
-                >
-                  Sending...
-                </button>
-              )}
-            </div>
-          </div>
-        ) : null}
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-3 ' + styles.padd_remove + ' ' + styles.wd16}>
-            <div
-              onClick={this.onGenerateApiCodeClicked}
-              className={styles.generateBtn}
-            >
-              <button className="btn">Generate API code</button>
-            </div>
-          </div>
-        ) : null}
         <div className={styles.stickySeparator} />
       </div>
     );
@@ -323,8 +280,9 @@ class ApiRequest extends Component {
               onBlur={this.handleBlur}
               data-test={`header-value-${i}`}
               type={
-                header.key.toLowerCase() === 'x-hasura-access-key' &&
-                !this.state.accessKeyVisible
+                header.key.toLowerCase() ===
+                  `x-hasura-${globals.adminSecretLabel}` &&
+                !this.state.adminSecretVisible
                   ? 'password'
                   : 'text'
               }
@@ -332,12 +290,13 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() === 'x-hasura-access-key' ? (
+              {header.key.toLowerCase() ===
+              `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                  className={styles.showAccessKey + ' fa fa-eye'}
+                  className={styles.showAdminSecret + ' fa fa-eye'}
                   data-header-id={i}
                   aria-hidden="true"
-                  onClick={this.onShowAccessKeyClicked.bind(this)}
+                  onClick={this.onShowAdminSecretClicked.bind(this)}
                 />
               ) : null}
               <i

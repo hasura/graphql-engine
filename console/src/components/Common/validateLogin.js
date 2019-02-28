@@ -1,4 +1,8 @@
-import { loadAccessKeyState, clearAccessKeyState } from '../AppState';
+import {
+  loadAdminSecretState,
+  clearAdminSecretState,
+  CONSOLE_ADMIN_SECRET,
+} from '../AppState';
 import globals from '../../Globals';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 
@@ -9,13 +13,13 @@ import { changeRequestHeader } from '../ApiExplorer/Actions';
 
 import { SERVER_CONSOLE_MODE } from '../../constants';
 
-const checkValidity = accessKey => {
+const checkValidity = adminSecret => {
   return dispatch => {
     const url = Endpoints.getSchema;
     const currentSchema = 'public';
     const headers = {
-      'Content-Type': 'application/json',
-      'X-Hasura-Access-Key': accessKey,
+      'content-type': 'application/json',
+      [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
     };
     const options = {
       credentials: globalCookiePolicy,
@@ -40,29 +44,34 @@ const checkValidity = accessKey => {
 
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
-    // Validate isAccessKeySet env is set by server or accessKey env is set by cli
-    if (globals.isAccessKeySet || globals.accessKey) {
-      let accessKey = '';
-      // Check the console mode and retrieve accessKey accordingly.
+    // Validate isAdminSecretSet env is set by server or adminSecret env is set by cli
+    if (globals.isAdminSecretSet || globals.adminSecret) {
+      let adminSecret = '';
+      // Check the console mode and retrieve adminSecret accordingly.
       if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-        accessKey = loadAccessKeyState('CONSOLE_ACCESS_KEY');
+        adminSecret = loadAdminSecretState(CONSOLE_ADMIN_SECRET);
       } else {
-        accessKey = globals.accessKey;
+        adminSecret = globals.adminSecret;
       }
-      dispatch(checkValidity(accessKey))
+      dispatch(checkValidity(adminSecret))
         .then(() => {
           return Promise.all([
             dispatch({
               type: UPDATE_DATA_HEADERS,
               data: {
-                'Content-Type': 'application/json',
-                'X-Hasura-Access-Key': accessKey,
+                'content-type': 'application/json',
+                [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
               },
             }),
             dispatch(
-              changeRequestHeader(1, 'key', 'X-Hasura-Access-Key', true)
+              changeRequestHeader(
+                1,
+                'key',
+                `x-hasura-${globals.adminSecretLabel}`,
+                true
+              )
             ),
-            dispatch(changeRequestHeader(1, 'value', accessKey, true)),
+            dispatch(changeRequestHeader(1, 'value', adminSecret, true)),
           ]);
         })
         .then(() => {
@@ -73,7 +82,7 @@ const validateLogin = ({ dispatch }) => {
         })
         .catch(() => {
           // Clear state from the localStorage if there exists one
-          clearAccessKeyState();
+          clearAdminSecretState();
           if (nextState.location.pathname !== '/login') {
             replaceState('/login');
           }

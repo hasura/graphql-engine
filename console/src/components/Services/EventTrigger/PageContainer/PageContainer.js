@@ -85,7 +85,7 @@ const PageContainer = ({
             type="text"
             onChange={triggerSearch.bind(this)}
             className="form-control"
-            placeholder="search triggers"
+            placeholder="search event triggers"
             data-test="search-triggers"
           />
         </div>
@@ -100,7 +100,7 @@ const PageContainer = ({
               styles.padd_left_remove
             }
           >
-            Triggers ({triggerList.length})
+            Event Triggers ({triggerList.length})
           </div>
           {migrationMode ? (
             <div
@@ -115,12 +115,8 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/events/manage/triggers/add'}
               >
-                <Button
-                  color="white"
-                  size="xs"
-                  data-test="sidebar-add-table"
-                >
-                  Add Trigger
+                <Button color="white" size="xs" data-test="sidebar-add-table">
+                  Add
                 </Button>
               </Link>
             </div>

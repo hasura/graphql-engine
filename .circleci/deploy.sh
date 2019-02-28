@@ -103,6 +103,12 @@ setup_gcloud() {
     gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
 }
 
+# push the server binary to google cloud storage
+push_server_binary() {
+    gsutil cp /build/_server_output/graphql-engine \
+              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64  
+}
+
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -134,6 +140,7 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     deploy_server_latest
+    push_server_binary
     build_and_push_cli_migrations_image
     CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)
