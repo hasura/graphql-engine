@@ -158,8 +158,8 @@ buildJsonObject pfx parAls arrRelCtx flds =
 
     toSQLColArgs :: PGColInfo -> Maybe ColOp -> S.SQLExp
     toSQLColArgs col Nothing = toSQLCol col
-    toSQLColArgs col (Just (ColOp op exp)) = 
-      toJSONableExp colTy $ S.mkSQLOpExp op colNameExp exp
+    toSQLColArgs col (Just (ColOp op cExp)) = 
+      toJSONableExp colTy $ S.mkSQLOpExp op colNameExp cExp
       where 
         colTy = pgiType col
         colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col

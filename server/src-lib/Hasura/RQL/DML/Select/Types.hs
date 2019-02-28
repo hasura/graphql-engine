@@ -232,3 +232,16 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
+
+getJSONArgumentPath :: AnnArgs -> Maybe T.Text
+getJSONArgumentPath args
+  | length pathArgs == 0 = Nothing
+  | otherwise = getPathValue $ head pathArgs
+  where
+    hasPath ((FieldName argName), _) = argName == "path"
+    pathArgs = filter hasPath args
+    getPathValue (_, pgVal) = case pgVal of
+      PGValText t -> Just t
+      _           -> Nothing
+
+

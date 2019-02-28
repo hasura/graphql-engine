@@ -28,7 +28,6 @@ import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -56,11 +55,11 @@ jsonPathToColExp t = case parseJSONPath t of
 
 
 argsToColOp :: (MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
-argsToColOp args = case (Map.lookup "path" args) of 
-  Nothing -> return Nothing 
-  Just val -> toOp val 
+argsToColOp args = case (Map.lookup "path" args) of
+  Nothing  -> return Nothing
+  Just val -> toOp val
   where
-    toJsonPathExp t = jsonPathToColExp t 
+    toJsonPathExp t = jsonPathToColExp t
       >>= (return . Just . (RS.ColOp S.jsonbPathOp))
     toOp = \case
       AGScalar _ (Just (PGValText t)) -> toJsonPathExp t
