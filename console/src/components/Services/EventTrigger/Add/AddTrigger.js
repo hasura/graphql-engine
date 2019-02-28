@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   removeHeader,

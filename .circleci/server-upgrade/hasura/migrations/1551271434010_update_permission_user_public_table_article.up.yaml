@@ -1,0 +1,16 @@
+- args:
+    permission:
+      allow_upsert: true
+      check:
+        author_id:
+          _eq: X-Hasura-User-Id
+      columns:
+      - id
+      - title
+      set:
+        author_id: x-hasura-user-id
+    role: user
+    table:
+      name: article
+      schema: public
+  type: create_insert_permission

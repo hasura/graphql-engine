@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router';
+import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 
@@ -31,16 +31,12 @@ const EventHeader = ({
                   currentLocation.includes('events/manage') ? styles.active : ''
                 }
               >
-                <Link
-                  className={styles.linkBorder}
-                  to={appPrefix + '/manage'}
-                >
+                <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
                   <div className={styles.schemaWrapper}>
                     <div
                       className={styles.schemaSidebarSection}
                       data-test="schema"
                     >
-
                       Manage
                     </div>
                   </div>

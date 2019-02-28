@@ -2,7 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification, showTempNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
-import Button from '../Layout/Button/Button';
+import Button from '../../Common/Button/Button';
 
 const styles = require('./TableCommon/Table.scss');
 
