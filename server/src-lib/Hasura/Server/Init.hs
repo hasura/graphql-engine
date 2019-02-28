@@ -47,6 +47,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoWsReadCookie    :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -248,8 +249,18 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig mCfg =
-      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+    mkCorsConfig mCfg = do
+      corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
+      wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
+        (True, _)      -> return readCookVal
+        (False, True)  -> throwError $ fst wsReadCookieEnv
+                          <> " can only be used when CORS is disabled"
+        (False, False) -> return False
+      return $ case corsCfg of
+        CCDisabled _ -> CCDisabled wsReadCookie
+        _            -> corsCfg
+
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -332,7 +343,7 @@ serveCmdFooter =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , pgUsePrepareEnv, txIsoEnv, adminSecretEnv, accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv
+      , enableTelemetryEnv, wsReadCookieEnv
       ]
 
     eventEnvs =
@@ -440,6 +451,15 @@ enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
   , "Enable anonymous telemetry (default: true)"
+  )
+
+wsReadCookieEnv :: (String, String)
+wsReadCookieEnv =
+  ( "HASURA_GRAPHQL_WS_READ_COOKIE"
+  , "Read cookie on WebSocket initial handshake, even when CORS is disabled."
+  ++ " This can be a potential security flaw! Please make sure you know "
+  ++ "what you're doing."
+  ++ "This configuration is only applicable when CORS is disabled."
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -622,7 +642,7 @@ parseUnAuthRole = optional $
                         )
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
-parseCorsConfig = mapCC <$> disableCors <*> corsDomain
+parseCorsConfig = mapCC <$> disableCors <*> corsDomain -- <*> wsReadCookie
   where
     corsDomain = optional $
       option (eitherReader readCorsDomains)
@@ -634,10 +654,15 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
     disableCors =
       switch ( long "disable-cors" <>
                help "Disable CORS. Do not send any CORS headers on any request"
-             )
+             ) -- *> wsReadCookie
+
+    -- wsReadCookie =
+    --   switch ( long "ws-read-cookie" <>
+    --            help (snd wsReadCookieEnv)
+    --          )
 
     mapCC isDisabled domains =
-      bool domains (Just CCDisabled) isDisabled
+      bool domains (Just $ CCDisabled False) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -650,6 +675,12 @@ parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
+         )
+
+parseWsReadCookie :: Parser Bool
+parseWsReadCookie =
+  switch ( long "ws-read-cookie" <>
+           help (snd wsReadCookieEnv)
          )
 
 -- Init logging related

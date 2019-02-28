@@ -306,8 +306,10 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
+    let corsPolicy = mkDefaultCorsPolicy corsCfg
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager cacheRef runTx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
+                   cacheRef runTx corsPolicy
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 

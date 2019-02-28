@@ -35,6 +35,16 @@ Hasura GraphQL engine uses the `GraphQL over Websocket Protocol
 `apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`_ library
 for sending and receiving events.
 
+Cookie and Websockets
+^^^^^^^^^^^^^^^^^^^^^
+Hasura GraphQL engine will read cookies sent by the browser when initiating a
+websocket connection. Your browser will send the cookie only if it is a secure
+cookie (``secure`` flag in the cookie) and if the cookie has a ``HttpOnly``
+flag.
+
+Hasura will read this cookie and use it as headers when resolving authorization
+(i.e. when resolving the auth webhook).
+
 .. toctree::
   :maxdepth: 1
   :hidden:

@@ -42,6 +42,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
+import           Hasura.Server.Cors
+import           Hasura.Server.Utils                         (bsToTxt)
 
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
@@ -114,17 +116,21 @@ instance L.ToEngineLog WSLog where
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger   :: !L.Logger
-  , _wseServer   :: !WSServer
-  , _wseRunTx    :: !TxRunner
-  , _wseLiveQMap :: !LiveQueryMap
-  , _wseGCtxMap  :: !(IORef.IORef SchemaCache)
-  , _wseHManager :: !H.Manager
+  { _wseLogger     :: !L.Logger
+  , _wseServer     :: !WSServer
+  , _wseRunTx      :: !TxRunner
+  , _wseLiveQMap   :: !LiveQueryMap
+  , _wseGCtxMap    :: !(IORef.IORef SchemaCache)
+  , _wseHManager   :: !H.Manager
+  , _wseCorsPolicy :: !CorsPolicy
   }
 
-onConn :: L.Logger -> WS.OnConnH WSConnData
-onConn (L.Logger logger) wsId requestHead = do
-  res <- runExceptT checkPath
+onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
+onConn (L.Logger logger) corsPolicy wsId requestHead = do
+  res <- runExceptT $ do
+    checkPath
+    let origin = find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
+    maybe (return Nothing) enforceCors $ snd <$> origin
   either reject accept res
   where
 
@@ -132,9 +138,8 @@ onConn (L.Logger logger) wsId requestHead = do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
-    accept _ = do
+    accept cookie = do
       logger $ WSLog wsId Nothing EAccepted
-      let cookie = getCookieHeader
       connData <- WSConnData
                   <$> IORef.newIORef (CSNotInitialised cookie)
                   <*> STMMap.newIO
@@ -154,7 +159,22 @@ onConn (L.Logger logger) wsId requestHead = do
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
     getCookieHeader =
-      find (\(n, _) -> n == "Cookie") (WS.requestHeaders requestHead)
+      find ((==) "Cookie" . fst) $ WS.requestHeaders requestHead
+
+    enforceCors origin =
+      case cpConfig corsPolicy of
+        CCDisabled readCookie -> return $ bool Nothing getCookieHeader readCookie
+        CCAllowAll -> return getCookieHeader
+        CCAllowedOrigins ds
+          -- if the origin is in our cors domains, no error
+          | bsToTxt origin `elem` dmFqdns ds   -> return getCookieHeader
+          -- if current origin is part of wildcard domain list, no error
+          | inWildcardList ds (bsToTxt origin) -> return getCookieHeader
+          -- otherwise error
+          | otherwise                          -> corsErr
+
+    corsErr = throw400 AccessDenied
+              "received origin header does not match configured CORS domains"
 
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
@@ -222,7 +242,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
-    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ = serverEnv
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
@@ -362,11 +382,11 @@ onClose logger lqMap _ wsConn = do
 createWSServerEnv
   :: L.Logger
   -> H.Manager -> IORef.IORef SchemaCache
-  -> TxRunner -> IO WSServerEnv
-createWSServerEnv logger httpManager cacheRef runTx = do
+  -> TxRunner -> CorsPolicy -> IO WSServerEnv
+createWSServerEnv logger httpManager cacheRef runTx corsPolicy = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager
+  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager corsPolicy
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =
@@ -374,6 +394,6 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      (onConn $ _wseLogger serverEnv)
+      (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)

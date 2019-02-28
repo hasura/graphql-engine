@@ -10,7 +10,7 @@ class CookieAuth(RequestHandler):
         if request.headers['cookie']:
             res = {'x-hasura-role': 'admin'}
             return Response(HTTPStatus.OK, res)
-        return Response(HTTPStatus.UNAUTHORIZED, {'error': 'unauthorized'})
+        return Response(HTTPStatus.UNAUTHORIZED)
 
     def post(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
