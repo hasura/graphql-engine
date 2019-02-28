@@ -14,6 +14,22 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6
   font-size: 40px;
   text-align: center;
 }
+input::-moz-focus-inner {
+ outline: 0;
+ -moz-outline: none;
+ border:0;
+}
+select:-moz-focusring
+{
+  color: transparent;
+  text-shadow: 0 0 0 #000;
+}
+select::-moz-focus-inner {
+ outline: 0;
+ -moz-outline: none;
+ border: 0;
+}
+option::-moz-focus-inner { border: 0; outline: 0 }
 table thead tr th
 {
   background-color: #F2F2F2 !important;
@@ -54,6 +70,8 @@ table thead tr th
       a
       {
         color: #767E93;
+        background-color: #f0f0f0;
+        width: 100%;
         word-wrap: break-word;
         padding: 15px 0px;
         padding-left: 20px;
@@ -70,8 +88,8 @@ table thead tr th
         padding-left: 20px;
       }
     }
-    .schemaBorder {
-      border-bottom: 1px solid #E6E6E6;
+    .linkBorder {
+      border-bottom: 1px solid #e6e6e6;
     }
     li:last-child {
       border-bottom: 0px;

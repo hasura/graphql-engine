@@ -16,11 +16,13 @@ import { fetchCustomFunction } from '../customFunctionReducer';
 
 class Permission extends React.Component {
   componentDidMount() {
-    const { functionName } = this.props.params;
+    const { functionName, schema } = this.props.params;
     if (!functionName) {
       this.props.dispatch(push(prefixUrl));
     }
-    Promise.all([this.props.dispatch(fetchCustomFunction(functionName))]);
+    Promise.all([
+      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+    ]);
   }
   render() {
     const styles = require('../Modify/ModifyCustomFunction.scss');
@@ -28,9 +30,11 @@ class Permission extends React.Component {
       functionSchema: schema,
       functionName,
       setOffTable,
+      setOffTableSchema,
     } = this.props.functions;
+
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
+    const permissionTableUrl = `${prefixUrl}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {

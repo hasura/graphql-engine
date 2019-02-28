@@ -19,6 +19,7 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import semverCheck from '../../../../helpers/semver';
+import './AceEditorFix.css';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
@@ -38,9 +39,11 @@ const migrationNameTip = (
     'run_sql_migration'
   </Tooltip>
 );
-const trackTableTip = (hasFunctionSupport) => (
+const trackTableTip = hasFunctionSupport => (
   <Tooltip id="tooltip-tracktable">
-    { `If you are creating a table/view${hasFunctionSupport ? '/function' : ''}, you can track them to query them
+    {`If you are creating a table/view${
+      hasFunctionSupport ? '/function' : ''
+    }, you can track them to query them
       with GraphQL`}
   </Tooltip>
 );
@@ -299,7 +302,10 @@ const RawSQL = ({
               data-test="raw-sql-track-check"
             />
             Track {placeholderText}
-            <OverlayTrigger placement="right" overlay={trackTableTip(!!functionText)}>
+            <OverlayTrigger
+              placement="right"
+              overlay={trackTableTip(!!functionText)}
+            >
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
                 aria-hidden="true"

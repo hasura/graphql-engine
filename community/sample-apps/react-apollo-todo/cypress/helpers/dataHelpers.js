@@ -8,7 +8,7 @@ export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   method: "POST",
   url: makeDataAPIUrl(dataApiUrl),
   headers: {
-    "x-hasura-access-key": key
+    "x-hasura-admin-secret": key
   },
   body,
   failOnStatusCode: false

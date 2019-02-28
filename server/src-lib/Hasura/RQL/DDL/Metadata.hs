@@ -30,9 +30,7 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List                      as L
 import qualified Data.Text                      as T
 
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -121,7 +119,6 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
-  clearHdbViews
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -418,7 +415,6 @@ runReloadMetadata
   => ReloadMetadata -> m RespBody
 runReloadMetadata _ = do
   adminOnly
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   DT.buildSchemaCache
   return successMsg
 

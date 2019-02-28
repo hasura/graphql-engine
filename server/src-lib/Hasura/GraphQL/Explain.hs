@@ -12,6 +12,7 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
@@ -48,11 +49,11 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx, FuncArgCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, FuncArgCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
@@ -66,24 +67,24 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      builderSQL <- runExplain (fldMap, orderByCtx, funcArgCtx) $
+      builderSQL <- runExplain (fldMap, orderByCtx) $
         case opCxt of
-          OCSelect tn permFilter permLimit hdrs -> do
+          OCSelect (SelOpCtx tn hdrs permFilter permLimit) -> do
             validateHdrs hdrs
             toSQL . RS.mkSQLSelect False <$>
               RS.fromField txtConverter tn permFilter permLimit fld
-          OCSelectPkey tn permFilter hdrs -> do
+          OCSelectPkey (SelPkOpCtx tn hdrs permFilter argMap) -> do
             validateHdrs hdrs
             toSQL . RS.mkSQLSelect True <$>
-              RS.fromFieldByPKey txtConverter tn permFilter fld
-          OCSelectAgg tn permFilter permLimit hdrs -> do
+              RS.fromFieldByPKey txtConverter tn argMap permFilter fld
+          OCSelectAgg (SelOpCtx tn hdrs permFilter permLimit) -> do
             validateHdrs hdrs
             toSQL . RS.mkAggSelect <$>
               RS.fromAggField txtConverter tn permFilter permLimit fld
-          OCFuncQuery tn fn permFilter permLimit hdrs ->
-            procFuncQuery tn fn permFilter permLimit hdrs False
-          OCFuncAggQuery tn fn permFilter permLimit hdrs ->
-            procFuncQuery tn fn permFilter permLimit hdrs True
+          OCFuncQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq False
+          OCFuncAggQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq True
           _ -> throw500 "unexpected mut field info for explain"
 
       let txtSQL = TB.run builderSQL
@@ -98,16 +99,15 @@ explainField userInfo gCtx fld =
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
-    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
 
-    procFuncQuery tn fn permFilter permLimit hdrs isAgg = do
+    procFuncQuery tn fn permFilter permLimit hdrs argSeq isAgg = do
       validateHdrs hdrs
       (tabArgs, eSel, frmItem) <-
-        RS.fromFuncQueryField txtConverter fn isAgg fld
+        RS.fromFuncQueryField txtConverter fn argSeq isAgg fld
       return $ toSQL $
         RS.mkFuncSelectWith fn tn
         (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem

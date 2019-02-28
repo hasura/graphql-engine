@@ -206,7 +206,7 @@ const PageContainer = ({
             <div
               className={
                 'col-xs-4 text-center ' +
-                styles.padd_remove +
+                styles.padd_left_remove +
                 ' ' +
                 styles.sidebarCreateTable
               }
@@ -215,12 +215,7 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/data/schema/' + schemaName + '/table/add'}
               >
-                <Button
-                  className={styles.add_mar_right}
-                  size="xs"
-                  color="white"
-                  data-test="sidebar-add-table"
-                >
+                <Button size="xs" color="white" data-test="sidebar-add-table">
                   Add Table
                 </Button>
               </Link>

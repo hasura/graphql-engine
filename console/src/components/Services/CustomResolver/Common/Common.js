@@ -24,7 +24,7 @@ const clientHeaderForward = (
 );
 const additionalHeaders = (
   <Tooltip id="tooltip-cascade">
-    Custom headers to be sent to the remote GraphQL server. E.g. an access key
+    Custom headers to be sent to the remote GraphQL server
   </Tooltip>
 );
 const schema = (
@@ -85,13 +85,19 @@ class Common extends React.Component {
           />
         </label>
         <hr />
-        <div className={styles.subheading_text}>
+        <h4 className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={graphqlurl}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
-        </div>
-        <div className={styles.addPaddCommom + ' ' + styles.wd_300}>
+          <br />
+          <br />
+          <small>
+            Note: Specifying the server URL via an environmental variable is
+            recommended if you have different URLs for multiple environments.
+          </small>
+        </h4>
+        <div className={styles.wd_300}>
           <DropdownButton
             dropdownOptions={[
               { display_text: 'URL', value: 'manualUrl' },

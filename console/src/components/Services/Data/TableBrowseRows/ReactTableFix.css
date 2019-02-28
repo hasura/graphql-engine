@@ -1,3 +1,6 @@
+.ReactTable {
+  border: 0;
+}
 .ReactTable .-pagination .-btn {
   height: 35px !important;
   width: 40%;
@@ -52,16 +55,29 @@
 
 .ReactTable .rt-table .rt-tbody {
   margin-bottom: 10px;
+  border: solid 1px rgba(0, 0, 0, 0.05);
+  min-width: fit-content !important;
+  min-width: -moz-fit-content !important;
+  min-width: -webkit-fit-content !important;
+  min-width: -o-fit-content !important;
 }
-
+.ReactTable .rt-table .rt-thead {
+  min-width: fit-content !important;
+  min-width: -moz-fit-content !important;
+  min-width: -webkit-fit-content !important;
+  min-width: -o-fit-content !important;
+  border-right: solid 1px #f2f2f2;
+  border-left: solid 1px #f2f2f2;
+}
 .ReactTable .rt-tbody .rt-tr-group:last-child {
   border-bottom: solid 1px rgba(0, 0, 0, 0.05);
 }
+
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even:hover {
   background-color: #ebf7de;
 }
 
-.ReactTable .rt-tbody {
+.ReactTable .rt-table .rt-tbody {
   overflow-x: hidden !important;
   min-width: fit-content !important;
 }

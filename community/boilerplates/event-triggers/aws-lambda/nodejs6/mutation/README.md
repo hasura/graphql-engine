@@ -31,7 +31,7 @@ Create a lambda function in AWS. This will be our webhook.
 7. Add an API to API gateway.
 8. Upload the zip from previous step. The handler function of your lambda will be `index.handler`.
 9. Add the following enviroment variables in your lambda config:
-   1. `ACCESS_KEY`: this is the access key you configured when you setup HGE.
+   1. `ADMIN_SECRET`: this is the admin secret key you configured when you setup HGE.
    2. `HGE_ENDPOINT`: the URL on which you HGE instance is running.
 
 # Add the trigger in Hasura GraphQL

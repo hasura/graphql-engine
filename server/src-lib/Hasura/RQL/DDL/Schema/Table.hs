@@ -277,6 +277,8 @@ buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
   => m ()
 buildSchemaCache = do
+  -- clean hdb_views
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
@@ -438,8 +440,14 @@ execWithMDCheck (RunSQL t cascade _) = do
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
       existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
-      droppedFuncs = getDroppedFuncs oldFuncMeta newFuncMeta
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
+      overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
+
+  -- Do not allow overloading functions
+  unless (null overloadedFuncs) $
+    throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
+    <> reportFuncs overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -458,6 +466,12 @@ execWithMDCheck (RunSQL t cascade _) = do
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf
     delFunctionFromCache qf
+
+  -- Process altered functions
+  forM_ alteredFuncs $ \(qf, newTy) ->
+    when (newTy == FTVOLATILE) $
+      throw400 NotSupported $
+      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
   -- update the schema cache with the changes
   processSchemaChanges schemaDiff
@@ -482,12 +496,14 @@ execWithMDCheck (RunSQL t cascade _) = do
   refreshGCtxMapInSchema
 
   return res
+  where
+    reportFuncs = T.intercalate ", " . map dquoteTxt
 
 isAltrDropReplace :: QErrM m => T.Text -> m Bool
 isAltrDropReplace = either throwErr return . matchRegex regex False
   where
     throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-    regex = "alter|drop|replace"
+    regex = "alter|drop|replace|create function"
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)

@@ -13,28 +13,22 @@ export default class InputChecker extends React.Component {
   }
   onBlur(e) {
     const val = e.target.value;
-    const indexId =
-      e.target && parseInt(e.target.getAttribute('data-index-id'), 10);
     if (!val) {
       this.setState({
-        ...this.state,
         isError: false,
         errorMessage: '',
       });
       return;
     }
     inputChecker(this.props.type, val)
-      .then(r => {
+      .then(() => {
         this.setState({
-          ...this.state,
           isError: false,
           errorMessage: '',
         });
-        this.props.onBlur(undefined, indexId, r);
       })
       .catch(r => {
         this.setState({
-          ...this.state,
           isError: true,
           errorMessage: r.message,
         });
@@ -58,6 +52,7 @@ export default class InputChecker extends React.Component {
         data-index-id={indexId || 0}
         disabled={disabled}
         title={this.state.errorMessage || ''}
+        data-test={this.props['data-test']}
       />
     );
   }

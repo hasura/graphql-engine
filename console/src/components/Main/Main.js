@@ -7,6 +7,7 @@ import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
+import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
 
@@ -35,12 +36,10 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadConsoleOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          this.checkEventsTab().then(() => {
-            this.checkSchemaStitch();
-          });
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -52,21 +51,27 @@ class Main extends React.Component {
             isUpdateAvailable = false;
             this.setState({ showBannerNotification: false });
           } else {
-            this.setState({ showBannerNotification: isUpdateAvailable });
+            this.setState({
+              showBannerNotification: isUpdateAvailable,
+            });
           }
         } catch (e) {
           console.error(e);
         }
       });
+      this.checkEventsTab().then(() => {
+        this.checkSchemaStitch();
+      });
     });
   }
+
   checkSchemaStitch() {
     const showSchemaStitch = semverCheck(
       'schemaStitching',
       this.props.serverVersion
     );
     if (showSchemaStitch) {
-      this.setState({ ...this.state, showSchemaStitch: true });
+      this.setState({ showSchemaStitch: true });
     }
     return Promise.resolve();
   }
@@ -97,7 +102,6 @@ class Main extends React.Component {
     };
     setLoveConsentState(s);
     this.setState({
-      ...this.state,
       loveConsentState: { ...getLoveConsentState() },
     });
   }
@@ -143,12 +147,12 @@ class Main extends React.Component {
     } else {
       mainContent = children && React.cloneElement(children);
     }
-    let accessKeyHtml = null;
+    let adminSecretHtml = null;
     if (
-      !globals.isAccessKeySet &&
-      (globals.accessKey === '' || globals.accessKey === null)
+      !globals.isAdminSecretSet &&
+      (globals.adminSecret === '' || globals.adminSecret === null)
     ) {
-      accessKeyHtml = (
+      adminSecretHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
             <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
@@ -240,7 +244,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/remote-schemas'}
+                        to={appPrefix + '/remote-schemas/manage/schemas'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -263,7 +267,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/events'}
+                        to={appPrefix + '/events/manage/triggers'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -280,7 +284,7 @@ class Main extends React.Component {
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
-              {accessKeyHtml}
+              {adminSecretHtml}
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   <i className={styles.question + ' fa fa-cog'} />

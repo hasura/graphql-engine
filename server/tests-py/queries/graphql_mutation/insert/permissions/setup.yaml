@@ -318,3 +318,55 @@ args:
     - id: 6
       name: Resident 6
       age: 22
+
+#Create blog table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE blog (
+        id serial primary key,
+        title text not null,
+        content text,
+        author_id INTEGER REFERENCES author(id),
+        last_updated timestamptz,
+        updated_by INTEGER REFERENCES author(id)
+      );
+      INSERT INTO blog (id, title, author_id) VALUES
+        (1, 'first blog', 1), (2, 'second blog', 2);
+
+- type: track_table
+  args:
+    name: blog
+    schema: public
+    
+- type: create_select_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        author_id: X-Hasura-User-Id
+
+- type: create_insert_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      check: {}
+
+- type: create_update_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      columns:
+      - title
+      - content
+      filter: {}
+      set:
+        last_updated: 'NOW()'
+        updated_by: X-Hasura-User-Id
+
+
+

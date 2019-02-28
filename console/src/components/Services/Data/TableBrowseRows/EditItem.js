@@ -6,6 +6,19 @@ import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
 import Button from '../../Layout/Button/Button';
 
+import {
+  getPlaceholder,
+  INTEGER,
+  BIGINT,
+  NUMERIC,
+  DATE,
+  BOOLEAN,
+  UUID,
+  JSONDTYPE,
+  JSONB,
+  TIMESTAMP,
+  TIMETZ,
+} from '../../../../constants';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
@@ -16,13 +29,12 @@ class EditItem extends Component {
   }
 
   onTextChange = (e, colName) => {
-    const textValue = e.target.value;
-    const tempState = {
-      ...this.state,
-    };
-    tempState.editorColumnMap = { ...this.state.editorColumnMap };
-    tempState.editorColumnMap[colName] = textValue;
-    this.setState({ ...tempState });
+    this.setState({
+      editorColumnMap: {
+        ...this.state.editorColumnMap,
+        [colName]: e.target.value,
+      },
+    });
   };
 
   onModalClose = () => {
@@ -72,7 +84,7 @@ class EditItem extends Component {
       // Text type
       let typedInput = (
         <input
-          placeholder="text"
+          placeholder={getPlaceholder(colType)}
           type="text"
           className={'form-control ' + styles.insertBox}
           onClick={clicker}
@@ -83,10 +95,10 @@ class EditItem extends Component {
       );
 
       // Integer
-      if (colType === 'integer') {
+      if (colType === INTEGER) {
         typedInput = (
           <input
-            placeholder="integer"
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -95,10 +107,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'numeric') {
+      } else if (colType === BIGINT) {
         typedInput = (
           <input
-            placeholder="float"
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -107,10 +119,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'timestamp with time zone') {
+      } else if (colType === NUMERIC) {
         typedInput = (
           <input
-            placeholder={new Date().toISOString()}
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -119,10 +131,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'date') {
+      } else if (colType === TIMESTAMP) {
         typedInput = (
           <input
-            placeholder={new Date().toISOString().slice(0, 10)}
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -131,11 +143,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'timetz') {
-        const time = new Date().toISOString().slice(11, 19);
+      } else if (colType === DATE) {
         typedInput = (
           <input
-            placeholder={`${time}Z or ${time}+05:30`}
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -144,10 +155,22 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'json' || colType === 'jsonb') {
+      } else if (colType === TIMETZ) {
         typedInput = (
           <input
-            placeholder={'{"name": "foo"} or [12, "asdf"]'}
+            placeholder={getPlaceholder(colType)}
+            type="text"
+            className={'form-control ' + styles.insertBox}
+            onClick={clicker}
+            ref={inputRef}
+            defaultValue={oldItem[colName]}
+            data-test={`typed-input-${i}`}
+          />
+        );
+      } else if (colType === JSONDTYPE || colType === JSONB) {
+        typedInput = (
+          <input
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -156,7 +179,7 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'boolean') {
+      } else if (colType === BOOLEAN) {
         typedInput = (
           <select
             className="form-control"
@@ -172,6 +195,18 @@ class EditItem extends Component {
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
+        );
+      } else if (colType === UUID) {
+        typedInput = (
+          <input
+            placeholder={getPlaceholder(colType)}
+            type="text"
+            className={'form-control ' + styles.insertBox}
+            onClick={clicker}
+            ref={inputRef}
+            defaultValue={oldItem[colName]}
+            data-test={`typed-input-${i}`}
+          />
         );
       } else {
         // everything else is text.

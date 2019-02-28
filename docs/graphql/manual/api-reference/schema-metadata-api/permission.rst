@@ -121,8 +121,8 @@ Args syntax
 
 .. _InsertPermission:
 
-``InsertPermission``
-&&&&&&&&&&&&&&&&&&&&
+InsertPermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -235,8 +235,8 @@ Args syntax
 
 .. _SelectPermission:
 
-``SelectPermission``
-&&&&&&&&&&&&&&&&&&&&
+SelectPermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -357,8 +357,8 @@ Args syntax
 
 .. _UpdatePermission:
 
-``UpdatePermission``
-&&&&&&&&&&&&&&&&&&&&
+UpdatePermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -468,8 +468,8 @@ Args syntax
 
 .. _DeletePermission:
 
-``DeletePermission``
-&&&&&&&&&&&&&&&&&&&&
+DeletePermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1

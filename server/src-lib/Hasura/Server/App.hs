@@ -43,10 +43,10 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Middleware               (corsMiddleware,
-                                                         mkDefaultCorsPolicy)
+import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -55,9 +55,12 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
+
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
@@ -68,14 +71,15 @@ consoleAssetsLoc =
   "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
 #endif
 
-mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
-mkConsoleHTML path authMode =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAccessKeySet" .= isAccessKeySet authMode
+                         , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
+                         , "enableTelemetry" .= boolToText enableTelemetry
                          ]
     consolePath = case path of
       "" -> "/console"
@@ -284,13 +288,12 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
     cacheRef <- do
-      pgResp <- runExceptT $
-        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
-        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
-        buildSchemaCache
+      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+                httpManager pool Q.Serializable buildSchemaCache
       either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
@@ -300,7 +303,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
           cacheLock mode httpManager
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole
+                httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
@@ -308,11 +311,11 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- cors middleware
-    unless (ccDisabled corsCfg) $
-      middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
+    unless (isCorsDisabled corsCfg) $
+      middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
     when enableConsole serveApiConsole
@@ -381,7 +384,7 @@ httpApp corsCfg serverCtx enableConsole = do
       get root $ redirect "console"
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path $ scAuthMode serverCtx
+          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry
 
 #ifdef LocalConsole
       get "static/main.js" $ do

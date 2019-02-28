@@ -23,12 +23,13 @@ Options inherited from parent commands
 
 ::
 
-      --project string   hasura project directory where the commands should be executed. (default: current directory)
+      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string     directory where commands are executed. (default: current dir)
 
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - hasura controls the hasura project
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
 * :ref:`hasura metadata apply <hasura_metadata_apply>` 	 - Apply Hasura metadata on a database
 * :ref:`hasura metadata export <hasura_metadata_export>` 	 - Export Hasura GraphQL Engine metadata from the database
 * :ref:`hasura metadata reload <hasura_metadata_reload>` 	 - Reload Hasura GraphQL Engine metadata on the database

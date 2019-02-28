@@ -6,10 +6,13 @@ Using multiple arguments in a query
   :depth: 1
   :local:
 
-Multiple arguments can be used together in the same query. For example, you can use the ``where`` argument to
-filter the results and then use the ``order_by`` argument to sort them.
+Multiple arguments can be used together in the same query.
 
-For example, fetch a list of authors and only 2 of their published articles that are sorted by their date of publication:
+For example, you can use the ``where`` argument to filter the results and then use the ``order_by`` argument to
+sort them.
+
+**For example**, fetch a list of authors and only 2 of their published articles that are sorted by their date
+of publication:
 
 .. graphiql::
   :view_only:

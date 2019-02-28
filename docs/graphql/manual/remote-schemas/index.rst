@@ -121,13 +121,8 @@ Current limitations
 - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level fields have to be
   from the same GraphQL server.
 - Subscriptions on remote GraphQL servers are not supported.
-- Interfaces_ and Unions_ are not supported - if a remote schema has interfaces/unions, an error will be thrown if
-  you try to merge it.
 
 These limitations will be addressed in upcoming versions.
-
-.. _Interfaces: https://graphql.github.io/learn/schema/#interfaces
-.. _Unions: https://graphql.github.io/learn/schema/#union-types
 
 Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

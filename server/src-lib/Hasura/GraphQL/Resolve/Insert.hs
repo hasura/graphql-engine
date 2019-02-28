@@ -2,7 +2,6 @@ module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
-import           Control.Arrow                     (second)
 import           Data.Has
 import           Hasura.Prelude
 import           Hasura.Server.Utils
@@ -144,16 +143,17 @@ parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
   -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
+parseOnConflict tn updPermM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint
       _  -> do
-          (_, updFiltr) <- onNothing updFiltrM $ throw500
+          UpdPermForIns _ updFiltr preSet <- onNothing updPermM $ throw500
             "cannot update columns since update permission is not defined"
-          return $ RI.CP1Update constraint updCols $ toSQLBoolExp (S.mkQual tn) updFiltr
+          return $ RI.CP1Update constraint updCols preSet $
+            toSQLBoolExp (S.mkQual tn) updFiltr
 
   where
     getUpdCols o = do
@@ -168,7 +168,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
-     => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
+          => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
   forM cols $ \(c, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
@@ -445,17 +445,6 @@ insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
 
--- | build mutation response for empty objects
-withEmptyObjs :: RR.MutFlds -> Convert RespTx
-withEmptyObjs = return . mkTx
-  where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
-    -- generate empty mutation response
-    convMutFld = \case
-      RR.MCount -> J.toJSON (0 :: Int)
-      RR.MExp e -> J.toJSON e
-      RR.MRet _ -> J.toJSON ([] :: [J.Value])
-
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
@@ -470,7 +459,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFlds) (withEmptyObjs mutFlds) $ null annVals
+  bool (withNonEmptyObjs annVals mutFlds) (buildEmptyMutResp mutFlds) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn

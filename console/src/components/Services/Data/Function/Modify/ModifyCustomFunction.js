@@ -31,12 +31,28 @@ class ModifyCustomFunction extends React.Component {
   }
   componentDidMount() {
     const { functionName, schema } = this.props.params;
-    if (!functionName) {
+    if (!functionName || !schema) {
       this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
       this.props.dispatch(fetchCustomFunction(functionName, schema)),
     ]);
+  }
+  componentWillReceiveProps(nextProps) {
+    const { functionName, schema } = this.props.params;
+    if (
+      functionName !== nextProps.params.functionName ||
+      schema !== nextProps.params.schema
+    ) {
+      Promise.all([
+        this.props.dispatch(
+          fetchCustomFunction(
+            nextProps.params.functionName,
+            nextProps.params.schema
+          )
+        ),
+      ]);
+    }
   }
   loadRunSQLAndLoadPage() {
     const { functionDefinition } = this.props.functions;
@@ -46,7 +62,7 @@ class ModifyCustomFunction extends React.Component {
     ]);
   }
   updateDeleteConfirmationError(data) {
-    this.setState({ ...this.state, deleteConfirmationError: data });
+    this.setState({ deleteConfirmationError: data });
   }
   handleUntrackCustomFunction(e) {
     e.preventDefault();

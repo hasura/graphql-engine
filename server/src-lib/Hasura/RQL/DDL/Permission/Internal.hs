@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -20,6 +21,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value           (withGeoVal)
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
@@ -167,25 +169,23 @@ procBoolExp tn fieldInfoMap be = do
 isReqUserId :: T.Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
-getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders (BoolExp boolExp) =
-  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
+getDepHeadersFromVal :: Value -> [T.Text]
+getDepHeadersFromVal val = case val of
+  Object o -> parseObject o
+  _        -> parseOnlyString val
   where
-    parseValue val = case val of
-      (Object o) -> parseObject o
-      _          -> parseOnlyString val
-
-    parseOnlyString val = case val of
+    parseOnlyString v = case v of
       (String t)
         | isUserVar t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap parseOnlyString (M.elems o)
-      -- if isRQLOp k
-      --                        then parseOnlyString v
-      --                        else []
+      concatMap getDepHeadersFromVal (M.elems o)
+
+getDependentHeaders :: BoolExp -> [T.Text]
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -198,9 +198,9 @@ valueParser columnType = \case
   val -> txtRHSBuilder columnType val
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr =
+    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
+    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

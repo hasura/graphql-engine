@@ -31,11 +31,10 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Query        (peelRun)
+import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Client.TLS    as TLS
-import qualified Network.Wreq.Session       as WrqS
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
@@ -65,12 +64,13 @@ parseHGECommand =
                 <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseAccessKey
+                <*> (parseAdminSecret <|> parseAccessKey)
                 <*> parseWebHook
                 <*> parseJwtSecret
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseEnableTelemetry
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -100,13 +100,13 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook
-             mJwtSecret mUnAuthRole corsCfg enableConsole) -> do
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
+             mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
-      authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
+      authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes
@@ -114,32 +114,36 @@ main =  do
       ci <- procConnInfo rci
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
+
       -- safe init catalog
-      initialise logger ci httpManager
-      -- migrate catalog if necessary
-      migrate logger ci httpManager
+      initRes <- initialise logger ci httpManager
+
       -- prepare event triggers data
       prepareEvents logger ci
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole
+                         am corsCfg enableConsole enableTelemetry
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
-
-      -- start a background thread to check for updates
-      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
 
       maxEvThrds <- getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-      httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool cacheRef eventEngineCtx
+
+      -- start a background thread to check for updates
+      void $ C.forkIO $ checkForUpdates loggerCtx httpManager
+
+      -- start a background thread for telemetry
+      when enableTelemetry $ do
+        unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
+        void $ C.forkIO $ runTelemetry logger httpManager cacheRef initRes
 
       unLogger logger $
         mkGenericStrLog "server" "starting API server"
@@ -163,6 +167,7 @@ main =  do
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
+
     runTx :: Q.ConnInfo -> Q.TxE QErr a -> IO (Either QErr a)
     runTx ci tx = do
       pool <- getMinimalPool ci
@@ -184,18 +189,28 @@ main =  do
 
     initialise (Logger logger) ci httpMgr = do
       currentTime <- getCurrentTime
-      res <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_init") res
 
-    migrate (Logger logger) ci httpMgr = do
-      currentTime <- getCurrentTime
-      res <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
-      either printErrJExit (logger . mkGenericStrLog "db_migrate") res
+      -- initialise the catalog
+      initRes <- runAsAdmin ci httpMgr $ initCatalogSafe currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_init") initRes
+
+      -- migrate catalog if necessary
+      migRes <- runAsAdmin ci httpMgr $ migrateCatalog currentTime
+      either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
+
+      -- generate and retrieve uuids
+      getUniqIds ci
 
     prepareEvents (Logger logger) ci = do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx ci unlockAllEvents
       either printErrJExit return res
+
+    getUniqIds ci = do
+      eDbId <- runTx ci getDbId
+      dbId <- either printErrJExit return eDbId
+      fp <- liftIO generateFingerprint
+      return (dbId, fp)
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -208,3 +223,10 @@ main =  do
 
     cleanSuccess =
       putStrLn "successfully cleaned graphql-engine related data"
+
+
+telemetryNotice :: String
+telemetryNotice =
+  "Help us improve Hasura! The graphql-engine server collects anonymized "
+  <> "usage stats which allows us to keep improving Hasura at warp speed. "
+  <> "To read more or opt-out, visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html"
