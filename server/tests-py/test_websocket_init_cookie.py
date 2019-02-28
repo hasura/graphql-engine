@@ -29,11 +29,11 @@ class TestWebsocketInitCookie():
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
 
-    def test_websocket_init_cookie_used(self, hge_ctx):
-        if hge_ctx.ws_read_cookie == 'noread':
-            pytest.skip('cookie is not to be read')
+    def _send_query(self, hge_ctx):
         ws_url = url(hge_ctx)
-        ws = websocket.create_connection(ws_url, header={'cookie': 'foo=bar;'})
+        ws = websocket.create_connection(ws_url,
+                                         header={'cookie': 'foo=bar;',
+                                                 'origin': 'example.com'})
         init_payload = {
             'type': 'connection_init',
             'payload': {'headers': {}}
@@ -45,6 +45,12 @@ class TestWebsocketInitCookie():
             'payload': {'query': 'query { person {name}}'}
         }
         ws.send(json.dumps(payload))
+        return ws
+
+    def test_websocket_init_cookie_used(self, hge_ctx):
+        if hge_ctx.ws_read_cookie == 'noread':
+            pytest.skip('cookie is not to be read')
+        ws = self._send_query(hge_ctx)
         it = 0
         while True:
             raw = ws.recv()
@@ -66,19 +72,7 @@ class TestWebsocketInitCookie():
         if hge_ctx.ws_read_cookie == 'read':
             pytest.skip('cookie is read')
 
-        ws_url = url(hge_ctx)
-        ws = websocket.create_connection(ws_url, header={'cookie': 'foo=bar;'})
-        init_payload = {
-            'type': 'connection_init',
-            'payload': {'headers': {}}
-        }
-        ws.send(json.dumps(init_payload))
-        payload = {
-            'type': 'start',
-            'id': '1',
-            'payload': {'query': 'query { person {name}}'}
-        }
-        ws.send(json.dumps(payload))
+        ws = self._send_query(hge_ctx)
         it = 0
         while True:
             raw = ws.recv()

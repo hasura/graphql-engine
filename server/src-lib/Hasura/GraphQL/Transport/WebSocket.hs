@@ -54,7 +54,7 @@ type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
 
 data WSConnState
-  = CSNotInitialised !(Maybe H.Header)
+  = CSNotInitialised !(Maybe (H.Header, H.Header)) -- cookie and origin header
   | CSInitError Text
   | CSInitialised UserInfo [H.Header]
 
@@ -107,6 +107,7 @@ data WSLog
   { _wslWebsocketId :: !WS.WSId
   , _wslUser        :: !(Maybe UserVars)
   , _wslEvent       :: !WSEvent
+  , _wslMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
@@ -130,7 +131,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     checkPath
     let origin = find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
-    maybe (return Nothing) enforceCors $ snd <$> origin
+    cookie <- maybe (return Nothing) enforceCors $ snd <$> origin
+    return $ (,) <$> cookie <*> origin
   either reject accept res
   where
 
@@ -138,17 +140,17 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
-    accept cookie = do
-      logger $ WSLog wsId Nothing EAccepted
+    accept hdrs = do
+      logger $ WSLog wsId Nothing EAccepted Nothing
       connData <- WSConnData
-                  <$> IORef.newIORef (CSNotInitialised cookie)
+                  <$> IORef.newIORef (CSNotInitialised hdrs)
                   <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
 
     reject qErr = do
-      logger $ WSLog wsId Nothing $ ERejected qErr
+      logger $ WSLog wsId Nothing (ERejected qErr) Nothing
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -163,7 +165,12 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
     enforceCors origin =
       case cpConfig corsPolicy of
-        CCDisabled readCookie -> return $ bool Nothing getCookieHeader readCookie
+        CCDisabled readCookie ->
+          if readCookie
+          then return getCookieHeader
+          else do
+            liftIO $ logger $ WSLog wsId Nothing EAccepted (Just corsNote)
+            return Nothing
         CCAllowAll -> return getCookieHeader
         CCAllowedOrigins ds
           -- if the origin is in our cors domains, no error
@@ -175,6 +182,11 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
     corsErr = throw400 AccessDenied
               "received origin header does not match configured CORS domains"
+
+    corsNote = "Cookie is not read when CORS is disabled, because it is a potential "
+            <> "security issue. If you're already handling CORS before Hasura and enforcing "
+            <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
+            <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
@@ -329,7 +341,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
   let userInfoM = case userInfoME of
         CSInitialised userInfo _ -> return $ userVars userInfo
         _                        -> Nothing
-  liftIO $ logger $ WSLog wsId userInfoM wsEv
+  liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
   where
     WSConnData userInfoR _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
@@ -358,11 +370,11 @@ onConnInit logger manager wsConn authMode connParamsM = do
     mkHeaders st =
       [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
       | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
-      ] ++ maybeToList (getCookie st)
+      ] ++ getCookieAndOrigin st
 
-    getCookie st = case st of
-      CSNotInitialised c -> c
-      _                  -> Nothing
+    getCookieAndOrigin st = case st of
+      CSNotInitialised h -> maybe [] (\(c,o) -> [c,o]) h
+      _                  -> []
 
 onClose
   :: L.Logger

@@ -6,14 +6,20 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 class CookieAuth(RequestHandler):
     def get(self, request):
-        print(request.headers['cookie'])
-        if request.headers['cookie']:
+        headers = {k.lower(): v for k, v in request.headers.items()}
+        print(headers)
+        if 'cookie' in headers and headers['cookie']:
             res = {'x-hasura-role': 'admin'}
             return Response(HTTPStatus.OK, res)
         return Response(HTTPStatus.UNAUTHORIZED)
 
     def post(self, request):
-        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+        headers = {k.lower(): v for k, v in request.json['headers'].items()}
+        print(headers)
+        if 'cookie' in headers and headers['cookie'] and 'origin' in headers and headers['origin']:
+            res = {'x-hasura-role': 'admin'}
+            return Response(HTTPStatus.OK, res)
+        return Response(HTTPStatus.UNAUTHORIZED)
 
 
 handlers = MkHandlers({

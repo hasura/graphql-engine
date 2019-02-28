@@ -202,6 +202,7 @@ unset HASURA_GRAPHQL_CORS_DOMAIN
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
 export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
+export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
 
@@ -239,6 +240,7 @@ kill -INT $PID
 kill -INT $WHC_PID
 unset HASURA_GRAPHQL_WS_READ_COOKIE
 unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
 sleep 4
 combine_hpc_reports
 
