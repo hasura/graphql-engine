@@ -14,6 +14,7 @@ Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
 
 - [Demo](#demo)
 - [Realtime](#realtime)
+- [Installation](#installation)
 - [Getting started](#quickstart-with-react)
 - [How it works](#how-it-works)
     + [Motivation](#motivation)
@@ -57,6 +58,20 @@ Realtime charts can be very useful in visualising live data trends. Two of the m
 2. Realtime poll
 
 You can see the time series chart in action [here](#demo). We have used [Hasura GraphQL engine](https://hasura.io) as a realtime GraphQL backend. Hasura provides realtime GraphQL APIs over any Postgres database. Postgres is a good choice of a database for storing chart data because you can create custom views that aggregate the data in your tables. Hasura allows you to query (or subscribe to) these views over GraphQL. Hasura also allows you to have granular access control rules so that you can restrict the CRUD on your database based on user's session information.
+
+## Installation
+
+### Via npm
+
+```
+npm install --save graphql2chartjs
+```
+
+### Use in a script tag
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/hasura/graphql-engine/master/community/tools/graphql2chartjs/bundle/js/index.min.js" type="text/javascript"></script>
+```
 
 ## Quickstart with React
 
