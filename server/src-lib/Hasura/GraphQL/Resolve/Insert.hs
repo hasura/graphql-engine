@@ -252,7 +252,7 @@ insertAndRetCols tn withExp errMsg retCols = do
     return (col, pgColVal)
   where
     annSelFlds = flip map retCols $ \pgci ->
-      (fromPGCol $ pgiName pgci, RS.FCol pgci)
+      (fromPGCol $ pgiName pgci, RS.FCol pgci Nothing)
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent

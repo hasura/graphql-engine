@@ -78,9 +78,14 @@ data ArrSel
 type ArrSelFlds = Fields ArrSel
 type AnnArgs = Fields PGColValue
 
+data ColOp 
+  = ColOp 
+  { _colOp :: S.SQLOp 
+  , _colExp :: S.SQLExp 
+  } deriving (Show, Eq)
+
 data AnnFld
-  = FCol !PGColInfo
-  | FColArg !PGColInfo !AnnArgs
+  = FCol !PGColInfo !(Maybe ColOp)
   | FObj !ObjSel
   | FArr !ArrSel
   | FExp !T.Text
@@ -227,16 +232,3 @@ mergeArrNodes lNode rNode =
   where
     ArrNode lExtrs colMapping lBN = lNode
     ArrNode rExtrs _          rBN = rNode
-
-getJSONArgumentPath :: AnnArgs -> Maybe T.Text
-getJSONArgumentPath args
-  | length pathArgs == 0 = Nothing
-  | otherwise = getPathValue $ head pathArgs
-  where
-    hasPath ((FieldName argName), _) = argName == "path"
-    pathArgs = filter hasPath args
-    getPathValue (_, pgVal) = case pgVal of
-      PGValText t -> Just t
-      _           -> Nothing
-
-

@@ -209,8 +209,8 @@ incOp = SQLOp "+"
 mulOp :: SQLOp
 mulOp = SQLOp "*"
 
-jsonbGetOp :: SQLOp
-jsonbGetOp = SQLOp "->"
+jsonbPathOp :: SQLOp
+jsonbPathOp = SQLOp "#>"
 
 jsonbConcatOp :: SQLOp
 jsonbConcatOp = SQLOp "||"

@@ -152,7 +152,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol colInfo)
+      return (fromPGCol pgCol, FCol colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return ( fromRel $ fromMaybe relName mAlias
@@ -240,8 +240,7 @@ partAnnFlds
   -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
-  FCol c -> Just $ Left (pgiName c, pgiType c)
-  FColArg c _ -> Just $ Left (pgiName c, pgiType c)
+  FCol c _ -> Just $ Left (pgiName c, pgiType c)
   FObj o -> Just $ Right $ Left o
   FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing

@@ -15,6 +15,7 @@ module Hasura.GraphQL.Resolve.Select
 
 import           Control.Arrow                     (first)
 import           Data.Has
+import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
@@ -27,6 +28,7 @@ import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -44,14 +46,26 @@ withSelSet selSet f =
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
-paramsToAnnArgs :: ArgsMap -> RS.AnnArgs
-paramsToAnnArgs = concatMap toArg . Map.toList
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp t = case parseJSONPath t of
+  Left s       -> throwVE $ T.pack s
+  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
   where
-    toArg (name, val) = case val of
-      AGScalar _ Nothing  -> []
-      AGScalar _ (Just v) -> [(FieldName $ G.unName name, v)]
-      _                   -> []
+    elToColExp (Key k)   = S.SELit k
+    elToColExp (Index i) = S.SELit $ T.pack (show i)
 
+
+argsToColOp :: (MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
+argsToColOp args = case (Map.lookup "path" args) of 
+  Nothing -> return Nothing 
+  Just val -> toOp val 
+  where
+    toJsonPathExp t = jsonPathToColExp t 
+      >>= (return . Just . (RS.ColOp S.jsonbPathOp))
+    toOp = \case
+      AGScalar _ (Just (PGValText t)) -> toJsonPathExp t
+      AGScalar _ (Just (PGValVarchar t)) -> toJsonPathExp t
+      _ -> return Nothing
 
 fromSelSet
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r, Has OrdByCtx r)
@@ -65,9 +79,8 @@ fromSelSet f fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left colInfo -> if (null $ _fArguments fld)
-            then return $ RS.FCol colInfo
-            else return $ RS.FColArg colInfo (paramsToAnnArgs $ _fArguments fld)
+          Left colInfo ->
+            (RS.FCol colInfo) <$> (argsToColOp $ _fArguments fld)
             -- let jsonCol = return $ RS.FCol $ colInfo { pgiName = PGCol $ T.pack "metadata->'name'" }
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo

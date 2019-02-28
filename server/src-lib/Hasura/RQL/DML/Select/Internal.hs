@@ -142,8 +142,7 @@ buildJsonObject pfx parAls arrRelCtx flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col    -> toSQLCol col
-      FColArg col args -> toSQLColArgs col args
+      FCol col args  -> toSQLColArgs col args
       FExp e      -> S.SELit e
       FObj objSel ->
         let qual = mkObjRelTableAls pfx $ aarName objSel
@@ -157,19 +156,14 @@ buildJsonObject pfx parAls arrRelCtx flds =
     toSQLCol col = toJSONableExp (pgiType col) $
                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
 
-    toSQLColArgs :: PGColInfo -> AnnArgs -> S.SQLExp
-    toSQLColArgs col args
-      | isJSONType colTy || isJSONBType colTy =
-          case (getJSONArgumentPath args) of
-            Nothing -> toSQLCol col
-            Just pArg -> toJSONableExp colTy $
-                          S.SEOpApp S.jsonbGetOp
-                            [ S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
-                            , S.SELit pArg
-                            ]
-      | otherwise = toSQLCol col
-      where
+    toSQLColArgs :: PGColInfo -> Maybe ColOp -> S.SQLExp
+    toSQLColArgs col Nothing = toSQLCol col
+    toSQLColArgs col (Just (ColOp op exp)) = 
+      toJSONableExp colTy $ S.mkSQLOpExp op colNameExp exp
+      where 
         colTy = pgiType col
+        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+
 
 
 -- uses row_to_json to build a json object

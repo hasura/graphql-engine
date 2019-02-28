@@ -25,7 +25,7 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (PGColInfo col colTy _) -> Just (col, colTy)
+    FCol (PGColInfo col colTy _) _ -> Just (col, colTy)
     _                            -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
@@ -38,7 +38,7 @@ mkDefaultMutFlds = \case
   where
     mutFlds = [("affected_rows", MCount)]
     pgColsToSelFlds cols = flip map cols $ \pgColInfo ->
-      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
+      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
 
 qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden qt =
