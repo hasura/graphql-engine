@@ -16,7 +16,6 @@ import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.GraphQL.Resolve.Context         (LazyRespTx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
