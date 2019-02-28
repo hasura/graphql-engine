@@ -1,4 +1,5 @@
 @import "../Common/Common.scss";
+
 .container {
   display: flex;
   align-items: center;
@@ -27,26 +28,25 @@
 .mainWrapper {
   background-color: #F8FAFB;
 }      
-.input_addon_group
-{
+.input_addon_group {
   margin-bottom: 10px;
   padding: 0 15px;
-  .input_group
-  {
+
+  .input_group {
     width: 100%;
-    .input_group_addon
-    {
+
+    .input_group_addon {
       background-color: #e2e2e2;
       height: 50px;
       width: 50px;
       border: 0;
     }
-    input:focus
-    {
+
+    input:focus {
       border: 1px solid #999;
     }
-    .form_input
-    {
+
+    .form_input {
       border: 1px solid #e2e2e2;
       border-radius: 5px;
       border-top-left-radius: 0;
@@ -56,13 +56,13 @@
     }
   }
 }
-.signin_btn
-{
+
+.signin_btn {
    padding: 0 15px;
    padding-bottom: 15px;
    padding-top: 10px;
-   button
-   {
+
+   button {
      background-color: #27AE60;
      height: 60px;
      border: 0;
@@ -71,6 +71,7 @@
      text-transform: uppercase;
    }
 }
+
 .loginHeading {
   text-transform: uppercase;
   text-align: center;
@@ -78,12 +79,14 @@
   font-family: 'Gudea';
   color: #4d4d4d;
   font-weight: bold;
+
   .text {
     border-bottom: 1px solid #dcdcdc;
     width: 100px;
     margin: 10px auto;
   }
 }
+
 .hasuraLogo {
   width: 100px;
   padding-bottom: 20px;

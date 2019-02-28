@@ -1,11 +1,13 @@
 @import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
 @import "../../../Common/Common.scss";
+
 .container {
 }
-.displayFlexContainer
-{
+
+.displayFlexContainer {
   display: flex;
 }
+
 .flexRow {
   display: flex;
   margin-bottom: 20px;
@@ -33,40 +35,47 @@
   color: #333;
   border: 1px solid #E5E5E5;
   background-color: #F8F8F8;
+
   /*
   a,a:visited {
     color: $navbar-inverse-link-color;
   }
+
   a:hover {
     color: $navbar-inverse-link-hover-color;
   }
   */
+
   hr {
     margin: 0;
     border-color: $navbar-inverse-color;
   }
+
   ul {
     list-style-type: none;
     padding-top: 10px;
     padding-left: 7px;
+
     li {
       padding: 7px 0;
       transition: color 0.5s;
+
       /*
       a,a:visited {
         color: $navbar-inverse-link-color;
       }
+
       a:hover {
         color: $navbar-inverse-link-hover-color;
       }
       */
 
-      a
-      {
+      a {
         color: #767E93;
         word-wrap: break-word;
       }
     }
+
     li:hover {
       padding: 7px 0;
       // color: $navbar-inverse-link-hover-color;
@@ -87,24 +96,25 @@
   padding: 10px 0px;
   padding-bottom: 0px;
   position: relative;
-  i
-  {
+
+  i {
     position: absolute;
     padding: 10px;
     font-size: 14px;
     padding-left: 8px;
     color: #979797;
   }
-  input
-  {
+
+  input {
     padding-left: 25px;
   }
 }
-.sidebarHeadingWrapper
-{
+
+.sidebarHeadingWrapper {
   width: 100%;
   float: left;
   padding-bottom: 10px;
+
   .sidebarHeading {
     font-weight: bold;
     display: inline-block;
@@ -112,6 +122,7 @@
     font-size: 15px;
   }
 }
+
 .schemaTableList {
   // max-height: 300px;
   // overflow-y: auto;
@@ -119,39 +130,48 @@
   padding-left: 20px;
   max-height: calc(100vh - 275px);
 }
+
 .schemaListUl {
   padding-left: 5px;
   padding-bottom: 10px;
+
   li {
     border-bottom: 0px !important;
     padding: 0 0 !important;
+
     .tableFunctionDivider {
       margin-top: 5px;
       margin-bottom: 5px;
       width: 95%;
     }
+
     a {
       background: transparent !important;
       padding: 5px 0px !important;
       font-weight: 400 !important;
       padding-left: 5px !important;
+
       .tableIcon, .functionIcon {
         margin-right: 5px;
         font-size: 12px;
       }
+
       .functionIcon {
         width: 12px;
+
         img {
           width: 100%;
         }
       }
     }
   }
+
   .noTables {
     font-weight: 400 !important;
     padding-bottom: 10px !important;
     color: #767E93 !important;
   }
+
   li:first-child {
     padding-top: 15px !important;
   }
@@ -167,8 +187,7 @@
 }
 
 .activeTable {
-  a
-  {
+  a {
     // border-left: 4px solid #FFC627;
     color: #FD9540!important;
   }

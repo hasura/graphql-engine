@@ -4,10 +4,11 @@
 .flexRow {
   display: flex;
 }
-.padd_left_remove
-{
+
+.padd_left_remove {
   padding-left: 0;
 }
+
 .add_btn {
   margin: 10px 0;
 }
@@ -22,25 +23,31 @@
   overflow: auto;
   background: #444;
   color: $navbar-inverse-color;
+
   hr {
     margin: 0;
     border-color: $navbar-inverse-color;
   }
+
   ul {
     list-style-type: none;
     padding-top: 10px;
     padding-left: 7px;
+
     li {
       padding: 7px 0;
       transition: color 0.5s;
+
       a,a:visited {
         color: $navbar-inverse-link-color;
       }
+
       a:hover {
         color: $navbar-inverse-link-hover-color;
         text-decoration: none;
       }
     }
+
     li:hover {
       padding: 7px 0;
       color: $navbar-inverse-link-hover-color;

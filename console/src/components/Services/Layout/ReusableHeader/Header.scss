@@ -1,18 +1,20 @@
 @import "../../../Common/Common.scss";
 
 .common_header_wrapper {
-  .defaultWidth
-  {
+  .defaultWidth {
     width: 300px;
   }
+
   .add_mar_right {
     margin-right: 10px !important;
   }
+
   .header_colon {
     margin-right: 10px;
     font-weight: bold;
     font-size: 24px;
   }
+
   .value_wd {
     width: 300px;
   }

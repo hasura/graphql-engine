@@ -70,15 +70,16 @@
   border: 1px solid #ccc;
   max-width: 700px;
 }
-.textRight
-{
+
+.textRight {
   text-align: right;
 }
-.noPadd
-{
+
+.noPadd {
   padding-left: 0;
   padding-right: 0;
 }
+
 .modifyOpsCollapsedContent {
   padding-bottom: 5px;
   max-width: 530px;
@@ -87,8 +88,8 @@
   font-size: 13px;
   align-items: center;
 }
-.modifyOpsCollapsedContent1
-{
+
+.modifyOpsCollapsedContent1 {
   padding-bottom: 5px;
   max-width: 530px;
   display: flex;
@@ -154,22 +155,23 @@ modifyHeadersCollapsedHeadings {
 .modifyProperty p{
   font-size: 14px;
 }
-.modifyOpsCollapsedtitle
-{
+
+.modifyOpsCollapsedtitle {
   margin:5px 0;
-  i
-  {
+
+  i {
     font-size: 11px;
   }
 }
+
 .opsCheckboxWrapper {
   display: flex;
   flex-direction: row;
   align-items: center;
   flex: 1;
   margin: 10px 0;
-  input
-  {
+
+  input {
     margin-top: 0;
   }
 }
@@ -269,6 +271,7 @@ modifyHeadersCollapsedHeadings {
   display: flex;
   flex-direction: row;
   margin: 5px 0;
+
   input {
     height: 25px;
     margin-left: 5px;
@@ -280,8 +283,8 @@ modifyHeadersCollapsedHeadings {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  table
-  {
+
+  table {
     width: 80%;
     margin-top: 20px;
   }

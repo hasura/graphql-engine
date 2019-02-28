@@ -2,8 +2,8 @@
   position: relative;
   width: 80%;
 }
-.codeBlockCustom
-{
+
+.codeBlockCustom {
   /* position: relative;
   padding: 10px 20px; */
   background-color: white;
@@ -42,24 +42,23 @@
   padding: 0px 0px !important;
 }
 
-.copyGenerated
-{
+.copyGenerated {
   position: absolute;
   bottom: 15px;
   right: 30px;
   cursor: pointer;
 }
-.copyGenerated img, .copyExecution img
-{
+
+.copyGenerated img, .copyExecution img {
   width: 20px;
   opacity: .6;
 }
-.copyGenerated img:hover, .copyExecution img:hover
-{
+
+.copyGenerated img:hover, .copyExecution img:hover {
   opacity: 1;
 }
-.copyGenerated:focus, .copyExecution:focus
-{
+
+.copyGenerated:focus, .copyExecution:focus {
   outline: none;
 }
 

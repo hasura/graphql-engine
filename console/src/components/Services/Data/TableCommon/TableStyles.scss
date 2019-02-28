@@ -1,14 +1,17 @@
 .container {
   padding: 0;
 }
+
 .header {
   background: #eee;
+
   h2 {
     margin: 0;
     padding: 26px;
     float: left;
     line-height: 26px;
   }
+
   .nav {
     padding: 20px;
     float: left;
@@ -28,12 +31,15 @@
   button {
     margin: 0 10px;
   }
+
   label.radioLabel {
     padding-top: 0;
+
     input[type="radio"] {
       margin-top: 10px;
     }
   }
+
   span.radioSpan {
     line-height: 34px;
   }
@@ -42,17 +48,21 @@
 .table {
   width: -webkit-fill-available;
   // width: auto;
+
   thead {
     background: #333;
     color: #ddd;
   }
+
   th {
     min-width: 100px;
     font-weight: 300;
   }
+
   tr {
     cursor: pointer;
   }
+
   td {
     width: 300px;
     max-width: 300px;
@@ -80,16 +90,19 @@ a.expanded {
 .tableNameInput {
   width: 300px;
 }
+
 .addCol {
   .input {
     width: 250px;
     display: inline-block;
   }
+
   .select {
     margin: 0 20px;
     display: inline-block;
     width: 120px;
   }
+
   i:hover {
     cursor: pointer;
     color: #B85C27;
@@ -111,10 +124,12 @@ a.expanded {
 
 .relationshipTable {
   width: auto;
+
   thead {
     background: #333;
     color: #ddd;
   }
+
   th {
     min-width: 100px;
     font-weight: 300;

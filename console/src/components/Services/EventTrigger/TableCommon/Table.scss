@@ -1,10 +1,13 @@
 @import "../../../Common/Common.scss";
+
 .container {
   padding: 0;
 }
+
 .dropdown_wrapper {
   width: 300px;
 }
+
 .tableContainer {
   overflow: auto;
   //margin-top: 25px;
@@ -13,30 +16,32 @@
 .schemaWrapper {
   background: #FFF3D5;
   width: 100%;
+
   .schemaSidebarSection {
     display: inline-block;
     width: 40%;
   }
 }
-.clearBoth
-{
+
+.clearBoth {
   clear: both;
 }
-.wd100
-{
+
+.wd100 {
   width: 100%;
   float: left;
   clear: both;
 }
-.noPadd
-{
+
+.noPadd {
   padding-left: 0;
   padding-right: 0;
 }
-.listenColumnWrapper
-{
+
+.listenColumnWrapper {
   max-width: 700px;
 }
+
 .aceBlock {
   max-height: 300px;
   position: relative;
@@ -75,12 +80,15 @@
   button {
     margin: 0 10px;
   }
+
   label.radioLabel {
     padding-top: 0;
+
     input[type="radio"] {
       margin-top: 10px;
     }
   }
+
   span.radioSpan {
     line-height: 34px;
   }
@@ -88,14 +96,17 @@
 
 .table {
   width: auto;
+
   thead {
     background: #333;
     color: #ddd;
   }
+
   th {
     min-width: 100px;
     font-weight: 300;
   }
+
   td {
     max-width: 300px;
     white-space: pre;
@@ -122,11 +133,13 @@ a.expanded {
 .tableNameInput {
   width: 300px;
 }
+
 .addCol {
   .input {
     width: 300px;
     display: inline-block;
   }
+
   .inputCheckbox {
     width: auto;
     display: inline-block;
@@ -134,21 +147,23 @@ a.expanded {
     margin: 0px 20px;
     box-shadow: none;
   }
-  .inputDefault
-  {
+
+  .inputDefault {
     width: 150px;
     margin: 0px 20px;
     display: inline-block;
   }
-  .remove_ul_left
-  {
+
+  .remove_ul_left {
 
   }
+
   .select {
     display: inline-block;
     width: 300px;
     height: 34px;
   }
+
   i:hover {
     cursor: pointer;
     color: #B85C27;
@@ -230,6 +245,7 @@ a.expanded {
 
 .invocationsSection {
   margin-top: 20px;
+
   li {
     display: block;
     padding: 5px 10px;
@@ -238,9 +254,11 @@ a.expanded {
     line-height: 23px;
     border-bottom: 1px solid #e1e4e8;
   }
+
   .invocationSuccess {
     color: #28a745
   }
+
   .invocationFailure {
     color: red;
   }
@@ -248,6 +266,7 @@ a.expanded {
 
 .streamingLogs {
   margin-top: 20px;
+
   li {
     display: block;
     padding: 5px 10px;
@@ -256,9 +275,11 @@ a.expanded {
     line-height: 23px;
     border-bottom: 1px solid #e1e4e8;
   }
+
   .invocationSuccess {
     color: #28a745;
   }
+
   .invocationFailure {
     color: red;
   }
@@ -272,6 +293,7 @@ a.expanded {
 
 .advancedToggleBtn {
   width: 300px;
+
   i {
     padding-left: 5px;
   }
@@ -291,9 +313,11 @@ a.expanded {
   padding: 5px;
   min-height: 41px;
 }
+
 .newBtn {
   margin-right: 10px;
 }
+
 .loadNewer {
   display: flex;
   align-items: center;
@@ -303,32 +327,40 @@ a.expanded {
   min-height: 41px;
   position: relative;
 }
+
 .filterAll {
   position: absolute;
   left: 10px;
+
   input {
     display: inline-block;
     width: auto;
     margin-left: 10px;
   }
 }
+
 .retryEvent {
   cursor: pointer;
 }
+
 .redeliverModal {
   width: 60%;
 }
+
 .redeliverEventSection {
   clear: both;
   margin: 0;
 }
+
 .triggerSettingsModifyButton {
   margin-right: 10px;
   border-radius: 3px;
 }
+
 .dropDownGroup {
   max-width: 300px;
 }
+
 .status_code_right {
   text-align: right;
   font-weight: bold;
@@ -336,16 +368,19 @@ a.expanded {
   padding-bottom: 20px;
   margin-top: 0;
   margin-bottom: 0;
-  i
-  {
+
+  i {
     margin-left: 5px;
   }
 }
+
 .toggleAdvanced {
   cursor: pointer;
+
   b {
     font-size: 15px;
   }
+
   i:hover {
     color: #4D4D4D ;
   }
