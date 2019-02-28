@@ -129,7 +129,7 @@ npx json2graphql <hasura-url> -d ./path/to/db.json
 json2graphql https://j2gtest.herokuapp.com -d ./path/to/db.json
 
 # Running against a hasura with an admin secret
-json2graphql https://j2gtest.herokuapp.com -s <admin-secret> -d ./path/to/db.json
+json2graphql https://j2gtest.herokuapp.com -k <admin-secret> -d ./path/to/db.json
 
 # Reset configuration, schema & data and import
 # Useful for updating schema structure or working against an existing Hasura setup
@@ -152,6 +152,7 @@ json2graphql URL [flags]
 - `-d --db`: path to the JS file that exports your sample JSON database
 - `-o --overwrite`: DANGER: Overwrite tables if they already exist in database
 - `-v --version`: show CLI version
+- `-k --access-key=access-key`:  Access key to Hasura GraphQL Engine (X-Hasura-Access-Key)
 - `-h, --help`: show CLI help
 
 ## JSON structure
