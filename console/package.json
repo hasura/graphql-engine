@@ -58,7 +58,7 @@
     "deep-equal": "^1.0.1",
     "graphiql": "^0.11.11",
     "graphiql-explorer": "^0.3.7",
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.2",
     "hasura-console-graphiql": "0.0.8",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",

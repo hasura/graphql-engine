@@ -5,12 +5,13 @@ import { getHeadersAsJSON } from './utils';
 import GraphiQLExplorer from 'graphiql-explorer';
 import './GraphiQL.css';
 import 'graphiql/graphiql.css';
+import { makeDefaultArg, getDefaultScalarArgValue } from './onegraphUtils';
 
 class OneGraphExplorer extends React.Component {
   state = {
-    explorerOpen: false,
+    explorerOpen: true,
     schema: null,
-    query: this.props.queries,
+    query: this.props.query,
   };
 
   componentDidMount() {
@@ -45,17 +46,22 @@ class OneGraphExplorer extends React.Component {
     const { renderGraphiql } = this.props;
     return (
       <div className="graphiql-container">
-        <GraphiQLExplorer
-          schema={schema}
-          query={query}
-          onEdit={this.editQuery}
-          explorerIsOpen={explorerOpen}
-          onToggleExplorer={this.toggleExplorer}
-        />
+        <div className="gqlexplorer">
+          <GraphiQLExplorer
+            schema={schema}
+            query={query}
+            onEdit={this.editQuery}
+            explorerIsOpen={explorerOpen}
+            onToggleExplorer={this.toggleExplorer}
+            getDefaultScalarArgValue={getDefaultScalarArgValue}
+            makeDefaultArg={makeDefaultArg}
+          />
+        </div>
         {renderGraphiql({
           query,
           schema,
           onEditQuery: this.editQuery,
+          toggleExplorer: this.toggleExplorer,
         })}
       </div>
     );

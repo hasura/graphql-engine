@@ -107,14 +107,15 @@ class GraphiQLWrapper extends Component {
 
     const analyzeFetcherInstance = analyzeFetcher(
       this.props.data.url,
-      this.props.data.headers,
+      this.props.data.headerFocus,
       analyzeApiChange
     );
 
     // let content = "fetching schema";
-    let renderGraphiql = () => (
+    let placeholderContent = (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
+    let renderGraphiql;
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
       if (queries) {
@@ -151,7 +152,7 @@ class GraphiQLWrapper extends Component {
       );
     } else if (this.state.error) {
       // there is an error parsing graphql schema
-      renderGraphiql = () => <div> Error parsing GraphQL Schema </div>;
+      placeholderContent = () => <div> Error parsing GraphQL Schema </div>;
     }
 
     return (
@@ -164,12 +165,16 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          <OneGraphExplorer
-            renderGraphiql={renderGraphiql}
-            endpoint={this.props.data.url}
-            headers={this.props.data.headers}
-            query={queries}
-          />
+          {renderGraphiql ? (
+            <OneGraphExplorer
+              renderGraphiql={renderGraphiql}
+              endpoint={this.props.data.url}
+              headers={this.props.data.headers}
+              query={queries}
+            />
+          ) : (
+            placeholderContent
+          )}
         </div>
       </ErrorBoundary>
     );
