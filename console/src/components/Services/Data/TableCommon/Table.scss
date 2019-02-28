@@ -52,20 +52,11 @@
   border-left: 1px solid #ddd;
 }
 
-.cellExpand {
-  transform: rotate(-45deg);
-  cursor: pointer;
-  top: -5px;
-  left: 0px;
-  right: 0px;
-}
-
-.cellCollapse {
-  cursor: pointer;
-  top: -5px;
-  left: 0px;
-  right: 0px;
-  padding-right: 5px;
+.tableHeaderCell i {
+  font-size: 12px;
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 8px;
 }
 
 .insertContainer {
@@ -194,7 +185,6 @@ a.expanded {
   text-align: center;
 }
 
-.tableCellCenterAlignedExpanded {
-  text-align: center;
+.tableCellExpanded {
   white-space: normal;
 }
