@@ -1,16 +1,43 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-
+import Modal from 'react-bootstrap/lib/Modal';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../Layout/Button/Button';
 import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 
 class CustomResolver extends React.Component {
+  constructor() {
+    super();
+
+    this.handleShow = this.handleShow.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+
+    this.state = {
+      show: false,
+    };
+  }
+
+  handleClose() {
+    this.setState({ show: false });
+  }
+
+  handleShow() {
+    this.setState({ show: true });
+  }
   render() {
     const styles = require('../Styles.scss');
     const node = require('./Node.svg');
+    const remoteSchema = require('./remote_schema.png');
+    const arrowRight = require('./yellow_arrow.svg');
+    const glitch = require('./glitch.png');
+    const externalLink = require('./external-link.svg');
+    const lightGrayArrow = require('./light-gray-arrow.svg');
+    const darkGrayArrow = require('./dark-gray-arrow.svg');
+    const googleCloud = require('./google_cloud.svg');
+    const MicrosoftAzure = require('./Microsoft_Azure_Logo.svg');
+    const AWS = require('./AWS.png');
     // const landingImage = require('./schema-stitching-color.png');
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
@@ -25,100 +52,99 @@ class CustomResolver extends React.Component {
         <div className={styles.padd_left}>
           <Helmet title={`${pageTitle}s | Hasura`} />
           <div>
-            <h2 className={`${styles.heading_text} ${styles.inline_block}`}>
-              Remote Schemas &nbsp;
-            </h2>
-            {migrationMode ? (
-              <Button
-                data-test="data-create-remote-schemas"
-                color="yellow"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
-                }}
-              >
-                Add
-              </Button>
-            ) : null}
+            <div className={styles.display_flex}>
+              <h2 className={`${styles.headerText} ${styles.addPaddRight} ${styles.inline_block}`}>
+                Remote Schemas
+              </h2>
+              {migrationMode ? (
+                <Button
+                  data-test="data-create-remote-schemas"
+                  color="yellow"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
+                  }}
+                >
+                  Add
+                </Button>
+              ) : null}
+            </div>
             <hr />
-            <div className={styles.subheading_text}>Try it out</div>
-            <p>
-              1.
-              <a
-                className={styles.add_mar_left_small}
-                href="https://glitch.com/edit/#!/hasura-sample-remote-schema-4"
-                target="_blank"
-              >
-                <button className={'btn btn-sm ' + styles.yellow_button}>
-                  Deploy with Glitch
-                </button>
-              </a>
-              <span className={styles.add_pad_left}>
-                Click to deploy an example GraphQL service to Glitch
-              </span>
-            </p>
-            <p>2. Add the GraphQL service as a Remote Schema:</p>
-            <p className={styles.add_pad_left}>
-              - Click on the SHOW button in the Glitch console and copy the URL
-            </p>
-            <p className={styles.add_pad_left}>
-              - Create a remote schema by clicking the <b>Add</b> button at the
-              top of this page
-            </p>
-            <p className={styles.add_pad_left}>
-              - Set the name as “Sample Remote Schema” and enter the above URL
-              as the <b>GraphQL server URL</b>
-            </p>
-            <p className={styles.add_pad_left}>
-              - Click on the <b>Add Remote Schema</b> button - That’s it!
-            </p>
-            <p>3. Head to the GraphiQL tab and try out the following query:</p>
+            <div className={styles.subHeaderText}>
+              <img className={'img-responsive'} src={arrowRight} alt={'Arrow'} />
+              What are Remote Schemas?
+            </div>
+            <div className={styles.remoteSchemaImg}>
+              <img className={'img-responsive'} src={remoteSchema} alt={'Remote Schema'} />
+            </div>
+            <div className={styles.descriptionText + ' ' + styles.wd60}>
+              Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community.  Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community.
+            </div>
+            <hr className={styles.clear_fix} />
+            <div className={styles.subHeaderText}>
+              <img className={'img-responsive'} src={arrowRight} alt={'Arrow'} />
+              Try it out
+            </div>
+            <div className={styles.tryOutWrapper}>
+              <div className={styles.boxLarge}>
+                <div className={styles.logoIcon}>
+                  <img className={'img-responsive'} src={glitch} alt={'glitch'} />
+                </div>
+                <button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button>
+                <div onClick={this.handleShow} className={styles.instructions}>
+                  Instructions <img className={'img-responsive'} src={lightGrayArrow} alt={'lightGrayArrow'}/>
+                </div>
+              </div>
+              <div className={styles.boxSmallWrapper}>
+                <div className={styles.boxSmall}>
+                  <div className={styles.logoIcon}>
+                    <img className={'img-responsive'} src={googleCloud} alt={'googleCloud'} />
+                  </div>
+                </div>
+                <div className={styles.boxSmall}>
+                  <div className={styles.logoIcon}>
+                    <img className={'img-responsive'} src={MicrosoftAzure} alt={'Microsoft Azure'} />
+                  </div>
+                </div>
+                <div className={styles.boxSmall}>
+                  <div className={styles.logoIcon}>
+                    <img className={'img-responsive ' + styles.imgAws} src={AWS} alt={'AWS'} />
+                  </div>
+                </div>
+                <div className={styles.instructions}>
+                  And many more <img className={'img-responsive'} src={darkGrayArrow} alt={'darkGrayArrow'}/>
+                </div>
+              </div>
+            </div>
+            <Modal show={this.state.show} onHide={this.handleClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>Modal heading</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <div className={styles.listItems}>
+                  <div className={styles.yellowCircle}>
+                  </div>
+                  <div className={styles.descriptionText + ' ' + styles.fontWeightBold}>
+                    Click on “Try it with Glitch”
+                  </div>
+                </div>
+                Woohoo, you're reading this text in a modal!
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={this.handleClose}>
+                  Close
+                </Button>
+                <Button variant="primary" onClick={this.handleClose}>
+                  Save Changes
+                </Button>
+              </Modal.Footer>
+            </Modal>
             <ReusableTextAreaWithCopy
               copyText={queryDefinition}
               textLanguage={'graphql'}
             />
-            <p className={styles.add_pad_top}>
-              You just added a remote schema and queried it!
-            </p>
-            <hr />
-            <div className={styles.subheading_text}>Get Started</div>
-            <p>Read the docs for more information</p>
-            <p>Boilerplates</p>
-            <p>
-              Check out the individual READMEs for detailed deployment
-              instructions
-            </p>
-            <div className={styles.iconWrapper}>
-              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
-                <div className={styles.icon}>
-                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
-                    <img className={'img-responsive'} src={node} alt={'node'} />
-                  </a>
-                </div>
-              </div>
-              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
-                <div className={styles.icon}>
-                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
-                    <img className={'img-responsive'} src={node} alt={'node'} />
-                  </a>
-                </div>
-              </div>
-              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
-                <div className={styles.icon}>
-                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
-                    <img className={'img-responsive'} src={node} alt={'node'} />
-                  </a>
-                </div>
-              </div>
-              <div className={'col-md-3 col-sm-3 col-xs-3 ' + styles.removePadd}>
-                <div className={styles.icon}>
-                  <a href="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs" target="_blank">
-                    <img className={'img-responsive'} src={node} alt={'node'} />
-                  </a>
-                </div>
-              </div>
-            </div>
+
           </div>
           {/*
             <div className={styles.resolverContent}>

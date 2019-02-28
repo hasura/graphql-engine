@@ -7,6 +7,10 @@
 .wd_300 {
   width: 300px;
 }
+.wd60
+{
+  width: 60%;
+}
 .addPaddTop
 {
   padding-top: 20px;
@@ -159,4 +163,107 @@
     line-height: 26px;
   }
 
+}
+.remoteSchemaImg
+{
+  padding: 12px 0;
+  padding-bottom: 30px;
+  img
+  {
+    width: 75%;
+  }
+}
+.externalLinkImg
+{
+  margin-left: 7px;
+  width: 12px;
+  display: inline-block;
+}
+.instructions
+{
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+  img
+  {
+    width: 8px;
+    display: inline-block;
+    margin-left: 12px;
+  }
+}
+.yellowCircle
+{
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  background-color: #f8c533;
+  margin-right: 10px;
+}
+.tryOutWrapper
+{
+  padding-top: 30px;
+  display: flex;
+  align-items: flex-start;
+  .boxLarge
+  {
+    width: 225px;
+    height: 200px;
+    border-radius: 10px;
+    box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.16);
+    background-color: #ffffff;
+    margin-right: 20px;
+    text-align: center;
+    display: inline-block;
+    .logoIcon
+    {
+      text-align: center;
+      padding: 20px 0;
+      img
+      {
+        width: 76px;
+        display: inline-block;
+      }
+    }
+    .default_button
+    {
+      display: inline-block;
+    }
+    .instructions
+    {
+      border-top: 1px solid #DEDEDE;
+    }
+  }
+  .boxSmallWrapper
+  {
+    display: flex;
+    align-items: center;
+    .boxSmall
+    {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.16);
+      background-color: #ffffff;
+      margin-right: 20px;
+      display: inline-block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .imgAws
+      {
+        width: 59px;
+      }
+    }
+    .instructions
+    {
+      margin-top: 0;
+    }
+  }
+}
+.listItems
+{
+  display: flex;
+  align-items: center;
 }
