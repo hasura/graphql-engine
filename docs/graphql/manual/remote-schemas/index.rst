@@ -137,6 +137,14 @@ community tooling to write your own client-facing GraphQL gateway that interacts
   it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
+Response headers from your remote GraphQL servers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Response headers from your remote schema servers are sent back to the client
+over HTTP transport. **Over websocket transport, the response headers are not
+sent.** If you require the response headers from remote servers, use the HTTP
+transport.
+
+
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------
 

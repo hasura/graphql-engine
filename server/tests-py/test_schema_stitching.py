@@ -228,6 +228,33 @@ class TestAddRemoteSchemaTbls:
         assert st_code == 200, resp
 
 
+class TestRemoteSchemaResponseHeaders():
+    teardown = {"type": "clear_metadata", "args": {}}
+    dir = 'queries/remote_schemas'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('sample-auth', 'http://localhost:5000/auth-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    def test_response_headers_from_remote(self, hge_ctx):
+        headers = {}
+        if hge_ctx.hge_key:
+            headers = {'x-hasura-admin-secret': hge_ctx.hge_key}
+        q = {'query': 'query { hello (arg: "me") }'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1alpha1/graphql', json=q,
+                                 headers=headers)
+        assert resp.status_code == 200
+        print(resp.headers)
+        assert ('Set-Cookie' in resp.headers and
+                resp.headers['Set-Cookie'] == 'abcd')
+        res = resp.json()
+        assert res['data']['hello'] == "Hello me"
+
+
 class TestAddRemoteSchemaCompareRootQueryFields:
 
     remote = 'http://localhost:5000/default-value-echo-graphql'

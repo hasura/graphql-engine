@@ -27,6 +27,10 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Context
+import           Hasura.Server.Utils                    (bsToTxt,
+                                                         filterRequestHeaders,
+                                                         filterResponseHeaders)
 
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as VQ
@@ -42,7 +46,7 @@ runGQ
   -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
-  -> m BL.ByteString
+  -> m HResponse
 runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
@@ -104,7 +108,7 @@ runHasuraGQ
   -> UserInfo
   -> SchemaCache
   -> VQ.QueryParts
-  -> m BL.ByteString
+  -> m HResponse
 runHasuraGQ pool isoL userInfo sc queryParts = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- runReaderT (VQ.validateGQ queryParts) gCtx
@@ -112,7 +116,7 @@ runHasuraGQ pool isoL userInfo sc queryParts = do
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx opTy fields
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ encodeGQResp $ GQSuccess resp
+  return $ HResponse (encodeGQResp $ GQSuccess resp) Nothing
   where
     gCtxMap = scGCtxMap sc
     runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
@@ -126,7 +130,7 @@ runRemoteGQ
   -- ^ the raw request string
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
-  -> m BL.ByteString
+  -> m HResponse
 runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
@@ -138,7 +142,9 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
-  return $ resp ^. Wreq.responseBody
+  let respHdrs = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v)) $
+                 filterResponseHeaders $ resp ^. Wreq.responseHeaders
+  return $ HResponse (resp ^. Wreq.responseBody) (Just respHdrs)
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
@@ -147,9 +153,4 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                  userInfoToList userInfo
-    filteredHeaders = flip filter reqHdrs $ \(n, _) ->
-      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-                  , "Accept-Language", "Accept-Datetime"
-                  , "Cache-Control", "Connection", "DNT"
-                  ]
+    filteredHeaders = filterRequestHeaders reqHdrs
