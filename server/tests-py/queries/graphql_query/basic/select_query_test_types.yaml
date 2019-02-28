@@ -37,11 +37,18 @@ response:
       c31_macaddr: '08:00:2b:01:02:03'
       c32_json:
         a: b
+        obj:
+          c1: c2
+        arr: [1,2,3]
+
       c32_json_child_prop: c2
       c32_json_array_item: 1
       c33_jsonb:
         c: d
-      c33_jsonb_child_prop:  e2
+        obj:
+          e1: e2
+        arr: [4,5,6]
+      c33_jsonb_child_prop: e2
       c33_jsonb_array_item: 6
       c34_text_array: ["a","b","c"]
       c35_integer_2d_array:
@@ -97,11 +104,11 @@ query:
         c30_inet
         c31_macaddr
         c32_json
-        c32_json_child_prop: c32_json(path="obj.c1")
-        c32_json_array_item: c32_json(path="obj.arr[0]")
+        c32_json_child_prop: c32_json(path: "obj.c1")
+        c32_json_array_item: c32_json(path: "arr[0]")
         c33_jsonb
-        c33_jsonb_child_prop: c33_jsonb(path="obj.e1")
-        c33_jsonb_array_item: c33_jsonb(path="obj.arr[2]")
+        c33_jsonb_child_prop: c33_jsonb(path: "obj.e1")
+        c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
         c34_text_array
         c35_integer_2d_array
         c36_uuid
