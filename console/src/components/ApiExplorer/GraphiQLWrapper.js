@@ -7,6 +7,7 @@ import {
   graphQLFetcherFinal,
   getRemoteQueries,
 } from './Actions';
+import OneGraphExplorer from './OneGraphExplorer';
 
 import './GraphiQL.css';
 
@@ -92,7 +93,7 @@ class GraphiQLWrapper extends Component {
 
   render() {
     const styles = require('../Common/Common.scss');
-    const { supportAnalyze, analyzeApiChange } = this.state;
+    const { supportAnalyze, analyzeApiChange, queries } = this.state;
     const graphQLFetcher = graphQLParams => {
       if (this.state.headerFocus) {
         return null;
@@ -111,31 +112,33 @@ class GraphiQLWrapper extends Component {
     );
 
     // let content = "fetching schema";
-    let content = (
+    let renderGraphiql = () => (
       <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
     );
 
     if (!this.state.error && this.props.numberOfTables !== 0) {
-      if (this.state.queries) {
-        content = (
+      if (queries) {
+        renderGraphiql = graphiqlProps => (
           <GraphiQL
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
-            query={this.state.queries}
+            query={queries}
+            {...graphiqlProps}
           />
         );
       } else {
-        content = (
+        renderGraphiql = graphiqlProps => (
           <GraphiQL
             fetcher={graphQLFetcher}
             analyzeFetcher={analyzeFetcherInstance}
             supportAnalyze={supportAnalyze}
+            {...graphiqlProps}
           />
         );
       }
     } else if (this.props.numberOfTables === 0) {
-      content = (
+      renderGraphiql = graphiqlProps => (
         <GraphiQL
           fetcher={graphQLFetcher}
           supportAnalyze={supportAnalyze}
@@ -143,12 +146,12 @@ class GraphiQLWrapper extends Component {
           query={
             '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
           }
-          schema={undefined}
+          {...graphiqlProps}
         />
       );
     } else if (this.state.error) {
       // there is an error parsing graphql schema
-      content = <div> Error parsing GraphQL Schema </div>;
+      renderGraphiql = () => <div> Error parsing GraphQL Schema </div>;
     }
 
     return (
@@ -161,7 +164,12 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          {content}
+          <OneGraphExplorer
+            renderGraphiql={renderGraphiql}
+            endpoint={this.props.data.url}
+            headers={this.props.data.headers}
+            query={queries}
+          />
         </div>
       </ErrorBoundary>
     );

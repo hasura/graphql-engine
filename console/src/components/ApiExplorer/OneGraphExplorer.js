@@ -1,0 +1,65 @@
+import React from 'react';
+
+import { getIntrospectionQuery, buildClientSchema } from 'graphql';
+import { getHeadersAsJSON } from './utils';
+import GraphiQLExplorer from 'graphiql-explorer';
+import './GraphiQL.css';
+import 'graphiql/graphiql.css';
+
+class OneGraphExplorer extends React.Component {
+  state = {
+    explorerOpen: false,
+    schema: null,
+    query: this.props.queries,
+  };
+
+  componentDidMount() {
+    const { endpoint, headers } = this.props;
+    fetch(endpoint, {
+      method: 'POST',
+      headers: getHeadersAsJSON(headers || []),
+      body: JSON.stringify({
+        query: getIntrospectionQuery(),
+      }),
+    })
+      .then(response => response.json())
+      .then(result => {
+        this.setState({
+          schema: buildClientSchema(result.data),
+        });
+      });
+  }
+
+  toggleExplorer = () => {
+    this.setState(state => ({
+      explorerOpen: !state.explorerOpen,
+    }));
+  };
+
+  editQuery = query => {
+    this.setState({ query });
+  };
+
+  render() {
+    const { schema, explorerOpen, query } = this.state;
+    const { renderGraphiql } = this.props;
+    return (
+      <div className="graphiql-container">
+        <GraphiQLExplorer
+          schema={schema}
+          query={query}
+          onEdit={this.editQuery}
+          explorerIsOpen={explorerOpen}
+          onToggleExplorer={this.toggleExplorer}
+        />
+        {renderGraphiql({
+          query,
+          schema,
+          onEditQuery: this.editQuery,
+        })}
+      </div>
+    );
+  }
+}
+
+export default OneGraphExplorer;
