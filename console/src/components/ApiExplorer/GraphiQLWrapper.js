@@ -107,7 +107,7 @@ class GraphiQLWrapper extends Component {
 
     const analyzeFetcherInstance = analyzeFetcher(
       this.props.data.url,
-      this.props.data.headerFocus,
+      this.props.data.headers,
       analyzeApiChange
     );
 
