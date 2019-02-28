@@ -9,7 +9,7 @@ import { makeDefaultArg, getDefaultScalarArgValue } from './onegraphUtils';
 
 class OneGraphExplorer extends React.Component {
   state = {
-    explorerOpen: true,
+    explorerOpen: false,
     schema: null,
     query: this.props.query,
   };
@@ -59,7 +59,6 @@ class OneGraphExplorer extends React.Component {
         </div>
         {renderGraphiql({
           query,
-          schema,
           onEditQuery: this.editQuery,
           toggleExplorer: this.toggleExplorer,
         })}
