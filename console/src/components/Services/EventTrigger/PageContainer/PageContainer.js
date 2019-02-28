@@ -4,7 +4,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import { LISTING_TRIGGER } from '../EventActions';
 
@@ -85,7 +85,7 @@ const PageContainer = ({
             type="text"
             onChange={triggerSearch.bind(this)}
             className="form-control"
-            placeholder="search triggers"
+            placeholder="search event triggers"
             data-test="search-triggers"
           />
         </div>
@@ -100,7 +100,7 @@ const PageContainer = ({
               styles.padd_left_remove
             }
           >
-            Triggers ({triggerList.length})
+            Event Triggers ({triggerList.length})
           </div>
           {migrationMode ? (
             <div
@@ -116,7 +116,7 @@ const PageContainer = ({
                 to={'/events/manage/triggers/add'}
               >
                 <Button color="white" size="xs" data-test="sidebar-add-table">
-                  Add Trigger
+                  Add
                 </Button>
               </Link>
             </div>
