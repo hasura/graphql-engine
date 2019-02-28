@@ -7,13 +7,14 @@ export const getTableName = (i, testName = '') =>
 export const getWebhookURL = () => 'http://httpbin.org/post';
 export const getNoOfRetries = () => '5';
 export const getIntervalSeconds = () => '10';
+export const getTimeoutSeconds = () => '25';
 export const getElementFromAlias = alias => `[data-test=${alias}]`;
 export const makeDataAPIUrl = dataApiUrl => `${dataApiUrl}/v1/query`;
 export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   method: 'POST',
   url: makeDataAPIUrl(dataApiUrl),
   headers: {
-    'x-hasura-access-key': key,
+    'x-hasura-admin-secret': key,
   },
   body,
   failOnStatusCode: false,

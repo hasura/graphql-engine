@@ -265,7 +265,7 @@ hr
     word-wrap: break-word;
     .columnListElement {
       float: left;
-      margin-right: 75px;
+      margin-right: 50px;
     }
 
     .toggleAll {
@@ -324,4 +324,7 @@ hr
       }
     }
   }
+}
+.chevron_mar_right {
+  margin-right: 5px;
 }

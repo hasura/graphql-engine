@@ -17,6 +17,9 @@ module Hasura.RQL.Types.Subscribe
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
+
+  , defaultRetryConf
+  , defaultTimeoutSeconds
   ) where
 
 import           Data.Aeson
@@ -58,10 +61,23 @@ data SubscribeOpSpec
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
+defaultNumRetries :: Int
+defaultNumRetries = 0
+
+defaultRetryInterval :: Int
+defaultRetryInterval = 10
+
+defaultTimeoutSeconds:: Int
+defaultTimeoutSeconds = 60
+
+defaultRetryConf :: RetryConf
+defaultRetryConf = RetryConf defaultNumRetries defaultRetryInterval (Just defaultTimeoutSeconds)
+
 data RetryConf
   = RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
+  , rcTimeoutSec  :: !(Maybe Int)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)

@@ -20,13 +20,13 @@ Options
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --down string         apply all or N down migration steps
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-  -h, --help                help for apply
-      --type string         type of migration (up, down) to be used with version flag (default "up")
-      --up string           apply all or N up migration steps
-      --version string      migrate the database to a specific version
+      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --down string           apply all or N down migration steps
+      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                  help for apply
+      --type string           type of migration (up, down) to be used with version flag (default "up")
+      --up string             apply all or N up migration steps
+      --version string        migrate the database to a specific version
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,3 @@
+- args:
+    name: hello_rs
+  type: remove_remote_schema

@@ -63,7 +63,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , InsSetCols
+       , PreSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -200,7 +200,7 @@ data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !InsSetCols
+  , ipiSet             :: !PreSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -223,6 +223,7 @@ data UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpSQL
+  , upiSet             :: !PreSetCols
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 

@@ -244,12 +244,13 @@ updateSelPermFlds rf refQT rn (SelPerm cols fltr limit aggAllwd) = do
     updCols = updateCols refQT rf cols
 
 updateUpdPermFlds :: (MonadTx m, CacheRM m) => PermModifier m UpdPerm
-updateUpdPermFlds rf refQT rn (UpdPerm cols fltr) = do
+updateUpdPermFlds rf refQT rn (UpdPerm cols preset fltr) = do
   updBoolExp <- updateBoolExp refQT rf fltr
   liftTx $ updatePermDefInCatalog PTUpdate refQT rn $
-      UpdPerm updCols updBoolExp
+      UpdPerm updCols updPresetM updBoolExp
   where
     updCols = updateCols refQT rf cols
+    updPresetM = updatePreset refQT rf <$> preset
 
 updateDelPermFlds :: (MonadTx m, CacheRM m) => PermModifier m DelPerm
 updateDelPermFlds rf refQT rn (DelPerm fltr) = do
@@ -258,7 +259,7 @@ updateDelPermFlds rf refQT rn (DelPerm fltr) = do
     DelPerm updBoolExp
 
 updatePreset
-  :: QualifiedTable -> RenameField -> Object -> Object
+  :: QualifiedTable -> RenameField -> ColVals -> ColVals
 updatePreset refQT rf obj =
    case rf of
      RFCol (RenameItem qt oCol nCol) ->
@@ -266,16 +267,15 @@ updatePreset refQT rf obj =
        else obj
      _                              -> obj
 
-updatePreset' :: PGCol -> PGCol -> Object -> Object
+updatePreset' :: PGCol -> PGCol -> ColVals -> ColVals
 updatePreset' oCol nCol obj =
   M.fromList updItems
   where
     updItems= map procObjItem $ M.toList obj
-    procObjItem (k, v) =
-      let pgCol = PGCol k
-          isUpdated = pgCol == oCol
+    procObjItem (pgCol, v) =
+      let isUpdated = pgCol == oCol
           updCol = bool pgCol nCol isUpdated
-      in (getPGColTxt updCol, v)
+      in (PGCol $ getPGColTxt updCol, v)
 
 updateCols
   :: QualifiedTable -> RenameField -> PermColSpec -> PermColSpec

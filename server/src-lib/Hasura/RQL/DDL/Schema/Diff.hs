@@ -17,10 +17,12 @@ module Hasura.RQL.DDL.Schema.Diff
   , fetchFunctionMeta
   , FunctionDiff(..)
   , getFuncDiff
+  , getOverloadedFuncs
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils (duplicates)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
@@ -257,6 +259,7 @@ fetchFunctionMeta = do
       )
     WHERE
       f.function_schema <> 'hdb_catalog'
+    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type
     |] () False
 
 data FunctionDiff
@@ -275,3 +278,11 @@ getFuncDiff oldMeta newMeta =
       let isTypeAltered = fmType oldfm /= fmType newfm
           alteredFunc = (funcFromMeta oldfm, fmType newfm)
       in bool Nothing (Just alteredFunc) isTypeAltered
+
+getOverloadedFuncs
+  :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]
+getOverloadedFuncs trackedFuncs newFuncMeta =
+  duplicates $ map funcFromMeta trackedMeta
+  where
+    trackedMeta = flip filter newFuncMeta $ \fm ->
+      funcFromMeta fm `elem` trackedFuncs

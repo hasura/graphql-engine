@@ -35,16 +35,19 @@ const routes = store => {
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.accessKey) {
+            if (globals.adminSecret) {
               alert('Hasura CLI: ' + r.message);
             } else {
               alert(
-                'Looks like CLI is not configured with the access key. Please configure and try again'
+                `Looks like CLI is not configured with the ${
+                  globals.adminSecretLabel
+                }. Please configure and try again`
               );
             }
           } else {
             alert(
-              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                'instance is running and the endpoint is configured correctly.'
             );
           }
         }

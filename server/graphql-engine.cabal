@@ -146,6 +146,7 @@ library
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
+                     , Hasura.Server.Cors
                      , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry

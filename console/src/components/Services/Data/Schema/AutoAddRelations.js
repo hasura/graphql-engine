@@ -9,7 +9,7 @@ import {
   autoAddRelName,
 } from '../TableRelationships/Actions';
 import { getRelationshipLine } from '../TableRelationships/Relationships';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class AutoAddRelations extends Component {
   trackAllRelations = untrackedData => {
@@ -32,11 +32,11 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
-    const untrackData = untrackedRelations.map(obj => {
+    const untrackData = untrackedRelations.map((obj, i) => {
       return (
         <div
           className={styles.padd_top_medium}
-          key={'untrackedIndiv' + obj.data.tableName}
+          key={`${obj.data.tableName}-${obj.data.rTable}-${i}`}
         >
           <Button
             className={`${styles.display_inline}`}

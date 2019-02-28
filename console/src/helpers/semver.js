@@ -15,6 +15,8 @@ const componentsSemver = {
   permHideUpsertSection: '1.0.0-alpha32',
   customFunctionSection: '1.0.0-alpha36',
   tableColumnRename: '1.0.0-alpha38',
+  triggerRetryTimeout: '1.0.0-alpha38',
+  permUpdatePresets: '1.0.0-alpha38',
 };
 
 const getPreRelease = version => {

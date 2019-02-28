@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   getPlaceholder,
@@ -29,13 +29,12 @@ class EditItem extends Component {
   }
 
   onTextChange = (e, colName) => {
-    const textValue = e.target.value;
-    const tempState = {
-      ...this.state,
-    };
-    tempState.editorColumnMap = { ...this.state.editorColumnMap };
-    tempState.editorColumnMap[colName] = textValue;
-    this.setState({ ...tempState });
+    this.setState({
+      editorColumnMap: {
+        ...this.state.editorColumnMap,
+        [colName]: e.target.value,
+      },
+    });
   };
 
   onModalClose = () => {

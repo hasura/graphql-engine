@@ -30,6 +30,18 @@ import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import Button from '../../Layout/Button/Button';
 import ColumnEditor from './ColumnEditor';
 import semverCheck from '../../../../helpers/semver';
+import {
+  INTEGER,
+  SERIAL,
+  BIGINT,
+  BIGSERIAL,
+  UUID,
+  JSONDTYPE,
+  JSONB,
+  TIMESTAMP,
+  TIME,
+} from '../../../../constants';
+const appPrefix = '/data';
 
 const alterTypeOptions = dataTypes.map((datatype, index) => (
   <option value={datatype.value} key={index} title={datatype.description}>
@@ -70,6 +82,53 @@ class ModifyTable extends React.Component {
       }
     } catch (e) {
       console.error(e);
+    });
+  };
+
+  const modifyAlterOptions = columntype => {
+    const integerOptions = [
+      'integer',
+      'serial',
+      'bigint',
+      'bigserial',
+      'numeric',
+      'text',
+    ];
+    const bigintOptions = ['bigint', 'bigserial', 'text', 'numeric'];
+    const uuidOptions = ['uuid', 'text'];
+    const jsonOptions = ['json', 'jsonb', 'text'];
+    const timestampOptions = ['timestamptz', 'text'];
+    const timeOptions = ['timetz', 'text'];
+    switch (columntype) {
+      case INTEGER:
+        return generateAlterOptions(integerOptions);
+
+      case SERIAL:
+        return generateAlterOptions(integerOptions);
+
+      case BIGINT:
+        return generateAlterOptions(bigintOptions);
+
+      case BIGSERIAL:
+        return generateAlterOptions(bigintOptions);
+
+      case UUID:
+        return generateAlterOptions(uuidOptions);
+
+      case JSONDTYPE:
+        return generateAlterOptions(jsonOptions);
+
+      case JSONB:
+        return generateAlterOptions(jsonOptions);
+
+      case TIMESTAMP:
+        return generateAlterOptions(timestampOptions);
+
+      case TIME:
+        return generateAlterOptions(timeOptions);
+
+      default:
+        return generateAlterOptions([columntype, 'text']);
     }
   };
 
@@ -382,7 +441,7 @@ class ModifyTable extends React.Component {
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div
             className={
-              `col-xs-9 ${styles.padd_left_remove}` +
+              `col-xs-10 ${styles.padd_left_remove}` +
               ' ' +
               styles.modifyMinWidth
             }

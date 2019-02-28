@@ -16,7 +16,7 @@ Install packages
 
 .. code-block:: bash
 
-  npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory
+  npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory subscriptions-transport-ws
 
 Once these packages are installed, import them as follows in the file where you have currently initialised your client
 (usually your ``App.js`` file).

@@ -40,9 +40,6 @@ class Main extends React.Component {
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          this.checkEventsTab().then(() => {
-            this.checkSchemaStitch();
-          });
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -52,10 +49,9 @@ class Main extends React.Component {
           );
           if (isClosedBefore === 'true') {
             isUpdateAvailable = false;
-            this.setState({ ...this.state, showBannerNotification: false });
+            this.setState({ showBannerNotification: false });
           } else {
             this.setState({
-              ...this.state,
               showBannerNotification: isUpdateAvailable,
             });
           }
@@ -63,8 +59,12 @@ class Main extends React.Component {
           console.error(e);
         }
       });
+      this.checkEventsTab().then(() => {
+        this.checkSchemaStitch();
+      });
     });
   }
+
   checkSchemaStitch() {
     const showSchemaStitch = semverCheck(
       'schemaStitching',
@@ -78,7 +78,7 @@ class Main extends React.Component {
   checkEventsTab() {
     const showEvents = semverCheck('eventsTab', this.props.serverVersion);
     if (showEvents) {
-      this.setState({ ...this.state, showEvents: true });
+      this.setState({ showEvents: true });
     }
     return Promise.resolve();
   }
@@ -111,7 +111,7 @@ class Main extends React.Component {
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ ...this.state, showBannerNotification: false });
+    this.setState({ showBannerNotification: false });
   }
 
   render() {
@@ -147,12 +147,12 @@ class Main extends React.Component {
     } else {
       mainContent = children && React.cloneElement(children);
     }
-    let accessKeyHtml = null;
+    let adminSecretHtml = null;
     if (
-      !globals.isAccessKeySet &&
-      (globals.accessKey === '' || globals.accessKey === null)
+      !globals.isAdminSecretSet &&
+      (globals.adminSecret === '' || globals.adminSecret === null)
     ) {
-      accessKeyHtml = (
+      adminSecretHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
             <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
@@ -244,7 +244,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/remote-schemas'}
+                        to={appPrefix + '/remote-schemas/manage/schemas'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -267,7 +267,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/events'}
+                        to={appPrefix + '/events/manage/triggers'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -284,7 +284,7 @@ class Main extends React.Component {
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
-              {accessKeyHtml}
+              {adminSecretHtml}
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   <i className={styles.question + ' fa fa-cog'} />

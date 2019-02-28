@@ -1,7 +1,11 @@
 import React from 'react';
 import Editor from './Editor';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import { setWebhookUrl, setWebhookUrlType } from './Actions';
+import {
+  setWebhookUrl,
+  setWebhookUrlType,
+  showValidationError,
+} from './Actions';
 import Tooltip from './Tooltip';
 
 class WebhookEditor extends React.Component {
@@ -18,7 +22,7 @@ class WebhookEditor extends React.Component {
   };
 
   validateAndSave = () => {
-    const { modifyTrigger } = this.props;
+    const { modifyTrigger, dispatch } = this.props;
     if (modifyTrigger.webhookUrlType === 'url') {
       let tempUrl = false;
       try {
@@ -27,7 +31,7 @@ class WebhookEditor extends React.Component {
         console.error(e);
       }
       if (!tempUrl) {
-        alert('Invalid URL');
+        dispatch(showValidationError('Invalid URL'));
         return;
       }
     }

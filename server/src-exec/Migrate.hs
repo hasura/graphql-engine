@@ -160,7 +160,7 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
           \, DROP COLUMN headers" () False
   where
     uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
-      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint) headers
+      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
                                          UPDATE hdb_catalog.event_triggers
                                          SET

@@ -19,7 +19,7 @@ type hdbVersion struct {
 }
 
 // GetServerState queries a server for the state.
-func GetServerState(endpoint, accessKey string, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
+func GetServerState(endpoint, adminSecret string, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
 	state := &ServerState{
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
@@ -38,7 +38,7 @@ func GetServerState(endpoint, accessKey string, serverVersion *semver.Version, l
 	}`
 	req := gorequest.New()
 	req = req.Post(endpoint + "/v1/query").Send(payload)
-	req.Set("X-Hasura-Access-Key", accessKey)
+	req.Set("X-Hasura-Admin-Secret", adminSecret)
 
 	var r []hdbVersion
 	_, _, errs := req.EndStruct(&r)

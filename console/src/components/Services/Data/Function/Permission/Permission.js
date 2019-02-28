@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Helmet from 'react-helmet';
-import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
@@ -9,6 +9,7 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
+import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -16,11 +17,13 @@ import { fetchCustomFunction } from '../customFunctionReducer';
 
 class Permission extends React.Component {
   componentDidMount() {
-    const { functionName } = this.props.params;
+    const { functionName, schema } = this.props.params;
     if (!functionName) {
       this.props.dispatch(push(prefixUrl));
     }
-    Promise.all([this.props.dispatch(fetchCustomFunction(functionName))]);
+    Promise.all([
+      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+    ]);
   }
   render() {
     const styles = require('../Modify/ModifyCustomFunction.scss');
@@ -28,9 +31,11 @@ class Permission extends React.Component {
       functionSchema: schema,
       functionName,
       setOffTable,
+      setOffTableSchema,
     } = this.props.functions;
+
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${appPrefix}/schema/${schema}/tables/${setOffTable}/permissions`;
+    const permissionTableUrl = `${prefixUrl}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {
@@ -79,12 +84,9 @@ class Permission extends React.Component {
         </p>
         <div className={styles.commonBtn}>
           <Link to={permissionTableUrl}>
-            <button
-              className={styles.yellow_button}
-              data-test={'custom-function-permission-btn'}
-            >
+            <Button color="yellow" data-test={'custom-function-permission-btn'}>
               {`${setOffTable} Permissions`}
-            </button>
+            </Button>
           </Link>
         </div>
       </div>
