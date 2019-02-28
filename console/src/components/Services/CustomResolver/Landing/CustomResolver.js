@@ -7,6 +7,15 @@ import Button from '../../Layout/Button/Button';
 import PopUp from './PopUp';
 
 class CustomResolver extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      isPopUp: false,
+    };
+  }
+  togglePopup() {
+    this.setState({isPopUp : !this.state.isPopUp});
+  }
   render() {
     const styles = require('../Styles.scss');
     const node = require('./Node.svg');
@@ -72,9 +81,11 @@ class CustomResolver extends React.Component {
                   <img className={'img-responsive'} src={glitch} alt={'glitch'} />
                 </div>
                 <button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button>
-                <div onClick={this.handleShow} className={styles.instructions}>
-                  Instructions <img className={'img-responsive'} src={lightGrayArrow} alt={'lightGrayArrow'}/>
-                  <PopUp />
+                <div className={styles.instructions}>
+                  <span onClick = {this.togglePopup.bind(this)}>Instructions <img className={'img-responsive'} src={lightGrayArrow} alt={'lightGrayArrow'}/></span>
+                  { this.state.isPopUp ?
+                    (<PopUp onClose = {this.togglePopup.bind(this)} />)
+                    : null }
                 </div>
               </div>
               <div className={styles.boxSmallWrapper}>

@@ -1,8 +1,21 @@
 @import "../../Common/Common.scss";
+@import "../Layout/ReusableTextAreaWithCopy/style.scss";
 .wd100
 {
   width: 100%;
   float: left;
+}
+.arrowLeft {
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right:8px solid #fff;
+  position: absolute;
+  left: 0;
+  bottom: 20px;
+  left: -7px;
+  bottom: 13px;
 }
 .yellowCircle
 {
@@ -34,6 +47,7 @@
   right: 20px;
   top: 17px;
   z-index: 2;
+  cursor: pointer;
   img
   {
     display: inline-block;
@@ -51,6 +65,7 @@
   z-index: 1;
   border-radius: 10px;
   padding: 20px;
+  cursor: default;
   .descriptionText
   {
     text-align: left;
@@ -65,5 +80,12 @@
     {
       padding-bottom: 0;
     }
+  }
+  .copyGenerated
+  {
+
+  }
+  .copyTooltip .tooltiptext::after {
+    top: 26px !important;
   }
 }

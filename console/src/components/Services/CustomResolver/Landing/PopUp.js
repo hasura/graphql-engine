@@ -1,11 +1,12 @@
 import React from 'react';
 import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import PropTypes from 'prop-types';
 
 class PopUp extends React.Component {
   render() {
     const styles = require('../Popup.scss');
     const close = require('./cancel.svg');
-    const { dispatch, migrationMode } = this.props;
+    const { dispatch, migrationMode, onClose } = this.props;
     const queryDefinition = 'query { hello }';
     return (
       <div className={styles.popupWrapper}>
@@ -13,8 +14,10 @@ class PopUp extends React.Component {
           <div className={styles.descriptionText + ' ' + styles.fontWeightBold + ' ' + styles.addPaddBottom + ' ' + styles.commonBorBottom}>
             Steps to deploy an example GraphQL service to Glitch
           </div>
-          <div className={styles.close}>
+          <div className={styles.close} onClick={ onClose }>
             <img className={'img-responsive'} src={close} alt={'Close'} />
+          </div>
+          <div className={styles.arrowLeft}>
           </div>
           <div className={styles.listItems + ' ' + styles.addPaddTop}>
             <div className={styles.yellowCircle}>
@@ -73,5 +76,7 @@ class PopUp extends React.Component {
     );
   }
 }
-
+PopUp.propTypes = {
+  onClose: PropTypes.func.isRequired,
+};
 export default PopUp;

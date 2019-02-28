@@ -38,12 +38,12 @@ class ReusableTextAreaWithCopy extends React.Component {
   }
   render() {
     const style = require('./style.scss');
-    const { copyText } = this.props;
+    const { copyText, toolTipClass } = this.props;
     return (
       <div className={`${style.codeBlockCustom}`}>
         <div className={`${style.copyGenerated}`}>
           <div className={`${style.copyTooltip}`}>
-            <span className={style.tooltiptext} id="copyCustomFunctionSQL">
+            <span className={toolTipClass ? toolTipClass : style.tooltiptext} id="copyCustomFunctionSQL">
               Copy
             </span>
             <i
@@ -89,6 +89,7 @@ class ReusableTextAreaWithCopy extends React.Component {
 ReusableTextAreaWithCopy.propTypes = {
   copyText: PropTypes.string.isRequired,
   textLanguage: PropTypes.string,
+  isClass: PropTypes.boolean
 };
 
 export default ReusableTextAreaWithCopy;
