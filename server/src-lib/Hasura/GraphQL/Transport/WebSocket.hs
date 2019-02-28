@@ -23,6 +23,7 @@ import qualified Network.WebSockets                          as WS
 import qualified STMContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
+import           Data.ByteString                             (ByteString)
 import qualified Data.IORef                                  as IORef
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
@@ -53,9 +54,15 @@ type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
 
+newtype WsHeaders
+  = WsHeaders { unWsHeaders :: [H.Header] }
+  deriving (Show, Eq)
+
 data WSConnState
-  = CSNotInitialised !(Maybe (H.Header, H.Header)) -- cookie and origin header
+  -- headers from the client for websockets
+  = CSNotInitialised !WsHeaders
   | CSInitError Text
+  -- headers from the client (in conn params) to forward to the remote schema
   | CSInitialised UserInfo [H.Header]
 
 data WSConnData
@@ -130,12 +137,12 @@ onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     checkPath
-    let origin = find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
-    cookie <- maybe (return Nothing) enforceCors $ snd <$> origin
-    return $ (,) <$> cookie <*> origin
+    let reqHdrs = WS.requestHeaders requestHead
+    headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
+    return $ WsHeaders $ filterWsHeaders headers
   either reject accept res
-  where
 
+  where
     keepAliveAction wsConn = forever $ do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
@@ -160,25 +167,32 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
       throw404 "only /v1alpha1/graphql is supported on websockets"
 
-    getCookieHeader =
-      find ((==) "Cookie" . fst) $ WS.requestHeaders requestHead
+    getOrigin =
+      find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
 
-    enforceCors origin =
-      case cpConfig corsPolicy of
-        CCDisabled readCookie ->
-          if readCookie
-          then return getCookieHeader
-          else do
-            liftIO $ logger $ WSLog wsId Nothing EAccepted (Just corsNote)
-            return Nothing
-        CCAllowAll -> return getCookieHeader
-        CCAllowedOrigins ds
-          -- if the origin is in our cors domains, no error
-          | bsToTxt origin `elem` dmFqdns ds   -> return getCookieHeader
-          -- if current origin is part of wildcard domain list, no error
-          | inWildcardList ds (bsToTxt origin) -> return getCookieHeader
-          -- otherwise error
-          | otherwise                          -> corsErr
+    enforceCors :: ByteString -> [H.Header] -> ExceptT QErr IO [H.Header]
+    enforceCors origin reqHdrs = case cpConfig corsPolicy of
+      CCAllowAll -> return reqHdrs
+      CCDisabled readCookie ->
+        if readCookie
+        then return reqHdrs
+        else do
+          liftIO $ logger $ WSLog wsId Nothing EAccepted (Just corsNote)
+          return $ filter (\h -> fst h /= "Cookie") reqHdrs
+      CCAllowedOrigins ds
+        -- if the origin is in our cors domains, no error
+        | bsToTxt origin `elem` dmFqdns ds   -> return reqHdrs
+        -- if current origin is part of wildcard domain list, no error
+        | inWildcardList ds (bsToTxt origin) -> return reqHdrs
+        -- otherwise error
+        | otherwise                          -> corsErr
+
+    filterWsHeaders hdrs = flip filter hdrs $ \(n, _) ->
+      n `notElem` [ "sec-websocket-key"
+                  , "sec-websocket-version"
+                  , "upgrade"
+                  , "connection"
+                  ]
 
     corsErr = throw400 AccessDenied
               "received origin header does not match configured CORS domains"
@@ -187,6 +201,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
             <> "security issue. If you're already handling CORS before Hasura and enforcing "
             <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
+
 
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
@@ -361,19 +376,22 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        CSInitialised userInfo headers
+        CSInitialised userInfo paramHeaders
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
       sendMsg wsConn SMConnKeepAlive
   where
     mkHeaders st =
+      paramHeaders ++ getClientHdrs st
+
+    paramHeaders =
       [ (CI.mk $ TE.encodeUtf8 h, TE.encodeUtf8 v)
       | (h, v) <- maybe [] Map.toList $ connParamsM >>= _cpHeaders
-      ] ++ getCookieAndOrigin st
+      ]
 
-    getCookieAndOrigin st = case st of
-      CSNotInitialised h -> maybe [] (\(c,o) -> [c,o]) h
+    getClientHdrs st = case st of
+      CSNotInitialised h -> unWsHeaders h
       _                  -> []
 
 onClose

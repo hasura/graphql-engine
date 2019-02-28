@@ -31,9 +31,8 @@ class TestWebsocketInitCookie():
 
     def _send_query(self, hge_ctx):
         ws_url = url(hge_ctx)
-        ws = websocket.create_connection(ws_url,
-                                         header={'cookie': 'foo=bar;',
-                                                 'origin': 'example.com'})
+        headers = {'Cookie': 'foo=bar;'}
+        ws = websocket.create_connection(ws_url, header=headers)
         init_payload = {
             'type': 'connection_init',
             'payload': {'headers': {}}
