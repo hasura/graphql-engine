@@ -102,7 +102,7 @@ as follows:
     }
 
 Example: Fuzzy match search functions
-******************************
+*************************************
 
 Let's look at an example of a street address text search with support for misspelled queries.
 
