@@ -7,7 +7,7 @@ import { findAllFromRel } from '../utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
 import AddRelationship from './AddManualRelationship';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import RelationshipEditor from './RelationshipEditor';
 import semverCheck from '../../../../helpers/semver';
 

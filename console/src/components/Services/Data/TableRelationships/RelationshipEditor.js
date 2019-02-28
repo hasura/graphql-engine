@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
 import { getRelationshipLine } from './utils';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';

@@ -20,7 +20,7 @@ import { getRelationshipLine } from './utils';
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import semverCheck from '../../../../helpers/semver';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :

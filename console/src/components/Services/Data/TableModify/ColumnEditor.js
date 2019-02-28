@@ -15,12 +15,12 @@ import {
   BIGINT,
   BIGSERIAL,
   UUID,
-  JSON,
+  JSONDTYPE,
   JSONB,
   TIMESTAMP,
   TIME,
 } from '../../../../constants';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const appPrefix = '/data';
 
@@ -251,7 +251,7 @@ const ColumnEditor = ({
       case UUID:
         return generateAlterOptions(uuidOptions);
 
-      case JSON:
+      case JSONDTYPE:
         return generateAlterOptions(jsonOptions);
 
       case JSONB:
