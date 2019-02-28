@@ -24,18 +24,20 @@ const DataHeader = ({
   dispatch,
 }) => {
   const styles = require('./TableCommon/Table.scss');
+
   const currentLocation = location.pathname;
+
   let migrationSection = null;
   if (globals.consoleMode === 'cli') {
     migrationSection = (
       <li
         role="presentation"
         className={
-          currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
+          currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
         <Link
-          className={styles.sidebarMigration}
+          className={styles.linkBorder}
           to={sectionPrefix + '/migrations'}
         >
           Migrations
@@ -67,35 +69,35 @@ const DataHeader = ({
               <li
                 role="presentation"
                 className={
-                  currentLocation.indexOf('schema') !== -1 ? styles.active : ''
+                  currentLocation.includes('data/schema') ? styles.active : ''
                 }
               >
-                <div className={styles.schemaWrapper}>
-                  <div
-                    className={styles.schemaSidebarSection}
-                    data-test="schema"
-                  >
-                    <Link
-                      className={styles.schemaBorder}
-                      to={sectionPrefix + '/schema'}
+                <Link
+                  className={styles.linkBorder}
+                  to={sectionPrefix + '/schema/' + currentSchema}
+                >
+                  <div className={styles.schemaWrapper}>
+                    <div
+                      className={styles.schemaSidebarSection}
+                      data-test="schema"
                     >
                       Schema:
-                    </Link>
-                    <select
-                      onChange={handleSchemaChange}
-                      className={styles.changeSchema + ' form-control'}
-                    >
-                      {schemaList.map(s => (
-                        <option
-                          key={s.schema_name}
-                          selected={s.schema_name === currentSchema}
-                        >
-                          {s.schema_name}
-                        </option>
-                      ))}
-                    </select>
+                      <select
+                        onChange={handleSchemaChange}
+                        className={styles.changeSchema + ' form-control'}
+                      >
+                        {schemaList.map(s => (
+                          <option
+                            key={s.schema_name}
+                            selected={s.schema_name === currentSchema}
+                          >
+                            {s.schema_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <PageContainer
                   location={location}
                   schema={schema}
@@ -106,11 +108,11 @@ const DataHeader = ({
               <li
                 role="presentation"
                 className={
-                  currentLocation.indexOf('sql') !== -1 ? styles.active : ''
+                  currentLocation.includes('data/sql') ? styles.active : ''
                 }
               >
                 <Link
-                  className={styles.wd100}
+                  className={styles.linkBorder}
                   to={sectionPrefix + '/sql'}
                   data-test="sql-link"
                 >
