@@ -31,7 +31,7 @@ import mainState from './src/components/Main/State';
 import { changeRequestHeader } from './src/components/ApiExplorer/Actions';
 import { validateLogin } from './src/components/Main/Actions';
 
-const filterQueryScss = require('./src/components/Services/Data/TableBrowseRows/FilterQuery.scss');
+const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
 const tableScss = require('./src/components/Services/Data/TableCommon/Table.scss');
 
 // export GraphiQL parts
