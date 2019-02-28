@@ -33,6 +33,13 @@ def pytest_addoption(parser):
         help="Run testcases for CORS configuration"
     )
 
+    parser.addoption(
+        "--test-remote-subs",
+        metavar="<url>",
+        required=False,
+        help="Run testcases for remote schema subscriptions"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -44,7 +51,7 @@ def hge_ctx(request):
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
-    test_cors = request.config.getoption('--test-cors')
+    test_remote = request.config.getoption('--test-remote-subs')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -53,7 +60,8 @@ def hge_ctx(request):
             hge_webhook=hge_webhook,
             webhook_insecure=webhook_insecure,
             hge_jwt_key_file=hge_jwt_key_file,
-            hge_jwt_conf=hge_jwt_conf
+            hge_jwt_conf=hge_jwt_conf,
+            test_remote=test_remote
         )
     except HGECtxError as e:
         pytest.exit(str(e))

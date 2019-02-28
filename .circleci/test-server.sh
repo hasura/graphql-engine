@@ -124,6 +124,36 @@ WH_PID=""
 trap stop_services ERR
 trap stop_services INT
 
+# test remote schema graphql subscriptions
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA SUBSCRIPTIONS ########>\n"
+
+HASURA_RM_SUBS_TEST_DB='postgres://gql_test:@localhost:5432/rem_hge_test'
+echo "Installing psql"
+apt-get update && apt-get install -y postgresql-client
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database rem_hge_test;"
+
+# start another hasura instance as a remote graphql server for subscriptions
+"$GRAPHQL_ENGINE" --database-url "$HASURA_RM_SUBS_TEST_DB" serve \
+                  --server-port 8081 --server-host 0.0.0.0 \
+                  >> "$OUTPUT_FOLDER/remote-graphql-engine.log" 2>&1 & RM_PID=$!
+
+wait_for_port 8081
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-remote-subs="http://localhost:8081" test_remote_subscriptions.py
+
+kill -INT $PID
+kill -INT $RM_PID
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database rem_hge_test;"
+sleep 4
+combine_hpc_reports
+unset HASURA_RM_SUBS_TEST_DB
+
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 
 "$GRAPHQL_ENGINE" serve > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
@@ -273,5 +303,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 
 fi
+
+# end of tests
 
 mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true
