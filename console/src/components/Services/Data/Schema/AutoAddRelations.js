@@ -9,7 +9,7 @@ import {
   autoAddRelName,
 } from '../TableRelationships/Actions';
 import { getRelationshipLine } from '../TableRelationships/Relationships';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class AutoAddRelations extends Component {
   trackAllRelations = untrackedData => {

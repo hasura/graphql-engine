@@ -19,7 +19,7 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {

@@ -1,12 +1,8 @@
 /* Constants */
 
 export const PGTypes = {
-  boolean: [
-    'boolean'
-  ],
-  uuid: [
-    'uuid'
-  ],
+  boolean: ['boolean'],
+  uuid: ['uuid'],
   numeric: [
     'smallint',
     'integer',
@@ -16,36 +12,22 @@ export const PGTypes = {
     'real',
     'double precision',
   ],
-  character: [
-    'character',
-    'character varying',
-    'text'
-  ],
+  character: ['character', 'character varying', 'text'],
   dateTime: [
     'timestamp',
     'timestamp with time zone',
     'date',
     'time',
     'time with time zone',
-    'interval'
+    'interval',
   ],
-  json: [
-    'json',
-    'jsonb'
-  ],
-  postgis: [
-    'geometry',
-  ]
+  json: ['json', 'jsonb'],
+  postgis: ['geometry'],
 };
 
-export const notBoolOperators = [
-  '_not'
-];
+export const notBoolOperators = ['_not'];
 
-export const andOrBoolOperators = [
-  '_and',
-  '_or'
-];
+export const andOrBoolOperators = ['_and', '_or'];
 
 export const genericSimpleColumnOperators = [
   '_eq',
@@ -55,17 +37,12 @@ export const genericSimpleColumnOperators = [
   '_gt',
   '_lt',
   '_gte',
-  '_lte'
+  '_lte',
 ];
 
-export const genericArrayColumnOperators = [
-  '_in',
-  '_nin'
-];
+export const genericArrayColumnOperators = ['_in', '_nin'];
 
-export const genericBoolColumnOperators = [
-  '_is_null'
-];
+export const genericBoolColumnOperators = ['_is_null'];
 
 export const textOnlyColumnOperators = [
   '_like',
@@ -76,10 +53,7 @@ export const textOnlyColumnOperators = [
   '_nsimilar',
 ];
 
-export const jsonColumnOperators = [
-  '_contains',
-  '_contained_in'
-];
+export const jsonColumnOperators = ['_contains', '_contained_in'];
 
 export const topologyColumnOperators = [
   '_st_contains',
@@ -89,11 +63,10 @@ export const topologyColumnOperators = [
   '_st_overlaps',
   '_st_touches',
   '_st_within',
-  '_st_d_within'
+  '_st_d_within',
 ];
 
-export const boolOperators = notBoolOperators
-  .concat(andOrBoolOperators);
+export const boolOperators = notBoolOperators.concat(andOrBoolOperators);
 
 export const columnOperators = genericSimpleColumnOperators
   .concat(genericArrayColumnOperators)
@@ -106,11 +79,11 @@ export const genericOperators = genericSimpleColumnOperators
   .concat(genericArrayColumnOperators)
   .concat(genericBoolColumnOperators);
 
-export const textColumnOperators = genericOperators
-  .concat(textOnlyColumnOperators);
+export const textColumnOperators = genericOperators.concat(
+  textOnlyColumnOperators
+);
 
-export const allOperators = boolOperators
-  .concat(columnOperators);
+export const allOperators = boolOperators.concat(columnOperators);
 
 /* Util functions */
 
@@ -131,9 +104,7 @@ export function isBoolTypeColumnOperator(value) {
 }
 
 export function isJsonTypeColumnOperator(value) {
-  return jsonColumnOperators
-    .concat(topologyColumnOperators)
-    .includes(value);
+  return jsonColumnOperators.concat(topologyColumnOperators).includes(value);
 }
 
 export function isColumnOperator(value) {
@@ -247,7 +218,9 @@ export function getColumnType(columnName, tableSchema) {
     return _columnType;
   }
 
-  const columnSchema = tableSchema.columns.find(_columnSchema => (_columnSchema.column_name === columnName));
+  const columnSchema = tableSchema.columns.find(
+    _columnSchema => _columnSchema.column_name === columnName
+  );
 
   if (columnSchema) {
     _columnType = columnSchema.data_type;

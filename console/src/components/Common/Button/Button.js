@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/Common.scss';
+import styles from '../Common.scss';
 
 /*
   This is a Button HOC that takes al the props supported by <button> and also
