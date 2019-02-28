@@ -4,7 +4,7 @@ import Helmet from 'react-helmet';
 // import PageContainer from '../PageContainer/PageContainer';
 
 const SchemaContainer = ({ children }) => {
-  const styles = require('./SchemaContainer.scss');
+  const styles = require('../../../Common/SchemaContainer.scss');
   return (
     <div className={styles.container + ' container-fluid'}>
       <Helmet title={'Schema | Data | Hasura'} />
