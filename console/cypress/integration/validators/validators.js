@@ -362,9 +362,9 @@ export const validateCTrigger = (triggerName, result) => {
       const trigger = response.body[0];
       expect(trigger.configuration.definition.insert.columns === '*').to.be
         .true;
-      expect(trigger.configuration.definition.update.columns === '*').to.be
+      expect(trigger.configuration.definition.delete.columns === '*').to.be
         .true;
-      expect(trigger.configuration.definition.delete.columns.length === 3).to.be
+      expect(trigger.configuration.definition.update.columns.length === 3).to.be
         .true;
       expect(
         trigger.configuration.retry_conf.interval_sec ===
