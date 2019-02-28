@@ -13,7 +13,7 @@
   width: auto;
   border-radius: 5px;
   // max-height: calc(100% - 60px);
-  overflow: auto;
+  // overflow: auto;
   margin-top: 0px;
   // min-height: calc(100% - 60px);
   position: relative;
@@ -46,12 +46,12 @@
 .schemaPreWrapper
 {
   position: relative;
-  min-height: 72px;
+  min-height: 40px;
 }
 .copyGenerated
 {
   position: absolute;
-  bottom: 15px;
+  bottom: 10px;
   right: 30px;
   cursor: pointer;
   z-index: 100;
@@ -96,7 +96,7 @@
 .copyTooltip .tooltiptext::after {
 	content: "";
 	position: absolute;
-	top: 24px;
+	top: 14px;
 	right: 22px;
 	margin-left: -5px;
 	border-width: 5px;

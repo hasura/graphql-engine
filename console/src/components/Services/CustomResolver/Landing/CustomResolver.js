@@ -1,31 +1,12 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import Modal from 'react-bootstrap/lib/Modal';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../Layout/Button/Button';
-import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import PopUp from './PopUp';
 
 class CustomResolver extends React.Component {
-  constructor() {
-    super();
-
-    this.handleShow = this.handleShow.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-
-    this.state = {
-      show: false,
-    };
-  }
-
-  handleClose() {
-    this.setState({ show: false });
-  }
-
-  handleShow() {
-    this.setState({ show: true });
-  }
   render() {
     const styles = require('../Styles.scss');
     const node = require('./Node.svg');
@@ -42,7 +23,6 @@ class CustomResolver extends React.Component {
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
     const { dispatch, migrationMode } = this.props;
-    const queryDefinition = 'query { hello }';
     return (
       <div
         className={`${styles.padd_left_remove} ${
@@ -94,6 +74,7 @@ class CustomResolver extends React.Component {
                 <button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button>
                 <div onClick={this.handleShow} className={styles.instructions}>
                   Instructions <img className={'img-responsive'} src={lightGrayArrow} alt={'lightGrayArrow'}/>
+                  <PopUp />
                 </div>
               </div>
               <div className={styles.boxSmallWrapper}>
@@ -117,34 +98,6 @@ class CustomResolver extends React.Component {
                 </div>
               </div>
             </div>
-            <Modal show={this.state.show} onHide={this.handleClose}>
-              <Modal.Header closeButton>
-                <Modal.Title>Modal heading</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <div className={styles.listItems}>
-                  <div className={styles.yellowCircle}>
-                  </div>
-                  <div className={styles.descriptionText + ' ' + styles.fontWeightBold}>
-                    Click on “Try it with Glitch”
-                  </div>
-                </div>
-                Woohoo, you're reading this text in a modal!
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={this.handleClose}>
-                  Close
-                </Button>
-                <Button variant="primary" onClick={this.handleClose}>
-                  Save Changes
-                </Button>
-              </Modal.Footer>
-            </Modal>
-            <ReusableTextAreaWithCopy
-              copyText={queryDefinition}
-              textLanguage={'graphql'}
-            />
-
           </div>
           {/*
             <div className={styles.resolverContent}>
