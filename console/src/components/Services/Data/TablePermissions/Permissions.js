@@ -315,40 +315,37 @@ class Permissions extends Component {
       } else {
         const permissions = rolePermissions[role][queryType];
 
-        /* eslint-disable no-fallthrough */
         if (permissions) {
-          let checkColumns = false;
+          let checkColumns;
           let filterKey;
-          switch (queryType) {
-            case 'select':
-            case 'update':
-              checkColumns = true;
-            case 'delete':
-              filterKey = 'filter';
-            case 'insert':
-              filterKey = filterKey || 'check';
 
-              if (JSON.stringify(permissions[filterKey]) === '{}') {
-                if (
-                  checkColumns &&
-                  !permissions.columns.includes('*') &&
-                  permissions.columns.length !== tableSchema.columns.length
-                ) {
-                  _permission = permissionsSymbols.partialAccess;
-                } else {
-                  _permission = permissionsSymbols.fullAccess;
-                }
-              } else {
-                _permission = permissionsSymbols.partialAccess;
-              }
-              break;
-            default:
-              _permission = permissionsSymbols.noAccess;
+          if (queryType === 'select' || queryType === 'update') {
+            checkColumns = true;
+            filterKey = 'filter';
+          } else if (queryType === 'insert') {
+            checkColumns = true;
+            filterKey = 'check';
+          } else if (queryType === 'delete') {
+            checkColumns = false;
+            filterKey = 'filter';
+          }
+
+          if (JSON.stringify(permissions[filterKey]) === '{}') {
+            if (
+              checkColumns &&
+              !permissions.columns.includes('*') &&
+              permissions.columns.length !== tableSchema.columns.length
+            ) {
+              _permission = permissionsSymbols.partialAccess;
+            } else {
+              _permission = permissionsSymbols.fullAccess;
+            }
+          } else {
+            _permission = permissionsSymbols.partialAccess;
           }
         } else {
           _permission = permissionsSymbols.noAccess;
         }
-        /* eslint-enable no-fallthrough */
       }
 
       return _permission;
@@ -357,13 +354,14 @@ class Permissions extends Component {
     const getPermissionsTableRow = (
       tableSchema,
       role,
+      roleList,
       queryTypes,
       permissionsSymbols,
       permsState,
-      isNewPerm
+      newPermRow
     ) => {
       const dispatchOpenEdit = queryType => () => {
-        if (isNewPerm && permsState.newRole !== '') {
+        if (newPermRow && permsState.newRole !== '') {
           dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
         } else if (role !== '') {
           const allowInsertPermColumns = semverCheck(
@@ -393,46 +391,49 @@ class Permissions extends Component {
         dispatch(permSetBulkSelect(isChecked, selectedRole));
       };
 
-      const dispatchDeletePermission = () => {
-        const isConfirm = window.confirm(
-          'Are you sure you want to delete the permission for role ' +
-            role +
-            '?'
-        );
-        if (isConfirm) {
-          dispatch(permRemoveRole(tableSchema, role));
-        }
-      };
+      // const dispatchDeletePermission = () => {
+      //   const isConfirm = window.confirm(
+      //     'Are you sure you want to delete the permission for role ' + role + '?'
+      //   );
+      //   if (isConfirm) {
+      //     dispatch(permRemoveRole(tableSchema, role));
+      //   }
+      // };
 
       const _permissionsRowHtml = [];
       if (role === 'admin' || role === '') {
         _permissionsRowHtml.push(<td key={-1} />);
       } else {
         const bulkSelect = permsState.bulkSelect;
-        const currentInputSelection = (
-          <input
-            onChange={dispatchBulkSelect}
-            checked={bulkSelect.filter(e => e === role).length}
-            data-role={role}
-            className={styles.bulkSelect}
-            type="checkbox"
-          />
-        );
+
+        // const deleteIcon = (
+        //   <i
+        //     onClick={dispatchDeletePermission}
+        //     className={styles.permissionDelete + ' fa fa-close'}
+        //     title="Remove all permissions"
+        //     aria-hidden="true"
+        //   />
+        // );
+
         _permissionsRowHtml.push(
           <td key={-1}>
             <div>
-              {currentInputSelection}
-              <i
-                onClick={dispatchDeletePermission}
-                className={styles.permissionDelete + ' fa fa-trash'}
-                aria-hidden="true"
+              <input
+                onChange={dispatchBulkSelect}
+                checked={bulkSelect.filter(e => e === role).length}
+                data-role={role}
+                title="Select for bulk actions"
+                type="checkbox"
               />
+              {/*{deleteIcon}*/}
             </div>
           </td>
         );
       }
 
-      if (isNewPerm) {
+      if (newPermRow) {
+        const isNewRole = !roleList.includes(permsState.newRole);
+
         _permissionsRowHtml.push(
           <td key={-2}>
             <input
@@ -441,7 +442,7 @@ class Permissions extends Component {
               onChange={dispatchRoleNameChange}
               type="text"
               placeholder="Enter new role"
-              value={permsState.newRole}
+              value={isNewRole ? permsState.newRole : ''}
               data-test="role-textbox"
             />
           </td>
@@ -478,7 +479,7 @@ class Permissions extends Component {
             key={i}
             className={className}
             onClick={onClick}
-            title="Click to edit permissions"
+            title="Edit permissions"
             data-test={`${role}-${queryType}`}
           >
             {getRoleQueryPermission(
@@ -513,6 +514,7 @@ class Permissions extends Component {
             {getPermissionsTableRow(
               tableSchema,
               role,
+              roleList,
               queryTypes,
               permissionsSymbols,
               permsState
@@ -527,6 +529,7 @@ class Permissions extends Component {
           {getPermissionsTableRow(
             tableSchema,
             '',
+            roleList,
             queryTypes,
             permissionsSymbols,
             permsState,
@@ -606,9 +609,9 @@ class Permissions extends Component {
       roleList
     ) => {
       const permissionsSymbols = {
-        fullAccess: <i className="fa fa-check" aria-hidden="true" />,
-        noAccess: <i className="fa fa-times" aria-hidden="true" />,
-        partialAccess: <i className="fa fa-filter" aria-hidden="true" />,
+        fullAccess: <i className={'fa fa-check ' + styles.permissionSymbolFA} aria-hidden="true" />,
+        noAccess: <i className={'fa fa-times ' + styles.permissionSymbolNA} aria-hidden="true" />,
+        partialAccess: <i className={'fa fa-filter ' + styles.permissionSymbolPA} aria-hidden="true" />,
       };
 
       return (
@@ -1770,7 +1773,7 @@ class Permissions extends Component {
           </div>
           <div className={styles.padd_bottom}>
             <Button onClick={handleBulkRemoveClick} color="red" size="sm">
-              Remove Permissions
+              Remove All Permissions
             </Button>
           </div>
         </div>

@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.FileEmbed                         as FE
 #endif
 import qualified Data.HashMap.Strict                    as M
+import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -89,13 +90,14 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
+  { scIsolation     :: Q.TxIsolation
+  , scPGPool        :: Q.PGPool
+  , scLogger        :: L.Logger
+  , scCacheRef      :: IORef SchemaCache
+  , scCacheLock     :: MVar ()
+  , scAuthMode      :: AuthMode
+  , scManager       :: HTTP.Manager
+  , scEnabledAPIs   :: S.HashSet API
   }
 
 data HandlerCtx
@@ -107,6 +109,12 @@ data HandlerCtx
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+
+isMetadataEnabled :: ServerCtx -> Bool
+isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
+
+isGraphQLEnabled :: ServerCtx -> Bool
+isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -289,8 +297,9 @@ mkWaiApp
   -> CorsConfig
   -> Bool
   -> Bool
+  -> S.HashSet API
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry apis = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager pool Q.Serializable buildSchemaCache
@@ -300,7 +309,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTe
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager apis
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
@@ -320,41 +329,45 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when enableConsole serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) tmpltGetOrDeleteH
-    post   ("v1/template" <//> var) tmpltPutOrPostH
-    put    ("v1/template" <//> var) tmpltPutOrPostH
-    delete ("v1/template" <//> var) tmpltGetOrDeleteH
+    when enableMetadata $ do
+      get    ("v1/template" <//> var) tmpltGetOrDeleteH
+      post   ("v1/template" <//> var) tmpltPutOrPostH
+      put    ("v1/template" <//> var) tmpltPutOrPostH
+      delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-    post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
-      query <- parseBody
-      v1QueryHandler query
+      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+        query <- parseBody
+        v1QueryHandler query
 
-    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-      expQuery <- parseBody
-      gqlExplainHandler expQuery
+      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+        mkSpockAction encodeQErr serverCtx $
+        legacyQueryHandler (TableName tableName) queryType
 
-    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
-      query <- parseBody
-      v1Alpha1GQHandler query
+    when enableGraphQL $ do
+      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+        expQuery <- parseBody
+        gqlExplainHandler expQuery
 
-    -- get "v1alpha1/graphql/schema" $
-    --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+        query <- parseBody
+        v1Alpha1GQHandler query
 
-    post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-      mkSpockAction encodeQErr serverCtx $
-      legacyQueryHandler (TableName tableName) queryType
+        -- get "v1alpha1/graphql/schema" $
+        --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
 
-    hookAny GET $ \_ -> do
+    forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError qErr
 
   where
+    enableGraphQL = isGraphQLEnabled serverCtx
+    enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs

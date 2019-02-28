@@ -6,6 +6,7 @@ import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
+import qualified Data.HashSet                 as Set
 import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
@@ -48,6 +49,7 @@ data RawServeOptions
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   , rsoWsReadCookie    :: !Bool
+  , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -63,6 +65,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -83,6 +86,13 @@ data HGECommandG a
   | HCExecute
   | HCVersion
   deriving (Show, Eq)
+
+data API
+  = METADATA
+  | GRAPHQL
+  deriving (Show, Eq, Read, Generic)
+
+instance Hashable API
 
 type HGECommand = HGECommandG ServeOptions
 type RawHGECommand = HGECommandG RawServeOptions
@@ -131,6 +141,9 @@ instance FromEnv Q.TxIsolation where
 instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
 
+instance FromEnv [API] where
+  fromEnv = readAPIs
+
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
   | t `elem` truthVals = Right True
@@ -171,7 +184,7 @@ considerEnv envVar = do
       "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
 considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
-considerEnvs envVars = fmap (foldl1 (<|>)) $ mapM considerEnv envVars
+considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
 withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
@@ -227,9 +240,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
+                     withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry
+                        unAuthRole corsCfg enableConsole enableTelemetry enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -453,6 +468,7 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
+
 wsReadCookieEnv :: (String, String)
 wsReadCookieEnv =
   ( "HASURA_GRAPHQL_WS_READ_COOKIE"
@@ -460,6 +476,12 @@ wsReadCookieEnv =
   ++ " This can be a potential security flaw! Please make sure you know "
   ++ "what you're doing."
   ++ "This configuration is only applicable when CORS is disabled."
+  )
+
+enabledAPIsEnv :: (String, String)
+enabledAPIsEnv =
+  ( "HASURA_GRAPHQL_ENABLED_APIS"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -604,6 +626,13 @@ readHookType tyS =
     "POST" -> Right AHTPost
     _      -> Left "Only expecting GET / POST"
 
+readAPIs :: String -> Either String [API]
+readAPIs = mapM readAPI . T.splitOn "," . T.pack
+  where readAPI si = case T.toUpper $ T.strip si of
+          "METADATA" -> Right METADATA
+          "GRAPHQL"  -> Right GRAPHQL
+          _          -> Left "Only expecting list of comma separated API types metadata / graphql"
+
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
   AuthHookG <$> url <*> urlType
@@ -642,7 +671,7 @@ parseUnAuthRole = optional $
                         )
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
-parseCorsConfig = mapCC <$> disableCors <*> corsDomain -- <*> wsReadCookie
+parseCorsConfig = mapCC <$> disableCors <*> corsDomain
   where
     corsDomain = optional $
       option (eitherReader readCorsDomains)
@@ -654,12 +683,7 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain -- <*> wsReadCookie
     disableCors =
       switch ( long "disable-cors" <>
                help "Disable CORS. Do not send any CORS headers on any request"
-             ) -- *> wsReadCookie
-
-    -- wsReadCookie =
-    --   switch ( long "ws-read-cookie" <>
-    --            help (snd wsReadCookieEnv)
-    --          )
+             )
 
     mapCC isDisabled domains =
       bool domains (Just $ CCDisabled False) isDisabled
@@ -681,6 +705,13 @@ parseWsReadCookie :: Parser Bool
 parseWsReadCookie =
   switch ( long "ws-read-cookie" <>
            help (snd wsReadCookieEnv)
+         )
+
+parseEnabledAPIs :: Parser (Maybe [API])
+parseEnabledAPIs = optional $
+  option (eitherReader readAPIs)
+         ( long "enabled-apis" <>
+           help (snd enabledAPIsEnv)
          )
 
 -- Init logging related
