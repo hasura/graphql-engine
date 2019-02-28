@@ -6,7 +6,7 @@ import 'brace/mode/sql';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Toggle from 'react-toggle';
-import { updateMigrationModeStatus } from '../../../Main/Actions';
+import { updateMigrationModeStatus } from '../../Main/Actions';
 import './ReactToggle.css';
 
 const migrationTip = (

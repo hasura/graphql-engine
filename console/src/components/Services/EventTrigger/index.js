@@ -12,4 +12,4 @@ export runningEventsConnector from './RunningEvents/ViewTable';
 export streamingLogsConnector from './StreamingLogs/Logs';
 export schemaConnector from './Schema/Schema';
 export schemaContainerConnector from './Schema/SchemaContainer';
-export migrationsConnector from './Migrations/MigrationsHome';
+export migrationsConnector from '../../Common/Migrations/MigrationsHome';
