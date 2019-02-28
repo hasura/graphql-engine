@@ -75,8 +75,9 @@ class App extends Component {
           className={styles.alertDanger + ' alert alert-danger'}
         >
           <strong>
-            Hasura console is not able to reach your Hasura GraphQL engine instance.
-            Please ensure that your instance is running and the endpoint is configured correctly.
+            Hasura console is not able to reach your Hasura GraphQL engine
+            instance. Please ensure that your instance is running and the
+            endpoint is configured correctly.
           </strong>
         </div>
       );

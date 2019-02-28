@@ -26,9 +26,7 @@ class QueryBuilderJson extends React.Component {
     const wrapSquareBrackets = value => {
       return (
         <span>
-          [
-          <div className={styles.qb_nested}>{value}</div>
-          ]
+          [<div className={styles.qb_nested}>{value}</div>]
         </span>
       );
     };

@@ -2,14 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import DropdownButton from './DropdownButton';
+import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import {
   inputChange,
   UPDATE_FORWARD_CLIENT_HEADERS,
 } from '../Add/addResolverReducer';
 
-import CommonHeader from '../../Layout/ReusableHeader/Header';
+import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 
 const graphqlurl = (
   <Tooltip id="tooltip-cascade">

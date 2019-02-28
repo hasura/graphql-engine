@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   removeHeader,
@@ -233,7 +233,7 @@ class AddTrigger extends Component {
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -476,7 +476,7 @@ class AddTrigger extends Component {
       >
         <Helmet title="Add Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>Add a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />

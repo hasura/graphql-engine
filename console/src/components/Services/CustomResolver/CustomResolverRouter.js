@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Route, IndexRedirect, Link } from 'react-router';
-import { layoutConnector, rightBar } from '../Layout';
+import { layoutConnector, rightBar } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
   landingCustomResolverGen,

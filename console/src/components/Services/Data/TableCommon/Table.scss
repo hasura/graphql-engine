@@ -15,7 +15,6 @@
 }
 
 .schemaWrapper {
-  background: #FFF3D5;
   width: 100%;
   .schemaSidebarSection {
     display: inline-block;
@@ -198,9 +197,4 @@ a.expanded {
 .tableCellCenterAlignedExpanded {
   text-align: center;
   white-space: normal;
-}
-
-.sidebarMigration {
-  display: block !important;
-  clear: both !important;
 }

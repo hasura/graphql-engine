@@ -39,7 +39,7 @@ class DropButton extends React.Component {
               onClick={onButtonChange}
               eventKey={i + 1}
               key={i}
-              data-test={testId + '-' + 'dropdown-item'}
+              data-test={testId + '-' + 'dropdown-item' + '-' + (i + 1)}
             >
               {d.display_text}
             </MenuItem>
