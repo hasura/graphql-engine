@@ -455,7 +455,9 @@ const applySamePermissionsBulk = tableSchema => {
     const table = tableSchema.table_name;
     const currentQueryType = permissionsState.query;
     const toBeAppliedPermission = permissionsState[currentQueryType];
-    const selectedRoles = permissionsState.applySamePermissions.concat([permissionsState.role]);
+    const selectedRoles = permissionsState.applySamePermissions.concat([
+      permissionsState.role,
+    ]);
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -469,7 +471,10 @@ const applySamePermissionsBulk = tableSchema => {
         return el.role_name === role;
       });
 
-      if (currentRolePermission && currentRolePermission.permissions[currentQueryType]) {
+      if (
+        currentRolePermission &&
+        currentRolePermission.permissions[currentQueryType]
+      ) {
         // existing permission is there. so drop and recreate.
         const deleteQuery = {
           type: 'drop_' + currentQueryType + '_permission',

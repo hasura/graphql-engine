@@ -36,10 +36,7 @@ const DataHeader = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link
-          className={styles.linkBorder}
-          to={sectionPrefix + '/migrations'}
-        >
+        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
           Migrations
         </Link>
       </li>

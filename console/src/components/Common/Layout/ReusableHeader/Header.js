@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { generateHeaderSyms } from './HeaderReducer';
-import DropdownButton from '../../CustomResolver/Common/DropdownButton';
+import DropdownButton from '../../DropdownButton/DropdownButton';
 
 class Header extends React.Component {
   constructor(props) {

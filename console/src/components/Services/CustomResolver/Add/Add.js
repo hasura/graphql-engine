@@ -3,7 +3,7 @@ import Common from '../Common/Common';
 
 import { addResolver, RESET } from './addResolverReducer';
 import Helmet from 'react-helmet';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import { pageTitle } from '../constants';
 
