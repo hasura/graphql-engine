@@ -80,6 +80,12 @@ The fastest way to try Hasura out is via Heroku.
 
 ### Other deployment methods
 
+Check out the instructions for the following one-click deployment options:
+
+[![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app)
+
+[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)
+
 For Docker-based deployment and advanced configuration options, see [deployment
 guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
 [install manifests](install-manifests).
