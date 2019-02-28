@@ -24,7 +24,6 @@ import qualified STMContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 import qualified Data.IORef                                  as IORef
-import           Hasura.Server.Context
 
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
@@ -198,8 +197,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           withComplete $ sendConnErr "subscription to remote server is not supported"
         resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
                              msgRaw rsi opDef
-        -- ignore headers when sending response on websocket
-        either postExecErr sendSuccResp (_hrBody <$> resp)
+        either postExecErr sendSuccResp resp
         sendCompleted
 
   where

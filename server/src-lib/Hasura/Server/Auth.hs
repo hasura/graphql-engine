@@ -219,7 +219,12 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
         (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"
 
-    filteredHeaders = filterRequestHeaders reqHeaders
+    filteredHeaders = flip filter reqHeaders $ \(n, _) ->
+      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+                  , "Accept-Language", "Accept-Datetime"
+                  , "Cache-Control", "Connection", "DNT"
+                  ]
 
 
 getUserInfo
@@ -236,7 +241,7 @@ getUserInfo logger manager rawHeaders = \case
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
       Just givenAdminScrt -> userInfoWhenAdminSecret adminScrt givenAdminScrt
-      Nothing             -> userInfoWhenNoAdminSecret unAuthRole
+      Nothing          -> userInfoWhenNoAdminSecret unAuthRole
 
   AMAdminSecretAndHook accKey hook ->
     whenAdminSecretAbsent accKey (userInfoFromAuthHook logger manager hook rawHeaders)

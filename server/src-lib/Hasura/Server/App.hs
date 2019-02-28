@@ -43,7 +43,6 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
@@ -147,12 +146,11 @@ logError
 logError userInfoM req reqBody sc qErr =
   logResult userInfoM req reqBody sc (Left qErr) Nothing
 
-
 mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
   -> ServerCtx
-  -> Handler HResponse
+  -> Handler BL.ByteString
   -> ActionT m ()
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
@@ -171,8 +169,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx (_hrBody <$> result) $
-    Just (t1, t2)
+  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
 
   where
@@ -187,9 +184,8 @@ mkSpockAction qErrEncoder serverCtx handler = do
       logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
-    resToResp (HResponse resp mHdrs) = do
+    resToResp resp = do
       uncurry setHeader jsonHeader
-      onJust mHdrs $ mapM_ (uncurry setHeader . unHeader)
       lazyBytes resp
 
 withLock :: (MonadIO m, MonadError e m)
@@ -204,12 +200,11 @@ withLock lk action = do
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
-v1QueryHandler :: RQLQuery -> Handler HResponse
+v1QueryHandler :: RQLQuery -> Handler BL.ByteString
 v1QueryHandler query = do
   lk <- scCacheLock . hcServerCtx <$> ask
-  res <- bool (fst <$> dbAction) (withLock lk dbActionReload) $
+  bool (fst <$> dbAction) (withLock lk dbActionReload) $
     queryNeedsReload query
-  return $ HResponse res Nothing
   where
     -- Hit postgres
     dbAction = do
@@ -235,7 +230,7 @@ v1QueryHandler query = do
       liftIO $ writeIORef scRef newSc'
       return resp
 
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler HResponse
+v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
@@ -247,15 +242,14 @@ v1Alpha1GQHandler query = do
   isoL <- scIsolation . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo sc manager reqHeaders query reqBody
 
-gqlExplainHandler :: GE.GQLExplain -> Handler HResponse
+gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
   sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  res <- GE.explainGQLQuery pool isoL sc query
-  return $ HResponse res Nothing
+  GE.explainGQLQuery pool isoL sc query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -277,7 +271,7 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler HResponse
+legacyQueryHandler :: TableName -> T.Text -> Handler BL.ByteString
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
