@@ -15,7 +15,6 @@
 }
 
 .schemaWrapper {
-  background: #FFF3D5;
   width: 100%;
   .schemaSidebarSection {
     display: inline-block;
@@ -188,9 +187,4 @@ a.expanded {
 
 .tableCellExpanded {
   white-space: normal;
-}
-
-.sidebarMigration {
-  display: block !important;
-  clear: both !important;
 }

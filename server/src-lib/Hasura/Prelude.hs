@@ -1,5 +1,8 @@
 module Hasura.Prelude
   ( module M
+  , onNothing
+  , onJust
+  , onLeft
   ) where
 
 import           Control.Applicative    as M ((<|>))
@@ -28,3 +31,15 @@ import           Data.Word              as M (Word64)
 import           GHC.Generics           as M (Generic)
 import           Prelude                as M hiding (fail, init, lookup)
 import           Text.Read              as M (readEither, readMaybe)
+
+onNothing :: (Monad m) => Maybe a -> m a -> m a
+onNothing m act = maybe act return m
+
+onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+onJust m action = maybe (return ()) action m
+
+onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
+onLeft e f = either f return e
+
+
+
