@@ -5,6 +5,7 @@ import {
   getWebhookURL,
   getNoOfRetries,
   getIntervalSeconds,
+  getTimeoutSeconds,
   baseUrl,
 } from '../../../helpers/eventHelpers';
 import { getColName } from '../../../helpers/dataHelpers';
@@ -91,6 +92,7 @@ export const passCT = () => {
   // retry configuration
   cy.get(getElementFromAlias('no-of-retries')).type(getNoOfRetries());
   cy.get(getElementFromAlias('interval-seconds')).type(getIntervalSeconds());
+  cy.get(getElementFromAlias('timeout-seconds')).type(getTimeoutSeconds());
 
   //  Click on create
   cy.get(getElementFromAlias('trigger-create')).click();
@@ -163,7 +165,7 @@ export const deleteCTTestTrigger = () => {
   //  Match the URL
   cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
   //  Validate
-  validateCTrigger(getTriggerName(0, testName), 'success');
+  validateCTrigger(getTriggerName(0, testName), 'failure');
 };
 
 export const deleteCTTestTable = () => {

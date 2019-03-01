@@ -36,10 +36,22 @@ Edit ``deployment.yaml`` and set the right database url:
       value: postgres://username:password@hostname:port/dbname
   ...
 
-Examples of ``database-url``:
+Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
 
 - ``postgres://admin:password@localhost:5432/my-db``
 - ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
+
+.. note::
+
+  - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
+    ``HASURA_GRAPHQL_DATABASE_URL`` env var (e.g. %40 for @).
+
+    You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
+    to connect to the database.
+
+  - Hasura GraphQL engine needs access permissions to your Postgres database as described in
+    :doc:`Postgres permissions <../postgres-permissions>`
+
 
 Step 3: Create the Kubernetes deployment and service
 ----------------------------------------------------

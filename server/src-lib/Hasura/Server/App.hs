@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.FileEmbed                         as FE
 #endif
 import qualified Data.HashMap.Strict                    as M
+import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -43,10 +44,10 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Middleware               (corsMiddleware,
-                                                         mkDefaultCorsPolicy)
+import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -55,9 +56,12 @@ import           Hasura.SQL.Types
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
-isAccessKeySet :: AuthMode -> T.Text
-isAccessKeySet AMNoAuth = "false"
-isAccessKeySet _        = "true"
+boolToText :: Bool -> T.Text
+boolToText = bool "false" "true"
+
+isAdminSecretSet :: AuthMode -> T.Text
+isAdminSecretSet AMNoAuth = boolToText False
+isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
 consoleAssetsLoc :: Text
@@ -68,14 +72,15 @@ consoleAssetsLoc =
   "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
 #endif
 
-mkConsoleHTML :: T.Text -> AuthMode -> Either String T.Text
-mkConsoleHTML path authMode =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
                   object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAccessKeySet" .= isAccessKeySet authMode
+                         , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
+                         , "enableTelemetry" .= boolToText enableTelemetry
                          ]
     consolePath = case path of
       "" -> "/console"
@@ -85,13 +90,14 @@ mkConsoleHTML path authMode =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation :: Q.TxIsolation
-  , scPGPool    :: Q.PGPool
-  , scLogger    :: L.Logger
-  , scCacheRef  :: IORef SchemaCache
-  , scCacheLock :: MVar ()
-  , scAuthMode  :: AuthMode
-  , scManager   :: HTTP.Manager
+  { scIsolation     :: Q.TxIsolation
+  , scPGPool        :: Q.PGPool
+  , scLogger        :: L.Logger
+  , scCacheRef      :: IORef SchemaCache
+  , scCacheLock     :: MVar ()
+  , scAuthMode      :: AuthMode
+  , scManager       :: HTTP.Manager
+  , scEnabledAPIs   :: S.HashSet API
   }
 
 data HandlerCtx
@@ -103,6 +109,12 @@ data HandlerCtx
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+
+isMetadataEnabled :: ServerCtx -> Bool
+isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
+
+isGraphQLEnabled :: ServerCtx -> Bool
+isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -218,7 +230,7 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc)
+      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
       (mergedGCtxMap, defGCtx) <-
         mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
       let newSc' =
@@ -273,7 +285,7 @@ legacyQueryHandler tn queryType =
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
     Nothing          -> throw404 "No such resource exists"
   where
-    qt = QualifiedTable publicSchema tn
+    qt = QualifiedObject publicSchema tn
 
 
 mkWaiApp
@@ -284,23 +296,23 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Bool
+  -> S.HashSet API
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
+mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole enableTelemetry apis = do
     cacheRef <- do
-      pgResp <- runExceptT $
-        peelRun emptySchemaCache adminUserInfo httpManager pool Q.Serializable $ do
-        liftTx $ Q.catchE defaultTxErrorHandler initStateTx
-        buildSchemaCache
+      pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
+                httpManager pool Q.Serializable buildSchemaCache
       either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager
+          cacheLock mode httpManager apis
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole
+                httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
 
@@ -308,48 +320,52 @@ mkWaiApp isoLevel loggerCtx pool httpManager mode corsCfg enableConsole = do
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- cors middleware
-    unless (ccDisabled corsCfg) $
-      middleware $ corsMiddleware (mkDefaultCorsPolicy $ ccDomain corsCfg)
+    unless (isCorsDisabled corsCfg) $
+      middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when enableConsole serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) tmpltGetOrDeleteH
-    post   ("v1/template" <//> var) tmpltPutOrPostH
-    put    ("v1/template" <//> var) tmpltPutOrPostH
-    delete ("v1/template" <//> var) tmpltGetOrDeleteH
+    when enableMetadata $ do
+      get    ("v1/template" <//> var) tmpltGetOrDeleteH
+      post   ("v1/template" <//> var) tmpltPutOrPostH
+      put    ("v1/template" <//> var) tmpltPutOrPostH
+      delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-    post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
-      query <- parseBody
-      v1QueryHandler query
+      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+        query <- parseBody
+        v1QueryHandler query
 
-    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-      expQuery <- parseBody
-      gqlExplainHandler expQuery
+      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+        mkSpockAction encodeQErr serverCtx $
+        legacyQueryHandler (TableName tableName) queryType
 
-    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
-      query <- parseBody
-      v1Alpha1GQHandler query
+    when enableGraphQL $ do
+      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+        expQuery <- parseBody
+        gqlExplainHandler expQuery
 
-    -- get "v1alpha1/graphql/schema" $
-    --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+        query <- parseBody
+        v1Alpha1GQHandler query
 
-    post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-      mkSpockAction encodeQErr serverCtx $
-      legacyQueryHandler (TableName tableName) queryType
+        -- get "v1alpha1/graphql/schema" $
+        --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
 
-    hookAny GET $ \_ -> do
+    forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError qErr
 
   where
+    enableGraphQL = isGraphQLEnabled serverCtx
+    enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
@@ -381,7 +397,7 @@ httpApp corsCfg serverCtx enableConsole = do
       get root $ redirect "console"
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path $ scAuthMode serverCtx
+          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry
 
 #ifdef LocalConsole
       get "static/main.js" $ do

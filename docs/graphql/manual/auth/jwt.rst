@@ -24,11 +24,11 @@ If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 is used for the permissions system.
 
 .. note::
-   Configuring JWT requires Hasura to run with an access key (``--access-key``).
+   Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
 
-   - The authorization is **enforced** when ``X-Hasura-Access-Key`` header is
+   - The authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
-   - The authorization is **skipped** when ``X-Hasura-Access-Key`` header **is
+   - The authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
      found** in the request.
 
 ..   :doc:`Read more<config>`.
@@ -111,9 +111,7 @@ Configuring JWT mode
 
 You can enable JWT mode by using the ``--jwt-secret`` flag or
 ``HASURA_GRAPHQL_JWT_SECRET`` environment variable; the value of which is a
-JSON.
-
-The JSON is:
+JSON object:
 
 .. code-block:: json
 
@@ -121,10 +119,11 @@ The JSON is:
      "type": "<standard-JWT-algorithms>",
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
-     "claims_namespace": "<optional-key-name-in-claims>"
+     "claims_namespace": "<optional-key-name-in-claims>",
+     "claims_format": "json|stringified_json"
    }
 
-``key`` or ``jwk_url``, either of them has to be present.
+``key`` or ``jwk_url``, **one of them has to be present**.
 
 ``type``
 ^^^^^^^^
@@ -175,6 +174,55 @@ This is an optional field. You can specify the key name
 inside which the Hasura specific claims will be present. E.g. - ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
+
+
+``claims_format``
+^^^^^^^^^^^^^^^^^^
+This is an optional field, with only the following possible values:
+- ``json``
+- ``stringified_json``
+
+Default is ``json``.
+
+This is to indicate that if the hasura specific claims are a regular JSON object
+or stringified JSON
+
+This is required because providers like AWS Cognito only allows strings in the
+JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
+
+Example:-
+
+If ``claims_format`` is ``json`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["editor","user", "mod"],
+      "x-hasura-default-role": "user",
+      "x-hasura-user-id": "1234567890",
+      "x-hasura-org-id": "123",
+      "x-hasura-custom": "custom-value"
+    }
+  }
+
+
+If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
+  }
+
 
 Examples
 ^^^^^^^^
@@ -237,7 +285,7 @@ Using the flag:
       graphql-engine \
       --database-url postgres://username:password@hostname:port/dbname \
       serve \
-      --access-key mysecretkey \
+      --admin-secret myadminsecretkey \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -245,7 +293,7 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ACCESS_KEY="mysecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \

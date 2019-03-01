@@ -33,6 +33,21 @@ export const permNoCheck = (tableName, query, first) => {
       .contains('Toggle all')
       .click();
   }
+  if (query === 'insert' || query === 'update') {
+    cy.get(getElementFromAlias('toggle-column-presets')).click();
+    cy.get(getElementFromAlias('column-presets-column-0')).select(
+      getColName(0)
+    );
+    cy.get(getElementFromAlias('column-presets-type-0')).select('static');
+    cy.get(getElementFromAlias('column-presets-value-0'))
+      .type('1')
+      .blur();
+    cy.get(getElementFromAlias('column-presets-column-1')).select(
+      getColName(1)
+    );
+    cy.get(getElementFromAlias('column-presets-type-1')).select('session');
+    cy.get(getElementFromAlias('column-presets-value-1')).type('user-id');
+  }
   // Save
   savePermission();
   // Validate
@@ -45,9 +60,11 @@ export const permCustomCheck = (tableName, query) => {
   // check the without checks textbox
   cy.get(getElementFromAlias('custom-check')).click();
   // Select column
-  cy.get('select').select(getColName(0));
+  cy.get(getElementFromAlias('qb-select'))
+    .first()
+    .select(getColName(0));
   // Select operator
-  cy.get('select')
+  cy.get(getElementFromAlias('qb-select'))
     .last()
     .select(`${getColName(0)}._eq`);
   // Set filter to 1
@@ -122,7 +139,7 @@ export const createView = (viewName, tableName) => {
     const { __env } = win;
     const requestOptions = makeDataAPIOptions(
       __env.dataApiUrl,
-      __env.accessKey,
+      __env.adminSecret,
       reqBody
     );
     cy.request(requestOptions);

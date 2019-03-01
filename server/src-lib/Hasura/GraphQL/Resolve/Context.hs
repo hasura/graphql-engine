@@ -1,10 +1,13 @@
 module Hasura.GraphQL.Resolve.Context
   ( FieldMap
   , RelationInfoMap
+  , FuncArgItem(..)
   , OrdByCtx
   , OrdByItemMap
   , OrdByItem(..)
-  , UpdPermForIns
+  , FuncArgSeq
+  , PGColArgMap
+  , UpdPermForIns(..)
   , InsCtx(..)
   , InsCtxMap
   , RespTx

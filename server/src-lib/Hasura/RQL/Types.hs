@@ -51,6 +51,7 @@ import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
 import           Hasura.RQL.Types.Subscribe    as R
+
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC

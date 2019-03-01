@@ -17,6 +17,9 @@ module Hasura.RQL.Types.Subscribe
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
+
+  , defaultRetryConf
+  , defaultTimeoutSeconds
   ) where
 
 import           Data.Aeson
@@ -58,10 +61,23 @@ data SubscribeOpSpec
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
+defaultNumRetries :: Int
+defaultNumRetries = 0
+
+defaultRetryInterval :: Int
+defaultRetryInterval = 10
+
+defaultTimeoutSeconds:: Int
+defaultTimeoutSeconds = 60
+
+defaultRetryConf :: RetryConf
+defaultRetryConf = RetryConf defaultNumRetries defaultRetryInterval (Just defaultTimeoutSeconds)
+
 data RetryConf
   = RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
+  , rcTimeoutSec  :: !(Maybe Int)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
@@ -122,7 +138,7 @@ instance FromJSON CreateEventTriggerQuery where
       else fail "only alphanumeric and underscore and hyphens allowed for name"
     case insert <|> update <|> delete of
       Just _  -> return ()
-      Nothing -> fail "must provide operation spec(s)"
+      Nothing -> fail "at least one among the insert/update/delete operation specs must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()

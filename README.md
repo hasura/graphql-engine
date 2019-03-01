@@ -194,9 +194,7 @@ License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). We have
 written more about what you can and cannot do under AGPL
 [here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
 
-**Commercial licenses** that bundle the Hasura GraphQL Engine with support and
-SLAs are available on request. Please feel free to contact us at build@hasura.io
-or on our [website chat](https://hasura.io). 
+**Commercial licenses** are available on request, if you do not wish to use the Hasura GraphQL Engine under the AGPL license. Typically, they come bundled with support plans and SLAs. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).

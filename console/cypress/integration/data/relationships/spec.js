@@ -9,9 +9,8 @@ import {
 const delRel = (table, relname) => {
   cy.get(getElementFromAlias(table)).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get(getElementFromAlias(`remove-button-${relname}`))
-    .first()
-    .click();
+  cy.get(getElementFromAlias(`relationship-toggle-editor-${relname}`)).click();
+  cy.get(getElementFromAlias(`relationship-remove-${relname}`)).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
@@ -172,9 +171,11 @@ export const passRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('author');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('author');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
@@ -183,9 +184,38 @@ export const passRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('arr-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('comments');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('comments');
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments', columns: ['comment'] }],
+    'success'
+  );
+};
+
+export const passRTRenameRelationship = () => {
+  cy.get(getElementFromAlias('relationship-toggle-editor-comments')).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments'))
+    .clear()
+    .type('comments_renamed');
+  cy.get(getElementFromAlias('relationship-save-comments')).click();
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments_renamed', columns: ['comment'] }],
+    'success'
+  );
+  cy.get(
+    getElementFromAlias('relationship-toggle-editor-comments_renamed')
+  ).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments_renamed'))
+    .clear()
+    .type('comments');
+  cy.get(getElementFromAlias('relationship-save-comments_renamed')).click();
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
@@ -197,10 +227,13 @@ export const failRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
+  cy.get(getElementFromAlias('suggested-rel-name')).clear();
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   // cy.get('.notification-error');
   cy.wait(15000);
-  cy.get(getElementFromAlias('suggested-rel-name')).type(123123);
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type(123123);
   cy.get('button')
     .contains('Save')
     .click();
@@ -214,7 +247,9 @@ export const failRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('author');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('author');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   cy.wait(15000);
   validateColumn(
@@ -225,7 +260,9 @@ export const failRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('arr-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name')).type('author');
+  cy.get(getElementFromAlias('suggested-rel-name'))
+    .clear()
+    .type('author');
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
   cy.wait(15000);
   // cy.get('.notification-error');

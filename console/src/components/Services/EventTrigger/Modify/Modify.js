@@ -25,7 +25,7 @@ class Modify extends React.Component {
       triggerList,
       migrationMode,
       dispatch,
-      allSchemas,
+      tableSchemas,
     } = this.props;
 
     const currentTrigger = triggerList.find(
@@ -45,8 +45,10 @@ class Modify extends React.Component {
       retry_conf,
     } = currentTrigger.configuration;
 
-    const currentTableSchema = allSchemas.find(
-      tableSchema => tableSchema.table_name === currentTrigger.table_name
+    const currentTableSchema = tableSchemas.find(
+      tableSchema =>
+        tableSchema.table_name === currentTrigger.table_name &&
+        tableSchema.table_schema === currentTrigger.schema_name
     );
 
     return (
@@ -89,6 +91,7 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             styles={styles}
             save={() => dispatch(save('retry', modifyTriggerName))}
+            serverVersion={this.props.serverVersion}
             dispatch={dispatch}
           />
           <HeadersEditor

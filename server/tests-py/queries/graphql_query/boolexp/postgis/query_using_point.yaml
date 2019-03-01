@@ -1,0 +1,55 @@
+description: Query data from geom_table using postgis ops in bool exp and point value as input argument
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    st_contains:
+    - id: 1
+      type: point
+      geom_col:
+        type: Point
+        coordinates:
+        - 1
+        - 2
+    - id: 2
+      type: linestring
+      geom_col:
+        type: LineString
+        coordinates:
+        - - 0
+          - 0
+        - - 0.5
+          - 1
+        - - 1
+          - 2
+        - - 1.5
+          - 3
+    st_equals:
+    - id: 1
+      type: point
+      geom_col:
+        type: Point
+        coordinates:
+        - 1
+        - 2
+
+query:
+  variables:
+    point:
+      type: Point
+      coordinates:
+      - 1
+      - 2
+  query: |
+    query geom_table($point: geometry){
+      st_contains: geom_table(where: {geom_col: {_st_contains: $point}}){
+        id
+        type
+        geom_col
+      }
+      st_equals: geom_table(where: {geom_col: {_st_equals: $point}}){
+        id
+        type
+        geom_col
+      }
+    }

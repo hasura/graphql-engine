@@ -11,30 +11,38 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, version string, versionType string) {
+func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, v string, vType string) {
 	logger, hook := test.NewNullLogger()
 	opts := &migrateApplyOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
-				AccessKey:      os.Getenv("HASURA_GRAPHQL_TEST_ACCESS_KEY"),
+				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
 			},
 		},
 		upMigration:      up,
 		downMigration:    down,
-		versionMigration: version,
-		migrationType:    versionType,
+		versionMigration: v,
+		migrationType:    vType,
 	}
 
-	err := opts.run()
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err != nil {
+		t.Fatalf("getting server version failed: %v", err)
+	}
+	opts.EC.Version.SetServerVersion(v)
+
+	err = opts.run()
 	if err != nil {
 		t.Fatalf("failed applying migration: %v", err)
 	}
@@ -49,15 +57,21 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
+			ServerConfig: &cli.ServerConfig{
 				Endpoint:       ":",
-				AccessKey:      "",
+				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},
 			},
 		},
 	}
 
-	err := opts.run()
+	opts.EC.Version = version.New()
+	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	if err == nil {
+		t.Fatalf("expected error to be not nil")
+	}
+	opts.EC.Version.SetServerVersion(v)
+	err = opts.run()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}
@@ -70,16 +84,19 @@ func TestMigrateApplyWithMultipleFlags(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			Config: &cli.HasuraGraphQLConfig{
-				Endpoint:  ":",
-				AccessKey: "",
+			ServerConfig: &cli.ServerConfig{
+				Endpoint:    ":",
+				AdminSecret: "",
 			},
 		},
 		upMigration:   "1",
 		downMigration: "2",
 	}
 
-	err := opts.EC.Config.ParseEndpoint()
+	opts.EC.Version = version.New()
+	opts.EC.Version.SetServerVersion("")
+
+	err := opts.EC.ServerConfig.ParseEndpoint()
 	if err == nil {
 		t.Fatalf("expected err not to be nil")
 	}

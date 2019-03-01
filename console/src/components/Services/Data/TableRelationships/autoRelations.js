@@ -106,11 +106,21 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
 
         for (let k = 0; k < currentArrRels.length; k++) {
           // check if this is already an existing relationship
+          const relDef = currentArrRels[k].rel_def;
+          let currTable = null;
+          let currRCol = null;
+          if (relDef.foreign_key_constraint_on) {
+            currTable = relDef.foreign_key_constraint_on.table;
+            currRCol = [relDef.foreign_key_constraint_on.column];
+          } else {
+            currTable = relDef.manual_configuration.remote_table;
+            currRCol = Object.values(
+              relDef.manual_configuration.column_mapping
+            );
+          }
           if (
-            currentArrRels[k].rel_def.foreign_key_constraint_on.column ===
-              rcol &&
-            currentArrRels[k].rel_def.foreign_key_constraint_on.table ===
-              constraint.table_name
+            currRCol.sort().join(',') === rcol.sort().join(',') &&
+            getTableName(currTable) === constraint.table_name
           ) {
             // existing relationship
             isExistingArrayRel = true;

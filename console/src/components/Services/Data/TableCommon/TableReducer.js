@@ -1,7 +1,7 @@
 import {
   defaultModifyState,
   defaultPermissionsState,
-  defaultInsertSetState,
+  defaultSetState,
 } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
@@ -70,10 +70,10 @@ import {
   deleteFromPermissionsState,
   updateBulkSelect,
   updateBulkSameSelect,
-  CREATE_NEW_INSERT_SET_VAL,
-  DELETE_INSERT_SET_VAL,
+  CREATE_NEW_SET_VAL,
+  DELETE_SET_VAL,
   UPDATE_PERM_SET_KEY_VALUE,
-  TOGGLE_PERM_INSERT_SET_OPERATION_CHECK,
+  TOGGLE_PERM_SET_OPERATION_CHECK,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -274,16 +274,20 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_OPEN_EDIT:
+      const permState = getBasePermissionsState(
+        action.tableSchema,
+        action.role,
+        action.query,
+        action.insertPermColumnRestriction
+      );
       return {
         ...modifyState,
         permissionsState: {
-          ...getBasePermissionsState(
-            action.tableSchema,
-            action.role,
-            action.query,
-            action.insertPermColumnRestriction
-          ),
+          ...permState,
           tableSchemas: schemas,
+        },
+        prevPermissionState: {
+          ...permState,
         },
       };
 
@@ -481,50 +485,61 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     /* Set operations */
-    case TOGGLE_PERM_INSERT_SET_OPERATION_CHECK:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          insert: {
-            ...modifyState.permissionsState.insert,
-            isSetConfigChecked: !modifyState.permissionsState.insert
-              .isSetConfigChecked,
+    case TOGGLE_PERM_SET_OPERATION_CHECK:
+      if (
+        modifyState.permissionsState[action.data.queryType].localSet.length ===
+          0 ||
+        (modifyState.permissionsState[action.data.queryType].localSet.length ===
+          1 &&
+          modifyState.permissionsState[action.data.queryType].localSet[0]
+            .key === '')
+      ) {
+        return {
+          ...modifyState,
+          permissionsState: {
+            ...modifyState.permissionsState,
+            [action.data.queryType]: {
+              ...modifyState.permissionsState[action.data.queryType],
+              isSetConfigChecked: !modifyState.permissionsState[
+                action.data.queryType
+              ].isSetConfigChecked,
+            },
           },
-        },
-      };
-
-    case CREATE_NEW_INSERT_SET_VAL:
+        };
+      }
+      return modifyState;
+    case CREATE_NEW_SET_VAL:
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          insert: {
-            ...modifyState.permissionsState.insert,
+          [action.data.queryType]: {
+            ...modifyState.permissionsState[action.data.queryType],
             localSet: [
-              ...modifyState.permissionsState.insert.localSet.slice(),
-              { ...defaultInsertSetState },
+              ...modifyState.permissionsState[action.data.queryType].localSet,
+              { ...defaultSetState[action.data.queryType] },
             ],
           },
         },
       };
-
-    case DELETE_INSERT_SET_VAL:
+    case DELETE_SET_VAL:
       const deleteIndex = action.data.index;
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          insert: {
-            ...modifyState.permissionsState.insert,
+          [action.data.queryType]: {
+            ...modifyState.permissionsState[action.data.queryType],
             localSet: [
-              ...modifyState.permissionsState.insert.localSet.slice(
-                0,
-                deleteIndex
-              ),
-              ...modifyState.permissionsState.insert.localSet.slice(
+              ...modifyState.permissionsState[
+                action.data.queryType
+              ].localSet.slice(0, deleteIndex),
+              ...modifyState.permissionsState[
+                action.data.queryType
+              ].localSet.slice(
                 deleteIndex + 1,
-                modifyState.permissionsState.insert.localSet.length
+                modifyState.permissionsState[action.data.queryType].localSet
+                  .length
               ),
             ],
           },
@@ -534,34 +549,36 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
     case UPDATE_PERM_SET_KEY_VALUE:
       const updatedIndex = action.data.index;
       const setKeyVal =
-        modifyState.permissionsState.insert.localSet[updatedIndex];
+        modifyState.permissionsState[action.data.queryType].localSet[
+          updatedIndex
+        ];
       setKeyVal[action.data.key] = action.data.value;
       if (action.data.key === 'key') {
         // Clear if key changes
         setKeyVal.value = '';
       }
-
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          insert: {
-            ...modifyState.permissionsState.insert,
+          [action.data.queryType]: {
+            ...modifyState.permissionsState[action.data.queryType],
             localSet: [
-              ...modifyState.permissionsState.insert.localSet.slice(
-                0,
-                updatedIndex
-              ),
+              ...modifyState.permissionsState[
+                action.data.queryType
+              ].localSet.slice(0, updatedIndex),
               { ...setKeyVal },
-              ...modifyState.permissionsState.insert.localSet.slice(
+              ...modifyState.permissionsState[
+                action.data.queryType
+              ].localSet.slice(
                 updatedIndex + 1,
-                modifyState.permissionsState.insert.localSet.length
+                modifyState.permissionsState[action.data.queryType].localSet
+                  .length
               ),
             ],
           },
         },
       };
-
     case PERM_RESET_BULK_SELECT:
       return {
         ...modifyState,

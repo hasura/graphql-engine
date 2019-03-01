@@ -11,9 +11,9 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
-import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
@@ -29,23 +29,29 @@ buildTx userInfo gCtx fld = do
   opCxt <- getOpCtx $ _fName fld
   join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap) $ case opCxt of
 
-    OCSelect tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+    OCSelect ctx ->
+      validateHdrs (_socHeaders ctx) >> RS.convertSelect ctx fld
 
-    OCSelectPkey tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
-      -- RS.convertSelect tn permFilter fld
-    OCSelectAgg tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
-    OCInsert tn hdrs    ->
-      validateHdrs hdrs >> RI.convertInsert roleName tn fld
-      -- RM.convertInsert (tn, vn) cols fld
-    OCUpdate tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
-      -- RM.convertUpdate tn permFilter fld
-    OCDelete tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertDelete tn permFilter fld
-      -- RM.convertDelete tn permFilter fld
+    OCSelectPkey ctx ->
+      validateHdrs (_spocHeaders ctx) >> RS.convertSelectByPKey ctx fld
+
+    OCSelectAgg ctx ->
+      validateHdrs (_socHeaders ctx) >> RS.convertAggSelect ctx fld
+
+    OCFuncQuery ctx ->
+      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx False fld
+
+    OCFuncAggQuery ctx ->
+      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx True fld
+
+    OCInsert ctx    ->
+      validateHdrs (_iocHeaders ctx) >> RI.convertInsert roleName (_iocTable ctx) fld
+
+    OCUpdate ctx ->
+      validateHdrs (_uocHeaders ctx) >> RM.convertUpdate ctx fld
+
+    OCDelete ctx ->
+      validateHdrs (_docHeaders ctx) >> RM.convertDelete ctx fld
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx

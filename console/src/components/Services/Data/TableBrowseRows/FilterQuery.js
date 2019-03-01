@@ -22,6 +22,7 @@ import {
   removeOrder,
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
+import Button from '../../../Common/Button/Button';
 
 const renderCols = (colName, tableSchema, onChange, usage, key) => {
   const columns = tableSchema.columns.map(c => c.column_name);
@@ -138,6 +139,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
         />
       );
     }
+
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-6">
@@ -145,13 +147,14 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
         </div>
         <div className="col-xs-5">
           <select
-            value={c.type}
+            value={c.column ? c.type : ''}
             className="form-control"
             onChange={e => {
               dispatch(setOrderType(e.target.value, i));
             }}
             data-test={`sort-order-${i}`}
           >
+            <option disabled value="">--</option>
             <option value="asc">Asc</option>
             <option value="desc">Desc</option>
           </select>
@@ -198,13 +201,14 @@ class FilterQuery extends Component {
             </div>
           </div>
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
-            <button
+            <Button
               type="submit"
-              className={`btn ${styles.yellow_button}`}
+              color="yellow"
+              size="sm"
               data-test="run-query"
             >
               Run query
-            </button>
+            </Button>
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>
         </form>

@@ -32,12 +32,6 @@ import qualified Database.PG.Query       as Q
 
 data OpVar = OLD | NEW deriving (Show)
 
-defaultNumRetries :: Int
-defaultNumRetries = 0
-
-defaultRetryInterval :: Int
-defaultRetryInterval = 10
-
 triggerTmplt :: Maybe GingerTmplt
 triggerTmplt = case parseGingerTmplt $(FE.embedStringFile "src-rsr/trigger.sql.j2") of
   Left _      -> Nothing
@@ -154,7 +148,7 @@ addEventTriggerToCatalog qt allCols etc = do
   mkTriggerQ trid name qt allCols opsdef
   return trid
   where
-    QualifiedTable sn tn = qt
+    QualifiedObject sn tn = qt
     (EventTriggerConf name opsdef _ _ _ _) = etc
     getTrid []    = throw500 "could not create event-trigger"
     getTrid (x:_) = return x
@@ -235,7 +229,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   assertCols ti update
   assertCols ti delete
 
-  let rconf = fromMaybe (RetryConf defaultNumRetries defaultRetryInterval) retryConf
+  let rconf = fromMaybe defaultRetryConf retryConf
   return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()

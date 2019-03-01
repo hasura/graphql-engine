@@ -9,6 +9,7 @@ import {
   autoAddRelName,
 } from '../TableRelationships/Actions';
 import { getRelationshipLine } from '../TableRelationships/Relationships';
+import Button from '../../../Common/Button/Button';
 
 class AutoAddRelations extends Component {
   trackAllRelations = untrackedData => {
@@ -31,21 +32,23 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
-    const untrackData = untrackedRelations.map(obj => {
+    const untrackData = untrackedRelations.map((obj, i) => {
       return (
         <div
           className={styles.padd_top_medium}
-          key={'untrackedIndiv' + obj.data.tableName}
+          key={`${obj.data.tableName}-${obj.data.rTable}-${i}`}
         >
-          <button
-            className={`${styles.display_inline} btn btn-xs btn-default`}
+          <Button
+            className={`${styles.display_inline}`}
+            size="xs"
+            color="white"
             onClick={e => {
               e.preventDefault();
               handleAutoAddIndivRel(obj);
             }}
           >
             Add
-          </button>
+          </Button>
           <div className={styles.display_inline + ' ' + styles.add_pad_left}>
             <b>{obj.data.tableName}</b> -{' '}
             {getRelationshipLine(
@@ -75,17 +78,15 @@ class AutoAddRelations extends Component {
             There are {untrackedRelations.length} untracked relations
           </div>
         )}
-        <button
+        <Button
           onClick={this.trackAllRelations.bind(this, untrackedRelations)}
-          className={
-            styles.display_inline +
-            ' btn btn-xs btn-default ' +
-            styles.add_mar_left
-          }
+          className={`${styles.display_inline} ${styles.add_mar_left}`}
+          color="white"
+          size="xs"
           data-test="track-all-relationships"
         >
           Track All Relations
-        </button>
+        </Button>
         <div className={styles.padd_top_small}>{untrackData}</div>
       </div>
     );

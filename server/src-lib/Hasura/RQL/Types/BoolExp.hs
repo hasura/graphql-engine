@@ -4,6 +4,7 @@ module Hasura.RQL.Types.BoolExp
        , gBoolExpToJSON
        , parseGBoolExp
 
+       , WithinOp(..)
        , OpExpG(..)
 
        , AnnBoolExpFld(..)
@@ -22,7 +23,9 @@ import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Internal
+import           Data.Aeson.TH
 import qualified Data.Aeson.Types           as J
 import qualified Data.HashMap.Strict        as M
 import           Instances.TH.Lift          ()
@@ -90,9 +93,16 @@ foldBoolExp f (BoolNot notExp) =
 foldBoolExp f (BoolFld ce)  =
   f ce
 
+data WithinOp a =
+  WithinOp
+  { woDistance :: !a
+  , woFrom     :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 2 snakeCase) ''WithinOp)
+
 data OpExpG a
-  = AEQ !a
-  | ANE !a
+  = AEQ !Bool !a
+  | ANE !Bool !a
 
   | AIN  ![a]
   | ANIN ![a]
@@ -117,6 +127,15 @@ data OpExpG a
   | AHasKeysAny [Text]
   | AHasKeysAll [Text]
 
+  | ASTContains !a
+  | ASTCrosses !a
+  | ASTDWithin !(WithinOp a)
+  | ASTEquals !a
+  | ASTIntersects !a
+  | ASTOverlaps !a
+  | ASTTouches !a
+  | ASTWithin !a
+
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
 
@@ -131,8 +150,8 @@ data OpExpG a
 
 opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
 opExpToJPair f = \case
-  AEQ a          -> ("_eq", f a)
-  ANE a          -> ("_ne", f a)
+  AEQ _ a          -> ("_eq", f a)
+  ANE _ a          -> ("_ne", f a)
 
   AIN a          -> ("_in", toJSON $ map f a)
   ANIN a         -> ("_nin", toJSON $ map f a)
@@ -156,6 +175,15 @@ opExpToJPair f = \case
   AHasKey a      -> ("_has_key", f a)
   AHasKeysAny a  -> ("_has_keys_any", toJSON a)
   AHasKeysAll a  -> ("_has_keys_all", toJSON a)
+
+  ASTContains a   -> ("_st_contains", f a)
+  ASTCrosses a    -> ("_st_crosses", f a)
+  ASTDWithin o    -> ("_st_d_within", toJSON $ f <$> o)
+  ASTEquals a     -> ("_st_equals", f a)
+  ASTIntersects a -> ("_st_intersects", f a)
+  ASTOverlaps a   -> ("_st_overlaps", f a)
+  ASTTouches a    -> ("_st_touches", f a)
+  ASTWithin a     -> ("_st_within", f a)
 
   ANISNULL       -> ("_is_null", toJSON True)
   ANISNOTNULL    -> ("_is_null", toJSON False)

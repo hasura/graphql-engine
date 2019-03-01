@@ -12,6 +12,7 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
@@ -27,7 +28,6 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.RQL.DML.Select                  as RS
-import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -67,30 +67,35 @@ explainField userInfo gCtx fld =
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      sel <- runExplain (fldMap, orderByCtx) $ case opCxt of
-        OCSelect tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect False <$>
-            RS.fromField txtConverter tn permFilter permLimit fld
-        OCSelectPkey tn permFilter hdrs -> do
-          validateHdrs hdrs
-          RS.mkSQLSelect True <$>
-            RS.fromFieldByPKey txtConverter tn permFilter fld
-        OCSelectAgg tn permFilter permLimit hdrs -> do
-          validateHdrs hdrs
-          RS.mkAggSelect <$>
-            RS.fromAggField txtConverter tn permFilter permLimit fld
-        _ -> throw500 "unexpected mut field info for explain"
+      builderSQL <- runExplain (fldMap, orderByCtx) $
+        case opCxt of
+          OCSelect (SelOpCtx tn hdrs permFilter permLimit) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect False <$>
+              RS.fromField txtConverter tn permFilter permLimit fld
+          OCSelectPkey (SelPkOpCtx tn hdrs permFilter argMap) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect True <$>
+              RS.fromFieldByPKey txtConverter tn argMap permFilter fld
+          OCSelectAgg (SelOpCtx tn hdrs permFilter permLimit) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkAggSelect <$>
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq False
+          OCFuncAggQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq True
+          _ -> throw500 "unexpected mut field info for explain"
 
-      let selectSQL = TB.run $ toSQL sel
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> selectSQL
+      let txtSQL = TB.run builderSQL
+          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      return $ FieldPlan fName (Just selectSQL) $ Just planLines
+      return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter (ty, val) =
-      return $ S.annotateExp (txtEncoder val) ty
+    txtConverter = return . uncurry toTxtValue
+
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
@@ -98,6 +103,14 @@ explainField userInfo gCtx fld =
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
       "lookup failed: opctx: " <> showName f
+
+    procFuncQuery tn fn permFilter permLimit hdrs argSeq isAgg = do
+      validateHdrs hdrs
+      (tabArgs, eSel, frmItem) <-
+        RS.fromFuncQueryField txtConverter fn argSeq isAgg fld
+      return $ toSQL $
+        RS.mkFuncSelectWith fn tn
+        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
 
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo

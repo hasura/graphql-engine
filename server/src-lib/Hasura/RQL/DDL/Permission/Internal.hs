@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -20,6 +21,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value           (withGeoVal)
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
@@ -104,7 +106,7 @@ savePermToCatalog
   -> QualifiedTable
   -> PermDef a
   -> Q.TxE QErr ()
-savePermToCatalog pt (QualifiedTable sn tn) (PermDef  rn qdef mComment) =
+savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                hdb_catalog.hdb_permission
@@ -112,12 +114,27 @@ savePermToCatalog pt (QualifiedTable sn tn) (PermDef  rn qdef mComment) =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment) True
 
+updatePermDefInCatalog
+  :: (ToJSON a)
+  => PermType
+  -> QualifiedTable
+  -> RoleName
+  -> a
+  -> Q.TxE QErr ()
+updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.hdb_permission
+              SET perm_def = $1 :: jsonb
+             WHERE table_schema = $2 AND table_name = $3
+               AND role_name = $4 AND perm_type = $5
+           |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
+
 dropPermFromCatalog
   :: QualifiedTable
   -> RoleName
   -> PermType
   -> Q.TxE QErr ()
-dropPermFromCatalog (QualifiedTable sn tn) rn pt =
+dropPermFromCatalog (QualifiedObject sn tn) rn pt =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                hdb_catalog.hdb_permission
@@ -167,25 +184,23 @@ procBoolExp tn fieldInfoMap be = do
 isReqUserId :: T.Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
-getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders (BoolExp boolExp) =
-  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
+getDepHeadersFromVal :: Value -> [T.Text]
+getDepHeadersFromVal val = case val of
+  Object o -> parseObject o
+  _        -> parseOnlyString val
   where
-    parseValue val = case val of
-      (Object o) -> parseObject o
-      _          -> parseOnlyString val
-
-    parseOnlyString val = case val of
+    parseOnlyString v = case v of
       (String t)
         | isUserVar t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap parseOnlyString (M.elems o)
-      -- if isRQLOp k
-      --                        then parseOnlyString v
-      --                        else []
+      concatMap getDepHeadersFromVal (M.elems o)
+
+getDependentHeaders :: BoolExp -> [T.Text]
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -198,9 +213,9 @@ valueParser columnType = \case
   val -> txtRHSBuilder columnType val
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr =
+    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
+    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
@@ -217,8 +232,8 @@ injectDefaults qv qt =
   ]
 
   where
-    QualifiedTable (SchemaName vsn) (TableName vn) = qv
-    QualifiedTable (SchemaName tsn) (TableName tn) = qt
+    QualifiedObject (SchemaName vsn) (TableName vn) = qv
+    QualifiedObject (SchemaName tsn) (TableName tn) = qt
 
 data DropPerm a
   = DropPerm
