@@ -26,6 +26,7 @@ const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
+const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
@@ -221,8 +222,28 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   );
 };
 
-const operationToggleColumn = (column, operation) => {
+const operationToggleColumn = (
+  column,
+  operation,
+  supportColumnChangeFeature
+) => {
   return (dispatch, getState) => {
+    if (supportColumnChangeFeature) {
+      if (operation === 'update') {
+        const currentOperations = getState().addTrigger.operations;
+        const currentCols = currentOperations[operation];
+        // check if column is in currentCols. if not, push
+        const isExists = currentCols.includes(column);
+        let finalCols = currentCols;
+        if (isExists) {
+          finalCols = currentCols.filter(col => col !== column);
+        } else {
+          finalCols.push(column);
+        }
+        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+      }
+      return;
+    }
     const currentOperations = getState().addTrigger.operations;
     const currentCols = currentOperations[operation];
     // check if column is in currentCols. if not, push
@@ -237,11 +258,18 @@ const operationToggleColumn = (column, operation) => {
   };
 };
 
-const operationToggleAllColumns = columns => {
+const operationToggleAllColumns = (
+  columns,
+  supportListeningToColumnsUpdate
+) => {
   return dispatch => {
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    if (supportListeningToColumnsUpdate) {
+      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
+    } else {
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    }
   };
 };
 
@@ -377,6 +405,15 @@ const addTriggerReducer = (state = defaultState, action) => {
       const operations = state.operations;
       operations[action.op] = action.cols;
       return { ...state, operations: { ...operations } };
+    case TOGGLE_ALL_COLUMNS:
+      return {
+        ...state,
+        operations: {
+          insert: '*',
+          delete: '*',
+          update: action.cols,
+        },
+      };
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
       selectedOperations[action.data] = true;

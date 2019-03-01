@@ -253,7 +253,6 @@ class AddTrigger extends Component {
       const tableSchema = tableListBySchema.find(
         t => t.table_name === e.target.value
       );
-
       const columns = [];
       if (tableSchema) {
         tableSchema.columns.map(colObj => {
@@ -261,7 +260,7 @@ class AddTrigger extends Component {
           columns.push(column);
         });
       }
-      dispatch(operationToggleAllColumns(columns));
+      dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
     };
 
     const handleOperationSelection = e => {
@@ -271,7 +270,9 @@ class AddTrigger extends Component {
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        dispatch(operationToggleColumn(column, type));
+        dispatch(
+          operationToggleColumn(column, type, supportColumnChangeFeature)
+        );
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName
@@ -310,7 +311,6 @@ class AddTrigger extends Component {
       }
       return null;
     };
-
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
