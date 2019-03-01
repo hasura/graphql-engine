@@ -1,65 +1,30 @@
 import React from 'react';
 import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import RemoteSchemaContent from '../../CommonLanding/RemoteSchemaContent';
+import EventTriggerContent from '../../CommonLanding/EventTriggerContent';
+const styles = require('../Popup.scss');
 import PropTypes from 'prop-types';
-
+const ContentMap = {
+  "remoteSchema" : <RemoteSchemaContent styles = {styles}/>,
+  "eventTrigger" : <EventTriggerContent styles = {styles}/>
+}
 class PopUp extends React.Component {
   render() {
-    const styles = require('../Popup.scss');
+
     const close = require('./cancel.svg');
-    const { dispatch, migrationMode, onClose } = this.props;
-    const queryDefinition = 'query { hello }';
+    const { onClose, title, queryDefinition, footerDescription } = this.props;
+    // const queryDefinition = 'query { hello }';
     return (
       <div className={styles.popupWrapper}>
         <div className={styles.wd100}>
           <div className={styles.descriptionText + ' ' + styles.fontWeightBold + ' ' + styles.addPaddBottom + ' ' + styles.commonBorBottom}>
-            Steps to deploy an example GraphQL service to Glitch
+            { title }
           </div>
           <div className={styles.close} onClick={ onClose }>
             <img className={'img-responsive'} src={close} alt={'Close'} />
           </div>
-          <div className={styles.arrowLeft}>
-          </div>
-          <div className={styles.listItems + ' ' + styles.addPaddTop}>
-            <div className={styles.yellowCircle}>
-            </div>
-            <div className={styles.descriptionText + ' ' + styles.fontWeightBold}>
-              Steps to deploy an example GraphQL service to Glitch
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.yellowCircle}>
-            </div>
-            <div className={styles.descriptionText + ' ' + styles.fontWeightBold}>
-              Add the GraphQL service as a Remote Schema:
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
-              1. Click on the <span className={styles.fontWeightBold}>SHOW</span> button in the Glitch console and copy the URL.
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
-              2. Create a remote schema by clicking the <span className={styles.fontWeightBold}>Add remote schema</span> button at the top of this page
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
-              3. Set the name as “Sample Remote Schema” and enter the above URL as the GraphQL server URL
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
-              4. Click on the <span className={styles.fontWeightBold}>Create Remote Schema</span> button - That’s it!
-            </div>
-          </div>
-          <div className={styles.listItems}>
-            <div className={styles.yellowCircle}>
-            </div>
-            <div className={styles.descriptionText + ' ' + styles.fontWeightBold}>
-              Head to the GraphiQL tab and try out the following query:
-            </div>
-          </div>
+          <div className={styles.arrowLeft}></div>
+          {ContentMap[this.props.service]}
           <div className={styles.addPaddLeft + ' text-left ' + styles.addPaddTop}>
             <ReusableTextAreaWithCopy
               copyText={queryDefinition}
@@ -68,7 +33,7 @@ class PopUp extends React.Component {
           </div>
           <div className={styles.listItems}>
             <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
-              You just added a remote schema and queried it!
+              { footerDescription }
             </div>
           </div>
         </div>
@@ -78,5 +43,9 @@ class PopUp extends React.Component {
 }
 PopUp.propTypes = {
   onClose: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  queryDefinition: PropTypes.string.isRequired,
+  footerDescription: PropTypes.string.isRequired,
+  service: PropTypes.string.isRequired,
 };
 export default PopUp;

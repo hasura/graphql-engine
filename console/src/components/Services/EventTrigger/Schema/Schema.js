@@ -10,7 +10,8 @@ import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 import Button from '../../Layout/Button/Button';
 import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
-
+import TopicDescription from '../../CommonLanding/TopicDescription';
+import TryItOut from '../../CommonLanding/TryItOut';
 const appPrefix = globals.urlPrefix + '/events';
 
 class Schema extends Component {
@@ -54,50 +55,13 @@ class Schema extends Component {
             ) : null}
           </div>
           <hr />
-          <p>
-            1. Head to the Data tab and create a table, say `user`, with columns
-            `id` and `name`
-          </p>
-          <p>
-            2.
-            <a
-              className={styles.add_mar_left_small}
-              href="https://glitch.com/edit/#!/hasura-sample-event-trigger"
-              target="_blank"
-            >
-              <button className={'btn btn-sm ' + styles.yellow_button}>
-                Deploy with Glitch
-              </button>
-            </a>
-            <span className={styles.add_pad_left}>
-              Click to deploy an example Event Trigger to Glitch
-            </span>
-          </p>
-          <p>3. Add the Event Trigger</p>
-          <p className={styles.add_pad_left}>
-            - Click on the SHOW button in the Glitch console and copy the URL
-          </p>
-          <p className={styles.add_pad_left}>
-            - Create an event trigger by clicking on the <b>Create Trigger</b>{' '}
-            button at the top of this page.
-          </p>
-          <p className={styles.add_pad_left}>
-            - Set the name as "sample-trigger". Choose `user` table and select
-            `INSERT`, `UPDATE` and `DELETE` operations. <br />
-            Enter the above URL as <b>WEBHOOK URL</b>
-          </p>
-          <p className={styles.add_pad_left}>
-            - Click on the <b>Create</b> button - That's it!
-          </p>
-          <p>4. Head to the GraphiQL tab and try out the following query:</p>
-          <ReusableTextAreaWithCopy
-            copyText={queryDefinition}
-            textLanguage={'graphql'}
-          />
-          <p className={styles.add_pad_top}>
-            Head to the Events tab and see an event invoked under
-            `sample-trigger`.
-          </p>
+          <TopicDescription
+            title="What are Event triggers?"
+            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+            imgAlt="Event triggers"
+            description="Hasura can be used to create event triggers on tables in the Postgres database. Event triggers reliably capture events happening on the specified tables and then call configured webhooks to carry out some business logic."/>
+            <hr className={styles.clear_fix} />
+            <TryItOut service="eventTrigger" queryDefinition="mutation{ insert_user()}"/>
         </div>
       </div>
     );

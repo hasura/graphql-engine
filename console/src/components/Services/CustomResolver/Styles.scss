@@ -181,11 +181,8 @@
 }
 .instructions
 {
-  padding: 12px 0;
   font-size: 15px;
   font-weight: 600;
-  margin-top: 20px;
-  position: relative;
   cursor: pointer;
   color: #909090;
   display: flex;
@@ -251,11 +248,12 @@
     }
     .instructionsWrapper
     {
+      margin-top: 20px;
       border-top: 1px solid #DEDEDE;
+      position: relative;
       .instructions
       {
-        margin-top: 0;
-        padding: 0 0;
+        padding: 12px 0;
       }
     }
     .instructionsWrapper:hover
