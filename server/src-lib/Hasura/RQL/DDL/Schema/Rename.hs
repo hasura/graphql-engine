@@ -10,6 +10,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
+import qualified Hasura.RQL.DDL.Subscribe           as DS
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -56,6 +57,8 @@ renameTableInCatalog newQT oldQT = do
       updateRelDefs refQT rn (oldQT, newQT)
     -- table names are not specified in permission definitions
     SOTableObj _ (TOPerm _ _)   -> return ()
+    -- A trigger's definition is not dependent on the table directly
+    SOTableObj _ (TOTrigger _)   -> return ()
     d -> otherDeps errMsg d
   -- -- Update table name in hdb_catalog
   liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
@@ -86,6 +89,8 @@ renameColInCatalog oCol nCol qt ti = do
       updatePermFlds refQT role pt renameFld
     SOTableObj refQT (TORel rn) ->
       updateColInRel refQT rn $ RenameItem qt oCol nCol
+    SOTableObj _ (TOTrigger triggerName) ->
+      updateColInEventTriggerDef triggerName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
@@ -313,11 +318,38 @@ updateColInRel fromQT rn rnCol = do
       updateColInArrRel fromQT toQT rnCol <$> decodeValue oldDefV
   liftTx $ updateRel fromQT rn newDefV
 
+-- rename columns in relationship definitions
+updateColInEventTriggerDef
+  :: (MonadTx m)
+  => TriggerName -> RenameCol -> m ()
+updateColInEventTriggerDef trigName rnCol = do
+  (trigTab, trigDef) <- liftTx $ DS.getEventTriggerDef trigName
+  void $ liftTx $ DS.updateEventTriggerDef trigName $
+    rewriteEventTriggerConf trigTab trigDef
+  where
+    rewriteSubsCols trigTab = \case
+      SubCStar       -> SubCStar
+      SubCArray cols -> SubCArray $
+                        map (getNewCol rnCol trigTab) cols
+    rewriteOpSpec trigTab (SubscribeOpSpec cols payload) =
+      SubscribeOpSpec
+      (rewriteSubsCols trigTab cols)
+      (rewriteSubsCols trigTab <$> payload)
+    rewriteTrigOpsDef trigTab (TriggerOpsDef ins upd del) =
+      TriggerOpsDef
+      (rewriteOpSpec trigTab <$> ins)
+      (rewriteOpSpec trigTab <$> upd)
+      (rewriteOpSpec trigTab <$> del)
+    rewriteEventTriggerConf trigTab etc =
+      etc { etcDefinition =
+            rewriteTrigOpsDef trigTab $ etcDefinition etc
+          }
+
 updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col -> RUFKeyOn $ updateColRel fromQT col rnCol
+  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
   RUManual (ObjRelManualConfig manConfig) ->
     RUManual $ ObjRelManualConfig $
     updateRelManualConfig fromQT toQT rnCol manConfig
@@ -327,7 +359,7 @@ updateColInArrRel
   -> RenameCol -> ArrRelUsing -> ArrRelUsing
 updateColInArrRel fromQT toQT rnCol = \case
   RUFKeyOn (ArrRelUsingFKeyOn t c) ->
-    let updCol = updateColRel toQT c rnCol
+    let updCol = getNewCol rnCol toQT c
     in RUFKeyOn $ ArrRelUsingFKeyOn t updCol
   RUManual (ArrRelManualConfig manConfig) ->
     RUManual $ ArrRelManualConfig $
@@ -335,9 +367,9 @@ updateColInArrRel fromQT toQT rnCol = \case
 
 type ColMap = Map.Map PGCol PGCol
 
-updateColRel
-  :: QualifiedTable -> PGCol -> RenameCol -> PGCol
-updateColRel qt col rnCol =
+getNewCol
+  :: RenameCol -> QualifiedTable -> PGCol -> PGCol
+getNewCol rnCol qt col =
   if opQT == qt && col == oCol then nCol else col
   where
     RenameItem opQT oCol nCol = rnCol
@@ -378,4 +410,3 @@ updateRel (QualifiedObject sn tn) rn relDef =
               AND table_name = $3
               AND rel_name = $4
                 |] (Q.AltJ relDef, sn , tn, rn) True
-
