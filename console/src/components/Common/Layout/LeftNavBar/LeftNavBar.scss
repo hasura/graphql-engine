@@ -35,6 +35,7 @@
   color: #333;
   border: 1px solid #E5E5E5;
   background-color: #F8F8F8;
+
   /*
   a,a:visited {
     color: $navbar-inverse-link-color;
@@ -44,6 +45,7 @@
     color: $navbar-inverse-link-hover-color;
   }
   */
+
   hr {
     margin: 0;
     border-color: $navbar-inverse-color;
@@ -57,6 +59,7 @@
     li {
       padding: 7px 0;
       transition: color 0.5s;
+
       /*
       a,a:visited {
         color: $navbar-inverse-link-color;
@@ -137,15 +140,29 @@
     border-bottom: 0px !important;
     padding: 0 0 !important;
 
+    .tableFunctionDivider {
+      margin-top: 5px;
+      margin-bottom: 5px;
+      width: 95%;
+    }
+
     a {
       background: transparent !important;
       padding: 5px 0px !important;
       font-weight: 400 !important;
       padding-left: 5px !important;
 
-      .tableIcon {
+      .tableIcon, .functionIcon {
         margin-right: 5px;
         font-size: 12px;
+      }
+
+      .functionIcon {
+        width: 12px;
+
+        img {
+          width: 100%;
+        }
       }
     }
   }

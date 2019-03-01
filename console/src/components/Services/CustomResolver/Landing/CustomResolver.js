@@ -81,7 +81,7 @@ const mapStateToProps = state => {
   };
 };
 
-const landingCustomResolverGen = connect =>
+const customResolverConnector = connect =>
   connect(mapStateToProps)(CustomResolver);
 
-export default landingCustomResolverGen;
+export default customResolverConnector;

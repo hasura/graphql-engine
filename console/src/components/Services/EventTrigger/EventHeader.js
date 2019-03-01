@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import PageContainer from './PageContainer/PageContainer';
+import LeftNavBar from './LeftNavBar/LeftNavBar';
 
 const appPrefix = '/events';
 
@@ -41,7 +41,7 @@ const EventHeader = ({
                     </div>
                   </div>
                 </Link>
-                <PageContainer
+                <LeftNavBar
                   location={location}
                   schema={schema}
                   currentSchema={currentSchema}

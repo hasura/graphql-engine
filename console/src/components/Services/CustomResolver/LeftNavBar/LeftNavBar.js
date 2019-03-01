@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router';
-import Button from '../../Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const LeftNavBar = ({
   appPrefix,
@@ -15,14 +15,13 @@ const LeftNavBar = ({
   viewResolver,
   migrationMode,
 }) => {
-  const styles = require('./LeftNavBar.scss');
+  const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
   // Now schema might be null or an empty array
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
     filterItem(dataList, searchTerm);
   }
-  // TODO: Make it generic so that other components can use it.
 
   return (
     <div className={styles.schemaTableList}>

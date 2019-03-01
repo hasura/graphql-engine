@@ -23,7 +23,7 @@ class Schema extends Component {
   render() {
     const { migrationMode, dispatch } = this.props;
 
-    const styles = require('../../../Common/PageContainer/PageContainer.scss');
+    const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
 
     return (
       <div

@@ -1,10 +1,11 @@
 import React from 'react';
 
 import { Route, IndexRedirect, Link } from 'react-router';
-import { layoutConnector, rightContainerConnector } from '../../Common/Layout';
+import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
-  landingCustomResolverGen,
+  customResolverHeaderConnector,
+  landingConnector,
   addConnector,
   editConnector,
   viewConnector,
@@ -133,7 +134,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
   return (
     <Route
       path="remote-schemas"
-      component={layoutConnector(
+      component={customResolverHeaderConnector(
         connect,
         leftNavMapStateToProps,
         leftNavMapDispatchToProps
@@ -144,7 +145,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="schemas" />
-        <Route path="schemas" component={landingCustomResolverGen(connect)} />
+        <Route path="schemas" component={landingConnector(connect)} />
         <Route
           path="add"
           component={addConnector(connect)}

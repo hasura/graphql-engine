@@ -11,7 +11,7 @@ import semverCheck from '../../../../helpers/semver';
 
 const appPrefix = '/data';
 
-const PageContainer = ({
+const LeftNavBar = ({
   schema,
   listingSchema,
   functionsList,
@@ -25,7 +25,7 @@ const PageContainer = ({
   currentFunction,
   serverVersion,
 }) => {
-  const styles = require('../../../Common/PageContainer/PageContainer.scss');
+  const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
   const functionSymbol = require('./function.svg');
   const functionSymbolActive = require('./function_high.svg');
 
@@ -249,4 +249,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(PageContainer);
+export default connect(mapStateToProps)(LeftNavBar);

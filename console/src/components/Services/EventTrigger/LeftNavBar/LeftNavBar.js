@@ -10,7 +10,7 @@ import { LISTING_TRIGGER } from '../EventActions';
 
 const appPrefix = '/events';
 
-const PageContainer = ({
+const LeftNavBar = ({
   currentTrigger,
   triggerList,
   listingTrigger,
@@ -19,7 +19,7 @@ const PageContainer = ({
   dispatch,
   location,
 }) => {
-  const styles = require('../../../Common/PageContainer/PageContainer.scss');
+  const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
 
   // Now schema might be null or an empty array
   let triggerLinks = (
@@ -143,4 +143,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(PageContainer);
+export default connect(mapStateToProps)(LeftNavBar);

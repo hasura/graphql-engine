@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import _push from './push';
 import Helmet from 'react-helmet';
-import PageContainer from './PageContainer/PageContainer';
+import LeftNavBar from './LeftNavBar/LeftNavBar';
 import globals from '../../../Globals';
 
 import {
@@ -95,7 +95,7 @@ const DataHeader = ({
                     </div>
                   </div>
                 </Link>
-                <PageContainer
+                <LeftNavBar
                   location={location}
                   schema={schema}
                   currentSchema={currentSchema}

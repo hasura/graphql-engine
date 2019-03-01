@@ -6,7 +6,7 @@
  */
 
 export dataHeaderConnector from './DataHeader';
-export PageContainer from './PageContainer/PageContainer';
+export PageContainer from './LeftNavBar/LeftNavBar';
 export viewTableConnector from './TableBrowseRows/ViewTable';
 export addExistingTableViewConnector from './Add/AddExistingTableView';
 export addTableConnector from './Add/AddTable';
