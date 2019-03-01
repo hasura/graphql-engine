@@ -27,6 +27,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
 
+import           Control.Arrow       ((***))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
@@ -166,8 +167,7 @@ getTableDiff oldtm newtm =
       = PGColInfo colName colType isNullable
 
     alteredCols =
-      flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->
-      (pcmToPci pcmo, pcmToPci pcmn)
+      flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
 
     droppedFKeyConstraints = map cmName $
       filter (isForeignKey . cmType) $ getDifference cmOid
@@ -225,7 +225,7 @@ getSchemaChangeDeps schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
+    isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False
 
 data FunctionMeta

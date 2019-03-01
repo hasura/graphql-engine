@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
