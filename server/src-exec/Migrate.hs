@@ -22,7 +22,13 @@ curCatalogVer :: T.Text
 curCatalogVer = "10"
 
 migrateMetadata
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m
+     , HasHttpManager m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     , HasSQLGenCtx m
+     )
   => Bool -> RQLQuery -> m ()
 migrateMetadata buildSC rqlQuery = do
   -- Build schema cache from 'hdb_catalog' only if current
@@ -108,7 +114,13 @@ from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                 |] () False
 
 from1To2
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
   => m ()
 from1To2 = do
   -- Migrate database
@@ -130,7 +142,13 @@ from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 -- custom resolver
 from4To5
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
   => m ()
 from4To5 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -183,7 +201,13 @@ from6To7 = liftTx $ do
   return ()
 
 from7To8
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
   => m ()
 from7To8 = do
   -- Migrate database
@@ -200,7 +224,13 @@ from7To8 = do
 
 -- alter hdb_version table and track it (telemetry changes)
 from8To9
-  :: (MonadTx m, HasHttpManager m, CacheRWM m, UserInfoM m, MonadIO m)
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
   => m ()
 from8To9 = do
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
@@ -222,7 +252,13 @@ from9To10 = liftTx $ do
   return ()
 
 migrateCatalog
-  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: ( MonadTx m
+     , CacheRWM m
+     , MonadIO m
+     , UserInfoM m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     )
   => UTCTime -> m String
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion

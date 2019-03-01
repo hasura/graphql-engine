@@ -121,7 +121,8 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m)
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => ClearMetadata -> m RespBody
 runClearMetadata _ = do
   adminOnly
@@ -197,6 +198,7 @@ applyQP2
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
+     , HasSQLGenCtx m
      )
   => ReplaceMetadata
   -> m RespBody
@@ -264,7 +266,9 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
         DP.addPermP2 (tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => ReplaceMetadata -> m RespBody
 runReplaceMetadata q = do
   applyQP1 q
@@ -410,7 +414,8 @@ $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m)
+     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => ReloadMetadata -> m RespBody
 runReloadMetadata _ = do
   adminOnly

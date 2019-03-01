@@ -139,9 +139,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
+   * - ``--stringify-numeric-types``
+     - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
+     - Stringify certain Postgres numeric types, specifically ``bigint``, ``numeric``, ``decimal`` and ``double precision`` as they don't fit into the ``IEEE-754`` spec for JSON encoding-decoding. (default: false)
+
    * - ``--enabled-apis <APIS>``
      - ``HASURA_GRAPHQL_ENABLED_APIS``
      - Comma separated list of APIs (metadata & graphql) to be enabled. (default: ``metadata,graphql``)
 
 .. note::
-  When the equivalent flags for environment variables are used, the flags will take precedence.
+  1. When the equivalent flags for environment variables are used, the flags will take precedence.

@@ -23,7 +23,9 @@ import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
 initCatalogSafe
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
   hdbCatalogExists <- liftTx $ Q.catchE defaultTxErrorHandler $
@@ -56,7 +58,9 @@ initCatalogSafe initTime =  do
                     |] (Identity sn) False
 
 initCatalogStrict
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
   liftTx $ Q.catchE defaultTxErrorHandler $
@@ -127,7 +131,9 @@ cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DROP SCHEMA hdb_catalog CASCADE" () False
 
 execQuery
-  :: (MonadTx m, CacheRWM m, MonadIO m, UserInfoM m, HasHttpManager m)
+  :: ( MonadTx m, CacheRWM m, MonadIO m
+     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+     )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do
   query <- case A.decode queryBs of
