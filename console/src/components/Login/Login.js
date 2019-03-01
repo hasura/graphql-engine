@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { loginClicked, UPDATE_ADMIN_SECRET_INPUT } from '../Main/Actions';
 
@@ -62,9 +63,9 @@ class Login extends Component {
                   </div>
                 </div>
                 <div className={styles.signin_btn}>
-                  <button type="submit" className="form-control">
+                  <Button type="submit" color="green" className="form-control">
                     {loginText}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>

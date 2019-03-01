@@ -62,7 +62,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
     # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code == 401, "\n" + yaml.dump({
+    assert code in [401,404], "\n" + yaml.dump({
         "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
@@ -73,7 +73,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     # Test with random admin secret
     headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code == 401, "\n" + yaml.dump({
+    assert code in [401,404], "\n" + yaml.dump({
         "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
@@ -85,7 +85,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 def test_forbidden_webhook(hge_ctx, conf):
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)
-    assert code == 401, "\n" + yaml.dump({
+    assert code in [401,404], "\n" + yaml.dump({
         "expected": "Should be access denied as it is denied from webhook",
         "actual": {
             "code": code,
