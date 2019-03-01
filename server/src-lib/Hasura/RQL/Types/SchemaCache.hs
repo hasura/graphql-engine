@@ -85,8 +85,6 @@ module Hasura.RQL.Types.SchemaCache
        , getDependentObjs
        , getDependentObjsWith
 
-       , getAllRelations
-
        , FunctionType(..)
        , FunctionArg(..)
        , FunctionArgName(..)
@@ -779,8 +777,3 @@ getDependentObjsWith f sc objId =
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
-
-getAllRelations :: TableCache -> [(QualifiedTable, [RelInfo])]
-getAllRelations tc = map getRelInfo $ M.toList tc
-  where
-    getRelInfo (qt, ti) = (qt, getRels $ tiFieldInfoMap ti)
