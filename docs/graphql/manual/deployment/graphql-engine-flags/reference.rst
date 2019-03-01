@@ -141,7 +141,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
-     - Stringify numeric types (default: false)
+     - Stringify certain Postgres numeric types, specifically ``bigint``, ``numeric``, ``decimal`` and ``double precision`` as they don't fit into the ``IEEE-754`` spec for JSON encoding-decoding. (default: false)
 
    * - ``--enabled-apis <APIS>``
      - ``HASURA_GRAPHQL_ENABLED_APIS``
@@ -149,6 +149,3 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
 .. note::
   1. When the equivalent flags for environment variables are used, the flags will take precedence.
-  2. If ``--stringify-numeric`` flag or ``HASURA_GRAPHQL_STRINGIFY_NUMERIC`` is set to ``true`` then
-     GraphQL Engine sends numeric data types which do not fit into `IEEE 754 <https://tools.ietf.org/html/rfc7159#ref-IEEE754>`_
-     ``binary64`` (double precision) range as ``String``.
