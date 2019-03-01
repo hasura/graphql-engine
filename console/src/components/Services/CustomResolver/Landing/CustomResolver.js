@@ -12,7 +12,6 @@ class CustomResolver extends React.Component {
     const node = require('./Node.svg');
     const Rectangle = require('./Rectangle.svg');
 
-
     // const lightGrayArrow = require('./light-gray-arrow.svg');
     // const darkGrayArrow = require('./dark-gray-arrow.svg');
 
@@ -30,7 +29,11 @@ class CustomResolver extends React.Component {
           <Helmet title={`${pageTitle}s | Hasura`} />
           <div>
             <div className={styles.display_flex}>
-              <h2 className={`${styles.headerText} ${styles.addPaddRight} ${styles.inline_block}`}>
+              <h2
+                className={`${styles.headerText} ${styles.addPaddRight} ${
+                  styles.inline_block
+                }`}
+              >
                 Remote Schemas
               </h2>
               {migrationMode ? (
@@ -40,7 +43,9 @@ class CustomResolver extends React.Component {
                   size="sm"
                   onClick={e => {
                     e.preventDefault();
-                    dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
+                    dispatch(
+                      push(`${globals.urlPrefix}${appPrefix}/manage/add`)
+                    );
                   }}
                 >
                   Add
@@ -52,9 +57,13 @@ class CustomResolver extends React.Component {
               title="What are Remote Schemas?"
               imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png"
               imgAlt="Remote Schema"
-              description="Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community.  Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community."/>
+              description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
+            />
             <hr className={styles.clear_fix} />
-            <TryItOut service="remoteSchema" queryDefinition="query { hello }"/>
+            <TryItOut
+              service="remoteSchema"
+              queryDefinition="query { hello }"
+            />
           </div>
           {/*
             <div className={styles.resolverContent}>

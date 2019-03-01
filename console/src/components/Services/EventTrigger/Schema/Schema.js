@@ -56,12 +56,16 @@ class Schema extends Component {
           </div>
           <hr />
           <TopicDescription
-            title="What are Event triggers?"
+            title="What are Event Triggers?"
             imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
-            imgAlt="Event triggers"
-            description="Hasura can be used to create event triggers on tables in the Postgres database. Event triggers reliably capture events happening on the specified tables and then call configured webhooks to carry out some business logic."/>
-            <hr className={styles.clear_fix} />
-            <TryItOut service="eventTrigger" queryDefinition="mutation{ insert_user()}"/>
+            imgAlt="Event Triggers"
+            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+          />
+          <hr className={styles.clear_fix} />
+          <TryItOut
+            service="eventTrigger"
+            queryDefinition="mutation{ insert_user()}"
+          />
         </div>
       </div>
     );
