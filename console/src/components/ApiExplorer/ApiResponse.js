@@ -5,9 +5,9 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import CopyToClipboard from 'react-copy-to-clipboard';
 
-import generateSuggestionBox from '../Common/generateSuggestionBox';
+import generateSuggestionBox from './generateSuggestionBox';
 
-import suggestionFunction from './suggestionFunctions';
+import suggestionFunctions from './suggestionFunctions';
 
 class ApiResponse extends React.Component {
   constructor() {
@@ -17,6 +17,7 @@ class ApiResponse extends React.Component {
       tabIndex: 0,
     };
   }
+
   render() {
     const {
       categoryType,
@@ -25,16 +26,21 @@ class ApiResponse extends React.Component {
       response,
       url,
     } = this.props;
-    const getSuggestionFunction = suggestionFunction[categoryType];
 
-    const isResponseError =
-      'statusCode' in response ? response.statusCode !== 200 : false;
-    const responseHtml =
-      isResponseError && getSuggestionFunction
-        ? generateSuggestionBox(response, getSuggestionFunction)
-        : '';
     const styles = require('./ApiExplorer.scss');
+
+    const suggestionFunction = suggestionFunctions[categoryType];
+    const isResponseError = ('statusCode' in response)
+      ? response.statusCode !== 200
+      : false;
+
+    const responseHtml =
+      (isResponseError && suggestionFunction)
+        ? generateSuggestionBox(response, suggestionFunction)
+        : '';
+
     const imgHTMLTag = `<img src='${url}' />`;
+
     let formattedResponse = JSON.stringify(response.response, null, 4);
     let responseMode = 'json';
     let showGutter = true;
@@ -49,6 +55,7 @@ class ApiResponse extends React.Component {
 
     const getHeaders = responseHeader => {
       const currHeaders = [];
+
       if (responseHeader.responseHeaders) {
         responseHeader.responseHeaders.forEach((value, name) => {
           currHeaders.push(
@@ -69,6 +76,7 @@ class ApiResponse extends React.Component {
           );
         });
       }
+
       return currHeaders.length > 0 ? currHeaders : '';
     };
 
@@ -103,7 +111,9 @@ class ApiResponse extends React.Component {
             ''
           )}
         </div>
+
         {responseHtml}
+
         {showHelpBulb ? (
           <div className={styles.helpTextWrapper}>
             <i className="fa fa-lightbulb-o" aria-hidden="true" />
