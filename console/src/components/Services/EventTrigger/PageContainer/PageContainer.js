@@ -19,7 +19,7 @@ const PageContainer = ({
   dispatch,
   location,
 }) => {
-  const styles = require('./PageContainer.scss');
+  const styles = require('../../../Common/PageContainer.scss');
   // Now schema might be null or an empty array
   let triggerLinks = (
     <li className={styles.noTables}>

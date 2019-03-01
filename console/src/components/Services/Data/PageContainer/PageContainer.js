@@ -25,7 +25,7 @@ const PageContainer = ({
   currentFunction,
   serverVersion,
 }) => {
-  const styles = require('./PageContainer.scss');
+  const styles = require('../../../Common/PageContainer.scss');
   const functionSymbol = require('./function.svg');
   const functionSymbolActive = require('./function_high.svg');
 

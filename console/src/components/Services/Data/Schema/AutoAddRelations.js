@@ -17,7 +17,7 @@ class AutoAddRelations extends Component {
   };
   render() {
     const { untrackedRelations, dispatch } = this.props;
-    const styles = require('../PageContainer/PageContainer.scss');
+    const styles = require('../../../Common/PageContainer.scss');
     const handleAutoAddIndivRel = obj => {
       dispatch(autoAddRelName(obj));
     };
