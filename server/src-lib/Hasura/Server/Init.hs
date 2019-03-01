@@ -6,8 +6,8 @@ import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
-import qualified Data.String                  as DataString
 import qualified Data.HashSet                 as Set
+import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
@@ -48,6 +48,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
@@ -64,6 +65,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
@@ -183,7 +185,7 @@ considerEnv envVar = do
       "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
 considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
-considerEnvs envVars = fmap (foldl1 (<|>)) $ mapM considerEnv envVars
+considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
 withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
@@ -239,11 +241,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
-
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry enabledAPIs
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -345,9 +347,10 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv, accessKeyEnv, authHookEnv, authHookModeEnv
+      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
+      , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv
+      , enableTelemetryEnv, stringifyNumEnv
       ]
 
     eventEnvs =
@@ -455,6 +458,12 @@ enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
   , "Enable anonymous telemetry (default: true)"
+  )
+
+stringifyNumEnv :: (String, String)
+stringifyNumEnv =
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
+  , "Stringify numeric types (default: false)"
   )
 
 enabledAPIsEnv :: (String,String)
@@ -680,6 +689,12 @@ parseEnableTelemetry = optional $
            help (snd enableTelemetryEnv)
          )
 
+parseStringifyNum :: Parser Bool
+parseStringifyNum =
+  switch ( long "stringify-numeric-types" <>
+           help (snd stringifyNumEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -711,6 +726,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+                       , "stringify_numeric_types" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

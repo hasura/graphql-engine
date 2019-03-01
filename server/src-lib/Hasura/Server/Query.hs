@@ -28,6 +28,7 @@ import           Hasura.RQL.DML.Returning           (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
 
@@ -94,11 +95,11 @@ $(deriveJSON
   ''RQLQuery)
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager)
+           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -106,30 +107,35 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks fst
+  askUserInfo = asks _1
 
 instance HasHttpManager Run where
-  askHttpManager = asks snd
+  askHttpManager = asks _2
+
+instance HasSQLGenCtx Run where
+  askSQLGenCtx = asks _3
 
 peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
+  -> Bool
   -> Q.PGPool -> Q.TxIsolation
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr pgPool txIso (Run m) =
+peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
   runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr)
+    sqlGenCtx = SQLGenCtx strfyNum
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache -> HTTP.Manager
+  => Q.PGPool -> Q.TxIsolation -> UserInfo
+  -> SchemaCache -> HTTP.Manager -> Bool
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr query = do
+runQuery pool isoL userInfo sc hMgr strfyNum query = do
   res <- liftIO $ runExceptT $
-         peelRun sc userInfo hMgr pool isoL $ runQueryM query
+         peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool
@@ -188,7 +194,7 @@ queryNeedsReload qi = case qi of
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => RQLQuery
   -> m RespBody

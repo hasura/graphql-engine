@@ -13,7 +13,13 @@ import           Hasura.SQL.Types
 import qualified Data.HashMap.Strict               as HM
 
 renameRelP2
-  :: (QErrM m, MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m
+     , MonadTx m
+     , CacheRWM m
+     , MonadIO m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     )
   => QualifiedTable -> RelName -> RelInfo -> m ()
 renameRelP2 qt newRN relInfo = do
   tabInfo <- askTabInfo qt
@@ -32,7 +38,14 @@ renameRelP2 qt newRN relInfo = do
     oldRN = riName relInfo
 
 runRenameRel
-  :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m, MonadIO m, HasHttpManager m)
+  :: ( QErrM m
+     , CacheRWM m
+     , MonadTx m
+     , UserInfoM m
+     , MonadIO m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     )
   => RenameRel -> m RespBody
 runRenameRel defn = do
   ri <- validateRelP1 qt rn
