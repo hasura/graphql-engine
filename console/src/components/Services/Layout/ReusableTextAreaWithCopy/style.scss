@@ -74,7 +74,10 @@
     position: relative;
     display: inline-block;
 }
-
+.copyTooltip i
+{
+  color: #505050;
+}
 .copyTooltip .tooltiptext {
 	background-color: #555;
 	color: #fff;

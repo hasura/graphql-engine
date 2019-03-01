@@ -80,32 +80,38 @@ class CustomResolver extends React.Component {
                 <div className={styles.logoIcon}>
                   <img className={'img-responsive'} src={glitch} alt={'glitch'} />
                 </div>
-                <button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button>
-                <div className={styles.instructions}>
-                  <span onClick = {this.togglePopup.bind(this)}>Instructions <img className={'img-responsive'} src={lightGrayArrow} alt={'lightGrayArrow'}/></span>
+                <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}><button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button></a>
+                <div className={styles.instructions + ' ' + styles.instructionsWrapper + ' ' + styles.displayFlex}  onClick = {this.togglePopup.bind(this)}>
+                  <span className={styles.instructions + ' ' + styles.displayFlex}><span>Instructions</span><div className={styles.rightArrow}></div></span>
                   { this.state.isPopUp ?
                     (<PopUp onClose = {this.togglePopup.bind(this)} />)
                     : null }
                 </div>
               </div>
               <div className={styles.boxSmallWrapper}>
-                <div className={styles.boxSmall}>
-                  <div className={styles.logoIcon}>
-                    <img className={'img-responsive'} src={googleCloud} alt={'googleCloud'} />
+                <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+                  <div className={styles.boxSmall}>
+                    <div className={styles.logoIcon}>
+                      <img className={'img-responsive'} src={googleCloud} alt={'googleCloud'} />
+                    </div>
                   </div>
-                </div>
-                <div className={styles.boxSmall}>
-                  <div className={styles.logoIcon}>
-                    <img className={'img-responsive'} src={MicrosoftAzure} alt={'Microsoft Azure'} />
+                </a>
+                <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+                  <div className={styles.boxSmall}>
+                    <div className={styles.logoIcon}>
+                      <img className={'img-responsive'} src={MicrosoftAzure} alt={'Microsoft Azure'} />
+                    </div>
                   </div>
-                </div>
-                <div className={styles.boxSmall}>
-                  <div className={styles.logoIcon}>
-                    <img className={'img-responsive ' + styles.imgAws} src={AWS} alt={'AWS'} />
+                </a>
+                <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+                  <div className={styles.boxSmall}>
+                    <div className={styles.logoIcon}>
+                      <img className={'img-responsive ' + styles.imgAws} src={AWS} alt={'AWS'} />
+                    </div>
                   </div>
-                </div>
+                </a>
                 <div className={styles.instructions}>
-                  And many more <img className={'img-responsive'} src={darkGrayArrow} alt={'darkGrayArrow'}/>
+                  <span>And many more</span> <div className={styles.rightArrow}></div>
                 </div>
               </div>
             </div>
