@@ -1,42 +1,89 @@
 import React from 'react';
 import Editor from './Editor';
 
-import { setRetryNum, setRetryInterval } from './Actions';
+import {
+  setRetryNum,
+  setRetryInterval,
+  setRetryTimeout,
+  showValidationError,
+} from './Actions';
 import Tooltip from './Tooltip';
 
+import semverCheck from '../../../../helpers/semver';
+
 class RetryConfEditor extends React.Component {
+  state = {
+    supportRetryTimeout: false,
+  };
+
+  componentDidMount() {
+    if (this.props.serverVersion) {
+      this.checkRetryTimeoutSupport(this.props.serverVersion);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkRetryTimeoutSupport(this.props.serverVersion);
+    }
+  }
+
   setValues = () => {
     const { dispatch } = this.props;
     const retryConf = this.props.retryConf || {};
     dispatch(setRetryNum(retryConf.num_retries || 0));
     dispatch(setRetryInterval(retryConf.interval_sec || 10));
+    if (this.state.supportRetryTimeout) {
+      dispatch(setRetryTimeout(retryConf.timeout_sec || 60));
+    }
   };
+
+  checkRetryTimeoutSupport(version) {
+    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
+    this.setState({ supportRetryTimeout });
+  }
 
   validateAndSave = () => {
     const {
       dispatch,
       modifyTrigger: {
-        retryConf: { numRetrys, retryInterval },
+        retryConf: { numRetrys, retryInterval, timeout },
       },
     } = this.props;
-    if (isNaN(numRetrys)) {
-      alert('Number of retries should be an integer!');
+
+    const iNumRetries = numRetrys === '' ? 0 : parseInt(numRetrys, 10);
+    const iRetryInterval =
+      retryInterval === '' ? 10 : parseInt(retryInterval, 10);
+    const iTimeout = timeout === '' ? 60 : parseInt(timeout, 10);
+
+    if (iNumRetries < 0 || isNaN(iNumRetries)) {
+      dispatch(
+        showValidationError('Number of retries must be a non negative number!')
+      );
       return;
     }
-    dispatch(setRetryNum(parseInt(numRetrys, 10)));
+    dispatch(setRetryNum(iNumRetries));
 
-    if (isNaN(retryInterval)) {
-      alert('Retry interval should be an integer!');
+    if (iRetryInterval <= 0 || isNaN(iRetryInterval)) {
+      dispatch(showValidationError('Retry interval must be a postive number!'));
       return;
     }
-    dispatch(setRetryInterval(parseInt(retryInterval, 10)));
+    dispatch(setRetryInterval(iRetryInterval));
 
+    if (this.state.supportRetryTimeout) {
+      if (isNaN(iTimeout) || iTimeout <= 0) {
+        dispatch(showValidationError('Timeout must be a positive number!'));
+        return;
+      }
+      dispatch(setRetryTimeout(iTimeout));
+    }
     this.props.save();
   };
 
   render() {
     const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
+    const { supportRetryTimeout } = this.state;
     const collapsed = toggleButton => (
       <div className={styles.modifyOpsCollapsed}>
         {toggleButton('Edit')}
@@ -54,9 +101,17 @@ class RetryConfEditor extends React.Component {
               Retry Interval (sec):
             </div>
             <div className={'col-md-12 ' + styles.noPadd}>
-              {retryConf.interval_sec || 0}
+              {retryConf.interval_sec || 10}
             </div>
           </div>
+          {supportRetryTimeout && (
+            <div className={styles.modifyOpsCollapsedContent1}>
+              <div className={'col-md-4 ' + styles.noPadd}>Timeout (sec):</div>
+              <div className={'col-md-12 ' + styles.noPadd}>
+                {retryConf.timeout_sec || 60}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -95,6 +150,23 @@ class RetryConfEditor extends React.Component {
               />
             </div>
           </div>
+          {this.state.supportRetryTimeout && (
+            <div className={styles.modifyOpsCollapsedContent1}>
+              <div className={`col-md-4 ${styles.noPadd}`}>
+                Timeout (sec):&nbsp;
+              </div>
+              <div className="col-md-12">
+                <input
+                  type="text"
+                  className={`${styles.input} form-control ${
+                    styles.add_mar_right
+                  } ${styles.modifyRetryConfTextbox}`}
+                  value={modifyTrigger.retryConf.timeout}
+                  onChange={e => dispatch(setRetryTimeout(e.target.value))}
+                />
+              </div>
+            </div>
+          )}
         </div>
         {saveButton(this.validateAndSave)}
       </div>

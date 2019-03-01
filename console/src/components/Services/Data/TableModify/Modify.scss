@@ -183,9 +183,10 @@ hr
   .newRoleTd {
     padding-top: 13px;
   }
-  .permissionDelete {
-    cursor: pointer;
-  }
+  //.permissionDelete {
+  //  cursor: pointer;
+  //  margin-left: 10px;
+  //}
 
   .editPermissionLink {
     font-size: 12px;
@@ -193,10 +194,6 @@ hr
     right: 10px;
     color: #337ab7;
     cursor: pointer;
-  }
-
-  .bulkSelect {
-    margin-right: 10px !important;
   }
 
   .clickableCell {
@@ -223,6 +220,20 @@ hr
   .permissionsLegendValue {
     margin-right: 15px;
   }
+}
+
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
 }
 
 .applyBulkPermissions {
@@ -265,7 +276,7 @@ hr
     word-wrap: break-word;
     .columnListElement {
       float: left;
-      margin-right: 75px;
+      margin-right: 50px;
     }
 
     .toggleAll {
@@ -325,7 +336,6 @@ hr
     }
   }
 }
-
 .chevron_mar_right {
   margin-right: 5px;
 }

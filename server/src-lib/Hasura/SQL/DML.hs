@@ -604,9 +604,17 @@ buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
 
-buildSEWithExcluded :: [PGCol] -> SetExp
-buildSEWithExcluded cols = SetExp $ flip map cols $
-  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
+buildUpsertSetExp
+  :: [PGCol]
+  -> HM.HashMap PGCol SQLExp
+  -> SetExp
+buildUpsertSetExp cols preSet =
+  SetExp $ map SetExpItem $ HM.toList setExps
+  where
+    setExps = HM.union preSet $ HM.fromList $
+      flip map cols $ \col ->
+        (col, SEExcluded $ getPGColTxt col)
+
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)

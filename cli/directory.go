@@ -30,9 +30,8 @@ func (ec *ExecutionContext) validateDirectory() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			return errors.Wrap(err, "did not find required directory. use 'init'?")
-		} else {
-			return errors.Wrap(err, "error getting directory details")
 		}
+		return errors.Wrap(err, "error getting directory details")
 	}
 	if !ed.IsDir() {
 		return errors.Errorf("'%s' is not a directory", ed.Name())

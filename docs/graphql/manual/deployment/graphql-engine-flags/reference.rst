@@ -12,18 +12,30 @@ Every GraphQL engine command is structured as:
 
    $ graphql-engine <server-flags> serve <command-flags>
 
+The flags can be passed as ENV variables as well.
+
 Server flags
 ^^^^^^^^^^^^
 
-For ``graphql-engine`` command these are the flags available
+For ``graphql-engine`` command these are the flags and ENV variables available:
 
-.. code-block:: none
 
-      --database-url       Postgres database URL
-                           <postgres/postgresql>://<user>:<password>@<host>:<port>/<db-name>
-                           Example: postgres://admin:mypass@mydomain.com:5432/mydb
+.. list-table::
+   :header-rows: 1
 
-Or either you can specify following options
+   * - Flag
+     - ENV variable
+     - Description
+
+   * - ``--database-url <DB_URL>``
+     - ``HASURA_GRAPHQL_DATABASE_URL``
+     - Postgres database URL:
+
+       ``postgres://<user>:<password>@<host>:<port>/<db-name>``
+
+       Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
+
+Or you can specify following options *(only via flags)*
 
 .. code-block:: none
 
@@ -33,123 +45,103 @@ Or either you can specify following options
   -p, --password           Password of the user
   -d, --dbname             Database name to connect to
 
+
 Command flags
 ^^^^^^^^^^^^^
 
-For ``serve`` subcommand these are the flags available
+For ``serve`` sub-command these are the flags and ENV variables available:
 
-.. code-block:: none
+.. list-table::
+   :header-rows: 1
 
-       --server-host               IP address of network interface that graphql-engine will listen on (default: '*', all interfaces)
+   * - Flag
+     - ENV variable
+     - Description
 
-       --server-port               Port on which graphql-engine should be served (default: 8080)
+   * - ``--server-port <PORT>``
+     - ``HASURA_GRAPHQL_SERVER_PORT``
+     - Port on which graphql-engine should be served (default: 8080)
 
-       --access-key                Secret access key, required to access this instance.
-                                   If specified client needs to send 'X-Hasura-Access-Key'
-                                   header
+   * - ``--server-host <HOST>``
+     - ``HASURA_GRAPHQL_SERVER_HOST``
+     - Host on which graphql-engine will listen (default: ``*``)
 
-       --cors-domain               The domain, including sheme and port, to allow CORS for
+   * - ``--enable-console <true|false>``
+     - ``HASURA_GRAPHQL_ENABLE_CONSOLE``
+     - Enable the Hasura Console (served by the server on ``/`` and ``/console``)
 
-       --disable-cors              Disable CORS handling
+   * - ``--admin-secret <ADMIN_SECRET_KEY>``
+     - ``HASURA_GRAPHQL_ADMIN_SECRET``
+     - Admin secret key, required to access this instance. This is mandatory
+       when you use webhook or JWT.
 
-       --auth-hook                 The authentication webhook, required to authenticate
-                                   incoming request
+   * - ``--auth-hook <WEBHOOK_URL>``
+     - ``HASURA_GRAPHQL_AUTH_HOOK``
+     - URL of the authorization webhook required to authorize requests.
+       See auth webhooks docs for more details.
 
-       --auth-hook-mode            The authentication webhook mode. GET|POST (default: GET)
+   * - ``--auth-hook-mode <GET|POST>``
+     - ``HASURA_GRAPHQL_AUTH_HOOK_MODE``
+     - HTTP method to use for the authorization webhook (default: GET)
 
-       --jwt-secret                The JSON containing type and the JWK used for
-                                   verifying. e.g: `{"type": "HS256", "key":
-                                   "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                                   "key": "<your-PEM-RSA-public-key>"}
+   * - ``--jwt-secret <JSON_CONFIG>``
+     - ``HASURA_GRAPHQL_JWT_SECRET``
+     - A JSON string containing type and the JWK used for verifying (and other
+       optional details).
+       Example: ``{"type": "HS256", "key": "3bd561c37d214b4496d09049fadc542c"}``.
+       See the JWT docs for more details.
 
-       --unauthorized-role         Unauthorized role, used when access-key is not sent in
-                                   access-key only mode or "Authorization" header is absent
-                                   in JWT mode
+   * - ``--unauthorized-role <ROLE>``
+     - ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE``
+     - Unauthorized role, used when access-key is not sent in access-key only
+       mode or "Authorization" header is absent in JWT mode.
+       Example: ``anonymous``. Now whenever "Authorization" header is
+       absent, request's role will default to "anonymous".
 
-   -s, --stripes                   Number of stripes (default: 1)
+   * - ``--cors-domain <DOMAINS>``
+     - ``HASURA_GRAPHQL_CORS_DOMAIN``
+     - CSV of list of domains, excluding scheme (http/https) and including port,
+       to allow CORS for. Wildcard domains are allowed.
 
-   -c, --connections               Number of connections that need to be opened to Postgres
-                                   (default: 50)
+   * - ``--disable-cors``
+     - N/A
+     - Disable CORS. Do not send any CORS headers on any request.
 
-       --timeout                   Each connection's idle time before it is closed
-                                   (default: 180 sec)
+   * - ``--enable-telemetry <true|false>``
+     - ``HASURA_GRAPHQL_ENABLE_TELEMETRY``
+     - Enable anonymous telemetry (default: true)
 
-   -i, --tx-iso                    Transaction isolation. read-commited / repeatable-read /
-                                   serializable
+   * - N/A
+     - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
+     - Max event threads
 
-       --enable-console            Enable API console. It is served at '/' and '/console'
+   * - N/A
+     - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
+     - Postgres events polling interval
 
-       --use-prepared-statements   Use prepared statements for SQL queries (default: true)
+   * - ``-s, --stripes <NO_OF_STRIPES>``
+     - ``HASURA_GRAPHQL_PG_STRIPES``
+     - Number of conns that need to be opened to Postgres (default: 1)
 
-       --enable-telemetry       Enable anonymous telemetry (default: true)
+   * - ``-c, --connections <NO_OF_CONNS>``
+     - ``HASURA_GRAPHQL_PG_CONNECTIONS``
+     - Number of conns that need to be opened to Postgres (default: 50)
 
+   * - ``--timeout <SECONDS>``
+     - ``HASURA_GRAPHQL_PG_TIMEOUT``
+     - Each connection's idle time before it is closed (default: 180 sec)
 
-Default environment variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   * - ``--use-prepared-statements <true|false>``
+     - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
+     - Use prepared statements for queries (default: true)
 
-You can use environment variables to configure defaults instead of using flags:
+   * - ``-i, --tx-iso <TXISO>``
+     - ``HASURA_GRAPHQL_TX_ISOLATION``
+     - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+
+   * - ``--enabled-apis <APIS>``
+     - ``HASURA_GRAPHQL_ENABLED_APIS``
+     - Comma separated list of APIs (metadata & graphql) to be enabled. (default: ``metadata,graphql``)
 
 .. note::
   When the equivalent flags for environment variables are used, the flags will take precedence.
-
-For example:
-
-.. code-block:: bash
-
-   $ HASURA_GRAPHQL_DATABASE_URL=postgres://user:pass@host:5432/dbname graphql-engine serve
-
-
-These are the environment variables which are available:
-
-.. code-block:: none
-
-   HASURA_GRAPHQL_DATABASE_URL          Postgres database URL
-                                        <postgres/postgresql>://<user>:<password>@<host>:
-                                        <port>/<db-name> Example:
-                                        postgres://admin:mypass@mydomain.com:5432/mydb
-
-   HASURA_GRAPHQL_PG_STRIPES            Number of stripes (default: 1)
-
-   HASURA_GRAPHQL_PG_CONNECTIONS        Number of connections that need to be opened to
-                                        Postgres (default: 50)
-
-   HASURA_GRAPHQL_PG_TIMEOUT                Each connection's idle time before it is closed
-                                            (default: 180 sec)
-
-   HASURA_GRAPHQL_TX_ISOLATION              transaction isolation. read-committed /
-                                            repeatable-read / serializable
-                                            (default: read-commited)
-   HASURA_GRAPHQL_SERVER_HOST               IP address of network interface that graphql-engine will listen on
-
-   HASURA_GRAPHQL_SERVER_PORT               Port on which graphql-engine should be served
-
-   HASURA_GRAPHQL_ACCESS_KEY                Secret access key, required to access this
-                                            instance. If specified client needs to send
-                                            'X-Hasura-Access-Key' header
-
-   HASURA_GRAPHQL_AUTH_HOOK                 The authentication webhook, required to
-                                            authenticate incoming request
-
-   HASURA_GRAPHQL_AUTH_HOOK_MODE            The authentication webhook mode, GET|POST
-                                            (default: GET)
-
-   HASURA_GRAPHQL_CORS_DOMAIN               The domain, including sheme and port,
-                                            to allow CORS for
-
-   HASURA_GRAPHQL_JWT_SECRET                The JSON containing type and the JWK used for
-                                            verifying. e.g: `{"type": "HS256", "key":
-                                            "<your-hmac-shared-secret>"}`,`{"type": "RS256",
-                                            "key": "<your-PEM-RSA-public-key>"}
-                                            Enable JWT mode, the value of which is a JSON
-
-   HASURA_GRAPHQL_UNAUTHORIZED_ROLE         Unauthorized role, used when access-key is not sent
-                                            in access-key only mode or "Authorization" header
-                                            is absent in JWT mode
-
-   HASURA_GRAPHQL_ENABLE_CONSOLE            Enable API console. It is served at
-                                            '/' and '/console'
-
-   HASURA_GRAPHQL_ENABLE_TELEMETRY          Enable anonymous telemetry (default: true)
-
-   HASURA_GRAPHQL_USE_PREPARED_STATEMENTS   Use prepared statements for SQL queries
-                                            (default: true)

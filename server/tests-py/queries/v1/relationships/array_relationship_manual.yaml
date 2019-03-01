@@ -16,6 +16,20 @@
           column_mapping:
             id: author_id
 
+#Rename relationship
+
+- description: Rename relationship articles to articles_array
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: rename_relationship
+    args:
+      table: author_view
+      name: articles
+      new_name: articles_array
+
 #Drop relationship
 - description: Drop object relationship
   url: /v1/query
@@ -26,4 +40,4 @@
     type: drop_relationship
     args:
       table: author_view
-      relationship: articles
+      relationship: articles_array

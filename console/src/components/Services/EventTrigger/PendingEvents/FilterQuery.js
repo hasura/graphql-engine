@@ -21,7 +21,7 @@ import {
   addOrder,
   removeOrder,
 } from './FilterActions.js';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
 

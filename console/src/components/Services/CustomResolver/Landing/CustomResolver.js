@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class CustomResolver extends React.Component {
   render() {

@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -30,7 +29,6 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List                      as L
 import qualified Data.Text                      as T
 
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types

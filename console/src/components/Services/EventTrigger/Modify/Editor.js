@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class Editor extends React.Component {
   state = {

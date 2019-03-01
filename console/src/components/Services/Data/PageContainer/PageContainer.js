@@ -4,7 +4,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import { LISTING_SCHEMA, UPDATE_TRACKED_FUNCTIONS } from '../DataActions';
 import semverCheck from '../../../../helpers/semver';
@@ -215,11 +215,7 @@ const PageContainer = ({
                 className={styles.padd_remove_full}
                 to={'/data/schema/' + schemaName + '/table/add'}
               >
-                <Button
-                  size="xs"
-                  color="white"
-                  data-test="sidebar-add-table"
-                >
+                <Button size="xs" color="white" data-test="sidebar-add-table">
                   Add Table
                 </Button>
               </Link>

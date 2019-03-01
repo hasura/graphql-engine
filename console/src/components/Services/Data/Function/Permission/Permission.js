@@ -1,14 +1,15 @@
 import React from 'react';
 
 import Helmet from 'react-helmet';
-import CommonTabLayout from '../../../Layout/CommonTabLayout/CommonTabLayout';
-// import { Link } from 'react-router';
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
 import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
+import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -82,14 +83,11 @@ class Permission extends React.Component {
           applicable to the data returned by this function
         </p>
         <div className={styles.commonBtn}>
-          <a href={permissionTableUrl}>
-            <button
-              className={styles.yellow_button}
-              data-test={'custom-function-permission-btn'}
-            >
+          <Link to={permissionTableUrl}>
+            <Button color="yellow" data-test={'custom-function-permission-btn'}>
               {`${setOffTable} Permissions`}
-            </button>
-          </a>
+            </Button>
+          </Link>
         </div>
       </div>
     );

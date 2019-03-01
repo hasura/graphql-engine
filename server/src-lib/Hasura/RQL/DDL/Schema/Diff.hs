@@ -17,14 +17,17 @@ module Hasura.RQL.DDL.Schema.Diff
   , fetchFunctionMeta
   , FunctionDiff(..)
   , getFuncDiff
+  , getOverloadedFuncs
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils (duplicates)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query   as Q
 
+import           Control.Arrow       ((***))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
@@ -164,8 +167,7 @@ getTableDiff oldtm newtm =
       = PGColInfo colName colType isNullable
 
     alteredCols =
-      flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->
-      (pcmToPci pcmo, pcmToPci pcmn)
+      flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci
 
     droppedFKeyConstraints = map cmName $
       filter (isForeignKey . cmType) $ getDifference cmOid
@@ -223,7 +225,7 @@ getSchemaChangeDeps schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
+    isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False
 
 data FunctionMeta
@@ -257,6 +259,7 @@ fetchFunctionMeta = do
       )
     WHERE
       f.function_schema <> 'hdb_catalog'
+    GROUP BY p.oid, f.function_schema, f.function_name, f.function_type
     |] () False
 
 data FunctionDiff
@@ -275,3 +278,11 @@ getFuncDiff oldMeta newMeta =
       let isTypeAltered = fmType oldfm /= fmType newfm
           alteredFunc = (funcFromMeta oldfm, fmType newfm)
       in bool Nothing (Just alteredFunc) isTypeAltered
+
+getOverloadedFuncs
+  :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]
+getOverloadedFuncs trackedFuncs newFuncMeta =
+  duplicates $ map funcFromMeta trackedMeta
+  where
+    trackedMeta = flip filter newFuncMeta $ \fm ->
+      funcFromMeta fm `elem` trackedFuncs
