@@ -36,6 +36,56 @@ const relTypeChange = isObjRel => ({
 });
 const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
 
+const saveRenameRelationship = (oldName, newName, tableName, callback) => {
+  return (dispatch, getState) => {
+    const currentSchema = getState().tables.currentSchema;
+    const migrateUp = [
+      {
+        type: 'rename_relationship',
+        args: {
+          table: tableName,
+          name: oldName,
+          new_name: newName,
+        },
+      },
+    ];
+    const migrateDown = [
+      {
+        type: 'rename_relationship',
+        args: {
+          table: tableName,
+          name: newName,
+          new_name: oldName,
+        },
+      },
+    ];
+    // Apply migrations
+    const migrationName = `rename_relationship_${oldName}_to_${newName}_schema_${currentSchema}_table_${tableName}`;
+
+    const requestMsg = 'Renaming relationship...';
+    const successMsg = 'Relationship renamed';
+    const errorMsg = 'Renaming relationship failed';
+
+    const customOnSuccess = () => {
+      callback();
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrateUp,
+      migrateDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const generateRelationshipsQuery = (
   tableName,
   relName,
@@ -487,4 +537,5 @@ export {
   autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,
+  saveRenameRelationship,
 };

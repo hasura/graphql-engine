@@ -750,7 +750,7 @@ code {
 
 .yellow_button {
   background-color: #FEC53D;
-  border-radius: 5px;
+  border-radius: 3px;
   color: #606060;
   border: 1px solid #FEC53D;
   padding: 5px 10px;
@@ -880,7 +880,51 @@ code {
 .heading_text {
   font-size: 18px;
   font-weight: bold;
+  padding-bottom: 20px
+}
+
+.editable_heading_text
+{
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
   padding-bottom: 20px;
+  h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  i {
+    cursor: pointer;
+  }
+}
+.editable_heading_textbox
+{
+  display: flex;
+  align-items: center;
+  padding-bottom: 12px;
+  input {
+    width: 30%;
+    font-weight: normal;
+  }
+}
+.editable_heading_action
+{
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  i {
+    margin-top: 2px;
+  }
+}
+.editable_heading_action_item
+{
+  margin-right: 10px;
+  font-size: 14px;
+  text-decoration: underline;
+  font-weight: normal;
+  cursor: pointer;
 }
 
 .header_project_name {
