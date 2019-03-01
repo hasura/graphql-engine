@@ -65,8 +65,9 @@ class Schema extends Component {
           <hr className={styles.clear_fix} />
           <TryItOut
             service="eventTrigger"
-            footerDescription="Head to the Events tab and see an event invoked under `sample-trigger`."
+            title= "Click to deploy an example Event Trigger to Glitch"
             queryDefinition="mutation{ insert_user()}"
+            footerDescription="Head to the Events tab and see an event invoked under `sample-trigger`."
             glitchLink="https://github.com/hasura/graphql-engine/tree/master/community"
             googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"

@@ -38,7 +38,7 @@ class TryItOut extends React.Component {
                 (<PopUp
                   onClose = {this.togglePopup.bind(this)}
                   service = {this.props.service}
-                  title= "Steps to deploy an example GraphQL service to Glitch"
+                  title= {this.props.footerDescription}
                   queryDefinition= {this.props.queryDefinition}
                   footerDescription= {this.props.footerDescription}/>)
                 : null }
