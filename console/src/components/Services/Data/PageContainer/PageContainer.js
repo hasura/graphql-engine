@@ -25,24 +25,28 @@ const PageContainer = ({
   currentFunction,
   serverVersion,
 }) => {
-  const styles = require('../../../Common/PageContainer.scss');
+  const styles = require('../../../Common/PageContainer/PageContainer.scss');
   const functionSymbol = require('./function.svg');
   const functionSymbolActive = require('./function_high.svg');
 
   const handleFunc = semverCheck('customFunctionSection', serverVersion)
     ? true
     : false;
+
   // Now schema might be null or an empty array
   let tableLinks = [
     <li className={styles.noTables} key="no-tables-1">
       <i>No tables/views available</i>
     </li>,
   ];
+
   const tables = {};
   listingSchema.map(t => {
     tables[t.table_name] = t;
   });
+
   const currentLocation = location.pathname;
+
   if (listingSchema && listingSchema.length) {
     tableLinks = Object.keys(tables)
       .sort()
@@ -77,6 +81,7 @@ const PageContainer = ({
             </li>
           );
         }
+
         return (
           <li className={activeTableClass} key={i}>
             <Link

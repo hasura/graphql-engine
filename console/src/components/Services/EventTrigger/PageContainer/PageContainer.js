@@ -19,17 +19,20 @@ const PageContainer = ({
   dispatch,
   location,
 }) => {
-  const styles = require('../../../Common/PageContainer.scss');
+  const styles = require('../../../Common/PageContainer/PageContainer.scss');
+
   // Now schema might be null or an empty array
   let triggerLinks = (
     <li className={styles.noTables}>
       <i>No triggers available</i>
     </li>
   );
+
   const triggers = {};
   listingTrigger.map(t => {
     triggers[t.name] = t;
   });
+
   const currentLocation = location.pathname;
   if (listingTrigger && listingTrigger.length) {
     triggerLinks = Object.keys(triggers)
@@ -42,6 +45,7 @@ const PageContainer = ({
         ) {
           activeTableClass = styles.activeTable;
         }
+
         return (
           <li className={activeTableClass} key={i}>
             <Link

@@ -2,7 +2,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 
-class ReusableTextAreaWithCopy extends React.Component {
+class TextAreaWithCopy extends React.Component {
   copyToClip(type, id) {
     let text = '';
     if (this.props.copyText.length > 0) {
@@ -12,6 +12,7 @@ class ReusableTextAreaWithCopy extends React.Component {
         })
         : this.props.copyText;
     }
+
     const textArea = document.createElement('textarea');
     textArea.value = text;
     document.body.appendChild(textArea);
@@ -31,13 +32,17 @@ class ReusableTextAreaWithCopy extends React.Component {
     }
     document.body.removeChild(textArea);
   }
+
   resetCopy(id) {
     const tooltip = document.getElementById(id);
     tooltip.innerHTML = 'Copy';
   }
+
   render() {
-    const style = require('./style.scss');
+    const style = require('./TextAreaWithCopy.scss');
+
     const { copyText } = this.props;
+
     return (
       <div className={`${style.codeBlockCustom}`}>
         <div className={`${style.copyGenerated}`}>
@@ -85,9 +90,9 @@ class ReusableTextAreaWithCopy extends React.Component {
   }
 }
 
-ReusableTextAreaWithCopy.propTypes = {
+TextAreaWithCopy.propTypes = {
   copyText: PropTypes.string.isRequired,
   textLanguage: PropTypes.string,
 };
 
-export default ReusableTextAreaWithCopy;
+export default TextAreaWithCopy;

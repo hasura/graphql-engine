@@ -20,7 +20,7 @@ export relationshipsViewConnector from './TableRelationships/RelationshipsView';
 export permissionsConnector from './TablePermissions/Permissions';
 export schemaConnector from './Schema/Schema';
 export schemaContainerConnector from './Schema/SchemaContainer';
-export migrationsConnector from '../../Common/Migrations/MigrationsHome';
+export migrationsConnector from './Migrations/MigrationsHome';
 
 export dataRouter from './DataRouter';
 

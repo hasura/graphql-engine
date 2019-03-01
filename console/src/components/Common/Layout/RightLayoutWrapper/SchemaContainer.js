@@ -1,7 +1,8 @@
 import React from 'react';
 
 const SchemaContainer = ({ children }) => {
-  const styles = require('../../SchemaContainer.scss');
+  const styles = require('../../SchemaContainer/SchemaContainer.scss');
+
   return (
     <div className={styles.container + ' container-fluid'}>
       <div className="row">

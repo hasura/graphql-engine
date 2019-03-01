@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const styles = require('./Styles.scss');
+const styles = require('./QueryBuilderJson.scss');
 
 class QueryBuilderJson extends React.Component {
   static propTypes = {

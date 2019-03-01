@@ -6,24 +6,27 @@ import 'brace/mode/sql';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Toggle from 'react-toggle';
-import { updateMigrationModeStatus } from '../../Main/Actions';
-import './ReactToggle.css';
+import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 
-const migrationTip = (
-  <Tooltip id="tooltip-migration">
-    Modifications to the underlying postgres schema should be tracked as
-    migrations.
-  </Tooltip>
-);
+import { updateMigrationModeStatus } from '../../../Main/Actions';
 
 const MigrationsHome = ({ dispatch, migrationMode }) => {
-  const styles = require('./Styles.scss');
+  const styles = require('./Migrations.scss');
+
   const handleMigrationModeToggle = () => {
     const isConfirm = window.confirm('Are you sure?');
     if (isConfirm) {
       dispatch(updateMigrationModeStatus());
     }
   };
+
+  const migrationTip = (
+    <Tooltip id="tooltip-migration">
+      Modifications to the underlying postgres schema should be tracked as
+      migrations.
+    </Tooltip>
+  );
+
   return (
     <div className={'container-fluid'}>
       <Helmet title="Migrations - Data | Hasura" />
