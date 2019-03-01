@@ -16,8 +16,7 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/ReactTableFix.css';
 
 const ViewRows = ({
@@ -30,7 +29,6 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
@@ -114,7 +112,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -207,14 +205,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
-    } else if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -291,7 +282,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
                   return formattedDate;
                 }
                 const content =

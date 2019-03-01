@@ -1,34 +1,31 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Subscribe
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
+import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
@@ -36,130 +33,77 @@ import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
 
 delTableFromCatalog :: QualifiedTable -> Q.Tx ()
-delTableFromCatalog (QualifiedTable sn tn) =
+delTableFromCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             DELETE FROM "hdb_catalog"."hdb_table"
             WHERE table_schema = $1 AND table_name = $2
                 |] (sn, tn) False
 
 saveTableToCatalog :: QualifiedTable -> Q.Tx ()
-saveTableToCatalog (QualifiedTable sn tn) =
+saveTableToCatalog (QualifiedObject sn tn) =
   Q.unitQ [Q.sql|
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
-getViewInfo :: QualifiedTable -> Q.TxE QErr (Maybe ViewInfo)
-getViewInfo (QualifiedTable sn tn) = do
-  tableTy <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-             [Q.sql|
-              SELECT table_type FROM information_schema.tables
-              WHERE table_schema = $1
-                AND table_name = $2
-                   |] (sn, tn) False
-
-  bool (return Nothing) buildViewInfo $ isView tableTy
-  where
-    buildViewInfo = do
-      (is_upd, is_ins, is_trig_upd, is_trig_del, is_trig_ins)
-        <- Q.getRow <$> Q.withQE defaultTxErrorHandler
-             [Q.sql|
-              SELECT is_updatable :: boolean,
-                     is_insertable_into::boolean,
-                     is_trigger_updatable::boolean,
-                     is_trigger_deletable::boolean,
-                     is_trigger_insertable_into::boolean
-               FROM information_schema.views
-              WHERE table_schema = $1
-                AND table_name = $2
-                    |] (sn, tn) False
-      return $ Just $ ViewInfo
-               (is_upd || is_trig_upd)
-               (is_upd || is_trig_del)
-               (is_ins || is_trig_ins)
-
 -- Build the TableInfo with all its columns
 getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
-getTableInfo qt@(QualifiedTable sn tn) isSystemDefined = do
-  tableExists <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT true from information_schema.tables
-             WHERE table_schema = $1
-               AND table_name = $2;
-                           |] (sn, tn) False
-
-  -- if no columns are found, there exists no such view/table
-  unless (tableExists == [Identity True]) $
-    throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-
-  -- Fetch View information
-  viewInfo <- getViewInfo qt
-
-  -- Fetch the column details
-  colData <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-            SELECT column_name, to_json(udt_name), is_nullable::boolean
-              FROM information_schema.columns
-             WHERE table_schema = $1
-               AND table_name = $2
-                           |] (sn, tn) False
-
-  -- Fetch primary key columns
-  rawPrimaryCols <- Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT columns
-             FROM hdb_catalog.hdb_primary_key
-            WHERE table_schema = $1
-              AND table_name = $2
-                           |] (sn, tn) False
-  pkeyCols <- mkPKeyCols rawPrimaryCols
-
-  -- Fetch the constraint details
-  rawConstraints <- Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-           SELECT constraint_type, constraint_name
-             FROM information_schema.table_constraints
-             WHERE table_schema = $1
-               AND table_name = $2
-                           |] (sn, tn) False
-  let colDetails = flip map colData $ \(colName, Q.AltJ colTy, isNull)
-                   -> (colName, colTy, isNull)
-  return $ mkTableInfo qt isSystemDefined rawConstraints colDetails pkeyCols viewInfo
-  where
-    mkPKeyCols [] = return []
-    mkPKeyCols [Identity (Q.AltJ pkeyCols)] = return pkeyCols
-    mkPKeyCols _ = throw500 "found multiple rows for a table in hdb_primary_key"
+getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
+  tableData <- Q.catchE defaultTxErrorHandler $
+               Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
+  case tableData of
+    [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
+    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
+    _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable
   = TrackTable
   { tName :: QualifiedTable }
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
-trackExistingTableOrViewP1 :: TrackTable -> P1 ()
+trackExistingTableOrViewP1
+  :: (CacheRM m, UserInfoM m, QErrM m) => TrackTable -> m ()
 trackExistingTableOrViewP1 (TrackTable vn) = do
   adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
+  rawSchemaCache <- askSchemaCache
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
-trackExistingTableOrViewP2Setup :: (P2C m) => QualifiedTable -> Bool -> m ()
+trackExistingTableOrViewP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedTable -> Bool -> m ()
 trackExistingTableOrViewP2Setup tn isSystemDefined = do
   ti <- liftTx $ getTableInfo tn isSystemDefined
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (P2C m) => QualifiedTable -> Bool -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => QualifiedTable -> Bool -> m RespBody
 trackExistingTableOrViewP2 vn isSystemDefined = do
+  sc <- askSchemaCache
+  let defGCtx = scDefaultRemoteGCtx sc
+      tn = GS.qualObjectToName vn
+  GS.checkConflictingNode defGCtx tn
+
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
+
+  -- refresh the gCtx in schema cache
+  refreshGCtxMapInSchema
+
   return successMsg
 
-instance HDBQuery TrackTable where
+runTrackTableQ
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, UserInfoM m
+     )
+  => TrackTable -> m RespBody
+runTrackTableQ q = do
+  trackExistingTableOrViewP1 q
+  trackExistingTableOrViewP2 (tName q) False
 
-  type Phase1Res TrackTable = ()
-  phaseOne = trackExistingTableOrViewP1
-
-  phaseTwo (TrackTable tn) _ = trackExistingTableOrViewP2 tn False
-
-  schemaCachePolicy = SCPReload
-
-purgeDep :: (CacheRWM m, MonadError QErr m, MonadTx m)
+purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
 purgeDep schemaObjId = case schemaObjId of
   (SOTableObj tn (TOPerm rn pt)) -> do
@@ -168,11 +112,15 @@ purgeDep schemaObjId = case schemaObjId of
 
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
-    delFldFromCache (fromRel rn) qt
+    delRelFromCache rn qt
 
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
     delQTemplateFromCache qtn
+
+  (SOFunction qf) -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
@@ -181,70 +129,96 @@ purgeDep schemaObjId = case schemaObjId of
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
-processTableChanges :: (P2C m) => TableInfo -> TableDiff -> m ()
+processTableChanges :: (MonadTx m, CacheRWM m)
+                    => TableInfo -> TableDiff -> m Bool
 processTableChanges ti tableDiff = do
-
-  when (isJust mNewName) $
-    throw400 NotSupported $ "table renames are not yet supported : " <>> tn
-
-  -- for all the dropped columns
-  forM_ droppedCols $ \droppedCol ->
-    -- Drop the column from the cache
-    delFldFromCache (fromPGCol droppedCol) tn
-
-  -- In the newly added columns check that there is no conflict with relationships
-  forM_ addedCols $ \colInfo@(PGColInfo colName _ _) ->
-    case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
-      Just (FIRelationship _) ->
-        throw400 AlreadyExists $ "cannot add column " <> colName
-        <<> " in table " <> tn <<>
-        " as a relationship with the name already exists"
-      _ -> addFldToCache (fromPGCol colName) (FIColumn colInfo) tn
-
+  -- If table rename occurs then don't replace constraints and
+  -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
-  -- for rest of the columns
-  forM_ alteredCols $ \(PGColInfo oColName oColTy _, nci@(PGColInfo nColName nColTy _)) ->
-    if | oColName /= nColName ->
-           throw400 NotSupported $ "column renames are not yet supported : " <>
-             tn <<> "." <>> oColName
-       | oColTy /= nColTy -> do
-           let colId   = SOTableObj tn $ TOCol oColName
-               depObjs = getDependentObjsWith (== "on_type") sc colId
-           if null depObjs
-             then updateFldInCache oColName $ FIColumn nci
-             else throw400 DependencyError $ "cannot change type of column " <> oColName <<> " in table "
-                  <> tn <<> " because of the following dependencies : " <>
-                  reportSchemaObjs depObjs
-       | otherwise -> return ()
-  where
-    updateFldInCache cn ci = do
-      delFldFromCache (fromPGCol cn) tn
-      addFldToCache (fromPGCol cn) ci tn
-    tn = tiName ti
-    TableDiff mNewName droppedCols addedCols alteredCols _ = tableDiff
+  let tn = tiName ti
+      withOldTabName = do
+        -- replace constraints
+        replaceConstraints tn
+        -- for all the dropped columns
+        procDroppedCols tn
+        -- for all added columns
+        procAddedCols tn
+        -- for all altered columns
+        procAlteredCols sc tn
 
-processSchemaChanges :: (P2C m) => SchemaDiff -> m ()
+      withNewTabName newTN = do
+        let tnGQL = GS.qualObjectToName newTN
+            defGCtx = scDefaultRemoteGCtx sc
+        -- check for GraphQL schema conflicts on new name
+        GS.checkConflictingNode defGCtx tnGQL
+        void $ procAlteredCols sc tn
+        -- update new table in catalog
+        renameTableInCatalog newTN tn
+        return True
+
+  maybe withOldTabName withNewTabName mNewName
+
+  where
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiUniqOrPrimConstraints = constraints}
+
+    procDroppedCols tn =
+      forM_ droppedCols $ \droppedCol ->
+        -- Drop the column from the cache
+        delColFromCache droppedCol tn
+
+    procAddedCols tn =
+      -- In the newly added columns check that there is no conflict with relationships
+      forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
+        case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
+          Just (FIRelationship _) ->
+            throw400 AlreadyExists $ "cannot add column " <> colName
+            <<> " in table " <> tn <<>
+            " as a relationship with the name already exists"
+          _ -> addColToCache colName pci tn
+
+    procAlteredCols sc tn = fmap or $
+      forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
+        if | oColName /= nColName -> do
+               renameColInCatalog oColName nColName tn ti
+               return True
+           | oColTy /= nColTy -> do
+               let colId   = SOTableObj tn $ TOCol oColName
+                   depObjs = getDependentObjsWith (== "on_type") sc colId
+               unless (null depObjs) $ throw400 DependencyError $
+                 "cannot change type of column " <> oColName <<> " in table "
+                 <> tn <<> " because of the following dependencies : " <>
+                 reportSchemaObjs depObjs
+               return False
+           | otherwise -> return False
+
+delTableAndDirectDeps
+  :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedTable -> m ()
+delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
+  liftTx $ Q.catchE defaultTxErrorHandler $ do
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_relationship"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_permission"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."event_triggers"
+             WHERE schema_name = $1 AND table_name = $2
+              |] (sn, tn) False
+    delTableFromCatalog qtn
+  delTableFromCache qtn
+
+processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m Bool
 processSchemaChanges schemaDiff = do
   -- Purge the dropped tables
-  forM_ droppedTables $ \qtn@(QualifiedTable sn tn) -> do
-    liftTx $ Q.catchE defaultTxErrorHandler $ do
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_relationship"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."hdb_permission"
-               WHERE table_schema = $1 AND table_name = $2
-                |] (sn, tn) False
-      Q.unitQ [Q.sql|
-               DELETE FROM "hdb_catalog"."event_triggers"
-               WHERE schema_name = $1 AND table_name = $2
-                |] (sn, tn) False
-      delTableFromCatalog qtn
-    delTableFromCache qtn
-  -- Get schema cache
+  mapM_ delTableAndDirectDeps droppedTables
+
   sc <- askSchemaCache
-  forM_ alteredTables $ \(oldQtn, tableDiff) -> do
+  fmap or $ forM alteredTables $ \(oldQtn, tableDiff) -> do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
@@ -259,105 +233,84 @@ data UntrackTable =
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 
-unTrackExistingTableOrViewP1 :: UntrackTable -> P1 (UntrackTable, TableInfo)
-unTrackExistingTableOrViewP1 ut@(UntrackTable vn _) = do
+unTrackExistingTableOrViewP1
+  :: (CacheRM m, UserInfoM m, QErrM m) => UntrackTable -> m ()
+unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
   adminOnly
-  rawSchemaCache <- getSchemaCache <$> lift ask
+  rawSchemaCache <- askSchemaCache
   case M.lookup vn (scTables rawSchemaCache) of
-    Just ti -> do
+    Just ti ->
       -- Check if table/view is system defined
       when (tiSystemDefined ti) $ throw400 NotSupported $
         vn <<> " is system defined, cannot untrack"
-      return (ut, ti)
     Nothing -> throw400 AlreadyUntracked $
       "view/table already untracked : " <>> vn
 
-unTrackExistingTableOrViewP2 :: (P2C m)
-                             => UntrackTable -> TableInfo -> m RespBody
-unTrackExistingTableOrViewP2 (UntrackTable vn cascade) tableInfo = do
+unTrackExistingTableOrViewP2
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => UntrackTable -> m RespBody
+unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
 
-  -- Get Foreign key constraints to this table
-  fKeyTables <- liftTx getFKeyTables
-  let fKeyDepIds = mkFKeyObjIds $ filterTables fKeyTables $ scTables sc
-
-  -- Report back with an error if any fkey object ids are present
-  when (fKeyDepIds /= []) $ reportDepsExt fKeyDepIds []
-
-  -- Get relational and query template dependants
-  let allRels = getAllRelations $ scTables sc
-      directRelDep = (vn, getRels $ tiFieldInfoMap tableInfo)
-      relDeps = directRelDep : foldl go [] allRels
-      relDepIds = concatMap mkObjIdFromRel relDeps
-      queryTDepIds = getDependentObjsOfQTemplateCache (SOTable vn)
-                     (scQTemplates sc)
-      allDepIds = relDepIds <> queryTDepIds
+  -- Get relational, query template and function dependants
+  let allDeps = getDependentObjs sc (SOTable qtn)
+      indirectDeps = filter (not . isDirectDep) allDeps
 
   -- Report bach with an error if cascade is not set
-  when (allDepIds /= [] && not (or cascade)) $ reportDepsExt allDepIds []
+  when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
 
   -- Purge all the dependants from state
-  mapM_ purgeDep allDepIds
+  mapM_ purgeDep indirectDeps
 
-  -- update the schema cache with the changes
-  processSchemaChanges $ SchemaDiff [vn] []
+  -- delete the table and its direct dependencies
+  delTableAndDirectDeps qtn
+
+  -- refresh the gctxmap in schema cache
+  refreshGCtxMapInSchema
 
   return successMsg
   where
-    QualifiedTable sn tn = vn
-    getFKeyTables = Q.catchE defaultTxErrorHandler $ Q.listQ [Q.sql|
-                    SELECT constraint_name,
-                           table_schema,
-                           table_name
-                     FROM  hdb_catalog.hdb_foreign_key_constraint
-                     WHERE ref_table_table_schema = $1
-                       AND ref_table = $2
-                   |] (sn, tn) False
-    filterTables tables tc = flip filter tables $ \(_, s, t) ->
-      isJust $ M.lookup (QualifiedTable s t) tc
+    isDirectDep = \case
+      (SOTableObj dtn _) -> qtn == dtn
+      _                  -> False
 
-    mkFKeyObjIds tables = flip map tables $ \(cn, s, t) ->
-                     SOTableObj (QualifiedTable s t) (TOCons cn)
+runUntrackTableQ
+  :: ( QErrM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, UserInfoM m
+     )
+  => UntrackTable -> m RespBody
+runUntrackTableQ q = do
+  unTrackExistingTableOrViewP1 q
+  unTrackExistingTableOrViewP2 q
 
-    getAllRelations tc = map getRelInfo $ M.toList tc
-    getRelInfo (qt, ti) = (qt, getRels $ tiFieldInfoMap ti)
-
-    go l (qt, ris) = if any isDep ris
-                     then (qt, filter isDep ris):l
-                     else l
-    isDep relInfo = vn == riRTable relInfo
-    mkObjIdFromRel (qt, ris) = flip map ris $ \ri ->
-      SOTableObj qt (TORel $ riName ri)
-
-instance HDBQuery UntrackTable where
-  type Phase1Res UntrackTable = (UntrackTable, TableInfo)
-  phaseOne = unTrackExistingTableOrViewP1
-
-  phaseTwo _ = uncurry unTrackExistingTableOrViewP2
-
-  schemaCachePolicy = SCPReload
-
-buildSchemaCache :: Q.TxE QErr SchemaCache
-buildSchemaCache = flip execStateT emptySchemaCache $ do
-  tables <- lift $ Q.catchE defaultTxErrorHandler fetchTables
+buildSchemaCache
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m)
+  => m ()
+buildSchemaCache = do
+  -- clean hdb_views
+  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  -- reset the current schemacache
+  writeSchemaCache emptySchemaCache
+  hMgr <- askHttpManager
+  tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup (QualifiedTable sn tn) isSystemDefined
+    trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
 
   -- Fetch all the relationships
-  relationships <- lift $ Q.catchE defaultTxErrorHandler fetchRelationships
+  relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
   forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) ->
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
     ObjRel -> do
       using <- decodeValue rDef
-      objRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
     ArrRel -> do
       using <- decodeValue rDef
-      arrRelP2Setup (QualifiedTable sn tn) $ RelDef rn using Nothing
+      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
 
   -- Fetch all the permissions
-  permissions <- lift $ Q.catchE defaultTxErrorHandler fetchPermissions
+  permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
   forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) ->
     modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
@@ -367,33 +320,51 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
     PTDelete -> permHelper sn tn rn pDef PADelete
 
   -- Fetch all the query templates
-  qtemplates <- lift $ Q.catchE defaultTxErrorHandler fetchQTemplates
+  qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
     qtDef <- decodeValue qtDefVal
-    qCtx <- mkAdminQCtx <$> get
-    qti <- liftP1 qCtx $ createQueryTemplateP1 $
+    qCtx <- mkAdminQCtx <$> askSchemaCache
+    (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
            CreateQueryTemplate qtn qtDef Nothing
-    addQTemplateToCache qti
+    addQTemplateToCache qti deps
 
-  eventTriggers <- lift $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ tDefVal, webhook, nr, rint, Q.AltJ mheaders) -> do
-    let headerConfs = fromMaybe [] mheaders
-        qt = QualifiedTable sn tn
+  eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
+  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
+    etc <- decodeValue configuration
+
+    let qt = QualifiedObject sn tn
+    subTableP2Setup qt trid etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    headers <- getHeaderInfosFromConf headerConfs
-    tDef <- decodeValue tDefVal
-    addEventTriggerToCache (QualifiedTable sn tn) trid trn tDef (RetryConf nr rint) webhook headers
-    liftTx $ mkTriggerQ trid trn qt allCols tDef
+    liftTx $ mkTriggerQ trid trn qt allCols (etcDefinition etc)
+
+  functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
+  forM_ functions $ \(sn, fn) ->
+    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
+    trackFunctionP2Setup (QualifiedObject sn fn)
+
+  -- remote schemas
+  res <- liftTx fetchRemoteSchemas
+  sc <- askSchemaCache
+  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
+
+  remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
+    (,) n <$> validateRemoteSchemaDef def
+  let rmScMap = M.fromList remoteScConf
+  (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
+  writeRemoteSchemasToCache mergedGCtxMap rmScMap
+  postMergeSc <- askSchemaCache
+  writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
+
   where
     permHelper sn tn rn pDef pa = do
-      qCtx <- mkAdminQCtx <$> get
+      qCtx <- mkAdminQCtx <$> askSchemaCache
       perm <- decodeValue pDef
-      let qt = QualifiedTable sn tn
+      let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
-      p1Res <- liftP1 qCtx $ phaseOne createPerm
-      addPermP2Setup qt permDef p1Res
-      addPermToCache qt rn pa p1Res
+      (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
+      addPermP2Setup qt permDef permInfo
+      addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
     fetchTables =
@@ -421,14 +392,20 @@ buildSchemaCache = flip execStateT emptySchemaCache $ do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.id, e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+               SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
                  FROM hdb_catalog.event_triggers e
                |] () False
+    fetchFunctions =
+      Q.listQ [Q.sql|
+               SELECT function_schema, function_name
+                 FROM hdb_catalog.hdb_function
+                    |] () False
 
 data RunSQL
   = RunSQL
-  { rSql     :: T.Text
-  , rCascade :: !(Maybe Bool)
+  { rSql                      :: T.Text
+  , rCascade                  :: !(Maybe Bool)
+  , rCheckMetadataConsistency :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
@@ -441,24 +418,46 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-runSqlP2 :: (P2C m) => RunSQL -> m RespBody
-runSqlP2 (RunSQL t cascade) = do
+execRawSQL :: (MonadTx m) => T.Text -> m RunSQLRes
+execRawSQL =
+  liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+  where
+    rawSqlErrHandler txe =
+      let e = err400 PostgresError "query execution failed"
+      in e {qeInternal = Just $ toJSON txe}
+
+execWithMDCheck
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RunSQL -> m RunSQLRes
+execWithMDCheck (RunSQL t cascade _) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
 
   -- Get the metadata before the sql query, everything, need to filter this
   oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  oldFuncMetaU <-
+    liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
 
   -- Run the SQL
-  res <- liftTx $ Q.multiQE rawSqlErrHandler $ Q.fromText t
+  res <- execRawSQL t
 
   -- Get the metadata after the sql query
   newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
+  newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
   sc <- askSchemaCache
   let existingTables = M.keys $ scTables sc
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
+      existingFuncs = M.keys $ scFunctions sc
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
+      overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
+
+  -- Do not allow overloading functions
+  unless (null overloadedFuncs) $
+    throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
+    <> reportFuncs overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -468,43 +467,65 @@ runSqlP2 (RunSQL t cascade) = do
   -- Purge all the indirect dependents from state
   mapM_ purgeDep indirectDeps
 
-  -- update the schema cache with the changes
-  processSchemaChanges schemaDiff
+  -- Purge all dropped functions
+  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
+        case dep of
+          SOFunction qf -> Just qf
+          _             -> Nothing
 
-  postSc <- askSchemaCache
-  -- recreate the insert permission infra
-  forM_ (M.elems $ scTables postSc) $ \ti -> do
-    let tn = tiName ti
-    forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
-      maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
+  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
+    liftTx $ delFunctionFromCatalog qf
+    delFunctionFromCache qf
 
-  --recreate triggers
-  forM_ (M.elems $ scTables postSc) $ \ti -> do
-    let tn = tiName ti
-        cols = getCols $ tiFieldInfoMap ti
-    forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-      let insert = otiCols <$> etiInsert eti
-          update = otiCols <$> etiUpdate eti
-          delete = otiCols <$> etiDelete eti
-          trid = etiId eti
-      liftTx $ mkTriggerQ trid trn tn cols (TriggerOpsDef insert update delete)
+  -- Process altered functions
+  forM_ alteredFuncs $ \(qf, newTy) ->
+    when (newTy == FTVOLATILE) $
+      throw400 NotSupported $
+      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
-  return $ encode (res :: RunSQLRes)
+  -- update the schema cache and hdb_catalog with the changes
+  reloadRequired <- processSchemaChanges schemaDiff
 
+  let withReload = buildSchemaCache
+      withoutReload = do
+        postSc <- askSchemaCache
+        -- recreate the insert permission infra
+        forM_ (M.elems $ scTables postSc) $ \ti -> do
+          let tn = tiName ti
+          forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
+            maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
+
+        --recreate triggers
+        forM_ (M.elems $ scTables postSc) $ \ti -> do
+          let tn = tiName ti
+              cols = getCols $ tiFieldInfoMap ti
+          forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
+            let opsDef = etiOpsDef eti
+                trid = etiId eti
+            liftTx $ mkTriggerQ trid trn tn cols opsDef
+
+  bool withoutReload withReload reloadRequired
+
+  -- refresh the gCtxMap in schema cache
+  refreshGCtxMapInSchema
+
+  return res
   where
-    rawSqlErrHandler :: Q.PGTxErr -> QErr
-    rawSqlErrHandler txe =
-      let e = err400 PostgresError "query execution failed"
-      in e {qeInternal = Just $ toJSON txe}
+    reportFuncs = T.intercalate ", " . map dquoteTxt
 
-instance HDBQuery RunSQL where
+isAltrDropReplace :: QErrM m => T.Text -> m Bool
+isAltrDropReplace = either throwErr return . matchRegex regex False
+  where
+    throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
+    regex = "alter|drop|replace|create function"
 
-  type Phase1Res RunSQL = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo q _ = runSqlP2 q
-
-  schemaCachePolicy = SCPReload
+runRunSQL
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  => RunSQL -> m RespBody
+runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
+  adminOnly
+  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
+  encode <$> bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]

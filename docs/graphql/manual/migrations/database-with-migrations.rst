@@ -1,6 +1,11 @@
 Migrations with a database with an existing migration system
 ============================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 This guide will help you setup Hasura specific migrations in case you're working with an existing database
 that already has its database migration tooling.
 
@@ -16,50 +21,11 @@ In case you've deployed this using Docker the URL might be ``http://xx.xx.xx.xx:
 Step 1: Install the Hasura CLI
 ------------------------------
 
-.. rst-class:: api_tabs
-.. tabs::
+Follow the instructions in :doc:`../hasura-cli/install-hasura-cli`
 
-   .. tab:: Mac
+Step 2: Set up a project directory
+----------------------------------
 
-      In your terminal enter the following command:
-
-      .. code-block:: bash
-
-         curl -L https://cli.hasura.io/install.sh | bash
-
-      This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
-      your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-   .. tab:: Linux
-
-      Open your linux shell and run the following command:
-
-      .. code-block:: bash
-
-         curl -L https://cli.hasura.io/install.sh | bash
-
-      This will install the Hasura CLI tool in ``/usr/local/bin``. You might have to provide
-      your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
-
-   .. tab:: Windows
-
-      .. note::
-
-         You should have ``git bash`` installed to use Hasura CLI. Download ``git bash`` using this `link
-         <https://git-scm.com/download/win>`_. Also, make sure you install it in ``MinTTY`` mode, instead of Windows'
-         default console.
-
-      Download the ``hasura`` installer:
-
-      * `hasura (64-bit Windows installer) <https://cli.hasura.io/install/windows-amd64>`_
-      * `hasura (32-bit Windows installer) <https://cli.hasura.io/install/windows-386>`_
-
-      **Note:** Please run the installer as ``Administrator`` to avoid PATH update errors. If you're still
-      getting a "command not found" error after installing Hasura CLI, please restart ``git bash``.
-
-
-Step 2: Setup a project directory
----------------------------------
 Skip this step if you already have a project directory.
 
 .. code-block:: bash
@@ -69,15 +35,15 @@ Skip this step if you already have a project directory.
 Step 3: Open the console via the CLI & disable Postgres schema changes
 ----------------------------------------------------------------------
 
-Instead of using the console at ``http://my-grapqhl.herokuapp.com/console`` you should now use the console by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you should now use the console by running:
 
 .. code-block:: bash
 
-   # Without access key
+   # Without admin secret key
    hasura console
 
-   # With access key
-   hasura console --access-key mysecretkey
+   # With admin secret key
+   hasura console --admin-secret-key myadminsecretkey
 
 Step 4: Disable database schema modifications
 ---------------------------------------------
@@ -99,12 +65,12 @@ metadata file changes automatically at ``migrations/metadata.yaml``.
 Step 6: Apply the metadata to another instance of GraphQL engine
 ----------------------------------------------------------------
 
-- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-grapqhl.herokuapp.com``
+- Edit ``config.yaml`` and change the endpoint to another instance, say ``https://my-another-graphql.herokuapp.com``
 
   .. code-block:: yaml
 
      # config.yaml
-     endpoint: https://my-another-grapqhl.herokuapp.com
+     endpoint: https://my-another-graphql.herokuapp.com
 
 - Apply metadata present in the ``migrations/metadata.yaml`` on this new instance:
 

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../../Common/Button/Button';
 
 import {
   removeHeader,
@@ -16,15 +17,19 @@ import {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
+  UPDATE_WEBHOOK_URL_TYPE,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 import { fetchTableListBySchema } from './AddActions';
+
+import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import semverCheck from '../../../../helpers/semver';
 
@@ -35,18 +40,26 @@ class AddTrigger extends Component {
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
+      supportWebhookEnv: false,
+      supportRetryTimeout: false,
     };
   }
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
     if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
+      this.checkSemVer(this.props.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(this.props.serverVersion);
+        this.checkRetryTimeoutSupport(this.props.serverVersion);
+      });
     }
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
+      this.checkSemVer(nextProps.serverVersion).then(() => {
+        this.checkWebhookEnvSupport(nextProps.serverVersion);
+        this.checkRetryTimeoutSupport(nextProps.serverVersion);
+      });
     }
   }
   componentWillUnmount() {
@@ -69,13 +82,33 @@ class AddTrigger extends Component {
       this.updateSupportColumnChangeFeature(false);
       console.error(e);
     }
+    return Promise.resolve();
+  }
+
+  checkWebhookEnvSupport(version) {
+    const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
+    this.setState({ supportWebhookEnv });
+    return Promise.resolve();
+  }
+
+  checkRetryTimeoutSupport(version) {
+    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
+    this.setState({ supportRetryTimeout });
+    return Promise.resolve();
   }
 
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      ...this.state,
       supportColumnChangeFeature: val,
     });
+  }
+
+  updateWebhookUrlType(e) {
+    const field = e.target.getAttribute('value');
+    if (field === 'env' || field === 'url') {
+      this.props.dispatch({ type: UPDATE_WEBHOOK_URL_TYPE, data: field });
+      this.props.dispatch(setWebhookURL(''));
+    }
   }
 
   submitValidation(e) {
@@ -97,15 +130,36 @@ class AddTrigger extends Component {
       errorMsg = 'Webhook URL cannot be empty';
       customMsg = 'Webhook URL cannot be empty. Please add a valid URL';
     } else if (this.props.retryConf) {
-      if (isNaN(parseInt(this.props.retryConf.num_retries, 10))) {
+      const iNumRetries =
+        this.props.retryConf.num_retries === ''
+          ? 0
+          : parseInt(this.props.retryConf.num_retries, 10);
+      const iRetryInterval =
+        this.props.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(this.props.retryConf.interval_sec, 10);
+      const iTimeout =
+        this.props.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(this.props.retryConf.timeout_sec, 10);
+
+      if (iNumRetries < 0 || isNaN(iNumRetries)) {
         isValid = false;
         errorMsg = 'Number of retries is not valid';
-        customMsg = 'Numer of retries cannot be empty and can only be numbers';
+        customMsg = 'Numer of retries must be a non-negative number';
       }
-      if (isNaN(parseInt(this.props.retryConf.interval_sec, 10))) {
+      if (iRetryInterval <= 0 || isNaN(iRetryInterval)) {
         isValid = false;
         errorMsg = 'Retry interval is not valid';
-        customMsg = 'Retry interval cannot be empty and can only be numbers';
+        customMsg = 'Retry interval must be a postiive number';
+      }
+      if (
+        this.state.supportRetryTimeout &&
+        (isNaN(iTimeout) || iTimeout <= 0)
+      ) {
+        isValid = false;
+        errorMsg = 'Timeout is not valid';
+        customMsg = 'Timeout must be a positive number';
       }
     } else if (this.props.selectedOperations.insert) {
       // check if columns are selected.
@@ -172,12 +226,14 @@ class AddTrigger extends Component {
       lastSuccess,
       internalError,
       headers,
+      webhookURL,
+      webhookUrlType,
     } = this.props;
 
-    const { supportColumnChangeFeature } = this.state;
+    const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -197,7 +253,6 @@ class AddTrigger extends Component {
       const tableSchema = tableListBySchema.find(
         t => t.table_name === e.target.value
       );
-
       const columns = [];
       if (tableSchema) {
         tableSchema.columns.map(colObj => {
@@ -205,7 +260,7 @@ class AddTrigger extends Component {
           columns.push(column);
         });
       }
-      dispatch(operationToggleAllColumns(columns));
+      dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
     };
 
     const handleOperationSelection = e => {
@@ -215,7 +270,9 @@ class AddTrigger extends Component {
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        dispatch(operationToggleColumn(column, type));
+        dispatch(
+          operationToggleColumn(column, type, supportColumnChangeFeature)
+        );
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName
@@ -224,6 +281,7 @@ class AddTrigger extends Component {
       if (tableSchema) {
         return tableSchema.columns.map((colObj, i) => {
           const column = colObj.column_name;
+          const columnDataType = colObj.udt_name;
           const checked = operations[type]
             ? operations[type].includes(column)
             : false;
@@ -239,14 +297,12 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div
-              key={i}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-            >
-              <div className="checkbox">
+            <div key={i} className={styles.noPadd + ' col-md-4'}>
+              <div className={'checkbox '}>
                 <label>
                   {inputHtml}
                   {column}
+                  <small> ({columnDataType})</small>
                 </label>
               </div>
             </div>
@@ -255,7 +311,6 @@ class AddTrigger extends Component {
       }
       return null;
     };
-
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
@@ -268,7 +323,10 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div>{getColumnList('update')}</div>
+          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+            {' '}
+            {getColumnList('update')}{' '}
+          </div>
         ) : (
           <div>
             <div
@@ -370,42 +428,42 @@ class AddTrigger extends Component {
             }}
             data-test={`header-${i}`}
           />
-          <select
-            value={header.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
-              styles.add_pad_left
-            } ${styles.add_mar_right}`}
-            onChange={e => {
-              dispatch(setHeaderType(e.target.value, i));
-              if (i + 1 === headers.length) {
-                dispatch(addHeader());
+          <div className={styles.dropDownGroup}>
+            <DropdownButton
+              dropdownOptions={[
+                { display_text: 'Value', value: 'static' },
+                { display_text: 'From env var', value: 'env' },
+              ]}
+              title={
+                (header.type === 'static' && 'Value') ||
+                (header.type === 'env' && 'From env var') ||
+                'Value'
               }
-            }}
-            data-test={`header-type-${i}`}
-          >
-            {header.type === '' ? (
-              <option disabled value="">
-                -- value type --
-              </option>
-            ) : null}
-            <option value="static" key="0" title="static">
-              static
-            </option>
-            <option value="env" key="1" title="env">
-              from env variable
-            </option>
-          </select>{' '}
-          <input
-            type="text"
-            className={`${styles.input} form-control ${styles.add_mar_right}`}
-            value={header.value}
-            placeholder="value"
-            onChange={e => {
-              dispatch(setHeaderValue(e.target.value, i));
-            }}
-            data-test={`header-value-${i}`}
-          />{' '}
-          {removeIcon}
+              dataKey={
+                (header.type === 'static' && 'static') ||
+                (header.type === 'env' && 'env')
+              }
+              title={header.type === 'env' ? 'From env var' : 'Value'}
+              dataKey={header.type === 'env' ? 'env' : 'static'}
+              onButtonChange={e => {
+                dispatch(setHeaderType(e.target.getAttribute('value'), i));
+              }}
+              onInputChange={e => {
+                dispatch(setHeaderValue(e.target.value, i));
+                if (i + 1 === headers.length) {
+                  dispatch(addHeader());
+                }
+              }}
+              bsClass={styles.dropdown_button}
+              inputVal={header.value}
+              id={`header-value-${i}`}
+              inputPlaceHolder={
+                header.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+              }
+              testId={`header-value-${i}`}
+            />
+          </div>
+          <div>{removeIcon}</div>
         </div>
       );
     });
@@ -418,7 +476,7 @@ class AddTrigger extends Component {
       >
         <Helmet title="Add Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>Add a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />
@@ -443,7 +501,7 @@ class AddTrigger extends Component {
                 data-test="trigger-name"
                 placeholder="trigger_name"
                 required
-                pattern="^\w+$"
+                pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
                 className={`${styles.tableNameInput} form-control`}
                 onChange={e => {
                   dispatch(setTriggerName(e.target.value));
@@ -577,32 +635,74 @@ class AddTrigger extends Component {
                   >
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
+                  <br />
+                  <br />
+                  <small>
+                    Note: Specifying the webhook URL via an environmental
+                    variable is recommended if you have different URLs for
+                    multiple environments.
+                  </small>
                 </h4>
-                <input
-                  type="url"
-                  required
-                  data-test="webhook"
-                  placeholder="webhook url"
-                  className={`${styles.tableNameInput} form-control`}
-                  onChange={e => {
-                    dispatch(setWebhookURL(e.target.value));
-                  }}
-                />
+                <div>
+                  {this.state.supportWebhookEnv ? (
+                    <div className={styles.dropdown_wrapper}>
+                      <DropdownButton
+                        dropdownOptions={[
+                          { display_text: 'URL', value: 'url' },
+                          { display_text: 'From env var', value: 'env' },
+                        ]}
+                        title={
+                          (webhookUrlType === 'url' && 'URL') ||
+                          (webhookUrlType === 'env' && 'From env var') ||
+                          'Value'
+                        }
+                        dataKey={
+                          (webhookUrlType === 'url' && 'url') ||
+                          (webhookUrlType === 'env' && 'env')
+                        }
+                        onButtonChange={this.updateWebhookUrlType.bind(this)}
+                        onInputChange={e => {
+                          dispatch(setWebhookURL(e.target.value));
+                        }}
+                        required
+                        bsClass={styles.dropdown_button}
+                        inputVal={webhookURL}
+                        id="webhook-url"
+                        inputPlaceHolder={
+                          (webhookUrlType === 'url' &&
+                            'http://httpbin.org/post') ||
+                          (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
+                        }
+                        testId="webhook"
+                      />
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      required
+                      data-test="webhook"
+                      placeholder="webhook url"
+                      className={`${styles.tableNameInput} form-control`}
+                      onChange={e => {
+                        dispatch(setWebhookURL(e.target.value));
+                      }}
+                    />
+                  )}
+                </div>
               </div>
               <hr />
-              <button
+              <div
                 onClick={this.toggleAdvanced.bind(this)}
+                className={styles.toggleAdvanced}
                 data-test="advanced-settings"
-                type="button"
-                className={'btn btn-default ' + styles.advancedToggleBtn}
               >
-                Advanced Settings
                 {this.state.advancedExpanded ? (
-                  <i className={'fa fa-arrow-up'} />
+                  <i className={'fa fa-chevron-down'} />
                 ) : (
-                  <i className={'fa fa-arrow-down'} />
-                )}
-              </button>
+                  <i className={'fa fa-chevron-right'} />
+                )}{' '}
+                <b>Advanced Settings</b>
+              </div>
               {this.state.advancedExpanded ? (
                 <div
                   className={
@@ -610,61 +710,105 @@ class AddTrigger extends Component {
                     ' ' +
                     styles.add_mar_bottom +
                     ' ' +
-                    styles.add_mar_top
+                    styles.add_mar_top +
+                    ' ' +
+                    styles.wd100
                   }
                 >
                   {tableName ? advancedColumnSection : null}
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Number of retries (default: 0)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryNum(e.target.value));
-                        }}
-                        data-test="no-of-retries"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="no of retries"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Number of retries (default: 0)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryNum(e.target.value));
+                          }}
+                          data-test="no-of-retries"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="no of retries"
+                        />
+                      </div>
                     </div>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Retry Interval in seconds (default: 10)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryInterval(e.target.value));
-                        }}
-                        data-test="interval-seconds"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="interval time in seconds"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Retry Interval in seconds (default: 10)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryInterval(e.target.value));
+                          }}
+                          data-test="interval-seconds"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="interval time in seconds"
+                        />
+                      </div>
                     </div>
+                    {supportRetryTimeout && (
+                      <div className={styles.retrySection}>
+                        <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                          <label
+                            className={`${styles.add_mar_right} ${
+                              styles.retryLabel
+                            }`}
+                          >
+                            Timeout in seconds (default: 60)
+                          </label>
+                        </div>
+                        <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                          <input
+                            onChange={e => {
+                              dispatch(setRetryTimeout(e.target.value));
+                            }}
+                            data-test="timeout-seconds"
+                            className={`${styles.display_inline} form-control ${
+                              styles.width300
+                            }`}
+                            type="text"
+                            placeholder="timeout in seconds"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div
-                    className={styles.add_mar_bottom + ' ' + styles.add_mar_top}
+                    className={
+                      styles.add_mar_bottom +
+                      ' ' +
+                      styles.add_mar_top +
+                      ' ' +
+                      styles.wd100
+                    }
                   >
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
@@ -672,13 +816,14 @@ class AddTrigger extends Component {
                 </div>
               ) : null}
               <hr />
-              <button
+              <Button
                 type="submit"
-                className={`btn ${styles.yellow_button}`}
+                color="yellow"
+                size="sm"
                 data-test="trigger-create"
               >
                 {createBtnText}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

@@ -27,9 +27,8 @@ Options inherited from parent commands
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-      --project string      hasura project directory where the commands should be executed. (default: current directory)
+      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string     directory where commands are executed. (default: current dir)
 
 SEE ALSO
 ~~~~~~~~

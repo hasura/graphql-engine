@@ -60,7 +60,7 @@ type Driver interface {
 	UnLock() error
 
 	// Run applies a migration to the database. migration is garantueed to be not nil.
-	Run(migration io.Reader, fileType string) error
+	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
 	ResetQuery()

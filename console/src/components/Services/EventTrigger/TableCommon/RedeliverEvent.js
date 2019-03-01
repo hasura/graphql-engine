@@ -12,6 +12,7 @@ import {
 } from '../EventActions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
+import Button from '../../../Common/Button/Button';
 
 class RedeliverEvent extends Component {
   constructor(props) {
@@ -52,11 +53,11 @@ class RedeliverEvent extends Component {
       () => this.props.dispatch(loadEventInvocations(eventId)),
       5000
     );
-    this.setState({ ...this.state, intervalId: intervalId });
+    this.setState({ intervalId: intervalId });
   }
   removeFetching(intervalId) {
     clearInterval(intervalId);
-    this.setState({ ...this.state, intervalId: null });
+    this.setState({ intervalId: null });
   }
   refreshData() {
     this.props.dispatch(loadEventInvocations(this.props.log.event_id));
@@ -211,12 +212,14 @@ class RedeliverEvent extends Component {
                 <div className="col-md-12">
                   <div className={styles.add_mar_bottom}>
                     Event ID - {log.redeliverEventId}
-                    <button
+                    <Button
                       onClick={this.handleRedeliver.bind(this)}
-                      className={'hide btn btn-default'}
+                      className="hide"
+                      color="white"
+                      size="sm"
                     >
                       Deliver again
-                    </button>
+                    </Button>
                   </div>
                   <div className={styles.padd_left_remove + ' col-md-5'}>
                     <div> Request </div>

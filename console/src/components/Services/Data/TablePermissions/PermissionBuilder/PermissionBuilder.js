@@ -9,13 +9,24 @@ import {
   getTableColumnNames,
   getTableRelationshipNames,
   getTableRelationship,
+  getTableDef,
+  getTableSchema,
+  getColumnType,
+  isJsonString,
+  getAllJsonPaths,
+  isNotOperator,
+  isAndOrOperator,
+  isColumnOperator,
+  isBoolTypeColumnOperator,
+  isArrayTypeColumnOperator,
+  isJsonTypeColumnOperator,
   boolOperators,
-  columnOperators,
-  arrayColumnOperators,
-  boolColumnOperators,
+  genericOperators,
+  textColumnOperators,
+  jsonColumnOperators,
+  topologyColumnOperators,
+  PGTypes,
 } from './utils';
-
-import { getTableName } from '../../utils';
 
 import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
 
@@ -23,12 +34,96 @@ const styles = require('./Styles.scss');
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
-    allSchemas: PropTypes.array.isRequired,
+    allTableSchemas: PropTypes.array.isRequired,
     dispatch: PropTypes.func.isRequired,
-    dispatchFunc: PropTypes.func.isRequired,
+    dispatchFuncSetFilter: PropTypes.func.isRequired,
+    dispatchFuncAddTableSchemas: PropTypes.func.isRequired,
     filter: PropTypes.string,
-    table: PropTypes.string,
+    tableName: PropTypes.string,
+    schemaName: PropTypes.string,
   };
+
+  componentDidMount() {
+    this.fetchMissingSchemas();
+  }
+
+  componentDidUpdate(prevProps) {
+    // check for and fetch any missing schemas if
+    // either permission filter or available table schemas have changed
+    if (
+      this.props.filter !== prevProps.filter ||
+      this.props.allTableSchemas.length !== prevProps.allTableSchemas.length
+    ) {
+      this.fetchMissingSchemas();
+    }
+  }
+
+  fetchMissingSchemas() {
+    const {
+      dispatch,
+      tableName,
+      schemaName,
+      dispatchFuncAddTableSchemas,
+      filter,
+    } = this.props;
+
+    const findMissingSchemas = (path, currTable) => {
+      let _missingSchemas = [];
+
+      const pathSplit = path.split('.');
+
+      const operator = pathSplit[0];
+
+      if (isAndOrOperator(operator)) {
+        const newPath = pathSplit.slice(2).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (isNotOperator(operator)) {
+        const newPath = pathSplit.slice(1).join('.');
+        _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (isColumnOperator(operator)) {
+        // no missing schemas
+      } else {
+        const { allTableSchemas } = this.props;
+
+        const tableSchema = getTableSchema(allTableSchemas, currTable);
+        const tableRelationships = getTableRelationshipNames(tableSchema);
+
+        if (tableRelationships.includes(operator)) {
+          const rel = getTableRelationship(tableSchema, operator);
+          const refTable = getRefTable(rel, tableSchema);
+
+          const refTableSchema = getTableSchema(allTableSchemas, refTable);
+          if (!refTableSchema) {
+            _missingSchemas.push(refTable.schema);
+          }
+
+          const newPath = pathSplit.slice(1).join('.');
+          _missingSchemas.push(...findMissingSchemas(newPath, refTable));
+        } else {
+          // no missing schemas
+        }
+      }
+
+      return _missingSchemas;
+    };
+
+    const table = getTableDef(tableName, schemaName);
+
+    const missingSchemas = [];
+    const paths = getAllJsonPaths(JSON.parse(filter || '{}'));
+
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+
+      const subMissingSchemas = findMissingSchemas(path, table);
+
+      missingSchemas.push(...subMissingSchemas);
+    }
+
+    if (missingSchemas.length > 0) {
+      dispatch(dispatchFuncAddTableSchemas(missingSchemas));
+    }
+  }
 
   render() {
     const wrapDoubleQuotes = value => {
@@ -41,102 +136,164 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const getTableSchemas = allSchemas => {
-      const _tableSchemas = {};
-
-      allSchemas.forEach(tableSchema => {
-        _tableSchemas[tableSchema.table_name] = {
-          columns: tableSchema.columns,
-          relationships: tableSchema.relationships,
-          foreign_key_constraints: tableSchema.foreign_key_constraints,
-        };
-      });
-
-      return _tableSchemas;
-    };
-
-    const isNotOperator = value => {
-      return value === boolOperators.not;
-    };
-
-    const isAndOrOperator = value => {
-      return value === boolOperators.or || value === boolOperators.and;
-    };
-
-    const isArrayColumnOperator = value => {
-      return arrayColumnOperators.indexOf(value) !== -1;
-    };
-
-    const isBoolColumnOperator = value => {
-      return boolColumnOperators.indexOf(value) !== -1;
-    };
-
-    const isColumnOperator = value => {
-      return columnOperators.indexOf(value) !== -1;
-    };
+    /********************************/
 
     const getFilter = (conditions, prefix, value = '') => {
-      const _where = {};
+      let _where = {};
+
+      const getAndOrOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = [];
+        } else {
+          const opPrefixSplit = opPrefix.split('.');
+
+          const position = parseInt(opPrefixSplit[0], 10);
+          const newPrefix = opPrefixSplit.slice(1).join('.');
+
+          _filter[operator] = opConditions;
+          _filter[operator][position] = getFilter(
+            opConditions[position],
+            newPrefix,
+            opValue
+          );
+          if (Object.keys(_filter[operator][position]).length === 0) {
+            _filter[operator].splice(position, 1);
+          }
+        }
+
+        return _filter;
+      };
+
+      const getNotOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = {};
+        } else {
+          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+        }
+
+        return _filter;
+      };
+
+      const getArrayColumnOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = opValue || [];
+        } else {
+          const opPrefixSplit = opPrefix.split('.');
+          const position = parseInt(opPrefixSplit[0], 10);
+
+          _filter[operator] = opConditions || [];
+          if (opValue !== '') {
+            _filter[operator][position] = opValue;
+          } else {
+            _filter[operator].splice(position, 1);
+          }
+        }
+
+        return _filter;
+      };
+
+      const getColumnOperatorFilter = (operator, opValue) => {
+        const _filter = {};
+
+        _filter[operator] = opValue;
+
+        return _filter;
+      };
+
+      const getColumnFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {};
+
+        if (isLast) {
+          _filter[operator] = {};
+        } else {
+          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+        }
+
+        return _filter;
+      };
 
       const prefixSplit = prefix.split('.');
-      const operation = prefixSplit[0];
 
-      if (prefixSplit.length !== 1) {
-        if (isAndOrOperator(operation)) {
-          const position = parseInt(prefixSplit[1], 10);
-          _where[operation] = conditions[operation];
-          _where[operation][position] = getFilter(
-            conditions[operation][position],
-            prefixSplit.slice(2).join('.'),
-            value
-          );
-          if (Object.keys(_where[operation][position]).length === 0) {
-            _where[operation].splice(position, 1);
-          }
-        } else if (isNotOperator(operation)) {
-          _where[operation] = getFilter(
-            conditions[operation],
-            prefixSplit.slice(1).join('.'),
-            value
-          );
-        } else if (isArrayColumnOperator(operation)) {
-          const position = parseInt(prefixSplit[1], 10);
-          _where[operation] = conditions[operation] || [];
-          if (value) {
-            _where[operation][position] = value;
-          } else {
-            _where[operation].splice(position, 1);
-          }
-        } else {
-          // is column name
-          _where[operation] = getFilter(
-            conditions[operation],
-            prefixSplit.slice(1).join('.'),
-            value
-          );
-        }
+      const operator = prefixSplit[0];
+      const newPrefix = prefixSplit.slice(1).join('.');
+
+      const isLast = prefixSplit.length === 1;
+
+      const opConditions = isLast ? null : conditions[operator];
+
+      if (operator === '') {
+        // blank where
+      } else if (isAndOrOperator(operator)) {
+        _where = getAndOrOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isNotOperator(operator)) {
+        _where = getNotOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isArrayTypeColumnOperator(operator)) {
+        _where = getArrayColumnOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
+      } else if (isColumnOperator(operator)) {
+        _where = getColumnOperatorFilter(operator, value);
       } else {
-        if (operation === '--') {
-          /* blank where */
-        } else if (isAndOrOperator(operation)) {
-          _where[operation] = [];
-        } else if (isNotOperator(operation)) {
-          _where[operation] = {};
-        } else if (isArrayColumnOperator(operation)) {
-          _where[operation] = value || [];
-        } else if (isColumnOperator(operation)) {
-          _where[operation] = value;
-        } else {
-          // is column name
-          _where[operation] = {};
-        }
+        _where = getColumnFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
       }
 
       return _where;
     };
 
     const _dispatchFunc = data => {
-      const { dispatch, filter, dispatchFunc } = this.props;
+      const { dispatch, filter, dispatchFuncSetFilter } = this.props;
 
       const newFilter = getFilter(
         JSON.parse(filter || '{}'),
@@ -144,60 +301,57 @@ class PermissionBuilder extends React.Component {
         data.value
       );
 
-      // dispatch(dispatchFunc(JSON.stringify(newFilter, null, 4)));
-      dispatch(dispatchFunc(JSON.stringify(newFilter)));
+      // dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4)));
+      dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter)));
     };
 
-    const renderBoolSelect = (dispatchFunc, value) => {
-      const boolDispatchFunc = val => {
-        let boolVal = '';
-        if (val === 'true') {
-          boolVal = true;
-        } else if (val === 'false') {
-          boolVal = false;
-        }
+    /********************************/
 
-        dispatchFunc(boolVal);
-      };
+    const renderBoolSelect = (
+      selectDispatchFunc,
+      value,
+      prefix = '',
+      disabledValues = []
+    ) => {
+      const _value = typeof value === 'boolean' ? value.toString() : '';
 
-      let selectValue = '';
-      if (value === true) {
-        selectValue = 'true';
-      } else if (value === false) {
-        selectValue = 'false';
-      }
+      const values = ['true', 'false'];
 
-      const selectValues = ['true', 'false'];
-
-      return renderSelect(boolDispatchFunc, selectValue, selectValues);
+      return renderSelect(
+        selectDispatchFunc,
+        _value,
+        values,
+        prefix,
+        disabledValues
+      );
     };
 
     const renderSelect = (
-      dispatchFunc,
+      selectDispatchFunc,
       value,
       values,
       prefix = '',
       disabledValues = []
     ) => {
       const dispatchSelect = e => {
-        dispatchFunc(e.target.value);
+        selectDispatchFunc(e.target.value);
       };
 
       const _selectOptions = [];
-      ['--'].concat(values).forEach((val, i) => {
+      [''].concat(values).forEach((val, i) => {
         const optionVal = addToPrefix(prefix, val);
         _selectOptions.push(
           <option
             value={optionVal}
             key={i}
-            disabled={disabledValues.indexOf(val) !== -1}
+            disabled={disabledValues.includes(val)}
           >
-            {val}
+            {val || '--'}
           </option>
         );
       });
 
-      const selectedValue = addToPrefix(prefix, value || '--');
+      const selectedValue = addToPrefix(prefix, value);
 
       return (
         <select
@@ -205,39 +359,108 @@ class PermissionBuilder extends React.Component {
           name={value}
           onChange={dispatchSelect}
           className={styles.qb_select}
+          data-test="qb-select"
         >
           {_selectOptions}
         </select>
       );
     };
 
-    const renderInput = (dispatchFunc, value, prefix) => {
+    const renderInput = (inputDispatchFunc, value) => {
       const dispatchInput = e => {
-        dispatchFunc({ prefix: prefix, value: e.target.value });
+        inputDispatchFunc(e.target.value);
       };
 
-      const dispatchSuggestion = () => {
-        dispatchFunc({ prefix: prefix, value: 'X-HASURA-USER-ID' });
-      };
+      let _value = value;
 
-      const input = wrapDoubleQuotes(
+      if (typeof value === 'object') {
+        _value = JSON.stringify(value);
+      }
+
+      return (
         <input
-          value={value}
+          value={_value}
           onChange={dispatchInput}
           type="text"
           className={styles.qb_input}
           data-test="perm-check-textbox"
         />
       );
+    };
 
-      const suggestion = (
+    const renderSuggestion = (
+      suggestionDispatchFunc,
+      inputValue,
+      displayValue = null
+    ) => {
+      const dispatchSuggestion = () => {
+        suggestionDispatchFunc(inputValue);
+      };
+
+      return (
         <span
           onClick={dispatchSuggestion}
           className={styles.qb_input_suggestion}
         >
-          [X-Hasura-User-Id]
+          [{displayValue || inputValue}]
         </span>
       );
+    };
+
+    /********************************/
+
+    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+      const dispatchInput = val => {
+        let _val = val;
+
+        if (val !== '') {
+          if (PGTypes.boolean.includes(valueType)) {
+            _val = val === 'true';
+          } else if (
+            PGTypes.numeric.includes(valueType) &&
+            !isNaN(val) &&
+            val.substr(-1) !== '.'
+          ) {
+            _val = Number(val);
+          } else if (
+            (PGTypes.json.includes(valueType) ||
+              PGTypes.postgis.includes(valueType)) &&
+            isJsonString(val)
+          ) {
+            _val = JSON.parse(val);
+          }
+        }
+
+        dispatchFunc({ prefix: prefix, value: _val });
+      };
+
+      const inputBox = () => {
+        return renderInput(dispatchInput, value);
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
+      };
+
+      const jsonSuggestion = () => {
+        return renderSuggestion(dispatchInput, '{}', 'JSON');
+      };
+
+      let input;
+      let suggestion;
+
+      if (PGTypes.boolean.includes(valueType)) {
+        input = renderBoolSelect(dispatchInput, value);
+      } else if (
+        PGTypes.json.includes(valueType) ||
+        PGTypes.postgis.includes(valueType)
+      ) {
+        input = inputBox();
+        suggestion = jsonSuggestion();
+      } else {
+        input = wrapDoubleQuotes(inputBox());
+        suggestion = sessionVariableSuggestion();
+      }
 
       return (
         <span>
@@ -246,10 +469,15 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderInputArray = (dispatchFunc, values, prefix) => {
+    const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
       const _inputArray = [];
       (values || []).concat(['']).map((val, i) => {
-        const input = renderInput(dispatchFunc, val, addToPrefix(prefix, i));
+        const input = renderValue(
+          dispatchFunc,
+          val,
+          addToPrefix(prefix, i),
+          valueType
+        );
         _inputArray.push(input);
       });
 
@@ -263,54 +491,72 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderOperatorExp = (dispatchFunc, condition, prefix) => {
-      const dispatchColumnOperator = val => {
+    const renderOperatorExp = (dispatchFunc, expression, prefix, valueType) => {
+      const dispatchColumnOperatorSelect = val => {
         dispatchFunc({ prefix: val });
       };
 
-      let _condition = condition;
-      if (typeof _condition === 'string') {
-        _condition = { $eq: _condition };
+      // let _expression = expression;
+      // if (typeof _expression === 'string') {
+      //   _expression = { $eq: _expression };
+      // }
+
+      const operator = Object.keys(expression)[0];
+      const operationValue = expression[operator];
+
+      let operators;
+      if (PGTypes.character.includes(valueType)) {
+        operators = textColumnOperators;
+      } else if (PGTypes.json.includes(valueType)) {
+        operators = jsonColumnOperators;
+      } else if (PGTypes.postgis.includes(valueType)) {
+        operators = topologyColumnOperators;
+      } else {
+        operators = genericOperators;
       }
 
-      const operator = Object.keys(_condition)[0];
-      const operationValue = _condition[operator];
-
-      const operatorSelect = renderSelect(
-        dispatchColumnOperator,
+      const _operatorSelect = renderSelect(
+        dispatchColumnOperatorSelect,
         operator,
-        columnOperators,
+        operators,
         prefix
       );
 
-      let valueInput = '';
+      let _valueInput = '';
       if (operator) {
-        if (isArrayColumnOperator(operator)) {
-          valueInput = renderInputArray(
+        if (isArrayTypeColumnOperator(operator)) {
+          _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
-            addToPrefix(prefix, operator)
+            addToPrefix(prefix, operator),
+            valueType
           );
-        } else if (isBoolColumnOperator(operator)) {
-          const boolOperatorDispatchFunc = val => {
-            dispatchFunc({ prefix: addToPrefix(prefix, operator), value: val });
-          };
-
-          valueInput = renderBoolSelect(
-            boolOperatorDispatchFunc,
-            operationValue
+        } else if (isBoolTypeColumnOperator(operator)) {
+          _valueInput = renderValue(
+            dispatchFunc,
+            operationValue,
+            addToPrefix(prefix, operator),
+            'boolean'
+          );
+        } else if (isJsonTypeColumnOperator(operator)) {
+          _valueInput = renderValue(
+            dispatchFunc,
+            operationValue,
+            addToPrefix(prefix, operator),
+            'jsonb'
           );
         } else {
           // normal column operator
-          valueInput = renderInput(
+          _valueInput = renderValue(
             dispatchFunc,
             operationValue,
-            addToPrefix(prefix, operator)
+            addToPrefix(prefix, operator),
+            valueType
           );
         }
       }
 
-      const _operatorExp = [{ key: operatorSelect, value: valueInput }];
+      const _operatorExp = [{ key: _operatorSelect, value: _valueInput }];
 
       const unselectedElements = [];
       if (!operator) {
@@ -328,7 +574,7 @@ class PermissionBuilder extends React.Component {
     const renderColumnExp = (
       dispatchFunc,
       column,
-      condition,
+      expression,
       table,
       tableSchemas,
       prefix
@@ -336,24 +582,31 @@ class PermissionBuilder extends React.Component {
       let tableRelationships = [];
       let tableSchema;
       if (table) {
-        tableSchema = tableSchemas[table];
+        tableSchema = getTableSchema(tableSchemas, table);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
 
       let _columnExp = '';
-      if (tableRelationships.indexOf(column) !== -1) {
+      if (tableRelationships.includes(column)) {
         const rel = getTableRelationship(tableSchema, column);
         const refTable = getRefTable(rel, tableSchema);
 
         _columnExp = renderBoolExp(
           dispatchFunc,
-          condition,
+          expression,
           refTable,
           tableSchemas,
           prefix
         ); // eslint-disable-line no-use-before-define
       } else {
-        _columnExp = renderOperatorExp(dispatchFunc, condition, prefix);
+        const columnType = getColumnType(column, tableSchema);
+
+        _columnExp = renderOperatorExp(
+          dispatchFunc,
+          expression,
+          prefix,
+          columnType
+        );
       }
 
       return _columnExp;
@@ -361,17 +614,17 @@ class PermissionBuilder extends React.Component {
 
     const renderBoolExpArray = (
       dispatchFunc,
-      conditions,
+      expressions,
       table,
       tableSchemas,
       prefix
     ) => {
       const _boolExpArray = [];
 
-      conditions.concat([{}]).forEach((condition, i) => {
+      expressions.concat([{}]).forEach((expression, i) => {
         const _boolExp = renderBoolExp(
           dispatchFunc,
-          condition,
+          expression,
           table,
           tableSchemas,
           addToPrefix(prefix, i)
@@ -379,7 +632,7 @@ class PermissionBuilder extends React.Component {
         _boolExpArray.push(_boolExp);
       });
 
-      const unselectedElements = [conditions.length];
+      const unselectedElements = [expressions.length];
 
       return (
         <QueryBuilderJson
@@ -391,68 +644,66 @@ class PermissionBuilder extends React.Component {
 
     const renderBoolExp = (
       dispatchFunc,
-      condition,
+      expression,
       table,
       tableSchemas,
       prefix = ''
     ) => {
-      const dispatchOperation = val => {
+      const dispatchOperationSelect = val => {
         dispatchFunc({ prefix: val });
       };
 
       let operation = null;
-      if (condition) {
-        operation = Object.keys(condition)[0];
+      if (expression) {
+        operation = Object.keys(expression)[0];
       }
 
       let tableColumns = [];
       let tableRelationships = [];
       if (table) {
-        // In case of a manual relationship the right table is an object for a different schema
-        const tableSchema = tableSchemas[getTableName(table)];
+        const tableSchema = getTableSchema(tableSchemas, table);
         tableColumns = getTableColumnNames(tableSchema);
         tableRelationships = getTableRelationshipNames(tableSchema);
       }
 
       const columnOptions = tableColumns.concat(tableRelationships);
-      const operationOptions = Object.values(boolOperators);
 
       const operatorOptions = columnOptions
         .concat(['---'])
-        .concat(operationOptions);
+        .concat(boolOperators);
 
-      const boolExpKey = renderSelect(
-        dispatchOperation,
+      const _boolExpKey = renderSelect(
+        dispatchOperationSelect,
         operation,
         operatorOptions,
         prefix,
         ['---']
       );
 
-      let boolExpValue = null;
+      let _boolExpValue = null;
       if (operation) {
         const newPrefix = addToPrefix(prefix, operation);
         if (isAndOrOperator(operation)) {
-          boolExpValue = renderBoolExpArray(
+          _boolExpValue = renderBoolExpArray(
             dispatchFunc,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
           );
         } else if (isNotOperator(operation)) {
-          boolExpValue = renderBoolExp(
+          _boolExpValue = renderBoolExp(
             dispatchFunc,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
           );
         } else {
-          boolExpValue = renderColumnExp(
+          _boolExpValue = renderColumnExp(
             dispatchFunc,
             operation,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
@@ -460,7 +711,7 @@ class PermissionBuilder extends React.Component {
         }
       }
 
-      const _boolExp = [{ key: boolExpKey, value: boolExpValue }];
+      const _boolExp = [{ key: _boolExpKey, value: _boolExpValue }];
 
       const unselectedElements = [];
       if (!operation) {
@@ -475,14 +726,18 @@ class PermissionBuilder extends React.Component {
       );
     };
 
+    /********************************/
+
     const showPermissionBuilder = () => {
-      const { table, filter, allSchemas } = this.props;
+      const { tableName, schemaName, filter, allTableSchemas } = this.props;
+
+      const table = getTableDef(tableName, schemaName);
 
       return renderBoolExp(
         _dispatchFunc,
         JSON.parse(filter || '{}'),
         table,
-        getTableSchemas(allSchemas)
+        allTableSchemas
       );
     };
 

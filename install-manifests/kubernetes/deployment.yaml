@@ -18,14 +18,14 @@ spec:
         app: hasura
     spec:
       containers:
-      - image: hasura/graphql-engine:v1.0.0-alpha28
+      - image: hasura/graphql-engine:v1.0.0-alpha38
         imagePullPolicy: IfNotPresent
         name: hasura
-        command: ["graphql-engine"]
-        args: ["serve", "--enable-console"]
         env:
         - name: HASURA_GRAPHQL_DATABASE_URL
           value: postgres://username:password@hostname:port/dbname
+        - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+          value: "true"
         ports:
         - containerPort: 8080
           protocol: TCP

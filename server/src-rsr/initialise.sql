@@ -1,6 +1,9 @@
 CREATE TABLE hdb_catalog.hdb_version (
+    hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     version TEXT NOT NULL,
-    upgraded_on TIMESTAMPTZ NOT NULL
+    upgraded_on TIMESTAMPTZ NOT NULL,
+    cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    console_state JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
 CREATE UNIQUE INDEX hdb_version_one_row
@@ -42,7 +45,7 @@ CREATE TABLE hdb_catalog.hdb_relationship
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, rel_name),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_permission
@@ -56,7 +59,7 @@ CREATE TABLE hdb_catalog.hdb_permission
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, role_name, perm_type),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE VIEW hdb_catalog.hdb_permission_agg AS
@@ -83,12 +86,12 @@ SELECT
     q.table_schema :: text,
     q.table_name :: text,
     q.constraint_name :: text,
-    hdb_catalog.first(q.constraint_oid) :: integer as constraint_oid,
-    hdb_catalog.first(q.ref_table_table_schema) :: text as ref_table_table_schema,
-    hdb_catalog.first(q.ref_table) :: text as ref_table,
+    min(q.constraint_oid) :: integer as constraint_oid,
+    min(q.ref_table_table_schema) :: text as ref_table_table_schema,
+    min(q.ref_table) :: text as ref_table,
     json_object_agg(ac.attname, afc.attname) as column_mapping,
-    hdb_catalog.first(q.confupdtype) :: text as on_update,
-    hdb_catalog.first(q.confdeltype) :: text as on_delete
+    min(q.confupdtype) :: text as on_update,
+    min(q.confdeltype) :: text as on_delete
 FROM
     (SELECT
         ctn.nspname AS table_schema,
@@ -156,18 +159,110 @@ GROUP BY
 
 CREATE VIEW hdb_catalog.hdb_primary_key AS
 SELECT
-    tc.table_schema,
-    tc.table_name,
-    tc.constraint_name,
-    json_agg(ccu.column_name) as columns
+  tc.table_schema,
+  tc.table_name,
+  tc.constraint_name,
+  json_agg(constraint_column_usage.column_name) AS columns
 FROM
+  (
     information_schema.table_constraints tc
-    JOIN information_schema.constraint_column_usage ccu
-    ON tc.constraint_name = ccu.constraint_name
+    JOIN (
+      SELECT
+        x.tblschema AS table_schema,
+        x.tblname AS table_name,
+        x.colname AS column_name,
+        x.cstrname AS constraint_name
+      FROM
+        (
+          SELECT
+            DISTINCT nr.nspname,
+            r.relname,
+            a.attname,
+            c.conname
+          FROM
+            pg_namespace nr,
+            pg_class r,
+            pg_attribute a,
+            pg_depend d,
+            pg_namespace nc,
+            pg_constraint c
+          WHERE
+            (
+              (nr.oid = r.relnamespace)
+              AND (r.oid = a.attrelid)
+              AND (d.refclassid = ('pg_class' :: regclass) :: oid)
+              AND (d.refobjid = r.oid)
+              AND (d.refobjsubid = a.attnum)
+              AND (d.classid = ('pg_constraint' :: regclass) :: oid)
+              AND (d.objid = c.oid)
+              AND (c.connamespace = nc.oid)
+              AND (c.contype = 'c' :: "char")
+              AND (
+                r.relkind = ANY (ARRAY ['r'::"char", 'p'::"char"])
+              )
+              AND (NOT a.attisdropped)
+            )
+          UNION ALL
+          SELECT
+            nr.nspname,
+            r.relname,
+            a.attname,
+            c.conname
+          FROM
+            pg_namespace nr,
+            pg_class r,
+            pg_attribute a,
+            pg_namespace nc,
+            pg_constraint c
+          WHERE
+            (
+              (nr.oid = r.relnamespace)
+              AND (r.oid = a.attrelid)
+              AND (nc.oid = c.connamespace)
+              AND (
+                r.oid = CASE
+                  c.contype
+                  WHEN 'f' :: "char" THEN c.confrelid
+                  ELSE c.conrelid
+                END
+              )
+              AND (
+                a.attnum = ANY (
+                  CASE
+                    c.contype
+                    WHEN 'f' :: "char" THEN c.confkey
+                    ELSE c.conkey
+                  END
+                )
+              )
+              AND (NOT a.attisdropped)
+              AND (
+                c.contype = ANY (ARRAY ['p'::"char", 'u'::"char", 'f'::"char"])
+              )
+              AND (
+                r.relkind = ANY (ARRAY ['r'::"char", 'p'::"char"])
+              )
+            )
+        ) x(
+          tblschema,
+          tblname,
+          colname,
+          cstrname
+        )
+    ) constraint_column_usage ON (
+      (
+        (tc.constraint_name) :: text = (constraint_column_usage.constraint_name) :: text
+        AND (tc.table_schema) :: text = (constraint_column_usage.table_schema) :: text
+        AND (tc.table_name) :: text = (constraint_column_usage.table_name) :: text
+      )
+    )
+  )
 WHERE
-    constraint_type = 'PRIMARY KEY'
+  ((tc.constraint_type) :: text = 'PRIMARY KEY' :: text)
 GROUP BY
-    tc.table_schema, tc.table_name, tc.constraint_name;
+  tc.table_schema,
+  tc.table_name,
+  tc.constraint_name;
 
 CREATE FUNCTION hdb_catalog.inject_table_defaults(view_schema text, view_name text, tab_schema text, tab_name text) RETURNS void
 LANGUAGE plpgsql AS $$
@@ -188,13 +283,8 @@ CREATE TABLE hdb_catalog.event_triggers
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  definition JSON,
-  query TEXT,
-  webhook TEXT NOT NULL,
-  num_retries INTEGER DEFAULT 0,
-  retry_interval INTEGER DEFAULT 10,
-  comment TEXT,
-  headers JSON
+  configuration JSON,
+  comment TEXT
 );
 
 CREATE TABLE hdb_catalog.event_log
@@ -228,3 +318,88 @@ CREATE TABLE hdb_catalog.event_invocation_logs
 );
 
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
+
+CREATE TABLE hdb_catalog.hdb_function
+(
+    function_schema TEXT,
+    function_name TEXT,
+    is_system_defined boolean default false,
+
+    PRIMARY KEY (function_schema, function_name)
+);
+
+CREATE VIEW hdb_catalog.hdb_function_agg AS
+(
+SELECT
+  p.proname::text AS function_name,
+  pn.nspname::text AS function_schema,
+
+  CASE
+    WHEN (p.provariadic = (0) :: oid) THEN false
+    ELSE true
+  END AS has_variadic,
+
+  CASE
+    WHEN (
+      (p.provolatile) :: text = ('i' :: character(1)) :: text
+    ) THEN 'IMMUTABLE' :: text
+    WHEN (
+      (p.provolatile) :: text = ('s' :: character(1)) :: text
+    ) THEN 'STABLE' :: text
+    WHEN (
+      (p.provolatile) :: text = ('v' :: character(1)) :: text
+    ) THEN 'VOLATILE' :: text
+    ELSE NULL :: text
+  END AS function_type,
+
+  pg_get_functiondef(p.oid) AS function_definition,
+
+  rtn.nspname::text AS return_type_schema,
+  rt.typname::text AS return_type_name,
+
+  CASE
+    WHEN ((rt.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
+    WHEN ((rt.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
+    WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
+    WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
+    WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
+    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
+    ELSE NULL :: text
+  END AS return_type_type,
+  p.proretset AS returns_set,
+  ( SELECT
+      COALESCE(json_agg(pt.typname), '[]')
+    FROM
+      (
+        unnest(
+          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+        ) WITH ORDINALITY pat(oid, ordinality)
+        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+      )
+   ) AS input_arg_types,
+  to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
+FROM
+  pg_proc p
+  JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
+  JOIN pg_type rt ON (rt.oid = p.prorettype)
+  JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
+WHERE
+  pn.nspname :: text NOT LIKE 'pg_%'
+  AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
+  AND (NOT EXISTS (
+          SELECT
+            1
+          FROM
+            pg_aggregate
+          WHERE
+            ((pg_aggregate.aggfnoid) :: oid = p.oid)
+        )
+    )
+);
+
+CREATE TABLE hdb_catalog.remote_schemas (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
+  definition JSON,
+  comment TEXT
+);

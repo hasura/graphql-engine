@@ -1,7 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.SQL.Rewrite
   ( prefixNumToAliases
   ) where
@@ -91,6 +87,8 @@ uFromItem fromItem = case fromItem of
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
+  S.FIFunc f args alM ->
+    S.FIFunc f args <$> mapM addAlias alM
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
     -- idens to empty based on correlation
@@ -123,6 +121,8 @@ uBoolExp = restoringIdens . \case
   S.BENull e -> S.BENull <$> uSqlExp e
   S.BENotNull e -> S.BENotNull <$> uSqlExp e
   S.BEExists sel -> S.BEExists <$> uSelect sel
+  S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
+  S.BEExp e -> S.BEExp <$> uSqlExp e
 
 uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
 uOrderBy (S.OrderByExp ordByItems) =
@@ -171,6 +171,7 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
+  S.SECount cty                 -> return $ S.SECount cty
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden

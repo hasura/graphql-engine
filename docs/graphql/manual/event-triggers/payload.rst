@@ -1,6 +1,11 @@
 Event trigger payload
 =====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
 
 HTTP request method
@@ -18,10 +23,11 @@ JSON payload
 
     {
       "event": {
+          "session_variables": <session-variables>,
           "op": "<op-name>",
           "data": {
-            "old": <column-values>,
-            "new": <column-values>
+              "old": <column-values>,
+              "new": <column-values>
           }
       },
       "created_at": "<timestamp>",
@@ -43,6 +49,9 @@ JSON payload
    * - Key
      - Type
      - Description
+   * - session-variables
+     - Object_ or NULL
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
    * - op-name
      - OpName_
      - Name of the operation. Can only be "INSERT", "UPDATE" or "DELETE"
@@ -99,6 +108,11 @@ JSON payload
           "name": "users"
       },
       "event": {
+          "session_variables": {
+              "x-hasura-role": "admin",
+              "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
+              "x-hasura-user-id": "1"
+          },
           "op": "INSERT",
           "data": {
             "old": null,
@@ -115,8 +129,6 @@ JSON payload
 Syntax definitions
 ------------------
 
-.. _Object:
-
 Object
 ^^^^^^
 
@@ -128,8 +140,6 @@ Object
     ..
   }
 
-
-.. _OpName:
 
 OpName
 ^^^^^^

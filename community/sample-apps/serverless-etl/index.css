@@ -1,0 +1,132 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    margin-bottom: 60px; /* Margin bottom by footer height */
+}
+.footer {
+    bottom: 60px;
+    width: 100%;
+    height: 60px; /* Set the fixed height of the footer here */
+    color: rgb(226, 226, 226) !important;
+    font-size: 0.8em;
+}
+
+.footer a {
+    color: rgb(226, 226, 226) !important;
+}
+
+.footer .hasura-logo a:hover {
+    text-decoration: none;
+}
+.footer .hasura-logo img {
+    height: 30px;
+}
+
+.footer .footer-small-text {
+    font-size: 0.7em;
+    padding-top: 5px;
+}
+
+.main {
+    height: calc(100vh - 60px);
+    background-color: #467FD7;
+    color: rgb(226, 226, 226);
+}
+
+.main-content {
+    text-align: center;
+}
+
+.main-content img#arch {
+    width: 100%;
+}
+
+.waiting-text {
+    padding-top: 10px
+}
+
+div .error {
+    padding-top: 20px;
+}
+
+#arch {
+    padding: 20px;
+}
+
+.notifications {
+    width: 100%;
+}
+
+.notifications ul {
+    max-height: 350px;
+    overflow: auto;
+}
+
+.try-again {
+    padding: 10px;
+}
+
+
+.loader {
+    height: 4px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #ddd;
+}
+.loader:before{
+    display: block;
+    position: absolute;
+    content: "";
+    left: -200px;
+    width: 200px;
+    height: 4px;
+    background-color: #2980b9;
+    animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+    from {left: -200px; width: 30%;}
+    50% {width: 30%;}
+    70% {width: 70%;}
+    80% { left: 50%;}
+    95% {left: 120%;}
+    to {left: 100%;}
+}
+
+.center-form input {
+    text-align: center;
+}
+
+.search-results {
+    max-height: 250px;
+    min-height: 250px;
+    overflow: auto;
+}
+
+div#search-box {
+    justify-content: center;
+}
+
+div.ais-search-box--magnifier {
+    margin-top: 6px;
+}
+
+button.ais-search-box--reset {
+    margin-top: 6px;
+}
+
+img.algolia_image {
+    height: 20px;
+}
+
+.algolia_search_attribution {
+    font-size: 0.8em;
+}
+
+.hasura-logo img {
+    height: 30px;
+    margin-bottom: 12px;
+}

@@ -143,3 +143,57 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: false
 
+#Resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        city TEXT NOT NULL
+      );
+      INSERT INTO resident (name, age, city)
+      VALUES  ('phillips', 25, 'canberra')
+            , ('george', 26, 'sydney')
+            , ('clarke', 21, 'perth')
+      ;
+- type: track_table
+  args:
+    name: resident
+    schema: public
+
+#Permissions
+- type: create_select_permission
+  args:
+    table: resident
+    role: user1
+    permission:
+      filter: {}
+      columns: '*'
+- type: create_update_permission
+  args:
+    table: resident
+    role: user1
+    permission:
+      filter: {}
+      columns: '*'
+      set:
+        city: melbourne
+
+- type: create_select_permission
+  args:
+    table: resident
+    role: user2
+    permission:
+      filter: {}
+      columns: '*'
+- type: create_update_permission
+  args:
+    table: resident
+    role: user2
+    permission:
+      filter: {}
+      columns: '*'
+      set:
+        city: X-Hasura-City

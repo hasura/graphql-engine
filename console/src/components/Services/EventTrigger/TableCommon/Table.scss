@@ -2,7 +2,9 @@
 .container {
   padding: 0;
 }
-
+.dropdown_wrapper {
+  width: 300px;
+}
 .tableContainer {
   overflow: auto;
   //margin-top: 25px;
@@ -16,7 +18,25 @@
     width: 40%;
   }
 }
-
+.clearBoth
+{
+  clear: both;
+}
+.wd100
+{
+  width: 100%;
+  float: left;
+  clear: both;
+}
+.noPadd
+{
+  padding-left: 0;
+  padding-right: 0;
+}
+.listenColumnWrapper
+{
+  max-width: 700px;
+}
 .aceBlock {
   max-height: 300px;
   position: relative;
@@ -193,19 +213,19 @@ a.expanded {
     margin-bottom: 10px;
   }
   margin-bottom: 10px;
-  label {
-    cursor: pointer;
-  }
 }
 
 .retryLabel {
   display: block;
-  margin-bottom: 10px !important;
 }
 
 .retrySection {
-  width: 300px;
   margin-right: 20px;
+  width: 100%;
+  float: left;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
 }
 
 .invocationsSection {
@@ -252,7 +272,6 @@ a.expanded {
 
 .advancedToggleBtn {
   width: 300px;
-  background: #f2f2f2 !important;
   i {
     padding-left: 5px;
   }
@@ -273,7 +292,6 @@ a.expanded {
   min-height: 41px;
 }
 .newBtn {
-  font-size: 12px;
   margin-right: 10px;
 }
 .loadNewer {
@@ -294,9 +312,6 @@ a.expanded {
     margin-left: 10px;
   }
 }
-.oldBtn {
-  font-size: 12px;
-}
 .retryEvent {
   cursor: pointer;
 }
@@ -306,4 +321,36 @@ a.expanded {
 .redeliverEventSection {
   clear: both;
   margin: 0;
+}
+.triggerSettingsModifyButton {
+  margin-right: 10px;
+  border-radius: 3px;
+}
+.dropDownGroup {
+  max-width: 300px;
+}
+.status_code_right {
+  text-align: right;
+  font-weight: bold;
+  font-size: 15px;
+  padding-bottom: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+  i
+  {
+    margin-left: 5px;
+  }
+}
+.toggleAdvanced {
+  cursor: pointer;
+  b {
+    font-size: 15px;
+  }
+  i:hover {
+    color: #4D4D4D ;
+  }
+}
+
+.width300 {
+  width: 300px;
 }

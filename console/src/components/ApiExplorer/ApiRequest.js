@@ -6,7 +6,6 @@ import {
   changeRequestMethod,
   changeRequestUrl,
   changeRequestParams,
-  sendExplorerReq,
   addRequestHeader,
   changeRequestHeader,
   removeRequestHeader,
@@ -15,6 +14,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
 } from './Actions';
+import globals from '../../Globals';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
 
@@ -23,8 +23,10 @@ const styles = require('./ApiExplorer.scss');
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
-    this.state.accessKeyVisible = false;
+    this.state = {
+      deletedHeader: false,
+    };
+    this.state.adminSecretVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
     this.state.tabIndex = 0;
     this.timer = null;
@@ -38,11 +40,6 @@ class ApiRequest extends Component {
 
   onGenerateApiCodeClicked = () => {
     this.props.dispatch(generateApiCodeClicked());
-  };
-
-  onSendButtonClick = () => {
-    // check the request type
-    this.props.dispatch(sendExplorerReq(this.props.bodyType));
   };
 
   onUrlChanged = e => {
@@ -66,11 +63,12 @@ class ApiRequest extends Component {
 
   onDeleteHeaderClicked(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    this.setState({ deletedHeader: true });
     this.props.dispatch(removeRequestHeader(index));
   }
 
-  onShowAccessKeyClicked() {
-    this.setState({ accessKeyVisible: !this.state.accessKeyVisible });
+  onShowAdminSecretClicked() {
+    this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
   }
 
   onNewHeaderKeyChanged(e) {
@@ -109,8 +107,6 @@ class ApiRequest extends Component {
   };
 
   getUrlBar() {
-    const { explorerData, bodyType } = this.props;
-
     return (
       <div
         id="stickyHeader"
@@ -140,47 +136,11 @@ class ApiRequest extends Component {
               onChange={this.onUrlChanged}
               value={this.props.url}
               type="text"
-              className={
-                styles.inputGroupInput +
-                ' form-control ' +
-                styles.cursorNotAllowed
-              }
+              readOnly
+              className={styles.inputGroupInput + ' form-control '}
             />
           </div>
         </div>
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-2 ' + styles.wd16}>
-            <div className={styles.sendBtn}>
-              {!explorerData.sendingRequest ? (
-                <button
-                  onClick={() => {
-                    this.onSendButtonClick();
-                  }}
-                >
-                  {bodyType === 'download' ? 'Download' : 'Send'}
-                </button>
-              ) : (
-                <button
-                  style={{ opacity: 0.4 }}
-                  className="btn"
-                  disabled={explorerData.sendingRequest}
-                >
-                  Sending...
-                </button>
-              )}
-            </div>
-          </div>
-        ) : null}
-        {this.props.bodyType !== 'graphql' ? (
-          <div className={'col-xs-3 ' + styles.padd_remove + ' ' + styles.wd16}>
-            <div
-              onClick={this.onGenerateApiCodeClicked}
-              className={styles.generateBtn}
-            >
-              <button className="btn">Generate API code</button>
-            </div>
-          </div>
-        ) : null}
         <div className={styles.stickySeparator} />
       </div>
     );
@@ -197,7 +157,55 @@ class ApiRequest extends Component {
   }
 
   getHeaderRows() {
-    const rows = this.props.headers.map((header, i) => {
+    let headers;
+    const headers_map = new Map();
+    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
+      const stored_headers = JSON.parse(
+        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
+      );
+      for (const s_h of this.props.headers) {
+        if (!headers_map.has(s_h.key)) {
+          headers_map.set(s_h.key, 1);
+        }
+      }
+      //Case when user loads again.
+      if (
+        stored_headers.length > this.props.headers.length &&
+        this.state.deletedHeader === false
+      ) {
+        const initHeaderCount = this.props.headers.length - 1;
+        const input_row = this.props.headers.pop();
+        for (
+          let i = initHeaderCount;
+          i <= stored_headers.length - initHeaderCount;
+          i++
+        ) {
+          if (!headers_map.has(stored_headers[i].key)) {
+            this.props.headers.push(stored_headers[i]);
+          }
+        }
+        this.props.headers.push(input_row);
+      }
+      //Case when user deletes a header from console.
+      if (
+        stored_headers.length > this.props.headers.length &&
+        this.state.deletedHeader === true
+      ) {
+        this.setState({ deletedHeader: false });
+      }
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    } else {
+      headers = this.props.headers;
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    }
+    const rows = headers.map((header, i) => {
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
@@ -272,8 +280,9 @@ class ApiRequest extends Component {
               onBlur={this.handleBlur}
               data-test={`header-value-${i}`}
               type={
-                header.key.toLowerCase() === 'x-hasura-access-key' &&
-                !this.state.accessKeyVisible
+                header.key.toLowerCase() ===
+                  `x-hasura-${globals.adminSecretLabel}` &&
+                !this.state.adminSecretVisible
                   ? 'password'
                   : 'text'
               }
@@ -281,12 +290,13 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() === 'x-hasura-access-key' ? (
+              {header.key.toLowerCase() ===
+              `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                  className={styles.showAccessKey + ' fa fa-eye'}
+                  className={styles.showAdminSecret + ' fa fa-eye'}
                   data-header-id={i}
                   aria-hidden="true"
-                  onClick={this.onShowAccessKeyClicked.bind(this)}
+                  onClick={this.onShowAdminSecretClicked.bind(this)}
                 />
               ) : null}
               <i

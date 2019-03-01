@@ -3,12 +3,16 @@ registry := hasura
 version  := $(shell ../scripts/get-version.sh)
 
 # TODO: needs to be replaced with something like yq
-stack_resolver := $(shell grep '^resolver:' stack.yaml | awk '{print $$2;}')
+stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
 packager_ver := 1.2
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 
 build_output := /build/_server_output
+
+dev: src-lib src-exec src-rsr
+	stack build --fast
+	stack exec graphql-engine -- --database-url postgres://postgres:@localhost:5432/hge serve --enable-console
 
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(version)" \

@@ -19,12 +19,14 @@ const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
 const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
 const SET_RETRY_NUM = 'AddTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'AddTrigger/SET_RETRY_INTERVAL';
+const SET_RETRY_TIMEOUT = 'AddTrigger/SET_RETRY_TIMEOUT';
 const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
+const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
@@ -32,6 +34,7 @@ const SET_HEADERKEY = 'AddTrigger/SET_HEADERKEY';
 const SET_HEADERTYPE = 'AddTrigger/SET_HEADERTYPE';
 const SET_HEADERVALUE = 'AddTrigger/SET_HEADERVALUE';
 const ADD_HEADER = 'AddTrigger/ADD_HEADER';
+const UPDATE_WEBHOOK_URL_TYPE = 'AddTrigger/UPDATE_WEBHOOK_URL_TYPE';
 
 const setTriggerName = value => ({ type: SET_TRIGGERNAME, value });
 const setTableName = value => ({ type: SET_TABLENAME, value });
@@ -39,6 +42,7 @@ const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
+const setRetryTimeout = value => ({ type: SET_RETRY_TIMEOUT, value });
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const addHeader = () => ({ type: ADD_HEADER });
 const removeHeader = i => ({ type: REMOVE_HEADER, index: i });
@@ -65,6 +69,10 @@ const validationError = error => {
   return { type: VALIDATION_ERROR, error };
 };
 
+const getWebhookKey = (type, val) => {
+  return { [type === 'url' ? 'webhook' : 'webhook_from_env']: val };
+};
+
 const createTrigger = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
@@ -74,6 +82,7 @@ const createTrigger = () => {
     const triggerName = currentState.triggerName;
     const tableName = currentState.tableName;
     const webhook = currentState.webhookURL;
+    const webhookType = currentState.webhookUrlType;
 
     // apply migrations
     const migrationName = 'create_trigger_' + triggerName.trim();
@@ -82,7 +91,8 @@ const createTrigger = () => {
       args: {
         name: triggerName,
         table: { name: tableName, schema: currentSchema },
-        webhook: webhook,
+        // webhook: webhook,
+        ...getWebhookKey(webhookType, webhook),
       },
     };
     const downPayload = {
@@ -105,6 +115,21 @@ const createTrigger = () => {
     if (currentState.retryConf) {
       payload.args.retry_conf = currentState.retryConf;
     }
+
+    payload.args.retry_conf = {
+      num_retries:
+        currentState.retryConf.num_retries === ''
+          ? 0
+          : parseInt(currentState.retryConf.num_retries, 10),
+      interval_sec:
+        currentState.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(currentState.retryConf.interval_sec, 10),
+      timeout_sec:
+        currentState.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(currentState.retryConf.timeout_sec, 10),
+    };
 
     // create header payload
     const headers = [];
@@ -183,6 +208,7 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
         },
         columns: ['*.*'],
         where: { table_schema: schemaName },
+        order_by: ['+table_name'],
       },
     }),
   };
@@ -196,8 +222,28 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   );
 };
 
-const operationToggleColumn = (column, operation) => {
+const operationToggleColumn = (
+  column,
+  operation,
+  supportColumnChangeFeature
+) => {
   return (dispatch, getState) => {
+    if (supportColumnChangeFeature) {
+      if (operation === 'update') {
+        const currentOperations = getState().addTrigger.operations;
+        const currentCols = currentOperations[operation];
+        // check if column is in currentCols. if not, push
+        const isExists = currentCols.includes(column);
+        let finalCols = currentCols;
+        if (isExists) {
+          finalCols = currentCols.filter(col => col !== column);
+        } else {
+          finalCols.push(column);
+        }
+        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+      }
+      return;
+    }
     const currentOperations = getState().addTrigger.operations;
     const currentCols = currentOperations[operation];
     // check if column is in currentCols. if not, push
@@ -212,11 +258,18 @@ const operationToggleColumn = (column, operation) => {
   };
 };
 
-const operationToggleAllColumns = columns => {
+const operationToggleAllColumns = (
+  columns,
+  supportListeningToColumnsUpdate
+) => {
   return dispatch => {
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    if (supportListeningToColumnsUpdate) {
+      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
+    } else {
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    }
   };
 };
 
@@ -235,7 +288,7 @@ const addTriggerReducer = (state = defaultState, action) => {
     case ADD_HEADER:
       return {
         ...state,
-        headers: [...state.headers, { key: '', type: '', value: '' }],
+        headers: [...state.headers, { key: '', type: 'static', value: '' }],
       };
     case REMOVE_HEADER:
       return {
@@ -323,7 +376,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          num_retries: parseInt(action.value, 10),
+          num_retries: action.value,
         },
       };
     case SET_RETRY_INTERVAL:
@@ -331,7 +384,15 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          interval_sec: parseInt(action.value, 10),
+          interval_sec: action.value,
+        },
+      };
+    case SET_RETRY_TIMEOUT:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          timeout_sec: action.value,
         },
       };
     case SET_TABLENAME:
@@ -344,6 +405,15 @@ const addTriggerReducer = (state = defaultState, action) => {
       const operations = state.operations;
       operations[action.op] = action.cols;
       return { ...state, operations: { ...operations } };
+    case TOGGLE_ALL_COLUMNS:
+      return {
+        ...state,
+        operations: {
+          insert: '*',
+          delete: '*',
+          update: action.cols,
+        },
+      };
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
       selectedOperations[action.data] = true;
@@ -352,6 +422,11 @@ const addTriggerReducer = (state = defaultState, action) => {
       const deselectedOperations = state.selectedOperations;
       deselectedOperations[action.data] = false;
       return { ...state, selectedOperations: { ...deselectedOperations } };
+    case UPDATE_WEBHOOK_URL_TYPE:
+      return {
+        ...state,
+        webhookUrlType: action.data,
+      };
     default:
       return state;
   }
@@ -370,11 +445,13 @@ export {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   createTrigger,
   fetchTableListBySchema,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
+  UPDATE_WEBHOOK_URL_TYPE,
 };
 export { validationError };

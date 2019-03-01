@@ -50,9 +50,6 @@
     min-width: 100px;
     font-weight: 300;
   }
-  tr {
-    cursor: pointer;
-  }
   td {
     width: 300px;
     max-width: 300px;
@@ -123,4 +120,9 @@ a.expanded {
 
 .relationshipTopPadding {
   padding: 10px 0;
+}
+
+.relEditButtons {
+  display: flex;
+  flex-direction:row;
 }

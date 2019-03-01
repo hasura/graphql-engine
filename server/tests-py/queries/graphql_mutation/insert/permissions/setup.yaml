@@ -39,7 +39,7 @@ args:
     sql: |
       CREATE TABLE resident (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         age INTEGER NOT NULL,
         is_user BOOLEAN DEFAULT FALSE NOT NULL
       )
@@ -116,6 +116,16 @@ args:
       check:
         author_id: X-Hasura-User-Id
 
+#Article udpate permission for user
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      filter:
+        author_id: X-Hasura-User-Id
+      columns: '*'
+
 #Author select permission for user
 - type: create_select_permission
   args:
@@ -129,7 +139,7 @@ args:
       filter:
         id: X-HASURA-USER-ID
 
-#Author insert permission for user
+#Author insert and update permission for user
 #Only admin can set is_registered to true
 - type: create_insert_permission
   args:
@@ -140,7 +150,17 @@ args:
         $and:
         - id: X-HASURA-USER-ID
         - is_registered: false
-      allow_upsert: true
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
 
 #Author insert permission for student
 #A Student should specify their Bio
@@ -152,7 +172,6 @@ args:
       check:
         bio:
           _is_null: false
-      allow_upsert: true
 
 #Insert Author table data
 - type: insert
@@ -169,10 +188,13 @@ args:
     objects:
     - content: Sample article content
       title: Article 1
+      author_id: 1
     - content: Sample article content
       title: Article 2
+      author_id: 1
     - content: Sample article content
       title: Article 3
+      author_id: 2
     
 #Company insert permission for user
 - type: create_insert_permission
@@ -182,7 +204,16 @@ args:
     permission:
       check:
         id: X-HASURA-COMPANY-ID
-      allow_upsert: true
+
+#Company update permission for user
+- type: create_update_permission
+  args:
+    table: Company
+    role: user
+    permission:
+      filter:
+        id: X-HASURA-COMPANY-ID
+      columns: '*'
 
 #Company select permission for user
 - type: create_select_permission
@@ -204,7 +235,6 @@ args:
     permission:
       check:
         id: X-Hasura-Resident-Id
-      allow_upsert: true
       set:
         name: X-Hasura-Resident-Name
         is_user: true
@@ -231,7 +261,6 @@ args:
     permission:
       check:
         id: X-Hasura-Infant-Id
-      allow_upsert: false
       set:
         name: X-Hasura-Infant-Name
         id: X-Hasura-Infant-Id
@@ -251,4 +280,93 @@ args:
       - is_user
       filter:
         id: X-Hasura-Infant-Id
+
+#Create permissions for resident role on resident table
+- type: create_insert_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+
+- type: create_update_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+- type: create_select_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+
+#Insert residents
+- type: insert
+  args:
+    table: resident
+    objects:
+    - id: 5
+      name: Resident 5
+      age: 21
+    - id: 6
+      name: Resident 6
+      age: 22
+
+#Create blog table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE blog (
+        id serial primary key,
+        title text not null,
+        content text,
+        author_id INTEGER REFERENCES author(id),
+        last_updated timestamptz,
+        updated_by INTEGER REFERENCES author(id)
+      );
+      INSERT INTO blog (id, title, author_id) VALUES
+        (1, 'first blog', 1), (2, 'second blog', 2);
+
+- type: track_table
+  args:
+    name: blog
+    schema: public
+    
+- type: create_select_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        author_id: X-Hasura-User-Id
+
+- type: create_insert_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      check: {}
+
+- type: create_update_permission
+  args:
+    table: blog
+    role: user
+    permission:
+      columns:
+      - title
+      - content
+      filter: {}
+      set:
+        last_updated: 'NOW()'
+        updated_by: X-Hasura-User-Id
+
+
 

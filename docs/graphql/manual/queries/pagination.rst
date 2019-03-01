@@ -1,10 +1,20 @@
 Paginate query results
 ======================
-The operators :ref:`limit <PaginationExp>` and :ref:`offset <PaginationExp>` are used for pagination.
-``limit`` specifies the number of rows to retain from the result set
-and ``offset`` determines which slice to retain from the results.
 
-The following are examples of pagination in different scenarios:
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+The operators ``limit`` and ``offset`` are used for pagination.
+
+``limit`` specifies the number of rows to retain from the result set and ``offset`` determines which slice to
+retain from the results.
+
+You can see the complete specification of the ``limit`` and ``offset`` arguments in the
+:ref:`API reference <PaginationExp>`.
+
+The following are examples of different pagination scenarios:
 
 Limit results
 -------------

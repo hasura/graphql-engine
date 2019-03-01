@@ -1,16 +1,26 @@
 Schema/Metadata API Reference: Run SQL
 ======================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
 .. _run_sql:
 
 run_sql
 -------
 
+``run_sql`` can be used to run arbitrary SQL statements.
+
+Multiple SQL statements can be separated by a ``;``, however, only the result of the last SQL statement will be
+returned.
+
 .. admonition:: Admin-only
 
   This is an admin-only query, i.e. the query can only be executed by a
   request having ``X-Hasura-Role: admin``. This can be set by passing
-  ``X-Hasura-Access-Key`` or by setting the right role in Webhook/JWT
+  ``X-Hasura-Admin-Secret`` or by setting the right role in Webhook/JWT
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
@@ -23,9 +33,6 @@ Use cases
 
 1. To execute DDL operations that are not supported by the console (e.g. managing indexes).
 2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
-
-``run_sql`` can be used to run arbitrary SQL statements. Multiple SQL statements can be separated by a
-"``;``", however, only the result of the last sql statement will be returned.
 
 An example:
 
@@ -160,7 +167,7 @@ The response is a JSON Object with the following structure.
 .. note::
    The first row in the ``result`` (when present) will be the names of the columns.
 
-More examples
+Some examples
 ^^^^^^^^^^^^^
 
 A query returning results.

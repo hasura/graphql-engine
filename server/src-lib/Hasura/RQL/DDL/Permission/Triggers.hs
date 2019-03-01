@@ -1,8 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.RQL.DDL.Permission.Triggers where
 
 import           Hasura.Prelude
@@ -10,15 +5,15 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query       as Q
-import qualified Hasura.SQL.DML          as S
+import qualified Database.PG.Query   as Q
+import qualified Hasura.SQL.DML      as S
 
-import qualified Data.Aeson              as J
-import qualified Data.FileEmbed          as FE
-import qualified Data.Text               as T
+import qualified Data.Aeson          as J
+import qualified Data.FileEmbed      as FE
+import qualified Data.Text           as T
 
 buildInsTrig :: QualifiedTable -> Q.Query
-buildInsTrig qt@(QualifiedTable _ tn) =
+buildInsTrig qt@(QualifiedObject _ tn) =
   Q.fromBuilder $ mconcat
   [ "CREATE TRIGGER " <> toSQL tn
   , " INSTEAD OF INSERT ON " <> toSQL qt

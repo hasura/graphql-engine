@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
-module Hasura.RQL.DML.Count where
+module Hasura.RQL.DML.Count
+  ( CountQueryP1(..)
+  , getCountDeps
+  , validateCountQWith
+  , validateCountQ
+  , runCount
+  , countQToTx
+  ) where
 
 import           Data.Aeson
 import           Instances.TH.Lift       ()
@@ -23,7 +25,7 @@ import qualified Hasura.SQL.DML          as S
 data CountQueryP1
   = CountQueryP1
   { cqp1Table    :: !QualifiedTable
-  , cqp1Where    :: !(S.BoolExp, Maybe (GBoolExp AnnSQLBoolExp))
+  , cqp1Where    :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
@@ -41,15 +43,15 @@ mkSQLCount
   :: CountQueryP1 -> S.Select
 mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   S.mkSelect
-    { S.selExtr = [S.Extractor (S.SEFnApp "count" [S.SEStar] Nothing) Nothing]
+    { S.selExtr = [S.Extractor S.countStar Nothing]
     , S.selFrom = Just $ S.FromExp
                   [S.mkSelFromExp False innerSel $ TableName "r"]
     }
   where
 
     finalWC =
-      S.BEBin S.AndOp permFltr $
-      maybe (S.BELit True) cBoolExp mWc
+      toSQLBoolExp (S.QualTable tn) $
+      maybe permFltr (andAnnBoolExps permFltr) mWc
 
     innerSel = partSel
       { S.selFrom  = Just $ S.mkSimpleFromExp tn
@@ -68,12 +70,12 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
-countP1
-  :: (P1C m)
+validateCountQWith
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
+validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
   tableInfo <- askTabInfo qt
 
   -- Check if select is allowed
@@ -90,7 +92,7 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp' colInfoMap qt selPerm be prepValBuilder
+    convBoolExp' colInfoMap selPerm be prepValBuilder
 
   return $ CountQueryP1
     qt
@@ -103,20 +105,26 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
     relInDistColsErr =
       "Relationships can't be used in \"distinct\"."
 
-countP2 :: (P2C m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-countP2 (u, p) = do
-  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler (Q.fromBuilder countSQL) (toList p) True
+validateCountQ
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ =
+  liftDMLP1 . validateCountQWith binRHSBuilder
+
+countQToTx
+  :: (QErrM m, MonadTx m)
+  => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+countQToTx (u, p) = do
+  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
+          (Q.fromBuilder countSQL) (toList p) True
   return $ BB.toLazyByteString $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
-instance HDBQuery CountQuery where
-
-  type Phase1Res CountQuery = (CountQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = flip runStateT DS.empty . countP1 binRHSBuilder
-
-  phaseTwo _ = countP2
-
-  schemaCachePolicy = SCPNoChange
+runCount
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => CountQuery -> m RespBody
+runCount q =
+  validateCountQ q >>= countQToTx

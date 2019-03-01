@@ -9,17 +9,27 @@ const componentsSemver = {
   supportColumnChangeTrigger: '1.0.0-alpha26',
   analyzeApiChange: '1.0.0-alpha26',
   insertPrefix: '1.0.0-alpha26',
+  schemaStitching: '1.0.0-alpha30',
+  webhookEnvSupport: '1.0.0-alpha29',
   insertPermRestrictColumns: '1.0.0-alpha28',
+  permHideUpsertSection: '1.0.0-alpha32',
+  customFunctionSection: '1.0.0-alpha36',
+  tableColumnRename: '1.0.0-alpha39',
+  triggerRetryTimeout: '1.0.0-alpha38',
+  permUpdatePresets: '1.0.0-alpha38',
 };
 
 const getPreRelease = version => {
   const prerelease = semver.prerelease(version);
+  if (!prerelease) {
+    return '';
+  }
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];
     const m = regex.exec(str);
     if (m.length < 3) {
-      return [];
+      return '';
     }
     return m.slice(1, 3);
   }
@@ -28,14 +38,12 @@ const getPreRelease = version => {
 
 const semverCheck = (component, serverVersion) => {
   if (component in componentsSemver) {
-    const componentCoerce = semver.valid(
-      semver.coerce(componentsSemver[component])
-    );
+    const componentCoerce = semver.valid(componentsSemver[component]);
     if (componentCoerce == null) {
       return false;
     }
 
-    const serverCoerce = semver.valid(semver.coerce(serverVersion));
+    const serverCoerce = semver.valid(serverVersion);
     if (serverCoerce == null) {
       return true;
     }

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.Server.Auth.JWT.Internal where
 
 import           Control.Lens
@@ -14,6 +12,7 @@ import           Data.ASN1.Types          (ASN1 (End, IntVal, Start),
 import           Data.Int                 (Int64)
 
 import           Hasura.Prelude
+import           Hasura.Server.Utils      (fmapL)
 
 import qualified Data.ByteString.Lazy     as BL
 import qualified Data.PEM                 as PEM
@@ -98,10 +97,6 @@ pubKeyToJwk pubKey = do
     rsaKeyParams n e =
       RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing
 
-
-fmapL :: (a -> a') -> Either a b -> Either a' b
-fmapL fn (Left e) = Left (fn e)
-fmapL _ (Right x) = pure x
 
 getAtleastOne :: Text -> [a] -> Either Text a
 getAtleastOne err []  = Left err

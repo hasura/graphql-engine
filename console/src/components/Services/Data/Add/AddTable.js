@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Button from '../../../Common/Button/Button';
 
 import dataTypes from '../Common/DataTypes';
 import { showErrorNotification } from '../Notification';
@@ -36,7 +37,7 @@ import {
 import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
 
 import {
-  listDulplicate,
+  listDuplicate,
   // convertListToDictUsingKV,
 } from '../../../../utils/data';
 
@@ -118,7 +119,7 @@ class AddTable extends Component {
       }
     } else if (this.props.columns.length > 1) {
       // check for repeatition
-      const listOfRepeats = listDulplicate(
+      const listOfRepeats = listDuplicate(
         this.props.columns.map(column => column.name)
       );
       if (listOfRepeats.length > 0) {
@@ -472,14 +473,15 @@ class AddTable extends Component {
               }}
             />
             <hr />
-            <button
+            <Button
               type="submit"
-              className={`btn ${styles.yellow_button}`}
               onClick={this.submitValidation.bind(this)}
               data-test="table-create"
+              color="yellow"
+              size="sm"
             >
               {createBtnText}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

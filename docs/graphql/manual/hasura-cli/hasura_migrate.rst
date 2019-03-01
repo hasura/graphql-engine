@@ -16,21 +16,20 @@ Options
 
 ::
 
-      --access-key string   access key for Hasura GraphQL Engine
-      --endpoint string     http(s) endpoint for Hasura GraphQL Engine
-  -h, --help                help for migrate
+  -h, --help   help for migrate
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --project string   hasura project directory where the commands should be executed. (default: current directory)
+      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string     directory where commands are executed. (default: current dir)
 
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - hasura controls the hasura project
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
 * :ref:`hasura migrate apply <hasura_migrate_apply>` 	 - Apply migrations on the database
 * :ref:`hasura migrate create <hasura_migrate_create>` 	 - Create files required for a migration
 * :ref:`hasura migrate status <hasura_migrate_status>` 	 - Display current status of migrations on a database

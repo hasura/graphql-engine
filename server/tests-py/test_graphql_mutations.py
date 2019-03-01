@@ -27,6 +27,14 @@ class TestGraphQLInsert(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb_variable_array.yaml")
         hge_ctx.may_skip_test_teardown = True
 
+    def test_insert_person(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_jsonb.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_insert_person_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_jsonb_array.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
         hge_ctx.may_skip_test_teardown = True
@@ -40,9 +48,6 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
 
     def test_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
-
-    def test_on_conflict_no_action_specified(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_no_action_specified.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
@@ -77,9 +82,6 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_on_conflict_ignore_user_role.yaml")
         hge_ctx.may_skip_test_teardown = True
-
-    def test_user_on_conflict_err_no_action_specified(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_article_on_conflict_err_no_action_specified.yaml")
 
     def test_user_err_missing_article_constraint(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_article_on_conflict_error_missing_article_constraint.yaml")
@@ -122,6 +124,12 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
 
     def test_resident_infant_role_insert_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_infant_fail.yaml")
+
+    def test_resident_5_modifies_resident_6_upsert(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
+
+    def test_blog_on_conflict_update_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
 
     @classmethod
     def dir(cls):
@@ -200,6 +208,12 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_author_with_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
 
+    def test_author_with_articles_empty(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_empty.yaml")
+
+    def test_author_with_articles_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_articles_null.yaml")
+
     def test_author_with_articles_author_id_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_author_id_fail.yaml")
 
@@ -243,6 +257,10 @@ class TestGraphqlUpdateBasic(DefaultTestQueries):
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
+
+    def test_empty_set_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_empty_set.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_set_person_details(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
@@ -299,6 +317,12 @@ class TestGraphqlUpdatePermissions(DefaultTestQueries):
     def test_user_cannot_update_id_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset.yaml')
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml')
 
     @classmethod
     def dir(cls):

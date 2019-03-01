@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
-import socketserver
+from http import HTTPStatus
+from urllib.parse import urlparse
+# import socketserver
 import threading
 import http.server
 import json
-import yaml
 import queue
-import requests
 import socket
-import websocket
 import subprocess
+import time
 
-from http import HTTPStatus
-from urllib.parse import urlparse
-
+import yaml
+import requests
+import websocket
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
+import graphql_server
 
 
 class HGECtxError(Exception):
@@ -28,21 +29,38 @@ class WebhookHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        contentLen = self.headers.get('Content-Length')
-        reqBody = self.rfile.read(int(contentLen)).decode("utf-8")
-        reqJson = json.loads(reqBody)
-        reqHeaders = self.headers
-        reqPath = self.path
-        self.log_message(json.dumps(reqJson))
-        if reqPath == "/fail":
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
+        req_json = json.loads(req_body)
+        req_headers = self.headers
+        req_path = self.path
+        self.log_message(json.dumps(req_json))
+        if req_path == "/fail":
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
             self.end_headers()
-            self.server.error_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
+            self.server.error_queue.put({"path": req_path,
+                                         "body": req_json,
+                                         "headers": req_headers})
+        elif req_path == "/timeout_short":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.error_queue.put({"path": req_path,
+                                         "body": req_json,
+                                         "headers": req_headers})
+        elif req_path == "/timeout_long":
+            time.sleep(5)
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": reqPath, "body": reqJson, "headers": reqHeaders})
-
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
 
 class WebhookServer(http.server.HTTPServer):
     def __init__(self, resp_queue, error_queue, server_address):
@@ -56,7 +74,7 @@ class WebhookServer(http.server.HTTPServer):
 
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, hge_jwt_key_file, webhook_insecure):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf, metadata_disabled):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -79,7 +97,9 @@ class HGECtx:
         else:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
+        self.hge_jwt_conf = hge_jwt_conf
         self.webhook_insecure = webhook_insecure
+        self.metadata_disabled = metadata_disabled
         self.may_skip_test_teardown = False
 
         self.ws_url = urlparse(hge_url)
@@ -90,14 +110,20 @@ class HGECtx:
         self.wst.daemon = True
         self.wst.start()
 
+        # start the graphql server
+        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+        self.gql_srvr_thread.start()
+
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()
-        try:
-            st_code, resp = self.v1q_f('queries/clear_db.yaml')
-        except requests.exceptions.RequestException as e:
-            self.teardown()
-            raise HGECtxError(repr(e))
-        assert st_code == 200, resp
+        if not self.metadata_disabled:
+          try:
+              st_code, resp = self.v1q_f('queries/clear_db.yaml')
+          except requests.exceptions.RequestException as e:
+              self.teardown()
+              raise HGECtxError(repr(e))
+          assert st_code == 200, resp
 
     def _on_message(self, message):
         my_json = json.loads(message)
@@ -128,10 +154,16 @@ class HGECtx:
         )
         return resp.status_code, resp.json()
 
-    def v1q(self, q):
-        h = dict()
+    def sql(self, q):
+        conn = self.engine.connect()
+        res  = conn.execute(q)
+        conn.close()
+        return res
+
+    def v1q(self, q, headers = {}):
+        h = headers.copy()
         if self.hge_key is not None:
-            h['X-Hasura-Access-Key'] = self.hge_key
+            h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + "/v1/query",
             json=q,
@@ -151,3 +183,5 @@ class HGECtx:
         self.ws.close()
         self.web_server.join()
         self.wst.join()
+        graphql_server.stop_server(self.graphql_server)
+        self.gql_srvr_thread.join()

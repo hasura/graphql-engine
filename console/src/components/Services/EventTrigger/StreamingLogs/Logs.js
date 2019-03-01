@@ -25,6 +25,10 @@ import {
   toggleOldAvailable,
   toggleNewAvailable,
 } from './LogActions';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { convertDateTimeToLocale } from '../utils';
+import Button from '../../../Common/Button/Button';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -60,13 +64,13 @@ class StreamingLogs extends Component {
     try {
       showRedeliver = semverCheck('eventRedeliver', version);
       if (showRedeliver) {
-        this.setState({ ...this.state, showRedeliver: true });
+        this.setState({ showRedeliver: true });
       } else {
-        this.setState({ ...this.state, showRedeliver: false });
+        this.setState({ showRedeliver: false });
       }
     } catch (e) {
-      console.log(e);
-      this.setState({ ...this.state, showRedeliver: false });
+      console.error(e);
+      this.setState({ showRedeliver: false });
     }
   }
   handleNewerEvents() {
@@ -130,8 +134,8 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
+      tableSchemas,
       count,
-      allSchemas,
       dispatch,
     } = this.props;
 
@@ -219,7 +223,7 @@ class StreamingLogs extends Component {
             return <div className={conditionalClassname}>{r.id}</div>;
           }
           if (col === 'created_at') {
-            const formattedDate = new Date(r.created_at).toUTCString();
+            const formattedDate = convertDateTimeToLocale(r.created_at);
             return <div className={conditionalClassname}>{formattedDate}</div>;
           }
           if (col === 'operation') {
@@ -231,8 +235,10 @@ class StreamingLogs extends Component {
           }
           if (col === 'primary_key') {
             const tableName = requestData[i].data.table.name;
-            const tableData = allSchemas.filter(
-              row => row.table_name === tableName
+            const tableSchema = requestData[i].data.table.schema;
+            const tableData = tableSchemas.filter(
+              row =>
+                row.table_name === tableName && row.table_schema === tableSchema
             );
             const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
             const pkHtml = [];
@@ -282,9 +288,11 @@ class StreamingLogs extends Component {
         />
         <br />
         <div className={'hide'}>
-          <button
+          <Button
             onClick={this.watchChanges.bind(this)}
-            className={styles.watchBtn + ' btn btn-default'}
+            className={styles.watchBtn}
+            color="white"
+            size="sm"
             data-test="run-query"
           >
             {this.state.isWatching ? (
@@ -297,7 +305,7 @@ class StreamingLogs extends Component {
                 Stream Logs <i className={'fa fa-play'} />
               </span>
             )}
-          </button>
+          </Button>
         </div>
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
@@ -310,9 +318,11 @@ class StreamingLogs extends Component {
                   onChange={this.filterAll.bind(this)}
                 />
               </div>
-              <button
+              <Button
                 onClick={this.handleNewerEvents.bind(this)}
-                className={styles.newBtn + ' btn btn-default'}
+                className={styles.newBtn}
+                color="white"
+                size="sm"
               >
                 {log.isLoadingNewer ? (
                   <span>
@@ -321,7 +331,7 @@ class StreamingLogs extends Component {
                 ) : (
                   <span>Load newer logs</span>
                 )}
-              </button>
+              </Button>
               {!log.isNewAvailable ? (
                 <span> No new logs available at this time </span>
               ) : null}
@@ -409,7 +419,54 @@ class StreamingLogs extends Component {
                           </div>
                         ) : null}
                         <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Response</div>
+                          <div
+                            className={
+                              styles.subheading_text +
+                              ' col-md-6 ' +
+                              styles.padd_remove
+                            }
+                          >
+                            {finalResponse.status_code ? 'Payload' : 'Error'}
+                          </div>
+                          <div
+                            className={
+                              styles.status_code_right +
+                              ' col-md-6 ' +
+                              styles.padd_remove
+                            }
+                          >
+                            {finalResponse.status_code
+                              ? [
+                                'Status Code: ',
+                                finalResponse.status_code === 200 ? (
+                                  <i
+                                    className={
+                                      styles.invocationSuccess +
+                                        ' fa fa-check'
+                                    }
+                                  />
+                                ) : (
+                                  <i
+                                    className={
+                                      styles.invocationFailure +
+                                        ' fa fa-times'
+                                    }
+                                  />
+                                ),
+                                finalResponse.status_code,
+                                ' ',
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={tooltip.statusCodeDescription}
+                                >
+                                  <i
+                                    className="fa fa-question-circle"
+                                    aria-hidden="true"
+                                  />
+                                </OverlayTrigger>,
+                              ]
+                              : null}
+                          </div>
                           <AceEditor
                             mode="json"
                             theme="github"
@@ -430,9 +487,10 @@ class StreamingLogs extends Component {
             />
             <div className={styles.loadOlder}>
               {log.isOldAvailable ? (
-                <button
+                <Button
                   onClick={this.handleOlderEvents.bind(this)}
-                  className={styles.oldBtn + ' btn btn-default'}
+                  color="white"
+                  size="sm"
                 >
                   {log.isLoadingOlder ? (
                     <span>
@@ -441,7 +499,7 @@ class StreamingLogs extends Component {
                   ) : (
                     <span>Load older logs</span>
                   )}
-                </button>
+                </Button>
               ) : (
                 <div> No more logs available </div>
               )}
@@ -462,6 +520,7 @@ class StreamingLogs extends Component {
 
 StreamingLogs.propTypes = {
   log: PropTypes.object,
+  currentTableSchema: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,

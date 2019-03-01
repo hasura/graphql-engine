@@ -1,6 +1,11 @@
 Schema design basics
 ====================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The Hasura GraphQL engine creates GraphQL schema object types and corresponding query/mutation fields with resolvers
 automatically as we create tables/views in the Postgres database.
 
@@ -24,6 +29,8 @@ Let's say we want to create two simple tables for an article/author schema:
     author_id INT
   )
 
+.. _create-tables:
+
 Create tables
 -------------
 
@@ -37,7 +44,7 @@ For example, here is the schema for the ``article`` table in this interface:
 
 .. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-The following *object type* and *query/mutation* fields are generated for the ``article`` table we just created:
+The following object type and query/mutation fields are generated for the ``article`` table we just created:
 
 .. code-block:: graphql
 
@@ -76,12 +83,15 @@ The following *object type* and *query/mutation* fields are generated for the ``
     where: article_bool_exp!
   ): article_mutation_response
 
-See the :doc:`API reference <../api-reference/index>` for more details.
+See the :doc:`query <../api-reference/query>` and :doc:`mutation <../api-reference/mutation>`
+API references for the full specifications
+
+You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
 
 Try basic GraphQL queries
 -------------------------
 At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the
-console ``GraphiQL`` tab (*you may want to add some test data in the tables first*).
+console ``GraphiQL`` tab (*you may want to add some sample data into the tables first*).
 
 Here are a couple of examples:
 

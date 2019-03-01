@@ -1,0 +1,21 @@
+description: Simple GraphQL query on the remote schema with bahnql
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    stationWithEvaId:
+      location:
+        latitude: 50.107145
+        longitude: 8.663789
+      name: Frankfurt (Main) Hbf
+query:
+  query: |
+    query {
+      stationWithEvaId(evaId: 8000105) {
+        name
+        location {
+          latitude
+          longitude
+        }
+      }
+    }

@@ -4,11 +4,8 @@ status: 200
 response:
   data:
     insert_author:
-      affected_rows: 1
-      returning:
-      - id: 1
-        name: Author 1
-        is_registered: false
+      affected_rows: 0
+      returning: []
 headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '1'
@@ -25,7 +22,7 @@ query:
           ],
         on_conflict: {
           constraint: author_pkey,
-          action: update
+          update_columns: []
         }
       ) {
         affected_rows

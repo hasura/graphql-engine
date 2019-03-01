@@ -6,36 +6,25 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique,
           remarks text
       );
-
-
-#Create resident table
-- type: run_sql
-  args:
-    sql: |
+      create table article(
+          id serial primary key,
+          title text,
+          author_id integer references author(id)
+      );
       CREATE TABLE hge_tests.resident (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         age INTEGER NOT NULL
-      )
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      );
       insert into author (name)
       values
       ('Author 1'),
-      ('Author 2') 
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      ('Author 2');
       insert into hge_tests.resident (name,age)
       values
       ('Resident 1', 23),
-      ('Resident 2', 31) 
+      ('Resident 2', 31);

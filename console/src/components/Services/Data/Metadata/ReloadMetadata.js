@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import Button from '../../../Common/Button/Button';
 
 import {
   showSuccessNotification,
@@ -14,13 +15,13 @@ class ReloadMetadata extends Component {
     this.state.isReloading = false;
   }
   render() {
-    const styles = require('../PageContainer/PageContainer.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
-        <button
+        <Button
           data-test="data-reload-metadata"
-          className={styles.default_button + ' ' + metaDataStyles.margin_right}
+          color="white"
+          size="sm"
           onClick={e => {
             e.preventDefault();
             this.setState({ isReloading: true });
@@ -72,8 +73,10 @@ class ReloadMetadata extends Component {
               });
           }}
         >
-          {this.state.isReloading ? 'Reloading...' : 'Reload'}
-        </button>
+          {this.state.isReloading
+            ? this.props.btnTextChanging || 'Reloading...'
+            : this.props.btnText || 'Reload'}
+        </Button>
       </div>
     );
   }

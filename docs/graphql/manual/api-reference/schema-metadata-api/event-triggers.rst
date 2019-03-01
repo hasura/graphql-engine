@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Event Triggers 
 =============================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Event triggers are used to capture database changes and send them to a configured webhook.
 
 .. _create_event_trigger:
@@ -131,8 +136,8 @@ Args syntax
  
 .. _TriggerName:
 
-``TriggerName``
-&&&&&&&&&&&&&&&
+TriggerName
+&&&&&&&&&&&
 
 .. parsed-literal::
 
@@ -140,8 +145,8 @@ Args syntax
 
 .. _OperationSpec:
 
-``OperationSpec``
-&&&&&&&&&&&&&&&&&
+OperationSpec
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -161,8 +166,8 @@ Args syntax
 
 .. _HeaderFromValue:
 
-``HeaderFromValue``
-&&&&&&&&&&&&&&&&&&&
+HeaderFromValue
+&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -182,8 +187,8 @@ Args syntax
 
 .. _HeaderFromEnv:
 
-``HeaderFromEnv``
-&&&&&&&&&&&&&&&&&
+HeaderFromEnv
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -203,8 +208,8 @@ Args syntax
 
 .. _EventTriggerColumns:
 
-``EventTriggerColumns``
-&&&&&&&&&&&&&&&&&&&&&&&
+EventTriggerColumns
+&&&&&&&&&&&&&&&&&&&
 
 .. parsed-literal::
    :class: haskell-pre

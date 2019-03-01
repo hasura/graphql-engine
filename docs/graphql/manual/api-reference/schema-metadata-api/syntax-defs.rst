@@ -1,6 +1,11 @@
 Schema/Metadata API reference: Syntax definitions
 =================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 
 .. _TableName:
 
@@ -14,6 +19,27 @@ TableName
 
 QualifiedTable
 ^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+           "name": String,
+           "schema": String
+   }
+
+.. _FunctionName:
+
+FunctionName
+^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String | QualifiedFunction_
+
+QualifiedFunction
+^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -250,6 +276,62 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``"$clt"``
 - ``"$cgte"``
 - ``"$clte"``
+
+Checking for NULL values :
+
+- ``_is_null`` (takes true/false as values)
+
+JSONB operators :
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_contains``
+     - ``@>``
+   * - ``_contained_in``
+     - ``<@``
+   * - ``_has_key``
+     - ``?``
+
+PostGIS related operators on GEOMETRY columns: 
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersects``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     - ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
+
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+
+.. note::
+
+   - All operators take a JSON representation of ``geometry/geography`` values as input value.
+   - Input value for ``_st_d_within`` operator is an object:
+
+     .. parsed-literal::
+
+       {
+         field-name : {_st_d_within: {distance: Float, from: Value} }
+       }
+
 
 .. _Object:
 

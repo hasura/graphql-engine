@@ -1,9 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
 module Hasura.Server.Version
   ( currentVersion
   , consoleVersion
+  , isDevVersion
   )
 where
 
@@ -16,7 +14,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Utils (runScript)
 
 version :: T.Text
-version = T.dropWhileEnd (== '\n') $ $(runScript "../scripts/get-version.sh")
+version = T.dropWhileEnd (== '\n') $(runScript "../scripts/get-version.sh")
 
 consoleVersion :: T.Text
 consoleVersion = case V.fromText $ T.dropWhile (== 'v') version of
@@ -31,3 +29,7 @@ mkVersion ver = T.pack $ "v" ++ show major ++ "." ++ show minor
 
 currentVersion :: T.Text
 currentVersion = version
+
+isDevVersion :: Bool
+isDevVersion = either (const True) (const False) $
+               V.fromText $ T.dropWhile (== 'v') version

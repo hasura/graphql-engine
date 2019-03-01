@@ -1,6 +1,11 @@
 Schema/Metadata API Reference: Permissions
 ==========================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 The permission layer is designed to restrict the operations that can be
 performed by various users. Permissions can be defined on various operations
 (insert/select/update/delete) at a role level granularity. By default, the ``admin``
@@ -116,8 +121,8 @@ Args syntax
 
 .. _InsertPermission:
 
-``InsertPermission``
-&&&&&&&&&&&&&&&&&&&&
+InsertPermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -230,8 +235,8 @@ Args syntax
 
 .. _SelectPermission:
 
-``SelectPermission``
-&&&&&&&&&&&&&&&&&&&&
+SelectPermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -352,8 +357,8 @@ Args syntax
 
 .. _UpdatePermission:
 
-``UpdatePermission``
-&&&&&&&&&&&&&&&&&&&&
+UpdatePermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -463,8 +468,8 @@ Args syntax
 
 .. _DeletePermission:
 
-``DeletePermission``
-&&&&&&&&&&&&&&&&&&&&
+DeletePermission
+&&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1

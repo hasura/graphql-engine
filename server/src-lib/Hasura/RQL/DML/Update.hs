@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
-module Hasura.RQL.DML.Update where
+module Hasura.RQL.DML.Update
+  ( validateUpdateQueryWith
+  , validateUpdateQuery
+  , UpdateQueryP1(..)
+  , updateQueryToTx
+  , getUpdateDeps
+  , runUpdate
+  ) where
 
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
@@ -26,7 +28,7 @@ data UpdateQueryP1
   = UpdateQueryP1
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, S.SQLExp)]
-  , uqp1Where   :: !(S.BoolExp, GBoolExp AnnSQLBoolExp)
+  , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
   , pqp1MutFlds :: !MutFlds
   } deriving (Show, Eq)
 
@@ -37,7 +39,8 @@ mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $ S.BEBin S.AndOp permFltr $ cBoolExp wc
+    tableFltr = Just $ S.WhereFrag $
+                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
 
 getUpdateDeps
   :: UpdateQueryP1
@@ -89,12 +92,15 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 convOp
   :: (UserInfoM m, QErrM m)
   => FieldInfoMap
+  -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
   -> (PGCol -> PGColType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
-convOp fieldInfoMap updPerm objs conv =
+convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
+    -- if column has predefined value then throw error
+    when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
     checkPermOnCol PTUpdate allowedCols pgCol
     colType <- askPGType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
@@ -103,13 +109,17 @@ convOp fieldInfoMap updPerm objs conv =
   where
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
+    throwNotUpdErr c = do
+      role <- userRole <$> askUserInfo
+      throw400 NotSupported $ "column " <> c <<> " is not updatable"
+        <> " for role " <> role <<> "; its value is predefined in permission"
 
-convUpdateQuery
-  :: (P1C m)
+validateUpdateQueryWith
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => (PGColType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m UpdateQueryP1
-convUpdateQuery f uq = do
+validateUpdateQueryWith f uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
 
@@ -128,33 +138,35 @@ convUpdateQuery f uq = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      preSetObj = upiSet updPerm
+      preSetCols = M.keys preSetObj
 
   -- convert the object to SQL set expression
   setItems <- withPathK "$set" $
-    convOp fieldInfoMap updPerm (M.toList $ uqSet uq) $ convSet f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet f
 
   incItems <- withPathK "$inc" $
-    convOp fieldInfoMap updPerm (M.toList $ uqInc uq) $ convInc f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc f
 
   mulItems <- withPathK "$mul" $
-    convOp fieldInfoMap updPerm (M.toList $ uqMul uq) $ convMul f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul f
 
   defItems <- withPathK "$default" $
-    convOp fieldInfoMap updPerm (zip (uqDefault uq) [()..]) convDefault
+    convOp fieldInfoMap preSetCols updPerm (zip (uqDefault uq) [()..]) convDefault
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let setExpItems = setItems ++ incItems ++ mulItems ++ defItems
-      updTable = upiTable updPerm
+  let preSetItems = M.toList preSetObj
+      setExpItems = preSetItems ++ setItems ++ incItems ++ mulItems ++ defItems
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap updTable selPerm (uqWhere uq) f
+    convBoolExp' fieldInfoMap selPerm (uqWhere uq) f
 
   return $ UpdateQueryP1
     tableName
@@ -168,21 +180,21 @@ convUpdateQuery f uq = do
       <> "has \"select\" permission as \"where\" can't be used "
       <> "without \"select\" permission on the table"
 
-convUpdQ :: UpdateQuery -> P1 (UpdateQueryP1, DS.Seq Q.PrepArg)
-convUpdQ updQ = flip runStateT DS.empty $ convUpdateQuery binRHSBuilder updQ
+validateUpdateQuery
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
+validateUpdateQuery =
+  liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateP2 :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-updateP2 (u, p) =
+updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
   where
     updateSQL = toSQL $ mkSQLUpdate u
 
-instance HDBQuery UpdateQuery where
-
-  type Phase1Res UpdateQuery = (UpdateQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = convUpdQ
-
-  phaseTwo _ = liftTx . updateP2
-
-  schemaCachePolicy = SCPNoChange
+runUpdate
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => UpdateQuery -> m RespBody
+runUpdate q =
+  validateUpdateQuery q >>= liftTx . updateQueryToTx

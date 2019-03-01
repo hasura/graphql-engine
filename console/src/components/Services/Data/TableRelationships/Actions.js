@@ -36,6 +36,56 @@ const relTypeChange = isObjRel => ({
 });
 const relRTableChange = rTable => ({ type: REL_SET_RTABLE, rTable });
 
+const saveRenameRelationship = (oldName, newName, tableName, callback) => {
+  return (dispatch, getState) => {
+    const currentSchema = getState().tables.currentSchema;
+    const migrateUp = [
+      {
+        type: 'rename_relationship',
+        args: {
+          table: tableName,
+          name: oldName,
+          new_name: newName,
+        },
+      },
+    ];
+    const migrateDown = [
+      {
+        type: 'rename_relationship',
+        args: {
+          table: tableName,
+          name: newName,
+          new_name: oldName,
+        },
+      },
+    ];
+    // Apply migrations
+    const migrationName = `rename_relationship_${oldName}_to_${newName}_schema_${currentSchema}_table_${tableName}`;
+
+    const requestMsg = 'Renaming relationship...';
+    const successMsg = 'Relationship renamed';
+    const errorMsg = 'Renaming relationship failed';
+
+    const customOnSuccess = () => {
+      callback();
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrateUp,
+      migrateDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const generateRelationshipsQuery = (
   tableName,
   relName,
@@ -331,26 +381,30 @@ const sanitizeRelName = arg =>
   arg
     .trim()
     .toLowerCase()
-    .replace(/([^A-Z]+)(.)/gi, function modifyRel() {
+    .replace(/([^A-Z0-9]+)(.)/gi, function modifyRel() {
       return arguments[2].toUpperCase();
     });
 
 const formRelName = relMeta => {
-  let finalRelName;
-  // remove special chars and change first letter after underscore to uppercase
-  const targetTable = sanitizeRelName(relMeta.rTable);
-  if (relMeta.isObjRel) {
-    const objLCol = sanitizeRelName(relMeta.lcol.join(','));
-    finalRelName = `${targetTable}By${objLCol}`;
-  } else {
-    const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-    finalRelName =
-      `${
-        targetTable
-        // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
-      }s` + `By${arrRCol}`;
+  try {
+    let finalRelName;
+    // remove special chars and change first letter after underscore to uppercase
+    const targetTable = sanitizeRelName(relMeta.rTable);
+    if (relMeta.isObjRel) {
+      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
+      finalRelName = `${targetTable}By${objLCol}`;
+    } else {
+      const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
+      finalRelName =
+        `${
+          targetTable
+          // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
+        }s` + `By${arrRCol}`;
+    }
+    return finalRelName;
+  } catch (e) {
+    return '';
   }
-  return finalRelName;
 };
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
@@ -483,4 +537,5 @@ export {
   autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,
+  saveRenameRelationship,
 };

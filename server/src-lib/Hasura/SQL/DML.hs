@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-
 module Hasura.SQL.DML where
 
 import           Hasura.Prelude
@@ -12,6 +6,7 @@ import           Hasura.SQL.Types
 import           Data.String                (fromString)
 import           Language.Haskell.TH.Syntax (Lift)
 
+import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text.Extended         as T
 import qualified Text.Builder               as TB
@@ -124,6 +119,10 @@ mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
     alias = Alias $ toIden tn
+
+mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
+mkFuncFromItem qf args =
+  FIFunc qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -238,6 +237,19 @@ jsonType = AnnType "json"
 jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
+data CountType
+  = CTStar
+  | CTSimple ![PGCol]
+  | CTDistinct ![PGCol]
+  deriving(Show, Eq)
+
+instance ToSQL CountType where
+  toSQL CTStar            = "*"
+  toSQL (CTSimple cols)   =
+    paren $ ", " <+> cols
+  toSQL (CTDistinct cols) =
+    "DISTINCT" <-> paren (", " <+> cols)
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -255,7 +267,11 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SECount !CountType
   deriving (Show, Eq)
+
+instance J.ToJSON SQLExp where
+  toJSON = J.toJSON . toSQLTxt
 
 newtype Alias
   = Alias { getAlias :: Iden }
@@ -269,6 +285,9 @@ instance ToSQL Alias where
 
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
+
+countStar :: SQLExp
+countStar = SECount CTStar
 
 instance ToSQL SQLExp where
   toSQL (SEPrep argNumber) =
@@ -304,10 +323,15 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
+
+annotateExp :: SQLExp -> PGColType -> SQLExp
+annotateExp sqlExp =
+  SETyAnn sqlExp . AnnType . T.pack . show
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
@@ -365,6 +389,7 @@ instance ToSQL DistinctExpr where
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
+  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
   | FISelect !Lateral !Select !Alias
   | FIJoin !JoinExpr
   deriving (Show, Eq)
@@ -380,6 +405,8 @@ instance ToSQL FromItem where
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
+  toSQL (FIFunc qf args mal) =
+    toSQL qf <> paren (", " <+> args) <-> toSQL mal
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIJoin je) =
@@ -439,6 +466,8 @@ data BoolExp
   | BENull !SQLExp
   | BENotNull !SQLExp
   | BEExists !Select
+  | BEIN !SQLExp ![SQLExp]
+  | BEExp !SQLExp
   deriving (Show, Eq)
 
 -- removes extraneous 'AND true's
@@ -460,12 +489,12 @@ simplifyBoolExp be = case be of
       | otherwise -> BEBin OrOp e1s e2s
   e                          -> e
 
-mkExists :: QualifiedTable -> BoolExp -> BoolExp
-mkExists qt whereFrag =
-  BEExists mkSelect {
-    selExtr  = [Extractor (SEUnsafe "1") Nothing],
-    selFrom  = Just $ mkSimpleFromExp qt,
-    selWhere = Just $ WhereFrag whereFrag
+mkExists :: FromItem -> BoolExp -> BoolExp
+mkExists fromItem whereFrag =
+  BEExists mkSelect
+  { selExtr  = [Extractor (SEUnsafe "1") Nothing]
+  , selFrom  = Just $ FromExp $ pure fromItem
+  , selWhere = Just $ WhereFrag whereFrag
   }
 
 instance ToSQL BoolExp where
@@ -483,6 +512,11 @@ instance ToSQL BoolExp where
     paren (toSQL v) <-> "IS NOT NULL"
   toSQL (BEExists sel) =
     "EXISTS " <-> paren (toSQL sel)
+  -- special case to handle lhs IN (exp1, exp2)
+  toSQL (BEIN vl exps) =
+    paren (toSQL vl) <-> toSQL SIN <-> paren (", " <+> exps)
+  -- Any SQL expression which evaluates to bool value
+  toSQL (BEExp e) = paren $ toSQL e
 
 data BinOp = AndOp
            | OrOp
@@ -570,9 +604,17 @@ buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
 
-buildSEWithExcluded :: [PGCol] -> SetExp
-buildSEWithExcluded cols = SetExp $ flip map cols $
-  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
+buildUpsertSetExp
+  :: [PGCol]
+  -> HM.HashMap PGCol SQLExp
+  -> SetExp
+buildUpsertSetExp cols preSet =
+  SetExp $ map SetExpItem $ HM.toList setExps
+  where
+    setExps = HM.union preSet $ HM.fromList $
+      flip map cols $ \col ->
+        (col, SEExcluded $ getPGColTxt col)
+
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)
@@ -634,7 +676,7 @@ instance ToSQL SQLConflictTarget where
 
 data SQLConflict
   = DoNothing !(Maybe SQLConflictTarget)
-  | Update !SQLConflictTarget !SetExp
+  | Update !SQLConflictTarget !SetExp !(Maybe WhereFrag)
   deriving (Show, Eq)
 
 instance ToSQL SQLConflict where
@@ -642,9 +684,9 @@ instance ToSQL SQLConflict where
   toSQL (DoNothing (Just ct)) = "ON CONFLICT"
                                 <-> toSQL ct
                                 <-> "DO NOTHING"
-  toSQL (Update ct ex)        = "ON CONFLICT"
+  toSQL (Update ct set whr)   = "ON CONFLICT"
                                 <-> toSQL ct <-> "DO UPDATE"
-                                <-> toSQL ex
+                                <-> toSQL set <-> toSQL whr
 
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable

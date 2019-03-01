@@ -1,6 +1,11 @@
 Hasura GraphQL Engine DigitalOcean One-click App
 ================================================
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Hasura GraphQL Engine is available as a One-click app on DigitalOcean. It is
 packed with a Postgres database and `Caddy <https://caddyserver.com/>`__
 webserver for easy and automatic HTTPS using Let's Encrypt.
@@ -9,17 +14,23 @@ webserver for easy and automatic HTTPS using Let's Encrypt.
 Quickstart
 ----------
 
-1. Create Hasura One-click Droplet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Create a Hasura One-click Droplet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create a new droplet and choose Hasura GraphQL Engine under One-click apps while
-choosing the image.
+Click the button below to create a new Hasura GraphQL Engine Droplet on
+DigitalOcean using One-Click App. (``Ctrl+Click`` to open in a new tab)
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png
+   :width: 300px
+   :alt: do_create_droplet_button
+   :class: no-shadow
+   :target: https://cloud.digitalocean.com/droplets/new?image=hasura-18-04&utm_source=hasura&utm_campaign=docs
 
 2. Open console
 ~~~~~~~~~~~~~~~
 
 Once Hasura GraphQL Engine One-Click Droplet is ready, you can visit the Droplet
-IP to open Hasura console, where you can create tables, explore GraphQL APIs
+IP to open the Hasura console, where you can create tables, explore GraphQL APIs
 etc. Note that it might take 1 or 2 minutes for everything to start running.
 
 The Hasura console will be at:
@@ -97,12 +108,12 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 Secure the GraphQL endpoint
 ---------------------------
 
-By default Hasura is exposed without any access key. Anyone can read and write
+By default Hasura is exposed without any secret key. Anyone can read and write
 to your database using GraphQL. When deploying to production, you should secure
-the endpoint by adding an access key and then setting up permission rules on
+the endpoint by adding an admin secret key and then setting up permission rules on
 tables.
 
-To add an access key, follow the steps given below:
+To add an admin secret key, follow the steps given below:
 
 1. Connect to the Droplet via SSH:
 
@@ -118,7 +129,7 @@ To add an access key, follow the steps given below:
       cd /etc/hasura
 
 
-3. Edit ``docker-compose.yaml`` and un-comment the line that mentions access key.
+3. Edit ``docker-compose.yaml`` and un-comment the line that mentions admin secret key.
    Also change it to some unique secret:
 
    .. code-block:: bash
@@ -126,8 +137,8 @@ To add an access key, follow the steps given below:
       vim docker-compose.yaml
 
       ...
-      # un-comment next line to add an access key
-      HASURA_GRAPHQL_ACCESS_KEY: mysecretaccesskey
+      # un-comment next line to add an admin secret key
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
       ...
 
       # type ESC followed by :wq to save and quit
@@ -141,19 +152,19 @@ To add an access key, follow the steps given below:
 
 
 That's it. Visit the console at ``http://your_droplet_ip/console`` and it should
-prompt for the access key. Further API requests can be made by adding the
+prompt for the admin secret key. Further API requests can be made by adding the
 following header:
 
 .. code-block:: bash
 
-   X-Hasura-Access-Key: mysecretaccesskey
+   X-Hasura-Admin-Secret: myadminsecretkey
 
 
 Adding a domain & Enabling HTTPS
 --------------------------------
 
 If you own a domain, you can enable HTTPS on this Droplet by mapping the domain
-to the Droplet IP. The One-Click Droplet is configured with Caddy which is an
+to the Droplet's IP. The One-Click Droplet is configured with Caddy which is an
 HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 1. Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
@@ -197,12 +208,12 @@ HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
 Visit ``https://your_domain/console`` to visit the Hasura console.
 
-Updating to latest version
---------------------------
+Updating to the latest version
+------------------------------
 
 When a new version of GraphQL Engine is released, you can upgrade to it by just
 changing the version tag in docker-compose.yaml. You can find the latest
-releases in the GitHub releases page.
+releases on the GitHub releases page.
 
 1. Connect to the Droplet via SSH:
 
@@ -270,6 +281,11 @@ Using a different database
 
       # type ESC followed by :wq to save and quit
 
+   .. note::
+
+     Hasura GraphQL engine needs access permissions to your Postgres database as described in
+     :doc:`Postgres permissions <../../deployment/postgres-permissions>`
+
 
 Logs
 ----
@@ -296,3 +312,4 @@ Logs
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.
+

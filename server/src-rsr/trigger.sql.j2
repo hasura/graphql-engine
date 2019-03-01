@@ -1,4 +1,4 @@
-CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETURNS trigger
+CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigger
    LANGUAGE plpgsql
    AS $$
    DECLARE
@@ -7,8 +7,20 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
    _new record;
    _data json;
    payload json;
+   session_variables json;
+   server_version_num int;
    BEGIN
      id := gen_random_uuid();
+     server_version_num := current_setting('server_version_num');
+     IF server_version_num >= 90600 THEN
+       session_variables := current_setting('hasura.user', 't');
+     ELSE
+        BEGIN
+          session_variables := current_setting('hasura.user');
+        EXCEPTION WHEN OTHERS THEN
+            session_variables := NULL;
+        END;
+     END IF;
      IF TG_OP = 'UPDATE' THEN
        _old := {{OLD_ROW}};
        _new := {{NEW_ROW}};
@@ -23,7 +35,8 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
      );
      payload := json_build_object(
                         'op', TG_OP,
-                        'data', _data
+                        'data', _data,
+                        'session_variables', session_variables
                         )::text;
      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
        INSERT INTO
@@ -34,5 +47,5 @@ CREATE OR REPLACE function hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}() RETU
      RETURN NULL;
    END;
    $$;
-   DROP TRIGGER IF EXISTS notify_hasura_{{NAME}}_{{OPERATION}} ON {{QUALIFIED_TABLE}};
-   CREATE TRIGGER notify_hasura_{{NAME}}_{{OPERATION}} AFTER {{OPERATION}} ON {{QUALIFIED_TABLE}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.notify_hasura_{{NAME}}_{{OPERATION}}();
+   DROP TRIGGER IF EXISTS {{QUALIFIED_TRIGGER_NAME}} ON {{QUALIFIED_TABLE}};
+   CREATE TRIGGER {{QUALIFIED_TRIGGER_NAME}} AFTER {{OPERATION}} ON {{QUALIFIED_TABLE}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.{{QUALIFIED_TRIGGER_NAME}}();

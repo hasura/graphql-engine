@@ -1,7 +1,12 @@
-.. title:: API Reference - Mutation
-
 API Reference - Mutation
 ========================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+
+.. _insert_upsert_syntax:
 
 Insert/Upsert syntax
 --------------------
@@ -86,6 +91,7 @@ Insert/Upsert syntax
       }
     }
 
+.. _update_syntax:
 
 Update syntax
 -------------
@@ -165,6 +171,8 @@ Update syntax
       }
     }
 
+.. _delete_syntax:
+
 Delete syntax
 -------------
 
@@ -224,10 +232,37 @@ Delete syntax
 Syntax definitions
 ------------------
 
+.. _MutationResponse:
+
+Mutation Response
+^^^^^^^^^^^^^^^^^
+.. code-block:: none
+
+    {
+      affected_rows
+      returning {
+        response-field1
+        response-field2
+        ..
+      }
+    }
+
+E.g.:
+
+.. code-block:: graphql
+
+    {
+      affected_rows
+      returning {
+        id
+        author_id
+      }
+    }
+
 .. _InputObject:
 
-Input Object
-^^^^^^^^^^^^
+**objects** argument
+^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
 
@@ -266,43 +301,19 @@ E.g.:
       }
     ]
 
-.. _MutationResponse:
-
-Mutation Response
-^^^^^^^^^^^^^^^^^
-.. code-block:: none
-   
-    {
-      affected_rows
-      returning {
-        response-field1
-        response-field2
-        ..
-      }
-    }
-
-E.g.:
-
-.. code-block:: graphql
-
-    {
-      affected_rows
-      returning {
-        id
-        author_id
-      }
-    }
-
 .. _ConflictClause:
 
-Conflict Clause
-^^^^^^^^^^^^^^^
+**on_conflict** argument
+^^^^^^^^^^^^^^^^^^^^^^^^
+Conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
+permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only if a
+table has *update* permissions defined.
+
 .. code-block:: none
     
     on_conflict: {
-      constraint: <unique_constraint_name>!
-      [update_columns: [table_column!]]
-      [action: [update|ignore]]
+      constraint: table_constraint!
+      update_columns: [table_update_column!]!
     }
 
 E.g.:
@@ -316,14 +327,12 @@ E.g.:
 
 .. _whereArgExp:
 
-``where`` argument
+**where** argument
 ^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
 
     where: BoolExp_
-
-.. _BoolExp:
 
 BoolExp
 *******
@@ -371,7 +380,8 @@ ColumnExp
 
 Operator
 ########
-Generic operators (all column types except json, jsonb) :
+
+**Generic operators (all column types except json, jsonb):**
 
 - ``_eq``
 - ``_ne``
@@ -382,7 +392,7 @@ Generic operators (all column types except json, jsonb) :
 - ``_gte``
 - ``_lte``
 
-Operators for comparing columns (all column types except json, jsonb):
+**Operators for comparing columns (all column types except json, jsonb)**:
 
 - ``_ceq``
 - ``_cneq``
@@ -391,7 +401,7 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``_cgte``
 - ``_cnlte``
 
-Text related operators :
+**Text related operators:**
 
 - ``_like``
 - ``_nlike``
@@ -400,13 +410,13 @@ Text related operators :
 - ``_similar``
 - ``_nsimilar``
 
-Checking for ``null`` values :
+**Checking for NULL values:**
 
 - ``_is_null`` (takes true/false as values)
 
 .. _setArgExp:
 
-``_set`` argument
+**_set** argument
 ^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -419,7 +429,7 @@ Checking for ``null`` values :
 
 .. _incArgExp:
 
-``_inc`` argument
+**_inc** argument
 ^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -432,7 +442,7 @@ Checking for ``null`` values :
 
 .. _appendArgExp:
 
-``_append`` argument
+**_append** argument
 ^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -454,7 +464,7 @@ E.g.
 
 .. _prependArgExp:
 
-``_prepend`` argument
+**_prepend** argument
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -476,7 +486,7 @@ E.g.
 
 .. _deleteKeyArgExp:
 
-``_delete_key`` argument
+**_delete_key** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -489,7 +499,7 @@ E.g.
 
 .. _deleteElemArgExp:
 
-``_delete_elem`` argument
+**_delete_elem** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none
@@ -502,7 +512,7 @@ E.g.
 
 .. _deleteAtPathArgExp:
 
-``_delete_at_path`` argument
+**_delete_at_path** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: none

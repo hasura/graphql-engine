@@ -130,7 +130,15 @@ args:
     permission:
       check:
         id: X-HASURA-USER-ID
-      allow_upsert: true
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        id: X-HASURA-USER-ID
 
 #Insert Author values
 - type: insert

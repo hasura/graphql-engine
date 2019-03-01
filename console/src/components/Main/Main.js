@@ -7,6 +7,7 @@ import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates } from './Actions';
+import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
 
@@ -23,6 +24,7 @@ class Main extends React.Component {
     this.state = {
       showBannerNotification: false,
       showEvents: false,
+      showSchemaStitch: false,
     };
 
     this.state.loveConsentState = getLoveConsentState();
@@ -34,13 +36,10 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadConsoleOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
-          const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-          if (showEvents) {
-            this.setState({ showEvents: true });
-          }
           isUpdateAvailable = semver.gt(
             this.props.latestServerVersion,
             this.props.serverVersion
@@ -52,14 +51,36 @@ class Main extends React.Component {
             isUpdateAvailable = false;
             this.setState({ showBannerNotification: false });
           } else {
-            this.setState({ showBannerNotification: isUpdateAvailable });
+            this.setState({
+              showBannerNotification: isUpdateAvailable,
+            });
           }
         } catch (e) {
           console.error(e);
-          this.setState({ showEvents: true });
         }
       });
+      this.checkEventsTab().then(() => {
+        this.checkSchemaStitch();
+      });
     });
+  }
+
+  checkSchemaStitch() {
+    const showSchemaStitch = semverCheck(
+      'schemaStitching',
+      this.props.serverVersion
+    );
+    if (showSchemaStitch) {
+      this.setState({ showSchemaStitch: true });
+    }
+    return Promise.resolve();
+  }
+  checkEventsTab() {
+    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
+    if (showEvents) {
+      this.setState({ showEvents: true });
+    }
+    return Promise.resolve();
   }
   handleBodyClick(e) {
     const heartDropDownOpen = document.querySelectorAll(
@@ -81,7 +102,6 @@ class Main extends React.Component {
     };
     setLoveConsentState(s);
     this.setState({
-      ...this.state,
       loveConsentState: { ...getLoveConsentState() },
     });
   }
@@ -109,6 +129,7 @@ class Main extends React.Component {
     const github = require('./Github.svg');
     const discord = require('./Discord.svg');
     const mail = require('./mail.svg');
+    const docs = require('./logo.svg');
     const pixHeart = require('./pix-heart.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -126,12 +147,12 @@ class Main extends React.Component {
     } else {
       mainContent = children && React.cloneElement(children);
     }
-    let accessKeyHtml = null;
+    let adminSecretHtml = null;
     if (
-      !globals.isAccessKeySet &&
-      (globals.accessKey === '' || globals.accessKey === null)
+      !globals.isAdminSecretSet &&
+      (globals.adminSecret === '' || globals.adminSecret === null)
     ) {
-      accessKeyHtml = (
+      adminSecretHtml = (
         <div className={styles.secureSection}>
           <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
             <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
@@ -211,6 +232,32 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
+                {this.state.showSchemaStitch ? (
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.customresolver}
+                  >
+                    <li>
+                      <Link
+                        className={
+                          currentActiveBlock === 'remote-schemas'
+                            ? styles.navSideBarActive
+                            : ''
+                        }
+                        to={appPrefix + '/remote-schemas/manage/schemas'}
+                      >
+                        <div className={styles.iconCenter}>
+                          <i
+                            title="Remote Schemas"
+                            className="fa fa-plug"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <p>Remote Schemas</p>
+                      </Link>
+                    </li>
+                  </OverlayTrigger>
+                ) : null}
                 {this.state.showEvents ? (
                   <OverlayTrigger placement="right" overlay={tooltip.events}>
                     <li>
@@ -220,7 +267,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/events'}
+                        to={appPrefix + '/events/manage/triggers'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -237,7 +284,7 @@ class Main extends React.Component {
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
-              {accessKeyHtml}
+              {adminSecretHtml}
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   <i className={styles.question + ' fa fa-cog'} />
@@ -304,6 +351,20 @@ class Main extends React.Component {
                           alt={'mail'}
                         />
                         <span>Reach out ({'support@hasura.io'})</span>
+                      </a>
+                    </li>
+                    <li className={'dropdown-item'}>
+                      <a
+                        href="https://docs.hasura.io/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <img
+                          className={'img-responsive'}
+                          src={docs}
+                          alt={'docs'}
+                        />
+                        <span>Head to docs</span>
                       </a>
                     </li>
                   </div>
@@ -399,7 +460,7 @@ class Main extends React.Component {
                         </li>
                         <li className={'dropdown-item '}>
                           <a
-                            href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com//hasura/graphql-engine%0A"
+                            href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
                             target="_blank"
                             rel="noopener noreferrer"
                           >

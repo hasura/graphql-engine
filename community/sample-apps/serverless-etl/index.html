@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <!-- instant search -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.10.1/dist/instantsearch.min.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="shortcut icon" type="image/png" href="favicon.png"/>
+
+    <title>ETL demo using Hasura GraphQL Engine Event Triggers</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-129818961-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-129818961-1');
+    </script>
+  </head>
+  <body class="main">
+
+    <div class="container h-100 main-content " id="loading-screen">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <div><h4 id="loading-text">🏃 Loading...️</h4></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container h-100 main-content hidden" id="input-screen" style="display:none;">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-8 center-form">
+          <h4>Enter details of a book to add to library</h4>
+          <hr/>
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Title" id="book-title">
+          </div>
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Author" id="book-author">
+          </div>
+          <button class="btn btn-success" type="button" id="save-button" onclick="saveBook()">✅ Save</button>
+          <button class="btn btn-light" type="button" id="search-page-button" onclick="showScreen('#search-screen')">🔍 Search library</button>
+          <div class="error"><span id="error-text"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container h-100 main-content hidden" id="search-screen" style="display:none;">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-12">
+          <h4>Search among the books in library</h4>
+          <hr/>
+          <div class="input-group mb-3" id="search-box">
+          </div>
+          <div class="algolia_search_attribution">
+            <span>
+              search by
+            </span>
+            <span>
+              <img class="algolia_image" src="algolia-logo.svg" alt="Algolia Search Logo">
+            </span>
+          </div>
+          <div class="error"><span id="error-text"></span></div>
+          <main class="search-results" >
+            <div class="col-12">
+              <ul class="list-group" id="hits">
+              </ul>
+            </div>
+            <div id="pagination"></div>
+          </main>
+          <div class="pt-2">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl#architecture" target="_blank">
+              <img class="col-6 img-fluid" src="arch.png" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="main-content">
+        <div class="hasura-logo">
+          <a href="https://hasura.io" target="_blank">
+            <img class="hasura-logo" alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white_200px.png" />
+          </a>
+          &nbsp; | &nbsp;
+          <a href="/console" target="_blank" id="hge-console-link">
+            Backend
+          </a>
+          &nbsp; | &nbsp;
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/serverless-etl" target="_blank">
+            Source
+          </a>
+          <div class="footer-small-text"><span>(The database resets every 24 hours)</span></div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+    <!-- Algolia -->
+    <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.10.1"></script>
+
+    <script type="text/html" id="hit-template">
+      <div class="hit">
+        <li class="list-group-item list-group-item-light">{{{_highlightResult.title.value}}} by {{{_highlightResult.author.value}}}</li>
+      </div>
+    </script>
+
+    <!-- custom js -->
+    <script src="index.js"></script>
+  </body>
+</html>

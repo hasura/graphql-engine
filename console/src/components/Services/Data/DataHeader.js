@@ -1,33 +1,59 @@
 import React from 'react';
 import { Link } from 'react-router';
+import _push from './push';
 import Helmet from 'react-helmet';
 import PageContainer from './PageContainer/PageContainer';
 import globals from '../../../Globals';
 
-const appPrefix = '/data';
+import {
+  loadSchema,
+  loadUntrackedSchema,
+  loadUntrackedRelations,
+  UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
+} from './DataActions';
+
+const sectionPrefix = '/data';
 
 const DataHeader = ({
   schema,
   currentSchema,
+  schemaList,
   children,
   location,
   dispatch,
 }) => {
   const styles = require('./TableCommon/Table.scss');
+
   const currentLocation = location.pathname;
+
   let migrationSection = null;
   if (globals.consoleMode === 'cli') {
     migrationSection = (
       <li
         role="presentation"
         className={
-          currentLocation.indexOf('migrations') !== -1 ? styles.active : ''
+          currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link to={appPrefix + '/migrations'}>Migrations</Link>
+        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+          Migrations
+        </Link>
       </li>
     );
   }
+
+  const handleSchemaChange = e => {
+    const updatedSchema = e.target.value;
+    dispatch(_push(`/schema/${updatedSchema}`));
+    Promise.all([
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+      dispatch(loadSchema()),
+      dispatch(loadUntrackedSchema()),
+      dispatch(loadUntrackedRelations()),
+      dispatch(fetchFunctionInit()),
+    ]);
+  };
   return (
     <div>
       <Helmet title={'Data | Hasura'} />
@@ -40,22 +66,35 @@ const DataHeader = ({
               <li
                 role="presentation"
                 className={
-                  currentLocation.indexOf('schema') !== -1 ? styles.active : ''
+                  currentLocation.includes('data/schema') ? styles.active : ''
                 }
               >
-                <div className={styles.schemaWrapper}>
-                  <div
-                    className={styles.schemaSidebarSection}
-                    data-test="schema"
-                  >
-                    <Link
-                      className={styles.schemaBorder}
-                      to={appPrefix + '/schema'}
+                <Link
+                  className={styles.linkBorder}
+                  to={sectionPrefix + '/schema/' + currentSchema}
+                >
+                  <div className={styles.schemaWrapper}>
+                    <div
+                      className={styles.schemaSidebarSection}
+                      data-test="schema"
                     >
-                      Schema - {currentSchema}
-                    </Link>
+                      Schema:
+                      <select
+                        onChange={handleSchemaChange}
+                        className={styles.changeSchema + ' form-control'}
+                      >
+                        {schemaList.map(s => (
+                          <option
+                            key={s.schema_name}
+                            selected={s.schema_name === currentSchema}
+                          >
+                            {s.schema_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <PageContainer
                   location={location}
                   schema={schema}
@@ -66,10 +105,14 @@ const DataHeader = ({
               <li
                 role="presentation"
                 className={
-                  currentLocation.indexOf('sql') !== -1 ? styles.active : ''
+                  currentLocation.includes('data/sql') ? styles.active : ''
                 }
               >
-                <Link to={appPrefix + '/sql'} data-test="sql-link">
+                <Link
+                  className={styles.linkBorder}
+                  to={sectionPrefix + '/sql'}
+                  data-test="sql-link"
+                >
                   SQL
                 </Link>
               </li>

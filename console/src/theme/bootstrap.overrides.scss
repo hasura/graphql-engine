@@ -12,6 +12,16 @@ input[type="radio"], input[type="checkbox"]
 {
   margin: 0 5px 0px 0px;
 }
+.dropdown.input-group-btn {
+  button {
+    min-height: 34px;
+  }
+}
+
+.form-group .input-group {
+  min-width: 300px;
+}
+
 label
 {
   margin-bottom: 0 !important;
@@ -81,8 +91,12 @@ select.form-control
 }
 .btn-warning:hover {
   color: #000;
-  background-color: #ec971f;
-  border-color: #d58512;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+.btn-warning:focus
+{
+  background-color: #F2B130 !important;
 }
 // Generate Code modal
 .padd_remove

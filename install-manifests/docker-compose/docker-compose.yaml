@@ -6,7 +6,7 @@ services:
     volumes:
     - db_data:/var/lib/postgresql/data
   graphql-engine:
-    image: hasura/graphql-engine:v1.0.0-alpha28
+    image: hasura/graphql-engine:v1.0.0-alpha38
     ports:
     - "8080:8080"
     depends_on:
@@ -14,9 +14,8 @@ services:
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
-    command:
-      - graphql-engine
-      - serve
-      - --enable-console
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## uncomment next line to set an admin secret
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
   db_data:

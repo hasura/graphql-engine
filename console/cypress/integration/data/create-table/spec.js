@@ -127,31 +127,6 @@ export const passCT = () => {
   validateCT(getTableName(0, testName), 'success');
 };
 
-export const failAddExistingTable = () => {
-  cy.visit(`${baseUrl}/data/schema/public/existing-table-view/add`);
-  cy.get(getElementFromAlias('existing-table')).type(getTableName(0, testName));
-  cy.get(getElementFromAlias('add-existing-table-button')).click();
-  cy.url().should(
-    'eq',
-    `${baseUrl}/data/schema/public/existing-table-view/add`
-  );
-  cy.get(getElementFromAlias(getTableName(0, testName))).click();
-  cy.get(getElementFromAlias('table-modify')).click();
-  cy.get(getElementFromAlias('untrack-table')).click();
-  cy.on('window:confirm', () => true);
-  cy.wait(5000);
-};
-
-export const passAddExistingTable = () => {
-  cy.visit(`${baseUrl}/data/schema/public/existing-table-view/add`);
-  cy.get(getElementFromAlias('existing-table')).type(getTableName(0, testName));
-  cy.get(getElementFromAlias('add-existing-table-button')).click();
-  cy.url().should(
-    'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
-  );
-};
-
 export const failCTDuplicateTable = () => {
   //  Visit data page
   cy.get(getElementFromAlias('sidebar-add-table')).click();

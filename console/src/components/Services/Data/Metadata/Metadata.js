@@ -1,3 +1,4 @@
+import globals from '../../../../Globals';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
@@ -6,9 +7,10 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
-import ClearAccessKey from './ClearAccessKey';
+import ClearAdminSecret from './ClearAdminSecret';
 
 import semverCheck from '../../../../helpers/semver';
+import { CONSOLE_ADMIN_SECRET } from '../../../AppState';
 
 class Metadata extends Component {
   constructor() {
@@ -42,7 +44,6 @@ class Metadata extends Component {
   }
   updateMetadataState(displayReloadMetadata) {
     this.setState({
-      ...this.state,
       showMetadata: displayReloadMetadata,
     });
   }
@@ -113,22 +114,25 @@ class Metadata extends Component {
           ]
           : null}
 
-        {window.localStorage.CONSOLE_ACCESS_KEY
+        {window.localStorage[CONSOLE_ADMIN_SECRET]
           ? [
             <div
               key="access_key_reset_1"
               className={metaDataStyles.intro_note}
             >
-              <h4>Clear access key (logout)</h4>
+              <h4>Clear {globals.adminSecretLabel} (logout)</h4>
               <div className={metaDataStyles.content_width}>
-                  The console caches the access key (HASURA_GRAPHQL_ACCESS_KEY)
-                  in the browser. You can clear this cache to force a prompt for
-                  the access key when the console is accessed next using this
-                  browser.
+                  The console caches the {globals.adminSecretLabel} (
+                {globals.adminSecretLabel === 'access-key'
+                  ? 'HASURA_GRAPHQL_ACCESS_KEY'
+                  : 'HASURA_GRAPHQL_ADMIN_SECRET'}
+                  ) in the browser. You can clear this cache to force a prompt
+                  for the {globals.adminSecretLabel} when the console is
+                  accessed next using this browser.
               </div>
             </div>,
             <div key="access_key_reset_2">
-              <ClearAccessKey {...this.props} />
+              <ClearAdminSecret {...this.props} />
             </div>,
           ]
           : null}

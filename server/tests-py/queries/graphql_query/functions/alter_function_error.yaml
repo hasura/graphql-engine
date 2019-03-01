@@ -1,0 +1,17 @@
+description: Alter SQL function to type VOLATILE (error)
+url: /v1/query
+status: 400
+reponse:
+  path: "$.args"
+  error: type of function "search_posts" is altered to "VOLATILE" which is not supported
+    now
+  code: not-supported
+query:
+  type: run_sql
+  args:
+    sql: |
+      create or replace function search_posts(search text)
+      returns setof post as $$
+          insert into post (title, content) values (search, search)
+          returning *
+      $$ language sql volatile;

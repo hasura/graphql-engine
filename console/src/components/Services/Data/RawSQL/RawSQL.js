@@ -4,8 +4,8 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
-import Button from 'react-bootstrap/lib/Button';
-import { Link } from 'react-router';
+import ModalButton from 'react-bootstrap/lib/Button';
+import Button from '../../../Common/Button/Button';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -18,6 +18,8 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
+import semverCheck from '../../../../helpers/semver';
+import './AceEditorFix.css';
 
 const cascadeTip = (
   <Tooltip id="tooltip-cascade">
@@ -37,10 +39,12 @@ const migrationNameTip = (
     'run_sql_migration'
   </Tooltip>
 );
-const trackTableTip = (
+const trackTableTip = hasFunctionSupport => (
   <Tooltip id="tooltip-tracktable">
-    If you are creating a table/view, you can track them to query them with
-    GraphQL
+    {`If you are creating a table/view${
+      hasFunctionSupport ? '/function' : ''
+    }, you can track them to query them
+      with GraphQL`}
   </Tooltip>
 );
 
@@ -58,7 +62,7 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  currentSchema,
+  serverVersion,
 }) => {
   const styles = require('../TableCommon/Table.scss');
 
@@ -171,6 +175,10 @@ const RawSQL = ({
       </div>
     );
   })();
+  const functionText = semverCheck('customFunctionSection', serverVersion)
+    ? 'Function'
+    : '';
+  const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
       className={`${styles.main_wrapper} ${styles.padd_left} ${
@@ -195,21 +203,15 @@ const RawSQL = ({
                 communicate with the database.
               </li>
               <li>
-                If you plan to create a Table/View using Raw SQL, remember to
-                link it to Hasura DB using&nbsp;
-                <Link
-                  to={
-                    '/data/schema/' + currentSchema + '/existing-table-view/add'
-                  }
-                >
-                  Add Existing Table View
-                </Link>{' '}
-                functionality.
+                If you plan to create a Table/View
+                {functionText ? '/' + functionText : ''} using Raw SQL, remember
+                to link it to Hasura DB by checking the{' '}
+                <code>Track {placeholderText}</code> checkbox below.
               </li>
               <li>
-                Please note that if the migrations are enabled,
-                <code>down</code>
-                migrations will not be generated for SQL statements.
+                Please note that if the migrations are enabled,{' '}
+                <code>down</code> migrations will not be generated when you
+                change the schema using Raw SQL.
               </li>
             </ul>
           </div>
@@ -248,10 +250,15 @@ const RawSQL = ({
                 dispatch({ type: SET_MIGRATION_CHECKED, data: false });
               }
               // set track table checkbox true
-              if (
-                formattedSql.indexOf('create view') !== -1 ||
-                formattedSql.indexOf('create table') !== -1
-              ) {
+              let regExp;
+              if (functionText) {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              } else {
+                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
+              }
+              // const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
+              const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
+              if (matches) {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
               } else {
                 dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
@@ -294,8 +301,11 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track table
-            <OverlayTrigger placement="right" overlay={trackTableTip}>
+            Track {placeholderText}
+            <OverlayTrigger
+              placement="right"
+              overlay={trackTableTip(!!functionText)}
+            >
               <i
                 className={`${styles.padd_small_left} fa fa-info-circle`}
                 aria-hidden="true"
@@ -351,19 +361,20 @@ const RawSQL = ({
           ) : (
             <hr />
           )}
-          <button
+          <Button
             type="submit"
-            className={styles.yellow_button}
             onClick={submitSQL}
+            color="yellow"
+            size="sm"
             data-test="run-sql"
           >
             Run!
-          </button>
+          </Button>
         </div>
         <div className="hidden col-xs-4">{alert}</div>
       </div>
       <Modal show={isModalOpen} onHide={onModalClose.bind(this)}>
-        <Modal.Header closeButton>
+        <Modal.Header closeModalButton>
           <Modal.Title>Run SQL</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -377,14 +388,14 @@ const RawSQL = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={onModalClose}>Cancel</Button>
-          <Button
+          <ModalButton onClick={onModalClose}>Cancel</ModalButton>
+          <ModalButton
             onClick={onConfirmNoMigration}
             bsStyle="primary"
             data-test="not-migration-confirm"
           >
             Yes, i confirm
-          </Button>
+          </ModalButton>
         </Modal.Footer>
       </Modal>
       <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -414,6 +425,7 @@ const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

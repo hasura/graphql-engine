@@ -1,17 +1,21 @@
 Schema/Metadata API Reference: Tables/Views
-============================================
-Add or remove a table/view to Hasura GraphQL Engine's metadata using following API.
+===========================================
 
-.. Note::
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
-   Only tables/views added to metadata are available for ``querying/mutating/subscribing`` data over **GraphQL** API.
+Track/untrack a table/view in Hasura GraphQL engine
+
+Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
 
 .. _track_table:
 
 track_table
 -----------
 
-``track_table`` is used to add a table/view.
+``track_table`` is used to add a table/view to the GraphQL schema.
 
 Add a table/view ``author``:
 
@@ -29,12 +33,29 @@ Add a table/view ``author``:
        }
    }
 
+.. _track_table_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+
 .. _untrack_table:
 
 untrack_table
 -------------
 
-``untrack_table`` is used to remove a table/view. 
+``untrack_table`` is used to remove a table/view from the GraphQL schema.
 
 Remove a table/view ``author``:
 

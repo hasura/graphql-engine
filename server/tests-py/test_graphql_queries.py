@@ -60,6 +60,9 @@ class TestGraphQLQueryAgg(DefaultTestSelectQueries):
     def test_author_agg_with_articles_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/author_agg_with_articles_where.yaml')
 
+    def test_article_deeply_nested_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_deeply_nested_aggregate.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/aggregations'
@@ -88,6 +91,9 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
     def test_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml')
+
+    def test_limit_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
 
     def test_err_str_limit_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml')
@@ -142,8 +148,17 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_in(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml')
 
+    def test_author_article_where_in_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml')
+
+    def test_author_article_where_nin_empty_array(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml')
+
     def test_author_article_where_nin(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml')
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml')
 
     def test_order_delivered_at_is_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml')
@@ -162,6 +177,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
 
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml')
+
+    def test_self_referential_relationships(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml')
 
     @classmethod
     def dir(cls):
@@ -182,11 +200,32 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_cannot_access_remarks_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml')
 
+    def test_user_can_query_geometry_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter.yaml')
+
+    def test_user_can_query_geometry_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter_session_vars.yaml')
+
+    def test_user_can_query_jsonb_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter.yaml')
+
+    def test_user_can_query_jsonb_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_session_vars.yaml')
+
     def test_artist_select_query_Track_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track_fail.yaml')
 
     def test_artist_select_query_Track(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track.yaml')
+
+    def test_artist_search_tracks(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks.yaml')
+
+    def test_artist_search_tracks_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks_aggregate.yaml')
+
+    def test_staff_passed_students(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml')
 
     @classmethod
     def dir(cls):
@@ -245,6 +284,20 @@ class TestGraphQLQueryBoolExpJsonB(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
+class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
+
+    def test_query_using_point(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_point.yaml')
+
+    def test_query_using_line(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_line.yaml')
+
+    def test_query_using_polygon(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_using_polygon.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/postgis'
 
 class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_without_id(self, hge_ctx):
@@ -256,6 +309,45 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_rel_author_rel_contact_phone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_rel_author_rel_contact_phone.yaml')
 
+    def test_album_order_by_tracks_count(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_count.yaml')
+
+    def test_album_order_by_tracks_duration_avg(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_duration_avg.yaml')
+
+    def test_album_order_by_tracks_max_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_max_name.yaml')
+
+    def test_album_order_by_tracks_bytes_stddev(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_bytes_stddev.yaml')
+
+    def test_employee_distinct_department_order_by_salary_desc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_desc.yaml')
+
+    def test_employee_distinct_department_order_by_salary_asc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_department_order_by_salary_asc.yaml')
+
+    def test_employee_distinct_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/employee_distinct_fail.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
+
+class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
+
+    def test_search_posts(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
+
+    def test_search_posts_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
+
+    def test_alter_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
+
+    def test_overloading_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions'

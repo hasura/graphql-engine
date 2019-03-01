@@ -1,14 +1,9 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Hasura.GraphQL.Validate.InputValue
   ( validateInputValue
   , jsonParser
   , valueParser
   , constValueParser
+  , pPrintValueC
   ) where
 
 import           Data.Scientific                 (fromFloatDigits)
@@ -20,6 +15,7 @@ import           Data.Has
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Data.Text                       as T
 import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
@@ -50,21 +46,9 @@ resolveVar var = do
   where
     typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
       -- named types
-      (G.TypeNamed eTy, G.TypeNamed aTy) -> eTy == aTy
-      -- non null type can be expected for a null type
-      (G.TypeNamed eTy, G.TypeNonNull (G.NonNullTypeNamed aTy)) -> eTy == aTy
-
+      (G.TypeNamed _ eTy, G.TypeNamed _ aTy) -> eTy == aTy
       -- list types
-      (G.TypeList eTy, G.TypeList aTy) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeList eTy, G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-
-      -- non null types
-      (G.TypeNonNull (G.NonNullTypeList eTy), G.TypeNonNull (G.NonNullTypeList aTy)) ->
-        typeCheck (G.unListType eTy) (G.unListType aTy)
-      (G.TypeNonNull (G.NonNullTypeNamed eTy), G.TypeNonNull (G.NonNullTypeNamed aTy)) ->
-        eTy == aTy
+      (G.TypeList _ eTy, G.TypeList _ aTy) -> typeCheck (G.unListType eTy) (G.unListType aTy)
       (_, _) -> False
 
 pVar
@@ -102,6 +86,23 @@ jsonParser =
     jScalar J.Null = pNull
     jScalar v      = pVal v
 
+toJValue :: (MonadError QErr m) => G.Value -> m J.Value
+toJValue = \case
+  G.VVariable _                   ->
+    throwVE "variables are not allowed in scalars"
+  G.VInt i                        -> return $ J.toJSON i
+  G.VFloat f                      -> return $ J.toJSON f
+  G.VString (G.StringValue t)     -> return $ J.toJSON t
+  G.VBoolean b                    -> return $ J.toJSON b
+  G.VNull                         -> return J.Null
+  G.VEnum (G.EnumValue n)         -> return $ J.toJSON n
+  G.VList (G.ListValueG vals)     ->
+    J.toJSON <$> mapM toJValue vals
+  G.VObject (G.ObjectValueG objs) ->
+    J.toJSON . Map.fromList <$> mapM toTup objs
+  where
+    toTup (G.ObjectFieldG f v) = (f,) <$> toJValue v
+
 valueParser
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
@@ -133,8 +134,38 @@ valueParser =
     pScalar (G.VBoolean b)    = pVal $ J.Bool b
     pScalar (G.VString sv)    = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VEnum _)       = throwVE "unexpected enum for a scalar"
-    pScalar (G.VObject _)     = throwVE "unexpected object for a scalar"
-    pScalar (G.VList _)       = throwVE "unexpected array for a scalar"
+    pScalar v                 = pVal =<< toJValue v
+
+pPrintValueC :: G.ValueConst -> Text
+pPrintValueC = \case
+  G.VCInt i                        -> T.pack $ show i
+  G.VCFloat f                      -> T.pack $ show f
+  G.VCString (G.StringValue t)     -> T.pack $ show t
+  G.VCBoolean b                    -> bool "false" "true"  b
+  G.VCNull                         -> "null"
+  G.VCEnum (G.EnumValue n)         -> G.unName n
+  G.VCList (G.ListValueG vals)     -> withSquareBraces $ T.intercalate ", " $ map pPrintValueC vals
+  G.VCObject (G.ObjectValueG objs) -> withCurlyBraces $ T.intercalate ", " $ map ppObjFld objs
+  where
+    ppObjFld (G.ObjectFieldG f v) = G.unName f <> ": " <> pPrintValueC v
+    withSquareBraces t = "[" <> t <> "]"
+    withCurlyBraces t = "{" <> t <> "}"
+
+
+toJValueC :: G.ValueConst -> J.Value
+toJValueC = \case
+  G.VCInt i                        -> J.toJSON i
+  G.VCFloat f                      -> J.toJSON f
+  G.VCString (G.StringValue t)     -> J.toJSON t
+  G.VCBoolean b                    -> J.toJSON b
+  G.VCNull                         -> J.Null
+  G.VCEnum (G.EnumValue n)         -> J.toJSON n
+  G.VCList (G.ListValueG vals)     ->
+    J.toJSON $ map toJValueC vals
+  G.VCObject (G.ObjectValueG objs) ->
+    J.toJSON . OMap.fromList $ map toTup objs
+  where
+    toTup (G.ObjectFieldG f v) = (f, toJValueC v)
 
 constValueParser :: (MonadError QErr m) => InputValueParser G.ValueConst m
 constValueParser =
@@ -160,8 +191,7 @@ constValueParser =
     pScalar (G.VCBoolean b) = pVal $ J.Bool b
     pScalar (G.VCString sv) = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VCEnum _)    = throwVE "unexpected enum for a scalar"
-    pScalar (G.VCObject _)  = throwVE "unexpected object for a scalar"
-    pScalar (G.VCList _)    = throwVE "unexpected array for a scalar"
+    pScalar v               = pVal $ toJValueC v
 
 validateObject
   :: ( MonadReader r m, Has TypeMap r
@@ -207,18 +237,23 @@ validateNamedTypeVal inpValParser nt val = do
   case tyInfo of
     -- this should never happen
     TIObj _ ->
-      throw500 $ "unexpected object type info for: "
-      <> showNamedTy nt
+      throwUnexpTypeErr "object"
+    TIIFace _ ->
+      throwUnexpTypeErr "interface"
+    TIUnion _ ->
+      throwUnexpTypeErr "union"
     TIInpObj ioti ->
       withParsed (getObject inpValParser) val $
       fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
     TIEnum eti ->
       withParsed (getEnum inpValParser) val $
       fmap (AGEnum nt) . mapM (validateEnum eti)
-    TIScalar (ScalarTyInfo _ pgColTy) ->
+    TIScalar (ScalarTyInfo _ pgColTy _) ->
       withParsed (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where
+    throwUnexpTypeErr ty = throw500 $ "unexpected " <> ty <> " type info for: "
+      <> showNamedTy nt
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)
       then return enumVal
@@ -240,19 +275,19 @@ validateList inpValParser listTy val =
     AGArray listTy <$>
       mapM (indexedMapM (validateInputValue inpValParser baseTy)) lM
 
-validateNonNull
-  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
-  => InputValueParser a m
-  -> G.NonNullType
-  -> a
-  -> m AnnGValue
-validateNonNull inpValParser nonNullTy val = do
-  parsedVal <- case nonNullTy of
-    G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
-    G.NonNullTypeList lt  -> validateList inpValParser lt val
-  when (hasNullVal parsedVal) $
-    throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
-  return parsedVal
+-- validateNonNull
+--   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
+--   => InputValueParser a m
+--   -> G.NonNullType
+--   -> a
+--   -> m AnnGValue
+-- validateNonNull inpValParser nonNullTy val = do
+--   parsedVal <- case nonNullTy of
+--     G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
+--     G.NonNullTypeList lt  -> validateList inpValParser lt val
+--   when (hasNullVal parsedVal) $
+--     throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
+--   return parsedVal
 
 validateInputValue
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -262,9 +297,9 @@ validateInputValue
   -> m AnnGValue
 validateInputValue inpValParser ty val =
   case ty of
-    G.TypeNamed nt    -> validateNamedTypeVal inpValParser nt val
-    G.TypeList lt     -> validateList inpValParser lt val
-    G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
+    G.TypeNamed _ nt -> validateNamedTypeVal inpValParser nt val
+    G.TypeList _ lt  -> validateList inpValParser lt val
+    --G.TypeNonNull nnt -> validateNonNull inpValParser nnt val
 
 withParsed
   :: (Monad m)

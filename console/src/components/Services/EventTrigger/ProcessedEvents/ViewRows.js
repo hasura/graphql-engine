@@ -17,9 +17,10 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/ReactTableFix.css';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 const ViewRows = ({
   curTriggerName,
@@ -31,7 +32,6 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
@@ -115,7 +115,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -223,7 +223,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -304,7 +304,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
                   return formattedDate;
                 }
                 const content =
@@ -406,8 +406,57 @@ const ViewRows = ({
                                 </div>
                               ) : null}
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Payload
+                                <div
+                                  className={
+                                    styles.subheading_text +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? 'Payload'
+                                    : 'Error'}
+                                </div>
+                                <div
+                                  className={
+                                    styles.status_code_right +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? [
+                                      'Status Code: ',
+                                      finalResponse.status_code === 200 ? (
+                                        <i
+                                          className={
+                                            styles.invocationSuccess +
+                                              ' fa fa-check'
+                                          }
+                                        />
+                                      ) : (
+                                        <i
+                                          className={
+                                            styles.invocationFailure +
+                                              ' fa fa-times'
+                                          }
+                                        />
+                                      ),
+                                      finalResponse.status_code,
+                                      ' ',
+                                      <OverlayTrigger
+                                        placement="top"
+                                        overlay={
+                                          tooltip.statusCodeDescription
+                                        }
+                                      >
+                                        <i
+                                          className="fa fa-question-circle"
+                                          aria-hidden="true"
+                                        />
+                                      </OverlayTrigger>,
+                                    ]
+                                    : null}
                                 </div>
                                 <AceEditor
                                   mode="json"
@@ -451,12 +500,6 @@ const ViewRows = ({
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
-            {isProgressing ? (
-              <div>
-                {' '}
-                <Spinner />{' '}
-              </div>
-            ) : null}
             {renderTableBody()}
           </div>
           <br />
