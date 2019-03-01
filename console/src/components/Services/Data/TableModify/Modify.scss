@@ -188,9 +188,10 @@ hr {
     padding-top: 13px;
   }
 
-  .permissionDelete {
-    cursor: pointer;
-  }
+  //.permissionDelete {
+  //  cursor: pointer;
+  //  margin-left: 10px;
+  //}
 
   .editPermissionLink {
     font-size: 12px;
@@ -228,6 +229,20 @@ hr {
   .permissionsLegendValue {
     margin-right: 15px;
   }
+}
+
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
 }
 
 .applyBulkPermissions {
