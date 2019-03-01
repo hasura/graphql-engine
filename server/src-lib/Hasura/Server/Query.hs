@@ -3,18 +3,19 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.ByteString.Builder        as BB
-import qualified Data.ByteString.Lazy           as BL
-import qualified Data.Vector                    as V
-import qualified Network.HTTP.Client            as HTTP
+import qualified Data.ByteString.Builder            as BB
+import qualified Data.ByteString.Lazy               as BL
+import qualified Data.Vector                        as V
+import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
@@ -23,12 +24,13 @@ import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.QueryTemplate
-import           Hasura.RQL.DML.Returning       (encodeJSONVector)
+import           Hasura.RQL.DML.Returning           (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
 
-import qualified Database.PG.Query              as Q
+import qualified Database.PG.Query                  as Q
 
 data RQLQuery
   = RQAddExistingTableOrView !TrackTable
@@ -42,6 +44,7 @@ data RQLQuery
   | RQCreateArrayRelationship !CreateArrRel
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
+  | RQRenameRelationship !RenameRel
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -92,11 +95,11 @@ $(deriveJSON
   ''RQLQuery)
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager)
+           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -104,30 +107,35 @@ newtype Run a
            )
 
 instance UserInfoM Run where
-  askUserInfo = asks fst
+  askUserInfo = asks _1
 
 instance HasHttpManager Run where
-  askHttpManager = asks snd
+  askHttpManager = asks _2
+
+instance HasSQLGenCtx Run where
+  askSQLGenCtx = asks _3
 
 peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
+  -> Bool
   -> Q.PGPool -> Q.TxIsolation
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr pgPool txIso (Run m) =
+peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
   runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr)
+    sqlGenCtx = SQLGenCtx strfyNum
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
-  -> UserInfo -> SchemaCache -> HTTP.Manager
+  => Q.PGPool -> Q.TxIsolation -> UserInfo
+  -> SchemaCache -> HTTP.Manager -> Bool
   -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr query = do
+runQuery pool isoL userInfo sc hMgr strfyNum query = do
   res <- liftIO $ runExceptT $
-         peelRun sc userInfo hMgr pool isoL $ runQueryM query
+         peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
   liftEither res
 
 queryNeedsReload :: RQLQuery -> Bool
@@ -142,6 +150,7 @@ queryNeedsReload qi = case qi of
   RQCreateArrayRelationship  _ -> True
   RQDropRelationship  _        -> True
   RQSetRelationshipComment  _  -> False
+  RQRenameRelationship _       -> True
 
   RQCreateInsertPermission _   -> True
   RQCreateSelectPermission _   -> True
@@ -185,7 +194,7 @@ queryNeedsReload qi = case qi of
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => RQLQuery
   -> m RespBody
@@ -201,6 +210,7 @@ runQueryM rq = withPathK "args" $ case rq of
   RQCreateArrayRelationship  q -> runCreateArrRel q
   RQDropRelationship  q        -> runDropRel q
   RQSetRelationshipComment  q  -> runSetRelComment q
+  RQRenameRelationship q       -> runRenameRel q
 
   RQCreateInsertPermission q -> runCreatePerm q
   RQCreateSelectPermission q -> runCreatePerm q

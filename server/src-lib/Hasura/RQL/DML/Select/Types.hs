@@ -140,10 +140,11 @@ data TablePerm
 
 data AnnSelG a
   = AnnSelG
-  { _asnFields :: !a
-  , _asnFrom   :: !TableFrom
-  , _asnPerm   :: !TablePerm
-  , _asnArgs   :: !TableArgs
+  { _asnFields   :: !a
+  , _asnFrom     :: !TableFrom
+  , _asnPerm     :: !TablePerm
+  , _asnArgs     :: !TableArgs
+  , _asnStrfyNum :: !Bool
   } deriving (Show, Eq)
 
 type AnnSel = AnnSelG AnnFlds

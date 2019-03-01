@@ -49,6 +49,7 @@ data RawServeOptions
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
   , rsoWsReadCookie    :: !Bool
+  , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
@@ -65,6 +66,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
@@ -240,11 +242,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
-
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry enabledAPIs
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -356,9 +358,10 @@ serveCmdFooter =
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
       [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv, accessKeyEnv, authHookEnv, authHookModeEnv
+      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
+      , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv, wsReadCookieEnv
+      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       ]
 
     eventEnvs =
@@ -468,7 +471,6 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
-
 wsReadCookieEnv :: (String, String)
 wsReadCookieEnv =
   ( "HASURA_GRAPHQL_WS_READ_COOKIE"
@@ -476,6 +478,12 @@ wsReadCookieEnv =
   ++ " This can be a potential security flaw! Please make sure you know "
   ++ "what you're doing."
   ++ "This configuration is only applicable when CORS is disabled."
+  )
+
+stringifyNumEnv :: (String, String)
+stringifyNumEnv =
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
+  , "Stringify numeric types (default: false)"
   )
 
 enabledAPIsEnv :: (String, String)
@@ -707,6 +715,12 @@ parseWsReadCookie =
            help (snd wsReadCookieEnv)
          )
 
+parseStringifyNum :: Parser Bool
+parseStringifyNum =
+  switch ( long "stringify-numeric-types" <>
+           help (snd stringifyNumEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -738,6 +752,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+                       , "stringify_numeric_types" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog
