@@ -19,7 +19,6 @@ class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
     const node = require('./Node.svg');
-    const remoteSchema = require('./remote_schema.png');
     const arrowRight = require('./yellow_arrow.svg');
     const glitch = require('./glitch.png');
     const externalLink = require('./external-link.svg');
@@ -65,7 +64,7 @@ class CustomResolver extends React.Component {
               What are Remote Schemas?
             </div>
             <div className={styles.remoteSchemaImg}>
-              <img className={'img-responsive'} src={remoteSchema} alt={'Remote Schema'} />
+              <img className={'img-responsive'} src={'https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png'} alt={'Remote Schema'} />
             </div>
             <div className={styles.descriptionText + ' ' + styles.wd60}>
               Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community.  Remote schemas are the foundation for a set of tools and techniques referred to as schema stitching, a brand new topic in the GraphQL community.
