@@ -139,8 +139,8 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
-   * - ``--stringify-numeric``
-     - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC``
+   * - ``--stringify-numeric-types``
+     - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
      - Stringify numeric types (default: false)
 
    * - ``--enabled-apis <APIS>``

@@ -462,7 +462,7 @@ enableTelemetryEnv =
 
 stringifyNumEnv :: (String, String)
 stringifyNumEnv =
-  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC"
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
   , "Stringify numeric types (default: false)"
   )
 
@@ -691,7 +691,7 @@ parseEnableTelemetry = optional $
 
 parseStringifyNum :: Parser Bool
 parseStringifyNum =
-  switch ( long "stringify-numeric" <>
+  switch ( long "stringify-numeric-types" <>
            help (snd stringifyNumEnv)
          )
 
@@ -726,7 +726,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
-                       , "stringify_numeric" J..= soStringifyNum so
+                       , "stringify_numeric_types" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog
