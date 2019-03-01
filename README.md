@@ -78,15 +78,19 @@ The fastest way to try Hasura out is via Heroku.
 
    Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
-### Other deployment methods
+### Other one-click deployment options
 
 Check out the instructions for the following one-click deployment options:
 
-[![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app)
+* **DigitalOcean**
 
-<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" width="150">
+  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app)
 
-[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)
+* **Azure Container Instances**
+
+  [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)
+
+### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment
 guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
