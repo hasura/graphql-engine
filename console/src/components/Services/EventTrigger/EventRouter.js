@@ -5,7 +5,6 @@ import globals from '../../../Globals';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
@@ -14,6 +13,8 @@ import {
   eventHeaderConnector,
   streamingLogsConnector,
 } from '.';
+
+import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   loadTriggers,
@@ -41,7 +42,7 @@ const makeEventRouter = (
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={schemaContainerConnector(connect)}>
+      <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
         <Route path="triggers" component={schemaConnector(connect)} />
         <Route

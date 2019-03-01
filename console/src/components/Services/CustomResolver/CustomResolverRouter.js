@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Route, IndexRedirect, Link } from 'react-router';
-import { layoutConnector, rightBar } from '../../Common/Layout';
+import { layoutConnector, rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
   landingCustomResolverGen,
@@ -129,6 +129,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   return (
     <Route
       path="remote-schemas"
@@ -141,7 +142,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       onChange={fetchInitialData(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightBar(connect)}>
+      <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="schemas" />
         <Route path="schemas" component={landingCustomResolverGen(connect)} />
         <Route

@@ -11,4 +11,3 @@ export pendingEventsConnector from './PendingEvents/ViewTable';
 export runningEventsConnector from './RunningEvents/ViewTable';
 export streamingLogsConnector from './StreamingLogs/Logs';
 export schemaConnector from './Schema/Schema';
-export schemaContainerConnector from './Schema/SchemaContainer';

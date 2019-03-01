@@ -7,7 +7,6 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   viewTableConnector,
   insertItemConnector,
   rawSQLConnector,
@@ -26,6 +25,8 @@ import {
   PermissionCustomFunction,
   // metadataConnector,
 } from '.';
+
+import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   fetchDataInit,
@@ -49,7 +50,7 @@ const makeDataRouter = (
   return (
     <Route path="data" component={dataHeaderConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={schemaContainerConnector(connect)}>
+      <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
