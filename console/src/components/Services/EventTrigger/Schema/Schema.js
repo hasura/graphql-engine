@@ -35,9 +35,10 @@ class Schema extends Component {
       >
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
-          <div>
-            <h2 className={`${styles.heading_text} ${styles.inline_block}`}>
-              {' '}
+          <div className={styles.display_flex}>
+            <h2 className={`${styles.headerText} ${styles.addPaddRight} ${
+              styles.inline_block
+              }`}>
               Event Triggers{' '}
             </h2>
             {migrationMode ? (
@@ -50,7 +51,7 @@ class Schema extends Component {
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
                 }}
               >
-                Create Trigger
+                Add
               </Button>
             ) : null}
           </div>
@@ -64,7 +65,13 @@ class Schema extends Component {
           <hr className={styles.clear_fix} />
           <TryItOut
             service="eventTrigger"
+            footerDescription="Head to the Events tab and see an event invoked under `sample-trigger`."
             queryDefinition="mutation{ insert_user()}"
+            glitchLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            awsLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community"
           />
         </div>
       </div>

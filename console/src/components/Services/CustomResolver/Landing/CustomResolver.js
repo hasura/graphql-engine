@@ -63,6 +63,12 @@ class CustomResolver extends React.Component {
             <TryItOut
               service="remoteSchema"
               queryDefinition="query { hello }"
+              footerDescription="You just added a remote schema and queried it!"
+              glitchLink="https://github.com/hasura/graphql-engine/tree/master/community"
+              googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
+              MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"
+              awsLink="https://github.com/hasura/graphql-engine/tree/master/community"
+              adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community"
             />
           </div>
           {/*

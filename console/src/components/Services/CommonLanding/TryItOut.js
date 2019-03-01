@@ -31,7 +31,7 @@ class TryItOut extends React.Component {
             <div className={styles.logoIcon}>
               <img className={'img-responsive'} src={glitch} alt={'glitch'} />
             </div>
-            <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}><button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button></a>
+            <a href={this.props.glitchLink} target={'_blank'}><button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button></a>
             <div className={styles.instructionsWrapper + ' ' + styles.displayFlex}>
               <span   onClick = {this.togglePopup.bind(this)} className={styles.instructions + ' ' + styles.displayFlex}><span>Instructions</span><div className={styles.rightArrow}></div></span>
               { this.state.isPopUp ?
@@ -40,26 +40,26 @@ class TryItOut extends React.Component {
                   service = {this.props.service}
                   title= "Steps to deploy an example GraphQL service to Glitch"
                   queryDefinition= {this.props.queryDefinition}
-                  footerDescription= "You just added a remote schema and queried it!"/>)
+                  footerDescription= {this.props.footerDescription}/>)
                 : null }
             </div>
           </div>
           <div className={styles.boxSmallWrapper}>
-            <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+            <a href={this.props.googleCloudLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img className={'img-responsive'} src={googleCloud} alt={'googleCloud'} />
                 </div>
               </div>
             </a>
-            <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+            <a href={this.props.MicrosoftAzureLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img className={'img-responsive'} src={MicrosoftAzure} alt={'Microsoft Azure'} />
                 </div>
               </div>
             </a>
-            <a href={'https://github.com/hasura/graphql-engine/tree/master/community'} target={'_blank'}>
+            <a href={this.props.awsLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img className={'img-responsive ' + styles.imgAws} src={AWS} alt={'AWS'} />
@@ -67,7 +67,7 @@ class TryItOut extends React.Component {
               </div>
             </a>
             <div className={styles.instructions}>
-              <span>And many more</span> <div className={styles.rightArrow}></div>
+              <a href={this.props.adMoreLink} target="_blank"><span>And many more</span> <div className={styles.rightArrow}></div></a>
             </div>
           </div>
         </div>
@@ -78,6 +78,11 @@ class TryItOut extends React.Component {
 TryItOut.propTypes = {
   service: PropTypes.string.isRequired,
   queryDefinition: PropTypes.string.isRequired,
+  glitchLink: PropTypes.string.isRequired,
+  googleCloudLink: PropTypes.string.isRequired,
+  MicrosoftAzureLink: PropTypes.string.isRequired,
+  awsLink: PropTypes.string.isRequired,
+  adMoreLink: PropTypes.string.isRequired,
   // imgUrl: PropTypes.string.isRequired,
   // imgAlt: PropTypes.string.isRequired,
   // description: PropTypes.string.isRequired,

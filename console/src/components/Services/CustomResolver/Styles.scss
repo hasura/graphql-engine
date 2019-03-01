@@ -187,6 +187,14 @@
   color: #909090;
   display: flex;
   align-items: center;
+  a
+  {
+    color: #909090;
+  }
+  a:
+  {
+    color: #505050;
+  }
   .rightArrow
   {
     margin-top: 3px;
@@ -221,7 +229,7 @@
 {
   padding: 30px 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   .boxLarge
   {
     width: 225px;
