@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  deleteRelMigrate,
   addNewRelClicked,
   addRelNewFromStateMigrate,
   relSelectionChanged,
@@ -16,10 +15,13 @@ import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import { getRelationshipLine } from './utils';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
+import RelationshipEditor from './RelationshipEditor';
 import Button from '../../../Common/Button/Button';
+import semverCheck from '../../../../helpers/semver';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -41,64 +43,6 @@ const getObjArrayRelationshipList = relationships => {
     });
   }
   return requiredList;
-};
-
-/* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
-const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
-  const finalRTable = rTable.name ? rTable.name : rTable;
-  return isObjRel ? (
-    <span>
-      &nbsp;
-      {lcol.join(',')}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol.join(',')}
-    </span>
-  ) : (
-    <span>
-      &nbsp;
-      {finalRTable} :: {rcol.join(',')}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {lcol.join(',')}
-    </span>
-  );
-};
-
-const relationshipView = (
-  dispatch,
-  tableName,
-  relName,
-  { lcol, rtable, rcol },
-  isObjRel,
-  tableStyles
-) => {
-  const onDelete = e => {
-    e.preventDefault();
-    const isOk = confirm('Are you sure?');
-    if (isOk) {
-      dispatch(
-        deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
-      );
-    }
-  };
-  return (
-    <td>
-      <div>
-        <Button
-          color="red"
-          size="sm"
-          onClick={onDelete}
-          data-test={`remove-button-${relName}`}
-        >
-          Remove
-        </Button>
-        &nbsp;
-        <b>{relName}</b>
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelationshipLine(isObjRel, lcol, rcol, rtable)}
-        </div>
-      </div>
-    </td>
-  );
 };
 
 const addRelationshipCellView = (
@@ -179,7 +123,7 @@ const addRelationshipCellView = (
             <Button
               type="submit"
               color="yellow"
-              size="sm"
+              size="xs"
               data-test={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
@@ -365,10 +309,39 @@ const AddRelationship = ({
 };
 
 class Relationships extends Component {
+  state = {
+    supportRename: false,
+  };
+
   componentDidMount() {
-    this.props.dispatch({ type: RESET });
-    this.props.dispatch(setTable(this.props.tableName));
+    const { dispatch, serverVersion } = this.props;
+    dispatch({ type: RESET });
+    dispatch(setTable(this.props.tableName));
+    if (serverVersion) {
+      this.checkRenameSupport(serverVersion);
+    }
   }
+
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.serverVersion &&
+      nextProps.serverVersion !== this.props.serverVersion
+    ) {
+      this.checkRenameSupport(nextProps.serverVersion);
+    }
+  }
+
+  checkRenameSupport = serverVersion => {
+    try {
+      if (semverCheck('tableColumnRename', serverVersion)) {
+        this.setState({
+          supportRename: true,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
   render() {
     const {
       tableName,
@@ -432,26 +405,36 @@ class Relationships extends Component {
               {getObjArrayRelationshipList(tableSchema.relationships).map(
                 (rel, i) => {
                   const column1 = rel.objRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.objRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.objRel),
-                      true,
-                      tableStyles
-                    )
+                    <RelationshipEditor
+                      dispatch={dispatch}
+                      tableName={tableName}
+                      relName={rel.objRel.rel_name}
+                      relConfig={findAllFromRel(
+                        allSchemas,
+                        tableSchema,
+                        rel.objRel
+                      )}
+                      isObjRel
+                      tableStyles={tableStyles}
+                      allowRename={this.state.supportRename}
+                    />
                   ) : (
                     <td />
                   );
                   const column2 = rel.arrRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.arrRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.arrRel),
-                      false,
-                      tableStyles
-                    )
+                    <RelationshipEditor
+                      dispatch={dispatch}
+                      tableName={tableName}
+                      relName={rel.arrRel.rel_name}
+                      relConfig={findAllFromRel(
+                        allSchemas,
+                        tableSchema,
+                        rel.arrRel
+                      )}
+                      isObjRel={false}
+                      tableStyles={tableStyles}
+                      allowRename={this.state.supportRename}
+                    />
                   ) : (
                     <td />
                   );
@@ -565,12 +548,14 @@ Relationships.propTypes = {
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,

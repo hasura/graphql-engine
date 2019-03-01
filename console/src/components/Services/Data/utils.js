@@ -1,3 +1,11 @@
+const tabNameMap = {
+  view: 'Browse Rows',
+  insert: 'Insert Row',
+  modify: 'Modify',
+  relationships: 'Relationships',
+  permissions: 'Permissions',
+};
+
 const ordinalColSort = (a, b) => {
   if (a.ordinal_position < b.ordinal_position) {
     return -1;
@@ -137,4 +145,5 @@ export {
   getIngForm,
   escapeRegExp,
   getTableName,
+  tabNameMap,
 };
