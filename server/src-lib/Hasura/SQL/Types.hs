@@ -386,7 +386,7 @@ isNumType ty        = isIntegerType ty
 
 isJSONType :: PGColType -> Bool
 isJSONType PGJSON = True
-isJSONType _       = False
+isJSONType _      = False
 
 isJSONBType :: PGColType -> Bool
 isJSONBType PGJSONB = True

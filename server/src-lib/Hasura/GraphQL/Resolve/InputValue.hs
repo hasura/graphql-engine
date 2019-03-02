@@ -13,6 +13,7 @@ module Hasura.GraphQL.Resolve.InputValue
   , withArrayM
   , parseMany
   , asPGColText
+  , asPGColTextM
   ) where
 
 import           Hasura.Prelude
@@ -121,11 +122,27 @@ parseMany fn v = case v of
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
 
+onlyText
+  :: (MonadError QErr m)
+  => PGColValue -> m Text
+onlyText = \case
+  PGValText t -> return t
+  PGValVarchar t -> return t
+  _           -> throw500 "expecting text for onlyText"
+
 asPGColText
   :: (MonadError QErr m)
   => AnnGValue -> m Text
 asPGColText val = do
   (_, pgColVal) <- asPGColVal val
   case pgColVal of
-    PGValText t -> return t
-    _           -> throw500 "expecting text for asPGColText"
+    PGValText t    -> return t
+    PGValVarchar t -> return t
+    _              -> throw500 "expecting text for asPGColText"
+
+asPGColTextM
+  :: (MonadError QErr m)
+  => AnnGValue -> m (Maybe Text)
+asPGColTextM val = do
+  pgColValM <- fmap snd <$> asPGColValM val
+  mapM onlyText pgColValM

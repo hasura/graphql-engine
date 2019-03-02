@@ -47,7 +47,7 @@ withSelSet selSet f =
 
 jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
 jsonPathToColExp t = case parseJSONPath t of
-  Left s       -> throwVE $ T.pack s
+  Left s       -> throw400 ParseFailed $ T.pack s
   Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
@@ -55,16 +55,10 @@ jsonPathToColExp t = case parseJSONPath t of
 
 
 argsToColOp :: (MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
-argsToColOp args = case (Map.lookup "path" args) of
-  Nothing  -> return Nothing
-  Just val -> toOp val
+argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
   where
-    toJsonPathExp t = jsonPathToColExp t
-      >>= (return . Just . (RS.ColOp S.jsonbPathOp))
-    toOp = \case
-      AGScalar _ (Just (PGValText t)) -> toJsonPathExp t
-      AGScalar _ (Just (PGValVarchar t)) -> toJsonPathExp t
-      _ -> return Nothing
+    toJsonPathExp = fmap (RS.ColOp S.jsonbPathOp) . jsonPathToColExp
+    toOp v = asPGColTextM v >>= mapM toJsonPathExp
 
 fromSelSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r

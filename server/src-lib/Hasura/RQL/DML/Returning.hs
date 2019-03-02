@@ -26,7 +26,7 @@ pgColsFromMutFld = \case
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
     FCol (PGColInfo col colTy _) _ -> Just (col, colTy)
-    _                            -> Nothing
+    _                              -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
