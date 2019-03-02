@@ -28,7 +28,7 @@ import {
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class StreamingLogs extends Component {
   constructor(props) {

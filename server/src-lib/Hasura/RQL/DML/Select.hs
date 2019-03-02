@@ -140,7 +140,7 @@ convOrderByElem (flds, spi) = \case
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
@@ -178,9 +178,11 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
 
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
-  return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit
-    (S.intToSQLExp <$> mQueryOffset) Nothing
+      tabArgs = TableArgs wClause annOrdByM mQueryLimit
+                (S.intToSQLExp <$> mQueryOffset) Nothing
+
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  return $ AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
 
   where
     mQueryOffset = sqOffset selQ
@@ -200,7 +202,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => FieldInfoMap
   -> RelName
   -> Maybe RelName
@@ -248,7 +250,7 @@ partAnnFlds flds =
 getSelectDeps
   :: AnnSel
   -> [SchemaDependency]
-getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
+getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
   mkParentDep tn
   : fromMaybe [] whereDeps
   <> colDeps
@@ -276,7 +278,7 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
     getAnnSel (ASAgg _)      = Nothing
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSel
@@ -289,15 +291,15 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
 
 funcQueryTx
   :: S.FromItem -> QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs
+  -> TablePerm -> TableArgs -> Bool
   -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
   -> Q.TxE QErr RespBody
-funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
+funcQueryTx frmItem fn tn tabPerm tabArgs strfyNum (eSelFlds, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
   where
     sqlBuilder = toSQL $
-      mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
+      mkFuncSelectWith fn tn tabPerm tabArgs strfyNum eSelFlds frmItem
 
 selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 selectAggP2 (sel, p) =
@@ -315,7 +317,7 @@ selectP2 asSingleObject (sel, p) =
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
 phaseOne
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
 phaseOne =
   liftDMLP1 . convSelectQuery binRHSBuilder
@@ -325,7 +327,7 @@ phaseTwo =
   liftTx . selectP2 False
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)
   => SelectQuery -> m RespBody
 runSelect q =
   phaseOne q >>= phaseTwo

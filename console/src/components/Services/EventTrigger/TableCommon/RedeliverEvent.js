@@ -12,7 +12,7 @@ import {
 } from '../EventActions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class RedeliverEvent extends Component {
   constructor(props) {
