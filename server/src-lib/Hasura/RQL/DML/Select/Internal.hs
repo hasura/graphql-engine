@@ -153,7 +153,8 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         in S.mkQIdenExp arrPfx fldAls
 
     toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
-    toSQLCol col colOpM = toJSONableExp strfyNum (pgiType col) $ case colOpM of
+    toSQLCol col colOpM =
+      toJSONableExp strfyNum (pgiType col) $ case colOpM of
         Nothing              -> colNameExp
         Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
       where

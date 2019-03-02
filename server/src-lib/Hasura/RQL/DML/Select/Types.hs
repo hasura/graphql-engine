@@ -14,7 +14,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value           (PGColValue (..))
 
 type SelectQExt = SelectG ExtCol BoolExp Int
 -- Columns in RQL
@@ -76,7 +75,6 @@ data ArrSel
   deriving (Show, Eq)
 
 type ArrSelFlds = Fields ArrSel
-type AnnArgs = Fields PGColValue
 
 data ColOp
   = ColOp
