@@ -133,12 +133,7 @@ onlyText = \case
 asPGColText
   :: (MonadError QErr m)
   => AnnGValue -> m Text
-asPGColText val = do
-  (_, pgColVal) <- asPGColVal val
-  case pgColVal of
-    PGValText t    -> return t
-    PGValVarchar t -> return t
-    _              -> throw500 "expecting text for asPGColText"
+asPGColText val = asPGColVal val >>= (onlyText . snd)
 
 asPGColTextM
   :: (MonadError QErr m)
