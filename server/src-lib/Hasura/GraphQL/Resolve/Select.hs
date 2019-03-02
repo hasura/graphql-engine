@@ -47,7 +47,7 @@ withSelSet selSet f =
 
 jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
 jsonPathToColExp t = case parseJSONPath t of
-  Left s       -> throw400 ParseFailed $ T.pack s
+  Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
   Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
