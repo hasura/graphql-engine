@@ -7,7 +7,13 @@ import TodoPublicWrapper from "../Todo/TodoPublicWrapper";
 import TodoPrivateWrapper from "../Todo/TodoPrivateWrapper";
 import OnlineUsers from "../OnlineUsers/OnlineUsers";
 import { Navbar, Button } from "react-bootstrap";
+import auth from "../Auth/Auth";
+
 class App extends Component {
+  constructor() {
+    super();
+    this.state = { session: false };
+  }
   login() {
     this.props.auth.login();
   }
@@ -15,7 +21,7 @@ class App extends Component {
     this.props.auth.logout();
   }
   updateLastSeen = () => {
-    const userId = localStorage.getItem("auth0:id_token:sub");
+    const userId = auth.sub;
     const timestamp = moment().format();
     if (this.props.client) {
       this.props.client
@@ -44,13 +50,28 @@ class App extends Component {
     }
   };
   componentDidMount() {
-    // eslint-disable-next-line
-    const lastSeenMutation = setInterval(this.updateLastSeen.bind(this), 5000);
+    const { renewSession } = auth;
+
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      // eslint-disable-next-line
+      const lastSeenMutation = setInterval(
+        this.updateLastSeen.bind(this),
+        5000
+      );
+      renewSession().then(data => {
+        this.setState({ session: true });
+      });
+    } else {
+      window.location.href = "/";
+    }
   }
   render() {
     const { isAuthenticated } = this.props.auth;
-    if (!isAuthenticated()) {
-      window.location.href = "/";
+    console.log(this.props.auth.getSub());
+    console.log(this.props.auth.sub);
+    console.log(auth.getSub());
+    if (!this.state.session) {
+      return <div>Loading></div>;
     }
     return (
       <div>
@@ -87,13 +108,19 @@ class App extends Component {
               <div className="col-md-6 col-sm-12">
                 <div className="wd95 addPaddTopBottom">
                   <div className="sectionHeader">Personal todos</div>
-                  <TodoPrivateWrapper client={this.props.client} />
+                  <TodoPrivateWrapper
+                    client={this.props.client}
+                    userId={auth.getSub()}
+                  />
                 </div>
               </div>
               <div className="col-xs-12 col-md-6 col-sm-12 grayBgColor todoMainWrapper commonBorRight">
                 <div className="wd95 addPaddTopBottom">
                   <div className="sectionHeader">Public todos</div>
-                  <TodoPublicWrapper client={this.props.client} />
+                  <TodoPublicWrapper
+                    client={this.props.client}
+                    userId={auth.getSub()}
+                  />
                 </div>
               </div>
             </div>
@@ -104,11 +131,7 @@ class App extends Component {
         </div>
         <div className="footerWrapper">
           <span>
-            <a
-              href="/console"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="/console" target="_blank" rel="noopener noreferrer">
               Backend
             </a>
             <span className="adminSecret">
