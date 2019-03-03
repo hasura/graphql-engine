@@ -28,43 +28,14 @@ class Auth {
     this.auth0.authorize();
   }
 
-  handleAuthentication = client => {
+  handleAuthentication = () => {
     this.auth0.parseHash((err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
         this.setSession(authResult);
         // store in db
         this.auth0.client.userInfo(authResult.accessToken, function(err, user) {
           // Now you have the user's information
-          /*
-          client
-            .mutate({
-              mutation: gql`
-                mutation($userId: String!, $nickname: String) {
-                  insert_users(
-                    objects: [{ auth0_id: $userId, name: $nickname }]
-                    on_conflict: {
-                      constraint: users_pkey
-                      update_columns: [last_seen, name]
-                    }
-                  ) {
-                    affected_rows
-                  }
-                }
-              `,
-              variables: {
-                userId: user.sub,
-                nickname: user.nickname
-              }
-            })
-            .then(() => {
-              history.replace("/home");
-              // window.location.href = "/home";
-            })
-            .catch(error => {
-              console.error(error);
-              // alert(JSON.stringify(error));
-          });
-          */
+          // The code to insert this user info to db has been handled at Auth0 Rule.
         });
       } else if (err) {
         history.replace("/home");
@@ -77,7 +48,6 @@ class Auth {
 
   setSession(authResult) {
     // Set isLoggedIn flag in localStorage
-    console.log("SSEEEEEEEEEEEEEEEEEEE");
     localStorage.setItem("isLoggedIn", "true");
 
     // Set the time that the access token will expire at

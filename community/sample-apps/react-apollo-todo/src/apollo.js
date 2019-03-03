@@ -11,7 +11,6 @@ import { GRAPHQL_URL, REALTIME_GRAPHQL_URL } from "./utils/constants";
 import auth from "./components/Auth/Auth";
 
 const getHeaders = () => {
-  // const token = auth.auth0.getIdToken();
   const headers = {
     authorization: `Bearer ${auth.getIdToken()}`
   };

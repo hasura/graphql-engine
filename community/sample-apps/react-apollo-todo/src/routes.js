@@ -12,40 +12,10 @@ import makeApolloClient from "./apollo";
 
 let client;
 
-/*
-const provideClient = (Component,renderProps) => {
-  if(auth.isAuthenticated()) {
-    console.log('IM Authenticated');
-    if(!client) {
-      console.log('client doesnt exist');
-      client = makeApolloClient();
-    }
-    return (
-      <ApolloProvider client={client}>
-        <Component {...renderProps} auth={auth} client={client} />
-      </ApolloProvider>);
-  } else {
-    console.log('HERE');
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-      // eslint-disable-next-line
-      auth.renewSession();
-      if(!client) {
-        console.log('client doesnt exist');
-        client = makeApolloClient();
-      }
-      return (
-        <ApolloProvider client={client}>
-          <Component {...renderProps} auth={auth} client={client} />
-        </ApolloProvider>);
-    } else {
-      return (<Component auth={auth} {...renderProps} />);
-    }
-  }
-};
-*/
-
 const provideClient = (Component, renderProps) => {
+  // check if logged in
   if (localStorage.getItem("isLoggedIn") === "true") {
+    // check if client exists
     if (!client) {
       client = makeApolloClient();
     }
@@ -55,7 +25,7 @@ const provideClient = (Component, renderProps) => {
       </ApolloProvider>
     );
   } else {
-    // if not login page, redirect to login page
+    // not logged in already, hence redirect to login page
     if (renderProps.match.path !== "/") {
       window.location.href = "/";
     } else {
@@ -63,11 +33,10 @@ const provideClient = (Component, renderProps) => {
     }
   }
 };
-// const auth = new Auth();
 
-const handleAuthentication = aClient => ({ location }) => {
+const handleAuthentication = ({ location }) => {
   if (/access_token|id_token|error/.test(location.hash)) {
-    auth.handleAuthentication(aClient);
+    auth.handleAuthentication();
   }
 };
 
@@ -88,7 +57,7 @@ export const makeMainRoutes = () => {
         <Route
           path="/callback"
           render={props => {
-            handleAuthentication(client)(props);
+            handleAuthentication(props);
             return <Callback {...props} />;
           }}
         />

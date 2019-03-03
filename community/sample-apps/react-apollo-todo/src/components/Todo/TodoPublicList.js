@@ -96,8 +96,6 @@ class TodoPublicList extends Component {
         }
       })
       .then(data => {
-        console.log("INSIDE LOAD OLDER RESP");
-        console.log(data);
         if (data.data.todos.length) {
           const mergedTodos = this.state.todos.concat(data.data.todos);
           // update state with new todos

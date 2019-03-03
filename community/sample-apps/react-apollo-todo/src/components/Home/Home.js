@@ -67,11 +67,8 @@ class App extends Component {
   }
   render() {
     const { isAuthenticated } = this.props.auth;
-    console.log(this.props.auth.getSub());
-    console.log(this.props.auth.sub);
-    console.log(auth.getSub());
     if (!this.state.session) {
-      return <div>Loading></div>;
+      return <div>Loading</div>;
     }
     return (
       <div>
