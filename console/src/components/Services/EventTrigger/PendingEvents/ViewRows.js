@@ -17,7 +17,8 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
-import '../TableCommon/ReactTableFix.css';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import '../TableCommon/EventReactTableOverrides.css';
 
 const ViewRows = ({
   curTriggerName,

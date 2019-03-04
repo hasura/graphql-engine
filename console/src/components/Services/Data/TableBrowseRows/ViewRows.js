@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 import 'react-table/react-table.css';
-import './ReactTableFix.css';
-import DragFoldTable from './DragFoldTable';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
 import {
   vExpandRel,

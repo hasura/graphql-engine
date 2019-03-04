@@ -18,7 +18,8 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
-import '../TableCommon/ReactTableFix.css';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 

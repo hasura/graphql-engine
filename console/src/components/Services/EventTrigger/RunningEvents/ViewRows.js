@@ -18,7 +18,8 @@ import {
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
-import '../TableCommon/ReactTableFix.css';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import '../TableCommon/EventReactTableOverrides.css';
 
 const ViewRows = ({
   curTriggerName,
