@@ -151,7 +151,7 @@ const AddRelationship = ({
     tableName,
     allSchemas
   );
-  const styles = require('../TableModify/Modify.scss');
+  const styles = require('../TableModify/ModifyTable.scss');
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&
     suggestedRelationshipsData.arrayRel.length < 1
@@ -356,7 +356,7 @@ class Relationships extends Component {
       currentSchema,
       schemaList,
     } = this.props;
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName);

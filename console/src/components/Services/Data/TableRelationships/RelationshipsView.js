@@ -85,7 +85,7 @@ class RelationshipsView extends Component {
       migrationMode,
       schemaList,
     } = this.props;
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
