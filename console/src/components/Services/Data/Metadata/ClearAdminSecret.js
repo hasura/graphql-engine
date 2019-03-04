@@ -7,7 +7,7 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../Notification';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class ClearAdminSecret extends Component {
   constructor() {

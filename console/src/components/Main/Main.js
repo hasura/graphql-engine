@@ -244,7 +244,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/remote-schemas'}
+                        to={appPrefix + '/remote-schemas/manage/schemas'}
                       >
                         <div className={styles.iconCenter}>
                           <i
@@ -267,7 +267,7 @@ class Main extends React.Component {
                             ? styles.navSideBarActive
                             : ''
                         }
-                        to={appPrefix + '/events'}
+                        to={appPrefix + '/events/manage/triggers'}
                       >
                         <div className={styles.iconCenter}>
                           <i

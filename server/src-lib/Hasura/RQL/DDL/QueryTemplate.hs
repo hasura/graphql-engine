@@ -96,7 +96,7 @@ data QueryTP1
   deriving (Show, Eq)
 
 validateTQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => QueryT
   -> m QueryTP1
 validateTQuery qt = withPathK "args" $ case qt of
@@ -123,7 +123,7 @@ collectDeps qt = case qt of
   QTP1Bulk qp1   -> concatMap collectDeps qp1
 
 createQueryTemplateP1
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => CreateQueryTemplate
   -> m (WithDeps QueryTemplateInfo)
 createQueryTemplateP1 (CreateQueryTemplate qtn qt _) = do
@@ -157,7 +157,7 @@ createQueryTemplateP2 cqt (qti, deps) = do
   return successMsg
 
 runCreateQueryTemplate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => CreateQueryTemplate -> m EncJSON
 runCreateQueryTemplate q =
   createQueryTemplateP1 q >>= createQueryTemplateP2 q

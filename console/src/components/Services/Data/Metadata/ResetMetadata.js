@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { showNotification } from '../../../App/Actions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   showSuccessNotification,

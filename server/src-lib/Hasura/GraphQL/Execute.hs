@@ -45,10 +45,11 @@ getHQueryPlan
   -> Word64 -- schema version
   -> GCtx
   -> EC.QueryCache
+  -> SQLGenCtx
   -> GQLReqParsed
   -> VQ.QueryParts
   -> m (G.OperationType, Q.TxE QErr EncJSON)
-getHQueryPlan userInfo schemaVer gCtx queryCache req queryParts = do
+getHQueryPlan userInfo schemaVer gCtx queryCache sqlCtx req queryParts = do
 
   queryPlanM <- liftIO $ EC.getPlan schemaVer (userRole userInfo)
                 req queryCache
@@ -65,11 +66,11 @@ getHQueryPlan userInfo schemaVer gCtx queryCache req queryParts = do
       -- create the transaction
       (opTy,) <$> case opTy of
         G.OperationTypeMutation ->
-          return $ R.resolveMutationSelSet userInfo gCtx fields
+          return $ R.resolveMutationSelSet userInfo gCtx sqlCtx fields
         _ -> do
           let isSubs = opTy == G.OperationTypeSubscription
           queryPlan <- EP.QueryPlan isSubs varDefs <$>
-                       R.resolveQuerySelSet userInfo gCtx fields
+                       R.resolveQuerySelSet userInfo gCtx sqlCtx fields
           when (EP.isReusable queryPlan) $
             liftIO $ EC.addPlan schemaVer (userRole userInfo) req
             queryPlan queryCache
@@ -85,9 +86,10 @@ getGQExecPlan
   -> UserInfo
   -> Word64 -- schema version
   -> GCtx
+  -> SQLGenCtx
   -> GQLReqUnparsed
   -> m (GQLReqParsed, GQExecPlan)
-getGQExecPlan queryCache userInfo schemaVer gCtx unParsedReq = do
+getGQExecPlan queryCache userInfo schemaVer gCtx sqlCtx unParsedReq = do
 
   -- look in the ast cache
   astM <- liftIO $ EC.getAST (_grQuery unParsedReq) queryCache
@@ -119,7 +121,7 @@ getGQExecPlan queryCache userInfo schemaVer gCtx unParsedReq = do
 
     VT.HasuraType -> do
       (opTy, tx) <- getHQueryPlan userInfo schemaVer
-                    gCtx queryCache req queryParts
+                    gCtx queryCache sqlCtx req queryParts
       return $ GExPHasura opTy tx
 
 assertSameLocationNodes

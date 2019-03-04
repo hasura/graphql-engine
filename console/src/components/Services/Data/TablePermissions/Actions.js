@@ -418,9 +418,9 @@ const permRemoveMultipleRoles = tableSchema => {
     // Apply migration
     const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
 
-    const requestMsg = 'Removing roles...';
-    const successMsg = 'Roles removed';
-    const errorMsg = 'Removing roles failed';
+    const requestMsg = 'Removing permissions...';
+    const successMsg = 'Permissions removed';
+    const errorMsg = 'Removing permissions failed';
 
     const customOnSuccess = () => {
       // reset new role name
@@ -455,7 +455,9 @@ const applySamePermissionsBulk = tableSchema => {
     const table = tableSchema.table_name;
     const currentQueryType = permissionsState.query;
     const toBeAppliedPermission = permissionsState[currentQueryType];
-    const selectedRoles = permissionsState.applySamePermissions.concat([permissionsState.role]);
+    const selectedRoles = permissionsState.applySamePermissions.concat([
+      permissionsState.role,
+    ]);
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -469,7 +471,10 @@ const applySamePermissionsBulk = tableSchema => {
         return el.role_name === role;
       });
 
-      if (currentRolePermission && currentRolePermission.permissions[currentQueryType]) {
+      if (
+        currentRolePermission &&
+        currentRolePermission.permissions[currentQueryType]
+      ) {
         // existing permission is there. so drop and recreate.
         const deleteQuery = {
           type: 'drop_' + currentQueryType + '_permission',

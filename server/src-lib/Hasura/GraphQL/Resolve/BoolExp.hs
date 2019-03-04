@@ -97,12 +97,12 @@ parseAsEqOp annVal = do
 parseColExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => PrepFn m -> G.NamedType -> G.Name -> AnnInpVal
-  -> (AnnInpVal -> m [OpExp]) -> m AnnBoolExpFldSQL
-parseColExp f nt n val expParser = do
+  -> m AnnBoolExpFldSQL
+parseColExp f nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     Left  pgColInfo -> do
-      opExps <- expParser val
+      opExps <- parseOpExps val
       AVCol pgColInfo <$> traverse (traverse f) opExps
     Right (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp f val
@@ -120,19 +120,22 @@ parseBoolExp f annGVal = do
           | k == "_and" -> BoolAnd . fromMaybe []
                            <$> parseMany (parseBoolExp f) v
           | k == "_not" -> BoolNot <$> parseBoolExp f v
-          | otherwise   -> BoolFld <$> parseColExp f nt k v parseOpExps
+          | otherwise   -> BoolFld <$> parseColExp f nt k v
   return $ BoolAnd $ fromMaybe [] boolExpsM
 
 type PGColValMap = Map.HashMap G.Name AnnInpVal
 
 pgColValToBoolExp
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => PrepFn m -> PGColValMap -> m AnnBoolExpSQL
-pgColValToBoolExp f colValMap = do
-  colExps <- forM colVals $ \(name, val) -> do
-    (_, _, ty, _) <- asPGColVal val
-    let namedTy = mkScalarTy ty
-    BoolFld <$> parseColExp f namedTy name val parseAsEqOp
+  :: (MonadError QErr m)
+  => PrepFn m -> PGColArgMap -> PGColValMap -> m AnnBoolExpSQL
+pgColValToBoolExp f colArgMap colValMap = do
+  colExps <- forM colVals $ \(name, val) ->
+    BoolFld <$> do
+      opExps <- parseAsEqOp val
+      colInfo <- onNothing (Map.lookup name colArgMap) $
+        throw500 $ "column name " <> showName name
+        <> " not found in column arguments map"
+      AVCol colInfo <$> traverse (traverse f) opExps
   return $ BoolAnd colExps
   where
     colVals = Map.toList colValMap

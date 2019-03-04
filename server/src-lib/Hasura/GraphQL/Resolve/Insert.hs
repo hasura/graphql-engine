@@ -144,16 +144,17 @@ parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
   -> AnnInpVal -> m RI.ConflictClauseP1
-parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
+parseOnConflict tn updPermM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint
       _  -> do
-          (_, updFiltr) <- onNothing updFiltrM $ throw500
+          UpdPermForIns _ updFiltr preSet <- onNothing updPermM $ throw500
             "cannot update columns since update permission is not defined"
-          return $ RI.CP1Update constraint updCols $ toSQLBoolExp (S.mkQual tn) updFiltr
+          return $ RI.CP1Update constraint updCols preSet $
+            toSQLBoolExp (S.mkQual tn) updFiltr
 
   where
     getUpdCols o = do
@@ -168,7 +169,7 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
 toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
-     => [(PGCol, AnnInpVal)] -> m [(PGCol, S.SQLExp)]
+          => [(PGCol, AnnInpVal)] -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
   forM cols $ \(c, v) -> do
     prepExpM <- asPGColValM v >>= mapM prepare
@@ -224,26 +225,28 @@ mkSelQ tn allColInfos pgColsWithVal = do
 
 execWithExp
   :: (J.FromJSON a)
-  => QualifiedTable
+  => Bool
+  -> QualifiedTable
   -> InsWithExp
   -> RR.MutFlds
   -> Q.TxE QErr a
-execWithExp tn (InsWithExp withExp ccM args) flds = do
+execWithExp strfyNum tn (InsWithExp withExp ccM args) flds = do
   RI.setConflictCtx ccM
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
   where
-    sqlBuilder = toSQL $ RR.mkSelWith tn withExp flds True
+    sqlBuilder = toSQL $ RR.mkSelWith tn withExp flds True strfyNum
 
 
 insertAndRetCols
-  :: QualifiedTable
+  :: Bool
+  -> QualifiedTable
   -> InsWithExp
   -> T.Text
   -> [PGColInfo]
   -> Q.TxE QErr [PGColWithValue]
-insertAndRetCols tn withExp errMsg retCols = do
-  insResp <- execWithExp tn withExp [("response", RR.MRet annSelFlds)]
+insertAndRetCols strfyNum tn withExp errMsg retCols = do
+  insResp <- execWithExp strfyNum tn withExp [("response", RR.MRet annSelFlds)]
   resObj <- onNothing (_irResponse insResp) $ throwVE errMsg
   forM retCols $ \(PGColInfo col colty _) -> do
     val <- onNothing (Map.lookup (getPGColTxt col) resObj) $
@@ -283,15 +286,16 @@ validateInsert insCols objRels addCols = do
 -- | insert an object relationship and return affected rows
 -- | and parent dependent columns
 insertObjRel
-  :: RoleName
+  :: Bool
+  -> RoleName
   -> ObjRelIns
   -> Q.TxE QErr (Int, [PGColWithValue])
-insertObjRel role objRelIns =
+insertObjRel strfyNum role objRelIns =
   withPathK relNameTxt $ do
-    (aRows, withExp) <- insertObj role tn singleObjIns []
+    (aRows, withExp) <- insertObj strfyNum role tn singleObjIns []
     let errMsg = "cannot proceed to insert object relation "
           <> relName <<> " since insert to table " <> tn <<> " affects zero rows"
-    retColsWithVals <- insertAndRetCols tn withExp errMsg $
+    retColsWithVals <- insertAndRetCols strfyNum tn withExp errMsg $
                        getColInfos rCols allCols
     let c = mergeListsWith mapCols retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
@@ -313,17 +317,18 @@ decodeEncJSON =
 
 -- | insert an array relationship and return affected rows
 insertArrRel
-  :: RoleName
+  :: Bool
+  -> RoleName
   -> [PGColWithValue]
   -> ArrRelIns
   -> Q.TxE QErr Int
-insertArrRel role resCols arrRelIns =
+insertArrRel strfyNum role resCols arrRelIns =
   withPathK relNameTxt $ do
   let addCols = mergeListsWith resCols colMapping
              (\(col, _) (lCol, _) -> col == lCol)
              (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
-  resBS <- insertMultipleObjects role tn multiObjIns addCols mutFlds "data"
+  resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds "data"
   resObj <- decodeEncJSON resBS
   onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
     throw500 "affected_rows not returned in array rel insert"
@@ -336,17 +341,18 @@ insertArrRel role resCols arrRelIns =
 
 -- | insert an object with object and array relationships
 insertObj
-  :: RoleName
+  :: Bool
+  -> RoleName
   -> QualifiedTable
   -> SingleObjIns
   -> [PGColWithValue] -- ^ additional fields
   -> Q.TxE QErr (Int, InsWithExp)
-insertObj role tn singleObjIns addCols = do
+insertObj strfyNum role tn singleObjIns addCols = do
   -- validate insert
   validateInsert (map _1 cols) (map _riRelInfo objRels) $ map fst addCols
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objRels $ insertObjRel role
+  objInsRes <- forM objRels $ insertObjRel strfyNum role
 
   -- prepare final insert columns
   let objInsAffRows = sum $ map fst objInsRes
@@ -375,9 +381,9 @@ insertObj role tn singleObjIns addCols = do
 
     withArrRels preAffRows insQ arrDepColsWithType = do
       arrDepColsWithVal <-
-        insertAndRetCols tn insQ cannotInsArrRelErr arrDepColsWithType
+        insertAndRetCols strfyNum tn insQ cannotInsArrRelErr arrDepColsWithType
 
-      arrInsARows <- forM arrRels $ insertArrRel role arrDepColsWithVal
+      arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
 
       let totalAffRows = preAffRows + sum arrInsARows
 
@@ -391,14 +397,15 @@ insertObj role tn singleObjIns addCols = do
 
 -- | insert multiple Objects in postgres
 insertMultipleObjects
-  :: RoleName
+  :: Bool
+  -> RoleName
   -> QualifiedTable
   -> MultiObjIns
   -> [PGColWithValue] -- ^ additional fields
   -> RR.MutFlds
   -> T.Text -- ^ error path
   -> Q.TxE QErr EncJSON
-insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
+insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs onConflictM vn tableColInfos defVals = multiObjIns
@@ -426,18 +433,18 @@ insertMultipleObjects role tn multiObjIns addCols mutFlds errP =
 
       let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds
           p1 = (insQP1, prepArgs)
-      bool (RI.nonAdminInsert p1) (RI.insertP2 p1) $ isAdmin role
+      bool (RI.nonAdminInsert strfyNum p1) (RI.insertP2 strfyNum p1) $ isAdmin role
 
     -- insert each object with relations
     withRelsInsert = withErrPath $ do
       insResps <- indexedForM singleObjInserts $ \objIns ->
-          insertObj role tn objIns addCols
+          insertObj strfyNum role tn objIns addCols
 
       let affRows = sum $ map fst insResps
           withExps = map snd insResps
           retFlds = mapMaybe getRet mutFlds
       respVals :: [J.Object] <- forM withExps
-        $ \withExp -> execWithExp tn withExp retFlds
+        $ \withExp -> execWithExp strfyNum tn withExp retFlds
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
           RR.MCount   -> return $ J.toJSON affRows
@@ -471,7 +478,8 @@ convertInsert role tn fld = prefixErrPath fld $ do
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
       let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
-      return $ prefixErrPath fld $ insertMultipleObjects role tn
+      strfyNum <- stringifyNum <$> asks getter
+      return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
     withEmptyObjs mutFlds =
       return $ return $ buildEmptyMutResp mutFlds

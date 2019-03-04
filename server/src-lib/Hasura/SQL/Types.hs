@@ -396,3 +396,11 @@ isComparableType PGGeography   = False
 isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
+
+isBigNum :: PGColType -> Bool
+isBigNum = \case
+  PGBigInt    -> True
+  PGBigSerial -> True
+  PGNumeric   -> True
+  PGDouble    -> True
+  _           -> False

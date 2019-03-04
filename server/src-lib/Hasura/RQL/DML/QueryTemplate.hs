@@ -90,7 +90,7 @@ mkSelQWithArgs (DMLQuery tn (SelectG c w o lim offset)) args = do
   return $ DMLQuery tn $ SelectG c w o intLim intOffset
 
 convQT
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => TemplateArgs
   -> QueryT
   -> m QueryTProc
@@ -112,24 +112,29 @@ convQT args qt = case qt of
     f = buildPrepArg args
 
 execQueryTemplateP1
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => ExecQueryTemplate -> m QueryTProc
 execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
   (QueryTemplateInfo _ qt) <- askQTemplateInfo qtn
   convQT args qt
 
-execQueryTP2 :: (QErrM m, CacheRM m, MonadTx m) => QueryTProc -> m EncJSON
-execQueryTP2 qtProc = case qtProc of
-  QTPInsert qp -> liftTx $ R.insertP2 qp
-  QTPSelect qp -> liftTx $ R.selectP2 False qp
-  QTPUpdate qp -> liftTx $ R.updateQueryToTx qp
-  QTPDelete qp -> liftTx $ R.deleteQueryToTx qp
-  QTPCount qp  -> RC.countQToTx qp
-  QTPBulk qps  ->
-    encJFromL <$> mapM execQueryTP2 qps
+execQueryTP2
+  :: (QErrM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
+  => QueryTProc -> m EncJSON
+execQueryTP2 qtProc = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  case qtProc of
+    QTPInsert qp -> liftTx $ R.insertP2 strfyNum qp
+    QTPSelect qp -> liftTx $ R.selectP2 False qp
+    QTPUpdate qp -> liftTx $ R.updateQueryToTx strfyNum qp
+    QTPDelete qp -> liftTx $ R.deleteQueryToTx strfyNum qp
+    QTPCount qp  -> RC.countQToTx qp
+    QTPBulk qps  -> encJFromL <$> mapM execQueryTP2 qps
 
 runExecQueryTemplate
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  :: ( QErrM m, UserInfoM m, CacheRM m
+     , MonadTx m, HasSQLGenCtx m
+     )
   => ExecQueryTemplate -> m EncJSON
 runExecQueryTemplate q =
   execQueryTemplateP1 q >>= execQueryTP2

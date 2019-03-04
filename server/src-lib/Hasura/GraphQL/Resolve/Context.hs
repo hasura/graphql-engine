@@ -2,11 +2,12 @@ module Hasura.GraphQL.Resolve.Context
   ( FieldMap
   , RelationInfoMap
   , FuncArgItem(..)
-  , FuncArgCtx
   , OrdByCtx
   , OrdByItemMap
   , OrdByItem(..)
-  , UpdPermForIns
+  , FuncArgSeq
+  , PGColArgMap
+  , UpdPermForIns(..)
   , InsCtx(..)
   , InsCtxMap
   , RespTx
@@ -129,7 +130,12 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) (Except QErr))
+  StateT PrepArgs (ReaderT ( FieldMap
+                           , OrdByCtx
+                           , InsCtxMap
+                           , SQLGenCtx
+                           ) (Except QErr)
+                  )
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
@@ -140,7 +146,9 @@ prepare (_, _, colTy, colVal) = do
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, FuncArgCtx) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
+  -> Convert a
+  -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx

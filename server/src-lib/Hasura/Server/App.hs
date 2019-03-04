@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.FileEmbed                         as FE
 #endif
 import qualified Data.HashMap.Strict                    as M
+import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -29,8 +30,8 @@ import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
-import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Execute                 as GEx
+import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -91,14 +92,16 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation  :: Q.TxIsolation
-  , scPGPool     :: Q.PGPool
-  , scLogger     :: L.Logger
-  , scCacheRef   :: IORef SchemaCache
-  , scCacheLock  :: MVar ()
-  , scAuthMode   :: AuthMode
-  , scManager    :: HTTP.Manager
-  , scQueryCache :: GEx.QueryCache
+  { scIsolation   :: Q.TxIsolation
+  , scPGPool      :: Q.PGPool
+  , scLogger      :: L.Logger
+  , scCacheRef    :: IORef SchemaCache
+  , scCacheLock   :: MVar ()
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scQueryCache  :: GEx.QueryCache
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
   }
 
 data HandlerCtx
@@ -110,6 +113,12 @@ data HandlerCtx
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
+
+isMetadataEnabled :: ServerCtx -> Bool
+isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
+
+isGraphQLEnabled :: ServerCtx -> Bool
+isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -130,7 +139,8 @@ buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
   cache <- liftIO $ readIORef scRef
-  return $ QCtx userInfo cache
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  return $ QCtx userInfo cache sqlGenCtx
 
 logResult
   :: (MonadIO m)
@@ -217,9 +227,10 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef scRef
       httpMgr <- scManager . hcServerCtx <$> ask
+      sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
-      runQuery pool isoL userInfo schemaCache httpMgr query
+      runQuery pool isoL userInfo schemaCache httpMgr sqlGenCtx query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -248,7 +259,9 @@ v1Alpha1GQHandler query = do
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
   queryCache <- scQueryCache . hcServerCtx <$> ask
-  GH.runGQ pool isoL queryCache userInfo sc manager reqHeaders query reqBody
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  GH.runGQ pool isoL queryCache userInfo sqlGenCtx sc
+    manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
@@ -257,7 +270,8 @@ gqlExplainHandler query = do
   sc <- liftIO $ readIORef scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc query
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  GE.explainGQLQuery pool isoL sc sqlGenCtx query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -294,31 +308,34 @@ mkWaiApp
   -> Q.PGPool
   -> GEx.QueryCache
   -> HTTP.Manager
+  -> SQLGenCtx
   -> AuthMode
   -> CorsConfig
   -> Bool
   -> Bool
+  -> S.HashSet API
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool queryCache httpManager mode
-  corsCfg enableConsole enableTelemetry = do
+mkWaiApp isoLevel loggerCtx pool queryCache httpManager sqlGenCtx mode
+  corsCfg enableConsole enableTelemetry apis = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager pool Q.Serializable buildSchemaCache
+                httpManager sqlGenCtx pool Q.Serializable buildSchemaCache
       either initErrExit return pgResp >>= newIORef . snd
 
     cacheLock <- newMVar ()
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager queryCache
+          cacheLock mode httpManager queryCache sqlGenCtx apis
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
+        corsPolicy = mkDefaultCorsPolicy corsCfg
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx)
-                   httpManager queryCache cacheRef runTx
+                   httpManager queryCache sqlGenCtx cacheRef runTx corsPolicy
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp, cacheRef)
 
@@ -329,41 +346,45 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when enableConsole serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
-    get    ("v1/template" <//> var) tmpltGetOrDeleteH
-    post   ("v1/template" <//> var) tmpltPutOrPostH
-    put    ("v1/template" <//> var) tmpltPutOrPostH
-    delete ("v1/template" <//> var) tmpltGetOrDeleteH
+    when enableMetadata $ do
+      get    ("v1/template" <//> var) tmpltGetOrDeleteH
+      post   ("v1/template" <//> var) tmpltPutOrPostH
+      put    ("v1/template" <//> var) tmpltPutOrPostH
+      delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-    post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
-      query <- parseBody
-      v1QueryHandler query
+      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+        query <- parseBody
+        v1QueryHandler query
 
-    post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-      expQuery <- parseBody
-      gqlExplainHandler expQuery
+      post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
+        mkSpockAction encodeQErr serverCtx $
+        legacyQueryHandler (TableName tableName) queryType
 
-    post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
-      query <- parseBody
-      v1Alpha1GQHandler query
+    when enableGraphQL $ do
+      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
+        expQuery <- parseBody
+        gqlExplainHandler expQuery
 
-    -- get "v1alpha1/graphql/schema" $
-    --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+        query <- parseBody
+        v1Alpha1GQHandler query
 
-    post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-      mkSpockAction encodeQErr serverCtx $
-      legacyQueryHandler (TableName tableName) queryType
+        -- get "v1alpha1/graphql/schema" $
+        --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
 
-    hookAny GET $ \_ -> do
+    forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError qErr
 
   where
+    enableGraphQL = isGraphQLEnabled serverCtx
+    enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs

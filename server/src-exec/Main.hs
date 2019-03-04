@@ -1,5 +1,6 @@
 module Main where
 
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Control.Monad.STM          (atomically)
@@ -25,7 +26,8 @@ import           Hasura.Logging             (Logger (..), defaultLoggerSettings,
                                              mkLogger, mkLoggerCtx)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (QErr, adminUserInfo,
+import           Hasura.RQL.Types           (QErr, SQLGenCtx (..),
+                                             adminUserInfo, defaultSQLGenCtx,
                                              emptySchemaCache)
 import           Hasura.Server.App          (mkWaiApp)
 import           Hasura.Server.Auth
@@ -72,6 +74,10 @@ parseHGECommand =
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseEnableTelemetry
+                <*> parseWsReadCookie
+                <*> parseStringifyNum
+                <*> parseEnabledAPIs
+
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -102,7 +108,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -124,8 +130,9 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       queryCache <- GE.initQueryCache
+      let sqlGenCtx = SQLGenCtx strfyNum
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool queryCache httpManager
-                         am corsCfg enableConsole enableTelemetry
+                         sqlGenCtx am corsCfg enableConsole enableTelemetry enabledAPIs
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -178,7 +185,7 @@ main =  do
     runAsAdmin ci httpManager m = do
       pool <- getMinimalPool ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager pool Q.Serializable m
+              httpManager defaultSQLGenCtx pool Q.Serializable m
       return $ fmap fst res
 
     procConnInfo rci =

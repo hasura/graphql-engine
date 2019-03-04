@@ -10,6 +10,7 @@ module Hasura.Server.Cors
   , mkDefaultCorsPolicy
   , isCorsDisabled
   , Domains (..)
+  , inWildcardList
   ) where
 
 import           Hasura.Prelude
@@ -45,23 +46,25 @@ $(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
 data CorsConfig
   = CCAllowAll
   | CCAllowedOrigins Domains
-  | CCDisabled
+  | CCDisabled Bool -- should read cookie?
   deriving (Show, Eq)
 
 instance J.ToJSON CorsConfig where
   toJSON c = case c of
-    CCDisabled         -> toJ True J.Null
-    CCAllowAll         -> toJ False (J.String "*")
-    CCAllowedOrigins d -> toJ False $ J.toJSON d
+    CCDisabled wsrc    -> toJ True J.Null (Just wsrc)
+    CCAllowAll         -> toJ False (J.String "*") Nothing
+    CCAllowedOrigins d -> toJ False (J.toJSON d) Nothing
     where
-      toJ dis origs =
+      toJ :: Bool -> J.Value -> Maybe Bool -> J.Value
+      toJ dis origs mWsRC =
         J.object [ "disabled" J..= dis
+                 , "ws_read_cookie" J..= mWsRC
                  , "allowed_origins" J..= origs
                  ]
 
 isCorsDisabled :: CorsConfig -> Bool
 isCorsDisabled = \case
-  CCDisabled -> True
+  CCDisabled _ -> True
   _          -> False
 
 readCorsDomains :: String -> Either String CorsConfig
@@ -88,6 +91,11 @@ mkDefaultCorsPolicy cfg =
   , cpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   , cpMaxAge = 1728000
   }
+
+inWildcardList :: Domains -> Text -> Bool
+inWildcardList (Domains _ wildcards) origin =
+  either (const False) (`Set.member` wildcards) $ parseOrigin origin
+
 
 -- | Parsers for wildcard domains
 

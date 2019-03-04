@@ -32,18 +32,21 @@ runGQ
   -> Q.TxIsolation
   -> E.QueryCache
   -> UserInfo
+  -> SQLGenCtx
   -> SchemaCache
   -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL queryCache userInfo sc manager reqHdrs reqUnparsed rawReq = do
+runGQ pool isoL queryCache userInfo sqlGenCtx sc manager
+  reqHdrs reqUnparsed rawReq = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   let schemaVer = scVersion sc
 
-  (_, plan) <- E.getGQExecPlan queryCache userInfo schemaVer gCtx reqUnparsed
+  (_, plan) <- E.getGQExecPlan queryCache userInfo
+               schemaVer gCtx sqlGenCtx reqUnparsed
   case plan of
     E.GExPHasura opTy tx -> do
       resp <- case opTy of

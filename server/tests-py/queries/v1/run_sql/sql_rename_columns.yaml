@@ -1,0 +1,70 @@
+#Rename columns
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table author rename column id to author_id;
+
+#Select Queries
+- url: /v1/query
+  status: 200
+  response:
+  - author_id: 1
+    name: Author 1
+  - author_id: 2
+    name: Author 2
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+      - author_id
+      - name
+
+- url: /v1/query
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+  - id: 1
+    title: article 1 by author 1
+    author_id: 1
+  - id: 2
+    title: article 2 by author 1
+    author_id: 1
+  query:
+    type: select
+    args:
+      table: article
+      columns:
+      - id
+      - title
+      - author_id
+
+#Revert changes
+- url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        alter table author rename column author_id to id;
+
+#Queries post revert
+- url: /v1/query
+  status: 200
+  response:
+  - id: 1
+    name: Author 1
+  - id: 2
+    name: Author 2
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+      - id
+      - name
