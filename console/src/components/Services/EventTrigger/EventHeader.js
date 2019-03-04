@@ -12,7 +12,7 @@ const EventHeader = ({
   location,
   dispatch,
 }) => {
-  const styles = require('../Data/TableCommon/Table.scss');
+  const styles = require('./TableCommon/Table.scss');
 
   const currentLocation = location.pathname;
 

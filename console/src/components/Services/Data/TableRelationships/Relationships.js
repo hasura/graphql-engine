@@ -357,7 +357,7 @@ class Relationships extends Component {
       schemaList,
     } = this.props;
     const styles = require('../TableModify/Modify.scss');
-    const tableStyles = require('../TableCommon/TableStyles.scss');
+    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
     let alert = null;
