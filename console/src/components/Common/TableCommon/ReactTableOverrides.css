@@ -18,6 +18,7 @@
   display: inline-block;
   font-weight: bold;
 }
+
 .ReactTable .rt-thead {
   font-size: 16px;
   color: #333;
@@ -25,26 +26,36 @@
   cursor: pointer;
   text-align: left;
 }
+
 .ReactTable .rt-thead .rt-resizable-header-content {
   font-weight: bold;
 }
+
 .ReactTable .rt-thead .rt-resizable-header .rt-resizer {
   width: 10px;
   right: -5px;
 }
+
+.ReactTable .rt-expander {
+  width: 10px;
+}
+
 .ReactTable .rt-thead.-header {
   box-shadow: none;
 }
+
 .ReactTable .-pagination {
   box-shadow: none;
   border: none;
 }
+
 .ReactTable .rt-table .rt-thead .rt-th,
 .ReactTable .rt-table .rt-thead .rt-td {
   padding-left: 20px !important;
   padding-right: 20px !important;
   border-right: 1px solid rgba(0,0,0,0.1);
 }
+
 .ReactTable .rt-table .rt-thead .rt-th.collapsed,
 .ReactTable .rt-table .rt-thead .rt-td.collapsed {
   padding-left: 10px !important;
