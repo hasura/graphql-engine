@@ -107,6 +107,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - N/A
      - Disable CORS. Do not send any CORS headers on any request.
 
+   * - ``--ws-read-cookie``
+     - ``HASURA_GRAPHQL_WS_READ_COOKIE``
+     - Read cookie on WebSocket initial handshake, even when CORS is disabled.
+       This can be a potential security flaw! Please make sure you know what
+       you're doing.This configuration is only applicable when CORS is disabled.
+       (``"true"`` or ``"false"``. Default: false)
+
    * - ``--enable-telemetry <true|false>``
      - ``HASURA_GRAPHQL_ENABLE_TELEMETRY``
      - Enable anonymous telemetry (default: true)
