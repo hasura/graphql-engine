@@ -20,7 +20,7 @@ const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
     cursor: 'pointer',
     position: 'absolute',
     fontSize: '14px',
-    top: 'calc(50% - 7px)',
+    top: 'calc(50% - 8px)',
     left: '8px',
     padding: '5px',
     margin: '-5px -5px -5px -5px',

@@ -55,6 +55,7 @@
 .ReactTable .rt-tbody .rt-td {
   padding: 8px;
   border-right: 1px solid rgba(0,0,0,0.1);
+  word-wrap: break-word;
 }
 
 .ReactTable .rt-th .ellipsis,
