@@ -401,10 +401,8 @@ export const passVAddManualObjRel = () => {
 export const passVDeleteRelationships = () => {
   cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get('button')
-    .contains('Remove')
-    .first()
-    .click();
+  cy.get(getElementFromAlias('relationship-toggle-editor-author')).click();
+  cy.get(getElementFromAlias('relationship-remove-author')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });

@@ -45,7 +45,7 @@ CREATE TABLE hdb_catalog.hdb_relationship
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, rel_name),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_permission
@@ -59,7 +59,7 @@ CREATE TABLE hdb_catalog.hdb_permission
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, role_name, perm_type),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE VIEW hdb_catalog.hdb_permission_agg AS
@@ -284,7 +284,9 @@ CREATE TABLE hdb_catalog.event_triggers
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
-  comment TEXT
+  comment TEXT,
+  FOREIGN KEY (schema_name, table_name)
+  REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.event_log
