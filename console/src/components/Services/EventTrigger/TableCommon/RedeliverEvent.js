@@ -133,6 +133,7 @@ class RedeliverEvent extends Component {
         <ReactTable
           data={invocationRowsData}
           columns={invocationGridHeadings}
+          minRows={0}
           showPagination={false}
           pageSize={invocationRowsData.length}
           SubComponent={logRow => {

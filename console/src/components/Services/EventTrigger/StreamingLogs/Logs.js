@@ -339,6 +339,7 @@ class StreamingLogs extends Component {
             <ReactTable
               data={invocationRowsData}
               columns={invocationGridHeadings}
+              minRows={0}
               showPagination={false}
               filtered={this.state.filtered}
               pageSize={
