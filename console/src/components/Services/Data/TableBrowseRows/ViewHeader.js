@@ -14,7 +14,7 @@ const ViewHeader = ({
   dispatch,
   allowRename,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   const activeTab = tabNameMap[tabName];

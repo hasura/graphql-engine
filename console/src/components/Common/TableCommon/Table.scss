@@ -1,14 +1,7 @@
-@import "../../../Common/Common.scss";
+@import "../Common.scss";
 
 .container {
   padding: 0;
-}
-
-.migration_disclaimer {
-  font-size: 12px;
-  margin-left: 10px;
-  margin-top: 10px;
-  color: rgb(236, 61, 61);
 }
 
 .tableContainer {
@@ -22,20 +15,19 @@
   .schemaSidebarSection {
     display: inline-block;
     width: 100%;
-    padding-left: 15px;
 
     a {
       display: inline-block !important;
       font-weight: bold;
     }
-  }
-}
 
-.changeSchema {
-  width: 50%;
-  margin-left: 10px;
-  display: inline-block;
-  font-weight: bold;
+    .changeSchema {
+      width: 50%;
+      margin-left: 10px;
+      display: inline-block;
+      font-weight: bold;
+    }
+  }
 }
 
 .aceBlock {
@@ -151,7 +143,7 @@ a.expanded {
     height: 34px;
   }
 
-  .selectWidth {
+  .select200 {
     width: 200px;
   }
 

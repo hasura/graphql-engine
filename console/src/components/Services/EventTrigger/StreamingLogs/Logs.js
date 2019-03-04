@@ -139,7 +139,7 @@ class StreamingLogs extends Component {
       dispatch,
     } = this.props;
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../TableCommon/EventTable.scss');
     const invocationColumns = [
       'redeliver',
       'status',
@@ -320,7 +320,7 @@ class StreamingLogs extends Component {
               </div>
               <Button
                 onClick={this.handleNewerEvents.bind(this)}
-                className={styles.newBtn}
+                className={styles.add_mar_right}
                 color="white"
                 size="sm"
               >

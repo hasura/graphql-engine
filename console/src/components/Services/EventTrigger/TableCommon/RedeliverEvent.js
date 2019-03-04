@@ -67,7 +67,7 @@ class RedeliverEvent extends Component {
   }
 
   render() {
-    const styles = require('./Table.scss');
+    const styles = require('./EventTable.scss');
     const { log } = this.props;
 
     const isLoading = this.state.intervalId ? (

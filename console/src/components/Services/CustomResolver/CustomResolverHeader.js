@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 
 class CustomResolverHeader extends React.Component {
   render() {
-    const styles = require('../Data/TableCommon/Table.scss');
+    const styles = require('../../Common/TableCommon/Table.scss');
     const { appPrefix, children } = this.props;
 
     const currentLocation = location.pathname;

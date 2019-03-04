@@ -52,7 +52,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
 
   const checkIfSingleRow = (_curRelName) => {
     let _isSingleRow = false;

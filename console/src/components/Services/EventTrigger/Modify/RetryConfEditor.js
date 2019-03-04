@@ -89,25 +89,25 @@ class RetryConfEditor extends React.Component {
         {toggleButton('Edit')}
         <div className={styles.modifyOps}>
           <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={'col-md-4 ' + styles.noPadd}>
+            <div className={'col-md-4 ' + styles.padd_remove}>
               Number of retries:
             </div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {retryConf.num_retries || 0}
             </div>
           </div>
           <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={'col-md-4 ' + styles.noPadd}>
+            <div className={'col-md-4 ' + styles.padd_remove}>
               Retry Interval (sec):
             </div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {retryConf.interval_sec || 10}
             </div>
           </div>
           {supportRetryTimeout && (
             <div className={styles.modifyOpsCollapsedContent1}>
-              <div className={'col-md-4 ' + styles.noPadd}>Timeout (sec):</div>
-              <div className={'col-md-12 ' + styles.noPadd}>
+              <div className={'col-md-4 ' + styles.padd_remove}>Timeout (sec):</div>
+              <div className={'col-md-12 ' + styles.padd_remove}>
                 {retryConf.timeout_sec || 60}
               </div>
             </div>
@@ -121,7 +121,7 @@ class RetryConfEditor extends React.Component {
         {toggleButton('Close')}
         <div className={styles.modifyOpsPadLeft}>
           <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={`col-md-4 ${styles.noPadd}`}>
+            <div className={`col-md-4 ${styles.padd_remove}`}>
               Number of retries: &nbsp;
             </div>
             <div className="col-md-12">
@@ -136,7 +136,7 @@ class RetryConfEditor extends React.Component {
             </div>
           </div>
           <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={`col-md-4 ${styles.noPadd}`}>
+            <div className={`col-md-4 ${styles.padd_remove}`}>
               Retry interval (sec):&nbsp;
             </div>
             <div className="col-md-12">
@@ -152,7 +152,7 @@ class RetryConfEditor extends React.Component {
           </div>
           {this.state.supportRetryTimeout && (
             <div className={styles.modifyOpsCollapsedContent1}>
-              <div className={`col-md-4 ${styles.noPadd}`}>
+              <div className={`col-md-4 ${styles.padd_remove}`}>
                 Timeout (sec):&nbsp;
               </div>
               <div className="col-md-12">

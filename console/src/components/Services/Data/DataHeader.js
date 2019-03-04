@@ -23,7 +23,7 @@ const DataHeader = ({
   location,
   dispatch,
 }) => {
-  const styles = require('./TableCommon/Table.scss');
+  const styles = require('../../Common/TableCommon/Table.scss');
 
   const currentLocation = location.pathname;
 

@@ -239,7 +239,7 @@ class AddTable extends Component {
       lastSuccess,
       internalError,
     } = this.props;
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
@@ -282,7 +282,7 @@ class AddTable extends Component {
           />
           <select
             value={column.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
+            className={`${styles.select} ${styles.select200} form-control ${
               styles.add_pad_left
             }`}
             onChange={e => {
@@ -422,7 +422,7 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.main_wrapper} ${
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
           styles.padd_left
         }`}
       >

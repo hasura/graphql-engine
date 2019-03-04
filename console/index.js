@@ -32,7 +32,7 @@ import { changeRequestHeader } from './src/components/ApiExplorer/Actions';
 import { validateLogin } from './src/components/Main/Actions';
 
 const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
-const tableScss = require('./src/components/Services/Data/TableCommon/Table.scss');
+const tableScss = require('./src/components/Common/TableCommon/Table.scss');
 
 // export GraphiQL parts
 export { GraphiQLWrapper };
