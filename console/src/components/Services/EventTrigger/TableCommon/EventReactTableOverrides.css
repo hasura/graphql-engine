@@ -1,3 +1,5 @@
+@import "../../../Common/TableCommon/ReactTableOverrides.css";
+
 .eventsTableBody .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
   min-width: 75px;
 }
