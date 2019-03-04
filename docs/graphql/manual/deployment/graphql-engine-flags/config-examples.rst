@@ -124,3 +124,8 @@ Examples:
   Top-level domains are not considered as part of wildcard domains. You
   have to add them separately. E.g - ``https://*.foo.com`` doesn't include
   ``https://foo.com``.
+
+
+You can tell Hasura to disable handling CORS entirely via the ``--disable-cors``
+flag. Hasura will not respond with CORS headers. You can use this option if
+you're already handling CORS on a reverse proxy etc.

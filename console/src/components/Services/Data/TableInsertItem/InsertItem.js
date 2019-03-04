@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import {
   getPlaceholder,
   BOOLEAN,

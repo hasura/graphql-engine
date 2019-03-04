@@ -33,6 +33,23 @@ def pytest_addoption(parser):
         help="Run testcases for CORS configuration"
     )
 
+    parser.addoption(
+        "--test-ws-init-cookie",
+        metavar="read|noread",
+        required=False,
+        help="Run testcases for testing cookie sending over websockets"
+    )
+
+    parser.addoption(
+        "--test-metadata-disabled", action="store_true",
+        help="Run Test cases with metadata queries being disabled"
+    )
+
+    parser.addoption(
+        "--test-graphql-disabled", action="store_true",
+        help="Run Test cases with GraphQL queries being disabled"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -44,7 +61,8 @@ def hge_ctx(request):
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
-    test_cors = request.config.getoption('--test-cors')
+    ws_read_cookie = request.config.getoption('--test-ws-init-cookie')
+    metadata_disabled = request.config.getoption('--test-metadata-disabled')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -53,7 +71,9 @@ def hge_ctx(request):
             hge_webhook=hge_webhook,
             webhook_insecure=webhook_insecure,
             hge_jwt_key_file=hge_jwt_key_file,
-            hge_jwt_conf=hge_jwt_conf
+            hge_jwt_conf=hge_jwt_conf,
+            ws_read_cookie=ws_read_cookie,
+            metadata_disabled=metadata_disabled
         )
     except HGECtxError as e:
         pytest.exit(str(e))

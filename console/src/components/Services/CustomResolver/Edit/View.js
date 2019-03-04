@@ -1,6 +1,6 @@
 import React from 'react';
 
-import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
+import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';

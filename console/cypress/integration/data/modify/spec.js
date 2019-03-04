@@ -40,6 +40,40 @@ export const passMTCheckRoute = () => {
   );
 };
 
+export const passMTRenameTable = () => {
+  cy.get(getElementFromAlias('heading-edit-table')).click();
+  cy.get(getElementFromAlias('heading-edit-table-input'))
+    .clear()
+    .type(getTableName(3, testName));
+  cy.get(getElementFromAlias('heading-edit-table-save')).click();
+  cy.wait(10000);
+  validateCT(getTableName(3, testName), 'success');
+  cy.get(getElementFromAlias('heading-edit-table')).click();
+  cy.get(getElementFromAlias('heading-edit-table-input'))
+    .clear()
+    .type(getTableName(0, testName));
+  cy.get(getElementFromAlias('heading-edit-table-save')).click();
+  cy.wait(10000);
+  validateCT(getTableName(0, testName), 'success');
+};
+
+export const passMTRenameColumn = () => {
+  cy.get(getElementFromAlias('edit-id')).click();
+  cy.get(getElementFromAlias('edit-col-name'))
+    .clear()
+    .type(getColName(3));
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(2500);
+  validateColumn(getTableName(0, testName), [getColName(3)], 'success');
+  cy.get(getElementFromAlias(`edit-${getColName(3)}`)).click();
+  cy.get(getElementFromAlias('edit-col-name'))
+    .clear()
+    .type('id');
+  cy.get(getElementFromAlias('save-button')).click();
+  cy.wait(2500);
+  validateColumn(getTableName(0, testName), ['id'], 'success');
+};
+
 export const passMTMoveToTable = () => {
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.url().should(

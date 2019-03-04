@@ -38,6 +38,7 @@ module Hasura.RQL.DDL.Permission
     , addPermP1
     , addPermP2
 
+    , dropView
     , DropPerm
     , runDropPerm
 
