@@ -14,12 +14,17 @@
 }
 
 .schemaWrapper {
-  background: #FFF3D5;
   width: 100%;
 
   .schemaSidebarSection {
     display: inline-block;
-    width: 40%;
+    width: 100%;
+    padding-left: 15px;
+
+    a {
+      display: inline-block !important;
+      font-weight: bold;
+    }
   }
 }
 
@@ -205,8 +210,7 @@ a.expanded {
   text-align: center;
 }
 
-.tableCellCenterAlignedExpanded {
-  text-align: center;
+.tableCellExpanded {
   white-space: normal;
 }
 

@@ -32,14 +32,7 @@ const EventHeader = ({
                 }
               >
                 <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
-                  <div className={styles.schemaWrapper}>
-                    <div
-                      className={styles.schemaSidebarSection}
-                      data-test="schema"
-                    >
-                      Manage
-                    </div>
-                  </div>
+                  Manage
                 </Link>
                 <LeftNavBar
                   location={location}
