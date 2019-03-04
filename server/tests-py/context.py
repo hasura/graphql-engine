@@ -74,7 +74,8 @@ class WebhookServer(http.server.HTTPServer):
 
 
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure, hge_jwt_key_file, hge_jwt_conf, metadata_disabled):
+    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
+                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie):
         server_address = ('0.0.0.0', 5592)
 
         self.resp_queue = queue.Queue(maxsize=1)
@@ -114,6 +115,8 @@ class HGECtx:
         self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
+
+        self.ws_read_cookie = ws_read_cookie
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()

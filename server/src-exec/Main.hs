@@ -1,5 +1,6 @@
 module Main where
 
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Control.Monad.STM          (atomically)
@@ -71,7 +72,10 @@ parseHGECommand =
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseEnableTelemetry
+                <*> parseWsReadCookie
+                <*> parseStringifyNum
                 <*> parseEnabledAPIs
+
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -102,7 +106,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole enableTelemetry enabledAPIs) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -124,7 +128,7 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole enableTelemetry enabledAPIs
+                         strfyNum am corsCfg enableConsole enableTelemetry enabledAPIs
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -177,7 +181,7 @@ main =  do
     runAsAdmin ci httpManager m = do
       pool <- getMinimalPool ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager pool Q.Serializable m
+              httpManager False pool Q.Serializable m
       return $ fmap fst res
 
     procConnInfo rci =
