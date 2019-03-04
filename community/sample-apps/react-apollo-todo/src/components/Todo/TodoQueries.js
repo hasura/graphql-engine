@@ -68,16 +68,14 @@ const QUERY_FEED_PUBLIC_OLD_TODO = gql`
       limit: 5
       order_by: { created_at: desc }
     ) {
-      id
-      text
-      is_completed
-      created_at
-      is_public
+      ...TodoFragment
       user {
-        name
+        ...UserFragment
       }
     }
   }
+  ${TODO_FRAGMENT}
+  ${USER_FRAGMENT}
 `;
 
 const MUTATION_TODO_ADD = gql`

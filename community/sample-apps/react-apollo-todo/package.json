@@ -9,7 +9,6 @@
     "apollo-cache-inmemory": "^1.2.10",
     "apollo-client": "^2.4.2",
     "apollo-link-context": "^1.0.9",
-    "apollo-link-error": "^1.1.7",
     "apollo-link-http": "^1.5.5",
     "apollo-link-ws": "^1.0.9",
     "auth0-js": "^9.7.3",
