@@ -72,8 +72,10 @@ parseHGECommand =
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseEnableTelemetry
+                <*> parseWsReadCookie
                 <*> parseStringifyNum
                 <*> parseEnabledAPIs
+
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -104,7 +106,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
