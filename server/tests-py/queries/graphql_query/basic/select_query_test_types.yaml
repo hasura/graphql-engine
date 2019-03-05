@@ -104,10 +104,10 @@ query:
         c30_inet
         c31_macaddr
         c32_json
-        c32_json_child_prop: c32_json(path: "obj.c1")
+        c32_json_child_prop: c32_json(path: ".obj.c1")
         c32_json_array_item: c32_json(path: "arr[0]")
         c33_jsonb
-        c33_jsonb_child_prop: c33_jsonb(path: "obj.e1")
+        c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
         c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
         c34_text_array
         c35_integer_2d_array

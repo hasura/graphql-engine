@@ -83,6 +83,7 @@ Simple Object
   object-name {
     field1
     field2
+    json_field(path: String)
     ..
     nested object1
     nested object2
@@ -97,6 +98,8 @@ E.g.
    author {
       id  # scalar field
       name  # scalar field
+      json_field(path: ".property[0]") # scalar field
+
       article {  # nested object
         title
       }
@@ -399,7 +402,16 @@ Operator
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
+   - ``path`` argument of ``json``/``jsonb`` follow simple `JSONPath specification <https://github.com/json-path/JsonPath>`. However, prefix symbol ``$.`` is optional.
 
+     .. parsed-literal::
+
+       {
+         field_json(path: "$.property[0]")
+         property: field_json(path: "property") # '$.' prefix is optional
+         array_item: field_json(path: "[0]")
+         array_property: field_json(path: "[0].property")
+       }
 
 .. _OrderByExp:
 
@@ -486,7 +498,7 @@ OrderByEnum
      desc_nulls_last
    }
 
-AggregateOrderBy               
+AggregateOrderBy
 ################
 
 Count aggregate

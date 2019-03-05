@@ -1,73 +1,69 @@
 module Data.Parser.JSONPath
   ( parseJSONPath
   , JSONPathElement(..)
+  , JSONPath
   ) where
 
-import           Control.Applicative  (liftA2, (<|>))
-import           Data.Aeson.Internal  (JSONPathElement (..))
+import           Control.Applicative  ((<|>))
+import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 import           Data.Bool            (bool)
 import           Data.Char            (isDigit)
-import           Data.List            (intercalate)
 import qualified Data.Text            as T
-import           Prelude
+import           Prelude              hiding (takeWhile)
 import           Text.Read            (readMaybe)
 
-firstPathElementChar :: Parser Char
-firstPathElementChar = letter
-  <|> satisfy (`elem` ("_$" :: String))
-  <?> "the first character of property name must be a letter, an underscore (_) or a dollar sign ($)."
+parseKey :: Parser T.Text
+parseKey = do
+  firstChar <- letter
+           <?> "the first character of property name must be a letter."
+  name <- many' (letter
+           <|> digit
+           <|> satisfy (`elem` ("-_" :: String))
+            )
+  return $ T.pack (firstChar:name)
 
-propertyPathElement :: Parser JSONPathElement
-propertyPathElement = do
-  firstChar <- firstPathElementChar
-  remain <- many'
-    ( letter
-    <|> digit
-    <|> satisfy (`elem` ("-_$" :: String))
-    <?> "invalid special characters, accept letters, digits, underscore (_), hyphen (-) or a dollar sign ($) only "
-    )
-  return $ Key $ T.pack (firstChar:remain)
-
-indexPathElement :: Parser JSONPathElement
-indexPathElement = skip (== '[') *> anyChar >>= parseDigits
+parseIndex :: Parser Int
+parseIndex = skip (== '[') *> anyChar >>= parseDigits
   where
-    parseDigits :: Char -> Parser JSONPathElement
+    parseDigits :: Char -> Parser Int
     parseDigits firstDigit
       | firstDigit == ']' = fail "empty array index"
-      | not $ isDigit firstDigit = fail $ "invalid index digit: " ++ [firstDigit]
-                                        ++ ". Please make sure that index value is number."
+      | not $ isDigit firstDigit =
+          fail $ "invalid array index: " ++ [firstDigit]
       | otherwise = do
           remain <- many' (notChar ']')
           skip (== ']')
           let content = firstDigit:remain
           case (readMaybe content :: Maybe Int) of
             Nothing -> fail $ "invalid array index: " ++ content
-            Just v  -> return $ Index v
+            Just v  -> return v
 
-pathElement :: Parser JSONPathElement
-pathElement = peekChar >>= \case
-  Nothing -> fail "empty json path"
-  Just '[' -> indexPathElement
-  _ -> propertyPathElement
+parseElement :: Parser JSONPathElement
+parseElement = do
+  dotLen <- T.length <$> takeWhile (== '.')
+  if dotLen > 1
+    then fail "multiple dots in json path"
+    else peekChar >>= \case
+      Nothing ->  fail "empty json path"
+      Just '[' -> Index <$> parseIndex
+      _ -> Key <$> parseKey
 
-pathElements :: Parser [JSONPathElement]
-pathElements = do
-  firstPath <- pathElement
-  remain <- childPathElements
-  return (firstPath:remain)
+parseElements :: Parser JSONPath
+parseElements = skipWhile (== '$') *> many1 parseElement
 
-childPathElements  :: Parser [JSONPathElement]
-childPathElements = peekChar >>= \case
-  Nothing -> return []
-  Just '.' -> liftA2 (:) (skip (== '.') *> propertyPathElement) childPathElements
-  Just '[' -> liftA2 (:) indexPathElement childPathElements
-  Just c -> fail $ "invalid character: " ++ [c]
-
-parseJSONPath :: T.Text -> Either String [JSONPathElement]
-parseJSONPath = parseResult . parse pathElements
+parseJSONPath :: T.Text -> Either String JSONPath
+parseJSONPath = parseResult . parse parseElements
   where
     parseResult = \case
-      Fail _ pos err -> Left $ bool (intercalate ". " pos) err (null pos)
-      Partial p -> parseResult $ p ""
-      Done _ r -> Right r
+      Fail _ pos err ->
+        Left $ bool (head pos) err (null pos)
+      Partial p ->  parseResult $ p ""
+      Done remain r ->
+        if not $ T.null remain then
+          Left $ invalidMessage remain
+        else
+          Right r
+
+    invalidMessage s = "invalid property name: "  ++ T.unpack s
+      ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
