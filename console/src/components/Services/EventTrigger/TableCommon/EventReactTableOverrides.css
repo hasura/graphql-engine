@@ -89,11 +89,6 @@
   max-width: 50px;
 }
 
-.streamingLogs .ReactTable .rt-thead .rt-th:last-child,
-.ReactTable .rt-thead .rt-td:last-child {
-  display: none;
-}
-
 .redeliverEventSection
   .ReactTable
   .rt-table
