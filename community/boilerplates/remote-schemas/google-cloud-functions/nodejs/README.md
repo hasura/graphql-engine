@@ -45,19 +45,15 @@ This will start a local server on `localhost:4000`. You can hit the graphql serv
 
 ## Deployment
 
-Install `gcloud` cli with `beta` component:
+1. Install `gcloud` cli.
+
+2. From the current directory, run the following command to deploy the function:
 
 ```bash
-$ gcloud components update && gcloud components install beta
+$ gcloud functions deploy hello-graphql --entry-point handler --runtime nodejs8 --trigger-http
 ```
 
-From the current directory, run the following command to deploy the function:
-
-```bash
-$ gcloud beta functions deploy hello-graphql --entry-point handler --runtime nodejs8 --trigger-http
-```
-
-Get the trigger URL from the above output:
+3. Get the trigger URL from the above output:
 
 ```yaml
 httpsTrigger:
