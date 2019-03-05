@@ -1,5 +1,5 @@
 import React from 'react';
-import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import ReusableTextAreaWithCopy from '../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 import RemoteSchemaContent from '../../CommonLanding/RemoteSchemaContent';
 import EventTriggerContent from '../../CommonLanding/EventTriggerContent';
 const styles = require('../Popup.scss');

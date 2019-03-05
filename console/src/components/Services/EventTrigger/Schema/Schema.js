@@ -9,7 +9,7 @@ import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
-import ReusableTextAreaWithCopy from '../../Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import ReusableTextAreaWithCopy from '../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
 const appPrefix = globals.urlPrefix + '/events';
