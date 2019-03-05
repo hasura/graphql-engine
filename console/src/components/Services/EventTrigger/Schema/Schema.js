@@ -27,7 +27,12 @@ class Schema extends Component {
 
     const styles = require('../PageContainer/PageContainer.scss');
     const queryDefinition = 'mutation{ insert_user()}';
-    const footerEvent = (<span>Head to the Events tab and see an event invoked under <span className={styles.fontWeightBold}> test-trigger</span>.</span>);
+    const footerEvent = (
+      <span>
+        Head to the Events tab and see an event invoked under{' '}
+        <span className={styles.fontWeightBold}> test-trigger</span>.
+      </span>
+    );
     return (
       <div
         className={`${styles.padd_left_remove} container-fluid ${
@@ -72,10 +77,10 @@ class Schema extends Component {
             queryDefinition="mutation{ insert_user()}"
             footerDescription={footerEvent}
             glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
-            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
-            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"
-            awsLink="https://github.com/hasura/graphql-engine/tree/master/community"
-            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
+            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs8"
+            awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
+            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
           />
         </div>
       </div>
