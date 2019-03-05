@@ -9,7 +9,7 @@ class TryItOut extends React.Component {
     };
   }
   togglePopup() {
-    this.setState({isPopUp : !this.state.isPopUp});
+    this.setState({ isPopUp: !this.state.isPopUp });
   }
   render() {
     const Rectangle = require('../CustomResolver/Landing/Rectangle.svg');
@@ -31,43 +31,75 @@ class TryItOut extends React.Component {
             <div className={styles.logoIcon}>
               <img className={'img-responsive'} src={glitch} alt={'glitch'} />
             </div>
-            <a href={this.props.glitchLink} target={'_blank'}><button className={styles.default_button}>Try it with Glitch <img className={'img-responsive ' + styles.externalLinkImg} src={externalLink} alt={'externalLink'} /></button></a>
-            <div className={styles.instructionsWrapper + ' ' + styles.displayFlex}>
-              <span   onClick = {this.togglePopup.bind(this)} className={styles.instructions + ' ' + styles.displayFlex}><span>Instructions</span><div className={styles.rightArrow}></div></span>
-              { this.state.isPopUp ?
-                (<PopUp
-                  onClose = {this.togglePopup.bind(this)}
-                  service = {this.props.service}
-                  title= {this.props.footerDescription}
-                  queryDefinition= {this.props.queryDefinition}
-                  footerDescription= {this.props.footerDescription}/>)
-                : null }
+            <a href={this.props.glitchLink} target={'_blank'}>
+              <button className={styles.default_button}>
+                Try it with Glitch{' '}
+                <img
+                  className={'img-responsive ' + styles.externalLinkImg}
+                  src={externalLink}
+                  alt={'externalLink'}
+                />
+              </button>
+            </a>
+            <div
+              className={styles.instructionsWrapper + ' ' + styles.displayFlex}
+            >
+              <span
+                onClick={this.togglePopup.bind(this)}
+                className={styles.instructions + ' ' + styles.displayFlex}
+              >
+                <span>Instructions</span>
+                <div className={styles.rightArrow} />
+              </span>
+              {this.state.isPopUp ? (
+                <PopUp
+                  onClose={this.togglePopup.bind(this)}
+                  service={this.props.service}
+                  title={this.props.title}
+                  queryDefinition={this.props.queryDefinition}
+                  footerDescription={this.props.footerDescription}
+                />
+              ) : null}
             </div>
           </div>
           <div className={styles.boxSmallWrapper}>
             <a href={this.props.googleCloudLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
-                  <img className={'img-responsive'} src={googleCloud} alt={'googleCloud'} />
+                  <img
+                    className={'img-responsive'}
+                    src={googleCloud}
+                    alt={'googleCloud'}
+                  />
                 </div>
               </div>
             </a>
             <a href={this.props.MicrosoftAzureLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
-                  <img className={'img-responsive'} src={MicrosoftAzure} alt={'Microsoft Azure'} />
+                  <img
+                    className={'img-responsive'}
+                    src={MicrosoftAzure}
+                    alt={'Microsoft Azure'}
+                  />
                 </div>
               </div>
             </a>
             <a href={this.props.awsLink} target={'_blank'}>
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
-                  <img className={'img-responsive ' + styles.imgAws} src={AWS} alt={'AWS'} />
+                  <img
+                    className={'img-responsive ' + styles.imgAws}
+                    src={AWS}
+                    alt={'AWS'}
+                  />
                 </div>
               </div>
             </a>
             <div className={styles.instructions}>
-              <a href={this.props.adMoreLink} target="_blank"><span>And many more</span> <div className={styles.rightArrow}></div></a>
+              <a href={this.props.adMoreLink} target="_blank">
+                <span>And many more</span> <div className={styles.rightArrow} />
+              </a>
             </div>
           </div>
         </div>

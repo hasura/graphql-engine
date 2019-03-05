@@ -37,9 +37,11 @@ class Schema extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
           <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.addPaddRight} ${
-              styles.inline_block
-              }`}>
+            <h2
+              className={`${styles.headerText} ${styles.addPaddRight} ${
+                styles.inline_block
+              }`}
+            >
               Event Triggers{' '}
             </h2>
             {migrationMode ? (
@@ -66,10 +68,10 @@ class Schema extends Component {
           <hr className={styles.clear_fix} />
           <TryItOut
             service="eventTrigger"
-            title= "Click to deploy an example Event Trigger to Glitch"
+            title="Steps to deploy an example Event Trigger to Glitch"
             queryDefinition="mutation{ insert_user()}"
             footerDescription={footerEvent}
-            glitchLink="https://github.com/hasura/graphql-engine/tree/master/community"
+            glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
             googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"
             awsLink="https://github.com/hasura/graphql-engine/tree/master/community"
