@@ -6,6 +6,7 @@ module Hasura.GraphQL.Resolve.Mutation
   ) where
 
 import           Control.Arrow                     (second)
+import           Data.Has                          (getter)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
@@ -19,6 +20,7 @@ import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
@@ -89,12 +91,10 @@ convDeleteAtPathObj val =
     return (pgCol, sqlExp)
 
 convertUpdate
-  :: QualifiedTable -- table
-  -> PreSetCols -- the preset cols
-  -> AnnBoolExpSQL -- the filter expression
+  :: UpdOpCtx -- the update context
   -> Field -- the mutation field
   -> Convert RespTx
-convertUpdate tn preSetCols filterExp fld = do
+convertUpdate opCtx fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   -- where bool expression to filter column
@@ -128,27 +128,31 @@ convertUpdate tn preSetCols filterExp fld = do
   unless (any isJust updExpsM || not (null preSetItems)) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
+  strfyNum <- stringifyNum <$> asks getter
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds
-      whenNonEmptyItems = return $ RU.updateQueryToTx (p1, prepArgs)
+      whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
       whenEmptyItems = buildEmptyMutResp mutFlds
   -- if there are not set items then do not perform
   -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null setItems
   where
+    UpdOpCtx tn _ filterExp preSetCols = opCtx
     args = _fArguments fld
     preSetItems = Map.toList preSetCols
 
 convertDelete
-  :: QualifiedTable -- table
-  -> AnnBoolExpSQL -- the filter expression
+  :: DelOpCtx -- the delete context
   -> Field -- the mutation field
   -> Convert RespTx
-convertDelete tn filterExp fld = do
+convertDelete opCtx fld = do
   whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
-  return $ RD.deleteQueryToTx (p1, args)
+  strfyNum <- stringifyNum <$> asks getter
+  return $ RD.deleteQueryToTx strfyNum (p1, args)
+  where
+    DelOpCtx tn _ filterExp = opCtx
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx

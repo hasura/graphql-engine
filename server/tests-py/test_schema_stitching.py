@@ -179,11 +179,9 @@ class TestAddRemoteSchemaTbls:
 
     def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the db """
-        conn = hge_ctx.engine.connect()
-        res = conn.execute('select * from hdb_catalog.remote_schemas')
+        res = hge_ctx.sql('select * from hdb_catalog.remote_schemas')
         row = res.fetchone()
         assert row['name'] == "simple2-graphql"
-        conn.close()
 
     def test_add_schema_conflicts_with_tables(self, hge_ctx):
         """add remote schema which conflicts with hasura tables"""

@@ -1,6 +1,17 @@
 .ReactTable {
   border: 0;
 }
+
+.ReactTable .rt-tbody {
+  min-height: 40px;
+}
+
+.ReactTable .rt-noData {
+  padding: 5px;
+  top: 62px;
+  background: none;
+}
+
 .ReactTable .-pagination .-btn {
   height: 35px !important;
   width: 40%;
@@ -12,19 +23,45 @@
   color: #333;
   background-color: #ddd;
   cursor: pointer;
+  text-align: left;
 }
 .ReactTable .rt-thead .rt-resizable-header-content {
   font-weight: bold;
+}
+.ReactTable .rt-thead .rt-resizable-header .rt-resizer {
+  width: 10px;
+  right: -5px;
 }
 .ReactTable .rt-thead.-header {
   box-shadow: none;
 }
 .ReactTable .-pagination {
   box-shadow: none;
+  border: none;
 }
-.ReactTable .rt-thead .rt-th,
-.ReactTable .rt-thead .rt-td {
-  padding: 10px !important;
+.ReactTable .rt-table .rt-thead .rt-th,
+.ReactTable .rt-table .rt-thead .rt-td {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  border-right: 1px solid rgba(0,0,0,0.1);
+}
+.ReactTable .rt-table .rt-thead .rt-th.collapsed,
+.ReactTable .rt-table .rt-thead .rt-td.collapsed {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.ReactTable .rt-tbody .rt-th,
+.ReactTable .rt-tbody .rt-td {
+  padding: 8px;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  word-wrap: break-word;
+}
+
+.ReactTable .rt-th .ellipsis,
+.ReactTable .rt-td > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th {
@@ -32,6 +69,7 @@
   color: #4d4d4d;
   font-weight: 600 !important;
   border-bottom: 2px solid #ddd;
+  text-align: left;
 }
 
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {

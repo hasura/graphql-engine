@@ -11,24 +11,10 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table address
-
-- type: run_sql
-  args:
-    sql: |
-      drop table resident
-
-- type: run_sql
-  args:
-    sql: |
-      drop table article
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table "Company"
+      drop table address;
+      drop table resident;
+      drop table article;
+      drop table blog;
+      drop table author;
+      drop table "Company";
+    cascade: true
