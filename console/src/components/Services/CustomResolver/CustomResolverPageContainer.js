@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
-import LeftNavBar from './LeftNavBar/LeftNavBar';
+import CustomResolverSubSidebar from './CustomResolverSubSidebar';
 
 class CustomResolverPageContainer extends React.Component {
   render() {
@@ -13,7 +13,7 @@ class CustomResolverPageContainer extends React.Component {
 
     const currentLocation = location.pathname;
 
-    const leftContent = (
+    const sidebarContent = (
       <ul>
         <li
           role="presentation"
@@ -29,7 +29,7 @@ class CustomResolverPageContainer extends React.Component {
           >
             Manage
           </Link>
-          <LeftNavBar {...this.props} />
+          <CustomResolverSubSidebar {...this.props} />
         </li>
       </ul>
     );
@@ -38,7 +38,7 @@ class CustomResolverPageContainer extends React.Component {
 
     const leftContainer = (
       <LeftContainer>
-        {leftContent}
+        {sidebarContent}
       </LeftContainer>
     );
 

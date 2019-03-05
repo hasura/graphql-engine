@@ -123,7 +123,7 @@
   }
 }
 
-.schemaTableList {
+.subSidebarList {
   // max-height: 300px;
   // overflow-y: auto;
   overflow: auto;
@@ -132,7 +132,7 @@
   border-bottom: 1px solid #e6e6e6;
 }
 
-.schemaListUl {
+.subSidebarListUL {
   padding-left: 5px;
   padding-bottom: 10px;
 
@@ -167,7 +167,7 @@
     }
   }
 
-  .noTables {
+  .noChildren {
     font-weight: 400 !important;
     padding-bottom: 10px !important;
     color: #767E93 !important;

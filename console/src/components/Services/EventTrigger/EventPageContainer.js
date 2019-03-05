@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
-import LeftNavBar from './LeftNavBar/LeftNavBar';
+import EventSubSidebar from './EventSubSidebar';
 
 const appPrefix = '/events';
 
@@ -18,7 +18,7 @@ const EventPageContainer = ({
 
   const currentLocation = location.pathname;
 
-  const leftContent = (
+  const sidebarContent = (
     <ul>
       <li
         role="presentation"
@@ -29,7 +29,7 @@ const EventPageContainer = ({
         <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
           Manage
         </Link>
-        <LeftNavBar
+        <EventSubSidebar
           location={location}
           schema={schema}
           currentSchema={currentSchema}
@@ -43,7 +43,7 @@ const EventPageContainer = ({
 
   const leftContainer = (
     <LeftContainer>
-      {leftContent}
+      {sidebarContent}
     </LeftContainer>
   );
 

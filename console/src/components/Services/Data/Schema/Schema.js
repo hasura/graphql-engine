@@ -79,7 +79,7 @@ class Schema extends Component {
       trackedFunctions,
     } = this.props;
 
-    const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
     /* Filter */
     const trackedFuncs = trackedFunctions.map(t => t.function_name);

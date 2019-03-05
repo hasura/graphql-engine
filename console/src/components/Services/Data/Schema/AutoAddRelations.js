@@ -17,7 +17,7 @@ class AutoAddRelations extends Component {
   };
 
   render() {
-    const styles = require('../../../Common/Layout/LeftNavBar/LeftNavBar.scss');
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
     const { untrackedRelations, dispatch } = this.props;
 

@@ -5,7 +5,7 @@ import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
-import LeftNavBar from './LeftNavBar/LeftNavBar';
+import DataSubSidebar from './DataSubSidebar';
 
 import {
   loadSchema,
@@ -57,7 +57,7 @@ const DataPageContainer = ({
     ]);
   };
 
-  const leftContent = (
+  const sidebarContent = (
     <ul>
       <li
         role="presentation"
@@ -91,7 +91,7 @@ const DataPageContainer = ({
             </div>
           </div>
         </Link>
-        <LeftNavBar
+        <DataSubSidebar
           location={location}
           schema={schema}
           currentSchema={currentSchema}
@@ -120,7 +120,7 @@ const DataPageContainer = ({
 
   const leftContainer = (
     <LeftContainer>
-      {leftContent}
+      {sidebarContent}
     </LeftContainer>
   );
 
