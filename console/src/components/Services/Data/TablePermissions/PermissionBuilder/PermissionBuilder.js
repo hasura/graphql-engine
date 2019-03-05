@@ -25,7 +25,7 @@ import {
   textColumnOperators,
   jsonColumnOperators,
   topologyColumnOperators,
-  PGTypes
+  PGTypes,
 } from './utils';
 
 import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
@@ -313,11 +313,17 @@ class PermissionBuilder extends React.Component {
       prefix = '',
       disabledValues = []
     ) => {
-      const _value = (typeof value === 'boolean') ? value.toString() : '';
+      const _value = typeof value === 'boolean' ? value.toString() : '';
 
       const values = ['true', 'false'];
 
-      return renderSelect(selectDispatchFunc, _value, values, prefix, disabledValues);
+      return renderSelect(
+        selectDispatchFunc,
+        _value,
+        values,
+        prefix,
+        disabledValues
+      );
     };
 
     const renderSelect = (
@@ -382,7 +388,11 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderSuggestion = (suggestionDispatchFunc, inputValue, displayValue = null) => {
+    const renderSuggestion = (
+      suggestionDispatchFunc,
+      inputValue,
+      displayValue = null
+    ) => {
       const dispatchSuggestion = () => {
         suggestionDispatchFunc(inputValue);
       };
@@ -392,7 +402,7 @@ class PermissionBuilder extends React.Component {
           onClick={dispatchSuggestion}
           className={styles.qb_input_suggestion}
         >
-            [{ displayValue || inputValue }]
+          [{displayValue || inputValue}]
         </span>
       );
     };
@@ -405,10 +415,18 @@ class PermissionBuilder extends React.Component {
 
         if (val !== '') {
           if (PGTypes.boolean.includes(valueType)) {
-            _val = (val === 'true');
-          } else if (PGTypes.numeric.includes(valueType) && !isNaN(val) && val.substr(-1) !== '.') {
+            _val = val === 'true';
+          } else if (
+            PGTypes.numeric.includes(valueType) &&
+            !isNaN(val) &&
+            val.substr(-1) !== '.'
+          ) {
             _val = Number(val);
-          } else if ((PGTypes.json.includes(valueType) || PGTypes.postgis.includes(valueType)) && isJsonString(val)) {
+          } else if (
+            (PGTypes.json.includes(valueType) ||
+              PGTypes.postgis.includes(valueType)) &&
+            isJsonString(val)
+          ) {
             _val = JSON.parse(val);
           }
         }
@@ -433,7 +451,10 @@ class PermissionBuilder extends React.Component {
 
       if (PGTypes.boolean.includes(valueType)) {
         input = renderBoolSelect(dispatchInput, value);
-      } else if (PGTypes.json.includes(valueType) || PGTypes.postgis.includes(valueType)) {
+      } else if (
+        PGTypes.json.includes(valueType) ||
+        PGTypes.postgis.includes(valueType)
+      ) {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else {
@@ -451,7 +472,12 @@ class PermissionBuilder extends React.Component {
     const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
       const _inputArray = [];
       (values || []).concat(['']).map((val, i) => {
-        const input = renderValue(dispatchFunc, val, addToPrefix(prefix, i), valueType);
+        const input = renderValue(
+          dispatchFunc,
+          val,
+          addToPrefix(prefix, i),
+          valueType
+        );
         _inputArray.push(input);
       });
 
@@ -575,7 +601,12 @@ class PermissionBuilder extends React.Component {
       } else {
         const columnType = getColumnType(column, tableSchema);
 
-        _columnExp = renderOperatorExp(dispatchFunc, expression, prefix, columnType);
+        _columnExp = renderOperatorExp(
+          dispatchFunc,
+          expression,
+          prefix,
+          columnType
+        );
       }
 
       return _columnExp;

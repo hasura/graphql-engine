@@ -3,7 +3,7 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
 class CustomResolver extends React.Component {

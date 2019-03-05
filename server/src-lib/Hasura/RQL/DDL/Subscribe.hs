@@ -11,6 +11,8 @@ module Hasura.RQL.DDL.Subscribe
   , subTableP2
   , subTableP2Setup
   , mkTriggerQ
+  , getEventTriggerDef
+  , updateEventTriggerDef
   ) where
 
 import           Data.Aeson
@@ -53,9 +55,10 @@ getTriggerSql
   -> TriggerName
   -> QualifiedTable
   -> [PGColInfo]
+  -> Bool
   -> Maybe SubscribeOpSpec
   -> Maybe T.Text
-getTriggerSql op trid trn qt allCols spec =
+getTriggerSql op trid trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
                    [ (T.pack "ID", trid)
                    , (T.pack "NAME", trn)
@@ -95,7 +98,7 @@ getTriggerSql op trid trn qt allCols spec =
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
-    mkQId opVar colInfo = toJSONableExp (pgiType colInfo) $
+    mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) $
       S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiName colInfo
 
     opToQual = S.QualVar . opToTxt
@@ -115,12 +118,13 @@ mkTriggerQ
   -> TriggerName
   -> QualifiedTable
   -> [PGColInfo]
+  -> Bool
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ trid trn qt allCols (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT trid trn qt allCols insert
-             <> getTriggerSql UPDATE trid trn qt allCols update
-             <> getTriggerSql DELETE trid trn qt allCols delete
+mkTriggerQ trid trn qt allCols strfyNum (TriggerOpsDef insert update delete) = do
+  let msql = getTriggerSql INSERT trid trn qt allCols strfyNum insert
+             <> getTriggerSql UPDATE trid trn qt allCols strfyNum update
+             <> getTriggerSql DELETE trid trn qt allCols strfyNum delete
   case msql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing  -> throw500 "no trigger sql generated"
@@ -133,9 +137,10 @@ delTriggerQ trn = mapM_ (\op -> Q.unitQE
 addEventTriggerToCatalog
   :: QualifiedTable
   -> [PGColInfo]
+  -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr TriggerId
-addEventTriggerToCatalog qt allCols etc = do
+addEventTriggerToCatalog qt allCols strfyNum etc = do
   ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler
          [Q.sql|
            INSERT into hdb_catalog.event_triggers
@@ -145,7 +150,7 @@ addEventTriggerToCatalog qt allCols etc = do
                |] (name, sn, tn, Q.AltJ $ toJSON etc) True
 
   trid <- getTrid ids
-  mkTriggerQ trid name qt allCols opsdef
+  mkTriggerQ trid name qt allCols strfyNum opsdef
   return trid
   where
     QualifiedObject sn tn = qt
@@ -165,25 +170,16 @@ delEventTriggerFromCatalog trn = do
 updateEventTriggerToCatalog
   :: QualifiedTable
   -> [PGColInfo]
+  -> Bool
   -> EventTriggerConf
   -> Q.TxE QErr TriggerId
-updateEventTriggerToCatalog qt allCols etc = do
-  ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler
-         [Q.sql|
-           UPDATE hdb_catalog.event_triggers
-           SET
-           configuration = $1
-           WHERE name = $2
-           RETURNING id
-               |] (Q.AltJ $ toJSON etc, name) True
-  trid <- getTrid ids
+updateEventTriggerToCatalog qt allCols strfyNum etc = do
+  trid <- updateEventTriggerDef name etc
   delTriggerQ name
-  mkTriggerQ trid name qt allCols opsdef
+  mkTriggerQ trid name qt allCols strfyNum opsdef
   return trid
   where
     EventTriggerConf name opsdef _ _ _ _ = etc
-    getTrid []    = throw500 "could not update event-trigger"
-    getTrid (x:_) = return x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
@@ -277,20 +273,21 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
       SubCArray pgcols -> pgcols
 
 subTableP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
   => QualifiedTable -> Bool -> EventTriggerConf -> m ()
 subTableP2 qt replace etc = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+  strfyNum <- stringifyNum <$> askSQLGenCtx
   trid <- if replace
     then do
     delEventTriggerFromCache qt (etcName etc)
-    liftTx $ updateEventTriggerToCatalog qt allCols etc
+    liftTx $ updateEventTriggerToCatalog qt allCols strfyNum etc
     else
-    liftTx $ addEventTriggerToCatalog qt allCols etc
+    liftTx $ addEventTriggerToCatalog qt allCols strfyNum etc
   subTableP2Setup qt trid etc
 
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
   => CreateEventTriggerQuery -> m RespBody
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
@@ -359,3 +356,26 @@ getEnv env = do
   case mEnv of
     Nothing -> throw400 NotFound $ "environment variable '" <> env <> "' not set"
     Just envVal -> return (T.pack envVal)
+
+getEventTriggerDef
+  :: TriggerName
+  -> Q.TxE QErr (QualifiedTable, EventTriggerConf)
+getEventTriggerDef triggerName = do
+  (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT e.schema_name, e.table_name, e.configuration::json
+     FROM hdb_catalog.event_triggers e where e.name = $1
+           |] (Identity triggerName) False
+  return (QualifiedObject sn tn, etc)
+
+updateEventTriggerDef
+  :: TriggerName -> EventTriggerConf -> Q.TxE QErr TriggerId
+updateEventTriggerDef trigName trigConf =
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+      UPDATE hdb_catalog.event_triggers
+      SET
+      configuration = $1
+      WHERE name = $2
+      RETURNING id
+          |] (Q.AltJ $ toJSON trigConf, trigName) True

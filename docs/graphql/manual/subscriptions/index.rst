@@ -35,6 +35,34 @@ Hasura GraphQL engine uses the `GraphQL over Websocket Protocol
 `apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`_ library
 for sending and receiving events.
 
+Cookie and Websockets
+---------------------
+Hasura GraphQL engine will read cookies sent by the browser when initiating a
+websocket connection. Browser will send the cookie only if it is a secure cookie
+(``secure`` flag in the cookie) and if the cookie has a ``HttpOnly`` flag.
+
+Hasura will read this cookie and use it as headers when resolving authorization
+(i.e. when resolving the auth webhook).
+
+Cookies, Websockets and CORS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As browsers don't enforce Same Origin Policy (SOP) for Websockets, Hasura server
+enforces the CORS rules when accepting the websocket connection.
+
+It uses the provided CORS configuration (as per :ref:`configure-cors`).
+
+1. When it is ``*``, the cookie is read the CORS check is not enforced.
+
+2. When there are explicit domains, only if the request originates from one of
+   the listed domains, the cookie will be read.
+
+3. If CORS is disabled, the default behaviour is, the cookie won't be read
+   (because of potential security issues). To override the behaviour, you can
+   use the flag ``--ws-read-cookie`` or environment variable
+   ``HASURA_GRAPHQL_WS_READ_COOKIE``. See
+   :doc:`../deployment/graphql-engine-flags/reference` for the setting.
+
+
 .. toctree::
   :maxdepth: 1
   :hidden:

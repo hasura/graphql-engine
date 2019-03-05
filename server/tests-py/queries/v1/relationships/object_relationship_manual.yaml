@@ -50,6 +50,56 @@
           - id
           - name 
 
+  #Rename object relationship
+- description: Rename object relationship author to author_obj
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: rename_relationship
+    args:
+      table: article_view
+      name: author
+      new_name: author_obj
+
+  #Select Query
+
+- description: Nested select on article with renamed object relation
+  url: /v1/query
+  status: 200
+  response:
+    - id: 1
+      title: Article 1
+      content: Sample article content 1
+      author_obj:
+        id: 1
+        name: AUTHOR 1
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      author_obj:
+        id: 1
+        name: AUTHOR 1
+    - id: 3
+      title: Article 3
+      content: Sample article content 3
+      author_obj:
+        id: 2
+        name: AUTHOR 2
+  query:
+    type: select
+    args:
+      table: article_view
+      columns:
+        - id
+        - title
+        - content
+        - name: author_obj
+          columns:
+          - id
+          - name 
+
   #Drop object relationship
 - description: Drop object relationship
   url: /v1/query
@@ -62,4 +112,4 @@
     type: drop_relationship
     args:
       table: article_view
-      relationship: author
+      relationship: author_obj

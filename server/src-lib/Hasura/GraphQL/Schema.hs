@@ -161,8 +161,8 @@ mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
   G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
 
-mkTableByPKeyTy :: QualifiedTable -> G.Name
-mkTableByPKeyTy tn = qualObjectToName tn <> "_by_pk"
+mkTableByPkName :: QualifiedTable -> G.Name
+mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
@@ -372,7 +372,7 @@ mkSelFldPKey tn cols =
   where
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
-    fldName = mkTableByPKeyTy tn
+    fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
@@ -546,9 +546,25 @@ input function_args {
   argn: arg-typen!
 }
 -}
-mkFuncArgsInp :: FunctionInfo -> Maybe (InpObjTyInfo, FuncArgCtx)
+
+procFuncArgs
+  :: Seq.Seq FunctionArg
+  -> (PGColType -> Text -> a) -> [a]
+procFuncArgs argSeq f =
+  fst $ foldl mkItem ([], 1::Int) argSeq
+  where
+    mkItem (items, argNo) (FunctionArg nameM ty) =
+      case nameM of
+        Just argName ->
+          let argT = getFuncArgNameTxt argName
+          in (items <> pure (f ty argT), argNo)
+        Nothing ->
+          let argT = "arg_" <> T.pack (show argNo)
+          in (items <> pure (f ty argT), argNo + 1)
+
+mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
 mkFuncArgsInp funcInfo =
-  bool (Just (inpObj, funcArgCtx)) Nothing $ null funcArgs
+  bool (Just inpObj) Nothing $ null funcArgs
   where
     funcName = fiName funcInfo
     funcArgs = fiInputArgs funcInfo
@@ -557,23 +573,11 @@ mkFuncArgsInp funcInfo =
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    (argInps, ctxItems) = unzip $ fst $ foldl mkArgInps ([], 1::Int) funcArgs
-    funcArgCtx = Map.singleton funcArgsTy $ Seq.fromList ctxItems
+    argInps = procFuncArgs funcArgs mkInpVal
 
-    mkArgInps (items, argNo) (FunctionArg nameM ty) =
-      case nameM of
-        Just argName ->
-          let argGName = G.Name $ getFuncArgNameTxt argName
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName
-          in (items <> pure (inpVal, argCtxItem), argNo)
-        Nothing ->
-          let argGName = G.Name $ "arg_" <> T.pack (show argNo)
-              inpVal = InpValInfo Nothing argGName Nothing $
-                       G.toGT $ G.toNT $ mkScalarTy ty
-              argCtxItem = FuncArgItem argGName
-          in (items <> pure (inpVal, argCtxItem), argNo + 1)
+    mkInpVal ty t =
+      InpValInfo Nothing (G.Name t) Nothing $ G.toGT $
+      G.toNT $ mkScalarTy ty
 
 -- table_set_input
 mkUpdSetTy :: QualifiedTable -> G.NamedType
@@ -1229,7 +1233,7 @@ mkGCtxRole'
   -> [FunctionInfo]
   -> TyAgg
 mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM funcs =
-  TyAgg (mkTyInfoMap allTypes) fieldMap ordByCtx funcArgCtx
+  TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
 
   where
 
@@ -1267,9 +1271,10 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
     mutHelper f objM = bool Nothing objM $ isMutable f viM
 
     fieldMap = Map.unions $ catMaybes
-               [ insInpObjFldsM, updSetInpObjFldsM, boolExpInpObjFldsM
-               , selObjFldsM, Just selByPKeyObjFlds
+               [ insInpObjFldsM, updSetInpObjFldsM
+               , boolExpInpObjFldsM , selObjFldsM
                ]
+    scalars = Set.unions [selByPkScalarSet, funcArgScalarSet]
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
@@ -1307,8 +1312,10 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
         else Nothing
 
     -- funcargs input type
-    (funcArgInpObjs, funcArgCtxs) = unzip $ mapMaybe mkFuncArgsInp funcs
-    funcArgCtx = Map.unions funcArgCtxs
+    funcArgInpObjs = mapMaybe mkFuncArgsInp funcs
+    -- funcArgCtx = Map.unions funcArgCtxs
+    funcArgScalarSet = Set.fromList $
+                       concatMap (map faType . toList . fiInputArgs) funcs
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
@@ -1369,15 +1376,13 @@ mkGCtxRole' tn insPermM selPermM updColsM delPermM pkeyCols constraints viM func
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
-    -- the field used in table_by_pkey object
-    selByPKeyObjFlds = Map.fromList $ flip map pkeyCols $
-      \pgi@(PGColInfo col ty _) -> ((mkScalarTy ty, mkColName col), Left pgi)
+    -- the scalar set for table_by_pk arguments
+    selByPkScalarSet = Set.fromList $ map pgiType pkeyCols
 
     ordByInpCtxM = mkOrdByInpObj tn <$> selFldsM
     (ordByInpObjM, ordByCtxM) = case ordByInpCtxM of
       Just (a, b) -> (Just a, Just b)
       Nothing     -> (Nothing, Nothing)
-
 
 getRootFldsRole'
   :: QualifiedTable
@@ -1415,37 +1420,54 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     colInfos = fst $ validPartitionFieldInfoMap fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( OCInsert tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+      in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
          , Right $ mkInsMutFld tn isUpsertable
          )
 
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
-      ( OCUpdate tn preSetCols updFltr hdrs
+      ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
       )
 
     getDelDet (delFltr, hdrs) =
-      (OCDelete tn delFltr hdrs, Right $ mkDelMutFld tn)
+      ( OCDelete $ DelOpCtx tn hdrs delFltr
+      , Right $ mkDelMutFld tn
+      )
     getSelDet (selFltr, pLimit, hdrs, _) =
-      (OCSelect tn selFltr pLimit hdrs, Left $ mkSelFld tn)
+      selFldHelper OCSelect mkSelFld selFltr pLimit hdrs
 
-    getSelAggDet (Just (selFltr, pLimit, hdrs, True)) = Just
-      (OCSelectAgg tn selFltr pLimit hdrs, Left $ mkAggSelFld tn)
-    getSelAggDet _ = Nothing
+    getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
+      Just $ selFldHelper OCSelectAgg mkAggSelFld selFltr pLimit hdrs
+    getSelAggDet _                                    = Nothing
+
+    selFldHelper f g pFltr pLimit hdrs =
+      ( f $ SelOpCtx tn hdrs pFltr pLimit
+      , Left $ g tn
+      )
 
     getPKeySelDet Nothing _ = Nothing
     getPKeySelDet _ [] = Nothing
     getPKeySelDet (Just (selFltr, _, hdrs, _)) pCols = Just
-      (OCSelectPkey tn selFltr hdrs, Left $ mkSelFldPKey tn pCols)
+      ( OCSelectPkey $ SelPkOpCtx tn hdrs selFltr $
+        mapFromL (mkColName . pgiName) pCols
+      , Left $ mkSelFldPKey tn pCols
+      )
 
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
-      flip map funcs $ \fi ->
-      (OCFuncQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncQueryFld fi)
+      funcFldHelper OCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
 
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
+      funcFldHelper OCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
+    getFuncAggQueryFlds _                             = []
+
+    funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      (OCFuncAggQuery tn (fiName fi) selFltr pLimit hdrs, Left $ mkFuncAggQueryFld fi)
-    getFuncAggQueryFlds _ = []
+      ( f $ FuncQOpCtx tn hdrs pFltr pLimit (fiName fi) $ mkFuncArgItemSeq fi
+      , Left $ g fi
+      )
+
+    mkFuncArgItemSeq fi = Seq.fromList $
+      procFuncArgs (fiInputArgs fi) $ \_ t -> FuncArgItem $ G.Name t
 
 
 getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
@@ -1500,9 +1522,9 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
     rels = getValidRels fields
     iView = ipiView insPermInfo
     setCols = ipiSet insPermInfo
-    mkUpdPermForIns upi =
-      (Set.toList $ upiCols upi, upiFilter upi)
     updPermForIns = mkUpdPermForIns <$> updPermM
+    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi)
+                          (upiFilter upi) (upiSet upi)
 
     isInsertable Nothing _          = False
     isInsertable (Just _) viewInfoM = isMutable viIsInsertable viewInfoM
@@ -1520,7 +1542,7 @@ mkAdminInsCtx tn tc fields = do
       isMutable viIsInsertable viewInfoM
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-      updPerm = (map pgiName cols, noFilter)
+      updPerm = UpdPermForIns (map pgiName cols) noFilter Map.empty
 
   return $ InsCtx tn cols Map.empty relInfoMap $ Just updPerm
   where
@@ -1602,7 +1624,8 @@ mkGCtxMapTable tableCache funcCache (TableInfo tn _ fields rolePerms constraints
     colInfos = getValidCols fields
     allCols = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
-    tabFuncs = getFuncsOfTable tn funcCache
+    tabFuncs = filter (isValidObjectName . fiName) $
+               getFuncsOfTable tn funcCache
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
