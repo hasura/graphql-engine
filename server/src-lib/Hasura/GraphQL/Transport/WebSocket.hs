@@ -218,14 +218,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
                -> ExceptT () IO ()
     runRemoteQ userInfo reqHdrs opDef rsi = do
       when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ sendConnErr "subscription to remote server is not supported"
+        withComplete $ preExecErr $
+        err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
       sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ sendConnErr "invalid websocket payload"
+        const $ withComplete $ preExecErr $
+        err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
               payload rsi opDef
