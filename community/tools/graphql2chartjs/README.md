@@ -1,6 +1,6 @@
-# graphql2chartjs - Convert GraphQL queries and responses to input for ChartJS
+# graphql2chartjs - Use GraphQL as a data source for ChartJS
 
-`graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL data source and render the output as a ChartJS chart.
+`graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL API and render the output as a ChartJS chart.
 
 How it works:
 1. Make a graphql query aliasing fields in the GraphQL query appropriately
@@ -18,33 +18,43 @@ How it works:
 ## Sample usage with react, apollo, react-chartjs-2
 
 ```javascript
-<Query
-  query={gql`
-      query {
-        VideoGameFollowers: video_games {
-          id
-          label: name
-          data: followers
+import React from 'react';
+import gql from 'graphql-tag';
+
+import {Bar} from 'react-chartjs-2';
+import {Query} from 'react-apollo';
+
+import graphql2chartjs from 'graphql2chartjs';
+
+const Chart = () => (
+  <Query
+    query={gql`
+        query {
+          VideoGameFollowers: video_games {
+            id
+            label: name
+            data: followers
+          }
+        }
+      `}>
+    {
+      ({data, error, loading}) => {
+
+        // Render the chart by calling graphql2chartjs() on the graphql data
+        if (data) {
+          return (<Bar data={graphql2chartjs('bar', data)} />);
+        }
+
+        if (error) {
+          return "Error";
+        }
+        if (loading) {
+          return "Loading..";
         }
       }
-    `}>
-  {
-    ({data, error, loading}) => {
-
-      // Render the chart by calling graphql2chartjs() on the graphql data
-      if (data) {
-        return (<Bar data={graphql2chartjs('bar', data)} />);
-      }
-
-      if (error) {
-        return "Error";
-      }
-      if (loading) {
-        return "Loading..";
-      }
     }
-  }
-</Query>
+  </Query>
+);
 ```
 
 ## Sample usage with vanillaJS
