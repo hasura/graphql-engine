@@ -207,7 +207,11 @@ const reducer = (state = defaultState, action) => {
     case TOGGLE_QUERY_TYPE:
       const newDefinition = { ...state.definition };
       if (action.value) {
-        newDefinition[action.query] = { columns: action.columns };
+        if (action.query === 'update') {
+          newDefinition[action.query] = { columns: action.columns };
+        } else {
+          newDefinition[action.query] = { columns: '*' };
+        }
       } else {
         delete newDefinition[action.query];
       }
@@ -235,7 +239,6 @@ const reducer = (state = defaultState, action) => {
           [action.query]: { columns: [...queryColumns, action.column] },
         },
       };
-
     case SET_RETRY_NUM:
       return {
         ...state,

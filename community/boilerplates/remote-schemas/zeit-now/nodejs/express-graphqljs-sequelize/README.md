@@ -20,11 +20,11 @@ Sequelize (Postgres ORM)
 
 ## Local Development
 
-The sample source code is present in `server.js`. Clone the repo and go to `community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/express-graphqljs-sequelize` folder:
+The sample source code is present in `server.js`. Clone the repo and go to `community/boilerplates/remote-schemas/zeit-now/nodejs/express-graphqljs-sequelize` folder:
 
 ```bash
 $ git clone git@github.com:hasura/graphql-engine
-$ cd graphql-engine/community/boilerplates/remote-schemas/remote-schema/zeit-now/nodejs/express-graphqljs-sequelize
+$ cd graphql-engine/community/boilerplates/remote-schemas/zeit-now/nodejs/express-graphqljs-sequelize
 ```
 
 1) First, let's set the environment variable for connecting to the postgres instance. This can be a local postgres instance or some managed postgres instance like AWS RDS.

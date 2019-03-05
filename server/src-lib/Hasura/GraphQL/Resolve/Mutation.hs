@@ -6,6 +6,7 @@ module Hasura.GraphQL.Resolve.Mutation
   ) where
 
 import           Control.Arrow                     (second)
+import           Data.Has                          (getter)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
@@ -127,8 +128,9 @@ convertUpdate opCtx fld = do
   unless (any isJust updExpsM || not (null preSetItems)) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
+  strfyNum <- stringifyNum <$> asks getter
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds
-      whenNonEmptyItems = return $ RU.updateQueryToTx (p1, prepArgs)
+      whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
       whenEmptyItems = buildEmptyMutResp mutFlds
   -- if there are not set items then do not perform
   -- update and return empty mutation response
@@ -147,7 +149,8 @@ convertDelete opCtx fld = do
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds
-  return $ RD.deleteQueryToTx (p1, args)
+  strfyNum <- stringifyNum <$> asks getter
+  return $ RD.deleteQueryToTx strfyNum (p1, args)
   where
     DelOpCtx tn _ filterExp = opCtx
 
