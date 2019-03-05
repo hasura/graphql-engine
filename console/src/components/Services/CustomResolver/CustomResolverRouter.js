@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Route, IndexRedirect, Link } from 'react-router';
+import { Route, IndexRedirect } from 'react-router';
 import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
@@ -18,43 +18,6 @@ import { fetchResolvers, FILTER_RESOLVER } from './customActions';
 // Whenever any operation happens like add resolver/delete resolver, this state should update automatically.
 
 import { appPrefix } from './constants';
-
-const listItem = (dataList, styles, currentLocation, currentResolver) => {
-  if (dataList.length === 0) {
-    return (
-      <li
-        className={styles.noTables}
-        data-test="remote-schema-sidebar-no-schemas"
-      >
-        <i>No remote schemas available</i>
-      </li>
-    );
-  }
-  return dataList.map((d, i) => {
-    let activeTableClass = '';
-    if (
-      d.name === currentResolver &&
-      currentLocation.pathname.indexOf(currentResolver) !== -1
-    ) {
-      activeTableClass = styles.activeTable;
-    }
-    return (
-      <li
-        className={activeTableClass}
-        key={i}
-        data-test={`remote-schema-sidebar-links-${i + 1}`}
-      >
-        <Link
-          to={appPrefix + '/manage/' + d.name + '/details'}
-          data-test={d.name}
-        >
-          <i className={styles.tableIcon + ' fa fa-table'} aria-hidden="true" />
-          {d.name}
-        </Link>
-      </li>
-    );
-  });
-};
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
@@ -86,7 +49,6 @@ const leftNavMapStateToProps = state => {
     searchQuery: state.customResolverData.listData.searchQuery,
     viewResolver: state.customResolverData.listData.viewResolver,
     migrationMode: state.main.migrationMode ? state.main.migrationMode : false,
-    listItemTemplate: listItem,
     appPrefix,
   };
 };

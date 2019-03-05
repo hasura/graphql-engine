@@ -1,10 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
 const CustomResolverSubSidebar = ({
   appPrefix,
-  listItemTemplate,
   dataList,
   filtered,
   searchQuery,
@@ -35,7 +35,45 @@ const CustomResolverSubSidebar = ({
   const getChildList = () => {
     const _dataList = searchQuery ? filtered : dataList;
 
-    return listItemTemplate(_dataList, styles, location, viewResolver);
+    let childList;
+    if (_dataList.length === 0) {
+      childList = (
+        <li
+          className={styles.noChildren}
+          data-test="remote-schema-sidebar-no-schemas"
+        >
+          <i>No remote schemas available</i>
+        </li>
+      );
+    } else {
+      childList = _dataList.map((d, i) => {
+        let activeTableClass = '';
+        if (
+          d.name === viewResolver &&
+            location.pathname.indexOf(viewResolver) !== -1
+        ) {
+          activeTableClass = styles.activeTable;
+        }
+
+        return (
+          <li
+            className={activeTableClass}
+            key={i}
+            data-test={`remote-schema-sidebar-links-${i + 1}`}
+          >
+            <Link
+              to={appPrefix + '/manage/' + d.name + '/details'}
+              data-test={d.name}
+            >
+              <i className={styles.tableIcon + ' fa fa-table'} aria-hidden="true" />
+              {d.name}
+            </Link>
+          </li>
+        );
+      });
+    }
+
+    return childList;
   };
 
   return (
