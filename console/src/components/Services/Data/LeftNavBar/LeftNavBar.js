@@ -207,6 +207,7 @@ const LeftNavBar = ({
           >
             Tables ({schema.length})
           </div>
+
           {migrationMode ? (
             <div
               className={

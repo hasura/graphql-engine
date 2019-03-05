@@ -1,5 +1,5 @@
-export eventHeaderConnector from './EventHeader';
-export eventRouter from './EventRouter';
+export eventPageConnector from './EventPageContainer';
+export eventRouterUtils from './EventRouter';
 
 export eventReducer from './EventReducer';
 export addTriggerConnector from './Add/AddTrigger';

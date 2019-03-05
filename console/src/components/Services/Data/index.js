@@ -5,7 +5,7 @@
  *
  */
 
-export dataHeaderConnector from './DataHeader';
+export dataPageConnector from './DataPageContainer';
 export PageContainer from './LeftNavBar/LeftNavBar';
 export viewTableConnector from './TableBrowseRows/ViewTable';
 export addExistingTableViewConnector from './Add/AddExistingTableView';
@@ -21,7 +21,7 @@ export permissionsConnector from './TablePermissions/Permissions';
 export schemaConnector from './Schema/Schema';
 export migrationsConnector from './Migrations/MigrationsHome';
 
-export dataRouter from './DataRouter';
+export dataRouterUtils from './DataRouter';
 
 export dataReducer from './DataReducer';
 

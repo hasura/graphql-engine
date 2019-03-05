@@ -16,7 +16,7 @@ import {
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
-import eventRouter from './src/components/Services/EventTrigger/EventRouter';
+import eventRouterUtils from './src/components/Services/EventTrigger/EventRouter';
 import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
@@ -44,7 +44,7 @@ export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ACCESS_KEY_ERROR };
 export { dataHeaders };
 
 // export Event Tab parts
-export { eventRouter, eventReducer };
+export { eventRouterUtils, eventReducer };
 
 // export Remote Schema parts
 export { getCustomResolverRouter, customResolverReducer };

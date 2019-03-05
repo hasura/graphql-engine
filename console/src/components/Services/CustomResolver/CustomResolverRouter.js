@@ -4,7 +4,7 @@ import { Route, IndexRedirect, Link } from 'react-router';
 import { rightContainerConnector } from '../../Common/Layout';
 import globals from '../../../Globals';
 import {
-  customResolverHeaderConnector,
+  customResolverPageConnector,
   landingConnector,
   addConnector,
   editConnector,
@@ -134,7 +134,7 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
   return (
     <Route
       path="remote-schemas"
-      component={customResolverHeaderConnector(
+      component={customResolverPageConnector(
         connect,
         leftNavMapStateToProps,
         leftNavMapDispatchToProps
@@ -145,7 +145,10 @@ const getCustomResolverRouter = (connect, store, composeOnEnterHooks) => {
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="schemas" />
-        <Route path="schemas" component={landingConnector(connect)} />
+        <Route
+          path="schemas"
+          component={landingConnector(connect)}
+        />
         <Route
           path="add"
           component={addConnector(connect)}

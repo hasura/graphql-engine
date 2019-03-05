@@ -10,7 +10,7 @@ import {
   processedEventsConnector,
   pendingEventsConnector,
   runningEventsConnector,
-  eventHeaderConnector,
+  eventPageConnector,
   streamingLogsConnector,
 } from '.';
 
@@ -38,13 +38,16 @@ const makeEventRouter = (
   return (
     <Route
       path="events"
-      component={eventHeaderConnector(connect)}
+      component={eventPageConnector(connect)}
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
-        <Route path="triggers" component={schemaConnector(connect)} />
+        <Route
+          path="triggers"
+          component={schemaConnector(connect)}
+        />
         <Route
           path="triggers/:trigger/processed"
           component={processedEventsConnector(connect)}
@@ -79,7 +82,7 @@ const makeEventRouter = (
   );
 };
 
-const eventRouter = (connect, store, composeOnEnterHooks) => {
+const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -193,4 +196,4 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default eventRouter;
+export default eventRouterUtils;

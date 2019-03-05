@@ -1,4 +1,4 @@
-export customResolverHeaderConnector from './CustomResolverHeader';
+export customResolverPageConnector from './CustomResolverPageContainer';
 export landingConnector from './Landing/CustomResolver';
 export addConnector from './Add/Add';
 export editConnector from './Edit/Edit';

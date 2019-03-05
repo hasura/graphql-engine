@@ -18,7 +18,7 @@ import {
   relationshipsConnector,
   relationshipsViewConnector,
   permissionsConnector,
-  dataHeaderConnector,
+  dataPageConnector,
   migrationsConnector,
   functionWrapperConnector,
   ModifyCustomFunction,
@@ -48,20 +48,35 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path="data" component={dataHeaderConnector(connect)}>
+    <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema/public" />
       <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
-        <Route path=":schema" component={schemaConnector(connect)} />
-        <Route path=":schema/tables" component={schemaConnector(connect)} />
-        <Route path=":schema/views" component={schemaConnector(connect)} />
+        <Route
+          path=":schema"
+          component={schemaConnector(connect)}
+        />
+        <Route
+          path=":schema/tables"
+          component={schemaConnector(connect)}
+        />
+        <Route
+          path=":schema/views"
+          component={schemaConnector(connect)}
+        />
         <Route
           path=":schema/functions/:functionName"
           component={functionWrapperConnector(connect)}
         >
           <IndexRedirect to="modify" />
-          <Route path="modify" component={ModifyCustomFunction} />
-          <Route path="permissions" component={PermissionCustomFunction} />
+          <Route
+            path="modify"
+            component={ModifyCustomFunction}
+          />
+          <Route
+            path="permissions"
+            component={PermissionCustomFunction}
+          />
         </Route>
         <Route
           path=":schema/tables/:table/browse"
@@ -130,7 +145,7 @@ const makeDataRouter = (
   );
 };
 
-const dataRouter = (connect, store, composeOnEnterHooks) => {
+const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -199,4 +214,4 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default dataRouter;
+export default dataRouterUtils;
