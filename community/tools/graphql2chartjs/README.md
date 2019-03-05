@@ -1,14 +1,89 @@
-# graphql2chartjs
+# graphql2chartjs - Convert GraphQL queries and responses to input for ChartJS
 
-> Realtime charts made easy with GraphQL and ChartJS
+`graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL data source and render the output as a ChartJS chart.
 
-A tiny tool to restructure your GraphQL data as per the [ChartJS](https://chartjs.org) API thus leveraging Realtime GraphQL API to build Realtime charts.
+How it works:
+1. Make a graphql query aliasing fields in the GraphQL query appropriately
+2. Call `graphql2chartjs()` on the output data
+3. Pass this reshaped data to a chartjs function to create a chart
+
+## Demos
+- Live demo: [https://graphql2chartjs-examples.herokuapp.com](https://graphql2chartjs-examples.herokuapp.com)
+- Vanilla JS: [codesandbox.io/vanilla]
+- React: [codesandbox.io/react]
+- Angular: [codesandbox.io/angular]
+- Vue: [codesandbox.io/vue]
+
+
+## Sample usage with react, apollo, react-chartjs-2
+
+```javascript
+<Query
+  query={gql`
+      query {
+        VideoGameFollowers: video_games {
+          id
+          label: name
+          data: followers
+        }
+      }
+    `}>
+  {
+    ({data, error, loading}) => {
+
+      // Render the chart by calling graphql2chartjs() on the graphql data
+      if (data) {
+        return (<Bar data={graphql2chartjs('bar', data)} />);
+      }
+
+      if (error) {
+        return "Error";
+      }
+      if (loading) {
+        return "Loading..";
+      }
+    }
+  }
+</Query>
+```
+
+## Sample usage with vanillaJS
+
+```javascript
+async function createChart() {
+  // Run a GraphQL query and get the response data
+  const response = await fetch('http://myapp.com/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: `query {
+          VideoGameFollowers: video_games {
+            id
+            label: name
+            data: followers
+          }
+        }`
+    })
+  });
+  const data = (await response.json()).data;
+
+  // Convert the response data to a ChartJS version
+  const chartData = graphql2chartjs('bar', data);
+
+  // Build the chart!
+  const ctx = document.getElementById('my-chart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: chartData
+  });
+};
+
+createChart();
+
+```
 
 Check out the live demo [here](https://graphql2chartjs-examples.herokuapp.com).
 
 ![how graphql2chartjs works](assets/how_convert_works.png)
-
-*Made with love by [Hasura](https://hasura.io)*
 
 ## Contents
 
