@@ -26,7 +26,11 @@ class Schema extends Component {
     const { migrationMode, dispatch } = this.props;
 
     const styles = require('../PageContainer/PageContainer.scss');
-    const queryDefinition = 'mutation{ insert_user()}';
+    const queryDefinition = `mutation {
+  insert_user(objects: [{name: "testuser"}] ){
+    affected_rows
+  }
+}`;
     const footerEvent = (
       <span>
         Head to the Events tab and see an event invoked under{' '}
@@ -74,7 +78,7 @@ class Schema extends Component {
           <TryItOut
             service="eventTrigger"
             title="Steps to deploy an example Event Trigger to Glitch"
-            queryDefinition="mutation{ insert_user()}"
+            queryDefinition={queryDefinition}
             footerDescription={footerEvent}
             glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
             googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
