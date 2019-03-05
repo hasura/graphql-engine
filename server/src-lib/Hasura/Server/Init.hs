@@ -48,6 +48,7 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoWsReadCookie    :: !Bool
   , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
@@ -265,8 +266,18 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig mCfg =
-      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+    mkCorsConfig mCfg = do
+      corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
+      wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
+        (True, _)      -> return readCookVal
+        (False, True)  -> throwError $ fst wsReadCookieEnv
+                          <> " can only be used when CORS is disabled"
+        (False, False) -> return False
+      return $ case corsCfg of
+        CCDisabled _ -> CCDisabled wsReadCookie
+        _            -> corsCfg
+
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -350,7 +361,7 @@ serveCmdFooter =
       , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv, stringifyNumEnv
+      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       ]
 
     eventEnvs =
@@ -460,13 +471,22 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
+wsReadCookieEnv :: (String, String)
+wsReadCookieEnv =
+  ( "HASURA_GRAPHQL_WS_READ_COOKIE"
+  , "Read cookie on WebSocket initial handshake, even when CORS is disabled."
+  ++ " This can be a potential security flaw! Please make sure you know "
+  ++ "what you're doing."
+  ++ "This configuration is only applicable when CORS is disabled."
+  )
+
 stringifyNumEnv :: (String, String)
 stringifyNumEnv =
   ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
   , "Stringify numeric types (default: false)"
   )
 
-enabledAPIsEnv :: (String,String)
+enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
   , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
@@ -674,7 +694,7 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
              )
 
     mapCC isDisabled domains =
-      bool domains (Just CCDisabled) isDisabled
+      bool domains (Just $ CCDisabled False) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -687,6 +707,12 @@ parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
+         )
+
+parseWsReadCookie :: Parser Bool
+parseWsReadCookie =
+  switch ( long "ws-read-cookie" <>
+           help (snd wsReadCookieEnv)
          )
 
 parseStringifyNum :: Parser Bool

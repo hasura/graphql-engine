@@ -198,6 +198,53 @@ kill_hge_and_combine_hpc_reports
 
 unset HASURA_GRAPHQL_CORS_DOMAIN
 
+# test websocket transport with initial cookie header
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
+export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+
+python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+
+wait_for_port 9876
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+echo "testcase 1: read cookie, cors enabled"
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+
+kill -INT $PID
+sleep 1
+
+echo "testcase 2: no read cookie, cors disabled"
+"$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=noread test_websocket_init_cookie.py
+
+kill -INT $PID
+sleep 1
+
+echo "testcase 3: read cookie, cors disabled and ws-read-cookie"
+export HASURA_GRAPHQL_WS_READ_COOKIE="true"
+"$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+
+kill -INT $PID
+kill -INT $WHC_PID
+unset HASURA_GRAPHQL_WS_READ_COOKIE
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+sleep 4
+combine_hpc_reports
+
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
 
 export HASURA_GRAPHQL_ENABLED_APIS="metadata"
@@ -240,6 +287,7 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
+
 
 # webhook tests
 

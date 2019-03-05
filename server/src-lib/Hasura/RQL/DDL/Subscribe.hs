@@ -11,6 +11,8 @@ module Hasura.RQL.DDL.Subscribe
   , subTableP2
   , subTableP2Setup
   , mkTriggerQ
+  , getEventTriggerDef
+  , updateEventTriggerDef
   ) where
 
 import           Data.Aeson
@@ -172,22 +174,12 @@ updateEventTriggerToCatalog
   -> EventTriggerConf
   -> Q.TxE QErr TriggerId
 updateEventTriggerToCatalog qt allCols strfyNum etc = do
-  ids <- map runIdentity <$> Q.listQE defaultTxErrorHandler
-         [Q.sql|
-           UPDATE hdb_catalog.event_triggers
-           SET
-           configuration = $1
-           WHERE name = $2
-           RETURNING id
-               |] (Q.AltJ $ toJSON etc, name) True
-  trid <- getTrid ids
+  trid <- updateEventTriggerDef name etc
   delTriggerQ name
   mkTriggerQ trid name qt allCols strfyNum opsdef
   return trid
   where
     EventTriggerConf name opsdef _ _ _ _ = etc
-    getTrid []    = throw500 "could not update event-trigger"
-    getTrid (x:_) = return x
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
@@ -364,3 +356,26 @@ getEnv env = do
   case mEnv of
     Nothing -> throw400 NotFound $ "environment variable '" <> env <> "' not set"
     Just envVal -> return (T.pack envVal)
+
+getEventTriggerDef
+  :: TriggerName
+  -> Q.TxE QErr (QualifiedTable, EventTriggerConf)
+getEventTriggerDef triggerName = do
+  (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT e.schema_name, e.table_name, e.configuration::json
+     FROM hdb_catalog.event_triggers e where e.name = $1
+           |] (Identity triggerName) False
+  return (QualifiedObject sn tn, etc)
+
+updateEventTriggerDef
+  :: TriggerName -> EventTriggerConf -> Q.TxE QErr TriggerId
+updateEventTriggerDef trigName trigConf =
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+      UPDATE hdb_catalog.event_triggers
+      SET
+      configuration = $1
+      WHERE name = $2
+      RETURNING id
+          |] (Q.AltJ $ toJSON trigConf, trigName) True
