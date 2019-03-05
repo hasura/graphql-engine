@@ -27,6 +27,7 @@ class Schema extends Component {
 
     const styles = require('../PageContainer/PageContainer.scss');
     const queryDefinition = 'mutation{ insert_user()}';
+    const footerEvent = (<span>Head to the Events tab and see an event invoked under <span className={styles.fontWeightBold}> test-trigger</span>.</span>);
     return (
       <div
         className={`${styles.padd_left_remove} container-fluid ${
@@ -67,7 +68,7 @@ class Schema extends Component {
             service="eventTrigger"
             title= "Click to deploy an example Event Trigger to Glitch"
             queryDefinition="mutation{ insert_user()}"
-            footerDescription="Head to the Events tab and see an event invoked under `sample-trigger`."
+            footerDescription={footerEvent}
             glitchLink="https://github.com/hasura/graphql-engine/tree/master/community"
             googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community"
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community"
