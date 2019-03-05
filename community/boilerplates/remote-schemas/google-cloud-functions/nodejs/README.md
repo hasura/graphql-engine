@@ -33,7 +33,7 @@ $ cd graphql-engine/community/boilerplates/remote-schemas/google-cloud-functions
 Start a local development server (you may need to install dependencies from npm):
 
 ```bash
-$ npm i apollo-server express
+$ npm i --no-save apollo-server express
 $ node localDev.js
 
 Output:
@@ -51,7 +51,7 @@ Install `gcloud` cli with `beta` component:
 $ gcloud components update && gcloud components install beta
 ```
 
-From the function directory, run the following command to deploy the function:
+From the current directory, run the following command to deploy the function:
 
 ```bash
 $ gcloud beta functions deploy hello-graphql --entry-point handler --runtime nodejs8 --trigger-http

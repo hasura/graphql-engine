@@ -1,12 +1,12 @@
 const { ApolloServer } = require("apollo-server-azure-functions");
-const { typeDefs, resolvers } = require('./index');
+const { typeDefs, resolvers } = require('./server');
 
 const server = new ApolloServer({
     typeDefs,
     resolvers,
 });
 
-exports.handler = server.createHandler({
+module.exports = server.createHandler({
     cors: {
         origin: '*',
         credentials: true,

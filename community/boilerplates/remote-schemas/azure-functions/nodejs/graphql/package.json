@@ -2,7 +2,7 @@
   "name": "azure-functions-nodejs",
   "version": "1.0.0",
   "description": "",
-  "main": "azureCtx.js",
+  "main": "run.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
