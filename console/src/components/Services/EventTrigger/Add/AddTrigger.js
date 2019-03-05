@@ -233,7 +233,7 @@ class AddTrigger extends Component {
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
     const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Add Event Trigger';
+    let createBtnText = 'Create';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
