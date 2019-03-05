@@ -27,7 +27,7 @@ The sample source code is present in `graphql` folder.
 
 ```bash
 $ git clone git@github.com:hasura/graphql-engine
-$ cd graphql-engine/community/boilerplates/remote-schemas/azure-functions/nodejs/graphql
+$ cd graphql-engine/community/boilerplates/remote-schemas/azure-functions/nodejs
 ```
 
 Start a local development server (you may need to install dependencies from npm):
