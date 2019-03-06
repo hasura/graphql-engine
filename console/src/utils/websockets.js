@@ -99,9 +99,12 @@ export const permanentWebSocketConn = (
       } else {
         console.log('Re-connecting to websocket server.');
         const time = (tries / noOfTurns) * 2 + 2;
-        setTimeout(() => {
-          reConn();
-        }, time >= 60 ? 60000 : time * 1000);
+        setTimeout(
+          () => {
+            reConn();
+          },
+          time >= 60 ? 60000 : time * 1000
+        );
       }
     };
 

@@ -4,7 +4,7 @@ import { showNotification, showTempNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
-const styles = require('./TableCommon/Table.scss');
+const styles = require('../../Common/TableCommon/Table.scss');
 
 const showErrorNotification = (title, message, reqBody, error) => {
   let modMessage;

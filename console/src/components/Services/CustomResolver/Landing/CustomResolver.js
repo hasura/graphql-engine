@@ -8,11 +8,12 @@ import Button from '../../../Common/Button/Button';
 
 class CustomResolver extends React.Component {
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
     // const landingImage = require('./schema-stitching-color.png');
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
     const { dispatch, migrationMode } = this.props;
+
     return (
       <div
         className={`${styles.padd_left_remove} ${
@@ -80,7 +81,7 @@ const mapStateToProps = state => {
   };
 };
 
-const landingCustomResolverGen = connect =>
+const customResolverConnector = connect =>
   connect(mapStateToProps)(CustomResolver);
 
-export default landingCustomResolverGen;
+export default customResolverConnector;

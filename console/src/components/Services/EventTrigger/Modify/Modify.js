@@ -1,6 +1,6 @@
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import styles from './Modify.scss';
+import styles from './ModifyEvent.scss';
 
 import { getTableColumns } from '../utils';
 import _push from '../push';

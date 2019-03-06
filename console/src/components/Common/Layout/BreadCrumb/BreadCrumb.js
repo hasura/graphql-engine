@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 class BreadCrumb extends React.Component {
   render() {
     const { breadCrumbs } = this.props;
-    const styles = require('../../../Services/EventTrigger/TableCommon/Table.scss');
+    const styles = require('../../TableCommon/Table.scss');
     const bC =
       breadCrumbs && breadCrumbs.length > 0
         ? breadCrumbs.map((b, i) => {
