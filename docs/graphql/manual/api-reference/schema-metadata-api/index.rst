@@ -1,3 +1,5 @@
+.. _metadata_apis:
+
 Schema / Metadata API Reference
 ===============================
 
