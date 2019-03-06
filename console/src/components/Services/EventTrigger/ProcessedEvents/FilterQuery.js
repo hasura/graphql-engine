@@ -195,14 +195,14 @@ class FilterQuery extends Component {
   }
 
   render() {
-    const { dispatch, whereAnd, triggerSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
+    const { dispatch, whereAnd, triggerSchema, orderBy } = this.props;
     const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
     return (
       <div className={styles.filterOptions}>
         <form
           onSubmit={e => {
             e.preventDefault();
-            dispatch(runQuery(triggerSchema));
+            dispatch(runQuery());
           }}
         >
           <div className="">

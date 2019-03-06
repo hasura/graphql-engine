@@ -87,8 +87,8 @@ class ViewStitchedSchema extends React.Component {
 
     const refresh = (
       <Tooltip id="tooltip-cascade">
-        If your remote schema has changed, you need to refresh the GraphQL Engine
-        metadata to query the modified schema
+        If your remote schema has changed, you need to refresh the GraphQL
+        Engine metadata to query the modified schema
       </Tooltip>
     );
 
@@ -119,17 +119,19 @@ class ViewStitchedSchema extends React.Component {
                     <td>Headers</td>
                     <td>
                       {filterHeaders &&
-                        filterHeaders.filter(k => !!k.name).map((h, i) => [
-                          <tr key={i}>
-                            <td>
-                              {h.name} :{' '}
-                              {h.type === 'static'
-                                ? h.value
-                                : '<' + h.value + '>'}
-                            </td>
-                          </tr>,
-                          i !== filterHeaders.length - 1 ? <hr /> : null,
-                        ])}
+                        filterHeaders
+                          .filter(k => !!k.name)
+                          .map((h, i) => [
+                            <tr key={i}>
+                              <td>
+                                {h.name} :{' '}
+                                {h.type === 'static'
+                                  ? h.value
+                                  : '<' + h.value + '>'}
+                              </td>
+                            </tr>,
+                            i !== filterHeaders.length - 1 ? <hr /> : null,
+                          ])}
                     </td>
                   </tr>
                 ) : null}

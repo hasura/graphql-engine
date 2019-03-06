@@ -30,12 +30,11 @@ class ApiResponse extends React.Component {
     const styles = require('./ApiExplorer.scss');
 
     const suggestionFunction = suggestionFunctions[categoryType];
-    const isResponseError = ('statusCode' in response)
-      ? response.statusCode !== 200
-      : false;
+    const isResponseError =
+      'statusCode' in response ? response.statusCode !== 200 : false;
 
     const responseHtml =
-      (isResponseError && suggestionFunction)
+      isResponseError && suggestionFunction
         ? generateSuggestionBox(response, suggestionFunction)
         : '';
 

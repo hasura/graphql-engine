@@ -61,19 +61,14 @@ const DataPageContainer = ({
     <ul>
       <li
         role="presentation"
-        className={
-          currentLocation.includes('data/schema') ? styles.active : ''
-        }
+        className={currentLocation.includes('data/schema') ? styles.active : ''}
       >
         <Link
           className={styles.linkBorder}
           to={sectionPrefix + '/schema/' + currentSchema}
         >
           <div className={styles.schemaWrapper}>
-            <div
-              className={styles.schemaSidebarSection}
-              data-test="schema"
-            >
+            <div className={styles.schemaSidebarSection} data-test="schema">
               Schema:
               <select
                 onChange={handleSchemaChange}
@@ -100,9 +95,7 @@ const DataPageContainer = ({
       </li>
       <li
         role="presentation"
-        className={
-          currentLocation.includes('data/sql') ? styles.active : ''
-        }
+        className={currentLocation.includes('data/sql') ? styles.active : ''}
       >
         <Link
           className={styles.linkBorder}
@@ -118,11 +111,7 @@ const DataPageContainer = ({
 
   const helmet = 'Data | Hasura';
 
-  const leftContainer = (
-    <LeftContainer>
-      {sidebarContent}
-    </LeftContainer>
-  );
+  const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
   return (
     <PageContainer helmet={helmet} leftContainer={leftContainer}>
@@ -139,6 +128,7 @@ const mapStateToProps = state => {
   };
 };
 
-const dataPageConnector = connect => connect(mapStateToProps)(DataPageContainer);
+const dataPageConnector = connect =>
+  connect(mapStateToProps)(DataPageContainer);
 
 export default dataPageConnector;

@@ -7,12 +7,8 @@ class LeftContainer extends React.Component {
     const { children } = this.props;
 
     return (
-      <div
-        className={styles.pageSidebar + ' col-xs-12 ' + styles.padd_remove}
-      >
-        <div>
-          {children}
-        </div>
+      <div className={styles.pageSidebar + ' col-xs-12 ' + styles.padd_remove}>
+        <div>{children}</div>
       </div>
     );
   }

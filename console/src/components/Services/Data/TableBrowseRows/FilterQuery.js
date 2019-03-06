@@ -154,7 +154,9 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
             }}
             data-test={`sort-order-${i}`}
           >
-            <option disabled value="">--</option>
+            <option disabled value="">
+              --
+            </option>
             <option value="asc">Asc</option>
             <option value="desc">Desc</option>
           </select>

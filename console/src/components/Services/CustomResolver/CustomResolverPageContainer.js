@@ -23,10 +23,7 @@ class CustomResolverPageContainer extends React.Component {
               : ''
           }
         >
-          <Link
-            className={styles.linkBorder}
-            to={appPrefix + '/manage'}
-          >
+          <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
             Manage
           </Link>
           <CustomResolverSubSidebar {...this.props} />
@@ -36,11 +33,7 @@ class CustomResolverPageContainer extends React.Component {
 
     const helmet = 'Remote Schemas | Hasura';
 
-    const leftContainer = (
-      <LeftContainer>
-        {sidebarContent}
-      </LeftContainer>
-    );
+    const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
       <PageContainer helmet={helmet} leftContainer={leftContainer}>

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import AceEditor from 'react-ace';
-import matchSorter from 'match-sorter';
+// import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
@@ -177,7 +177,7 @@ class StreamingLogs extends Component {
       requestData.push(parseRowData(r, 'request'));
       responseData.push(parseRowData(r, 'response'));
 
-      const getCellContent = (col) => {
+      const getCellContent = col => {
         const conditionalClassname = styles.tableCellCenterAligned;
         if (r[col] === null) {
           return (
@@ -251,32 +251,22 @@ class StreamingLogs extends Component {
       invocationRowsData.push(newRow);
     });
 
-    const subComponent = (logRow) => {
+    const subComponent = logRow => {
       const finalIndex = logRow.index;
       const finalRequest = requestData[finalIndex];
       const finalResponse = responseData[finalIndex];
       return (
         <div style={{ padding: '20px' }}>
-          <Tabs
-            animation={false}
-            defaultActiveKey={1}
-            id="requestResponseTab"
-          >
+          <Tabs animation={false} defaultActiveKey={1} id="requestResponseTab">
             <Tab eventKey={1} title="Request">
               {finalRequest.headers ? (
                 <div className={styles.add_mar_top}>
-                  <div className={styles.subheading_text}>
-                    Headers
-                  </div>
+                  <div className={styles.subheading_text}>Headers</div>
                   <AceEditor
                     mode="json"
                     theme="github"
                     name="headers"
-                    value={JSON.stringify(
-                      finalRequest.headers,
-                      null,
-                      4
-                    )}
+                    value={JSON.stringify(finalRequest.headers, null, 4)}
                     minLines={4}
                     maxLines={20}
                     width="100%"
@@ -303,18 +293,12 @@ class StreamingLogs extends Component {
             <Tab eventKey={2} title="Response">
               {finalResponse.headers ? (
                 <div className={styles.add_mar_top}>
-                  <div className={styles.subheading_text}>
-                    Headers
-                  </div>
+                  <div className={styles.subheading_text}>Headers</div>
                   <AceEditor
                     mode="json"
                     theme="github"
                     name="response"
-                    value={JSON.stringify(
-                      finalResponse.headers,
-                      null,
-                      4
-                    )}
+                    value={JSON.stringify(finalResponse.headers, null, 4)}
                     minLines={4}
                     maxLines={20}
                     width="100%"
@@ -326,18 +310,14 @@ class StreamingLogs extends Component {
               <div className={styles.add_mar_top}>
                 <div
                   className={
-                    styles.subheading_text +
-                    ' col-md-6 ' +
-                    styles.padd_remove
+                    styles.subheading_text + ' col-md-6 ' + styles.padd_remove
                   }
                 >
                   {finalResponse.status_code ? 'Payload' : 'Error'}
                 </div>
                 <div
                   className={
-                    styles.status_code_right +
-                    ' col-md-6 ' +
-                    styles.padd_remove
+                    styles.status_code_right + ' col-md-6 ' + styles.padd_remove
                   }
                 >
                   {finalResponse.status_code
@@ -346,15 +326,13 @@ class StreamingLogs extends Component {
                       finalResponse.status_code === 200 ? (
                         <i
                           className={
-                            styles.invocationSuccess +
-                            ' fa fa-check'
+                            styles.invocationSuccess + ' fa fa-check'
                           }
                         />
                       ) : (
                         <i
                           className={
-                            styles.invocationFailure +
-                            ' fa fa-times'
+                            styles.invocationFailure + ' fa fa-times'
                           }
                         />
                       ),

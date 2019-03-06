@@ -106,7 +106,9 @@ class RetryConfEditor extends React.Component {
           </div>
           {supportRetryTimeout && (
             <div className={styles.modifyOpsCollapsedContent1}>
-              <div className={'col-md-4 ' + styles.padd_remove}>Timeout (sec):</div>
+              <div className={'col-md-4 ' + styles.padd_remove}>
+                Timeout (sec):
+              </div>
               <div className={'col-md-12 ' + styles.padd_remove}>
                 {retryConf.timeout_sec || 60}
               </div>

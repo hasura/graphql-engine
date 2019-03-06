@@ -15,7 +15,7 @@ class LeftSubSidebar extends React.Component {
       addLabel,
       addTestString,
       children,
-      childListTestString
+      childListTestString,
     } = this.props;
 
     const getAddButton = () => {
@@ -48,7 +48,9 @@ class LeftSubSidebar extends React.Component {
         <div className={styles.display_flex + ' ' + styles.padd_top_medium}>
           <div
             className={
-              styles.sidebarSearch + ' form-group col-xs-12 ' + styles.padd_remove
+              styles.sidebarSearch +
+              ' form-group col-xs-12 ' +
+              styles.padd_remove
             }
           >
             <i className="fa fa-search" aria-hidden="true" />
@@ -69,7 +71,10 @@ class LeftSubSidebar extends React.Component {
             </div>
             {getAddButton()}
           </div>
-          <ul className={styles.subSidebarListUL} data-test={childListTestString}>
+          <ul
+            className={styles.subSidebarListUL}
+            data-test={childListTestString}
+          >
             {children}
           </ul>
         </div>

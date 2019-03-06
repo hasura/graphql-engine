@@ -47,7 +47,7 @@ const routes = store => {
           } else {
             alert(
               'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
-              'instance is running and the endpoint is configured correctly.'
+                'instance is running and the endpoint is configured correctly.'
             );
           }
         }
@@ -63,7 +63,11 @@ const routes = store => {
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
-  const _eventRouterUtils = eventRouterUtils(connect, store, composeOnEnterHooks);
+  const _eventRouterUtils = eventRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks
+  );
   const eventRouter = _eventRouterUtils.makeEventRouter;
 
   const customResolverRouter = getCustomResolverRouter(
@@ -74,10 +78,7 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
-      <Route
-        path="login"
-        component={generatedLoginConnector(connect)}
-      />
+      <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
         component={Main}
@@ -89,10 +90,7 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
-          <Route
-            path="metadata"
-            component={metadataConnector(connect)}
-          />
+          <Route path="metadata" component={metadataConnector(connect)} />
           {dataRouter}
           {eventRouter}
           {customResolverRouter}

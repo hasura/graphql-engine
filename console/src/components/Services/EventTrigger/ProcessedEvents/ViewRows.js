@@ -203,7 +203,7 @@ const ViewRows = ({
     } else {
       dispatch(setOrderType('asc', 0));
     }
-    dispatch(runQuery(triggerSchema));
+    dispatch(runQuery());
     // Add a new empty filter
     dispatch(addOrder());
   };
@@ -211,14 +211,14 @@ const ViewRows = ({
   const changePage = page => {
     if (curFilter.offset !== page * curFilter.limit) {
       dispatch(setOffset(page * curFilter.limit));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
   const changePageSize = size => {
     if (curFilter.size !== size) {
       dispatch(setLimit(size));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 

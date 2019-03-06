@@ -50,7 +50,7 @@ const CustomResolverSubSidebar = ({
         let activeTableClass = '';
         if (
           d.name === viewResolver &&
-            location.pathname.indexOf(viewResolver) !== -1
+          location.pathname.includes(viewResolver)
         ) {
           activeTableClass = styles.activeTable;
         }
@@ -65,7 +65,10 @@ const CustomResolverSubSidebar = ({
               to={appPrefix + '/manage/' + d.name + '/details'}
               data-test={d.name}
             >
-              <i className={styles.tableIcon + ' fa fa-table'} aria-hidden="true" />
+              <i
+                className={styles.tableIcon + ' fa fa-table'}
+                aria-hidden="true"
+              />
               {d.name}
             </Link>
           </li>

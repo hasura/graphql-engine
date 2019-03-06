@@ -41,11 +41,7 @@ const EventPageContainer = ({
 
   const helmet = 'Events | Hasura';
 
-  const leftContainer = (
-    <LeftContainer>
-      {sidebarContent}
-    </LeftContainer>
-  );
+  const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
   return (
     <PageContainer helmet={helmet} leftContainer={leftContainer}>
@@ -62,6 +58,7 @@ const mapStateToProps = state => {
   };
 };
 
-const eventPageConnector = connect => connect(mapStateToProps)(EventPageContainer);
+const eventPageConnector = connect =>
+  connect(mapStateToProps)(EventPageContainer);
 
 export default eventPageConnector;

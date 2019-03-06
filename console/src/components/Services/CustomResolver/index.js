@@ -7,4 +7,3 @@ export viewConnector from './Edit/View';
 export getCustomResolverRouter from './CustomResolverRouter';
 
 export customResolverReducer from './customResolverReducer';
-

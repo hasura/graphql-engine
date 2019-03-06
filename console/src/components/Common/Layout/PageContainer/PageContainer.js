@@ -13,9 +13,7 @@ class PageContainer extends React.Component {
         <div className={styles.wd20 + ' ' + styles.align_left}>
           {leftContainer}
         </div>
-        <div className={styles.wd80}>
-          {children}
-        </div>
+        <div className={styles.wd80}>{children}</div>
       </div>
     );
   }

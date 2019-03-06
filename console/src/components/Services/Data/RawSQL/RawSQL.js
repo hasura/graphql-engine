@@ -181,9 +181,7 @@ const RawSQL = ({
   const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${
-        styles.padd_top
-      }`}
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
       <Helmet title="Run SQL - Data | Hasura" />
       <div className={styles.subHeader}>

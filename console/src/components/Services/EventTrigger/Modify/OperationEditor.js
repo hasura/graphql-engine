@@ -36,7 +36,9 @@ class OperationEditor extends React.Component {
               {queryTypes.map((qt, i) => (
                 <div
                   className={
-                    styles.opsCheckboxWrapper + ' col-md-4 ' + styles.padd_remove
+                    styles.opsCheckboxWrapper +
+                    ' col-md-4 ' +
+                    styles.padd_remove
                   }
                   key={i}
                 >

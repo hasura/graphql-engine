@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import React, { Component } from 'react';
 import ReactTable, { ReactTableDefaults } from 'react-table';
 import 'react-table/react-table.css';
@@ -5,7 +7,7 @@ import FoldableHoc from './foldableTable';
 
 Object.assign(ReactTableDefaults, {
   defaultPageSize: 10,
-  minRows: 3
+  minRows: 3,
 });
 
 class DragFoldTable extends Component {
@@ -15,7 +17,7 @@ class DragFoldTable extends Component {
     this.reorder = [];
     this.state = {
       trigger: 0,
-      folded: {}
+      folded: {},
     };
   }
   mountEvents() {
@@ -65,7 +67,7 @@ class DragFoldTable extends Component {
 
     const cols = columns.map(col => ({
       ...col,
-      Header: <div className="draggable-header">{col.Header}</div>
+      Header: <div className="draggable-header">{col.Header}</div>,
     }));
 
     //run all reorder events
@@ -80,7 +82,11 @@ class DragFoldTable extends Component {
           {...this.props}
           data={data}
           columns={cols}
-          onFoldChange={newFolded => this.setState(p => { return { folded: newFolded }; })}
+          onFoldChange={newFolded =>
+            this.setState(p => {
+              return { folded: newFolded };
+            })
+          }
           folded={this.state.folded}
         />
       </div>
