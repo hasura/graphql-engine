@@ -1,5 +1,11 @@
 # anchor refs to be used elsewhere
 refs:
+  skip_job_on_ciignore: &skip_job_on_ciignore
+    run: |
+      if [ -f /build/skip_job.txt ]; then
+        echo "halting job due to /build/skip_job.txt"
+        circleci-agent step halt
+      fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -65,9 +71,10 @@ refs:
   test_server: &test_server
     working_directory: ~/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - *wait_for_postgres
     - run:
         name: test the server
@@ -79,6 +86,9 @@ refs:
   pytest_server: &pytest_server
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
     - checkout
     - restore_cache:
         keys:
@@ -86,8 +96,6 @@ refs:
     - restore_cache:
         keys:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
-    - attach_workspace:
-        at: /build
     - *wait_for_postgres
     - run:
         name: Run Python tests
@@ -112,6 +120,8 @@ jobs:
   # check if this should be built or not, fails if
   # changes only contains files in .ciignore
   check_build_worthiness:
+    - attach_workspace:
+        at: /build
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.3
     working_directory: ~/graphql-engine
@@ -127,6 +137,9 @@ jobs:
     - image: hasura/graphql-engine-server-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
     - checkout
     - *setup_remote_docker
     - restore_cache:
@@ -223,9 +236,10 @@ jobs:
         POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
@@ -255,9 +269,10 @@ jobs:
         POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
@@ -301,9 +316,10 @@ jobs:
     working_directory: ~/graphql-engine
     parallelism: 4
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         key:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
@@ -348,9 +364,10 @@ jobs:
         POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - run:
         name: upgrade_test 
         command: .circleci/server-upgrade/run.sh
@@ -363,10 +380,11 @@ jobs:
     - image: hasura/graphql-engine-deployer:v0.3
     working_directory: ~/graphql-engine
     steps:
-    - *setup_remote_docker
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - *setup_remote_docker
+    - checkout
     - run:
         name: deploy
         command: .circleci/deploy.sh

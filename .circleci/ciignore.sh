@@ -10,8 +10,13 @@
 set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
-# succeed until the script is fixed: https://github.com/hasura/graphql-engine/issues/1161
-exit
+# make build directory
+mkdir -p /build
+
+write_skip_job_file_and_exit() {
+    echo "true" > /build/skip_job.txt
+    exit
+}
 
 # always build tagged builds
 if [[ ! -z "$CIRCLE_TAG" ]]; then
@@ -19,11 +24,11 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     exit
 fi
 
-# always build default branch
-if [[ "$CIRCLE_BRANCH" == "master" ]]; then
-    echo "Skipping check for master branch"
-    exit
-fi
+#  # always build default branch
+#  if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+#      echo "Skipping check for master branch"
+#      exit
+#  fi
 
 if [[ ! -a "$ROOT/.ciignore" ]]; then
     echo "Skipping check since .ciignore is not found"
@@ -31,7 +36,7 @@ if [[ ! -a "$ROOT/.ciignore" ]]; then
 fi
 
 # Check CIRCLE_COMPARE_URL first and if its not set, check for diff with master.
-    
+
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff
     if [[ $CIRCLE_COMPARE_URL = *"commit"* ]]; then
@@ -72,5 +77,5 @@ if [[ ${#changes[@]} -gt 0 ]]; then
 	  exit
 fi
 
-echo "Only ignored files are present in commits, no need to build, fail the job"
-exit 1
+echo "Only ignored files are present in commits, no need to build, write the skip_job file"
+write_skip_job_file_and_exit
