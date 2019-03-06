@@ -74,10 +74,16 @@ You need to enter the following information:
 
 - **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
-  manually or by specifying an environment variable that contains this information. If you want to specify an
-  environment variable, please note that currently there is no validation that the environment variable is
-  actually available at the time of this configuration, so any errors in this configuration will result in a
-  runtime error.
+  manually or by specifying an environment variable that contains this information.
+
+  .. note::
+
+    - Currently there is no validation that an environment variable is actually available at the time
+      of this configuration, so any errors in this configuration will result in a runtime error.
+    - During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
+      the server endpoint on the host. i.e. use ``docker.host.internal`` on mac or ``docker.for.win.localhost`` on
+      windows.
+
 - **Headers**: configure the headers to be sent to your custom GraphQL server.
 
   - Toggle forwarding all headers sent by the client (when making a GraphQL query) to your remote GraphQL server.
