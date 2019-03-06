@@ -79,6 +79,8 @@ class Schema extends Component {
       trackedFunctions,
     } = this.props;
 
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+
     /* Filter */
     const trackedFuncs = trackedFunctions.map(t => t.function_name);
     // Assuming schema for both function and tables are same
@@ -101,7 +103,6 @@ class Schema extends Component {
       ]);
     };
 
-    const styles = require('../PageContainer/PageContainer.scss');
     let relationships = 0;
     schema.map(t => (relationships += t.relationships.length));
 

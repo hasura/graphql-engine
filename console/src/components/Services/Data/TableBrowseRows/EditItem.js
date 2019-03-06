@@ -65,7 +65,7 @@ class EditItem extends Component {
       return null;
     }
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const columns = schemas.find(x => x.table_name === tableName).columns;
 
     const refs = {};

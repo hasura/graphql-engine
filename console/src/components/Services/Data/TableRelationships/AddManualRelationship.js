@@ -79,7 +79,7 @@ class AddManualRelationship extends Component {
   }
 
   render() {
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
     const {
       tableName,
       allSchemas,
