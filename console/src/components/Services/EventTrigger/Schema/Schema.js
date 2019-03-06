@@ -10,7 +10,7 @@ import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import ReusableTextAreaWithCopy from '../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
-// import TopicDescription from '../../CommonLanding/TopicDescription';
+import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
 const appPrefix = globals.urlPrefix + '/events';
 
@@ -23,8 +23,9 @@ class Schema extends Component {
   }
 
   render() {
-    const { migrationMode, dispatch } = this.props;
+    const { migrationMode, dispatch, listingTrigger } = this.props;
 
+    const showFirstSection = listingTrigger.length ? false : true;
     const styles = require('../PageContainer/PageContainer.scss');
     const queryDefinition = `mutation {
   insert_user(objects: [{name: "testuser"}] ){
@@ -68,15 +69,16 @@ class Schema extends Component {
             ) : null}
           </div>
           <hr />
-          {/*
-          <TopicDescription
+          {showFirstSection ?
+          (<div>
+            <TopicDescription
             title="What are Event Triggers?"
             imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
             imgAlt="Event Triggers"
             description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
           />
           <hr className={styles.clear_fix} />
-          */}
+          </div>) : null}
           <TryItOut
             service="eventTrigger"
             title="Steps to deploy an example Event Trigger to Glitch"
@@ -110,6 +112,7 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
+  listingTrigger: state.triggers.listingTrigger,
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

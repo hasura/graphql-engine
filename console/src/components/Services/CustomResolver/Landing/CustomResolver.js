@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
-// import TopicDescription from '../../CommonLanding/TopicDescription';
+import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
 class CustomResolver extends React.Component {
   render() {
@@ -18,7 +18,9 @@ class CustomResolver extends React.Component {
     // const landingImage = require('./schema-stitching-color.png');
     // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
 
-    const { dispatch, migrationMode } = this.props;
+    const { dispatch, migrationMode, customResolverList } = this.props;
+    const showFirstSection = customResolverList.resolvers.length ? false : true;
+    console.log(showFirstSection);
     return (
       <div
         className={`${styles.padd_left_remove} ${
@@ -53,15 +55,19 @@ class CustomResolver extends React.Component {
               ) : null}
             </div>
             <hr />
-            {/*
-            <TopicDescription
+            {showFirstSection ?
+            (<div>
+              <TopicDescription
               title="What are Remote Schemas?"
               imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png"
               imgAlt="Remote Schema"
               description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
             />
             <hr className={styles.clear_fix} />
-            */}
+            </div>
+          ) : null}
+
+
             <TryItOut
               service="remoteSchema"
               queryDefinition="query { hello }"
@@ -111,6 +117,7 @@ class CustomResolver extends React.Component {
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
+    customResolverList: state.customResolverData.listData
   };
 };
 
