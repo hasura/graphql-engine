@@ -30,7 +30,7 @@ Get the docker run bash script from there:
 Step 2: Configure the **docker-run.sh** script
 ----------------------------------------------
 
-The ``docker-run.sh`` script has a sample docker run command in it. The following changes are needed to be
+The ``docker-run.sh`` script has a sample docker run command in it. The following changes have to be
 made to the command:
 
 - Database URL
