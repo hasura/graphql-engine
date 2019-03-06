@@ -16,7 +16,7 @@ const semver = require('semver');
 import {
   getLoveConsentState,
   setLoveConsentState,
-} from '../Common/localStorageManager';
+} from './loveConsentLocalStorage';
 
 class Main extends React.Component {
   constructor(props) {
@@ -147,8 +147,7 @@ class Main extends React.Component {
         mainContent = (
           <div>
             {' '}
-            <Spinner />
-            {' '}
+            <Spinner />{' '}
           </div>
         );
       }
@@ -160,9 +159,7 @@ class Main extends React.Component {
       let metadataSelectedMarker = null;
 
       if (currentActiveBlock === 'metadata') {
-        metadataSelectedMarker = (
-          <span className={styles.selected} />
-        );
+        metadataSelectedMarker = <span className={styles.selected} />;
       }
 
       return metadataSelectedMarker;
@@ -200,8 +197,7 @@ class Main extends React.Component {
       if (this.state.showBannerNotification) {
         bannerNotificationHtml = (
           <div>
-            <div className={styles.phantom} />
-            {' '}
+            <div className={styles.phantom} />{' '}
             {/* phantom div to prevent overlapping of banner with content. */}
             <div className={styles.updateBannerWrapper}>
               <div className={styles.updateBanner}>
@@ -301,8 +297,7 @@ class Main extends React.Component {
                   <br />
                   Star us on Github,
                   <br />
-                  To make our <i className={'fa fa-heart'} /> go
-                  wooooo!
+                  To make our <i className={'fa fa-heart'} /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a
@@ -382,10 +377,7 @@ class Main extends React.Component {
 
       if (this.state.showSchemaStitch) {
         remoteSchemaLink = (
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltip.customresolver}
-          >
+          <OverlayTrigger placement="right" overlay={tooltip.customresolver}>
             <li>
               <Link
                 className={
@@ -421,9 +413,7 @@ class Main extends React.Component {
             <li>
               <Link
                 className={
-                  currentActiveBlock === 'events'
-                    ? styles.navSideBarActive
-                    : ''
+                  currentActiveBlock === 'events' ? styles.navSideBarActive : ''
                 }
                 to={appPrefix + '/events/manage/triggers'}
               >
@@ -509,9 +499,9 @@ class Main extends React.Component {
                   </li>
                 </OverlayTrigger>
 
-                { getRemoteSchemaLink() }
+                {getRemoteSchemaLink()}
 
-                { getEventsLink() }
+                {getEventsLink()}
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
