@@ -5,6 +5,7 @@ import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
+import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 
 import dataTypes from '../Common/DataTypes';
 import { showErrorNotification } from '../Notification';
@@ -21,20 +22,14 @@ import {
   removeColDefault,
   addCol,
 } from './AddActions';
-import {
-  setDefaults,
-  setPk,
-  addPk,
-  removePk,
-  createTableSql,
-} from './AddActions';
+import { setDefaults, setPk, removePk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
 import {
   ATLEAST_ONE_PRIMARY_KEY_MSG,
   ATLEAST_ONE_COLUMN_MSG,
 } from './AddWarning';
-import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
+import { fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDuplicate,
@@ -196,25 +191,6 @@ class AddTable extends Component {
     return true;
   }
 
-  primaryKeyValidation(i, e) {
-    const value = parseInt(e.target.value, 10);
-    this.props.dispatch(resetValidation());
-    if (this.props.primaryKeys.filter(key => value === key).length > 0) {
-      this.props.dispatch(
-        validationError(
-          primaryKeyAlreadyPresentMsg(this.props.columns[value].name)
-        )
-      );
-      return false;
-    }
-
-    this.props.dispatch(setPk(value, i));
-    if (i + 1 === this.props.primaryKeys.length) {
-      this.props.dispatch(addPk());
-    }
-    return true;
-  }
-
   submitValidation() {
     this.props.dispatch(resetValidation());
     // table name validation
@@ -371,44 +347,16 @@ class AddTable extends Component {
         </div>
       );
     });
-    const pks = primaryKeys.map((pk, i) => {
-      let removeIcon;
-      if (i + 1 === primaryKeys.length) {
-        removeIcon = null;
-      } else {
-        removeIcon = (
-          <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-            onClick={() => {
-              dispatch(removePk(i));
-            }}
-          />
-        );
-      }
-      return (
-        <div key={i} className="form-group">
-          <select
-            value={pk || ''}
-            className={`${styles.select} form-control ${styles.add_pad_left}`}
-            onChange={this.primaryKeyValidation.bind(this, i)}
-            data-test={`primary-key-select-${i}`}
-            data-test={`primary-key-select-${i.toString()}`}
-          >
-            {pk === '' ? (
-              <option disabled value="">
-                -- select --
-              </option>
-            ) : null}
-            {columns.map(({ name }, j) => (
-              <option key={j} value={j}>
-                {name}
-              </option>
-            ))}
-          </select>
-          {removeIcon}
-        </div>
-      );
-    });
+    const pks = (
+      <PrimaryKeySelector
+        primaryKeys={primaryKeys}
+        columns={columns}
+        removePk={removePk}
+        setPk={setPk}
+        dispatch={dispatch}
+        styles={styles}
+      />
+    );
     let createBtnText = 'Create';
     if (ongoingRequest) {
       createBtnText = 'Creating...';

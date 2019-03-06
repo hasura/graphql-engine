@@ -275,16 +275,25 @@ const addTableReducer = (state = defaultState, action) => {
       return { ...state, tableComment: action.value };
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
-      const primaryKeys = state.primaryKeys.filter(
-        primaryKeyIndex => primaryKeyIndex !== action.index
-      );
+      const primaryKeys = state.primaryKeys
+        .map(primaryKeyIndex => {
+          const pkiValue = parseInt(primaryKeyIndex, 10);
+          if (pkiValue < action.index) {
+            return primaryKeyIndex;
+          }
+          if (pkiValue > action.index) {
+            return (pkiValue - 1).toString();
+          }
+        })
+        .filter(pki => Boolean(pki));
+
       return {
         ...state,
         columns: [
           ...state.columns.slice(0, action.index),
           ...state.columns.slice(action.index + 1),
         ],
-        primaryKeys: primaryKeys,
+        primaryKeys: [...primaryKeys, ''],
       };
     case SET_COLNAME:
       const i = action.index;
@@ -364,13 +373,17 @@ const addTableReducer = (state = defaultState, action) => {
         ],
       };
     case SET_PK:
+      const newPks = [
+        ...state.primaryKeys.slice(0, action.index),
+        action.pk,
+        ...state.primaryKeys.slice(action.index + 1),
+      ];
+      if (action.index + 1 === state.primaryKeys.length) {
+        newPks.push('');
+      }
       return {
         ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          action.pk,
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
+        primaryKeys: newPks,
       };
     default:
       return state;
