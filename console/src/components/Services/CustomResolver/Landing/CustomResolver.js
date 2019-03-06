@@ -11,16 +11,8 @@ class CustomResolver extends React.Component {
     const styles = require('../Styles.scss');
     const node = require('./Node.svg');
     const Rectangle = require('./Rectangle.svg');
-
-    // const lightGrayArrow = require('./light-gray-arrow.svg');
-    // const darkGrayArrow = require('./dark-gray-arrow.svg');
-
-    // const landingImage = require('./schema-stitching-color.png');
-    // const landingImage = 'https://storage.googleapis.com/hasura-graphql-engine/console/assets/schema-stitching-diagram.png';
-
     const { dispatch, migrationMode, customResolverList } = this.props;
     const showFirstSection = customResolverList.resolvers.length ? false : true;
-    console.log(showFirstSection);
     return (
       <div
         className={`${styles.padd_left_remove} ${
