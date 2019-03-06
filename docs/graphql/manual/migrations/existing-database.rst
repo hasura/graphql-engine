@@ -1,37 +1,35 @@
-Migrations for an existing project
-==================================
+Migrations for an existing database and Hasura instance
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-This guide will help you if you already have set up a schema and now want
-to start using migrations to help you track the database and GraphQL schema changes.
-
-These are the steps you need to follow:
-
-#. Install the Hasura CLI
-#. Set up a project directory
-#. Initialize migrations
-#. For further changes, use the Hasura CLI console (``http://localhost:9695``) instead of the console served by the
-   GraphQL engine (E.g.: ``http://my-graphql.herokuapp.com``)
+This guide is to be followed if you already have set up a database and Hasura
+instance and now want to start using migrations to help you track the database
+and GraphQL schema changes.
 
 Step 0: Take a note of your GraphQL engine endpoint
 ---------------------------------------------------
 
-Let's say you've deployed the GraphQL engine on Heroku, then this endpoint is: ``http://my-graphql.herokuapp.com``.
-In case you've deployed this using Docker the URL might be ``http://xx.xx.xx.xx:8080``.
+Let's say you've deployed the GraphQL engine on Heroku, then this endpoint is:
+``https://my-graphql.herokuapp.com``.
+In case you've deployed this using Docker the URL might be
+``http://xx.xx.xx.xx:8080``.
+
+.. note::
+
+   This endpoint should not contain the ``v1alpha1/graphql`` API path. It should
+   just be the hostname and any sub-path if it is configured that way.
 
 Step 1: Install the Hasura CLI
 ------------------------------
 
-Follow the instructions in :doc:`../hasura-cli/install-hasura-cli`
+Follow the instructions in :ref:`install_hasura_cli`.
 
 Step 2: Set up a project directory
 ----------------------------------
-
-Skip this step if you already have a project directory.
 
 .. code-block:: bash
 
@@ -40,19 +38,25 @@ Skip this step if you already have a project directory.
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
-- Install ``pg_dump`` (or use Docker) and run the following command to download the public schema as ``public-schema.sql``:
+- Use ``pg_dump`` to export the database schema. We're using the ``pg_dump``
+  command bundled within the ``postgres`` docker container. If you have
+  ``pg_dump`` installed on your machine, you could use that as well.
 
   .. code-block:: bash
-  
-     pg_dump -O -x -h <db-host> -p <db-port> -U <db-user> -d <db-name> --schema public --schema-only > public-schema.sql
+
+     # get the container id for postgres
+     docker ps
+
+     # dump the public schema into public-schema.sql (repeat for other schemas)
+     docker exec <postgres-container-id> pg_dump -U postgres --schema-only --schema public > public-schema.sql
 
   .. note::
 
-     If the exported file contains ``SELECT pg_catalog.set_config('search_path', '', false);``, remove the whole line.
-     This can cause issues later when SQL is run without schema qualifiers, since this statement sets search path to ``''``
-     instead of the default ``public`` and ``pg_catalog``.
+     It is safe to remove the initial ~20 lines which are ``SET`` statements
+     including ``SELECT pg_catalog.set_config('search_path', '', false);`` from
+     the SQL file and keep only the ``CREATE`` like statements that follow.
 
-- Export the metadata (this creates a file ``metadata.yaml``):
+- Export the metadata (this creates a file ``migrations/metadata.yaml``):
 
   .. code-block:: bash
      
