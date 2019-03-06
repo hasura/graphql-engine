@@ -26,6 +26,7 @@ import           Control.Concurrent                          (threadDelay)
 import           Data.ByteString                             (ByteString)
 import qualified Data.IORef                                  as IORef
 
+import           Hasura.GraphQL.Context                      (GCtx)
 import           Hasura.GraphQL.Resolve                      (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
@@ -239,20 +240,13 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
 
   case typeLocs of
-    [] -> runHasuraQ userInfo gCtx queryParts
-
+    []          -> runHasuraQ userInfo gCtx queryParts
     (typeLoc:_) -> case typeLoc of
-      VT.HasuraType ->
-        runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType _ rsi -> do
-        when (G._todType opDef == G.OperationTypeSubscription) $
-          withComplete $ sendConnErr "subscription to remote server is not supported"
-        resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-                             msgRaw rsi opDef
-        either postExecErr sendSuccResp resp
-        sendCompleted
+      VT.HasuraType       -> runHasuraQ userInfo gCtx queryParts
+      VT.RemoteType _ rsi -> runRemoteQ userInfo reqHdrs opDef rsi
 
   where
+    runHasuraQ :: UserInfo -> GCtx -> QueryParts -> ExceptT () IO ()
     runHasuraQ userInfo gCtx queryParts = do
       (opTy, fields) <- either (withComplete . preExecErr) return $
                         runReaderT (validateGQ queryParts) gCtx
@@ -270,8 +264,30 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
+    runRemoteQ :: UserInfo -> [H.Header]
+               -> G.TypedOperationDefinition -> RemoteSchemaInfo
+               -> ExceptT () IO ()
+    runRemoteQ userInfo reqHdrs opDef rsi = do
+      when (G._todType opDef == G.OperationTypeSubscription) $
+        withComplete $ preExecErr $
+        err400 NotSupported "subscription to remote server is not supported"
+
+      -- if it's not a subscription, use HTTP to execute the query on the remote
+      -- server
+      -- try to parse the (apollo protocol) websocket frame and get only the
+      -- payload
+      sockPayload <- onLeft (J.eitherDecode msgRaw) $
+        const $ withComplete $ preExecErr $
+        err500 Unexpected "invalid websocket payload"
+      let payload = J.encode $ _wpPayload sockPayload
+      resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+              payload rsi opDef
+      either postExecErr sendSuccResp resp
+      sendCompleted
+
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
+
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
@@ -429,3 +445,18 @@ createWSServerApp authMode serverEnv =
       (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
+
+
+-- | TODO:
+-- | The following ADT is required so that we can parse the incoming websocket
+-- | frame, and only pick the payload, for remote schema queries.
+-- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
+-- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
+-- | get only the payload
+data WebsocketPayload
+  = WebsocketPayload
+  { _wpId      :: !Text
+  , _wpType    :: !Text
+  , _wpPayload :: !J.Value
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
