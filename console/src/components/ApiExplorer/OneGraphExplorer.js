@@ -2,9 +2,9 @@ import React from 'react';
 
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import { getHeadersAsJSON } from './utils';
-import GraphiQLExplorer from 'graphiql-explorer';
+import GraphiQLExplorer from 'graphiql-explorer-hasura';
 import './GraphiQL.css';
-import 'graphiql/graphiql.css';
+import './OneGraphExplorer.css';
 import { makeDefaultArg, getDefaultScalarArgValue } from './onegraphUtils';
 
 class OneGraphExplorer extends React.Component {

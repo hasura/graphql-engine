@@ -8,9 +8,7 @@ import {
   getRemoteQueries,
 } from './Actions';
 import OneGraphExplorer from './OneGraphExplorer';
-
 import './GraphiQL.css';
-
 import semverCheck from '../../helpers/semver';
 
 class GraphiQLWrapper extends Component {
