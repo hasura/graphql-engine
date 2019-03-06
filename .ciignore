@@ -8,3 +8,4 @@ install-manifests/*
 .ciignore
 .gitignore
 .github/*
+.circleci/*
