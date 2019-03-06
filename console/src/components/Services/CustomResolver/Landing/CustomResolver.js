@@ -4,7 +4,7 @@ import { push } from 'react-router-redux';
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
-import TopicDescription from '../../CommonLanding/TopicDescription';
+// import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
 class CustomResolver extends React.Component {
   render() {
@@ -53,6 +53,7 @@ class CustomResolver extends React.Component {
               ) : null}
             </div>
             <hr />
+            {/*
             <TopicDescription
               title="What are Remote Schemas?"
               imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png"
@@ -60,6 +61,7 @@ class CustomResolver extends React.Component {
               description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
             />
             <hr className={styles.clear_fix} />
+            */}
             <TryItOut
               service="remoteSchema"
               queryDefinition="query { hello }"
