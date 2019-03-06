@@ -6,14 +6,20 @@ module Hasura.GraphQL.Transport.WebSocket.Connection where
 
 import           Control.Concurrent                          (ThreadId)
 
-import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
+import           Hasura.GraphQL.Transport.HTTP.Protocol      (OperationName)
+import           Hasura.GraphQL.Transport.WebSocket.Protocol (ConnErrMsg,
+                                                              OperationId)
 import           Hasura.GraphQL.Transport.WebSocket.Server   (WSId)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 
 import qualified Control.Concurrent.Async                    as A
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
 import qualified Data.HashMap.Strict                         as Map
+import qualified Hasura.Logging                              as L
 import qualified Network.HTTP.Types                          as HTTP
 import qualified Network.WebSockets                          as WS
 
@@ -54,8 +60,10 @@ data WebsocketProxyStateG a
   }
 
 instance Show (WebsocketProxyStateG a) where
-  show _ =
-    "WebsocketProxyStateG { (Async, Async), WebSocketConn }"
+  show (WebsocketProxyState _ thrdId _ ops) =
+    "WebsocketProxyStateG { "
+    ++ unlines ["AsyncOp", show thrdId, "WebsocketConn", show ops]
+    ++ " }"
 
 findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe WebsocketProxyState
 findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
@@ -72,3 +80,43 @@ getStateData :: WSConnState -> Maybe ConnInitState
 getStateData = \case
   CSInitialised d -> Just d
   _               -> Nothing
+
+
+data OpDetail
+  = ODStarted
+  | ODProtoErr !Text
+  | ODQueryErr !QErr
+  | ODCompleted
+  | ODStopped
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''OpDetail)
+
+data WSEvent
+  = EAccepted
+  | ERejected !QErr
+  | EConnErr !ConnErrMsg
+  | EOperation !OperationId !(Maybe OperationName) !OpDetail
+  | EClosed
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''WSEvent)
+
+data WSLog
+  = WSLog
+  { _wslWebsocketId :: !WSId
+  , _wslUser        :: !(Maybe UserVars)
+  , _wslEvent       :: !WSEvent
+  , _wslMsg         :: !(Maybe Text)
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
+
+instance L.ToEngineLog WSLog where
+  toEngineLog wsLog =
+    (L.LevelInfo, "ws-handler", J.toJSON wsLog)

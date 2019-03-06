@@ -2,6 +2,7 @@ module Hasura.GraphQL.Transport.WebSocket.Client
   ( runGqlClient
   , clearState
   , WebsocketPayload (..)
+  , sendStopMsg
   )
   where
 
@@ -11,7 +12,7 @@ import           Control.Exception                             (SomeException,
                                                                 try)
 
 import           Hasura.GraphQL.Transport.WebSocket.Connection
-import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId)
+import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -27,11 +28,13 @@ import qualified Network.URI                                   as URI
 import qualified Network.WebSockets                            as WS
 
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
+import qualified Hasura.Logging                                as L
+
 
 -- | TODO:
 -- | The following ADT is required so that we can parse the incoming websocket
 -- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
+-- | Ideally we should use `tartMsg` from Websocket.Protocol, but as
 -- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
 -- | get only the payload
 data WebsocketPayload
@@ -96,15 +99,24 @@ sendInit conn payload =
              , "payload" J..= _wpPayload payload
              ]
 
+sendStopMsg :: WS.Connection -> OperationId -> IO ()
+sendStopMsg conn opId =
+  WS.sendTextData conn $ J.encode $
+    J.object [ "type" J..= ("stop" :: Text)
+             , "id" J..= unOperationId opId
+             ]
+
+
 runGqlClient'
-  :: URI.URI
+  :: L.Logger
+  -> URI.URI
   -> WS.WSConn a
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
   -> WebsocketPayload
   -> ExceptT WebSocketClientErr IO ()
-runGqlClient' url wsConn stRef rn opId payload =
+runGqlClient' (L.Logger logger) url wsConn stRef rn opId payload =
   case host of
     Nothing -> throwError WSCEEmptyHostErr
     Just h  -> do
@@ -112,8 +124,10 @@ runGqlClient' url wsConn stRef rn opId payload =
 
       thrId <- liftIO $ forkIO $ do
         res <- try $ WS.runClient h port path gqClient
-        -- TODO: use logger
-        onLeft res $ \e -> putStrLn $ show (e :: SomeException)
+        onLeft res $ \e -> do
+          let err = T.pack $ show (e :: SomeException)
+              opDet = ODQueryErr $ err500 Unexpected err
+          logger $ WSLog wsId Nothing (EOperation opId Nothing opDet) Nothing
 
       res <- getWsProxyState stRef rn
       onJust res $ \curState -> do
@@ -124,21 +138,23 @@ runGqlClient' url wsConn stRef rn opId payload =
     port = read $ maybe "80" (drop 1 . URI.uriPort) uriAuth
     path = URI.uriPath url
     uriAuth = URI.uriAuthority url
+    wsId = WS._wcConnId wsConn
 
 
 runGqlClient
-  :: URI.URI
+  :: L.Logger
+  -> URI.URI
   -> WS.WSConn a
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
   -> WebsocketPayload
   -> ExceptT WebSocketClientErr IO ()
-runGqlClient url wsConn stRef rn opId payload = do
+runGqlClient logger url wsConn stRef rn opId payload = do
   mState <- getWsProxyState stRef rn
   case mState of
     Nothing ->
-      runGqlClient' url wsConn stRef rn opId payload
+      runGqlClient' logger url wsConn stRef rn opId payload
     Just st -> do
       -- send init message and the raw message on the existing conn
       let conn     = _wpsRemoteConn st
@@ -175,9 +191,8 @@ getWsProxyState ref rn = do
     Just (ConnInitState _ _ rmConnMap) -> return $ Map.lookup rn rmConnMap
 
 --stopOperation :: OperationId -> RemoteConnState
-clearState :: WebsocketProxyState -> IO ()
-clearState (WebsocketProxyState rmOp thrId _ _) = do
-  -- TODO: use logger
-  putStrLn "cancelling async operations.."
+clearState :: L.Logger -> WebsocketProxyState -> IO ()
+clearState (L.Logger logger) (WebsocketProxyState rmOp thrId _ _) = do
+  logger $ L.debugT "cancelling async operations.."
   A.cancel rmOp
   onJust thrId killThread

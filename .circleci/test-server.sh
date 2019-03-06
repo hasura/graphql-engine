@@ -131,6 +131,7 @@ WH_PID=""
 trap stop_services ERR
 trap stop_services INT
 
+# !!!! >>> TODO: put the test below regular tests
 # test remote schema graphql subscriptions
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA SUBSCRIPTIONS ########>\n"

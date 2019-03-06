@@ -11,8 +11,8 @@ import           Data.ByteString                               (ByteString)
 import qualified Control.Concurrent.Async                      as A
 import qualified Control.Concurrent.STM                        as STM
 import qualified Data.Aeson                                    as J
-import qualified Data.Aeson.Casing                             as J
-import qualified Data.Aeson.TH                                 as J
+--import qualified Data.Aeson.Casing                             as J
+--import qualified Data.Aeson.TH                                 as J
 import qualified Data.ByteString.Lazy                          as BL
 import qualified Data.CaseInsensitive                          as CI
 import qualified Data.HashMap.Strict                           as Map
@@ -46,7 +46,6 @@ import           Hasura.Server.Utils                           (bsToTxt)
 import qualified Hasura.GraphQL.Resolve.LiveQuery              as LQ
 import qualified Hasura.GraphQL.Transport.HTTP                 as TH
 import qualified Hasura.GraphQL.Transport.WebSocket.Client     as WS
-import qualified Hasura.GraphQL.Transport.WebSocket.Connection as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.GraphQL.Validate.Types                 as VT
 import qualified Hasura.Logging                                as L
@@ -67,7 +66,7 @@ data WSConnData
   , _wscOpMap :: !OperationMap
   }
 
-type LiveQueryMap = LQ.LiveQueryMap WS.GOperationId
+type LiveQueryMap = LQ.LiveQueryMap GOperationId
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
@@ -75,45 +74,6 @@ type WSConn = WS.WSConn WSConnData
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn =
   liftIO . WS.sendMsg wsConn . encodeServerMsg
-
-data OpDetail
-  = ODStarted
-  | ODProtoErr !Text
-  | ODQueryErr !QErr
-  | ODCompleted
-  | ODStopped
-  deriving (Show, Eq)
-$(J.deriveToJSON
-  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
-                   , J.sumEncoding = J.TaggedObject "type" "detail"
-                   }
-  ''OpDetail)
-
-data WSEvent
-  = EAccepted
-  | ERejected !QErr
-  | EConnErr !ConnErrMsg
-  | EOperation !OperationId !(Maybe OperationName) !OpDetail
-  | EClosed
-  deriving (Show, Eq)
-$(J.deriveToJSON
-  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
-                   , J.sumEncoding = J.TaggedObject "type" "detail"
-                   }
-  ''WSEvent)
-
-data WSLog
-  = WSLog
-  { _wslWebsocketId :: !WS.WSId
-  , _wslUser        :: !(Maybe UserVars)
-  , _wslEvent       :: !WSEvent
-  , _wslMsg         :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
-
-instance L.ToEngineLog WSLog where
-  toEngineLog wsLog =
-    (L.LevelInfo, "ws-handler", J.toJSON wsLog)
 
 data WSServerEnv
   = WSServerEnv
@@ -271,7 +231,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
       case G._todType opDef of
         G.OperationTypeSubscription -> do
-          res <- liftIO $ runExceptT $ WS.runGqlClient (rsUrl rsi)
+          res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
                  wsConn userInfoR rn opId sockPayload
           onLeft res $ \e -> do
             liftIO $ putStrLn "error occurred from runnning the gql client"
@@ -375,20 +335,13 @@ onStop serverEnv wsConn (StopMsg opId) = do
   let stData = getStateData connState
   onJust stData $ \(ConnInitState _ _ connMap) ->
     onJust (findOperationId connMap opId) $
-      (sendStopMsg . _wpsRemoteConn) >> WS.clearState
+      (WS.sendStopMsg . _wpsRemoteConn) >> WS.clearState logger
   where
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
     stateR = _wscState $ WS.getData wsConn
-    sendStopMsg conn = do
-      let msg = J.encode $
-                J.object [ "type" J..= ("stop" :: Text)
-                         , "id" J..= unOperationId opId
-                         ]
-      WS.sendTextData conn msg
-
 
 logWSEvent
   :: (MonadIO m)
@@ -454,7 +407,7 @@ onClose logger lqMap _ wsConn = do
   connState <- liftIO $ IORef.readIORef $ _wscState $ WS._wcExtraData wsConn
   let stData = getStateData connState
   onJust stData $ \(ConnInitState _ _ connMap) ->
-    onJust (findWebsocketId connMap wsId) WS.clearState
+    onJust (findWebsocketId connMap wsId) (WS.clearState logger)
   where
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
