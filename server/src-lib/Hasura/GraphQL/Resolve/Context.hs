@@ -24,6 +24,7 @@ module Hasura.GraphQL.Resolve.Context
   , Convert
   , runConvert
   , prepare
+  , txtConverter
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -133,6 +134,9 @@ prepare (colTy, colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
+
+txtConverter :: Monad m => PrepFn m
+txtConverter = return . uncurry toTxtValue
 
 runConvert
   :: (MonadError QErr m)

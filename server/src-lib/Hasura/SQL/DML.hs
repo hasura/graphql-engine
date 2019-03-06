@@ -267,6 +267,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SETuples ![SQLExp]
   | SECount !CountType
   deriving (Show, Eq)
 
@@ -323,6 +324,7 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SETuples exps) = paren $ ", " <+> exps
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
@@ -496,6 +498,19 @@ mkExists fromItem whereFrag =
   , selFrom  = Just $ FromExp $ pure fromItem
   , selWhere = Just $ WhereFrag whereFrag
   }
+
+beFromColVal
+  :: (PGCol -> SQLExp)
+  -> [HM.HashMap PGCol SQLExp]
+  -> BoolExp
+beFromColVal f colValMaps =
+  case colValMaps of
+    []      -> BELit False
+    l@(h:_) ->
+      let cols = map f $ HM.keys h
+          colTup = SETuples cols
+          valTups = map (SETuples . HM.elems) l
+      in BEIN colTup valTups
 
 instance ToSQL BoolExp where
   toSQL (BELit True)  = TB.text $ T.squote "true"

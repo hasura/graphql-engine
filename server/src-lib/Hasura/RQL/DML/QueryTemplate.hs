@@ -120,7 +120,8 @@ execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
   (QueryTemplateInfo _ qt) <- askQTemplateInfo qtn
   convQT args qt
 
-execQueryTP2 :: (QErrM m, CacheRM m, MonadTx m) => QueryTProc -> m RespBody
+execQueryTP2
+  :: (QErrM m, CacheRM m, MonadTx m) => QueryTProc -> m RespBody
 execQueryTP2 qtProc = case qtProc of
   QTPInsert qp -> liftTx $ R.insertP2 qp
   QTPSelect qp -> liftTx $ R.selectP2 False qp

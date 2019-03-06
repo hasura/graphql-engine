@@ -48,6 +48,7 @@ data ConstraintMeta
   { cmName :: !ConstraintName
   , cmOid  :: !Int
   , cmType :: !ConstraintType
+  , cmCols :: ![PGCol]
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ConstraintMeta)
@@ -99,11 +100,27 @@ fetchTableMeta = do
               json_build_object(
                   'name', tc.constraint_name,
                   'oid', r.oid::integer,
-                  'type', tc.constraint_type
+                  'type', tc.constraint_type,
+                  'cols', tc.columns
                   )
              ) as constraints
          FROM
-             information_schema.table_constraints tc
+             (
+               SELECT table_name, table_schema,
+                      constraint_name, columns,
+                      'PRIMARY KEY' as constraint_type
+                 FROM hdb_catalog.hdb_primary_key
+               UNION ALL
+               SELECT table_name, table_schema,
+                      constraint_name, columns,
+                      'UNIQUE' as constraint_type
+                 FROM hdb_catalog.hdb_unique_constraint
+               UNION ALL
+               SELECT table_name, table_schema,
+                      constraint_name, '[]'::json as columns,
+                      'FOREIGN KEY' as constraint_type
+                 FROM hdb_catalog.hdb_foreign_key_constraint
+             ) tc
              JOIN pg_catalog.pg_constraint r
              ON tc.constraint_name = r.conname
          GROUP BY
@@ -114,8 +131,8 @@ fetchTableMeta = do
         AND t.table_schema <> 'information_schema'
         AND t.table_schema <> 'hdb_catalog'
                 |] () False
-  forM res $ \(ts, tn, toid, cols, constrnts) ->
-    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
+  forM res $ \(ts, tn, toid, cols, constrnts)
+    -> return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -139,7 +156,7 @@ data TableDiff
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
   -- TODO: this ideally should't be part of TableDiff
-  , _tdUniqOrPriCons   :: ![ConstraintName]
+  , _tdUniqOrPriCons   :: ![TableConstraint]
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
@@ -152,7 +169,9 @@ getTableDiff oldtm newtm =
     newCols = tmColumns newtm
 
     uniqueOrPrimaryCons =
-      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary $ cmType cm]
+      [ TableConstraint (cmType cm) (cmName cm) (cmCols cm)
+        | cm <- tmConstraints newtm, isUniqueOrPrimary (cmType cm)
+      ]
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -167,7 +186,7 @@ getTableDiff oldtm newtm =
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ \(pcmo, pcmn) ->
-      (pcmToPci pcmo, pcmToPci pcmn)
+        (pcmToPci pcmo, pcmToPci pcmn)
 
     droppedFKeyConstraints = map cmName $
       filter (isForeignKey . cmType) $ getDifference cmOid
@@ -225,7 +244,7 @@ getSchemaChangeDeps schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOTableObj tn _) = tn `HS.member` (HS.fromList droppedTables)
+    isDirectDep (SOTableObj tn _) = tn `HS.member` HS.fromList droppedTables
     isDirectDep _                 = False
 
 data FunctionMeta
@@ -241,7 +260,7 @@ funcFromMeta :: FunctionMeta -> QualifiedFunction
 funcFromMeta fm = QualifiedObject (fmSchema fm) (fmName fm)
 
 fetchFunctionMeta :: Q.Tx [FunctionMeta]
-fetchFunctionMeta = do
+fetchFunctionMeta =
   map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
     SELECT
       json_build_object(

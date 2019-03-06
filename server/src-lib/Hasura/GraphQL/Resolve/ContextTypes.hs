@@ -49,6 +49,7 @@ data InsCtx
   , icSet       :: !PreSetCols
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
+  , icUniqCols  :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
