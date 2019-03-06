@@ -428,6 +428,8 @@ workflows:
         - test_server_upgrade
     - test_cli_with_last_release:
         <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
