@@ -13,11 +13,6 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 # make build directory
 mkdir -p /build
 
-write_skip_job_file_and_exit() {
-    echo "true" > /build/skip_job.txt
-    exit
-}
-
 # always build tagged builds
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     echo "Skipping check for tags"
@@ -77,5 +72,8 @@ if [[ ${#changes[@]} -gt 0 ]]; then
 	  exit
 fi
 
-echo "Only ignored files are present in commits, no need to build, write the skip_job file"
-write_skip_job_file_and_exit
+echo "Only ignored files are present in commits, build is not required, write the skip_job file"
+echo "true" > /build/skip_job.txt
+echo "/build skip_job.txt written"
+cat /build/skip_job.txt
+exit
