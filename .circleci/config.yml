@@ -120,12 +120,12 @@ jobs:
   # check if this should be built or not, fails if
   # changes only contains files in .ciignore
   check_build_worthiness:
-    - attach_workspace:
-        at: /build
     docker:
     - image: hasura/graphql-engine-cli-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
     - checkout
     - run:
         name: check build worthiness
