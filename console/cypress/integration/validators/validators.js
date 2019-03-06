@@ -360,11 +360,11 @@ export const validateCTrigger = (triggerName, result) => {
       expect(response.status === 200).to.be.true;
       expect(response.body.length === 1).to.be.true;
       const trigger = response.body[0];
-      expect(trigger.configuration.definition.insert.columns.length === 3).to.be
+      expect(trigger.configuration.definition.insert.columns === '*').to.be
+        .true;
+      expect(trigger.configuration.definition.delete.columns === '*').to.be
         .true;
       expect(trigger.configuration.definition.update.columns.length === 3).to.be
-        .true;
-      expect(trigger.configuration.definition.delete.columns.length === 3).to.be
         .true;
       expect(
         trigger.configuration.retry_conf.interval_sec ===

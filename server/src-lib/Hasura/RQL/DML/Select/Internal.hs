@@ -123,9 +123,9 @@ ordByFldName = FieldName "order_by"
 -- json_build_object is slower than row_to_json hence it is only
 -- used when needed
 buildJsonObject
-  :: Iden -> FieldName -> ArrRelCtx
+  :: Iden -> FieldName -> ArrRelCtx -> Bool
   -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-buildJsonObject pfx parAls arrRelCtx flds =
+buildJsonObject pfx parAls arrRelCtx strfyNum flds =
   if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
   then withJsonBuildObj parAls jsonBuildObjExps
   else withRowToJSON parAls rowToJsonExtrs
@@ -142,7 +142,7 @@ buildJsonObject pfx parAls arrRelCtx flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col    -> toJSONableExp (pgiType col) $
+      FCol col    -> toJSONableExp strfyNum (pgiType col) $
                      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
       FExp e      -> S.SELit e
       FObj objSel ->
@@ -191,6 +191,7 @@ processAnnOrderByItem
   :: Iden
   -> FieldName
   -> ArrRelCtx
+  -> Bool
   -> AnnOrderByItem
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
@@ -199,13 +200,15 @@ processAnnOrderByItem
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByItem pfx parAls arrRelCtx (OrderByItemG obTyM annObCol obNullsM) =
+processAnnOrderByItem pfx parAls arrRelCtx strfyNum obItemG =
   ( (obColAls, obColExp)
   , sqlOrdByItem
   , relNodeM
   )
   where
-    ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx parAls arrRelCtx annObCol
+    OrderByItemG obTyM annObCol obNullsM = obItemG
+    ((obColAls, obColExp), relNodeM) =
+      processAnnOrderByCol pfx parAls arrRelCtx strfyNum annObCol
 
     sqlOrdByItem =
       S.OrderByItem (S.SEIden $ toIden obColAls)
@@ -215,13 +218,14 @@ processAnnOrderByCol
   :: Iden
   -> FieldName
   -> ArrRelCtx
+  -> Bool
   -> AnnObCol
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByCol pfx parAls arrRelCtx = \case
+processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   AOCPG colInfo ->
     let
       qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
@@ -233,7 +237,7 @@ processAnnOrderByCol pfx parAls arrRelCtx = \case
   AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), ordByNode) =
-          processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx rest
+          processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
         (objNodeM, arrNodeM) = case ordByNode of
           OBNNothing           -> (Nothing, Nothing)
           OBNObjNode name node -> (Just (name, node), Nothing)
@@ -259,7 +263,7 @@ processAnnOrderByCol pfx parAls arrRelCtx = \case
         tabPerm = TablePerm relFltr Nothing
         (extr, arrFlds) = mkAggObExtrAndFlds annAggOb
         selFld = TAFAgg arrFlds
-        bn = mkBaseNode arrPfx fldName selFld tabFrom tabPerm noTableArgs
+        bn = mkBaseNode arrPfx fldName selFld tabFrom tabPerm noTableArgs strfyNum
         aggNode = ArrNode [extr] colMapping $ mergeBaseNodes bn $
                   mkEmptyBaseNode arrPfx tabFrom
         obAls = arrPfx <> Iden "." <> toIden fldName
@@ -309,7 +313,7 @@ aggSelToArrNode pfx als aggSel =
   ArrNode [extr] colMapping mergedBN
   where
     AnnRelG _ colMapping annSel = aggSel
-    AnnSelG aggFlds tabFrm tabPerm tabArgs = annSel
+    AnnSelG aggFlds tabFrm tabPerm tabArgs strfyNum = annSel
     fldAls = S.Alias $ toIden als
 
     extr = flip S.Extractor (Just fldAls) $ S.applyJsonBuildObj $
@@ -322,7 +326,7 @@ aggSelToArrNode pfx als aggSel =
     mergedBN = foldr mergeBaseNodes emptyBN allBNs
 
     mkAggBaseNode (fn, selFld) =
-      mkBaseNode pfx fn selFld tabFrm tabPerm tabArgs
+      mkBaseNode pfx fn selFld tabFrm tabPerm tabArgs strfyNum
 
     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
       TAFAgg flds -> aggFldToExp flds
@@ -381,6 +385,7 @@ fetchOrdByAggRels orderByM = fromMaybe [] relNamesM
 mkOrdByItems
   :: Iden -> FieldName
   -> Maybe (NE.NonEmpty AnnOrderByItem)
+  -> Bool
   -> ArrRelCtx
      -- extractors
   -> ( [(S.Alias, S.SQLExp)]
@@ -391,10 +396,10 @@ mkOrdByItems
      -- final order by expression
      , Maybe S.OrderByExp
      )
-mkOrdByItems pfx fldAls orderByM arrRelCtx =
+mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
   (obExtrs, ordByObjsMap, ordByArrsMap, ordByExpM)
   where
-    procAnnOrdBy' = processAnnOrderByItem pfx fldAls arrRelCtx
+    procAnnOrdBy' = processAnnOrderByItem pfx fldAls arrRelCtx strfyNum
     procOrdByM =
       unzip3 . map procAnnOrdBy' . toList <$> orderByM
 
@@ -415,8 +420,8 @@ mkOrdByItems pfx fldAls orderByM arrRelCtx =
 
 mkBaseNode
   :: Iden -> FieldName -> TableAggFld -> TableFrom
-  -> TablePerm -> TableArgs -> BaseNode
-mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
+  -> TablePerm -> TableArgs -> Bool -> BaseNode
+mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs strfyNum =
   BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrsWithOb
   where
@@ -429,7 +434,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
         TAFNodes flds ->
           let arrFlds = mapMaybe getAnnArr flds
               arrRelCtx = mkArrRelCtx arrFlds
-              selExtr = buildJsonObject pfx fldAls arrRelCtx flds
+              selExtr = buildJsonObject pfx fldAls arrRelCtx strfyNum flds
               -- all object relationships
               objNodes = HM.fromListWith mergeObjNodes $
                         map mkObjItem (mapMaybe getAnnObj flds)
@@ -487,7 +492,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 
     mkArrRelCtx arrSels = ArrRelCtx arrSels aggOrdByRelNames
 
-    mkOrdByItems' = mkOrdByItems pfx fldAls orderByM
+    mkOrdByItems' = mkOrdByItems pfx fldAls orderByM strfyNum
 
     distItemsM = processDistinctOnCol pfx <$> distM
     distExprM = fst <$> distItemsM
@@ -517,9 +522,9 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
 
 annSelToBaseNode :: Iden -> FieldName -> AnnSel -> BaseNode
 annSelToBaseNode pfx fldAls annSel =
-  mkBaseNode pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs
+  mkBaseNode pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
   where
-    AnnSelG selFlds tabFrm tabPerm tabArgs = annSel
+    AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
 
 mkObjNode :: Iden -> (FieldName, ObjSel) -> ObjNode
 mkObjNode pfx (fldName, AnnRelG _ rMapn rAnnSel) =
@@ -612,9 +617,9 @@ mkSQLSelect isSingleObject annSel =
 
 mkFuncSelectWith
   :: QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs -> Either TableAggFlds AnnFlds
-  -> S.FromItem -> S.SelectWith
-mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
+  -> TablePerm -> TableArgs -> Bool
+  -> Either TableAggFlds AnnFlds -> S.FromItem -> S.SelectWith
+mkFuncSelectWith qf tn tabPerm tabArgs strfyNum eSelFlds frmItem = selWith
   where
     -- SELECT * FROM function_name(args)
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
@@ -623,9 +628,9 @@ mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
 
     mainSel = case eSelFlds of
       Left aggFlds  -> mkAggSelect $
-                       AnnSelG aggFlds tabFrom tabPerm tabArgs
+                       AnnSelG aggFlds tabFrom tabPerm tabArgs strfyNum
       Right annFlds -> mkSQLSelect False $
-                       AnnSelG annFlds tabFrom tabPerm tabArgs
+                       AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
 
     tabFrom = TableFrom tn $ Just $ toIden funcAls
 

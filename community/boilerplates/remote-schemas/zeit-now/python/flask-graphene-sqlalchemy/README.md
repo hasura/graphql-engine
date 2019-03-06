@@ -22,11 +22,11 @@ SqlAlchemy (Postgres ORM)
 
 ## Local Development
 
-The sample source code is present in `server.py`. Clone the repo and go to `community/boilerplates/remote-schemas/remote-schema/zeit-now/python/flask-graphene-sqlalchemy` folder:
+The sample source code is present in `server.py`. Clone the repo and go to `community/boilerplates/remote-schemas/zeit-now/python/flask-graphene-sqlalchemy` folder:
 
 ```bash
 $ git clone git@github.com:hasura/graphql-engine
-$ cd graphql-engine/community/boilerplates/remote-schemas/remote-schema/zeit-now/python/flask-graphene-sqlalchemy
+$ cd graphql-engine/community/boilerplates/remote-schemas/zeit-now/python/flask-graphene-sqlalchemy
 ```
 
 1) First, let's set the environment variable for connecting to the postgres instance. This can be a local postgres instance or some managed postgres instance like AWS RDS.

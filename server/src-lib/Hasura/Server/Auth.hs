@@ -22,7 +22,6 @@ module Hasura.Server.Auth
 import           Control.Exception       (try)
 import           Control.Lens
 import           Data.Aeson
-import           Data.CaseInsensitive    (CI (..), original)
 import           Data.IORef              (newIORef)
 
 import qualified Data.Aeson              as J
@@ -72,12 +71,6 @@ data AuthMode
   | AMAdminSecretAndHook !AdminSecret !AuthHook
   | AMAdminSecretAndJWT !AdminSecret !JWTCtx !(Maybe RoleName)
   deriving (Show, Eq)
-
-hdrsToText :: [N.Header] -> [(T.Text, T.Text)]
-hdrsToText hdrs =
-  [ (bsToTxt $ original hdrName, bsToTxt hdrVal)
-  | (hdrName, hdrVal) <- hdrs
-  ]
 
 mkAuthMode
   :: ( MonadIO m
