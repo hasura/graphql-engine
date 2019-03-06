@@ -51,7 +51,7 @@ mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ colVals <- mutateAndFetchCols qt uniqCols q strfyNum
   colExps <- mapM (colValToColExp colMap) colVals
-  let selWhere = S.beFromColVal mkQIdenExp colExps
+  let selWhere = S.mkBoolExpWithColVal mkQIdenExp colExps
       selCTE = S.CTESelect $
                S.mkSelect
                { S.selExtr = [S.selectStar]

@@ -499,11 +499,11 @@ mkExists fromItem whereFrag =
   , selWhere = Just $ WhereFrag whereFrag
   }
 
-beFromColVal
+mkBoolExpWithColVal
   :: (PGCol -> SQLExp)
   -> [HM.HashMap PGCol SQLExp]
   -> BoolExp
-beFromColVal f colValMaps =
+mkBoolExpWithColVal f colValMaps =
   case colValMaps of
     []      -> BELit False
     l@(h:_) ->

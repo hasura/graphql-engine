@@ -42,15 +42,9 @@ data InsertQueryP1
   , iqp1UniqCols :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
--- <<<<<<< HEAD
 mkInsertCTE :: InsertQueryP1 -> S.CTE
 mkInsertCTE (InsertQueryP1 _ vn cols vals c _ _) =
   S.CTEInsert insert
--- =======
--- mkSQLInsert :: Bool -> InsertQueryP1 -> S.SelectWith
--- mkSQLInsert strfyNum (InsertQueryP1 tn vn cols vals c mutFlds) =
---   mkSelWith tn (S.CTEInsert insert) mutFlds False strfyNum
--- >>>>>>> master
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
