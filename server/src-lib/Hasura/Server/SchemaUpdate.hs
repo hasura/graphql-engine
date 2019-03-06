@@ -116,7 +116,8 @@ schemaUpdateEventListener pool logger eventsQueue =
 
 -- | An IO action that processes events from Queue
 schemaUpdateEventProcessor
-  :: PG.PGPool
+  :: Bool
+  -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> STM.TQueue SchemaUpdateEvent
@@ -124,8 +125,8 @@ schemaUpdateEventProcessor
   -> InstanceId
   -> Maybe UTC.UTCTime
   -> IO ()
-schemaUpdateEventProcessor pool logger httpManager eventsQueue
-                       cacheRef instanceId cacheInit =
+schemaUpdateEventProcessor strfyNum pool logger httpManager
+                    eventsQueue cacheRef instanceId cacheInit =
   -- Never exits
   forever $ do
     event <- STM.atomically $ STM.readTQueue eventsQueue
@@ -134,7 +135,7 @@ schemaUpdateEventProcessor pool logger httpManager eventsQueue
       -- Reload schema cache from catalog
       resE <- liftIO $ runExceptT $ withSCUpdate cacheRef $
                peelRun emptySchemaCache adminUserInfo
-               httpManager pool PG.Serializable buildSchemaCache
+               httpManager strfyNum pool PG.Serializable buildSchemaCache
       case resE of
         Left e -> logError logger threadType $ TEQueryError e
         Right _ ->

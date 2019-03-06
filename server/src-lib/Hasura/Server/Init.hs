@@ -6,6 +6,7 @@ import           Options.Applicative
 import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
+import qualified Data.HashSet                 as Set
 import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
 import qualified Data.UUID                    as UUID
@@ -57,6 +58,9 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoWsReadCookie    :: !Bool
+  , rsoStringifyNum    :: !Bool
+  , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -72,6 +76,8 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soStringifyNum    :: !Bool
+  , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -93,6 +99,13 @@ data HGECommandG a
   | HCExecute
   | HCVersion
   deriving (Show, Eq)
+
+data API
+  = METADATA
+  | GRAPHQL
+  deriving (Show, Eq, Read, Generic)
+
+instance Hashable API
 
 type HGECommand = HGECommandG ServeOptions
 type RawHGECommand = HGECommandG RawServeOptions
@@ -140,6 +153,9 @@ instance FromEnv Q.TxIsolation where
 
 instance FromEnv CorsConfig where
   fromEnv = readCorsDomains
+
+instance FromEnv [API] where
+  fromEnv = readAPIs
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -241,9 +257,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-
+  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
+                     withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -263,8 +281,18 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig mCfg =
-      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+    mkCorsConfig mCfg = do
+      corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
+      wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
+        (True, _)      -> return readCookVal
+        (False, True)  -> throwError $ fst wsReadCookieEnv
+                          <> " can only be used when CORS is disabled"
+        (False, False) -> return False
+      return $ case corsCfg of
+        CCDisabled _ -> CCDisabled wsReadCookie
+        _            -> corsCfg
+
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -344,10 +372,12 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
-      , pgStripesEnv, pgConnsEnv, pgTimeoutEnv , txIsoEnv
-      , pgUsePrepareEnv, adminSecretEnv, accessKeyEnv, authHookEnv , authHookModeEnv , jwtSecretEnv
-      , unAuthRoleEnv, corsDomainEnv , enableConsoleEnv , enableTelemetryEnv
+      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv,
+        pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
+      , accessKeyEnv, authHookEnv, authHookModeEnv
+      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
+      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       ]
 
     eventEnvs =
@@ -461,6 +491,27 @@ enableTelemetryEnv =
   ( "HASURA_GRAPHQL_ENABLE_TELEMETRY"
   -- TODO: better description
   , "Enable anonymous telemetry (default: true)"
+  )
+
+wsReadCookieEnv :: (String, String)
+wsReadCookieEnv =
+  ( "HASURA_GRAPHQL_WS_READ_COOKIE"
+  , "Read cookie on WebSocket initial handshake, even when CORS is disabled."
+  ++ " This can be a potential security flaw! Please make sure you know "
+  ++ "what you're doing."
+  ++ "This configuration is only applicable when CORS is disabled."
+  )
+
+stringifyNumEnv :: (String, String)
+stringifyNumEnv =
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
+  , "Stringify numeric types (default: false)"
+  )
+
+enabledAPIsEnv :: (String, String)
+enabledAPIsEnv =
+  ( "HASURA_GRAPHQL_ENABLED_APIS"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -613,6 +664,13 @@ readHookType tyS =
     "POST" -> Right AHTPost
     _      -> Left "Only expecting GET / POST"
 
+readAPIs :: String -> Either String [API]
+readAPIs = mapM readAPI . T.splitOn "," . T.pack
+  where readAPI si = case T.toUpper $ T.strip si of
+          "METADATA" -> Right METADATA
+          "GRAPHQL"  -> Right GRAPHQL
+          _          -> Left "Only expecting list of comma separated API types metadata / graphql"
+
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
   AuthHookG <$> url <*> urlType
@@ -666,7 +724,7 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
              )
 
     mapCC isDisabled domains =
-      bool domains (Just CCDisabled) isDisabled
+      bool domains (Just $ CCDisabled False) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -679,6 +737,25 @@ parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
+         )
+
+parseWsReadCookie :: Parser Bool
+parseWsReadCookie =
+  switch ( long "ws-read-cookie" <>
+           help (snd wsReadCookieEnv)
+         )
+
+parseStringifyNum :: Parser Bool
+parseStringifyNum =
+  switch ( long "stringify-numeric-types" <>
+           help (snd stringifyNumEnv)
+         )
+
+parseEnabledAPIs :: Parser (Maybe [API])
+parseEnabledAPIs = optional $
+  option (eitherReader readAPIs)
+         ( long "enabled-apis" <>
+           help (snd enabledAPIsEnv)
          )
 
 -- Init logging related
@@ -706,6 +783,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+                       , "stringify_numeric_types" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

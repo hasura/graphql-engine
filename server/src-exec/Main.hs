@@ -1,5 +1,6 @@
 module Main where
 
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Control.Monad.STM          (atomically)
@@ -73,6 +74,10 @@ parseHGECommand =
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseEnableTelemetry
+                <*> parseWsReadCookie
+                <*> parseStringifyNum
+                <*> parseEnabledAPIs
+
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -109,7 +114,7 @@ main =  do
       pgLogger = mkPGLogger logger
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -139,13 +144,13 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheBuiltTime) <-
-        mkWaiApp isoL loggerCtx pool httpManager am corsCfg enableConsole
-          enableTelemetry instanceId
+        mkWaiApp isoL loggerCtx strfyNum pool httpManager am
+          corsCfg enableConsole enableTelemetry instanceId enabledAPIs
 
       let scRef = _scrCache cacheRef
 
       -- start cache update events processor thread in background
-      procTId <- C.forkIO $ schemaUpdateEventProcessor pool logger httpManager
+      procTId <- C.forkIO $ schemaUpdateEventProcessor strfyNum pool logger httpManager
                               eventsQueue cacheRef instanceId cacheBuiltTime
       unLogger logger $ mkThreadLog procTId instanceId TTProcessor
 
@@ -199,7 +204,7 @@ main =  do
     runAsAdmin pgLogger ci httpManager m = do
       pool <- getMinimalPool pgLogger ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager pool Q.Serializable m
+              httpManager False pool Q.Serializable m
       return $ fmap fst res
 
     procConnInfo rci =

@@ -12,7 +12,7 @@ import {
 } from '../EventActions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class RedeliverEvent extends Component {
   constructor(props) {
@@ -230,10 +230,10 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                            log.eventInvocations[0].request,
-                            null,
-                            4
-                          )
+                              log.eventInvocations[0].request,
+                              null,
+                              4
+                            )
                           : ''
                       }
                       minLines={8}

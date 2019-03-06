@@ -27,7 +27,7 @@ data ConflictTarget
 
 data ConflictClauseP1
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !S.BoolExp
+  | CP1Update !ConflictTarget ![PGCol] !PreSetCols !S.BoolExp
   deriving (Show, Eq)
 
 data InsertQueryP1
@@ -40,9 +40,9 @@ data InsertQueryP1
   , iqp1MutFlds  :: !MutFlds
   } deriving (Show, Eq)
 
-mkSQLInsert :: InsertQueryP1 -> S.SelectWith
-mkSQLInsert (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith tn (S.CTEInsert insert) mutFlds False
+mkSQLInsert :: Bool -> InsertQueryP1 -> S.SelectWith
+mkSQLInsert strfyNum (InsertQueryP1 tn vn cols vals c mutFlds) =
+  mkSelWith tn (S.CTEInsert insert) mutFlds False strfyNum
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
@@ -51,8 +51,8 @@ toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
   CP1DoNothing Nothing          -> S.DoNothing Nothing
   CP1DoNothing (Just ct)        -> S.DoNothing $ Just $ toSQLCT ct
-  CP1Update ct inpCols filtr    -> S.Update (toSQLCT ct)
-    (S.buildSEWithExcluded inpCols) $ Just $ S.WhereFrag filtr
+  CP1Update ct inpCols preSet filtr    -> S.Update (toSQLCT ct)
+    (S.buildUpsertSetExp inpCols preSet) $ Just $ S.WhereFrag filtr
 
   where
     toSQLCT ct = case ct of
@@ -125,13 +125,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
-      updFiltr <- getUpdFilter
-      return $ CP1Update (Column $ getPGCols col) inpCols $
+      (updFiltr, preSet) <- getUpdPerm
+      return $ CP1Update (Column $ getPGCols col) inpCols preSet $
         toSQLBool updFiltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
-      updFiltr <- getUpdFilter
-      return $ CP1Update (Constraint cons) inpCols $
+      (updFiltr, preSet) <- getUpdPerm
+      return $ CP1Update (Constraint cons) inpCols preSet $
         toSQLBool updFiltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
@@ -152,12 +152,13 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
                    <<> " for table " <> tiName tableInfo
                    <<> " does not exist"
 
-    getUpdFilter = do
+    getUpdPerm = do
       upi <- askUpdPermInfo tableInfo
       let updFiltr = upiFilter upi
+          preSet = upiSet upi
           updCols = HS.toList $ upiCols upi
       validateInpCols inpCols updCols
-      return updFiltr
+      return (updFiltr, preSet)
 
 
 convInsertQuery
@@ -227,30 +228,30 @@ decodeInsObjs v = do
   return objs
 
 convInsQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
 convInsQ =
   liftDMLP1 .
   convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
-insertP2 :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-insertP2 (u, p) =
+insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+insertP2 strfyNum (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder insertSQL) (toList p) True
   where
-    insertSQL = toSQL $ mkSQLInsert u
+    insertSQL = toSQL $ mkSQLInsert strfyNum u
 
 data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol] !S.BoolExp
+  = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
-nonAdminInsert :: (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-nonAdminInsert (insQueryP1, args) = do
+nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+nonAdminInsert strfyNum (insQueryP1, args) = do
   conflictCtxM <- mapM extractConflictCtx conflictClauseP1
   setConflictCtx conflictCtxM
-  insertP2 (withoutConflictClause, args)
+  insertP2 strfyNum (withoutConflictClause, args)
   where
     withoutConflictClause = insQueryP1{iqp1Conflict=Nothing}
     conflictClauseP1 = iqp1Conflict insQueryP1
@@ -261,9 +262,9 @@ extractConflictCtx cp =
     (CP1DoNothing mConflictTar) -> do
       mConstraintName <- mapM extractConstraintName mConflictTar
       return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols filtr) -> do
+    (CP1Update conflictTar inpCols preSet filtr) -> do
       constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols filtr
+      return $ CCUpdate constraintName inpCols preSet filtr
   where
     extractConstraintName (Constraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
@@ -281,16 +282,17 @@ setConflictCtx conflictCtxM = do
 
     conflictCtxToJSON (CCDoNothing constrM) =
         encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols filtr) =
+    conflictCtxToJSON (CCUpdate constr updCols preSet filtr) =
         encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ toSQLTxt (S.buildSEWithExcluded updCols)
+        Just $ toSQLTxt (S.buildUpsertSetExp updCols preSet)
                <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 runInsert
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => InsertQuery
   -> m RespBody
 runInsert q = do
   res <- convInsQ q
   role <- userRole <$> askUserInfo
-  liftTx $ bool (nonAdminInsert res) (insertP2 res) $ isAdmin role
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  liftTx $ bool (nonAdminInsert strfyNum res) (insertP2 strfyNum res) $ isAdmin role

@@ -1,26 +1,10 @@
-CREATE TABLE hdb_catalog.hdb_schema_update_event (
-  id BIGSERIAL PRIMARY KEY,
-  instance_id uuid NOT NULL,
-  occurred_at timestamptz NOT NULL DEFAULT NOW()
-);
+ALTER TABLE hdb_catalog.hdb_relationship
+  DROP CONSTRAINT hdb_relationship_table_schema_fkey,
+  ADD CONSTRAINT hdb_relationship_table_schema_fkey FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE;
 
-CREATE FUNCTION hdb_catalog.hdb_schema_update_event_notifier() RETURNS trigger AS
-$function$
-  DECLARE
-    instance_id uuid;
-    occurred_at timestamptz;
-    curr_rec record;
-  BEGIN
-    instance_id = NEW.instance_id;
-    occurred_at = NEW.occurred_at;
-    PERFORM pg_notify('hasura_schema_update', json_build_object(
-      'instance_id', instance_id,
-      'occurred_at', occurred_at
-    )::text);
-    RETURN curr_rec;
-  END;
-$function$
-LANGUAGE plpgsql;
+ALTER TABLE hdb_catalog.hdb_permission
+  DROP CONSTRAINT hdb_permission_table_schema_fkey,
+  ADD CONSTRAINT hdb_permission_table_schema_fkey FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE;
 
-CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
-  FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
+ALTER TABLE hdb_catalog.event_triggers
+ADD CONSTRAINT event_triggers_table_schema_fkey FOREIGN KEY (schema_name, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE;

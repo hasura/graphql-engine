@@ -37,13 +37,14 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
+  -> SQLGenCtx
   -> SchemaCache
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m BL.ByteString
-runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
+runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
@@ -57,11 +58,11 @@ runGQ pool isoL userInfo sc manager reqHdrs req rawReq = do
   assertSameLocationNodes typeLocs
 
   case typeLocs of
-    [] -> runHasuraGQ pool isoL userInfo sc queryParts
+    [] -> runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts
 
     (typeLoc:_) -> case typeLoc of
       VT.HasuraType ->
-        runHasuraGQ pool isoL userInfo sc queryParts
+        runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts
       VT.RemoteType _ rsi ->
         runRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
   where
@@ -102,15 +103,16 @@ runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
+  -> SQLGenCtx
   -> SchemaCache
   -> VQ.QueryParts
   -> m BL.ByteString
-runHasuraGQ pool isoL userInfo sc queryParts = do
+runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- runReaderT (VQ.validateGQ queryParts) gCtx
   when (opTy == G.OperationTypeSubscription) $ throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
-  let tx = R.resolveSelSet userInfo gCtx opTy fields
+  let tx = R.resolveSelSet userInfo gCtx sqlGenCtx opTy fields
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ encodeGQResp $ GQSuccess resp
   where
