@@ -46,13 +46,11 @@ import           Hasura.Server.Utils                           (bsToTxt)
 import qualified Hasura.GraphQL.Resolve.LiveQuery              as LQ
 import qualified Hasura.GraphQL.Transport.HTTP                 as TH
 import qualified Hasura.GraphQL.Transport.WebSocket.Client     as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Connection as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.GraphQL.Validate.Types                 as VT
 import qualified Hasura.Logging                                as L
 
-
--- uniquely identifies an operation
-type GOperationId = (WS.WSId, OperationId)
 
 type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 
@@ -69,7 +67,7 @@ data WSConnData
   , _wscOpMap :: !OperationMap
   }
 
-type LiveQueryMap = LQ.LiveQueryMap GOperationId
+type LiveQueryMap = LQ.LiveQueryMap WS.GOperationId
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
@@ -451,6 +449,12 @@ onClose logger lqMap _ wsConn = do
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
+
+  -- clear remote conns, if any corresponding to this wsId
+  connState <- liftIO $ IORef.readIORef $ _wscState $ WS._wcExtraData wsConn
+  let stData = getStateData connState
+  onJust stData $ \(ConnInitState _ _ connMap) ->
+    onJust (findWebsocketId connMap wsId) WS.clearState
   where
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn

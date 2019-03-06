@@ -7,6 +7,7 @@ module Hasura.GraphQL.Transport.WebSocket.Connection where
 import           Control.Concurrent                          (ThreadId)
 
 import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
+import           Hasura.GraphQL.Transport.WebSocket.Server   (WSId)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -16,6 +17,9 @@ import qualified Data.HashMap.Strict                         as Map
 import qualified Network.HTTP.Types                          as HTTP
 import qualified Network.WebSockets                          as WS
 
+
+-- uniquely identifies an operation
+type GOperationId = (WSId, OperationId)
 
 data ConnInitState
   = ConnInitState
@@ -46,7 +50,7 @@ data WebsocketProxyStateG a
   { _wpsRemoteRcvr      :: !(A.Async a)
   , _wpsRunClientThread :: !(Maybe ThreadId)
   , _wpsRemoteConn      :: !WS.Connection
-  , _wpsOperations      :: ![OperationId]
+  , _wpsOperations      :: ![GOperationId]
   }
 
 instance Show (WebsocketProxyStateG a) where
@@ -58,7 +62,11 @@ findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
 
 findOperationId :: RemoteConnState -> OperationId -> Maybe WebsocketProxyState
 findOperationId connMap opId =
-  snd <$> find (elem opId . _wpsOperations . snd) (Map.toList connMap)
+  snd <$> find (elem opId . map snd . _wpsOperations . snd) (Map.toList connMap)
+
+findWebsocketId :: RemoteConnState -> WSId -> Maybe WebsocketProxyState
+findWebsocketId connMap wsId =
+  snd <$> find (elem wsId . map fst . _wpsOperations . snd) (Map.toList connMap)
 
 getStateData :: WSConnState -> Maybe ConnInitState
 getStateData = \case

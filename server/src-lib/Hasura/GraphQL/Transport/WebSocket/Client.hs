@@ -68,7 +68,8 @@ mkGraphqlProxy wsconn stRef rn opId payload destConn = do
   setupInitialGraphqlProto destConn
   -- setting up the proxy from remote to hasura
   op <- A.async $ proxy destConn srcConn
-  let newState = WebsocketProxyState op Nothing destConn [opId]
+  let wsId = WS._wcConnId wsconn
+  let newState = WebsocketProxyState op Nothing destConn [(wsId, opId)]
   updateState stRef rn newState
   A.wait op
   where
@@ -142,7 +143,8 @@ runGqlClient url wsConn stRef rn opId payload = do
       -- send init message and the raw message on the existing conn
       let conn     = _wpsRemoteConn st
           opids    = _wpsOperations st
-          newState = st { _wpsOperations = opids ++ [opId] }
+          wsId     = WS._wcConnId wsConn
+          newState = st { _wpsOperations = opids ++ [(wsId, opId)] }
       liftIO $ updateState stRef rn newState
       liftIO $ sendInit conn payload
       liftIO $ WS.sendTextData conn $ J.encode payload
