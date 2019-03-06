@@ -2,10 +2,8 @@
 refs:
   skip_job_on_ciignore: &skip_job_on_ciignore
     run: |
-      if [ -f /build/skip_job.txt ]; then
-        echo "halting job due to /build/skip_job.txt"
-        circleci-agent step halt
-      fi
+      echo "halting job due to /build/skip_job.txt"
+      circleci-agent step halt
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
