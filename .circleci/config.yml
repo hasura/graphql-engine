@@ -2,8 +2,9 @@
 refs:
   skip_job_on_ciignore: &skip_job_on_ciignore
     run: |
-      ls -l /build
-      echo "halting job due to /build/skip_job.txt"
+      ls -l /build/ciignore
+      cat /build/ciignore/skip_job.txt
+      echo "halting job due to /build/ciignore/skip_job.txt"
       circleci-agent step halt
   wait_for_postgres: &wait_for_postgres
     run:
@@ -129,6 +130,10 @@ jobs:
     - run:
         name: check build worthiness
         command: .circleci/ciignore.sh
+    - persist_to_workspace:
+        root: /build
+        paths:
+        - ciignore  
 
   # build the server binary, and package into docker image
   build_server:

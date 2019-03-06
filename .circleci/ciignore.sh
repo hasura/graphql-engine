@@ -11,7 +11,7 @@ set -eo pipefail
 ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
 
 # make build directory
-mkdir -p /build
+mkdir -p /build/ciignore
 
 # always build tagged builds
 if [[ ! -z "$CIRCLE_TAG" ]]; then
@@ -73,7 +73,7 @@ if [[ ${#changes[@]} -gt 0 ]]; then
 fi
 
 echo "Only ignored files are present in commits, build is not required, write the skip_job file"
-echo "true" > /build/skip_job.txt
-echo "/build skip_job.txt written"
-cat /build/skip_job.txt
+echo "true" > /build/ciignore/skip_job.txt
+echo "/build/ciignore/skip_job.txt written"
+cat /build/ciignore/skip_job.txt
 exit
