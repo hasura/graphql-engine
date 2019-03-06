@@ -1,11 +1,15 @@
 # anchor refs to be used elsewhere
 refs:
   skip_job_on_ciignore: &skip_job_on_ciignore
-    run: |
-      ls -l /build/ciignore
-      cat /build/ciignore/skip_job.txt
-      echo "halting job due to /build/ciignore/skip_job.txt"
-      circleci-agent step halt
+    run:
+      name: checking if job should be terminated or not
+      command: |
+        if [ -f /build/ciignore/skip_job.txt ]; then
+          echo "halting job due to /build/ciignore/skip_job.txt"
+          circleci-agent step halt
+        else
+          echo "no skip_job file present, full steam ahead"
+        fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready

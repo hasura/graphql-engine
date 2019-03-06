@@ -74,6 +74,4 @@ fi
 
 echo "Only ignored files are present in commits, build is not required, write the skip_job file"
 echo "true" > /build/ciignore/skip_job.txt
-echo "/build/ciignore/skip_job.txt written"
-cat /build/ciignore/skip_job.txt
 exit
