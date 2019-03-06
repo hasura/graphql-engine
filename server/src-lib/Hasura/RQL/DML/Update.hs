@@ -188,21 +188,22 @@ validateUpdateQueryWith f uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
 updateQueryToTx
-  :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-updateQueryToTx (u, p) =
+  :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1UniqCols u)
+                (uqp1MutFlds u) (uqp1UniqCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m RespBody
-runUpdate q =
-  validateUpdateQuery q >>= liftTx . updateQueryToTx
+runUpdate q = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum

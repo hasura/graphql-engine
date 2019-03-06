@@ -26,6 +26,7 @@ data Mutation
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
   , _mFields   :: !MutFlds
   , _mUniqCols :: !(Maybe [PGColInfo])
+  , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
 runMutation :: Mutation -> Q.TxE QErr RespBody
@@ -34,21 +35,21 @@ runMutation mut =
     hasNestedFld $ _mFields mut
 
 mutateAndReturn :: Mutation -> Q.TxE QErr RespBody
-mutateAndReturn (Mutation qt (cte, p) mutFlds _) =
+mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
-    selWith = mkSelWith qt cte mutFlds False
+    selWith = mkSelWith qt cte mutFlds False strfyNum
 
 mutateAndSel :: Mutation -> Q.TxE QErr RespBody
-mutateAndSel (Mutation qt q mutFlds mUniqCols) = do
+mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
   uniqCols <- onNothing mUniqCols $
               throw500 "uniqCols not found in mutateAndSel"
   let colMap = Map.fromList $ flip map uniqCols $
                \ci -> (pgiName ci, ci)
   -- Perform mutation and fetch unique columns
-  MutateResp _ colVals <- mutateAndFetchCols qt uniqCols q
+  MutateResp _ colVals <- mutateAndFetchCols qt uniqCols q strfyNum
   colExps <- mapM (colValToColExp colMap) colVals
   let selWhere = S.beFromColVal mkQIdenExp colExps
       selCTE = S.CTESelect $
@@ -57,7 +58,7 @@ mutateAndSel (Mutation qt q mutFlds mUniqCols) = do
                , S.selFrom = Just $ S.FromExp [S.FISimple qt Nothing]
                , S.selWhere = Just $ S.WhereFrag selWhere
                }
-      selWith = mkSelWith qt selCTE mutFlds False
+      selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
   runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
@@ -77,8 +78,10 @@ mutateAndSel (Mutation qt q mutFlds mUniqCols) = do
 mutateAndFetchCols
   :: QualifiedTable
   -> [PGColInfo]
-  -> (S.CTE, DS.Seq Q.PrepArg) -> Q.TxE QErr MutateResp
-mutateAndFetchCols qt cols (cte, p) =
+  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> Bool
+  -> Q.TxE QErr MutateResp
+mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
   where
@@ -102,4 +105,4 @@ mutateAndFetchCols qt cols (cte, p) =
       , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
       }
     colSel = S.SESelect $ mkSQLSelect False $
-             AnnSelG selFlds tabFrom tabPerm noTableArgs
+             AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum

@@ -1,6 +1,6 @@
 import React from 'react';
 import { deleteTrigger } from '../EventActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
   if (confirm('Are you sure?')) {

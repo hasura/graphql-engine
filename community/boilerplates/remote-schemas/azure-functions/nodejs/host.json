@@ -1,0 +1,19 @@
+{
+    "version": "2.0",
+    "functions": [ "graphql" ],
+    "functionTimeout": "00:00:30",
+    "extensions": {
+	"http": {
+        	"routePrefix": ""
+	}
+    },
+    "logging": {
+    	"fileLoggingMode": "always",
+	"logLevel": {
+      	    "default": "Information"
+    	},
+	"console": {
+            "isEnabled": "false"
+        }
+    }
+}

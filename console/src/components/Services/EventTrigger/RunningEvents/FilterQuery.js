@@ -23,7 +23,7 @@ import {
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
   const columns = ['id', 'delivered', 'created_at'];
