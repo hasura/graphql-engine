@@ -16,4 +16,12 @@ controlled and can be used with your CI/CD system to make incremental updates.
 When you're looking to setup migrations, there are two scenarios:
 
 #. :doc:`You already have a database and Hasura setup <existing-database>`.
-#. :doc:`You're starting from scratch - an empty database and a fresh Hasura instance <>`.
+#. :doc:`You're starting from scratch - an empty database and a fresh Hasura instance <new-database>`.
+
+.. toctree::
+  :maxdepth: 1
+  :hidden:
+
+  existing-database
+  new-database
+  

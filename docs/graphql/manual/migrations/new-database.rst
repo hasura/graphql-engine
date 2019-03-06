@@ -1,14 +1,15 @@
-Migrations for an existing database and Hasura instance
-=======================================================
+Migrations for a new database and Hasura instance
+=================================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-This guide is to be followed if you already have set up a database and Hasura
-instance and now want to start using migrations to help you track the database
-and GraphQL schema changes.
+This guide will help you if you are about to start setting up your schema from
+scratch. You can use migrations to help track the database and GraphQL schema
+changes.
+
 
 Step 0: Disable console on Server
 ---------------------------------
@@ -63,71 +64,23 @@ Hasura migrations. You can commit this directory to version control.
    machine and the the CLI will use it. You can also use it as a flag to CLI:
    ``--admin-secret "<your-admin-secret>"``.
 
-Step 3: Initialize the migrations as per your current state
------------------------------------------------------------
+Step 3: Open console from CLI
+-----------------------------
 
-- Use ``pg_dump`` to export the database schema. We're using the ``pg_dump``
-  command bundled within the ``postgres`` docker container. If you have
-  ``pg_dump`` installed on your machine, you could use that as well.
-
-  .. code-block:: bash
-
-     # get the container id for postgres
-     docker ps
-
-     # dump the public schema into public-schema.sql (repeat for other schemas)
-     docker exec <postgres-container-id> pg_dump -U postgres --schema-only --schema public > public-schema.sql
-
-  This command will create ``public-schema.sql`` which contains the SQL
-  definitions for the public schema.
-
-  .. note::
-
-     You should edit this SQL file and remove the initial ~20 lines which are
-     ``SET`` statements including ``SELECT pg_catalog.set_config('search_path',
-     '', false);``.
-
-- Create a migration called ``init`` using this SQL file and the metadata that
-  is on the server right now:
-
-  .. code-block:: bash
-
-     hasura migrate create "init" --sql-file "public-schema.sql" --metadata-from-server
-
-  This command will create a new "migration" under the ``migrations`` directory
-  with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
-  contain the required information to reproduce the current state of the server
-  including the Postgres schema and Hasura metadata. The command will also mark
-  this migration as "applied" on the server. If you'd like to read more about
-  the format of migration files, checkout the reference doc at
-  :ref:`migration_file_reference`. 
-
-.. note::
-
-  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.sql``
-
-Step 4: Use the console from the CLI
-------------------------------------
-
-From this point onwards, instead of using the console at
-``http://my-graphql.herokuapp.com/console`` you should use the console from CLI
-by running:
+Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you
+should now use the console by running: 
 
 .. code-block:: bash
 
    hasura console
 
-Step 5: Add a new table and see how a migration is added
+Step 4: Add a new table and see how a migration is added
 --------------------------------------------------------
 
-As you use the Hasura console UI to make changes to your schema, migration files are automatically generated
-in the ``migrations/`` directory in your project.
+As you use the Hasura console UI to make changes to your schema, migration files
+are automatically generated in the ``migrations/`` directory in your project. 
 
-.. note::
-
-   Migrations are only created when using the console through CLI.
-
-Step 6: Apply the migrations on another instance of GraphQL engine
+Step 5: Apply the migrations on another instance of GraphQL engine
 ------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
@@ -140,7 +93,7 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
 In case you need an automated way of applying the migrations, take a look at the
 :ref:`CLI-Migrations <auto_apply_migrations>` docker image, which can start
 GraphQL Engine after automatically applying the migrations which are
-mounted into a directory.  
+mounted into a directory.
 
 Advanced features
 -----------------
