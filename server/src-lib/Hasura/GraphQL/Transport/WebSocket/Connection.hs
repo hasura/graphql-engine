@@ -20,12 +20,18 @@ import qualified Network.WebSockets                          as WS
 data ConnInitState
   = ConnInitState
   { _cisUserInfo   :: !UserInfo
+  -- headers from the client (in conn params) to forward to the remote schema
   , _cisHeaders    :: ![HTTP.Header]
   , _cisRemoteConn :: !RemoteConnState
   } deriving (Show)
 
+newtype WsHeaders
+  = WsHeaders { unWsHeaders :: [HTTP.Header] }
+  deriving (Show, Eq)
+
 data WSConnState
-  = CSNotInitialised
+  -- headers from the client for websockets
+  = CSNotInitialised !WsHeaders
   | CSInitError Text
   | CSInitialised ConnInitState
   deriving (Show)

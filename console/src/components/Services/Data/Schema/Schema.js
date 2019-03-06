@@ -14,7 +14,7 @@ import {
   trackableFunctions,
   // nonTrackableFunctions,
 } from './Tooltips';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import {
   setTableName,
   addExistingTableSql,
@@ -293,7 +293,7 @@ class Schema extends Component {
                           styles.padd_right
                         }`}
                       >
-                        <button
+                        <Button
                           data-test={`add-track-function-${p.function_name}`}
                           className={`${
                             styles.display_inline
@@ -304,7 +304,7 @@ class Schema extends Component {
                           }}
                         >
                             Add
-                        </button>
+                        </Button>
                       </div>
                       <div
                         className={`${styles.padd_right} ${

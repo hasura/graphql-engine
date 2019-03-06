@@ -51,7 +51,7 @@ HASURA_GRAPHQL_ADMIN_SECRET: youradminsecretkey
 ```
 
 ```
-HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line"}
+HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line>"}
 ```
 
 For example, (copy the certificate from above step or use generated config from https://hasura.io/jwt-config):

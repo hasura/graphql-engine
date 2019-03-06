@@ -12,8 +12,8 @@ import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
-import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
-import Button from '../../Layout/Button/Button';
+import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 

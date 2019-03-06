@@ -166,8 +166,11 @@ library
                      , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship
+                     , Hasura.RQL.DDL.Relationship.Rename
+                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
@@ -235,6 +238,7 @@ library
                      , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
+                     , Migrate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -320,7 +324,8 @@ executable graphql-engine
                      , connection
                      , string-conversions
 
-  other-modules:     Ops
+  other-modules:       Ops
+                     , Migrate
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

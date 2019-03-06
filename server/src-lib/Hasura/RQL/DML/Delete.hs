@@ -30,9 +30,9 @@ data DeleteQueryP1
   } deriving (Show, Eq)
 
 mkSQLDelete
-  :: DeleteQueryP1 -> S.SelectWith
-mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds False
+  :: Bool -> DeleteQueryP1 -> S.SelectWith
+mkSQLDelete strfyNum (DeleteQueryP1 tn (fltr, wc) mutFlds) =
+  mkSelWith tn (S.CTEDelete delete) mutFlds False strfyNum
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $
@@ -90,20 +90,21 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
       <> "without \"select\" permission on the table"
 
 validateDeleteQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
 validateDeleteQ =
   liftDMLP1 . validateDeleteQWith binRHSBuilder
 
-deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-deleteQueryToTx (u, p) =
+deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx strfyNum (u, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
   where
-    deleteSQL = toSQL $ mkSQLDelete u
+    deleteSQL = toSQL $ mkSQLDelete strfyNum u
 
 runDelete
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => DeleteQuery -> m RespBody
-runDelete q =
-  validateDeleteQ q >>= liftTx . deleteQueryToTx
+runDelete q = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  validateDeleteQ q >>= liftTx . deleteQueryToTx strfyNum
