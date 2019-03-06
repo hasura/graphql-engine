@@ -56,29 +56,7 @@ Step 3: Initialize the migrations as per your current state
      including ``SELECT pg_catalog.set_config('search_path', '', false);`` from
      the SQL file and keep only the ``CREATE`` like statements that follow.
 
-- Export the metadata (this creates a file ``migrations/metadata.yaml``):
-
-  .. code-block:: bash
-     
-     hasura metadata export
-
-- Create a new migration with a name, say ``first``. This will generate some files in ``migrations/`` directory:
-
-  .. code-block:: bash
-  
-     hasura migrate create first
-
-- Move the contents of ``public-schema.sql`` to ``migrations/<version>_first.up.sql``
-- Move the contents of ``metadata.yaml`` to ``migrations/<version>_first.up.yaml`` with the following content
-  (take care of indentation):
-
-  .. code-block:: yaml
-
-     - type: replace_metadata
-       args:
-         <contents-of-metadata.yaml>
-
-- Remove ``migrations/<version>_first.down.{sql,yaml}`` migration files if you are not adding down migrations for these
+WIP
 
 .. note::
 
