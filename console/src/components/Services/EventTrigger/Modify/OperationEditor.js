@@ -180,7 +180,7 @@ class OperationEditor extends React.Component {
             ongoingRequest={modifyTrigger.ongoingRequest}
             service="modify-trigger"
             saveFunc={save}
-            toggleCallback={this.setValues}
+            expandCallback={this.setValues}
           />
         </div>
       </div>

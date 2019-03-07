@@ -35,6 +35,7 @@ const ColumnEditor = ({
   currentSchema,
   columnComment,
   allowRename,
+  columnProperties,
 }) => {
   //  eslint-disable-line no-unused-vars
   const c = column;
@@ -48,154 +49,14 @@ const ColumnEditor = ({
     null,
   ];
   // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
-  const refTable = fkAdd.refTable;
   const tableSchema = allSchemas.find(t => t.table_name === tableName);
-  const rcol = fkAdd.rcol;
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
     'value',
     dataTypes.filter(dataType => dataType.hasuraDatatype)
   );
-  const refSchema = allSchemas.find(t => t.table_name === refTable);
-  // const allTableNamesExceptCurrent = allSchemas.filter(t => t.table_name !== tableName);
-  const allTableNames = allSchemas.map(t => t.table_name);
-  allTableNames.sort();
-
-  const refColumnNames = refSchema
-    ? refSchema.columns.map(col => col.column_name)
-    : [];
-  refColumnNames.sort();
-  const onFKRefTableChange = e => {
-    dispatch(fkRefTableChange(e.target.value));
-  };
-  const onFKRefColumnChange = e => {
-    dispatch(fkRColChange(e.target.value));
-  };
-  const checkExistingForeignKey = () => {
-    const numFk = tableSchema.foreign_key_constraints.length;
-    let fkName = '';
-    const onDeleteFK = e => {
-      e.preventDefault();
-      const isOk = confirm('Are you sure?');
-      if (isOk) {
-        dispatch(deleteConstraintSql(tableName, fkName));
-      }
-    };
-    if (numFk > 0) {
-      for (let i = 0; i < numFk; i++) {
-        const fk = tableSchema.foreign_key_constraints[i];
-        if (
-          Object.keys(fk.column_mapping).toString() === c.column_name.toString()
-        ) {
-          fkName = fk.constraint_name;
-          return (
-            <div className={`${styles.display_flex} form-group`}>
-              <label className="col-xs-3 text-right">Foreign Key</label>
-              <div className="col-xs-9">
-                <h5>
-                  <span>{fk.ref_table} :: </span>
-                  <span className={styles.add_mar_right}>
-                    {Object.keys(fk.column_mapping)
-                      .map(l => fk.column_mapping[l])
-                      .join(',')}
-                  </span>
-                  <Link
-                    to={`${appPrefix}/schema/${currentSchema}/tables/${tableName}/relationships`}
-                  >
-                    <Button
-                      color="white"
-                      size="sm"
-                      type="button"
-                      data-test="add-rel-mod"
-                    >
-                      +Add relationship
-                    </Button>
-                  </Link>
-                  &nbsp;
-                  <Button
-                    color="red"
-                    size="sm"
-                    onClick={onDeleteFK}
-                    data-test="remove-constraint-button"
-                  >
-                    {' '}
-                    Remove Constraint{' '}
-                  </Button>{' '}
-                  &nbsp;
-                </h5>
-              </div>
-            </div>
-          );
-        }
-      }
-    }
-    return (
-      <div className={`${styles.display_flex} form-group`}>
-        <label className="col-xs-3 text-right">
-          <input
-            type="checkbox"
-            checked={fkAdd.fkCheckBox}
-            onChange={e => {
-              dispatch(toggleFKCheckBox(e.target.checked));
-            }}
-            value="ForeignKey"
-            data-test="foreign-key-checkbox"
-          />{' '}
-          Foreign Key
-        </label>
-        <div className="col-xs-6">
-          <select
-            className={`${styles.fkSelect} ${styles.fkInEdit} ${
-              styles.fkInEditLeft
-            } input-sm form-control`}
-            disabled={fkAdd.fkCheckBox === false}
-            value={refTable}
-            onChange={onFKRefTableChange}
-            data-test="ref-table"
-          >
-            <option disabled value="">
-              Reference table
-            </option>
-            {allTableNames.map((tName, i) => (
-              <option key={i} value={tName}>
-                {tName}
-              </option>
-            ))}
-          </select>
-          <select
-            className={`${styles.fkSelect} ${
-              styles.fkInEdit
-            } input-sm form-control`}
-            disabled={fkAdd.fkCheckBox === false}
-            value={rcol}
-            onChange={onFKRefColumnChange}
-            data-test="ref-col"
-          >
-            <option disabled value="">
-              Reference column
-            </option>
-            {refColumnNames.map((co, i) => (
-              <option key={i} value={co}>
-                {co}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    );
-  };
-  let isPrimaryKey = false;
-  const isUnique = isColumnUnique(tableSchema, c.column_name);
-
-  if (
-    tableSchema.primary_key &&
-    tableSchema.primary_key.columns.includes(c.column_name)
-  ) {
-    isPrimaryKey = true;
-  }
-
   const additionalOptions = [];
-  let finalDefaultValue = typeMap[c.data_type];
+  let finalDefaultValue = typeMap[columnProperties.type];
   if (!typeMap[c.data_type]) {
     finalDefaultValue = c.data_type;
     additionalOptions.push(
@@ -204,7 +65,6 @@ const ColumnEditor = ({
       </option>
     );
   }
-
   const generateAlterOptions = datatypeOptions => {
     return dataTypes.map(datatype => {
       if (datatypeOptions.includes(datatype.value)) {
@@ -274,6 +134,10 @@ const ColumnEditor = ({
         className="form-horizontal"
         onSubmit={e => {
           e.preventDefault();
+          console.log(itype.value);
+          console.log(inullable.value);
+          console.log(iunique.value);
+          console.log(icomment.value);
           onSubmit(
             itype.value,
             inullable.value,
@@ -292,7 +156,7 @@ const ColumnEditor = ({
               <input
                 ref={n => (iname = n)}
                 className="input-sm form-control"
-                defaultValue={column.column_name}
+                defaultValue={columnProperties.name}
                 type="text"
                 data-test="edit-col-name"
               />
@@ -306,9 +170,9 @@ const ColumnEditor = ({
               ref={n => (itype = n)}
               className="input-sm form-control"
               defaultValue={finalDefaultValue}
-              disabled={isPrimaryKey}
+              disabled={columnProperties.isPrimaryKey}
             >
-              {modifyAlterOptions(column.data_type)}
+              {modifyAlterOptions(columnProperties.type)}
               {additionalOptions}
             </select>
           </div>
@@ -319,8 +183,8 @@ const ColumnEditor = ({
             <select
               ref={n => (inullable = n)}
               className="input-sm form-control"
-              defaultValue={c.is_nullable === 'NO' ? 'false' : 'true'}
-              disabled={isPrimaryKey}
+              defaultValue={columnProperties.isNullable.toString()}
+              disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-nullable"
             >
               <option value="true">True</option>
@@ -334,8 +198,8 @@ const ColumnEditor = ({
             <select
               ref={n => (iunique = n)}
               className="input-sm form-control"
-              defaultValue={isUnique.toString()}
-              disabled={isPrimaryKey}
+              defaultValue={columnProperties.isUnique.toString()}
+              disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-unique"
             >
               <option value="true">True</option>
@@ -349,9 +213,9 @@ const ColumnEditor = ({
             <input
               ref={n => (idefault = n)}
               className="input-sm form-control"
-              defaultValue={c.column_default ? c.column_default : null}
+              defaultValue={columnProperties.default || ''}
               type="text"
-              disabled={isPrimaryKey}
+              disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-default"
             />
           </div>
@@ -367,32 +231,6 @@ const ColumnEditor = ({
               data-test="edit-col-comment"
             />
           </div>
-        </div>
-        {checkExistingForeignKey()}
-        <div className="row">
-          <Button
-            type="submit"
-            color="yellow"
-            className={styles.button_mar_right}
-            size="sm"
-            data-test="save-button"
-          >
-            Save
-          </Button>
-          {!isPrimaryKey ? (
-            <Button
-              type="submit"
-              color="red"
-              size="sm"
-              onClick={e => {
-                e.preventDefault();
-                onDelete();
-              }}
-              data-test="remove-button"
-            >
-              Remove
-            </Button>
-          ) : null}
         </div>
       </form>
       <div className="row">

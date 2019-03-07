@@ -40,6 +40,16 @@ const FK_ADD_FORM_ERROR = 'ModifyTable/FK_ADD_FORM_ERROR';
 const FK_RESET = 'ModifyTable/FK_RESET';
 const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 
+const SET_COLUMN_EDIT = `ModifyTable/SET_COLUMN_EDIT;`;
+
+const setColumnEdit = data => {
+  return {
+    type: SET_COLUMN_EDIT,
+    column: data.name,
+    data,
+  };
+};
+
 const changeTableOrViewName = (isTable, oldName, newName, callback) => {
   return (dispatch, getState) => {
     const property = isTable ? 'table' : 'view';
@@ -871,24 +881,24 @@ const saveColumnChangesSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1440,24 +1450,24 @@ const saveColChangesWithFkSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1945,6 +1955,7 @@ export {
   FK_ADD_PAIR,
   FK_ADD_FORM_ERROR,
   FK_RESET,
+  SET_COLUMN_EDIT,
   TOGGLE_FK_CHECKBOX,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
@@ -1957,6 +1968,7 @@ export {
   addColSql,
   deleteColumnSql,
   addFkSql,
+  setColumnEdit,
   deleteConstraintSql,
   deleteTableSql,
   untrackTableSql,

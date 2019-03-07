@@ -86,7 +86,7 @@ class WebhookEditor extends React.Component {
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}
-            toggleCallback={this.setValues}
+            expandCallback={this.setValues}
             property="webhook"
             service="modify-trigger"
             ongoingRequest={modifyTrigger.ongoingRequest}

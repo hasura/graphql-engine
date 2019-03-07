@@ -21,6 +21,7 @@ import {
   TOGGLE_FK_CHECKBOX,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
+  SET_COLUMN_EDIT,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -272,7 +273,13 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           editedValue: action.value,
         },
       };
-
+    case SET_COLUMN_EDIT:
+      return {
+        ...modifyState,
+        columnEdit: {
+          [action.column]: { ...action.data },
+        },
+      };
     case PERM_OPEN_EDIT:
       const permState = getBasePermissionsState(
         action.tableSchema,

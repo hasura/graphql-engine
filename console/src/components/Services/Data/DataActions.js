@@ -661,6 +661,7 @@ const dataReducer = (state = defaultState, action) => {
     case LOAD_TABLE_COMMENT:
       return { ...state, tableComment: action.data };
     case LOAD_COLUMN_COMMENT:
+      console.log(action.data);
       return { ...state, columnComment: action.data };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };

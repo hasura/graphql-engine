@@ -15,6 +15,7 @@ import {
   saveColumnChangesSql,
   saveColChangesWithFkSql,
   deleteColumnSql,
+  setColumnEdit,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
 import { convertListToDict } from '../../../../utils/data';
@@ -27,6 +28,7 @@ import Button from '../../../Common/Button/Button';
 import ColumnEditor from './ColumnEditor';
 import ColumnCreator from './ColumnCreator';
 import semverCheck from '../../../../helpers/semver';
+import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 class ModifyTable extends React.Component {
   state = {
@@ -76,6 +78,7 @@ class ModifyTable extends React.Component {
       tableComment,
       columnComment,
       tableCommentEdit,
+      columnEdit,
     } = this.props;
     const styles = require('./ModifyTable.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
@@ -89,10 +92,31 @@ class ModifyTable extends React.Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      let btnText = 'Edit';
       let colEditor = null;
-      let bg = '';
       const colName = c.column_name;
+      const columnProperties = {
+        name: c.column_name,
+        tableName: c.table_name,
+        schemaName: c.table_schema,
+        type: c.data_type,
+        isNullable: c.is_nullable === 'YES' ? true : false,
+        isPrimaryKey: tableSchema.primary_key.columns.includes(c.column_name),
+        isUnique: false,
+        default: c.column_default,
+      };
+      for (
+        let uci = tableSchema.unique_constraints.length - 1;
+        uci >= 0;
+        uci--
+      ) {
+        const constraint = tableSchema.unique_constraints[uci];
+        if (
+          constraint.columns.length === 1 &&
+          constraint.columns[0] === c.column_name
+        ) {
+          columnProperties.isUnique = true;
+        }
+      }
       const onSubmit = (
         type,
         nullable,
@@ -102,37 +126,19 @@ class ModifyTable extends React.Component {
         column,
         newName
       ) => {
-        // dispatch(saveColumnChangesSql(tableName, colName, type, nullable, def, column));
-        if (fkAdd.fkCheckBox === true) {
-          dispatch(fkLColChange(column.column_name));
-          dispatch(
-            saveColChangesWithFkSql(
-              tableName,
-              colName,
-              type,
-              nullable,
-              unique,
-              def,
-              comment,
-              column,
-              newName
-            )
-          );
-        } else {
-          dispatch(
-            saveColumnChangesSql(
-              tableName,
-              colName,
-              type,
-              nullable,
-              unique,
-              def,
-              comment,
-              column,
-              newName
-            )
-          );
-        }
+        dispatch(
+          saveColumnChangesSql(
+            tableName,
+            columnProperties.name,
+            type,
+            nullable,
+            unique,
+            def,
+            comment,
+            column,
+            newName
+          )
+        );
       };
       const onDelete = () => {
         const isOk = confirm('Are you sure you want to delete?');
@@ -140,117 +146,70 @@ class ModifyTable extends React.Component {
           dispatch(deleteColumnSql(tableName, colName, c));
         }
       };
-      if (activeEdit.column === colName) {
-        btnText = 'Close';
-        if (primaryKeyDict[colName]) {
-          colEditor = (
-            <ColumnEditor
-              column={c}
-              onSubmit={onSubmit}
-              onDelete={() => {
-                const isOk = window.confirm(`Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
-              Also, this will delete everything associated with the column (included related entities in other tables) permanently?`);
-                if (isOk) {
-                  dispatch(deleteColumnSql(tableName, colName));
-                }
-              }}
-              fkAdd={fkAdd}
-              tableName={tableName}
-              dispatch={dispatch}
-              allSchemas={allSchemas}
-              currentSchema={currentSchema}
-              columnComment={columnComment}
-              allowRename={this.state.supportTableColumnRename}
-            />
-          );
-        } else {
-          colEditor = (
-            <ColumnEditor
-              column={c}
-              onSubmit={onSubmit}
-              onDelete={onDelete}
-              fkAdd={fkAdd}
-              tableName={tableName}
-              dispatch={dispatch}
-              allSchemas={allSchemas}
-              currentSchema={currentSchema}
-              columnComment={columnComment}
-              allowRename={this.state.supportTableColumnRename}
-            />
-          );
+      const safeOnDelete = () => {
+        let confirmMessage = 'Are you sure you want to delete?';
+        if (columnProperties.isPrimaryKey) {
+          confirmMessage = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
+        Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
         }
-        bg = styles.activeEdit;
-      }
-      // check if column name is primary key
-      let isPrimaryKey = false;
-      if (hasPrimaryKeys) {
-        if (tableSchema.primary_key.columns.includes(colName)) {
-          isPrimaryKey = true;
+        const isOk = window.confirm(confirmMessage);
+        if (isOk) {
+          dispatch(deleteColumnSql(tableName, colName, c));
         }
-      }
-      let isForeignKey = false;
-      if (tableSchema.foreign_key_constraints.length > 0) {
-        const numFk = tableSchema.foreign_key_constraints.length;
-        for (let iFk = 0; iFk < numFk; iFk++) {
-          const fk = tableSchema.foreign_key_constraints[iFk];
-          if (
-            Object.keys(fk.column_mapping).toString() ===
-            c.column_name.toString()
-          ) {
-            isForeignKey = true;
-            break;
-          }
-        }
-      }
-
-      const keyProperties = () => {
-        if (isPrimaryKey && isForeignKey) {
-          return <i> - primary key, foreign key </i>;
-        }
-        if (isPrimaryKey) {
-          return <i> - primary key </i>;
-        }
-        if (isForeignKey) {
-          return <i> - foreign key </i>;
-        }
-        return <i> {''} </i>;
       };
-      return (
-        <div key={i} className={bg}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <Button
-                  className={styles.add_mar_small}
-                  size="xs"
-                  color="white"
-                  data-test={`edit-${colName}`}
-                  onClick={() => {
-                    if (activeEdit.column === colName) {
-                      // just closing the column
-                      dispatch({ type: TOGGLE_ACTIVE_COLUMN, column: colName });
-                    } else {
-                      // fetch column comment
-                      dispatch(fetchColumnComment(tableName, colName)).then(
-                        () => {
-                          dispatch({
-                            type: TOGGLE_ACTIVE_COLUMN,
-                            column: colName,
-                          });
-                        }
-                      );
-                    }
-                  }}
-                >
-                  {btnText}
-                </Button>
-                <b>{colName}</b> {keyProperties()}
-                &nbsp;
-              </h5>
-              {colEditor}
+      const keyProperties = () => {
+        const propertiesList = [];
+        if (columnProperties.isPrimaryKey) propertiesList.push('primary key');
+        if (columnProperties.isNullable) propertiesList.push('nullable');
+        if (columnProperties.isUnique) propertiesList.push('unique');
+        return <i> - {propertiesList.join(', ')}</i>;
+      };
+      const colEditorCollapsed = () => {
+        return (
+          <div key={i}>
+            <div className="container-fluid">
+              <div className="row">
+                <h5 className={styles.padd_bottom}>
+                  <b>{colName}</b> {keyProperties()}
+                  &nbsp;
+                </h5>
+              </div>
             </div>
           </div>
-        </div>
+        );
+      };
+      const colEditorExpanded = () => {
+        return (
+          <div>
+            <ColumnEditor
+              column={c}
+              onSubmit={onSubmit}
+              onDelete={safeOnDelete}
+              tableName={tableName}
+              dispatch={dispatch}
+              allSchemas={allSchemas}
+              currentSchema={currentSchema}
+              columnComment={columnComment}
+              allowRename={this.state.supportTableColumnRename}
+              columnProperties={columnProperties}
+            />
+          </div>
+        );
+      };
+      return (
+        <ExpandableEditor
+          editorCollapsed={colEditorCollapsed}
+          editorExpanded={colEditorExpanded}
+          property={`edit-column`}
+          ongoingRequest={'oola'}
+          service="modify-table"
+          saveFunc={onSubmit}
+          removeFunc={primaryKeyDict[colName] ? null : onDelete}
+          collapsedClass={styles.display_flex}
+          expandCallback={() => {
+            dispatch(fetchColumnComment(tableName, colName));
+          }}
+        />
       );
     });
 
@@ -352,9 +311,23 @@ class ModifyTable extends React.Component {
       );
     }
 
+    const primaryKeyEditors = () => {
+      const pkEditorCollapsed = () => (
+        <div>
+          <i> {`( ${tableSchema.primary_key.columns.join(', ')} )`} </i>
+        </div>
+      );
+      const pkEditorExpanded = () => {
+        const orderedCols = columns.map((c, _i) => ({
+          name: c.column_name,
+          type: c.data_type,
+          index: _i,
+        }));
+        const orderedPks = tableSchema.primary_key.columns.map(pk => {});
+      };
+    };
+
     // if (tableSchema.primary_key.columns > 0) {}
-    console.log(columns);
-    console.log(tableSchema.primary_key);
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -424,6 +397,7 @@ ModifyTable.propTypes = {
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
+  columnEdit: PropTypes.object.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   serverVersion: PropTypes.string,
@@ -437,6 +411,7 @@ const mapStateToProps = (state, ownProps) => ({
   currentSchema: state.tables.currentSchema,
   tableComment: state.tables.tableComment,
   columnComment: state.tables.columnComment,
+  columnEdit: state.tables.modify.commentEdit,
   ...state.tables.modify,
 });
 

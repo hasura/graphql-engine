@@ -180,7 +180,7 @@ class RetryConfEditor extends React.Component {
             property={'retry'}
             saveFunc={save}
             service="modify-trigger"
-            toggleCallback={this.setValues}
+            expandCallback={this.setValues}
             styles={styles}
           />
         </div>
