@@ -28,6 +28,20 @@ or a YAML file.
 YAML files
 ----------
 
+Each ``up`` or ``down`` YAML file contains Hasura Metadata API actions to be
+executed for that particular migration. The file should have a list of such API
+actions, which is represented with a ``-`` in YAML.
+
+.. code-block:: yaml
+
+   - type: run_sql
+     args:
+       sql: |
+         CREATE TABLE profile (
+           id SERIAL PRIMARY KEY
+           name TEXT
+         );
+
 SQL Files
 ---------
 
