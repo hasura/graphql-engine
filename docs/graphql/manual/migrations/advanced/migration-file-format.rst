@@ -63,8 +63,10 @@ actions, which is represented with a ``-`` in YAML. Here is an example file:
          DROP TABLE "public"."author"
 
 Each one of the actions in these files are actually Hasura Metadata API calls,
-which are executed in sequence when the migration is applied. You can find all
-the metadata action on the reference page at :ref:`metadata_apis`.
+which are executed in **sequence** when the migration is applied. You can find
+all the metadata actions that are available on the reference page at
+:ref:`metadata_apis`.
+
 
 SQL Files
 ---------
@@ -75,4 +77,6 @@ SQL Files
    already be included in the YAML files.
 
 As the name indicates, an SQL file can contain SQL statements which are executed
-on the apply step of the migration. ``up.sql``
+on the apply step of the migration. There can be an ``up`` SQL and a ``down``
+SQL file. The SQL file is executed first if it is present in an up migration and
+YAML file is executed first in a down migration.

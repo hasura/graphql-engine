@@ -142,11 +142,37 @@ In case you need an automated way of applying the migrations, take a look at the
 GraphQL Engine after automatically applying the migrations which are
 mounted into a directory.  
 
-Advanced features
------------------
+Step 7: Check status of migrations
+----------------------------------
 
-- Each migration consists of a pair of YAML files with up and down steps.
-- You can apply only certain versions or numbers of steps. You can also rollback
-  migrations using their ``down`` definitions. Read more at :ref:`migrate apply
-  <hasura_migrate_apply>`.
-- Create migrations manually using :ref:`migrate create <hasura_migrate_create>`.
+.. code-block:: bash
+
+   hasura migrate status
+
+This command will print out each migration version present in the ``migrations``
+directory and the ones applied on the database, along with a status text.
+
+For example,
+
+.. code-block:: bash
+
+   $ hasura migrate status
+   VERSION        SOURCE STATUS  DATABASE STATUS
+   1550925483858  Present        Present
+   1550931962927  Present        Present
+   1550931970826  Present        Present
+
+Such a migration status indicate that there are 3 migration versions in the
+local directory and all of them are applied on the database.
+
+If ``SOURCE STATUS`` indicates ``Not Present``, it means that the migration
+version is present on the server, but not on the current user's local directory.
+This typically happens if multiple people are collaborating on a project and one
+of the collaborator forgot to pull the latest changes which included the latest
+migration files or another collaborator forgot to push the latest migration
+files that were applied on the database. Syncing of the files would fix the
+issue.
+
+If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
+migration versions in the local directory which are not applied on the database
+yet. Executing a ``migrate apply`` would take care of such scenarios.

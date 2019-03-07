@@ -9,5 +9,6 @@ Migrations - advanced use-cases and reference documentation
   writing-migrations-manually
   migration-file-format
   metadata-file-format
+  rolling-back-migrations
 
   

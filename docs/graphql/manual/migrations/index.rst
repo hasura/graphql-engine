@@ -40,6 +40,7 @@ Here are some advanced use-cases are reference documentation:
 - :doc:`advanced/writing-migrations-manually`
 - :doc:`advanced/migration-file-format`
 - :doc:`advanced/metadata-file-format`
+- :doc:`advanced/rolling-back-migrations`
 
 .. toctree::
   :maxdepth: 1
