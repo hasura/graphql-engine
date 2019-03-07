@@ -15,12 +15,11 @@ class TestHorizantalScaleBasic():
 
     @pytest.fixture(autouse=True, scope='class')
     def transact(self, hge_ctx):
-        self.teardown = {"type": "clear_metadata", "args": {}}
         self.servers['1'] = hge_ctx.hge_url
         self.servers['2'] = hge_ctx.hge_scale_url
         yield
         # teardown
-        st_code, resp = hge_ctx.v1q(self.teardown)
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
         assert st_code == 200, resp
     
     def test_horizontal_scale_basic(self, hge_ctx):

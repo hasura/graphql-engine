@@ -363,10 +363,11 @@ unset HASURA_GRAPHQL_ADMIN_SECRET
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
 
-HASURA_HS_TEST_DB='postgres://gql_test:@localhost:5432/hs_hge_test'
-echo "Installing psql"
-apt-get update && apt-get install -y postgresql-client
+HASURA_HS_TEST_DB='postgres://postgres:postgres@localhost:6543/hs_hge_test'
 psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database hs_hge_test;"
+
+# start pgbouncer
+pgbouncer -d pgbouncer/pgbouncer.ini
 
 # start 1st server
 "$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
@@ -377,6 +378,15 @@ wait_for_port 8080
                   --server-port 8081 --server-host 0.0.0.0 \
                   >> "$OUTPUT_FOLDER/hs-graphql-engine.log" 2>&1 & HS_PID=$!
 wait_for_port 8081
+
+# run test
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+
+# Shutdown pgbouncer
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;"
+
+# start pgbouncer again
+pgbouncer -d pgbouncer/pgbouncer.ini
 
 # run test
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py

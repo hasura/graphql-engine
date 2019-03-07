@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table test_t1;
+- type: run_sql
+  args:
+    sql: |
+      drop table test_t2;
