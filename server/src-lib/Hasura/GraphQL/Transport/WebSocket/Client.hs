@@ -64,7 +64,7 @@ mkGraphqlProxy
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
-  -> WebsocketPayload
+  -> WebsocketPayload -- the start msg
   -> WS.ClientApp ()
 mkGraphqlProxy wsconn stRef rn opId payload destConn = do
   -- setup initial connection protocol
@@ -72,7 +72,7 @@ mkGraphqlProxy wsconn stRef rn opId payload destConn = do
   -- setting up the proxy from remote to hasura
   op <- A.async $ proxy destConn srcConn
   let wsId = WS._wcConnId wsconn
-  let newState = WebsocketProxyState op Nothing destConn [(wsId, opId)]
+      newState = WebsocketProxyState op Nothing destConn [(wsId, opId)]
   updateState stRef rn newState
   A.wait op
   where
@@ -161,9 +161,10 @@ runGqlClient logger url wsConn stRef rn opId payload = do
           opids    = _wpsOperations st
           wsId     = WS._wcConnId wsConn
           newState = st { _wpsOperations = opids ++ [(wsId, opId)] }
-      liftIO $ updateState stRef rn newState
-      liftIO $ sendInit conn payload
-      liftIO $ WS.sendTextData conn $ J.encode payload
+      liftIO $ do
+        updateState stRef rn newState
+        sendInit conn payload
+        WS.sendTextData conn $ J.encode payload
 
 updateState
   :: IORef.IORef WSConnState
@@ -171,6 +172,8 @@ updateState
   -> WebsocketProxyState
   -> IO ()
 updateState stRef rn wsProxyState = do
+  -- this updates the IORef only on start msg, should we be doing this with a
+  -- lock?
   st <- IORef.readIORef stRef
   let rmConnState = getStateData st
   onJust rmConnState $ \connState -> do

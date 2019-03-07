@@ -234,8 +234,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
                  wsConn userInfoR rn opId sockPayload
           onLeft res $ \e -> do
-            liftIO $ putStrLn "error occurred from runnning the gql client"
-            liftIO $ print e
+            logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
             withComplete $ sendConnErr . T.pack $ show e
           logOpEv ODStarted
 
@@ -251,9 +250,6 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
-    --WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr = serverEnv
-
-    --WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 
@@ -372,8 +368,6 @@ onConnInit logger manager wsConn authMode connParamsM = do
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
         CSInitialised (ConnInitState userInfo paramHeaders Map.empty)
-        -- liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        --   CSInitialised userInfo paramHeaders
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
