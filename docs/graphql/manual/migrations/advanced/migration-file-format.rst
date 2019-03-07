@@ -65,7 +65,7 @@ actions, which is represented with a ``-`` in YAML. Here is an example file:
 Each one of the actions in these files are actually Hasura Metadata API calls,
 which are executed in **sequence** when the migration is applied. You can find
 all the metadata actions that are available on the reference page at
-:ref:`metadata_apis`.
+:ref:`Query`.
 
 
 SQL Files
