@@ -11,12 +11,13 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import           Control.Lens
-import           Data.Aeson.Types
+import           Data.Aeson
 
 import qualified Data.HashMap.Strict          as M
 import qualified Data.HashSet                 as HS
 import qualified Data.Sequence                as DS
 import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as T
 
 newtype DMLP1 a
   = DMLP1 {unDMLP1 :: StateT (DS.Seq Q.PrepArg) P1 a}
@@ -219,8 +220,8 @@ convBoolExp' cim spi be prepValBuilder = do
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =
   case err of
-    Nothing          -> defaultTxErrorHandler p2Res
-    Just (code, msg) -> err400 code msg
+    Nothing                       -> defaultTxErrorHandler p2Res
+    Just (PGErrSimple code msg i) -> (err400 code msg) { qeInternal = i}
   where err = simplifyError p2Res
 
 toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
@@ -244,7 +245,11 @@ validateHeaders depHeaders = do
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
-simplifyError :: Q.PGTxErr -> Maybe (Code, T.Text)
+type InternalErr = Maybe Value
+
+data PGErrSimple = PGErrSimple Code T.Text InternalErr
+
+simplifyError :: Q.PGTxErr -> Maybe PGErrSimple
 simplifyError txErr = do
   stmtErr <- Q.getPGStmtErr txErr
   codeMsg <- getPGCodeMsg stmtErr
@@ -255,31 +260,35 @@ simplifyError txErr = do
     extractError = \case
       -- restrict violation
       ("23001", msg) ->
-        return (ConstraintViolation, "Can not delete or update due to data being referred. " <> msg)
+        retErr ConstraintViolation $ "Can not delete or update due to data being referred. " <> msg
       -- not null violation
       ("23502", msg) ->
-        return (ConstraintViolation, "Not-NULL violation. " <> msg)
+        retErr ConstraintViolation $ "Not-NULL violation. " <> msg
       -- foreign key violation
       ("23503", msg) ->
-        return  (ConstraintViolation, "Foreign key violation. " <> msg)
+        retErr ConstraintViolation $ "Foreign key violation. " <> msg
       -- unique violation
       ("23505", msg) ->
-        return  (ConstraintViolation, "Uniqueness violation. " <> msg)
+        retErr ConstraintViolation $ "Uniqueness violation. " <> msg
       -- check violation
-      ("23514", msg) ->
-        return (PermissionError, "Check constraint violation. " <> msg)
+      ("23514", msg) -> let cvErr = ("Check constraint violation. " <>)
+        in case decodeStrict (T.encodeUtf8 msg) of
+          Just (m,i) -> return $ PGErrSimple PermissionError (cvErr m) i
+          Nothing    -> retErr PermissionError $ cvErr msg
       -- invalid text representation
-      ("22P02", msg) -> return (DataException, msg)
+      ("22P02", msg) -> retErr DataException msg
       -- invalid parameter value
-      ("22023", msg) -> return (DataException, msg)
+      ("22023", msg) -> retErr DataException msg
       -- no unique constraint on the columns
       ("42P10", _)   ->
-        return (ConstraintError, "there is no unique or exclusion constraint on target column(s)")
+        retErr ConstraintError "there is no unique or exclusion constraint on target column(s)"
       -- no constraint
-      ("42704", msg) -> return (ConstraintError, msg)
+      ("42704", msg) -> retErr ConstraintError msg
       -- invalid input values
-      ("22007", msg) -> return (DataException, msg)
+      ("22007", msg) -> retErr DataException msg
       _              -> Nothing
+    retErr x y = return $ PGErrSimple x y Nothing
+
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()
