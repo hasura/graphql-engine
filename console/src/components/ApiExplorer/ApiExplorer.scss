@@ -1,64 +1,73 @@
 @import "../Common/Common.scss";
+
 .display_inl {
   display: inline-block;
 }
+
 .width_80 {
   width: 80%;
 }
-.responseHeader
-{
+
+.responseHeader {
   color: #788095;
   font-weight: bold;
   font-size: 14px;
 }
+
 .admin_token_align {
   vertical-align: middle;
   margin-left: 2px;
 }
-.marginBottom
-{
+
+.marginBottom {
   margin-bottom: 15px;
 }
+
 .apiExplorerMini {
   width: 80%;
 }
+
 .wrapperOnBoarding {
   // width: 80% !important;
 }
+
 .panelGreyed {
   opacity: 0.1;
 }
+
 .requestGreyed {
   opacity: 0.1;
 }
+
 .panelInFocus {
 
 }
+
 .requestInFocus {
 
 }
+
 .cursorNotAllowed {
   cursor: not-allowed;
 }
-.apiExplorerWrapper
-{
+
+.apiExplorerWrapper {
   display: flex;
   height: $mainContainerHeight;
-  .ApiRequestWrapperVH
-  {
+
+  .ApiRequestWrapperVH {
     height: 100%;
     width: 100%;
   }
-  .apiCollectionWrapper
-  {
+
+  .apiCollectionWrapper {
     background-color: #fff;
     height: 100%;
     overflow-y: auto;
     // Changed it from overfllow-y: scroll
-    .apiCollectionTabWrapper
-    {
-      .apiCollectionTab
-      {
+
+    .apiCollectionTabWrapper {
+      .apiCollectionTab {
         -webkit-padding-start: 0px;
         -webkit-margin-before: 0;
         -webkit-margin-after: 0;
@@ -71,8 +80,8 @@
         min-width: 240px;
         background-color: #fff;
         z-index: 10;
-        .apiCollectionTabList
-        {
+
+        .apiCollectionTabList {
           list-style-type: none;
           display: inline-block;
           width: 50%;
@@ -83,18 +92,18 @@
           color: #D8D8D8;
           cursor: pointer;
         }
-        .activeApiCollectionTab
-        {
+
+        .activeApiCollectionTab {
           border-bottom: 3px solid #ffca27;
           color: #6B6B6B;
         }
-        .apiCollectionTabList:focus
-        {
+
+        .apiCollectionTabList:focus {
           outline: none;
         }
       }
-      .apiCollectionClearHistory
-      {
+
+      .apiCollectionClearHistory {
         padding: 0 15px;
         margin: 0;
         border-bottom: 1px solid #e5e5e5;
@@ -103,8 +112,8 @@
         bottom: 0;
         transform: translateX(-88%);
         */
-        .apiCollectionClearHistoryButton
-        {
+
+        .apiCollectionClearHistoryButton {
           /*
           float: right;
           margin: 10px 0;
@@ -121,126 +130,127 @@
           border-top: 1px solid #ccc;
           background-color: #fff;
           z-index: 1;
+
           i {
             padding-right: 5px;
           }
 
         }
       }
-      .apiPaddTop
-      {
+
+      .apiPaddTop {
         padding-top: 46px !important;
       }
-      .apiCollectionTabListDetails
-      {
+
+      .apiCollectionTabListDetails {
         padding: 0 15px;
         margin: 10px 0;
         // padding-top: 46px;
-        .apiCollectionTabListHead
-        {
+
+        .apiCollectionTabListHead {
           padding-left: 15px;
           padding-bottom: 10px;
           font-weight: bold;
           font-size: 15px;
+
           .serviceBaseDomain {
             color: #bbb;
           }
         }
+
         .add_ellipsis {
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
         }
-        .apiCollectionGetPost
-        {
-          .apiCollectionGetWrapper
-          {
+
+        .apiCollectionGetPost {
+          .apiCollectionGetWrapper {
             padding: 5px 0;
             cursor: pointer;
-            .apiCollectionGet
-            {
+
+            .apiCollectionGet {
               text-align: left;
               color: #70CD00;
               font-size: 12px;
               font-weight: bold;
               padding-left: 15px;
             }
-            .apiCollectionGetDetailsWrapper
-            {
+
+            .apiCollectionGetDetailsWrapper {
               display: flex;
               align-items: center;
-              .apiCollectionGetDetails
-              {
+
+              .apiCollectionGetDetails {
                 word-wrap: break-word;
                 padding-right: 10px !important
               }
-              .apiCollectionPostDetails
-              {
+
+              .apiCollectionPostDetails {
                 word-wrap: break-word;
                 padding-right: 10px !important
               }
-              .apiRightArrowWrapper
-              {
+
+              .apiRightArrowWrapper {
                 padding-left: 5px;
               }
             }
-            .activeApiCollectionGetWrapperIcon
-            {
+
+            .activeApiCollectionGetWrapperIcon {
                 display: none;
             }
           }
-          .activeApiCollectionGetWrapper
-          {
+
+          .activeApiCollectionGetWrapper {
             background-color: #FFF3D5;
             border-radius: 4px;
-            .activeApiCollectionGetWrapperIcon
-            {
+
+            .activeApiCollectionGetWrapperIcon {
               display: block;
             }
           }
-          .apiCollectionPostWrapper
-          {
+
+          .apiCollectionPostWrapper {
             padding: 5px 0;
             cursor: pointer;
-            .apiCollectionPost
-            {
+
+            .apiCollectionPost {
               text-align: left;
               color: #FD9540;
               font-size: 12px;
               font-weight: bold;
               padding-left: 15px;
             }
-            .apiCollectionGetDetailsWrapper
-            {
+
+            .apiCollectionGetDetailsWrapper {
               display: flex;
               align-items: center;
-              .apiCollectionGetDetails
-              {
+
+              .apiCollectionGetDetails {
                 word-wrap: break-word;
                 padding-right: 10px !important
               }
-              .apiCollectionPostDetails
-              {
+
+              .apiCollectionPostDetails {
                 word-wrap: break-word;
                 padding-right: 10px !important
               }
-              .apiRightArrowWrapper
-              {
+
+              .apiRightArrowWrapper {
                 padding-left: 5px;
               }
             }
 
-            .activeApiCollectionGetWrapperIcon
-            {
+            .activeApiCollectionGetWrapperIcon {
                 display: none;
             }
           }
-          .activeApiCollectionGetWrapper
-          {
+
+          .activeApiCollectionGetWrapper {
             background-color: #FFF3D5;
             border-radius: 4px;
-            .activeApiCollectionGetWrapperIcon
-            {
+
+            .activeApiCollectionGetWrapperIcon {
               display: block;
             }
           }
@@ -248,11 +258,13 @@
       }
     }
   }
+
   .apiContentPadd {
     padding-top: 20px;
     // padding-bottom: 10px;
     // margin-bottom: -15px;
   }
+
   .closeHeader {
     cursor: pointer;
     padding-top: 8px;
@@ -260,6 +272,7 @@
     float: right;
     display: inline-block;
   }
+
   .showAdminSecret {
     cursor: pointer;
     padding-top: 8px;
@@ -268,8 +281,8 @@
     float: left;
     display: inline-block;
   }
-  .apiRequestWrapper
-  {
+
+  .apiRequestWrapper {
     .file_upload_wrapper {
       width: 100%;
       text-align: left;
@@ -278,55 +291,55 @@
       border: 1px solid #ccc;
       background-color: #fff;
       margin-bottom: 15px;
+
       input[type="file"] {
         display: inline-block;
         width: 162px;
       }
     }
-    .apiRequestheader
-    {
+
+    .apiRequestheader {
       font-weight: bold;
       font-size: 18px;
       padding-bottom: 10px;
       color: #000;
     }
-    .apiRequestContent
-    {
+
+    .apiRequestContent {
       font-size: 14px;
-      a
-      {
+
+      a {
         color: #FEC53D;
         text-decoration: underline;
       }
-      a:hover
-      {
+
+      a:hover {
         color: #FEC53D;
         text-decoration: underline;
       }
-      code
-      {
+
+      code {
         background-color: transparent;
         border: 1px solid #767E93;
         padding: 1px 4px !important;
         color: #767E93;
       }
     }
-    .apiPostRequestWrapper
-    {
+
+    .apiPostRequestWrapper {
       // padding: 20px 0;
       // padding-top: 20px;
       padding-top: 5px;
       background-color: #f8fafb;
-      .inputGroupWrapper
-      {
+
+      .inputGroupWrapper {
         -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
         -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
         box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
         border-radius: 5px;
-        .inputGroupBtn
-        {
-          button
-          {
+
+        .inputGroupBtn {
+          button {
             width: 100px;
             border: 0;
             padding: 10px 12px;
@@ -335,16 +348,16 @@
             font-size: 14px;
             font-weight: bold;
             text-align: left;
-            .caret
-            {
+
+            .caret {
               position: absolute;
               right: 10px;
               top: 16px;
             }
           }
         }
-        .inputGroupInput
-        {
+
+        .inputGroupInput {
           border: 0;
           box-shadow: none;
           padding: 10px 12px;
@@ -352,10 +365,9 @@
           background-color: #fff;
         }
       }
-      .sendBtn
-      {
-        button
-        {
+
+      .sendBtn {
+        button {
           width: 100%;
           text-align: center;
           height: 39px;
@@ -372,18 +384,17 @@
             background-color: #F2B130;
           }
         }
+
         /*
-        button:hover
-        {
+        button:hover {
           border: 1px solid #F2B130;
           background-color: #F2B130;
         }
         */
       }
-      .generateBtn
-      {
-        button
-        {
+
+      .generateBtn {
+        button {
           width: 100%;
           background-color: transparent;
           text-align: center;
@@ -393,97 +404,97 @@
           font-weight: bold;
           border-radius: 5px;
         }
-        button:hover
-        {
+
+        button:hover {
           border: 1px solid #606060;
           background-color: #efefef;
         }
       }
     }
-    .responseWrapper
-    {
+
+    .responseWrapper {
       clear: both;
       display: flex;
       align-items: center;
-      .responseHeader
-      {
+
+      .responseHeader {
         color: #788095;
         font-weight: bold;
         font-size: 14px;
-        .viewDetails
-        {
+
+        .viewDetails {
           padding-left: 10px;
           font-weight: normal;
           color: #FFCA27;
         }
-        .addAdminToken
-        {
+
+        .addAdminToken {
           text-align: right;
           padding-left: 15px;
         }
       }
-      .addAdminToken
-      {
+
+      .addAdminToken {
         text-align: right;
         padding-left: 15px;
       }
     }
   }
-  .apiResponseWrapper
-  {
-    .apiResponseheaderWrapper
-    {
+
+  .apiResponseWrapper {
+    .apiResponseheaderWrapper {
       border-bottom: 1px solid #ccc;
       margin-bottom: 20px;
-      .apiResponseheader
-      {
+
+      .apiResponseheader {
         font-weight: bold;
         font-size: 14px;
         padding-bottom: 10px;
         // color: #000;
         color: #788095
       }
-      .statusDetails
-      {
+
+      .statusDetails {
         display: inline-block;
         float: right;
         padding-left: 20px;
-        .statusView
-        {
+
+        .statusView {
           padding-left: 5px;
           font-weight: normal;
           color: #FFCA27;
         }
       }
     }
-    .helpTextWrapper
-    {
+
+    .helpTextWrapper {
       padding: 15px;
       border: 1px solid #ccc;
       background-color: #fff;
       clear: both;
       margin-bottom: 20px;
-      i
-      {
+
+      i {
         padding-right: 10px;
       }
-      pre
-      {
+
+      pre {
         margin-top: 10px;
         border-radius: 0;
       }
-      .copyBtn
-      {
+
+      .copyBtn {
         padding: 9px;
       }
     }
+
     .suggestionTextColor {
       color: #111;
       background-color: #ffd760;
       border-color: #ffd760;
     }
-    .noResponseWrapper
-    {
+
+    .noResponseWrapper {
       width: 100%;
       min-height: 200px;
       background-color: #fff;
@@ -495,20 +506,20 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 20px;
-      .noResponseContainer
-      {
+
+      .noResponseContainer {
         width: 325px;
-        .noResponseHeader
-        {
+
+        .noResponseHeader {
           font-size: 18px;
           opacity: 0.6;
         }
-        .barWrapper
-        {
+
+        .barWrapper {
           padding-top: 15px;
           text-align: center;
-          .bigBar
-          {
+
+          .bigBar {
             width: 56%;
             margin-right: 7px;
             height: 20px;
@@ -516,8 +527,8 @@
             display: inline-block;
             border-radius: 4px;
           }
-          .mediumBar
-          {
+
+          .mediumBar {
             width: 23%;
             margin-right: 7px;
             height: 20px;
@@ -525,8 +536,8 @@
             display: inline-block;
             border-radius: 4px;
           }
-          .smallBar
-          {
+
+          .smallBar {
             width: 13%;
             margin-right: 7px;
             height: 20px;
@@ -537,15 +548,15 @@
         }
       }
     }
-    .responseHeader
-    {
+
+    .responseHeader {
       padding-top: 15px;
       color: #788095;
       font-weight: bold;
       font-size: 14px;
       clear: both;
-      .viewDetails
-      {
+
+      .viewDetails {
         padding-left: 10px;
         font-weight: normal;
         color: #FFCA27;
@@ -555,35 +566,30 @@
 }
 
 // Common
-.responseTable
-{
+.responseTable {
   padding-top: 15px;
-  .tableBorder
-  {
+
+  .tableBorder {
     background-color: #fff;
     border: 1px solid #E3E5E5;
-    thead
-    {
-      tr
-      {
-        th
-        {
+
+    thead {
+      tr {
+        th {
           border-bottom: 0px;
         }
       }
     }
-    tbody
-    {
-      tr
-      {
-        td
-        {
+
+    tbody {
+      tr {
+        td {
           border-top: 0;
           // padding: 5px;
           padding: 0px 5px;
           min-width: 50px;
-          .responseTableInput
-          {
+
+          .responseTableInput {
             background-color: transparent;
             border: 0;
             box-shadow: none;
@@ -591,49 +597,50 @@
             // padding: 0;
           }
         }
+
         .headerPadd {
           padding: 15px !important;
         }
-        .borderTop
-        {
+
+        .borderTop {
           border-top: 1px solid #ccc;
         }
-        .tableTdLeft
-        {
+
+        .tableTdLeft {
           padding-left: 5%;
         }
-        .tableEnterKey
-        {
+
+        .tableEnterKey {
           // padding: 10px 0;
           padding: 0px 5px;
           padding-left: 4.5%;
         }
-        .tableLastTd
-        {
+
+        .tableLastTd {
           padding-left: 5px !important;
         }
       }
     }
   }
+
   .headerHeading {
     background-color: #f5f5f5;
     font-weight: bold;
     padding-left: 15px;
   }
 }
-.queryBuilderWrapper
-{
+
+.queryBuilderWrapper {
   padding-bottom: 20px;
-  .queryBuilderTab
-  {
-    ul
-    {
+
+  .queryBuilderTab {
+    ul {
       border: 1px solid #E7E7E7;
       -webkit-padding-start: 0px;
       -moz-padding-start: 0px;
       display: inline-block;
-      li
-      {
+
+      li {
         list-style-type: none;
         display: inline-block;
         padding: 12px 20px;
@@ -644,19 +651,19 @@
         background-color: #fff;
         font-weight: bold;
       }
-      li:focus
-      {
+
+      li:focus {
         outline: none;
       }
-      .activeQueryBuilderTab
-      {
+
+      .activeQueryBuilderTab {
         background-color: #FFF050;
       }
     }
   }
 }
-.AceEditorWrapper
-{
+
+.AceEditorWrapper {
   -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
   box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
@@ -671,6 +678,7 @@
   background-color: #fff;
   // padding: 15px;
 }
+
 .queryBuilderLayoutSub {
   padding: 20px;
 }
@@ -680,18 +688,18 @@
   padding-top: 15px;
   padding-left: 20px;
   padding-bottom: 15px;
+
   i {
     padding-left: 5px;
   }
 }
 
 
-.common_checkbox
-{
+.common_checkbox {
   opacity: 0;
   position: absolute;
-  .common_checkbox_label
-  {
+
+  .common_checkbox_label {
     display: inline-block;
     vertical-align: middle;
     margin: 0px;
@@ -700,13 +708,13 @@
     position: relative;
   }
 }
-.common_checkbox_label
-{
+
+.common_checkbox_label {
   margin-bottom: 0px !important;
   padding-top: 5px;
 }
-.common_checkbox + .common_checkbox_label:before
-{
+
+.common_checkbox + .common_checkbox_label:before {
   content: '';
   background: #fff;
   border: 1px solid #ddd;
@@ -720,12 +728,12 @@
   border-radius:4px;
   cursor:pointer;
 }
-label
-{
+
+label {
   font-weight: normal;
 }
-.common_checkbox:checked + .common_checkbox_label:before
-{
+
+.common_checkbox:checked + .common_checkbox_label:before {
     content: url('./tick.png');
     background: #FFCA27;
     color: #fff;
@@ -741,12 +749,14 @@ label
 
 .apiResponseTab {
   padding-top: 20px;
+
   .apiResponseTabUl {
     display: inline-block;
     -webkit-padding-start: 0px;
     -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
     -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
     box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
+
     .apiResponseTabList {
       display: inline-block;
       padding: 15px 25px;
@@ -756,13 +766,16 @@ label
       color: #6B6B6B;
       cursor: pointer;
     }
+
     .apiResponseTabList:focus {
       outline: none;
     }
+
     .activeApiResponseTab {
       background-color: #FFF3D5
     }
   }
+
   .apiResponseTabPanel {
     .AceEditorWrapper {
       margin-top: 15px;

@@ -18,7 +18,7 @@ import {
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
-import '../TableCommon/ReactTableFix.css';
+import '../TableCommon/EventReactTableOverrides.css';
 
 const ViewRows = ({
   curTriggerName,
@@ -35,7 +35,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -103,7 +103,7 @@ const ViewRows = ({
           let conditionalClassname = styles.tableCellCenterAligned;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -275,7 +275,7 @@ const ViewRows = ({
                 let conditionalClassname = styles.tableCellCenterAligned;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -310,6 +310,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;
