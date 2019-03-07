@@ -1,3 +1,5 @@
+.. _hasura_metadata_schema:
+
 Hasura GraphQL engine metadata schema
 =====================================
 

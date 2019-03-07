@@ -1,3 +1,5 @@
+.. _metadata_file_format:
+
 Metadata file format reference
 ==============================
 

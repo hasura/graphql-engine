@@ -1,3 +1,5 @@
+.. _postgres_schema_metadata:
+
 Managing Postgres Schema and Hasura Metadata Declaratively
 ==========================================================
 

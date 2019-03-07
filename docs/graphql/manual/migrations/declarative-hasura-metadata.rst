@@ -1,3 +1,5 @@
+.. _manage_hasura_metadata:
+
 Managing Hasura Metadata Declaratively
 ======================================
 
