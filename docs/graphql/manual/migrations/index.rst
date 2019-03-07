@@ -8,6 +8,9 @@ Migrations
   :depth: 1
   :local:
 
+Introduction
+------------
+
 When you're in the development phase, you'll be using the Hasura Console to
 create and track tables, create relationships, add permissions etc. When you
 need to move to a new environment, it will become quite hard to re-do all these
@@ -28,6 +31,15 @@ database. We will split the use cases into two:
    <declarative-postgres-schema-hasura-metadata>`. (Hasura will take care of the
    Postgres schema also)
 
+Advanced
+--------
+
+Here are some advanced use-cases are reference documentation:
+
+- :doc:`auto-apply-migrations`
+- :doc:`advanced/writing-migrations-manually`
+- :doc:`advanced/migration-file-format`
+- :doc:`advanced/metadata-file-format`
 
 .. toctree::
   :maxdepth: 1
@@ -35,3 +47,4 @@ database. We will split the use cases into two:
 
   declarative-hasura-metadata
   declarative-postgres-schema-hasura-metadata
+  Advanced use-cases and reference documentation <advanced/index>
