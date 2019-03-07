@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColVals
        , PreSetCols
+       , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
@@ -140,3 +141,10 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
 
 type ColVals = HM.HashMap PGCol Value
 type PreSetCols = HM.HashMap PGCol S.SQLExp
+
+data MutateResp
+  = MutateResp
+  { _mrAffectedRows     :: !Int
+  , _mrReturningColumns :: ![ColVals]
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
