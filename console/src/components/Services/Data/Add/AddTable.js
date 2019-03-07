@@ -411,7 +411,7 @@ class AddTable extends Component {
         </div>
       );
     });
-    let createBtnText = 'Add table';
+    let createBtnText = 'Add Table';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
