@@ -1,11 +1,11 @@
 @import "../../../Common/Common.scss";
 @import "../../../Common/TextAreaWithCopy/TextAreaWithCopy.scss";
 
-.wd100
-{
+.wd100 {
   width: 100%;
   float: left;
 }
+
 .arrowLeft {
   width: 0;
   height: 0;
@@ -18,45 +18,45 @@
   left: -7px;
   bottom: 13px;
 }
-.yellowCircle
-{
+
+.yellowCircle {
   border-radius: 50%;
   width: 10px;
   height: 10px;
   background-color: #f8c533;
   margin-right: 10px;
 }
-.addPaddBottom
-{
+
+.addPaddBottom {
   padding-bottom: 20px !important;
 }
-.commonBorBottom
-{
+
+.commonBorBottom {
   border-bottom: 1px solid #DEDEDE;
 }
-.addPaddLeft
-{
+
+.addPaddLeft {
   padding-left: 20px;
 }
-.addPaddTop
-{
+
+.addPaddTop {
   padding-top: 20px !important;
 }
-.close
-{
+
+.close {
   position: absolute;
   right: 20px;
   top: 17px;
   z-index: 2;
   cursor: pointer;
-  img
-  {
+
+  img {
     display: inline-block;
     width: 10px;
   }
 }
-.popupWrapper
-{
+
+.popupWrapper {
   box-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.16);
   background-color: #ffffff;
   width: 540px;
@@ -67,26 +67,27 @@
   border-radius: 10px;
   padding: 20px;
   cursor: default;
-  .descriptionText
-  {
+
+  .descriptionText {
     text-align: left;
     padding-bottom: 15px;
     color: #505050;
   }
-  .listItems
-  {
+
+  .listItems {
     display: flex;
     align-items: center;
     padding-top: 15px;
-    .descriptionText
-    {
+
+    .descriptionText {
       padding-bottom: 0;
     }
   }
-  .copyGenerated
-  {
+
+  .copyGenerated {
 
   }
+
   .copyTooltip .tooltiptext::after {
     top: 26px !important;
   }
