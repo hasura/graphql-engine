@@ -9,7 +9,6 @@ import {
 import {
   fkLColChange,
   deleteTableSql,
-  addColSql,
   untrackTableSql,
   RESET,
   TOGGLE_ACTIVE_COLUMN,
@@ -18,24 +17,16 @@ import {
   deleteColumnSql,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
-import dataTypes from '../Common/DataTypes';
 import { convertListToDict } from '../../../../utils/data';
 import {
   setTable,
   fetchTableComment,
   fetchColumnComment,
 } from '../DataActions';
-import { showErrorNotification } from '../Notification';
-import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import Button from '../../../Common/Button/Button';
 import ColumnEditor from './ColumnEditor';
+import ColumnCreator from './ColumnCreator';
 import semverCheck from '../../../../helpers/semver';
-
-const alterTypeOptions = dataTypes.map((datatype, index) => (
-  <option value={datatype.value} key={index} title={datatype.description}>
-    {datatype.name}
-  </option>
-));
 
 class ModifyTable extends React.Component {
   state = {
@@ -263,12 +254,6 @@ class ModifyTable extends React.Component {
       );
     });
 
-    let colNameInput;
-    let colTypeInput;
-    let colNullInput;
-    let colUniqueInput;
-    let colDefaultInput;
-
     // TODO
     const untrackBtn = (
       <Button
@@ -392,106 +377,11 @@ class ModifyTable extends React.Component {
             {columnEditors}
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
-            <div className={styles.activeEdit}>
-              <form
-                className={`form-inline ${styles.display_flex}`}
-                onSubmit={e => {
-                  e.preventDefault();
-                  // validate before sending
-                  if (!gqlPattern.test(colNameInput.value)) {
-                    dispatch(
-                      showErrorNotification(
-                        gqlColumnErrorNotif[0],
-                        gqlColumnErrorNotif[1],
-                        gqlColumnErrorNotif[2],
-                        gqlColumnErrorNotif[3]
-                      )
-                    );
-                  } else if (
-                    colNameInput.value === '' ||
-                    colTypeInput.value === ''
-                  ) {
-                    dispatch(
-                      showErrorNotification(
-                        'Error creating column!',
-                        'Column name/type cannot be empty',
-                        '',
-                        {
-                          custom: 'Column name/type cannot be empty',
-                        }
-                      )
-                    );
-                  } else {
-                    dispatch(
-                      addColSql(
-                        tableName,
-                        colNameInput.value,
-                        colTypeInput.value,
-                        colNullInput.checked,
-                        colUniqueInput.checked,
-                        colDefaultInput.value,
-                        e.target
-                      )
-                    );
-                  }
-                }}
-              >
-                <input
-                  placeholder="column name"
-                  type="text"
-                  className={`${styles.input} input-sm form-control`}
-                  ref={n => (colNameInput = n)}
-                  data-test="column-name"
-                />
-                <select
-                  className={`${styles.select} input-sm form-control`}
-                  defaultValue=""
-                  ref={n => (colTypeInput = n)}
-                  data-test="data-type"
-                >
-                  <option disabled value="">
-                    -- type --
-                  </option>
-                  {alterTypeOptions}
-                </select>
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className={`${styles.input} ${
-                    styles.nullable
-                  } input-sm form-control`}
-                  ref={n => (colNullInput = n)}
-                  data-test="nullable-checkbox"
-                />
-                <label className={styles.nullLabel}>Nullable</label>
-                <input
-                  type="checkbox"
-                  className={`${styles.input} ${
-                    styles.nullable
-                  } input-sm form-control`}
-                  ref={n => (colUniqueInput = n)}
-                  data-test="unique-checkbox"
-                />
-                <label className={styles.nullLabel}>Unique</label>
-                <input
-                  placeholder="default value"
-                  type="text"
-                  className={`${styles.input} ${
-                    styles.defaultInput
-                  } input-sm form-control`}
-                  ref={n => (colDefaultInput = n)}
-                  data-test="default-value"
-                />
-                <Button
-                  type="submit"
-                  color="yellow"
-                  size="sm"
-                  data-test="add-column-button"
-                >
-                  + Add column
-                </Button>
-              </form>
-            </div>
+            <ColumnCreator
+              styles={styles}
+              dispatch={dispatch}
+              tableName={tableName}
+            />
             <hr />
             {untrackBtn}
             <Button

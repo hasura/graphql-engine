@@ -406,7 +406,7 @@ const addColSql = (
   colNull,
   colUnique,
   colDefault,
-  form
+  callback
 ) => {
   let defWithQuotes = "''";
   if (colType === 'text' && colDefault !== '') {
@@ -499,7 +499,7 @@ const addColSql = (
     const errorMsg = 'Adding column failed';
 
     const customOnSuccess = () => {
-      form.reset();
+      callback();
     };
     const customOnError = () => {};
 
@@ -871,24 +871,24 @@ const saveColumnChangesSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1440,24 +1440,24 @@ const saveColChangesWithFkSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */

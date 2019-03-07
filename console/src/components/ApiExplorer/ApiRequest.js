@@ -134,7 +134,7 @@ class ApiRequest extends Component {
             </div>
             <input
               onChange={this.onUrlChanged}
-              value={this.props.url}
+              value={this.props.url || ''}
               type="text"
               readOnly
               className={styles.inputGroupInput + ' form-control '}
@@ -244,7 +244,7 @@ class ApiRequest extends Component {
           >
             <input
               className={'form-control ' + styles.responseTableInput}
-              value={header.key}
+              value={header.key || ''}
               disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Key"
@@ -270,7 +270,7 @@ class ApiRequest extends Component {
           >
             <input
               className={'form-control ' + styles.responseTableInput}
-              value={header.value}
+              value={header.value || ''}
               disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Value"
