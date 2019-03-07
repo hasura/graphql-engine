@@ -1,6 +1,9 @@
-# graphql2chartjs - Use GraphQL as a data source for ChartJS
+# graphql2chartjs - Instant realtime charts on Postgres using GraphQL
 
 `graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL API and render the output as a ChartJS chart.
+
+If you're using Postgres and Hasura, this is what your setup looks like:
+
 
 How it works:
 1. Make a graphql query aliasing fields in the GraphQL query appropriately
