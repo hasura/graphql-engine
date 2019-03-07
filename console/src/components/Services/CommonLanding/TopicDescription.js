@@ -4,13 +4,13 @@ import PropTypes from 'prop-types';
 class TopicDescription extends React.Component {
   render() {
     const Rectangle = require('../CustomResolver/Landing/Rectangle.svg');
-    const styles = require('../CustomResolver/Styles.scss');
-    const { title, imgUrl, imgAlt,  description} = this.props;
+    const styles = require('../CustomResolver/CustomResolver.scss');
+    const { title, imgUrl, imgAlt, description } = this.props;
     return (
       <div>
         <div className={styles.subHeaderText}>
           <img className={'img-responsive'} src={Rectangle} alt={'Rectangle'} />
-          { title }
+          {title}
         </div>
         <div className={styles.remoteSchemaImg}>
           <img className={'img-responsive'} src={imgUrl} alt={imgAlt} />
@@ -27,6 +27,5 @@ TopicDescription.propTypes = {
   imgUrl: PropTypes.string.isRequired,
   imgAlt: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
-
 };
 export default TopicDescription;

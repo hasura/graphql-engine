@@ -10,7 +10,7 @@ import TryItOut from '../../CommonLanding/TryItOut';
 
 class CustomResolver extends React.Component {
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
     // const node = require('./Node.svg');
     // const Rectangle = require('./Rectangle.svg');
 

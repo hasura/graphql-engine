@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PopUp from '../CustomResolver/Landing/PopUp';
+
 class TryItOut extends React.Component {
   constructor() {
     super();
@@ -13,7 +14,7 @@ class TryItOut extends React.Component {
   }
   render() {
     const Rectangle = require('../CustomResolver/Landing/Rectangle.svg');
-    const styles = require('../CustomResolver/Styles.scss');
+    const styles = require('../CustomResolver/CustomResolver.scss');
     const glitch = require('../CustomResolver/Landing/glitch.png');
     const googleCloud = require('../CustomResolver/Landing/google_cloud.svg');
     const MicrosoftAzure = require('../CustomResolver/Landing/Microsoft_Azure_Logo.svg');
@@ -31,7 +32,11 @@ class TryItOut extends React.Component {
             <div className={styles.logoIcon}>
               <img className={'img-responsive'} src={glitch} alt={'glitch'} />
             </div>
-            <a href={this.props.glitchLink} target={'_blank'}>
+            <a
+              href={this.props.glitchLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <button className={styles.default_button}>
                 Try it with Glitch{' '}
                 <img
@@ -63,7 +68,11 @@ class TryItOut extends React.Component {
             </div>
           </div>
           <div className={styles.boxSmallWrapper}>
-            <a href={this.props.googleCloudLink} target={'_blank'}>
+            <a
+              href={this.props.googleCloudLink}
+              target={'_blank'}
+              rel="noopener noreferrer"
+            >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img
@@ -74,7 +83,11 @@ class TryItOut extends React.Component {
                 </div>
               </div>
             </a>
-            <a href={this.props.MicrosoftAzureLink} target={'_blank'}>
+            <a
+              href={this.props.MicrosoftAzureLink}
+              target={'_blank'}
+              rel="noopener noreferrer"
+            >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img
@@ -85,7 +98,11 @@ class TryItOut extends React.Component {
                 </div>
               </div>
             </a>
-            <a href={this.props.awsLink} target={'_blank'}>
+            <a
+              href={this.props.awsLink}
+              target={'_blank'}
+              rel="noopener noreferrer"
+            >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img
@@ -97,7 +114,11 @@ class TryItOut extends React.Component {
               </div>
             </a>
             <div className={styles.instructions}>
-              <a href={this.props.adMoreLink} target="_blank">
+              <a
+                href={this.props.adMoreLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <span>And many more</span> <div className={styles.rightArrow} />
               </a>
             </div>
