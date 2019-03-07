@@ -11,28 +11,6 @@ import {
 
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 
-const graphqlurl = (
-  <Tooltip id="tooltip-cascade">
-    Remote GraphQL server’s URL. E.g. https://my-domain/v1alpha1/graphql
-  </Tooltip>
-);
-const clientHeaderForward = (
-  <Tooltip id="tooltip-cascade">
-    Toggle forwarding headers sent by the client app in the request to your
-    remote GraphQL server
-  </Tooltip>
-);
-const additionalHeaders = (
-  <Tooltip id="tooltip-cascade">
-    Custom headers to be sent to the remote GraphQL server
-  </Tooltip>
-);
-const schema = (
-  <Tooltip id="tooltip-cascade">
-    Give this GraphQL schema a friendly name.
-  </Tooltip>
-);
-
 class Common extends React.Component {
   getPlaceHolderText(valType) {
     if (valType === 'static') {
@@ -40,23 +18,55 @@ class Common extends React.Component {
     }
     return 'env var name';
   }
+
   handleInputChange(e) {
     const fieldName = e.target.getAttribute('data-key');
     this.props.dispatch(inputChange(fieldName, e.target.value));
   }
+
   toggleUrlParam(e) {
     const field = e.target.getAttribute('value');
     this.props.dispatch(inputChange(field, ''));
   }
+
   toggleForwardHeaders() {
     this.props.dispatch({ type: UPDATE_FORWARD_CLIENT_HEADERS });
   }
+
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
+
     const { name, manualUrl, envName, forwardClientHeaders } = this.props;
     const { isModify, id } = this.props.editState;
+
     const isDisabled = id >= 0 && !isModify;
     const urlRequired = !manualUrl && !envName;
+
+    const graphqlurl = (
+      <Tooltip id="tooltip-cascade">
+        Remote GraphQL server’s URL. E.g. https://my-domain/v1alpha1/graphql
+      </Tooltip>
+    );
+
+    const clientHeaderForward = (
+      <Tooltip id="tooltip-cascade">
+        Toggle forwarding headers sent by the client app in the request to your
+        remote GraphQL server
+      </Tooltip>
+    );
+
+    const additionalHeaders = (
+      <Tooltip id="tooltip-cascade">
+        Custom headers to be sent to the remote GraphQL server
+      </Tooltip>
+    );
+
+    const schema = (
+      <Tooltip id="tooltip-cascade">
+        Give this GraphQL schema a friendly name.
+      </Tooltip>
+    );
+
     return (
       <div className={styles.CommonWrapper}>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>

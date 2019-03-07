@@ -86,7 +86,7 @@ class ModifyTable extends React.Component {
       columnComment,
       tableCommentEdit,
     } = this.props;
-    const styles = require('./Modify.scss');
+    const styles = require('./ModifyTable.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
     const hasPrimaryKeys =
       tableSchema &&

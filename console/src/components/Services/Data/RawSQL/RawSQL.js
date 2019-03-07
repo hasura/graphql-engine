@@ -64,7 +64,7 @@ const RawSQL = ({
   migrationMode,
   serverVersion,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
 
   let alert = null;
 
@@ -181,9 +181,7 @@ const RawSQL = ({
   const placeholderText = functionText ? 'this' : 'table';
   return (
     <div
-      className={`${styles.main_wrapper} ${styles.padd_left} ${
-        styles.padd_top
-      }`}
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
       <Helmet title="Run SQL - Data | Hasura" />
       <div className={styles.subHeader}>
