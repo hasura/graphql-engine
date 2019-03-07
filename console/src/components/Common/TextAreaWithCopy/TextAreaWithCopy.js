@@ -6,7 +6,8 @@ class TextAreaWithCopy extends React.Component {
   copyToClip(type, id) {
     let text = '';
     if (this.props.copyText.length > 0) {
-      text = window.sqlFormatter
+
+      text = window.sqlFormatter && this.props.textLanguage && this.props.textLanguage.toLowerCase() === 'sql'
         ? window.sqlFormatter.format(this.props.copyText, {
           language: this.props.textLanguage,
         })
@@ -41,13 +42,13 @@ class TextAreaWithCopy extends React.Component {
   render() {
     const style = require('./TextAreaWithCopy.scss');
 
-    const { copyText } = this.props;
+    const { copyText, toolTipClass } = this.props;
 
     return (
       <div className={`${style.codeBlockCustom}`}>
         <div className={`${style.copyGenerated}`}>
           <div className={`${style.copyTooltip}`}>
-            <span className={style.tooltiptext} id="copyCustomFunctionSQL">
+            <span className={toolTipClass ? toolTipClass : style.tooltiptext} id="copyCustomFunctionSQL">
               Copy
             </span>
             <i
@@ -66,7 +67,7 @@ class TextAreaWithCopy extends React.Component {
           </div>
         </div>
 
-        {window && window.sqlFormatter && window.hljs ? (
+        {window && window.sqlFormatter && window.hljs && this.props.textLanguage && this.props.textLanguage.toLowerCase() === 'sql' ? (
           <pre>
             <code
               className={style.formattedCode}
@@ -81,7 +82,7 @@ class TextAreaWithCopy extends React.Component {
             />
           </pre>
         ) : (
-          <pre>
+          <pre className={style.schemaPreWrapper}>
             <code className={style.formattedCode}>{copyText}</code>
           </pre>
         )}
@@ -93,6 +94,7 @@ class TextAreaWithCopy extends React.Component {
 TextAreaWithCopy.propTypes = {
   copyText: PropTypes.string.isRequired,
   textLanguage: PropTypes.string,
+  isClass: PropTypes.boolean
 };
 
 export default TextAreaWithCopy;
