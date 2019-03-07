@@ -15,6 +15,7 @@ import qualified Data.Sequence            as DS
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
@@ -26,16 +27,17 @@ import qualified Hasura.SQL.DML           as S
 
 data UpdateQueryP1
   = UpdateQueryP1
-  { uqp1Table   :: !QualifiedTable
-  , uqp1SetExps :: ![(PGCol, S.SQLExp)]
-  , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , pqp1MutFlds :: !MutFlds
+  { uqp1Table    :: !QualifiedTable
+  , uqp1SetExps  :: ![(PGCol, S.SQLExp)]
+  , uqp1Where    :: !(AnnBoolExpSQL, AnnBoolExpSQL)
+  , uqp1MutFlds  :: !MutFlds
+  , uqp1UniqCols :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
-mkSQLUpdate
-  :: Bool -> UpdateQueryP1 -> S.SelectWith
-mkSQLUpdate strfyNum (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds False strfyNum
+mkUpdateCTE
+  :: UpdateQueryP1 -> S.CTE
+mkUpdateCTE (UpdateQueryP1 tn setExps (permFltr, wc) _ _) =
+  S.CTEUpdate update
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -45,10 +47,12 @@ mkSQLUpdate strfyNum (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
 getUpdateDeps
   :: UpdateQueryP1
   -> [SchemaDependency]
-getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds) =
-  mkParentDep tn : colDeps <> whereDeps <> retDeps
+getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds uniqCols) =
+  mkParentDep tn : colDeps <> uniqColDeps <> whereDeps <> retDeps
   where
     colDeps   = map (mkColDep "on_type" tn . fst) setExps
+    uniqColDeps = map (mkColDep "on_type" tn) $
+                  maybe [] (map pgiName) uniqCols
     whereDeps = getBoolExpDeps tn wc
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
@@ -140,6 +144,8 @@ validateUpdateQueryWith f uq = do
   let fieldInfoMap = tiFieldInfoMap tableInfo
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
+      uniqCols = getUniqCols (getCols fieldInfoMap) $
+                 tiUniqOrPrimConstraints tableInfo
 
   -- convert the object to SQL set expression
   setItems <- withPathK "$set" $
@@ -173,6 +179,7 @@ validateUpdateQueryWith f uq = do
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
     (mkDefaultMutFlds mAnnRetCols)
+    uniqCols
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
@@ -186,12 +193,13 @@ validateUpdateQuery
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateQueryToTx :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+updateQueryToTx
+  :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 updateQueryToTx strfyNum (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
+  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
+                (uqp1MutFlds u) (uqp1UniqCols u) strfyNum
   where
-    updateSQL = toSQL $ mkSQLUpdate strfyNum u
+    updateCTE = mkUpdateCTE u
 
 runUpdate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
