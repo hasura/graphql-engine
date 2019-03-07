@@ -150,10 +150,9 @@ schemaUpdateEventProcessor strfyNum pool logger httpManager
       -- init schema cache built then reload
     shouldReload (SUESuccess payload) =
       (_epInstanceId payload /= getInstanceId instanceId)
-      && withCacheInit (_epOccurredAt payload) cacheInit
+      && maybe True (withCacheInit $ _epOccurredAt payload) cacheInit
 
-    withCacheInit _ Nothing                  = False
-    withCacheInit occurredAt (Just initTime) = occurredAt > initTime
+    withCacheInit occurredAt initTime = occurredAt > initTime
 
 logInfo :: Logger -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $
