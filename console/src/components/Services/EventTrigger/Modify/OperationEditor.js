@@ -1,5 +1,5 @@
 import React from 'react';
-import Editor from './Editor';
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from './Tooltip';
 
 import { toggleQueryType, toggleColumn } from './Actions';
@@ -189,6 +189,7 @@ class OperationEditor extends React.Component {
             styles={styles}
             property="ops"
             ongoingRequest={modifyTrigger.ongoingRequest}
+            service="modify-trigger"
             toggleCallback={this.setValues}
           />
         </div>

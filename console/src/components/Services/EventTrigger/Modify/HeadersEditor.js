@@ -1,7 +1,6 @@
 import React from 'react';
-import Editor from './Editor';
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import AceEditor from 'react-ace';
-
 import {
   addHeader,
   removeHeader,
@@ -25,7 +24,6 @@ class HeadersEditor extends React.Component {
       }
     });
   };
-
   addExtraHeader = () => {
     const { dispatch, modifyTrigger } = this.props;
     const lastHeader = modifyTrigger.headers[modifyTrigger.headers.length - 1];
@@ -147,6 +145,7 @@ class HeadersEditor extends React.Component {
             toggleCallback={this.setValues}
             ongoingRequest={modifyTrigger.ongoingRequest}
             property="headers"
+            service="modify-trigger"
             styles={styles}
           />
         </div>

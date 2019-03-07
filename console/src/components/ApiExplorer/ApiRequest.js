@@ -293,12 +293,12 @@ class ApiRequest extends Component {
               {header.key.toLowerCase() ===
               `x-hasura-${globals.adminSecretLabel}` ? (
                 <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAdminSecretClicked.bind(this)}
-                />
-              ) : null}
+                    className={styles.showAdminSecret + ' fa fa-eye'}
+                    data-header-id={i}
+                    aria-hidden="true"
+                    onClick={this.onShowAdminSecretClicked.bind(this)}
+                  />
+                ) : null}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}

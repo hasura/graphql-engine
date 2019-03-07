@@ -1,6 +1,5 @@
 import React from 'react';
-import Editor from './Editor';
-
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
   setRetryNum,
   setRetryInterval,
@@ -186,6 +185,7 @@ class RetryConfEditor extends React.Component {
             editorExpanded={expanded}
             ongoingRequest={modifyTrigger.ongoingRequest}
             property={'retry'}
+            service="modify-trigger"
             toggleCallback={this.setValues}
             styles={styles}
           />

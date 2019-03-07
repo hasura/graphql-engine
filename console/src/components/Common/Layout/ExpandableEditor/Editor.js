@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '../../../Common/Button/Button';
+import Button from '../../Button/Button';
 
 class Editor extends React.Component {
   state = {
@@ -21,9 +21,9 @@ class Editor extends React.Component {
         ${this.props.styles.modifyEditButton}`}
       color="white"
       size="sm"
-      data-test={`${this.state.isEditing ? 'close' : 'edit'}-${
-        this.props.name
-      }`}
+      data-test={`${this.props.service}-${
+        this.state.isEditing ? 'close' : 'edit'
+      }-${this.props.property}`}
       onClick={this.toggleEditor}
     >
       {this.state.isEditing ? 'Close' : 'Edit'}
@@ -31,8 +31,8 @@ class Editor extends React.Component {
   );
 
   saveButton = saveFunc => {
-    const { name, property, ongoingRequest, styles } = this.props;
-    const isSaving = ongoingRequest === property;
+    const { service, property, ongoingRequest, styles } = this.props;
+    const isProcessing = ongoingRequest === property;
     return (
       <Button
         type="submit"
@@ -40,10 +40,28 @@ class Editor extends React.Component {
         color="yellow"
         size="sm"
         onClick={saveFunc}
-        data-test={`modify-trigger-${name}-save`}
-        disabled={isSaving}
+        data-test={`${service}-${property}-save`}
+        disabled={isProcessing}
       >
-        {isSaving ? 'Saving ...' : 'Save'}
+        Save
+      </Button>
+    );
+  };
+
+  removeButton = removeFunc => {
+    const { service, property, ongoingRequest, styles } = this.props;
+    const isProcessing = ongoingRequest === property;
+    return (
+      <Button
+        type="submit"
+        className={styles.modifySaveButton}
+        color="red"
+        size="sm"
+        onClick={removeFunc}
+        data-test={`${service}-${property}-remove`}
+        disabled={isProcessing}
+      >
+        Remove
       </Button>
     );
   };
@@ -53,7 +71,7 @@ class Editor extends React.Component {
     const { editorCollapsed, editorExpanded } = this.props;
 
     return isEditing
-      ? editorExpanded(this.toggleButton, this.saveButton)
+      ? editorExpanded(this.toggleButton, this.saveButton, this.removeButton)
       : editorCollapsed(this.toggleButton);
   }
 }

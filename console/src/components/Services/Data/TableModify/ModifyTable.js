@@ -353,6 +353,8 @@ class ModifyTable extends React.Component {
     }
 
     // if (tableSchema.primary_key.columns > 0) {}
+    console.log(columns);
+    console.log(tableSchema.primary_key);
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -382,6 +384,8 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
               tableName={tableName}
             />
+            <hr />
+            <h4 className={styles.subheading_text}>Primary keys</h4>
             <hr />
             {untrackBtn}
             <Button

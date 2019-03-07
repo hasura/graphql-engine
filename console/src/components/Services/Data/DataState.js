@@ -89,6 +89,7 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
+  pkEdit: [''],
   fkAdd: {
     refTable: '',
     pairs: [],

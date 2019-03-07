@@ -1,5 +1,5 @@
 import React from 'react';
-import Editor from './Editor';
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import {
   setWebhookUrl,
@@ -95,6 +95,7 @@ class WebhookEditor extends React.Component {
             editorExpanded={expanded}
             toggleCallback={this.setValues}
             property="webhook"
+            service="modify-trigger"
             ongoingRequest={modifyTrigger.ongoingRequest}
             styles={styles}
           />
