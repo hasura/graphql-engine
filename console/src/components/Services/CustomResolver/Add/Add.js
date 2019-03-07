@@ -36,7 +36,7 @@ class Add extends React.Component {
               disabled={isRequesting}
               data-test="add-remote-schema-submit"
             >
-              {isRequesting ? 'Adding...' : 'Create'}
+              {isRequesting ? 'Adding...' : 'Add Remote Schema'}
             </Button>
             {/*
             <button className={styles.default_button}>Cancel</button>

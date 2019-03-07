@@ -47,8 +47,8 @@ class EventTriggerContent extends React.Component {
         <div className={styles.listItems}>
           <div className={styles.descriptionText + ' ' + styles.addPaddLeft}>
             4. Click on the{' '}
-            <span className={styles.fontWeightBold}>Create</span> button -
-            That’s it!
+            <span className={styles.fontWeightBold}>Add Event Trigger</span>{' '}
+            button - That’s it!
           </div>
         </div>
         <div className={styles.listItems}>
