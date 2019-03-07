@@ -44,12 +44,11 @@ type migrateCreateOptions struct {
 func (o *migrateCreateOptions) run() error {
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
-	createOptions.IsCMD = true
 	err := createOptions.Create()
 	if err != nil {
 		return errors.Wrap(err, "error creating migration files")
 	}
-	o.EC.Logger.Infof("Migration files created with version %d_%s.[up|down].[yaml|sql]", timestamp, o.name)
+	o.EC.Logger.Infof("Migration files created with version %d_%s.[up|down].yaml", timestamp, o.name)
 	return nil
 }
 
