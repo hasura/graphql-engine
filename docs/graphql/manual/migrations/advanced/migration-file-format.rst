@@ -30,17 +30,41 @@ YAML files
 
 Each ``up`` or ``down`` YAML file contains Hasura Metadata API actions to be
 executed for that particular migration. The file should have a list of such API
-actions, which is represented with a ``-`` in YAML.
+actions, which is represented with a ``-`` in YAML. Here is an example file:
 
 .. code-block:: yaml
+   :caption: 1551151778747_create_table_public_author.up.yaml
+   :linenos:
 
    - type: run_sql
      args:
        sql: |
-         CREATE TABLE profile (
-           id SERIAL PRIMARY KEY
-           name TEXT
+         CREATE TABLE "public"."author" (
+           "id" SERIAL NOT NULL,
+           "name" TEXT NOT NULL,
+           PRIMARY KEY ("id")
          );
+   - type: track_table
+     args:
+       schema: public
+       name: author
+
+.. code-block:: yaml
+   :caption: 1551151778747_create_table_public_author.down.yaml
+   :linenos:
+
+   - type: untrack_table
+     args:
+       schema: public
+       name: author
+   - type: run_sql
+     args:
+       sql: |
+         DROP TABLE "public"."author"
+
+Each one of the actions in these files are actually Hasura Metadata API calls,
+which are executed in sequence when the migration is applied. You can find all
+the metadata action on the reference page at :ref:`metadata_apis`.
 
 SQL Files
 ---------
