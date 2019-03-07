@@ -1,17 +1,41 @@
-# graphql2chartjs - Instant realtime charts on Postgres using GraphQL
+# graphql2chartjs - Instant realtime charts using GraphQL
 
 `graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL API and render the output as a ChartJS chart.
 
-If you're using Postgres and Hasura, this is what your setup with graphql2chartjs might look like:
+If you're using Postgres and [Hasura](https://hasura.io), this is what using `graphql2chartjs` looks like:
 
 ![graphql2chartjs](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/graphql2chartjs-explained.png)
 
-## Demos
+## Demos & sandbox
 - Live demo: [https://graphql2chartjs-examples.herokuapp.com](https://graphql2chartjs-examples.herokuapp.com)
 - Vanilla JS: [codesandbox.io/vanilla]
 - React: [codesandbox.io/react]
 - Angular: [codesandbox.io/angular]
 - Vue: [codesandbox.io/vue]
+
+## Tutorials
+
+1. Basic bar chart
+   ![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+2. Multiple datasets
+   ![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+3. Multiple chart types in the same chart
+   ![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+4. Realtime chart with animations
+   ![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+5. Realtime time-series chart
+   ![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+
+## Mapping GraphQL queries to ChartJS charts
+
+Different types of charts need different structures in their datasets. 
+
+For example a bar chart dataset needs labels and data associated for each label; the ChartJS API refers to this as `label` and `data`. Once you alias fields in your graphql query to `label` and `data`, and pass the response through `graphql2chartjs`, your dataset is ready to be used by bar chart in chartjs.
+
+### Bar / Doughnut / Pie
+
+**Show a query with the alias names / field names being mapped to things in a bar chart**
+
 
 
 ## Sample usage with react, apollo, react-chartjs-2
