@@ -9,9 +9,9 @@ import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
-import ReusableTextAreaWithCopy from '../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
 import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
+
 const appPrefix = globals.urlPrefix + '/events';
 
 class Schema extends Component {
@@ -25,8 +25,9 @@ class Schema extends Component {
   render() {
     const { migrationMode, dispatch, listingTrigger } = this.props;
 
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+
     const showFirstSection = listingTrigger.length ? false : true;
-    const styles = require('../PageContainer/PageContainer.scss');
     const queryDefinition = `mutation {
   insert_user(objects: [{name: "testuser"}] ){
     affected_rows
@@ -69,16 +70,17 @@ class Schema extends Component {
             ) : null}
           </div>
           <hr />
-          {showFirstSection ?
-          (<div>
-            <TopicDescription
-            title="What are Event Triggers?"
-            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
-            imgAlt="Event Triggers"
-            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
-          />
-          <hr className={styles.clear_fix} />
-          </div>) : null}
+          {showFirstSection ? (
+            <div>
+              <TopicDescription
+                title="What are Event Triggers?"
+                imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+                imgAlt="Event Triggers"
+                description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+              />
+              <hr className={styles.clear_fix} />
+            </div>
+          ) : null}
           <TryItOut
             service="eventTrigger"
             title="Steps to deploy an example Event Trigger to Glitch"

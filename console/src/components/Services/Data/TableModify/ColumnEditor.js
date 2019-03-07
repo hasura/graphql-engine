@@ -38,7 +38,7 @@ const ColumnEditor = ({
 }) => {
   //  eslint-disable-line no-unused-vars
   const c = column;
-  const styles = require('./Modify.scss');
+  const styles = require('./ModifyTable.scss');
   let [iname, inullable, iunique, idefault, icomment, itype] = [
     null,
     null,

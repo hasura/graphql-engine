@@ -232,8 +232,8 @@ class AddTrigger extends Component {
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
-    const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    const styles = require('../TableCommon/EventTable.scss');
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -297,7 +297,7 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div key={i} className={styles.noPadd + ' col-md-4'}>
+            <div key={i} className={styles.padd_remove + ' col-md-4'}>
               <div className={'checkbox '}>
                 <label>
                   {inputHtml}
@@ -323,7 +323,7 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+          <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
             {' '}
             {getColumnList('update')}{' '}
           </div>
@@ -470,7 +470,7 @@ class AddTrigger extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.main_wrapper} ${
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
           styles.padd_left
         }`}
       >

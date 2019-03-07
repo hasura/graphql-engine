@@ -5,7 +5,7 @@ import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import styles from '../TableModify/Modify.scss';
+import styles from '../TableModify/ModifyTable.scss';
 
 class RelationshipEditor extends React.Component {
   state = {

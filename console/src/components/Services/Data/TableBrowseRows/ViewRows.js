@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 import 'react-table/react-table.css';
-import './ReactTableFix.css';
-import DragFoldTable from './DragFoldTable';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
 import {
   vExpandRel,
@@ -52,9 +52,9 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
 
-  const checkIfSingleRow = (_curRelName) => {
+  const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
 
     const parentTableSchema = parentTableName
@@ -67,7 +67,9 @@ const ViewRows = ({
     } else if (
       _curRelName &&
       parentTableSchema &&
-      parentTableSchema.relationships.find(r => r.name === _curRelName && r.rel_type === 'object')
+      parentTableSchema.relationships.find(
+        r => r.name === _curRelName && r.rel_type === 'object'
+      )
     ) {
       // Am I an obj_rel for my parent?
       _isSingleRow = true;
@@ -76,8 +78,10 @@ const ViewRows = ({
     return _isSingleRow;
   };
 
-  const checkIfHasPrimaryKey = (_tableSchema) => {
-    return _tableSchema.primary_key && _tableSchema.primary_key.columns.length > 0;
+  const checkIfHasPrimaryKey = _tableSchema => {
+    return (
+      _tableSchema.primary_key && _tableSchema.primary_key.columns.length > 0
+    );
   };
 
   const getGridHeadings = (_columns, _relationships) => {
@@ -107,13 +111,13 @@ const ViewRows = ({
         Header: (
           <div className="ellipsis" title="Click to sort">
             <span className={styles.tableHeaderCell}>
-              { columnName } <i className={'fa ' + sortIcon} />
+              {columnName} <i className={'fa ' + sortIcon} />
             </span>
           </div>
         ),
         accessor: columnName,
         id: columnName,
-        foldable: true
+        foldable: true,
       });
     });
 
@@ -123,14 +127,12 @@ const ViewRows = ({
       _gridHeadings.push({
         Header: (
           <div className="ellipsis">
-            <span className={styles.tableHeaderCell}>
-              { relName }
-            </span>
+            <span className={styles.tableHeaderCell}>{relName}</span>
           </div>
         ),
         accessor: relName,
         id: relName,
-        foldable: true
+        foldable: true,
       });
     });
 
@@ -178,7 +180,7 @@ const ViewRows = ({
               title={title}
               data-test={`row-${type}-button-${rowIndex}`}
             >
-              { icon }
+              {icon}
             </Button>
           );
         };
@@ -201,17 +203,13 @@ const ViewRows = ({
             handleClick = handleExpand;
           }
 
-          const expanderIcon = (
-            <i className={`fa ${icon}`} />
-          );
+          const expanderIcon = <i className={`fa ${icon}`} />;
 
           return getButton('expand', expanderIcon, title, handleClick);
         };
 
-        const getEditButton = (pkClause) => {
-          const editIcon = (
-            <i className="fa fa-edit" />
-          );
+        const getEditButton = pkClause => {
+          const editIcon = <i className="fa fa-edit" />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -225,10 +223,8 @@ const ViewRows = ({
           return getButton('edit', editIcon, editTitle, handleEditClick);
         };
 
-        const getDeleteButton = (pkClause) => {
-          const deleteIcon = (
-            <i className="fa fa-trash" />
-          );
+        const getDeleteButton = pkClause => {
+          const deleteIcon = <i className="fa fa-trash" />;
 
           const handleDeleteClick = () => {
             dispatch(deleteItem(pkClause));
@@ -236,13 +232,16 @@ const ViewRows = ({
 
           const deleteTitle = 'Delete row';
 
-          return getButton('delete', deleteIcon, deleteTitle, handleDeleteClick);
+          return getButton(
+            'delete',
+            deleteIcon,
+            deleteTitle,
+            handleDeleteClick
+          );
         };
 
         const getCloneButton = () => {
-          const cloneIcon = (
-            <i className="fa fa-clone" />
-          );
+          const cloneIcon = <i className="fa fa-clone" />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
@@ -293,7 +292,7 @@ const ViewRows = ({
           let cellTitle = '';
 
           if (rowColumnValue === null) {
-            cellValue = (<i>NULL</i>);
+            cellValue = <i>NULL</i>;
             cellTitle = 'NULL';
           } else if (rowColumnValue === undefined) {
             cellValue = 'NULL';
@@ -306,9 +305,11 @@ const ViewRows = ({
             cellTitle = cellValue;
           }
 
-
           return (
-            <div className={isExpanded ? styles.tableCellExpanded : ''} title={cellTitle}>
+            <div
+              className={isExpanded ? styles.tableCellExpanded : ''}
+              title={cellTitle}
+            >
               {cellValue}
             </div>
           );
@@ -326,17 +327,14 @@ const ViewRows = ({
 
           const getRelExpander = (value, className, clickHandler) => {
             return (
-              <a
-                href="#"
-                className={className}
-                onClick={clickHandler}
-              >
+              <a href="#" className={className} onClick={clickHandler}>
                 {value}
               </a>
             );
           };
 
-          const isRelExpanded = curQuery.columns.find(c => c.name === rel.rel_name) !== undefined;
+          const isRelExpanded =
+            curQuery.columns.find(c => c.name === rel.rel_name) !== undefined;
 
           if (isRelExpanded) {
             const handleCloseClick = e => {
@@ -344,16 +342,18 @@ const ViewRows = ({
               dispatch(vCloseRel(curPath, rel.rel_name));
             };
 
-            cellValue = getRelExpander('Close', styles.expanded, handleCloseClick);
+            cellValue = getRelExpander(
+              'Close',
+              styles.expanded,
+              handleCloseClick
+            );
           } else {
             const currentFkey = rel.rel_def.foreign_key_constraint_on;
             const currentFkeyValue = row[currentFkey];
 
             if (currentFkeyValue === null) {
               // cannot be expanded as value is null
-              cellValue = (
-                <i>NULL</i>
-              );
+              cellValue = <i>NULL</i>;
             } else {
               // can be expanded
               const pkClause = getPKClause();
@@ -367,11 +367,7 @@ const ViewRows = ({
             }
           }
 
-          return (
-            <div>
-              { cellValue }
-            </div>
-          );
+          return <div>{cellValue}</div>;
         };
 
         newRow[relName] = getRelCellContent();
@@ -447,8 +443,8 @@ const ViewRows = ({
               <div className="alert alert-warning" role="alert">
                 There is no unique identifier (primary Key) for a row. You need
                 at-least one primary key to allow editing, Please use{' '}
-                <Link to="/data/sql">Raw SQL</Link> to make one or more column as
-                primary key.
+                <Link to="/data/sql">Raw SQL</Link> to make one or more column
+                as primary key.
               </div>
             </div>
           </div>
@@ -499,7 +495,9 @@ const ViewRows = ({
           return (
             <ViewRows
               key={i}
-              curTableName={findTableFromRel(schemas, tableSchema, rel).table_name}
+              curTableName={
+                findTableFromRel(schemas, tableSchema, rel).table_name
+              }
               currentSchema={currentSchema}
               curQuery={cq}
               curFilter={curFilter}
@@ -538,7 +536,8 @@ const ViewRows = ({
     if (isProgressing) {
       return (
         <div>
-          {' '}<Spinner />{' '}
+          {' '}
+          <Spinner />{' '}
         </div>
       );
     }
@@ -612,11 +611,8 @@ const ViewRows = ({
     };
 
     const getTheadThProps = (finalState, some, column) => ({
-      onClick: (e) => {
-        if (
-          !disableSortColumn &&
-          column.id
-        ) {
+      onClick: e => {
+        if (!disableSortColumn && column.id) {
           sortByColumn(column.id, !e.shiftKey);
         }
 
@@ -675,19 +671,15 @@ const ViewRows = ({
 
   return (
     <div className={isVisible ? '' : 'hide '}>
-      { getFilterQuery() }
+      {getFilterQuery()}
       <hr />
-      { getPrimaryKeyMsg() }
+      {getPrimaryKeyMsg()}
       <div className="row">
         <div className="col-xs-12">
-          <div className={styles.tableContainer}>
-            { renderTableBody() }
-          </div>
+          <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
           <br />
-          <div>
-            { getChildComponent() }
-          </div>
+          <div>{getChildComponent()}</div>
         </div>
       </div>
     </div>

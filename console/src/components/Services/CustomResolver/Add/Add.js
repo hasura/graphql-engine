@@ -11,9 +11,12 @@ class Add extends React.Component {
   componentWillUnmount() {
     this.props.dispatch({ type: RESET });
   }
+
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
+
     const { isRequesting, dispatch } = this.props;
+
     return (
       <div className={styles.addWrapper}>
         <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />

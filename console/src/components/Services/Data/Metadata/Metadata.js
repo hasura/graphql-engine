@@ -48,11 +48,11 @@ class Metadata extends Component {
     });
   }
   render() {
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
       <div
-        className={`${styles.main_wrapper} ${styles.padd_left} ${
+        className={`${styles.clear_fix} ${styles.padd_left} ${
           styles.padd_top
         } ${metaDataStyles.metadata_wrapper} container-fluid`}
       >

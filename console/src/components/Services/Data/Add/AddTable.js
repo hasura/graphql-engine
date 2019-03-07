@@ -128,19 +128,21 @@ class AddTable extends Component {
       }
       // check for column value being valid graphql
       let isValid = true;
-      this.props.columns.filter(c => c.name !== '').map(c => {
-        if (!gqlPattern.test(c.name)) {
-          this.props.dispatch(
-            showErrorNotification(
-              gqlColumnErrorNotif[0],
-              gqlColumnErrorNotif[1],
-              gqlColumnErrorNotif[2],
-              gqlColumnErrorNotif[3]
-            )
-          );
-          isValid = false;
-        }
-      });
+      this.props.columns
+        .filter(c => c.name !== '')
+        .map(c => {
+          if (!gqlPattern.test(c.name)) {
+            this.props.dispatch(
+              showErrorNotification(
+                gqlColumnErrorNotif[0],
+                gqlColumnErrorNotif[1],
+                gqlColumnErrorNotif[2],
+                gqlColumnErrorNotif[3]
+              )
+            );
+            isValid = false;
+          }
+        });
       if (!isValid) {
         return false;
       }
@@ -239,7 +241,7 @@ class AddTable extends Component {
       lastSuccess,
       internalError,
     } = this.props;
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
@@ -282,7 +284,7 @@ class AddTable extends Component {
           />
           <select
             value={column.type}
-            className={`${styles.select} ${styles.selectWidth} form-control ${
+            className={`${styles.select} ${styles.select200} form-control ${
               styles.add_pad_left
             }`}
             onChange={e => {
@@ -422,7 +424,7 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.main_wrapper} ${
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
           styles.padd_left
         }`}
       >

@@ -1,18 +1,23 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../CommonLanding/TopicDescription';
 import TryItOut from '../../CommonLanding/TryItOut';
+
 class CustomResolver extends React.Component {
   render() {
     const styles = require('../Styles.scss');
-    const node = require('./Node.svg');
-    const Rectangle = require('./Rectangle.svg');
+    // const node = require('./Node.svg');
+    // const Rectangle = require('./Rectangle.svg');
+
     const { dispatch, migrationMode, customResolverList } = this.props;
+
     const showFirstSection = customResolverList.resolvers.length ? false : true;
+
     return (
       <div
         className={`${styles.padd_left_remove} ${
@@ -47,18 +52,17 @@ class CustomResolver extends React.Component {
               ) : null}
             </div>
             <hr />
-            {showFirstSection ?
-            (<div>
-              <TopicDescription
-              title="What are Remote Schemas?"
-              imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png"
-              imgAlt="Remote Schema"
-              description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
-            />
-            <hr className={styles.clear_fix} />
-            </div>
-          ) : null}
-
+            {showFirstSection ? (
+              <div>
+                <TopicDescription
+                  title="What are Remote Schemas?"
+                  imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/remote_schema.png"
+                  imgAlt="Remote Schema"
+                  description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
+                />
+                <hr className={styles.clear_fix} />
+              </div>
+            ) : null}
 
             <TryItOut
               service="remoteSchema"
@@ -109,11 +113,11 @@ class CustomResolver extends React.Component {
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    customResolverList: state.customResolverData.listData
+    customResolverList: state.customResolverData.listData,
   };
 };
 
-const landingCustomResolverGen = connect =>
+const customResolverConnector = connect =>
   connect(mapStateToProps)(CustomResolver);
 
-export default landingCustomResolverGen;
+export default customResolverConnector;
