@@ -357,6 +357,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 fi
 
 # horizontal scale test
+unset HASURA_GRAPHQL_AUTH_HOOK
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
 
