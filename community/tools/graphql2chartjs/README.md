@@ -2,13 +2,9 @@
 
 `graphql2chartjs` reshapes your GraphQL data as per the [ChartJS](https://chartjs.org) API. This makes it easy to query a GraphQL API and render the output as a ChartJS chart.
 
-If you're using Postgres and Hasura, this is what your setup looks like:
+If you're using Postgres and Hasura, this is what your setup with graphql2chartjs might look like:
 
-
-How it works:
-1. Make a graphql query aliasing fields in the GraphQL query appropriately
-2. Call `graphql2chartjs()` on the output data
-3. Pass this reshaped data to a chartjs function to create a chart
+![graphql2chartjs](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/graphql2chartjs-explained.png)
 
 ## Demos
 - Live demo: [https://graphql2chartjs-examples.herokuapp.com](https://graphql2chartjs-examples.herokuapp.com)
