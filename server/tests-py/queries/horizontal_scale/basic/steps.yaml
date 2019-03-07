@@ -1,24 +1,27 @@
 -
   operation:
-    type: bulk
-    args:
-      - type: run_sql
-        args:
-          sql: |
-            create table test_t1(
-              c1 int,
-              c2 text,
-              PRIMARY KEY (c1)
-            );
-      - type: track_table
-        args:
-          schema: public
-          name: test_t1
-      - type: run_sql
-        args:
-          sql: |
-            insert into test_t1(c1, c2) VALUES(1, 'test');
+    server: '1'
+    query:
+      type: bulk
+      args:
+        - type: run_sql
+          args:
+            sql: |
+              create table test_t1(
+                c1 int,
+                c2 text,
+                PRIMARY KEY (c1)
+              );
+        - type: track_table
+          args:
+            schema: public
+            name: test_t1
+        - type: run_sql
+          args:
+            sql: |
+              insert into test_t1(c1, c2) VALUES(1, 'test');
   validate:
+    server: '2'
     response:
       data:
         test_t1:

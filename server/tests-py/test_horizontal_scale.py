@@ -11,10 +11,13 @@ if not pytest.config.getoption("--test-hge-scale-url"):
 
 
 class TestHorizantalScaleBasic():
+    servers = {}
 
     @pytest.fixture(autouse=True, scope='class')
     def transact(self, hge_ctx):
         self.teardown = {"type": "clear_metadata", "args": {}}
+        self.servers['1'] = hge_ctx.hge_url
+        self.servers['2'] = hge_ctx.hge_scale_url
         yield
         # teardown
         st_code, resp = hge_ctx.v1q(self.teardown)
@@ -26,15 +29,20 @@ class TestHorizantalScaleBasic():
         
         assert isinstance(conf, list) == True, 'Not an list'
         for _, step in enumerate(conf):
-            # execute operation on 1st server
-            st_code, resp = hge_ctx.v1q(step['operation'])
+            # execute operation
+            response = hge_ctx.http.post(
+                self.servers[step['operation']['server']] + "/v1/query",
+                json=step['operation']['query']
+            )
+            st_code = response.status_code
+            resp = response.json()
             assert st_code == 200, resp
 
             # wait for x sec
             time.sleep(0.3)
-            # validate data on 2nd server
+            # validate data
             response = hge_ctx.http.post(
-                hge_ctx.hge_scale_url + "/v1alpha1/graphql",
+                self.servers[step['validate']['server']] + "/v1alpha1/graphql",
                 json=step['validate']['query']
             )
             st_code = response.status_code
