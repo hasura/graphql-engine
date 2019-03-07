@@ -1191,9 +1191,25 @@ code {
   margin-right: 20px;
 }
 
+.editorExpanded {
+  margin: 10px 0;
+  padding: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
 
+.editorCollapsed {
+  display: block;
+  margin: 10px 0;
+  flex-direction: row;
+}
+
+.editorActionButtons{
+}
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;
+

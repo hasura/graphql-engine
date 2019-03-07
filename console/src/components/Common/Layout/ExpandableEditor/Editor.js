@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../../Button/Button';
+import styles from '../../Common.scss';
 
 class Editor extends React.Component {
   state = {
@@ -17,10 +18,9 @@ class Editor extends React.Component {
 
   toggleButton = () => (
     <Button
-      className={`${this.props.styles.add_mar_small}
-        ${this.props.styles.modifyEditButton}`}
+      className={`${styles.add_mar_small} ${styles.add_mar_bottom_mid}`}
       color="white"
-      size="sm"
+      size="xs"
       data-test={`${this.props.service}-${
         this.state.isEditing ? 'close' : 'edit'
       }-${this.props.property}`}
@@ -31,14 +31,14 @@ class Editor extends React.Component {
   );
 
   saveButton = saveFunc => {
-    const { service, property, ongoingRequest, styles } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     return (
       <Button
         type="submit"
-        className={styles.modifySaveButton}
         color="yellow"
         size="sm"
+        className={styles.add_mar_right}
         onClick={saveFunc}
         data-test={`${service}-${property}-save`}
         disabled={isProcessing}
@@ -49,12 +49,11 @@ class Editor extends React.Component {
   };
 
   removeButton = removeFunc => {
-    const { service, property, ongoingRequest, styles } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     return (
       <Button
         type="submit"
-        className={styles.modifySaveButton}
         color="red"
         size="sm"
         onClick={removeFunc}
@@ -66,13 +65,31 @@ class Editor extends React.Component {
     );
   };
 
+  actionButtons = () => (
+    <div className={styles.editorActionButtons}>
+      {this.props.saveFunc && this.saveButton(this.props.saveFunc)}
+      {this.props.removeFunc && this.removeButton(this.props.removeFunc)}
+    </div>
+  );
+
   render() {
     const { isEditing } = this.state;
     const { editorCollapsed, editorExpanded } = this.props;
-
-    return isEditing
-      ? editorExpanded(this.toggleButton, this.saveButton, this.removeButton)
-      : editorCollapsed(this.toggleButton);
+    if (isEditing) {
+      return (
+        <div className={styles.editorExpanded}>
+          {this.toggleButton()}
+          {editorExpanded()}
+          {this.actionButtons()}
+        </div>
+      );
+    }
+    return (
+      <div className={styles.editorCollapsed}>
+        {this.toggleButton()}
+        {editorCollapsed(this.toggleButton)}
+      </div>
+    );
   }
 }
 
