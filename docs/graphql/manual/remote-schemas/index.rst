@@ -17,7 +17,7 @@ endpoint to Hasura. Your GraphQL service can be written in any language or frame
 This is what Hasura running with "Remote schemas" looks like:
 
 
-.. image:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
+.. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
    :width: 500px
 
@@ -67,7 +67,7 @@ To merge your remote schema with GraphQL Engine's auto-generated schema:
 
 Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button
 
-.. image:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
+.. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
 
 You need to enter the following information:

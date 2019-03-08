@@ -102,7 +102,7 @@ Option 1: Development & Testing
 While you're developing or testing, just indicate your role and your session variables by passing headers along with
 the request:
 
-.. image:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
+.. thumbnail:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
 .. note::
 

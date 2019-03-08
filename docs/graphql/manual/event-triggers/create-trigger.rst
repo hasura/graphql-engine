@@ -11,8 +11,8 @@ Event triggers can be created using the Hasura console.
 Open the Hasura console, head to the ``Events`` tab and click on the ``Create trigger`` button to open up the
 interface below to create an event trigger:
 
-.. image:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
-   :scale: 75 %
+.. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
+   :width: 75 %
 
 Parameters
 ----------
@@ -39,8 +39,8 @@ before using it for this configuration*).
 Advanced Settings
 -----------------
 
-.. image:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
-   :scale: 75 %
+.. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+   :width: 75 %
 
 
 Listen columns for update

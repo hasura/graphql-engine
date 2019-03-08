@@ -23,14 +23,14 @@ Open the Hasura console and head to the ``Data -> Create table`` interface.
 
 Create a table ``months_of_the_year`` with just one column ``month``, which is the primary key:
 
-.. image:: ../../../img/graphql/manual/schema/enum-create-ref-table.png
+.. thumbnail:: ../../../img/graphql/manual/schema/enum-create-ref-table.png
 
 Add the allowed enum values to the reference table
 --------------------------------------------------
 
 Head to the ``GraphiQL`` tab of the console and run an insert mutation to insert the allowed enum values:
 
-.. image:: ../../../img/graphql/manual/schema/enum-insert-ref-values.png
+.. thumbnail:: ../../../img/graphql/manual/schema/enum-insert-ref-values.png
 
 Add a foreign-key constraint to the reference table
 ---------------------------------------------------
@@ -38,7 +38,7 @@ Add a foreign-key constraint to the reference table
 Head to the ``Data -> magazine -> Modify`` tab of the console and set a foreign-key to the ``months_of_the_year`` table
 using the fields: ``issue_month -> months_of_the_year :: month``:
 
-.. image:: ../../../img/graphql/manual/schema/enum-set-foreign-key.png
+.. thumbnail:: ../../../img/graphql/manual/schema/enum-set-foreign-key.png
 
 Now the ``issue_month`` field can only take values from the months of the year.
 
