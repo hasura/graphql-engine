@@ -40,13 +40,29 @@ const FK_ADD_FORM_ERROR = 'ModifyTable/FK_ADD_FORM_ERROR';
 const FK_RESET = 'ModifyTable/FK_RESET';
 const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 
-const SET_COLUMN_EDIT = `ModifyTable/SET_COLUMN_EDIT;`;
+const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
+const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
+const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
+
+const editColumn = (column, key, value) => ({
+  type: EDIT_COLUMN,
+  column,
+  key,
+  value,
+});
 
 const setColumnEdit = data => {
   return {
     type: SET_COLUMN_EDIT,
     column: data.name,
     data,
+  };
+};
+
+const resetColumnEdit = column => {
+  return {
+    type: RESET_COLUMN_EDIT,
+    column,
   };
 };
 
@@ -808,21 +824,29 @@ const isColumnUnique = (tableSchema, colName) => {
   );
 };
 
-const saveColumnChangesSql = (
-  tableName,
-  colName,
-  colType,
-  nullable,
-  unique,
-  def,
-  comment,
-  column,
-  newName
-) => {
+const saveColumnChangesSql = (colName, column, allowRename) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
-    const currentSchema = getState().tables.currentSchema;
+    const columnEdit = getState().tables.modify.columnEdit[colName];
+    const { tableName } = columnEdit;
+    const colType = columnEdit.type,
+      nullable = columnEdit.isNullable,
+      unique = columnEdit.isUnique,
+      def = columnEdit.default,
+      comment = columnEdit.comment,
+      newName = columnEdit.name,
+      currentSchema = columnEdit.schemaName;
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
+    console.log(colName);
+    console.log(column);
+    console.log(tableName);
+    console.log(colType);
+    console.log(nullable);
+    console.log(unique);
+    console.log(def);
+    console.log(comment);
+    console.log(newName);
+    console.log(currentSchema);
     let defWithQuotes = "''";
     if (colType === 'text' && def !== '') {
       defWithQuotes = "'" + def + "'";
@@ -1294,10 +1318,7 @@ const saveColumnChangesSql = (
       "'";
 
     // check if comment is unchanged and then do an update. if not skip
-    if (
-      (originalColComment !== undefined && originalColComment[0]) !==
-      comment.trim()
-    ) {
+    if (originalColComment !== comment.trim()) {
       schemaChangesUp.push({
         type: 'run_sql',
         args: {
@@ -1969,6 +1990,7 @@ export {
   deleteColumnSql,
   addFkSql,
   setColumnEdit,
+  resetColumnEdit,
   deleteConstraintSql,
   deleteTableSql,
   untrackTableSql,
@@ -1982,4 +2004,7 @@ export {
   activateCommentEdit,
   updateCommentInput,
   saveTableCommentSql,
+  editColumn,
+  EDIT_COLUMN,
+  RESET_COLUMN_EDIT,
 };

@@ -16,6 +16,7 @@ import {
   saveColChangesWithFkSql,
   deleteColumnSql,
   setColumnEdit,
+  resetColumnEdit,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
 import { convertListToDict } from '../../../../utils/data';
@@ -92,7 +93,7 @@ class ModifyTable extends React.Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      let colEditor = null;
+      const colEditor = null;
       const colName = c.column_name;
       const columnProperties = {
         name: c.column_name,
@@ -117,28 +118,8 @@ class ModifyTable extends React.Component {
           columnProperties.isUnique = true;
         }
       }
-      const onSubmit = (
-        type,
-        nullable,
-        unique,
-        def,
-        comment,
-        column,
-        newName
-      ) => {
-        dispatch(
-          saveColumnChangesSql(
-            tableName,
-            columnProperties.name,
-            type,
-            nullable,
-            unique,
-            def,
-            comment,
-            column,
-            newName
-          )
-        );
+      const onSubmit = () => {
+        dispatch(saveColumnChangesSql(colName, c));
       };
       const onDelete = () => {
         const isOk = confirm('Are you sure you want to delete?');
@@ -180,7 +161,10 @@ class ModifyTable extends React.Component {
       };
       const colEditorExpanded = () => {
         return (
-          <div>
+          <div key={i}>
+            <div className="expandedLabel">
+              <b>{colName}</b>
+            </div>
             <ColumnEditor
               column={c}
               onSubmit={onSubmit}
@@ -192,6 +176,7 @@ class ModifyTable extends React.Component {
               columnComment={columnComment}
               allowRename={this.state.supportTableColumnRename}
               columnProperties={columnProperties}
+              columnEdit={columnEdit}
             />
           </div>
         );
@@ -200,14 +185,18 @@ class ModifyTable extends React.Component {
         <ExpandableEditor
           editorCollapsed={colEditorCollapsed}
           editorExpanded={colEditorExpanded}
-          property={`edit-column`}
+          property={'edit-column'}
           ongoingRequest={'oola'}
           service="modify-table"
           saveFunc={onSubmit}
           removeFunc={primaryKeyDict[colName] ? null : onDelete}
           collapsedClass={styles.display_flex}
           expandCallback={() => {
+            dispatch(setColumnEdit(columnProperties));
             dispatch(fetchColumnComment(tableName, colName));
+          }}
+          collapseCallback={() => {
+            dispatch(resetColumnEdit(colName));
           }}
         />
       );
@@ -411,7 +400,7 @@ const mapStateToProps = (state, ownProps) => ({
   currentSchema: state.tables.currentSchema,
   tableComment: state.tables.tableComment,
   columnComment: state.tables.columnComment,
-  columnEdit: state.tables.modify.commentEdit,
+  columnEdit: state.tables.modify.columnEdit,
   ...state.tables.modify,
 });
 

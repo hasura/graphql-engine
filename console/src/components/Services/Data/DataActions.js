@@ -661,8 +661,10 @@ const dataReducer = (state = defaultState, action) => {
     case LOAD_TABLE_COMMENT:
       return { ...state, tableComment: action.data };
     case LOAD_COLUMN_COMMENT:
-      console.log(action.data);
-      return { ...state, columnComment: action.data };
+      return {
+        ...state,
+        columnComment: action.data ? action.data.result[1] || '' : '',
+      };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:

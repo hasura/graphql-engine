@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router';
 import {
   fkRefTableChange,
@@ -6,6 +6,8 @@ import {
   toggleFKCheckBox,
   isColumnUnique,
   deleteConstraintSql,
+  setColumnEdit,
+  editColumn,
 } from '../TableModify/ModifyActions';
 import dataTypes from '../Common/DataTypes';
 import { convertListToDictUsingKV } from '../../../../utils/data';
@@ -36,11 +38,22 @@ const ColumnEditor = ({
   columnComment,
   allowRename,
   columnProperties,
+  columnEdit,
 }) => {
-  //  eslint-disable-line no-unused-vars
+  const colName = columnProperties.name;
+  useEffect(
+    () => {
+      dispatch(editColumn(colName, 'comment', columnComment));
+    },
+    [columnComment]
+  );
   const c = column;
+  if (!columnEdit[colName]) {
+    return null;
+  }
+  console.log(columnEdit[colName]);
   const styles = require('./ModifyTable.scss');
-  let [iname, inullable, iunique, idefault, icomment, itype] = [
+  const [iname, inullable, iunique, idefault, icomment, itype] = [
     null,
     null,
     null,
@@ -128,16 +141,31 @@ const ColumnEditor = ({
     }
   };
 
+  const updateColumnName = e => {
+    dispatch(editColumn(colName, 'name', e.target.value));
+  };
+  const updateColumnType = e => {
+    dispatch(editColumn(colName, 'type', e.target.value));
+  };
+  const updateColumnDef = e => {
+    dispatch(editColumn(colName, 'default', e.target.value));
+  };
+  const updateColumnComment = e => {
+    dispatch(editColumn(colName, 'comment', e.target.value));
+  };
+  const toggleColumnNullable = e => {
+    dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
+  };
+  const toggleColumnUnique = e => {
+    dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
+  };
+
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form
         className="form-horizontal"
         onSubmit={e => {
           e.preventDefault();
-          console.log(itype.value);
-          console.log(inullable.value);
-          console.log(iunique.value);
-          console.log(icomment.value);
           onSubmit(
             itype.value,
             inullable.value,
@@ -154,9 +182,9 @@ const ColumnEditor = ({
             <label className="col-xs-3 text-right">Name</label>
             <div className="col-xs-6">
               <input
-                ref={n => (iname = n)}
                 className="input-sm form-control"
-                defaultValue={columnProperties.name}
+                value={columnEdit[colName].name}
+                onChange={updateColumnName}
                 type="text"
                 data-test="edit-col-name"
               />
@@ -167,9 +195,9 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Type</label>
           <div className="col-xs-6">
             <select
-              ref={n => (itype = n)}
+              value={columnEdit[colName].type}
+              onChange={updateColumnType}
               className="input-sm form-control"
-              defaultValue={finalDefaultValue}
               disabled={columnProperties.isPrimaryKey}
             >
               {modifyAlterOptions(columnProperties.type)}
@@ -181,9 +209,9 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Nullable</label>
           <div className="col-xs-6">
             <select
-              ref={n => (inullable = n)}
               className="input-sm form-control"
-              defaultValue={columnProperties.isNullable.toString()}
+              value={columnEdit[colName].isNullable}
+              onChange={toggleColumnNullable}
               disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-nullable"
             >
@@ -196,9 +224,9 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Unique</label>
           <div className="col-xs-6">
             <select
-              ref={n => (iunique = n)}
               className="input-sm form-control"
-              defaultValue={columnProperties.isUnique.toString()}
+              value={columnEdit[colName].isUnique.toString()}
+              onChange={toggleColumnUnique}
               disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-unique"
             >
@@ -211,9 +239,9 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Default</label>
           <div className="col-xs-6">
             <input
-              ref={n => (idefault = n)}
               className="input-sm form-control"
-              defaultValue={columnProperties.default || ''}
+              value={columnEdit[colName].default || ''}
+              onChange={updateColumnDef}
               type="text"
               disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-default"
@@ -224,9 +252,9 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Comment</label>
           <div className="col-xs-6">
             <input
-              ref={n => (icomment = n)}
               className="input-sm form-control"
-              defaultValue={columnComment ? columnComment.result[1] : null}
+              value={columnEdit[colName].comment || ''}
+              onChange={updateColumnComment}
               type="text"
               data-test="edit-col-comment"
             />

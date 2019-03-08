@@ -22,6 +22,8 @@ import {
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
   SET_COLUMN_EDIT,
+  RESET_COLUMN_EDIT,
+  EDIT_COLUMN,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -277,7 +279,28 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         columnEdit: {
+          ...modifyState.columnEdit,
           [action.column]: { ...action.data },
+        },
+      };
+    case RESET_COLUMN_EDIT:
+      const updatedColumnEdit = {
+        ...modifyState.columnEdit,
+      };
+      delete updatedColumnEdit[action.column];
+      return {
+        ...modifyState,
+        columnEdit: updatedColumnEdit,
+      };
+    case EDIT_COLUMN:
+      return {
+        ...modifyState,
+        columnEdit: {
+          ...modifyState.columnEdit,
+          [action.column]: {
+            ...modifyState.columnEdit[action.column],
+            [action.key]: action.value,
+          },
         },
       };
     case PERM_OPEN_EDIT:

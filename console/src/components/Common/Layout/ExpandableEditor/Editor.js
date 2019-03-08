@@ -8,11 +8,10 @@ class Editor extends React.Component {
   };
 
   toggleEditor = () => {
-    let ret;
     if (this.props.expandCallback && !this.state.isEditing) {
-      ret = this.props.expandCallback();
+      this.props.expandCallback();
     } else if (this.props.collapseCallback && this.state.isEditing) {
-      ret = this.props.collapseCallback();
+      this.props.collapseCallback();
     }
     this.setState({
       isEditing: !this.state.isEditing,
