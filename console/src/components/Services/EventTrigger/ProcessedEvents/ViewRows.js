@@ -18,7 +18,7 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
-import '../TableCommon/ReactTableFix.css';
+import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
@@ -36,7 +36,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -104,7 +104,7 @@ const ViewRows = ({
           let conditionalClassname = styles.tableCellCenterAligned;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -203,7 +203,7 @@ const ViewRows = ({
     } else {
       dispatch(setOrderType('asc', 0));
     }
-    dispatch(runQuery(triggerSchema));
+    dispatch(runQuery());
     // Add a new empty filter
     dispatch(addOrder());
   };
@@ -211,14 +211,14 @@ const ViewRows = ({
   const changePage = page => {
     if (curFilter.offset !== page * curFilter.limit) {
       dispatch(setOffset(page * curFilter.limit));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
   const changePageSize = size => {
     if (curFilter.size !== size) {
       dispatch(setLimit(size));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
@@ -291,7 +291,7 @@ const ViewRows = ({
                 let conditionalClassname = styles.tableCellCenterAligned;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -326,6 +326,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;

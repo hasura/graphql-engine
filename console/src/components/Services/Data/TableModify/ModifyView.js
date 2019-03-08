@@ -75,7 +75,7 @@ class ModifyView extends Component {
       migrationMode,
     } = this.props;
 
-    const styles = require('./Modify.scss');
+    const styles = require('./ModifyTable.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
 

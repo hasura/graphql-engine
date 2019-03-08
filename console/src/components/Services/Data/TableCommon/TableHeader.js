@@ -15,7 +15,7 @@ const TableHeader = ({
   dispatch,
   allowRename,
 }) => {
-  const styles = require('./Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';

@@ -8,7 +8,8 @@ import Helmet from 'react-helmet';
 class PageNotFound extends Component {
   render() {
     const lostImage = require('./404-logo.png');
-    const styles = require('./Styles.scss');
+    const styles = require('./PageNotFound.scss');
+
     return (
       <div className={styles.viewcontainer}>
         <Helmet title="404 - Page Not Found | Hasura" />

@@ -171,6 +171,8 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
+  S.SETuples l                  ->
+    S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   where
     uQual = \case
