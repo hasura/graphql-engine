@@ -1,0 +1,15 @@
+schema:
+  - http://localhost:8080/v1alpha1/graphql:
+      headers:
+        x-hasura-admin-secret: <>
+documents:
+  - ./src/**/*.tsx
+  - ./src/**/*.ts
+overwrite: true
+#require:
+#  - ts-node/../../codegen-interpreter.ts
+generates:
+  ./src/graphql/types.ts:
+    plugins:
+      - typescript-common
+      - typescript-client
