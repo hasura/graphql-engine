@@ -390,7 +390,10 @@ class ApiRequest extends Component {
         {this.getUrlBar()}
         <hr />
         <div className={styles.headerWrapper}>
-          <CollapsibleToggle title={this.getHeaderTitleView()}>
+          <CollapsibleToggle
+            title={this.getHeaderTitleView()}
+            testId="api-explorer-header"
+          >
             {this.getHeaderTableView()}
           </CollapsibleToggle>
         </div>

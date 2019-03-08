@@ -65,6 +65,10 @@ export const checkExecuteQueryButton = () => {
 };
 
 export const checkQuery = () => {
+  /* Click on the toggle */
+  cy.get(getElementFromAlias('api-explorer-header')).click();
+  cy.wait(2000);
+  /*  */
   if (adminSecret) {
     cy.get(getElementFromAlias('header-key-2')).type('someKey');
     cy.get(getElementFromAlias('header-value-2')).type('someValue');

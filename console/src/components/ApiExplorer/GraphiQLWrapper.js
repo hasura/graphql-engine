@@ -38,6 +38,7 @@ class GraphiQLWrapper extends Component {
         this.checkNewAnalyzeVersion(this.props.data.serverVersion)
       );
     }
+    this.setQueryVariableSectionHeight();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -49,6 +50,13 @@ class GraphiQLWrapper extends Component {
   }
   shouldComponentUpdate(nextProps) {
     return !nextProps.headerFocus;
+  }
+
+  setQueryVariableSectionHeight() {
+    const variableEditor = document.querySelectorAll('.variable-editor');
+    if (variableEditor && variableEditor.length > 0) {
+      variableEditor[0].style.height = '70px';
+    }
   }
 
   checkSemVer(version) {
