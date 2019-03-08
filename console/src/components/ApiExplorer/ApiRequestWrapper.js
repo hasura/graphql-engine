@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ApiRequest from './ApiRequest';
 import ApiResponse from './ApiResponse';
-import ApiRequestDetails from './ApiRequestDetails';
+// import ApiRequestDetails from './ApiRequestDetails';
 
 class ApiRequestWrapper extends Component {
   render() {
@@ -22,10 +22,12 @@ class ApiRequestWrapper extends Component {
           this.props.requestStyles
         }
       >
+        {/*
         <ApiRequestDetails
           title={this.props.details.title}
           description={this.props.details.description}
         />
+        */}
         <ApiRequest
           bodyType={
             this.props.request.bodyType ? this.props.request.bodyType : ''

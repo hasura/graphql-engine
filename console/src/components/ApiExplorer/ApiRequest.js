@@ -18,6 +18,8 @@ import globals from '../../Globals';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
 
+import CollapsibleToggle from '../Common/CollapsibleToggle/CollapsibleToggle';
+
 const styles = require('./ApiExplorer.scss');
 
 class ApiRequest extends Component {
@@ -134,7 +136,7 @@ class ApiRequest extends Component {
             </div>
             <input
               onChange={this.onUrlChanged}
-              value={this.props.url}
+              value={this.props.url || ''}
               type="text"
               readOnly
               className={styles.inputGroupInput + ' form-control '}
@@ -206,6 +208,15 @@ class ApiRequest extends Component {
       );
     }
     const rows = headers.map((header, i) => {
+      const headerAdminVal =
+        header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}` ? (
+          <i
+            className={styles.showAdminSecret + ' fa fa-eye'}
+            data-header-id={i}
+            aria-hidden="true"
+            onClick={this.onShowAdminSecretClicked.bind(this)}
+          />
+        ) : null;
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
@@ -244,7 +255,7 @@ class ApiRequest extends Component {
           >
             <input
               className={'form-control ' + styles.responseTableInput}
-              value={header.key}
+              value={header.key || ''}
               disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Key"
@@ -270,7 +281,7 @@ class ApiRequest extends Component {
           >
             <input
               className={'form-control ' + styles.responseTableInput}
-              value={header.value}
+              value={header.value || ''}
               disabled={header.isDisabled === true ? true : false}
               data-header-id={i}
               placeholder="Enter Value"
@@ -290,15 +301,7 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}` ? (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAdminSecretClicked.bind(this)}
-                />
-              ) : null}
+              {headerAdminVal}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
@@ -386,8 +389,11 @@ class ApiRequest extends Component {
       <div className={styles.apiRequestWrapper}>
         {this.getUrlBar()}
         <hr />
-        {this.getHeaderTitleView()}
-        {this.getHeaderTableView()}
+        <div className={styles.headerWrapper}>
+          <CollapsibleToggle title={this.getHeaderTitleView()}>
+            {this.getHeaderTableView()}
+          </CollapsibleToggle>
+        </div>
         {this.getValidBody()}
       </div>
     );

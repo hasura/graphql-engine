@@ -1,0 +1,23 @@
+.collapsibleWrapper {
+  .collapsibleToggle {
+    cursor: pointer;
+    display: inline-block;
+    .caretWrapper {
+      padding-right: 10px;
+      font-size: 12px;
+      .rightArrow {
+        transition: transform 0.3s ease;
+      }
+      .downArrow {
+        transform: rotate(90deg);
+        transition: transform 0.3s ease;
+      }
+    }
+    .titleWrapper {
+      display: inline-block;
+    }
+  }
+  .collapsibleContent {
+    display: block;
+  }
+}
