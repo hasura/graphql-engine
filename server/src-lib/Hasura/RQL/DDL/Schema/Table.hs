@@ -52,8 +52,8 @@ getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
-      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
+    [(Q.AltJ cols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable

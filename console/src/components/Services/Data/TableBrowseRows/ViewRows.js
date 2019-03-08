@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 import 'react-table/react-table.css';
-import './ReactTableFix.css';
-import DragFoldTable from './DragFoldTable';
+import '../../../Common/TableCommon/ReactTableOverrides.css';
+import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
 import {
   vExpandRel,
@@ -52,7 +52,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
 
   const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
@@ -87,13 +87,11 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships) => {
     const _gridHeadings = [];
 
-    if (!isView) {
-      _gridHeadings.push({
-        Header: '',
-        accessor: 'actions',
-        id: 'actions',
-      });
-    }
+    _gridHeadings.push({
+      Header: '',
+      accessor: 'actions',
+      id: 'actions',
+    });
 
     _columns.map(col => {
       const columnName = col.column_name;
@@ -290,26 +288,28 @@ const ViewRows = ({
         const getColCellContent = () => {
           const rowColumnValue = row[columnName];
 
-          const getCellValue = () => {
-            let cellValue = '';
+          let cellValue = '';
+          let cellTitle = '';
 
-            if (rowColumnValue === null) {
-              cellValue = <i>NULL</i>;
-            } else if (rowColumnValue === undefined) {
-              cellValue = 'NULL';
-            } else if (col.data_type === 'json' || col.data_type === 'jsonb') {
-              cellValue = JSON.stringify(rowColumnValue);
-            } else {
-              cellValue = rowColumnValue.toString();
-            }
-
-            return cellValue;
-          };
-
-          const cellValue = getCellValue();
+          if (rowColumnValue === null) {
+            cellValue = <i>NULL</i>;
+            cellTitle = 'NULL';
+          } else if (rowColumnValue === undefined) {
+            cellValue = 'NULL';
+            cellTitle = cellValue;
+          } else if (col.data_type === 'json' || col.data_type === 'jsonb') {
+            cellValue = JSON.stringify(rowColumnValue);
+            cellTitle = cellValue;
+          } else {
+            cellValue = rowColumnValue.toString();
+            cellTitle = cellValue;
+          }
 
           return (
-            <div className={isExpanded ? styles.tableCellExpanded : ''}>
+            <div
+              className={isExpanded ? styles.tableCellExpanded : ''}
+              title={cellTitle}
+            >
               {cellValue}
             </div>
           );
@@ -333,10 +333,10 @@ const ViewRows = ({
             );
           };
 
-          const isExpanded =
+          const isRelExpanded =
             curQuery.columns.find(c => c.name === rel.rel_name) !== undefined;
 
-          if (isExpanded) {
+          if (isRelExpanded) {
             const handleCloseClick = e => {
               e.preventDefault();
               dispatch(vCloseRel(curPath, rel.rel_name));
@@ -485,32 +485,38 @@ const ViewRows = ({
       // Render child only if data is available
       if (curRows[0][cq.name]) {
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
-        let childRows = curRows[0][cq.name];
-        if (rel.rel_type === 'object') {
-          childRows = [childRows];
+
+        if (rel) {
+          let childRows = curRows[0][cq.name];
+          if (rel.rel_type === 'object') {
+            childRows = [childRows];
+          }
+          // Find the name of this childTable using the rel
+          return (
+            <ViewRows
+              key={i}
+              curTableName={
+                findTableFromRel(schemas, tableSchema, rel).table_name
+              }
+              currentSchema={currentSchema}
+              curQuery={cq}
+              curFilter={curFilter}
+              curPath={[...curPath, rel.rel_name]}
+              curRows={childRows}
+              parentTableName={curTableName}
+              activePath={activePath}
+              ongoingRequest={ongoingRequest}
+              lastError={lastError}
+              lastSuccess={lastSuccess}
+              schemas={schemas}
+              curDepth={curDepth + 1}
+              dispatch={dispatch}
+              expandedRow={expandedRow}
+            />
+          );
         }
-        // Find the name of this childTable using the rel
-        return (
-          <ViewRows
-            key={i}
-            curTableName={
-              findTableFromRel(schemas, tableSchema, rel).table_name
-            }
-            curQuery={cq}
-            curFilter={curFilter}
-            curPath={[...curPath, rel.rel_name]}
-            curRows={childRows}
-            parentTableName={curTableName}
-            activePath={activePath}
-            ongoingRequest={ongoingRequest}
-            lastError={lastError}
-            lastSuccess={lastSuccess}
-            schemas={schemas}
-            curDepth={curDepth + 1}
-            dispatch={dispatch}
-          />
-        );
       }
+
       return null;
     });
 

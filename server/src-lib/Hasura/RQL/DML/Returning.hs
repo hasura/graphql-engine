@@ -19,6 +19,17 @@ data MutFld
 
 type MutFlds = [(T.Text, MutFld)]
 
+hasNestedFld :: MutFlds -> Bool
+hasNestedFld = any isNestedMutFld
+  where
+    isNestedMutFld (_, mutFld) = case mutFld of
+      MRet annFlds -> any isNestedAnnFld annFlds
+      _            -> False
+    isNestedAnnFld (_, annFld) = case annFld of
+      FObj _ -> True
+      FArr _ -> True
+      _      -> False
+
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
   MCount -> []
@@ -31,14 +42,17 @@ pgColsFromMutFld = \case
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
+pgColsToSelFlds :: [PGColInfo] -> [(FieldName, AnnFld)]
+pgColsToSelFlds cols =
+  flip map cols $
+  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
+
 mkDefaultMutFlds :: Maybe [PGColInfo] -> MutFlds
 mkDefaultMutFlds = \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
-    pgColsToSelFlds cols = flip map cols $ \pgColInfo ->
-      (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
 
 qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden qt =

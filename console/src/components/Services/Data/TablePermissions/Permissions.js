@@ -25,7 +25,7 @@ import {
   permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
-  permRemoveRole,
+  // permRemoveRole,
   permSetBulkSelect,
   permRemoveMultipleRoles,
   permSetSameSelect,
@@ -240,7 +240,7 @@ class Permissions extends Component {
       currentSchema,
     } = this.props;
     const { showAggregation, showInsertPrefix, showUpdatePresets } = this.state;
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
 
     const getAllRoles = allTableSchemas => {
       const _allRoles = [];

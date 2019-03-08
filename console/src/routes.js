@@ -5,9 +5,11 @@ import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound } from 'components';
 
-import { dataRouter } from './components/Services/Data';
+import { dataRouterUtils } from './components/Services/Data';
 
-import { eventRouter } from './components/Services/EventTrigger';
+import { eventRouterUtils } from './components/Services/EventTrigger';
+
+import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 import { loadMigrationStatus } from './components/Main/Actions';
 
@@ -22,8 +24,6 @@ import { metadataConnector } from './components/Services/Data';
 import globals from './Globals';
 
 import validateLogin from './components/Common/validateLogin';
-
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 const routes = store => {
   // load hasuractl migration status
@@ -55,21 +55,27 @@ const routes = store => {
     } else {
       cb();
     }
+
     return;
   };
 
-  // loads schema
-  const dataRouterUtils = dataRouter(connect, store, composeOnEnterHooks);
-  const eventRouterUtils = eventRouter(connect, store, composeOnEnterHooks);
-  const requireSchema = dataRouterUtils.requireSchema;
-  const makeDataRouter = dataRouterUtils.makeDataRouter;
-  const makeEventRouter = eventRouterUtils.makeEventRouter;
+  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+  const requireSchema = _dataRouterUtils.requireSchema;
+  const dataRouter = _dataRouterUtils.makeDataRouter;
+
+  const _eventRouterUtils = eventRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks
+  );
+  const eventRouter = _eventRouterUtils.makeEventRouter;
 
   const customResolverRouter = getCustomResolverRouter(
     connect,
     store,
     composeOnEnterHooks
   );
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -85,8 +91,8 @@ const routes = store => {
             component={generatedApiExplorer(connect)}
           />
           <Route path="metadata" component={metadataConnector(connect)} />
-          {makeDataRouter}
-          {makeEventRouter}
+          {dataRouter}
+          {eventRouter}
           {customResolverRouter}
         </Route>
       </Route>

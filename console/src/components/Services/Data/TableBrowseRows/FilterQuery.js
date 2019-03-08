@@ -70,7 +70,7 @@ const renderOps = (opName, onChange, key) => (
 );
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
-  const styles = require('./FilterQuery.scss');
+  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -119,7 +119,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, tableSchema, dispatch) => {
-  const styles = require('./FilterQuery.scss');
+  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -175,7 +175,7 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
-    const styles = require('./FilterQuery.scss');
+    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
     return (
       <div className={styles.filterOptions}>
         <form
