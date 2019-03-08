@@ -23,14 +23,11 @@ import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
 
 newtype InstanceId
-  = InstanceId {getInstanceId :: UUID.UUID}
-    deriving (Show, Eq)
-
-instanceIdToTxt :: InstanceId -> T.Text
-instanceIdToTxt = UUID.toText . getInstanceId
+  = InstanceId {getInstanceId :: T.Text}
+    deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 mkInstanceId :: IO InstanceId
-mkInstanceId = InstanceId <$> UUID.nextRandom
+mkInstanceId = (InstanceId . UUID.toText) <$> UUID.nextRandom
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure

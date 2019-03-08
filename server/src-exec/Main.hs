@@ -11,7 +11,6 @@ import           System.Exit                (exitFailure)
 
 
 import qualified Control.Concurrent         as C
-import qualified Control.Concurrent.STM     as STM
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
@@ -100,7 +99,7 @@ printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
 mkPGLogger :: Logger -> Q.PGLogger
-mkPGLogger (Logger logger) msg =
+mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
 main :: IO ()
@@ -128,14 +127,7 @@ main =  do
       -- log postgres connection info
       unLogger logger $ connInfoToLog ci
 
-      -- create empty cache update events queue
-      eventsQueue <- STM.newTQueueIO
-
       pool <- Q.initPGPool ci cp pgLogger
-
-      -- start postgres cache update events listener thread in background
-      listenerTId <- C.forkIO $ schemaUpdateEventListener pool logger eventsQueue
-      unLogger logger $ mkThreadLog listenerTId instanceId TTListener
 
       -- safe init catalog
       initRes <- initialise logger ci httpManager
@@ -143,16 +135,13 @@ main =  do
       -- prepare event triggers data
       prepareEvents logger ci
 
-      (app, cacheRef, cacheBuiltTime) <-
+      (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx strfyNum pool httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs
 
-      let scRef = _scrCache cacheRef
-
-      -- start cache update events processor thread in background
-      procTId <- C.forkIO $ schemaUpdateEventProcessor strfyNum pool logger httpManager
-                              eventsQueue cacheRef instanceId cacheBuiltTime
-      unLogger logger $ mkThreadLog procTId instanceId TTProcessor
+      -- start a background thread for schema sync
+      void $ C.forkIO $ startSchemaSync strfyNum pool logger httpManager
+                        cacheRef instanceId cacheInitTime
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -162,6 +151,7 @@ main =  do
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
 
+      let scRef = _scrCache cacheRef
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
       void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool scRef eventEngineCtx
@@ -234,14 +224,6 @@ main =  do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
       res <- runTx pgLogger ci unlockAllEvents
       either printErrJExit return res
-
-    mkThreadLog threadId instanceId threadType =
-      let msg = T.pack (show threadType) <> " thread started"
-      in StartupLog LevelInfo "threads" $
-           A.object [ "instance_id" A..= getInstanceId instanceId
-                    , "thread_id" A..= show threadId
-                    , "message" A..= msg
-                    ]
 
     getUniqIds pgLogger ci = do
       eDbId <- runTx pgLogger ci getDbId

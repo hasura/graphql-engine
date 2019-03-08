@@ -314,10 +314,10 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager strfyNum pool Q.Serializable $ do
                   buildSchemaCache
-                  fetchLastUpdateTime
+                  liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
       scRef <- newIORef sc
-      return (scRef, time)
+      return (scRef, snd <$> time)
 
     cacheLock <- newMVar ()
 

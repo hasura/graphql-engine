@@ -30,8 +30,7 @@ import           Hasura.RQL.DML.Returning           (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
-import           Hasura.Server.Init                 (InstanceId (..),
-                                                     instanceIdToTxt)
+import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
@@ -119,16 +118,18 @@ instance HasHttpManager Run where
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _3
 
-fetchLastUpdateTime :: Run (Maybe UTCTime)
-fetchLastUpdateTime = do
-  l <- liftTx $ Q.listQE defaultTxErrorHandler
+fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
+fetchLastUpdate = do
+  l <- Q.listQE defaultTxErrorHandler
     [Q.sql|
-       SELECT occurred_at FROM hdb_catalog.hdb_schema_update_event
-       ORDER BY id DESC LIMIT 1
+       SELECT instance_id::text, occurred_at
+       FROM hdb_catalog.hdb_schema_update_event
+       ORDER BY occurred_at DESC LIMIT 1
           |] () True
   case l of
     []           -> return Nothing
-    [Identity t] -> return $ Just t
+    [(instId, occurredAt)] ->
+      return $ Just (InstanceId instId, occurredAt)
     -- never happens
     _            -> throw500 "more than one row returned by query"
 
@@ -139,7 +140,7 @@ recordSchemaUpdate instanceId =
                   hdb_catalog.hdb_schema_update_event
                   (instance_id, occurred_at)
              VALUES ($1::uuid, DEFAULT)
-            |] (Identity $ instanceIdToTxt instanceId) True
+            |] (Identity $ getInstanceId instanceId) True
 
 peelRun
   :: SchemaCache
