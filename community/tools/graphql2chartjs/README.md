@@ -15,6 +15,8 @@ We've set up a GraphQL server with continuously changing data, so that you can t
 |[View live charts]() | [Edit in sandbox]() | [Open GraphiQL]() |
 |---|---|---|
 
+![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+
 The demos above cover the following types of charts: [basic](), [multiple datasets](), [mixed chart-types](), [realtime chart with live data](), [realtime time-series]()
 
 ## Usage with Hasura
