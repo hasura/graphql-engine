@@ -74,17 +74,17 @@ query {
 
 graphql2chartjs works in 3 steps:
 
-1. Initialise graphql2chartjs: `new graphql2chartjs()`
-2. Add data from your graphql response: `graphql2chartjs.add(data, 'line')`
-3. Set your chart data to `graphql2chartjs.data`
+1. Initialise graphql2chartjs: `const g2c = new graphql2chartjs()`
+2. Add data from your graphql response: `g2c.add(data, 'line')`
+3. Set your chart data to the data properly of the graphql2chartjs instance: `g2c.data`
 
-#### Initialiase - `new graphql2chartjs()`
+### Step 1: Initialiase - `new graphql2chartjs()`
 
 ```javascript
 const g2c = new Graphql2Chartjs();
 ```
 
-#### Option 1: Add data for your chart - `graphql2chartjs.add(data, chartType)`
+### Step 2: (Option 1) Add data for your chart - `graphql2chartjs.add(data, chartType)`
 
 Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally:
 
@@ -105,7 +105,7 @@ g2c.add(data, 'line');
 - To customise the UI options of the rendered chart like colors or to create a mixed type chart (one dataset is rendered as a line chart, another as a bar chart) use the `addWithProps` function instead of this one.
 
 
-#### Option 2: Add data for your chart with UI properties - `graphql2chartjs.addWithProps(data, addProps())`
+### Step 2: (Option 2) Add data for your chart with UI properties - `graphql2chartjs.addWithProps(data, addProps())`
 
 Once you've initialised a `graphql2chartjs` object, you can use the `addWithProps` function to add data for the first time or incrementally. In addition, you can pass a function that specifies the type of chart, chartjs UI properties that apply to the entire dataset or to each point in the dataset.
 
@@ -142,7 +142,7 @@ g2c.addWithProps(data, (datasetName, dataPoint) => {
     - Bubble: https://www.chartjs.org/docs/latest/charts/bubble.html#dataset-properties
     - Scatter: https://www.chartjs.org/docs/latest/charts/scatter.html#dataset-properties
 
-#### Now create your chart with data - `g2c.data`
+### Step 3: Now create your chart with data - `g2c.data`
 
 Now that your data is created by `g2c.add()` or `g2c.addWithProps()`, use it to build your chart!
 
