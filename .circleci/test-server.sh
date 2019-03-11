@@ -368,9 +368,13 @@ psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database hs_hge_test;"
 
 # create pgbouncer user
 useradd pgbouncer
+cd $CIRCLECI_FOLDER
+chown -R pgbouncer:pgbouncer pgbouncer
 
 # start pgbouncer
-pgbouncer -u pgbouncer -d .circleci/pgbouncer/pgbouncer.ini
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
 
 # start 1st server
 "$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
@@ -388,8 +392,12 @@ pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-h
 # Shutdown pgbouncer
 psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;"
 
+cd $CIRCLECI_FOLDER
+
 # start pgbouncer again
-pgbouncer -u pgbouncer .circleci/pgbouncer/pgbouncer.ini
+pgbouncer -u pgbouncer pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
 
 # sleep for 2 seconds
 sleep 2
@@ -399,6 +407,7 @@ pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-h
 
 # Shutdown pgbouncer
 psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;"
+
 kill -INT $PID
 kill -INT $HS_PID
 psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database hs_hge_test;"
