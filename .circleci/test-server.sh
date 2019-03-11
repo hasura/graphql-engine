@@ -397,7 +397,7 @@ psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || t
 cd $CIRCLECI_FOLDER
 
 # start pgbouncer again
-pgbouncer -u pgbouncer pgbouncer/pgbouncer.ini
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
 
 cd $PYTEST_ROOT
 
