@@ -23,7 +23,7 @@ class CollapsibleToggleHoc extends React.Component {
   }
   render() {
     return (
-      <CollapsibleToggle toggle={this.toggle} {...this.state} {...this.props} />
+      <CollapsibleToggle toggle={this.toggle} {...this.props} {...this.state} />
     );
   }
 }
