@@ -1,10 +1,10 @@
 {
   "name": "graphql2chartjs",
-  "version": "0.0.7",
+  "version": "0.1.0-alpha1",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/index.test.js",
     "compile": "rm -rf lib && ./node_modules/.bin/babel src --out-dir lib",
     "bundle": "rm -rf bundle/js && ./node_modules/.bin/rollup -c",
     "launch": "yarn compile && yarn bundle && yarn publish"
