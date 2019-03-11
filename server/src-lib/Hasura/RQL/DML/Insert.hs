@@ -11,6 +11,7 @@ import qualified Data.Text.Lazy           as LT
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
@@ -38,11 +39,12 @@ data InsertQueryP1
   , iqp1Tuples   :: ![[S.SQLExp]]
   , iqp1Conflict :: !(Maybe ConflictClauseP1)
   , iqp1MutFlds  :: !MutFlds
+  , iqp1UniqCols :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
-mkSQLInsert :: Bool -> InsertQueryP1 -> S.SelectWith
-mkSQLInsert strfyNum (InsertQueryP1 tn vn cols vals c mutFlds) =
-  mkSelWith tn (S.CTEInsert insert) mutFlds False strfyNum
+mkInsertCTE :: InsertQueryP1 -> S.CTE
+mkInsertCTE (InsertQueryP1 _ vn cols vals c _ _) =
+  S.CTEInsert insert
   where
     insert =
       S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
@@ -66,7 +68,7 @@ mkDefValMap cim =
 
 getInsertDeps
   :: InsertQueryP1 -> [SchemaDependency]
-getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds) =
+getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds _) =
   mkParentDep tn : retDeps
   where
     retDeps = map (mkColDep "untyped" tn . fst) $
@@ -145,7 +147,8 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = tiUniqOrPrimConstraints tableInfo
+      let tableConsNames = map tcName $
+            tiUniqOrPrimConstraints tableInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
@@ -186,6 +189,8 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
       setInsVals = ipiSet insPerm
+      uniqCols = getUniqCols (getCols fieldInfoMap) $
+                 tiUniqOrPrimConstraints tableInfo
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols -> do
@@ -214,7 +219,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       buildConflictClause tableInfo inpCols c
 
   return $ InsertQueryP1 tableName insView insCols sqlExps
-           conflictClause mutFlds
+           conflictClause mutFlds uniqCols
 
   where
     selNecessaryMsg =
@@ -237,10 +242,10 @@ convInsQ =
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
 insertP2 strfyNum (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder insertSQL) (toList p) True
+  runMutation $ Mutation (iqp1Table u) (insertCTE, p)
+                (iqp1MutFlds u) (iqp1UniqCols u) strfyNum
   where
-    insertSQL = toSQL $ mkSQLInsert strfyNum u
+    insertCTE = mkInsertCTE u
 
 data ConflictCtx
   = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp

@@ -28,9 +28,7 @@ import {
   PGTypes,
 } from './utils';
 
-import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
-
-const styles = require('./Styles.scss');
+import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
@@ -126,6 +124,8 @@ class PermissionBuilder extends React.Component {
   }
 
   render() {
+    const styles = require('./PermissionBuilder.scss');
+
     const wrapDoubleQuotes = value => {
       return (
         <span>

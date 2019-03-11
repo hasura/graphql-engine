@@ -5,15 +5,16 @@ import globals from '../../../Globals';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
   pendingEventsConnector,
   runningEventsConnector,
-  eventHeaderConnector,
+  eventPageConnector,
   streamingLogsConnector,
 } from '.';
+
+import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   loadTriggers,
@@ -37,11 +38,11 @@ const makeEventRouter = (
   return (
     <Route
       path="events"
-      component={eventHeaderConnector(connect)}
+      component={eventPageConnector(connect)}
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={schemaContainerConnector(connect)}>
+      <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
         <Route path="triggers" component={schemaConnector(connect)} />
         <Route
@@ -78,7 +79,7 @@ const makeEventRouter = (
   );
 };
 
-const eventRouter = (connect, store, composeOnEnterHooks) => {
+const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -192,4 +193,4 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default eventRouter;
+export default eventRouterUtils;
