@@ -6,7 +6,6 @@ import ArrowBackIcon from '@material-ui/icons/ArrowBack'
 import DeleteIcon from '@material-ui/icons/Delete'
 import InfoIcon from '@material-ui/icons/Info'
 import MoreIcon from '@material-ui/icons/MoreVert'
-import { defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import gql from 'graphql-tag'
 import { History } from 'history'
 import * as React from 'react'
@@ -81,53 +80,50 @@ const mutation = gql`
     delete_chat_users(where:{chat_id:{_eq: $chatId}}) {
       affected_rows
     }
+    delete_message(where:{chat_id:{_eq: $chatId}}) {
+      affected_rows
+    }
     delete_chat(where:{id: {_eq: $chatId}}) {
       affected_rows
     }
   }
 `
+
 interface ChatNavbarProps {
-  chatId: number
+  chatId: string
   history: History
 }
 
 export default ({ chatId, history }: ChatNavbarProps) => {
   const me = useMe();
+  const parsedChatId = parseInt(chatId,10)
   const {
     data: { chat_users },
   } = useQuery<ChatList.Query, ChatList.Variables>(query, {
-    variables: { chatId, userId: me.id },
+    variables: { chatId: parsedChatId, userId: me.id },
     suspend: true,
   })
   const removeChat = useMutation<DeleteChat.Mutation, DeleteChat.Variables>(
     mutation,
     {
-      variables: { chatId },
+      variables: { chatId: parsedChatId },
       update: (client, { data: { delete_chat } }) => {
-        client.writeFragment({
-          id: defaultDataIdFromObject({
-            __typename: 'chat',
-            id: chatId,
-          }),
-          fragment: fragments.chat,
-          fragmentName: 'chat',
-          data: null,
-        })
-
         let chats
         try {
-          chats = client.readQuery<any>({
+          chats = client.readQuery<ChatList.Query, ChatList.Variables>({
             query: queries.chats,
-          }).chat
+            variables: { chatId: parsedChatId, userId: me.id }
+          }).chat_users
         } catch (e) {}
 
-        if (chats && chats.some(chat => chat.id === chatId)) {
-          const index = chats.findIndex(chat => chat.id === chatId)
+        if (chats && chats.some(chat => chat.chat_id === parsedChatId)) {
+          const index = chats.findIndex(chat => chat.chat_id === parsedChatId)
           chats.splice(index, 1)
 
-          client.writeQuery({
+          client.writeQuery<ChatList.Query, ChatList.Variables>({
             query: queries.chats,
-            data: { chat: chats },
+            variables: { chatId: parsedChatId, userId: me.id },
+            data: { chat_users: chats },
           })
         }
       },

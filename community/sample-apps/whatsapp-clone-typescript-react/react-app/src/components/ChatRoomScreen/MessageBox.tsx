@@ -1,6 +1,5 @@
 import Button from '@material-ui/core/Button'
 import SendIcon from '@material-ui/icons/Send'
-import { defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import gql from 'graphql-tag'
 import * as React from 'react'
 import { useState } from 'react'

@@ -9,7 +9,7 @@ import { Redirect } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router-dom'
 import styled from 'styled-components'
 import * as fragments from '../../graphql/fragments'
-import { GroupDetailsScreenQuery, GroupDetailsScreenMutation } from '../../graphql/types'
+import { GroupDetailsScreenQuery, GroupDetailsScreenUpdateMutation } from '../../graphql/types'
 import { useMe } from '../../services/auth.service'
 import { pickPicture, uploadProfilePicture } from '../../services/picture.service'
 import Navbar from '../Navbar'
@@ -86,9 +86,9 @@ const query = gql`
   ${fragments.user}
 `
 
-const mutation = gql`
-  mutation GroupDetailsScreenMutation($name: String, $picture: String, $owner_id: Int) {
-    insert_chat(objects: [{name: $name, picture: $picture, owner_id: $owner_id}]) {
+const updateMutation = gql`
+  mutation GroupDetailsScreenUpdateMutation($name: String, $picture: String, $chatId: Int!) {
+    update_chat(_set: {name: $name, picture: $picture}, where: {id: {_eq: $chatId}}) {
       affected_rows
       returning {
         ...chat
@@ -135,35 +135,24 @@ export default ({ location, match, history }: RouteComponentProps) => {
     const [chatName] = chatNameState
     const [chatPicture] = chatPictureState
 
-    /*
-    updateChat = useMutation<any>(mutation, {
+    updateChat = useMutation<GroupDetailsScreenUpdateMutation.Mutation>(updateMutation, {
       variables: {
         chatId,
         name: chatName,
         picture: chatPicture,
       },
-      optimisticResponse: {
-        __typename: 'Mutation',
-        updateGroup: {
-          ...chat,
-          __typename: 'Chat',
-          picture: chatPicture,
-          name: chatName,
-        },
-      },
-      update: (client, { data: { updateGroup } }) => {
-        chat.picture = updateGroup.picture
-        chat.name = updateGroup.name
+      update: (client, { data: { update_chat } }) => {
+        chat[0].picture = update_chat.returning[0].picture
+        chat[0].name = update_chat.returning[0].name
 
         client.writeFragment({
           id: defaultDataIdFromObject(chat),
           fragment: fragments.chat,
-          fragmentName: 'Chat',
+          fragmentName: 'chat',
           data: chat,
         })
       },
     })
-    */
 
     // Update picture once changed
     useEffect(

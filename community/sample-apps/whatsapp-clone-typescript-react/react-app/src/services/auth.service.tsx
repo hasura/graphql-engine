@@ -73,6 +73,7 @@ export const signUp = ({ username, password, name }) => {
 
 export const signOut = () => {
   localStorage.removeItem('Authorization')
+  // window.location.href = '/sign-in'
 
   return store.clearStore()
 }
