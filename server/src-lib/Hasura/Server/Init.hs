@@ -9,6 +9,7 @@ import qualified Data.Aeson                   as J
 import qualified Data.HashSet                 as Set
 import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as TE
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
@@ -16,7 +17,6 @@ import           Hasura.RQL.Types             (RoleName (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
-import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
 
 import qualified Hasura.Logging               as L
@@ -538,22 +538,19 @@ parseRawConnInfo =
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
-mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
+mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts
+      return $ Q.CIOptions $ Q.ConnOptions host port user pass db opts
 
-    (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
-                                return $ parseDatabaseUrl dbURL opts
+    (_, _, _, _, Just dbURL) ->
+      return $ Q.CIDatabaseURI $ TE.encodeUtf8 $ T.pack dbURL
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
-  where
-    invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
-                    ++ "Example postgres://foo:bar@example.com:2345/database"
 
 parseTxIsolation :: Parser (Maybe Q.TxIsolation)
 parseTxIsolation = optional $
@@ -729,15 +726,16 @@ parseEnabledAPIs = optional $
          )
 
 -- Init logging related
-connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog (Q.ConnInfo host port user _ db _) =
+connInfoToLog :: Q.ConnOptions -> StartupLog
+connInfoToLog opts =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
-    infoVal = J.object [ "host" J..= host
-                       , "port" J..= port
-                       , "user" J..= user
-                       , "database" J..= db
-                       ]
+    infoVal =J.object
+             [ "host" J..= Q.connHost opts
+             , "port" J..= Q.connPort opts
+             , "user" J..= Q.connUser opts
+             , "database" J..= Q.connDatabase opts
+             ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog so =

@@ -97,6 +97,14 @@ printJSON = BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a) => a -> IO ()
 printYaml = BC.putStrLn . Y.encode
 
+fetchConnOptions :: Q.ConnInfo -> IO Q.ConnOptions
+fetchConnOptions (Q.CIOptions opts) = return opts
+fetchConnOptions (Q.CIDatabaseURI uri) = do
+  mCOpts <- Q.parseConnOptions uri
+  maybe (putStrLn errMsg >> exitFailure) return mCOpts
+  where
+    errMsg = "invalid database url; parse error"
+
 main :: IO ()
 main =  do
   (HGEOptionsG rci hgeCmd) <- parseArgs
@@ -117,8 +125,8 @@ main =  do
       am <- either (printErrExit . T.unpack) return authModeRes
 
       ci <- procConnInfo rci
-      -- log postgres connection info
-      unLogger logger $ connInfoToLog ci
+      -- -- log postgres connection info
+      fetchConnOptions ci >>= (unLogger logger . connInfoToLog)
 
       -- safe init catalog
       initRes <- initialise logger ci httpManager
