@@ -393,6 +393,7 @@ class ApiRequest extends Component {
           <CollapsibleToggle
             title={this.getHeaderTitleView()}
             testId="api-explorer-header"
+            isOpen
           >
             {this.getHeaderTableView()}
           </CollapsibleToggle>
