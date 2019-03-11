@@ -128,6 +128,8 @@ export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 
 PID=""
 WH_PID=""
+HS_PID=""
+
 trap stop_services ERR
 trap stop_services INT
 
@@ -408,8 +410,8 @@ pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-h
 # Shutdown pgbouncer
 psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
 
-kill -INT $PID
-kill -INT $HS_PID
+kill $PID
+kill $HS_PID
 psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database hs_hge_test;"
 sleep 4
 combine_hpc_reports
