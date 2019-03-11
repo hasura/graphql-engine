@@ -591,7 +591,7 @@
           // padding: 5px;
           padding: 0px 5px;
           min-width: 50px;
-
+          vertical-align: middle;
           .responseTableInput {
             background-color: transparent;
             border: 0;
@@ -714,7 +714,8 @@
 
 .common_checkbox_label {
   margin-bottom: 0px !important;
-  padding-top: 5px;
+  padding-top: 0px;
+  display: flex;
 }
 
 .common_checkbox + .common_checkbox_label:before {
