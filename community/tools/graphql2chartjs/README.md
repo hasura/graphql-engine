@@ -107,7 +107,7 @@ graphql2chartjs works in 3 steps:
 2. Add data from your graphql response: `g2c.add(graphqlResponse.data, 'line')`
 3. Set your chart data to the data properly of the graphql2chartjs instance: `g2c.data`
 
-### Step 1: Initialiase - `new graphql2chartjs()`
+### Step 1: Initialiase - `new Graphql2Chartjs()`
 
 ```javascript
 const g2c = new Graphql2Chartjs();
@@ -136,13 +136,13 @@ g2c.add(data, 'line');
 
 ### Step 2: (Option 2) Add data for your chart with UI properties - `graphql2chartjs.add(data, addProps())`
 
-Once you've initialised a `graphql2chartjs` object, you can use the `addWithProps` function to add data for the first time or incrementally. In addition, you can pass a function that specifies the type of chart, chartjs UI properties that apply to the entire dataset or to each point in the dataset.
+Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally. In addition, you can pass a function that specifies the type of chart, chartjs UI properties that apply to the entire dataset or to each point in the dataset.
 
 ```javascript
 await data = runQuery(..);
 
 g2c.add(data, (datasetName, dataPoint) => {
-  return {
+  return {                                                                                                                  
     chartType: 'line',
     pointBackgroundColor: 'blue',
     borderColor: 'red'
