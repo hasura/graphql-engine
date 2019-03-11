@@ -2,12 +2,11 @@ import React from 'react';
 // import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
-// import { loadAccessKeyState } from '../../AppState';
+// import { loadAdminSecretState } from '../../AppState';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   viewTableConnector,
   insertItemConnector,
   rawSQLConnector,
@@ -19,7 +18,7 @@ import {
   relationshipsConnector,
   relationshipsViewConnector,
   permissionsConnector,
-  dataHeaderConnector,
+  dataPageConnector,
   migrationsConnector,
   functionWrapperConnector,
   ModifyCustomFunction,
@@ -27,12 +26,14 @@ import {
   // metadataConnector,
 } from '.';
 
+import { rightContainerConnector } from '../../Common/Layout';
+
 import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   // UPDATE_DATA_HEADERS,
-  // ACCESS_KEY_ERROR,
+  // ADMIN_SECRET_ERROR,
 } from './DataActions';
 
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
@@ -47,9 +48,9 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path="data" component={dataHeaderConnector(connect)}>
+    <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={schemaContainerConnector(connect)}>
+      <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -129,12 +130,12 @@ const makeDataRouter = (
   );
 };
 
-const dataRouter = (connect, store, composeOnEnterHooks) => {
+const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    // check if access key is available in localstorage. if so use that.
-    // if localstorage access key didn't work, redirect to login (meaning value has changed)
-    // if access key is not available in localstorage, check if cli is giving it via window.__env
-    // if access key is not available in localstorage and cli, make a api call to data without access key.
+    // check if admin secret is available in localstorage. if so use that.
+    // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
+    // if admin secret is not available in localstorage, check if cli is giving it via window.__env
+    // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
       tables: { allSchemas },
@@ -198,4 +199,4 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default dataRouter;
+export default dataRouterUtils;

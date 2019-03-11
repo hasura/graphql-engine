@@ -11,9 +11,9 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
-import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.RQL.Types
@@ -24,41 +24,44 @@ import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
 -- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> Field -> Q.TxE QErr BL.ByteString
-buildTx userInfo gCtx fld = do
+buildTx :: UserInfo -> GCtx -> SQLGenCtx -> Field -> Q.TxE QErr BL.ByteString
+buildTx userInfo gCtx sqlCtx fld = do
   opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert (fldMap, orderByCtx, insCtxMap, funcArgCtx) $ case opCxt of
+  join $ fmap fst $ runConvert ( fldMap
+                               , orderByCtx
+                               , insCtxMap
+                               , sqlCtx
+                               ) $ case opCxt of
 
-    OCSelect tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertSelect tn permFilter permLimit fld
+    OCSelect ctx ->
+      validateHdrs (_socHeaders ctx) >> RS.convertSelect ctx fld
 
-    OCSelectPkey tn permFilter hdrs ->
-      validateHdrs hdrs >> RS.convertSelectByPKey tn permFilter fld
+    OCSelectPkey ctx ->
+      validateHdrs (_spocHeaders ctx) >> RS.convertSelectByPKey ctx fld
 
-    OCSelectAgg tn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertAggSelect tn permFilter permLimit fld
+    OCSelectAgg ctx ->
+      validateHdrs (_socHeaders ctx) >> RS.convertAggSelect ctx fld
 
-    OCFuncQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit False fld
+    OCFuncQuery ctx ->
+      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx False fld
 
-    OCFuncAggQuery tn fn permFilter permLimit hdrs ->
-      validateHdrs hdrs >> RS.convertFuncQuery tn fn permFilter permLimit True fld
+    OCFuncAggQuery ctx ->
+      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx True fld
 
-    OCInsert tn hdrs    ->
-      validateHdrs hdrs >> RI.convertInsert roleName tn fld
+    OCInsert ctx    ->
+      validateHdrs (_iocHeaders ctx) >> RI.convertInsert roleName (_iocTable ctx) fld
 
-    OCUpdate tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertUpdate tn permFilter fld
+    OCUpdate ctx ->
+      validateHdrs (_uocHeaders ctx) >> RM.convertUpdate ctx fld
 
-    OCDelete tn permFilter hdrs ->
-      validateHdrs hdrs >> RM.convertDelete tn permFilter fld
+    OCDelete ctx ->
+      validateHdrs (_docHeaders ctx) >> RM.convertDelete ctx fld
   where
     roleName = userRole userInfo
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
     insCtxMap = _gInsCtxMap gCtx
-    funcArgCtx = _gFuncArgCtx gCtx
 
     getOpCtx f =
       onNothing (Map.lookup f opCtxMap) $ throw500 $
@@ -73,16 +76,16 @@ buildTx userInfo gCtx fld = do
 -- {-# SCC resolveFld #-}
 resolveFld
   :: (MonadTx m)
-  => UserInfo -> GCtx
+  => UserInfo -> GCtx -> SQLGenCtx
   -> G.OperationType
   -> Field
   -> m BL.ByteString
-resolveFld userInfo gCtx opTy fld =
+resolveFld userInfo gCtx sqlGenCtx opTy fld =
   case _fName fld of
     "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
     "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
     "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> liftTx $ buildTx userInfo gCtx fld
+    _            -> liftTx $ buildTx userInfo gCtx sqlGenCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
     mkRootTypeName = \case
@@ -92,11 +95,11 @@ resolveFld userInfo gCtx opTy fld =
 
 resolveSelSet
   :: (MonadTx m)
-  => UserInfo -> GCtx
+  => UserInfo -> GCtx -> SQLGenCtx
   -> G.OperationType
   -> SelSet
   -> m BL.ByteString
-resolveSelSet userInfo gCtx opTy fields =
+resolveSelSet userInfo gCtx sqlGenCtx opTy fields =
   fmap mkJSONObj $ forM (toList fields) $ \fld -> do
-    fldResp <- resolveFld userInfo gCtx opTy fld
+    fldResp <- resolveFld userInfo gCtx sqlGenCtx opTy fld
     return (G.unName $ G.unAlias $ _fAlias fld, fldResp)

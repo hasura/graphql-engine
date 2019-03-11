@@ -16,7 +16,7 @@ import {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class AddManualRelationship extends Component {
   constructor() {
@@ -79,7 +79,7 @@ class AddManualRelationship extends Component {
   }
 
   render() {
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
     const {
       tableName,
       allSchemas,

@@ -360,6 +360,16 @@ class TestV1UpdatePermissions(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
 
+    def test_user_update_resident_preset_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_error.yaml")
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset.yaml")
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_resident_preset_session_var.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/update/permissions"
@@ -460,6 +470,15 @@ class TestRunSQL(DefaultTestQueries):
 
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
+
+    def test_sql_rename_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
+
+    def test_sql_rename_columns(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_columns.yaml')
+
+    def test_sql_rename_table_and_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_and_column.yaml')
 
     @classmethod
     def dir(cls):

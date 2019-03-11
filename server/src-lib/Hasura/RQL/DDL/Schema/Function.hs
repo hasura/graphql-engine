@@ -4,6 +4,7 @@ import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.Schema.PGType
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -37,7 +38,7 @@ data RawFuncInfo
   , rfiReturnTypeName   :: !T.Text
   , rfiReturnTypeType   :: !PGTypType
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
+  , rfiInputArgTypes    :: ![PGColOidInfo]
   , rfiInputArgNames    :: ![T.Text]
   , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
@@ -62,7 +63,7 @@ validateFuncArgs args =
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
     invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
 
-mkFunctionInfo :: QualifiedFunction -> RawFuncInfo -> Q.TxE QErr FunctionInfo
+mkFunctionInfo :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
 mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -75,8 +76,10 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
+  inpArgTyps <- toPGColTysWithCaching inpArgOids
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
   validateFuncArgs funcArgs
+
 
   let funcArgsSeq = Seq.fromList funcArgs
       dep = SchemaDependency (SOTable retTable) "table"
@@ -84,14 +87,15 @@ mkFunctionInfo qf rawFuncInfo = do
   return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
   where
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+                retSet inpArgOids inpArgNames returnsTab
                 = rawFuncInfo
 
+
 -- Build function info
-getFunctionInfo :: QualifiedFunction -> Q.TxE QErr FunctionInfo
+getFunctionInfo :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedFunction -> m FunctionInfo
 getFunctionInfo qf@(QualifiedObject sn fn) = do
   -- fetch function details
-  funcData <- Q.catchE defaultTxErrorHandler $
+  funcData <- liftTx $ Q.catchE defaultTxErrorHandler $
               Q.listQ $(Q.sqlFromFile "src-rsr/function_info.sql") (sn, fn) True
 
   case funcData of
@@ -132,7 +136,7 @@ trackFunctionP1 (TrackFunction qf) = do
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
                      => QualifiedFunction -> m ()
 trackFunctionP2Setup qf = do
-  fi <- withPathK "name" $ liftTx $ getFunctionInfo qf
+  fi <- withPathK "name" $ getFunctionInfo qf
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache

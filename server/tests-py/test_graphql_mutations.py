@@ -128,6 +128,9 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_resident_5_modifies_resident_6_upsert(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
 
+    def test_blog_on_conflict_update_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -226,6 +229,9 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_articles_author_upsert_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/articles_author_upsert_fail.yaml")
 
+    def test_articles_with_author_returning(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/nested"
@@ -314,6 +320,12 @@ class TestGraphqlUpdatePermissions(DefaultTestQueries):
     def test_user_cannot_update_id_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
+
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset.yaml')
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml')
 
     @classmethod
     def dir(cls):

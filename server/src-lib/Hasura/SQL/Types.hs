@@ -149,7 +149,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -165,7 +165,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -183,7 +183,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -507,3 +507,15 @@ isComparableType' PGGeography   = False
 isComparableType' PGBoolean     = False
 isComparableType' (PGUnknown _) = False
 isComparableType' _             = True
+
+--TODO Nizar, Check how to handle array of BigNum
+isBigNum :: PGColType -> Bool
+isBigNum = onBaseUDT False isBigNum'
+
+isBigNum' :: PGBaseColType -> Bool
+isBigNum' = \case
+  PGBigInt    -> True
+  PGBigSerial -> True
+  PGNumeric   -> True
+  PGDouble    -> True
+  _           -> False

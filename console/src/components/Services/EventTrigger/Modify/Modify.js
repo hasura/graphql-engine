@@ -1,6 +1,6 @@
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import styles from './Modify.scss';
+import styles from './ModifyEvent.scss';
 
 import { getTableColumns } from '../utils';
 import _push from '../push';
@@ -91,6 +91,7 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             styles={styles}
             save={() => dispatch(save('retry', modifyTriggerName))}
+            serverVersion={this.props.serverVersion}
             dispatch={dispatch}
           />
           <HeadersEditor

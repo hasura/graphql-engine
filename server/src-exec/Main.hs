@@ -1,5 +1,6 @@
 module Main where
 
+import           Migrate                    (migrateCatalog)
 import           Ops
 
 import           Control.Monad.STM          (atomically)
@@ -35,8 +36,6 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Client.TLS    as TLS
-import qualified Network.Wreq.Session       as WrqS
 
 printErrExit :: forall a . String -> IO a
 printErrExit = (>> exitFailure) . putStrLn
@@ -66,13 +65,17 @@ parseHGECommand =
                 <*> parseServerHost
                 <*> parseConnParams
                 <*> parseTxIsolation
-                <*> parseAccessKey
+                <*> (parseAdminSecret <|> parseAccessKey)
                 <*> parseWebHook
                 <*> parseJwtSecret
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
                 <*> parseEnableTelemetry
+                <*> parseWsReadCookie
+                <*> parseStringifyNum
+                <*> parseEnabledAPIs
+
 
 parseArgs :: IO HGEOptions
 parseArgs = do
@@ -102,13 +105,13 @@ main =  do
   loggerCtx   <- mkLoggerCtx $ defaultLoggerSettings True
   let logger = mkLogger loggerCtx
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAccessKey mAuthHook mJwtSecret
-             mUnAuthRole corsCfg enableConsole enableTelemetry) -> do
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
 
-      authModeRes <- runExceptT $ mkAuthMode mAccessKey mAuthHook mJwtSecret
+      authModeRes <- runExceptT $ mkAuthMode mAdminSecret mAuthHook mJwtSecret
                                              mUnAuthRole httpManager loggerCtx
 
       am <- either (printErrExit . T.unpack) return authModeRes
@@ -125,7 +128,7 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         am corsCfg enableConsole enableTelemetry
+                         strfyNum am corsCfg enableConsole enableTelemetry enabledAPIs
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
@@ -134,11 +137,10 @@ main =  do
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-      httpSession    <- WrqS.newSessionControl Nothing TLS.tlsManagerSettings
 
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpSession pool cacheRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool cacheRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -179,7 +181,7 @@ main =  do
     runAsAdmin ci httpManager m = do
       pool <- getMinimalPool ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager pool Q.Serializable m
+              httpManager False pool Q.Serializable m
       return $ fmap fst res
 
     procConnInfo rci =

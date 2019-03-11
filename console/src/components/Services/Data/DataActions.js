@@ -27,7 +27,7 @@ const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
-const ACCESS_KEY_ERROR = 'Data/ACCESS_KEY_ERROR';
+const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
 const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
@@ -482,7 +482,8 @@ const makeMigrationCall = (
   customOnError,
   requestMsg,
   successMsg,
-  errorMsg
+  errorMsg,
+  shouldSkipSchemaReload
 ) => {
   const upQuery = {
     type: 'bulk',
@@ -519,14 +520,16 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    if (globals.consoleMode === 'cli') {
-      dispatch(loadMigrationStatus()); // don't call for server mode
+    if (!shouldSkipSchemaReload) {
+      if (globals.consoleMode === 'cli') {
+        dispatch(loadMigrationStatus()); // don't call for server mode
+      }
+      dispatch(loadSchema());
     }
-    dispatch(loadSchema());
-    customOnSuccess();
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
     }
+    customOnSuccess();
   };
 
   const onError = err => {
@@ -667,8 +670,8 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, schemaList: action.schemaList };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
-    case ACCESS_KEY_ERROR:
-      return { ...state, accessKeyError: action.data };
+    case ADMIN_SECRET_ERROR:
+      return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
     case UPDATE_REMOTE_SCHEMA_MANUAL_REL:
@@ -717,6 +720,9 @@ const dataReducer = (state = defaultState, action) => {
 
 export default dataReducer;
 export {
+  MAKE_REQUEST,
+  REQUEST_SUCCESS,
+  REQUEST_ERROR,
   setTable,
   loadSchema,
   loadUntrackedSchema,
@@ -731,7 +737,7 @@ export {
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,
-  ACCESS_KEY_ERROR,
+  ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   fetchTableListBySchema,

@@ -20,9 +20,13 @@ module Hasura.RQL.Types.Common
        , PGColOidInfo(..)
        , PGTyInfo(..)
        , getPGColTy
+       , ColVals
+       , PreSetCols
+       , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
+import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -222,3 +226,13 @@ instance (FromJSON a) => FromJSON (WithTable a) where
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
+
+type ColVals = Map.HashMap PGCol Value
+type PreSetCols = Map.HashMap PGCol S.SQLExp
+
+data MutateResp
+  = MutateResp
+  { _mrAffectedRows     :: !Int
+  , _mrReturningColumns :: ![ColVals]
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)

@@ -1,6 +1,5 @@
 module Hasura.RQL.DDL.Schema.PGType where
 
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -18,8 +17,14 @@ getPGTyInfoMap = do
     Q.listQ $(Q.sqlFromFile "src-rsr/pg_type_info.sql") () True
   return $ mkPGTyMaps $ map (Q.getAltJ . runIdentity) pgTyInfo
 
-getPGColTys :: Set.HashSet PGColOidInfo -> Q.TxE QErr (Map.HashMap PGColOidInfo PGColType)
-getPGColTys ctis = do
+toPGColTysWithCaching :: (QErrM m, CacheRWM m, MonadTx m) => [PGColOidInfo] -> m [PGColType]
+toPGColTysWithCaching oids = do
+  curTysCache <- addPGTysToCache $ Set.fromList oids
+  forM oids $ \oid -> onNothing (Map.lookup oid curTysCache) $ throw500 $
+      "Could not find Postgres type with oid info" <> T.pack (show oid)
+
+getPGColTysMap :: Set.HashSet PGColOidInfo -> Q.TxE QErr (Map.HashMap PGColOidInfo PGColType)
+getPGColTysMap ctis = do
   tim <- getPGTyInfoMap
   fmap Map.fromList $ forM (Set.toList ctis) $ \x -> fmap ((,) x) $ onNothing (getPGColTy tim x) $ errMsg x
   where
@@ -37,10 +42,9 @@ addPGTysToCache i = do
 updatePGTysCache :: (CacheRWM m, MonadTx m) => Set.HashSet PGColOidInfo -> m (Map.HashMap PGColOidInfo PGColType)
 updatePGTysCache iTys = do
   cTys <- liftTx $ getCatalogTys
-  updTysMap <- liftTx $ getPGColTys $ Set.union cTys iTys
+  updTysMap <- liftTx $ getPGColTysMap $ Set.union cTys iTys
   modPGTyCache updTysMap
   return updTysMap
-
 
 getCatalogTys :: Q.TxE QErr (Set.HashSet PGColOidInfo)
 getCatalogTys = do

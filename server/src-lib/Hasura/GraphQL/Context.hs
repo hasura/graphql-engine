@@ -19,73 +19,82 @@ import           Hasura.SQL.Types
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
+data InsOpCtx
+  = InsOpCtx
+  { _iocTable   :: !QualifiedTable
+  , _iocHeaders :: ![T.Text]
+  } deriving (Show, Eq)
+
+data SelOpCtx
+  = SelOpCtx
+  { _socTable   :: !QualifiedTable
+  , _socHeaders :: ![T.Text]
+  , _socFilter  :: !AnnBoolExpSQL
+  , _socLimit   :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data SelPkOpCtx
+  = SelPkOpCtx
+  { _spocTable   :: !QualifiedTable
+  , _spocHeaders :: ![T.Text]
+  , _spocFilter  :: !AnnBoolExpSQL
+  , _spocArgMap  :: !PGColArgMap
+  } deriving (Show, Eq)
+
+data FuncQOpCtx
+  = FuncQOpCtx
+  { _fqocTable    :: !QualifiedTable
+  , _fqocHeaders  :: ![T.Text]
+  , _fqocFilter   :: !AnnBoolExpSQL
+  , _fqocLimit    :: !(Maybe Int)
+  , _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FuncArgSeq
+  } deriving (Show, Eq)
+
+data UpdOpCtx
+  = UpdOpCtx
+  { _uocTable      :: !QualifiedTable
+  , _uocHeaders    :: ![T.Text]
+  , _uocFilter     :: !AnnBoolExpSQL
+  , _uocPresetCols :: !PreSetCols
+  , _uocUniqCols   :: !(Maybe [PGColInfo])
+  } deriving (Show, Eq)
+
+data DelOpCtx
+  = DelOpCtx
+  { _docTable    :: !QualifiedTable
+  , _docHeaders  :: ![T.Text]
+  , _docFilter   :: !AnnBoolExpSQL
+  , _docUniqCols :: !(Maybe [PGColInfo])
+  } deriving (Show, Eq)
+
 data OpCtx
-  -- table, req hdrs
-  = OCInsert QualifiedTable [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelect QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, filter exp, reqt hdrs
-  | OCSelectPkey QualifiedTable AnnBoolExpSQL [T.Text]
-  -- tn, filter exp, limit, req hdrs
-  | OCSelectAgg QualifiedTable AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, fn, filter, limit, req hdrs
-  | OCFuncQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, fn, filter, limit, req hdrs
-  | OCFuncAggQuery QualifiedTable QualifiedFunction AnnBoolExpSQL (Maybe Int) [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCUpdate QualifiedTable AnnBoolExpSQL [T.Text]
-  -- tn, filter exp, req hdrs
-  | OCDelete QualifiedTable AnnBoolExpSQL [T.Text]
+  = OCSelect !SelOpCtx
+  | OCSelectPkey !SelPkOpCtx
+  | OCSelectAgg !SelOpCtx
+  | OCFuncQuery !FuncQOpCtx
+  | OCFuncAggQuery !FuncQOpCtx
+  | OCInsert !InsOpCtx
+  | OCUpdate !UpdOpCtx
+  | OCDelete !DelOpCtx
   deriving (Show, Eq)
 
 
 data GCtx
   = GCtx
-  { _gTypes      :: !TypeMap
-  , _gFields     :: !FieldMap
-  , _gOrdByCtx   :: !OrdByCtx
-  , _gFuncArgCtx :: !FuncArgCtx
-  , _gQueryRoot  :: !ObjTyInfo
-  , _gMutRoot    :: !(Maybe ObjTyInfo)
-  , _gSubRoot    :: !(Maybe ObjTyInfo)
-  , _gOpCtxMap   :: !OpCtxMap
-  , _gInsCtxMap  :: !InsCtxMap
+  { _gTypes     :: !TypeMap
+  , _gFields    :: !FieldMap
+  , _gOrdByCtx  :: !OrdByCtx
+  , _gQueryRoot :: !ObjTyInfo
+  , _gMutRoot   :: !(Maybe ObjTyInfo)
+  , _gSubRoot   :: !(Maybe ObjTyInfo)
+  , _gOpCtxMap  :: !OpCtxMap
+  , _gInsCtxMap :: !InsCtxMap
   } deriving (Show, Eq)
 
 instance Has TypeMap GCtx where
   getter = _gTypes
   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
-
--- data OpCtx
---   -- table, req hdrs
---   = OCInsert QualifiedTable [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelect QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, reqt hdrs
---   | OCSelectPkey QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, limit, req hdrs
---   | OCSelectAgg QualifiedTable S.BoolExp (Maybe Int) [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCUpdate QualifiedTable S.BoolExp [T.Text]
---   -- tn, filter exp, req hdrs
---   | OCDelete QualifiedTable S.BoolExp [T.Text]
---   deriving (Show, Eq)
-
--- data GCtx
---   = GCtx
---   { _gTypes     :: !TypeMap
---   , _gFields    :: !FieldMap
---   , _gOrdByCtx  :: !OrdByCtx
---   , _gQueryRoot :: !ObjTyInfo
---   , _gMutRoot   :: !(Maybe ObjTyInfo)
---   , _gSubRoot   :: !(Maybe ObjTyInfo)
---   , _gOpCtxMap  :: !OpCtxMap
---   , _gInsCtxMap :: !InsCtxMap
---   } deriving (Show, Eq)
-
--- instance Has TypeMap GCtx where
---   getter = _gTypes
---   modifier f ctx = ctx { _gTypes = f $ _gTypes ctx }
 
 instance ToJSON GCtx where
   toJSON _ = String "GCtx"
@@ -96,17 +105,17 @@ data TyAgg
   = TyAgg
   { _taTypes   :: !TypeMap
   , _taFields  :: !FieldMap
+  , _taScalars :: !(Set.HashSet PGColType)
   , _taOrdBy   :: !OrdByCtx
-  , _taFuncArg :: !FuncArgCtx
   } deriving (Show, Eq)
 
 instance Semigroup TyAgg where
-  (TyAgg t1 f1 o1 fa1) <> (TyAgg t2 f2 o2 fa2) =
-    TyAgg (Map.union t1 t2) (Map.union f1 f2) (Map.union o1 o2)
-          (Map.union fa1 fa2)
+  (TyAgg t1 f1 s1 o1) <> (TyAgg t2 f2 s2 o2) =
+    TyAgg (Map.union t1 t2) (Map.union f1 f2)
+          (Set.union s1 s2) (Map.union o1 o2)
 
 instance Monoid TyAgg where
-  mempty = TyAgg Map.empty Map.empty Map.empty Map.empty
+  mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
   mappend = (<>)
 
 newtype RootFlds
@@ -324,11 +333,11 @@ defaultTypes = $(fromSchemaDocQ defaultSchema defaultPGColTyMap HasuraType)
 
 
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
-mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap =
+mkGCtx tyAgg (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
                   (G.NamedType "query_root") Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
-      scalarTys = map (TIScalar . mkHsraScalarTyInfo) colTys
+      scalarTys = map (TIScalar . mkHsraScalarTyInfo) (colTys <> toList scalars)
       compTys   = map (TIInpObj . mkCompExpInp) colTys
       ordByEnumTyM = bool (Just ordByEnumTy) Nothing $ null qFlds
       allTys    = Map.union tyInfos $ mkTyInfoMap $
@@ -340,9 +349,10 @@ mkGCtx (TyAgg tyInfos fldInfos ordByEnums funcArgCtx) (RootFlds flds) insCtxMap 
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
-  in GCtx allTys fldInfos ordByEnums funcArgCtx queryRoot mutRootM subRootM
+  in GCtx allTys fldInfos ordByEnums queryRoot mutRootM subRootM
      (Map.map fst flds) insCtxMap
   where
+    TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
     mkMutRoot =

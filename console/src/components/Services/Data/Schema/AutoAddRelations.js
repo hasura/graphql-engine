@@ -9,15 +9,18 @@ import {
   autoAddRelName,
 } from '../TableRelationships/Actions';
 import { getRelationshipLine } from '../TableRelationships/Relationships';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 class AutoAddRelations extends Component {
   trackAllRelations = untrackedData => {
     this.props.dispatch(autoTrackRelations(untrackedData));
   };
+
   render() {
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+
     const { untrackedRelations, dispatch } = this.props;
-    const styles = require('../PageContainer/PageContainer.scss');
+
     const handleAutoAddIndivRel = obj => {
       dispatch(autoAddRelName(obj));
     };
@@ -32,11 +35,12 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
-    const untrackData = untrackedRelations.map(obj => {
+
+    const untrackData = untrackedRelations.map((obj, i) => {
       return (
         <div
           className={styles.padd_top_medium}
-          key={'untrackedIndiv' + obj.data.tableName}
+          key={`${obj.data.tableName}-${obj.data.rTable}-${i}`}
         >
           <Button
             className={`${styles.display_inline}`}
@@ -61,6 +65,7 @@ class AutoAddRelations extends Component {
         </div>
       );
     });
+
     return (
       <div>
         {untrackedRelations.length === 0 ? (

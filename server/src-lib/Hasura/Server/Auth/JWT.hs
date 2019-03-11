@@ -183,7 +183,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ mkUserInfo unAuthRole $ mkUserVars []
+      return $ mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
 

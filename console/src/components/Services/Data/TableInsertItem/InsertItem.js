@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 import {
   getPlaceholder,
   BOOLEAN,
@@ -49,7 +49,7 @@ class InsertItem extends Component {
       dispatch,
     } = this.props;
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const _columns = schemas.find(x => x.table_name === tableName).columns;
     const refs = {};
     const columns = _columns.sort(ordinalColSort);

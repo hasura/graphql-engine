@@ -111,15 +111,15 @@ class App extends Component {
             >
               Backend
             </a>
-            <span className="accessKey">
-              <button>(use Access Key: hasurademoapp)</button>
+            <span className="adminSecret">
+              <button>(use Admin Secret: hasurademoapp)</button>
             </span>
             <i className="fa fa-angle-double-right" />
           </span>
           {/*
-          <span className="footerLinkPadd accessKey">
+          <span className="footerLinkPadd adminSecret">
             <button>
-              Access Key: hasurademoapp
+              Admin Secret: hasurademoapp
             </button>
           </span>
           */}

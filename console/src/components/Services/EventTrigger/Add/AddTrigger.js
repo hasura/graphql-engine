@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   removeHeader,
@@ -17,11 +17,12 @@ import {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
   setDefaults,
-  UPDATE_WEBHOOK_URL_TYPE
+  UPDATE_WEBHOOK_URL_TYPE,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
@@ -39,7 +40,8 @@ class AddTrigger extends Component {
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
-      supportWebhookEnv: false
+      supportWebhookEnv: false,
+      supportRetryTimeout: false,
     };
   }
   componentDidMount() {
@@ -48,6 +50,7 @@ class AddTrigger extends Component {
     if (this.props.serverVersion) {
       this.checkSemVer(this.props.serverVersion).then(() => {
         this.checkWebhookEnvSupport(this.props.serverVersion);
+        this.checkRetryTimeoutSupport(this.props.serverVersion);
       });
     }
   }
@@ -55,6 +58,7 @@ class AddTrigger extends Component {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion).then(() => {
         this.checkWebhookEnvSupport(nextProps.serverVersion);
+        this.checkRetryTimeoutSupport(nextProps.serverVersion);
       });
     }
   }
@@ -87,9 +91,15 @@ class AddTrigger extends Component {
     return Promise.resolve();
   }
 
+  checkRetryTimeoutSupport(version) {
+    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
+    this.setState({ supportRetryTimeout });
+    return Promise.resolve();
+  }
+
   updateSupportColumnChangeFeature(val) {
     this.setState({
-      supportColumnChangeFeature: val
+      supportColumnChangeFeature: val,
     });
   }
 
@@ -120,15 +130,36 @@ class AddTrigger extends Component {
       errorMsg = 'Webhook URL cannot be empty';
       customMsg = 'Webhook URL cannot be empty. Please add a valid URL';
     } else if (this.props.retryConf) {
-      if (isNaN(parseInt(this.props.retryConf.num_retries, 10))) {
+      const iNumRetries =
+        this.props.retryConf.num_retries === ''
+          ? 0
+          : parseInt(this.props.retryConf.num_retries, 10);
+      const iRetryInterval =
+        this.props.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(this.props.retryConf.interval_sec, 10);
+      const iTimeout =
+        this.props.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(this.props.retryConf.timeout_sec, 10);
+
+      if (iNumRetries < 0 || isNaN(iNumRetries)) {
         isValid = false;
         errorMsg = 'Number of retries is not valid';
-        customMsg = 'Numer of retries cannot be empty and can only be numbers';
+        customMsg = 'Numer of retries must be a non-negative number';
       }
-      if (isNaN(parseInt(this.props.retryConf.interval_sec, 10))) {
+      if (iRetryInterval <= 0 || isNaN(iRetryInterval)) {
         isValid = false;
         errorMsg = 'Retry interval is not valid';
-        customMsg = 'Retry interval cannot be empty and can only be numbers';
+        customMsg = 'Retry interval must be a postiive number';
+      }
+      if (
+        this.state.supportRetryTimeout &&
+        (isNaN(iTimeout) || iTimeout <= 0)
+      ) {
+        isValid = false;
+        errorMsg = 'Timeout is not valid';
+        customMsg = 'Timeout must be a positive number';
       }
     } else if (this.props.selectedOperations.insert) {
       // check if columns are selected.
@@ -173,7 +204,7 @@ class AddTrigger extends Component {
     } else {
       this.props.dispatch(
         showErrorNotification('Error creating trigger!', errorMsg, '', {
-          custom: customMsg
+          custom: customMsg,
         })
       );
     }
@@ -196,13 +227,13 @@ class AddTrigger extends Component {
       internalError,
       headers,
       webhookURL,
-      webhookUrlType
+      webhookUrlType,
     } = this.props;
 
-    const { supportColumnChangeFeature } = this.state;
+    const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
-    const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    const styles = require('../TableCommon/EventTable.scss');
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -222,7 +253,6 @@ class AddTrigger extends Component {
       const tableSchema = tableListBySchema.find(
         t => t.table_name === e.target.value
       );
-
       const columns = [];
       if (tableSchema) {
         tableSchema.columns.map(colObj => {
@@ -230,7 +260,7 @@ class AddTrigger extends Component {
           columns.push(column);
         });
       }
-      dispatch(operationToggleAllColumns(columns));
+      dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
     };
 
     const handleOperationSelection = e => {
@@ -240,7 +270,9 @@ class AddTrigger extends Component {
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        dispatch(operationToggleColumn(column, type));
+        dispatch(
+          operationToggleColumn(column, type, supportColumnChangeFeature)
+        );
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName
@@ -265,7 +297,7 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div key={i} className={styles.noPadd + ' col-md-4'}>
+            <div key={i} className={styles.padd_remove + ' col-md-4'}>
               <div className={'checkbox '}>
                 <label>
                   {inputHtml}
@@ -279,7 +311,6 @@ class AddTrigger extends Component {
       }
       return null;
     };
-
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
@@ -292,7 +323,7 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+          <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
             {' '}
             {getColumnList('update')}{' '}
           </div>
@@ -302,7 +333,7 @@ class AddTrigger extends Component {
               className={styles.display_inline + ' ' + styles.add_mar_right}
               style={{
                 marginTop: '10px',
-                marginBottom: '10px'
+                marginBottom: '10px',
               }}
             >
               Applicable to update operation only.
@@ -401,7 +432,7 @@ class AddTrigger extends Component {
             <DropdownButton
               dropdownOptions={[
                 { display_text: 'Value', value: 'static' },
-                { display_text: 'From env var', value: 'env' }
+                { display_text: 'From env var', value: 'env' },
               ]}
               title={
                 (header.type === 'static' && 'Value') ||
@@ -439,13 +470,13 @@ class AddTrigger extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.main_wrapper} ${
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
           styles.padd_left
         }`}
       >
         <Helmet title="Add Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>Add a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />
@@ -618,7 +649,7 @@ class AddTrigger extends Component {
                       <DropdownButton
                         dropdownOptions={[
                           { display_text: 'URL', value: 'url' },
-                          { display_text: 'From env var', value: 'env' }
+                          { display_text: 'From env var', value: 'env' },
                         ]}
                         title={
                           (webhookUrlType === 'url' && 'URL') ||
@@ -695,50 +726,80 @@ class AddTrigger extends Component {
                     }
                   >
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Number of retries (default: 0)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryNum(e.target.value));
-                        }}
-                        data-test="no-of-retries"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="no of retries"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Number of retries (default: 0)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryNum(e.target.value));
+                          }}
+                          data-test="no-of-retries"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="no of retries"
+                        />
+                      </div>
                     </div>
-                    <div
-                      className={
-                        styles.display_inline + ' ' + styles.retrySection
-                      }
-                    >
-                      <label
-                        className={
-                          styles.add_mar_right + ' ' + styles.retryLabel
-                        }
-                      >
-                        Retry Interval in seconds (default: 10)
-                      </label>
-                      <input
-                        onChange={e => {
-                          dispatch(setRetryInterval(e.target.value));
-                        }}
-                        data-test="interval-seconds"
-                        className={styles.display_inline + ' form-control'}
-                        type="text"
-                        placeholder="interval time in seconds"
-                      />
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Retry Interval in seconds (default: 10)
+                        </label>
+                      </div>
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryInterval(e.target.value));
+                          }}
+                          data-test="interval-seconds"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="interval time in seconds"
+                        />
+                      </div>
                     </div>
+                    {supportRetryTimeout && (
+                      <div className={styles.retrySection}>
+                        <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                          <label
+                            className={`${styles.add_mar_right} ${
+                              styles.retryLabel
+                            }`}
+                          >
+                            Timeout in seconds (default: 60)
+                          </label>
+                        </div>
+                        <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                          <input
+                            onChange={e => {
+                              dispatch(setRetryTimeout(e.target.value));
+                            }}
+                            data-test="timeout-seconds"
+                            className={`${styles.display_inline} form-control ${
+                              styles.width300
+                            }`}
+                            type="text"
+                            placeholder="timeout in seconds"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div
                     className={
@@ -783,14 +844,14 @@ AddTrigger.propTypes = {
   lastError: PropTypes.object,
   internalError: PropTypes.string,
   lastSuccess: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 

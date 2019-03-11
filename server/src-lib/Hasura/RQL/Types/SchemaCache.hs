@@ -7,6 +7,7 @@ module Hasura.RQL.Types.SchemaCache
        , emptySchemaCache
        , TableInfo(..)
        , TableConstraint(..)
+       , getUniqCols
        , ConstraintType(..)
        , ViewInfo(..)
        , isMutable
@@ -64,7 +65,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , InsSetCols
+       , PreSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -155,8 +156,8 @@ onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
-getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
-  pgiName ci `elem` cols
+getColInfos cols allColInfos =
+  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -202,7 +203,7 @@ data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !InsSetCols
+  , ipiSet             :: !PreSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -225,6 +226,7 @@ data UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpSQL
+  , upiSet             :: !PreSetCols
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -312,9 +314,31 @@ data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
   , tcName :: !ConstraintName
+  , tcCols :: ![PGCol]
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
+
+getUniqCols :: [PGColInfo] -> [TableConstraint] -> Maybe [PGColInfo]
+getUniqCols allCols = travConstraints
+  where
+    colsNotNull = all (not . pgiIsNullable)
+
+    travConstraints []    = Nothing
+    travConstraints (h:t) =
+      let cols = getColInfos (tcCols h) allCols
+      in case tcType h of
+           CTPRIMARYKEY -> Just cols
+           CTUNIQUE     -> if colsNotNull cols then Just cols
+                           else travConstraints t
+           _            -> travConstraints t
+
+getAllPkeyCols :: [TableConstraint] -> [PGCol]
+getAllPkeyCols constraints =
+  flip concatMap constraints $
+    \c -> case tcType c of
+      CTPRIMARYKEY -> tcCols c
+      _            -> []
 
 data ViewInfo
   = ViewInfo
@@ -342,7 +366,7 @@ data TableInfo
   , tiSystemDefined         :: !Bool
   , tiFieldInfoMap          :: !FieldInfoMap
   , tiRolePermInfoMap       :: !RolePermInfoMap
-  , tiUniqOrPrimConstraints :: ![ConstraintName]
+  , tiUniqOrPrimConstraints :: ![TableConstraint]
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
@@ -353,14 +377,14 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 mkTableInfo
   :: QualifiedTable
   -> Bool
-  -> [ConstraintName]
+  -> [TableConstraint]
   -> [PGColInfo]
-  -> [PGCol]
   -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
+mkTableInfo tn isSystemDefined uniqCons cols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-  uniqCons pcols mVI (M.fromList [])
+    uniqCons pCols mVI (M.fromList [])
   where
+    pCols = getAllPkeyCols uniqCons
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
 
@@ -782,7 +806,6 @@ getDependentObjsWith f sc objId =
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
-
     -- induces a b : is b dependent on a
     induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2

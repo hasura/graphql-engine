@@ -23,7 +23,7 @@ import {
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
   const columns = ['id', 'delivered', 'created_at'];
@@ -71,7 +71,7 @@ const renderOps = (opName, onChange, key) => (
 );
 
 const renderWheres = (whereAnd, triggerSchema, dispatch) => {
-  const styles = require('./FilterQuery.scss');
+  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -120,7 +120,7 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, triggerSchema, dispatch) => {
-  const styles = require('./FilterQuery.scss');
+  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -196,7 +196,7 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, triggerSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
-    const styles = require('./FilterQuery.scss');
+    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
     return (
       <div className={styles.filterOptions}>
         <form
@@ -226,9 +226,9 @@ class FilterQuery extends Component {
           <div className={`${styles.padd_right} ${styles.clear_fix}`}>
             <Button
               type="submit"
-              data-test="run-query"
               color="yellow"
               size="sm"
+              data-test="run-query"
             >
               Run query
             </Button>
