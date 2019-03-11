@@ -37,8 +37,8 @@ class TestHorizantalScaleBasic():
             resp = response.json()
             assert st_code == 200, resp
 
-            # wait for x sec
-            time.sleep(0.3)
+            # wait for 30 sec
+            time.sleep(30)
             # validate data
             response = hge_ctx.http.post(
                 self.servers[step['validate']['server']] + "/v1alpha1/graphql",
