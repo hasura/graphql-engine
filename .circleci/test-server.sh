@@ -390,7 +390,7 @@ wait_for_port 8081
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
 
 # Shutdown pgbouncer
-psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;"
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
 
 cd $CIRCLECI_FOLDER
 
@@ -406,7 +406,7 @@ sleep 30
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
 
 # Shutdown pgbouncer
-psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;"
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
 
 kill -INT $PID
 kill -INT $HS_PID
