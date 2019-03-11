@@ -382,7 +382,7 @@ wait_for_port 8080
 
 # start 2nd server
 "$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve \
-                  --server-port 8081 --server-host 0.0.0.0 \
+                  --server-port 8081 \
                   >> "$OUTPUT_FOLDER/hs-graphql-engine.log" 2>&1 & HS_PID=$!
 wait_for_port 8081
 
@@ -399,8 +399,8 @@ pgbouncer -u pgbouncer pgbouncer/pgbouncer.ini
 
 cd $PYTEST_ROOT
 
-# sleep for 2 seconds
-sleep 2
+# sleep for 30 seconds
+sleep 30
 
 # run test
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
