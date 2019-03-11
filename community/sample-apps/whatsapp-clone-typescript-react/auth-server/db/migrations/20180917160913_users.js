@@ -4,8 +4,6 @@ exports.up = function(knex, Promise) {
     table.increments();
     table.string('username').unique().notNullable();
     table.string('password').notNullable();
-    table.string('token').notNullable();
-
     table.timestamp('created_at').notNullable().defaultTo(knex.raw('now()'));
   });
 };

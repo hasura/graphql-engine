@@ -4,7 +4,7 @@ import { useQuery } from 'react-apollo-hooks'
 import { Redirect } from 'react-router-dom'
 import store from '../apollo-client'
 import * as queries from '../graphql/queries'
-// import { Me, User } from '../graphql/types'
+import { Me } from '../graphql/types'
 import { useSubscriptions } from './cache.service'
 
 const MyContext = React.createContext(null)
@@ -18,7 +18,7 @@ export const withAuth = (Component: React.ComponentType) => {
     if (!getAuthHeader()) return <Redirect to="/sign-in" />
 
     // Validating against server
-    const fetchUser = useQuery(queries.me, { suspend: true, context: { headers: {'x-hasura-role': 'mine'}} })
+    const fetchUser = useQuery<Me.Query, Me.Variables>(queries.me, { suspend: true, context: { headers: {'x-hasura-role': 'mine'}} })
     const myResult = fetchUser.data.users ? fetchUser.data.users[0] : {};
 
     useSubscriptions(myResult)

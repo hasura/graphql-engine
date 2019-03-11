@@ -20,10 +20,13 @@ Install NPM dependencies
 npm install
 ```
 
-Set DATABASE_URL env
+Set environment variables. Open `.env` file and add the following env
 
 ```bash
-export DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>
+ENCRYPTION_KEY=<replace_it_with_your_JWT_SECRET>
+DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>
+CLOUDINARY_URL=<replace_it_with_your_cloudinary_url>
+PORT=8010
 ```
 
 ##### User Schema
@@ -41,7 +44,7 @@ The following `users` table is assumed to be present in your schema. The table c
 Then start your app
 
 ```bash
-    ENCRYPTION_KEY=<put your secret key here> npm start
+npm start
 ```
 
 ## Usage

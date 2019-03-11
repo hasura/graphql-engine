@@ -101,10 +101,10 @@ export default ({ chatId }: MessageBoxProps) => {
         const chatQuery = gql`
           query MessagesListQueryLocal($chatId: Int!) {
             chat(where:{id: {_eq: $chatId}}) {
-              ...FullChat
+              ...chat
             }
           }
-          ${fragments.fullChat}
+          ${fragments.chat}
         `
 
         let chatData

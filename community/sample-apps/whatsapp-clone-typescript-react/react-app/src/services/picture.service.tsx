@@ -19,7 +19,7 @@ export const uploadProfilePicture = file => {
   formData.append('file', file)
   formData.append('upload_preset', 'profile-pic')
 
-  return fetch(`${process.env.REACT_APP_SERVER_URL}/upload-profile-pic`, {
+  return fetch(`${process.env.REACT_APP_AUTH_URL}/upload-profile-pic`, {
     method: 'POST',
     body: formData,
     headers: {

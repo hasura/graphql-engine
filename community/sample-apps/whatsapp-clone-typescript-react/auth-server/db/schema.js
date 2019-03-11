@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const knexConnection = Knex(connection);
-const randomBytesAsync = promisify(crypto.randomBytes);
 
 Model.knex(knexConnection);
 
@@ -23,15 +22,12 @@ class User extends Model {
     return {
       'id': this.id,
       'username': this.username,
-      'token': this.token
     }
   }
 
   async $beforeInsert () {
     const salt = bcrypt.genSaltSync();
     this.password = await bcrypt.hash(this.password, salt)
-    const createRandomToken = await randomBytesAsync(16).then(buf => buf.toString('hex'));
-    this.token = createRandomToken
   }
 
   verifyPassword (password, callback) {
