@@ -17,7 +17,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
 import qualified Control.Concurrent          as C
-import qualified Control.Concurrent.Async    as A
 import qualified Control.Concurrent.STM      as STM
 import qualified Data.Text                   as T
 import qualified Data.Time                   as UTC
@@ -38,22 +37,22 @@ instance Show ThreadType where
   show TTProcessor = "processor"
 
 
-data SchemaUpdateEventLog
-  = SchemaUpdateEventLog
+data SchemaSyncThreadLog
+  = SchemaSyncThreadLog
   { suelLogLevel   :: !LogLevel
   , suelThreadType :: !ThreadType
   , suelInfo       :: !Value
   } deriving (Show, Eq)
 
-instance ToJSON SchemaUpdateEventLog where
-  toJSON (SchemaUpdateEventLog _ t info) =
+instance ToJSON SchemaSyncThreadLog where
+  toJSON (SchemaSyncThreadLog _ t info) =
     object [ "thread_type" .= show t
            , "info" .= info
            ]
 
-instance ToEngineLog SchemaUpdateEventLog where
+instance ToEngineLog SchemaSyncThreadLog where
   toEngineLog threadLog =
-    (suelLogLevel threadLog, "schema_update_event", toJSON threadLog)
+    (suelLogLevel threadLog, "schema_sync_thread", toJSON threadLog)
 
 data EventPayload
   = EventPayload
@@ -83,15 +82,26 @@ startSchemaSync
 startSchemaSync strfyNum pool logger httpMgr cacheRef instanceId cacheInitTime = do
   -- Init events queue
   eventsQueue <- STM.newTQueueIO
+
   -- Start listener thread
-  lAsync <- A.async $ listener strfyNum pool
+  lTId <- C.forkIO $ listener strfyNum pool
     logger httpMgr eventsQueue cacheRef instanceId cacheInitTime
+  logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pAsync <- A.async $ processor strfyNum pool
+  pTId <- C.forkIO $ processor strfyNum pool
     logger httpMgr eventsQueue cacheRef instanceId
+  logThreadStarted TTProcessor pTId
 
-  void $ A.waitAny [lAsync, pAsync]
+  where
+    logThreadStarted threadType threadId =
+      let msg = T.pack (show threadType) <> " thread started"
+      in unLogger logger $
+         StartupLog LevelInfo "threads" $
+           object [ "instance_id" .= getInstanceId instanceId
+                  , "thread_id" .= show threadId
+                  , "message" .= msg
+                  ]
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue
 listener
@@ -104,8 +114,7 @@ listener
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
 listener strfyNum pool logger httpMgr eventsQueue
-  cacheRef instanceId cacheInitTime = do
-  logThreadStartup logger instanceId threadType
+  cacheRef instanceId cacheInitTime =
   -- Never exits
   forever $ do
     listenResE <-
@@ -125,7 +134,7 @@ listener strfyNum pool logger httpMgr eventsQueue
     refreshCache (Just (dbInstId, accrdAt)) =
       when (shouldRefresh dbInstId accrdAt) $
         refreshSchemaCache strfyNum pool logger httpMgr cacheRef
-          threadType "reloading schema cache on listen start"
+          threadType "schema cache reloaded after postgres listen init"
 
     notifyHandler = \case
       PG.PNEOnStart -> do
@@ -145,8 +154,8 @@ listener strfyNum pool logger httpMgr eventsQueue
 
     onError = logError logger threadType . TEQueryError
     logWarn = unLogger logger $
-      SchemaUpdateEventLog LevelWarn TTListener $ String
-        "error occured retrying pg listen after 1 second"
+      SchemaSyncThreadLog LevelWarn TTListener $ String
+        "error occurred, retrying postgres listen after 1 second"
 
 
 -- | An IO action that processes events from Queue
@@ -159,8 +168,7 @@ processor
   -> SchemaCacheRef
   -> InstanceId -> IO ()
 processor strfyNum pool logger httpMgr eventsQueue
-  cacheRef instanceId = do
-  logThreadStartup logger instanceId threadType
+  cacheRef instanceId =
   -- Never exits
   forever $ do
     event <- STM.atomically $ STM.readTQueue eventsQueue
@@ -173,21 +181,6 @@ processor strfyNum pool logger httpMgr eventsQueue
 
       -- If event is from another server
     shouldReload payload = _epInstanceId payload /= instanceId
-
-logThreadStartup
-  :: Show a
-  => Logger
-  -> InstanceId
-  -> a -> IO ()
-logThreadStartup logger instanceId threadType =
-  unLogger logger threadLog
-  where
-    threadLog =
-      let msg = T.pack (show threadType) <> " thread started"
-      in StartupLog LevelInfo "threads" $
-           object [ "instance_id" .= getInstanceId instanceId
-                  , "message" .= msg
-                  ]
 
 refreshSchemaCache
   :: Bool
@@ -209,9 +202,9 @@ refreshSchemaCache strfyNum pool logger httpManager cacheRef threadType msg = do
 
 logInfo :: Logger -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $
-  SchemaUpdateEventLog LevelInfo threadType val
+  SchemaSyncThreadLog LevelInfo threadType val
 
 logError :: ToJSON a => Logger -> ThreadType -> a -> IO ()
 logError logger threadType err =
-  unLogger logger $ SchemaUpdateEventLog LevelError threadType $
+  unLogger logger $ SchemaSyncThreadLog LevelError threadType $
     object ["error" .= toJSON err]

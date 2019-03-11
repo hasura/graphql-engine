@@ -140,8 +140,8 @@ main =  do
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs
 
       -- start a background thread for schema sync
-      void $ C.forkIO $ startSchemaSync strfyNum pool logger httpManager
-                        cacheRef instanceId cacheInitTime
+      startSchemaSync strfyNum pool logger httpManager
+                      cacheRef instanceId cacheInitTime
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 
