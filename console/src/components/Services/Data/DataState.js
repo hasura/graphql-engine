@@ -91,6 +91,7 @@ const defaultModifyState = {
   },
   columnEdit: {},
   pkEdit: [''],
+  pkModify: [''],
   fkAdd: {
     refTable: '',
     pairs: [],

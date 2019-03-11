@@ -7,16 +7,17 @@ import {
   saveTableCommentSql,
 } from './ModifyActions';
 import {
-  fkLColChange,
   deleteTableSql,
   untrackTableSql,
   RESET,
-  TOGGLE_ACTIVE_COLUMN,
   saveColumnChangesSql,
-  saveColChangesWithFkSql,
   deleteColumnSql,
   setColumnEdit,
   resetColumnEdit,
+  addPrimaryKey,
+  removePrimaryKey,
+  resetPrimaryKeys,
+  savePrimaryKeys,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
 import { convertListToDict } from '../../../../utils/data';
@@ -26,6 +27,7 @@ import {
   fetchColumnComment,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
+import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ColumnEditor from './ColumnEditor';
 import ColumnCreator from './ColumnCreator';
 import semverCheck from '../../../../helpers/semver';
@@ -72,14 +74,13 @@ class ModifyTable extends React.Component {
       tableName,
       allSchemas,
       dispatch,
-      activeEdit,
-      fkAdd,
       migrationMode,
       currentSchema,
       tableComment,
       columnComment,
       tableCommentEdit,
       columnEdit,
+      pkModify,
     } = this.props;
     const styles = require('./ModifyTable.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
@@ -93,7 +94,6 @@ class ModifyTable extends React.Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      const colEditor = null;
       const colName = c.column_name;
       const columnProperties = {
         name: c.column_name,
@@ -103,7 +103,7 @@ class ModifyTable extends React.Component {
         isNullable: c.is_nullable === 'YES' ? true : false,
         isPrimaryKey: tableSchema.primary_key.columns.includes(c.column_name),
         isUnique: false,
-        default: c.column_default,
+        default: c.column_default || '',
       };
       for (
         let uci = tableSchema.unique_constraints.length - 1;
@@ -301,21 +301,64 @@ class ModifyTable extends React.Component {
     }
 
     const primaryKeyEditors = () => {
+      const orderedCols = columns.map((c, _i) => ({
+        name: c.column_name,
+        type: c.data_type,
+        index: _i,
+      }));
+      const orderedPks = tableSchema.primary_key.columns.map(pk => {
+        return orderedCols.find(c => c.name === pk).index;
+      });
+      const pkConstraintName = tableSchema.primary_key.constraint_name;
       const pkEditorCollapsed = () => (
         <div>
           <i> {`( ${tableSchema.primary_key.columns.join(', ')} )`} </i>
         </div>
       );
-      const pkEditorExpanded = () => {
-        const orderedCols = columns.map((c, _i) => ({
-          name: c.column_name,
-          type: c.data_type,
-          index: _i,
-        }));
-        const orderedPks = tableSchema.primary_key.columns.map(pk => {});
-      };
-    };
+      const pkEditorExpanded = () => (
+        <div className={`${styles.pkEditorExpanded}`}>
+          <PrimaryKeySelector
+            dispatch={dispatch}
+            setPk={addPrimaryKey}
+            removePk={removePrimaryKey}
+            columns={orderedCols}
+            primaryKeys={pkModify}
+            service="modify-table"
+          />
+        </div>
+      );
 
+      const onSave = () => {
+        dispatch(savePrimaryKeys(tableName, currentSchema, pkConstraintName));
+      };
+
+      /*
+        TODO
+        Handle cases when there is no primary keys
+        Handle primary key removal
+      */
+
+      return (
+        <ExpandableEditor
+          editorCollapsed={pkEditorCollapsed}
+          editorExpanded={pkEditorExpanded}
+          property={'edit-pks'}
+          ongoingRequest={'todo'}
+          service="modify-table"
+          saveFunc={onSave}
+          removeFunc={() => console.log('PK Removed')}
+          collapsedClass={styles.display_flex}
+          expandCallback={() => {
+            orderedPks.forEach((oPk, __i) => {
+              dispatch(addPrimaryKey(oPk.toString(), __i));
+            });
+          }}
+          collapseCallback={() => {
+            dispatch(resetPrimaryKeys());
+          }}
+        />
+      );
+    };
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
@@ -348,6 +391,7 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>Primary keys</h4>
+            {primaryKeyEditors()}
             <hr />
             {untrackBtn}
             <Button
@@ -401,6 +445,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableComment: state.tables.tableComment,
   columnComment: state.tables.columnComment,
   columnEdit: state.tables.modify.columnEdit,
+  pkModify: state.tables.modify.pkModify,
   ...state.tables.modify,
 });
 

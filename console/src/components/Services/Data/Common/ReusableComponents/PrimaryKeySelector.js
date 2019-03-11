@@ -1,13 +1,18 @@
 import React from 'react';
+import styles from '../../../../Common/TableCommon/Table.scss';
 
 const PrimaryKeySelector = ({
   primaryKeys,
   columns,
   removePk,
   setPk,
-  styles,
   dispatch,
+  service,
 }) => {
+  console.log('==============================');
+  console.log(primaryKeys);
+  console.log(columns);
+  console.log('==============================');
   const numPks = primaryKeys.length;
   const nonPkColumns = columns
     .map((col, _i) => {
@@ -40,7 +45,12 @@ const PrimaryKeySelector = ({
     }
 
     return (
-      <div key={i} className="form-group">
+      <div
+        key={i}
+        className={`form-group ${
+          service === 'modify-table' ? styles.display_flex : ''
+        }`}
+      >
         <select
           value={pk || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}

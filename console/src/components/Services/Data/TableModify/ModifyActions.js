@@ -40,6 +40,10 @@ const FK_ADD_FORM_ERROR = 'ModifyTable/FK_ADD_FORM_ERROR';
 const FK_RESET = 'ModifyTable/FK_RESET';
 const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 
+const ADD_PRIMARY_KEY = 'ModifyTable/ADD_PRIMARY_KEY';
+const REMOVE_PRIMARY_KEY = 'ModifyTable/REMOVE_PRIMARY_KEY';
+const RESET_PRIMARY_KEY = 'ModifyTable/RESET_PRIMARY_KEY';
+
 const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
 const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
 const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
@@ -63,6 +67,97 @@ const resetColumnEdit = column => {
   return {
     type: RESET_COLUMN_EDIT,
     column,
+  };
+};
+
+const addPrimaryKey = (columnIndex, pkIndex) => ({
+  type: ADD_PRIMARY_KEY,
+  column: columnIndex,
+  pk: pkIndex,
+});
+
+const removePrimaryKey = pkIndex => ({
+  type: REMOVE_PRIMARY_KEY,
+  pk: pkIndex,
+});
+
+const resetPrimaryKeys = () => ({
+  type: RESET_PRIMARY_KEY,
+});
+
+const savePrimaryKeys = (tableName, schemaName) => {
+  return (dispatch, getState) => {
+    const { pkModify } = getState().tables.modify;
+    const tableSchema = getState().tables.allSchemas.find(
+      ts => ts.table_name === tableName
+    );
+    const constraintName = tableSchema.primary_key.constraint_name;
+    const migrationUp = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `
+          alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";
+        `,
+        },
+      },
+    ];
+    const selectedPkColumns = pkModify.filter(pk => pk !== '').map(pk => {
+      return tableSchema.columns[pk].column_name;
+    });
+    migrationUp.push({
+      type: 'run_sql',
+      args: {
+        sql: `
+          alter table "${schemaName}"."${tableName}"
+          add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
+  ', '
+)} );
+        `,
+      },
+    });
+    /* TODO */
+    const migrationDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `
+          alter table "${schemaName}"."${tableName}" drop constraint "${tableName}_pkey";
+        `,
+        },
+      },
+    ];
+    migrationDown.push({
+      type: 'run_sql',
+      sql: `
+        alter table "${schemaName}"."${tableName}"
+        add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
+  ', '
+)} );
+      `,
+    });
+    const migrationName = `modify_primarykey_${schemaName}_${tableName}`;
+    const requestMsg = 'Updating primary key constraint...';
+    const successMsg = 'Updating primary key constraint successful';
+    const errorMsg = 'Updating primary key constraint failed';
+
+    const customOnSuccess = () => {};
+    const customOnError = err => {
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrationUp,
+      migrationDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
 };
 
@@ -829,24 +924,14 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
     const { tableName } = columnEdit;
-    const colType = columnEdit.type,
-      nullable = columnEdit.isNullable,
-      unique = columnEdit.isUnique,
-      def = columnEdit.default,
-      comment = columnEdit.comment,
-      newName = columnEdit.name,
-      currentSchema = columnEdit.schemaName;
+    const colType = columnEdit.type;
+    const nullable = columnEdit.isNullable;
+    const unique = columnEdit.isUnique;
+    const def = columnEdit.default;
+    const comment = columnEdit.comment;
+    const newName = allowRename ? columnEdit.name : null;
+    const currentSchema = columnEdit.schemaName;
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
-    console.log(colName);
-    console.log(column);
-    console.log(tableName);
-    console.log(colType);
-    console.log(nullable);
-    console.log(unique);
-    console.log(def);
-    console.log(comment);
-    console.log(newName);
-    console.log(currentSchema);
     let defWithQuotes = "''";
     if (colType === 'text' && def !== '') {
       defWithQuotes = "'" + def + "'";
@@ -905,24 +990,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -1471,24 +1556,24 @@ const saveColChangesWithFkSql = (
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
@@ -1981,6 +2066,11 @@ export {
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
   SAVE_NEW_TABLE_NAME,
+  EDIT_COLUMN,
+  RESET_COLUMN_EDIT,
+  ADD_PRIMARY_KEY,
+  REMOVE_PRIMARY_KEY,
+  RESET_PRIMARY_KEY,
   changeTableOrViewName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -2005,6 +2095,8 @@ export {
   updateCommentInput,
   saveTableCommentSql,
   editColumn,
-  EDIT_COLUMN,
-  RESET_COLUMN_EDIT,
+  addPrimaryKey,
+  removePrimaryKey,
+  resetPrimaryKeys,
+  savePrimaryKeys,
 };
