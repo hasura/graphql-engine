@@ -1,5 +1,5 @@
 const Graphql2Chartjs = require('../src/index');
-const { vg1, vg2, scatter1, scatter2 } = require('./data.test')
+const { vg1, vg2, vg3, scatter1, scatter2 } = require('./data.test')
 
 const logTestResult = (condition, message) => {
   if (condition) {
@@ -28,9 +28,9 @@ const runTests = () => {
     ),
     'Initialization with data without transformer'
   )
-  g2c = new Graphql2Chartjs(vg2.data, 'line', (dsName, dp) => {
+  g2c = new Graphql2Chartjs(vg2.data, (dsName, dp) => {
     return {
-      ...dp, fill: true
+      ...dp, fill: true, type: 'line'
     }
   })
   logTestResult(
@@ -45,7 +45,7 @@ const runTests = () => {
     ),
     'Initialization with data with transformer'
   )
-  g2c.update({ "VideoGameFollowers": [{
+  g2c.add({ "VideoGameFollowers": [{
     "id": 4,
     "label": "PUBG",
     "data": 129769,
@@ -63,15 +63,16 @@ const runTests = () => {
     ),
     'Update without transformer'
   )
-  g2c.update({ "VideoGameFollowers": [{
+  g2c.add({ "VideoGameFollowers": [{
     "id": 4,
     "label": "PUBG",
     "data": 129769,
     "pointBackgroundColor": "#333333",
-  }]}, 'line', (ds, dp) => {
+  }]}, (ds, dp) => {
     return {
       pointBackgroundColor: "#111111",
-      data: 120000
+      data: 120000,
+      type: 'line'
     }
   })
   logTestResult(
@@ -86,7 +87,7 @@ const runTests = () => {
     ),
     'Update with transformer'
   )
-  g2c.update(scatter1.data, 'line');
+  g2c.add(scatter1.data, 'line');
   logTestResult(
     (
       g2c.data.labels.length === 5 && g2c.data.datasets.length === 3 &&
@@ -95,16 +96,25 @@ const runTests = () => {
     ),
     'Update by adding a new dataset'
   )
-  g2c.update(scatter1.data, 'line', (ds, dp) => {
+
+  g2c.reform((dp, ds) => {
+    return {
+      type: 'line'
+    }
+  })
+
+  g2c.add(scatter1.data, (ds, dp) => {
     if (ds === 'DataSet2') {
       return {
         ...dp,
-        backgroundColor: 'red'
+        backgroundColor: 'red',
+        type: 'line'
       };
     } else if (ds === 'DataSet1') {
       return {
         ...dp,
-        backgroundColor: 'green'
+        backgroundColor: 'green',
+        type: 'line'
       };
 
     }
@@ -116,21 +126,22 @@ const runTests = () => {
       g2c.data.datasets[1].backgroundColor === "green" && 
       g2c.data.datasets[2].backgroundColor === "red"
     ),
-    'Update by adding a new dataset'
+    'Update by adding a new dataset with transformer'
   )
 
-  g2c.reset(scatter1.data, 'line', (ds, dp) => {
+  g2c.reset(scatter1.data, (ds, dp) => {
     if (ds === 'DataSet2') {
       return {
         ...dp,
-        backgroundColor: 'brown'
+        backgroundColor: 'brown',
+        type: 'scatter'
       };
     } else if (ds === 'DataSet1') {
       return {
         ...dp,
-        backgroundColor: 'blue'
+        backgroundColor: 'blue',
+        type: 'bubble'
       };
-
     }
     return dp;
   });
@@ -140,7 +151,24 @@ const runTests = () => {
       g2c.data.datasets[1].backgroundColor === "brown" && 
       g2c.data.datasets[0].backgroundColor === "blue"
     ),
-    'Reset with new data'
+    'Reset scatter new data'
+  )
+
+  g2c.reset(vg3.data, (ds, db) => {
+    return {
+      type: 'bar'
+    }
+  })
+  logTestResult(
+    (
+      g2c.data.labels.length === 5 && g2c.data.datasets.length === 1 && 
+      g2c.data.datasets[0].backgroundColor[0] === "red" && g2c.data.datasets[0].data[0] === 427014 &&
+      g2c.data.datasets[0].backgroundColor[1] === "yellow" && g2c.data.datasets[0].data[1] === 220006 &&
+      g2c.data.datasets[0].backgroundColor[2] === "#3366ff" && g2c.data.datasets[0].data[2] === 71004 &&
+      g2c.data.datasets[0].backgroundColor[3] === "#330000" && g2c.data.datasets[0].data[3] === 129769 &&
+      g2c.data.datasets[0].backgroundColor[4] === "green" && g2c.data.datasets[0].data[4] === 90808
+    ),
+    'Reset with bar data'
   )
 
 }

@@ -1,38 +1,8 @@
-const bar = require('./bar');
-const line = require('./line');
-const radar = require('./radar');
-const bubble = require('./bubble');
-const scatter = require('./scatter');
-const polarArea = require('./polar-area');
-const doughnutPie = require('./doughnut-pie');
+const converter = require('./converter');
 
 function convert (type, graphqlData) {
-  try {
-    switch(type) {
-      case 'line':
-        return line(graphqlData);
-        break;
-      case 'bar':
-        return bar(graphqlData);
-        break;
-      case 'radar':
-        return radar(graphqlData);
-        break;
-      case 'bubble':
-        return bubble(graphqlData);
-        break;
-      case 'polar-area':
-        return polarArea(graphqlData);
-      case 'doughnut':
-        return doughnutPie(graphqlData);
-      case 'pie':
-        return doughnutPie(graphqlData);
-      case 'scatter':
-        return scatter(graphqlData);
-      default:
-        console.error('invalid chart type:', type)
-        return {};
-    }
+ try {
+    return converter(graphqlData, type);
   } catch (e) {
     console.error('unexpected error in graphql2chartjs; please check your graphql response');
     console.error(e);
@@ -40,22 +10,25 @@ function convert (type, graphqlData) {
 }
 
 class Graphql2Chartjs {
-  constructor(graphqlData, type, transformer) {
-    this.handleInit(graphqlData, type,  transformer);
+  constructor(graphqlData, arg) {
+    this.handleInit(graphqlData, arg);
   }
 
-  handleInit (graphqlData, type, transformer) {
+  handleInit (graphqlData, arg) {
     this.data = {};
     if (!graphqlData) {
-      console.warn('Graphql2Chartjs is empty; use the update() method to add data');
+      console.warn('Graphql2Chartjs is empty; use the add() method to add data');
     } else {
-      if (!transformer) {
+      if (typeof arg === 'string') {
         this.gqlData = graphqlData;
-        this.data = convert(type, graphqlData);
+        this.chartType = arg;
+        this.data = convert(arg, graphqlData);
+      } else if (typeof arg === 'function') {
+        this.transformer = arg;
+        this.gqlData = this.transformGqlData(graphqlData, arg);
+        this.data = convert(this.chartType, this.gqlData);
       } else {
-        this.transformer = transformer;
-        this.gqlData = this.transformGqlData(graphqlData, transformer);
-        this.data = convert(type, this.gqlData);
+        console.error('invalid second argument to graphql2chartjs');
       }
     }
   }
@@ -70,27 +43,32 @@ class Graphql2Chartjs {
     return transformedGqlData;
   }
 
-  reset (graphqlData, type, transformer) {
-    this.handleInit(graphqlData, type, transformer);
+  reset (graphqlData, arg) {
+    this.handleInit(graphqlData, arg);
   }
 
-  update (graphqlData, type, transformer) {
+  add (graphqlData, arg) {
     if (!graphqlData) {
       console.warn('invalid graphql data provided to Graphql2Chartjs');
       return;      
     }
     if (!this.gqlData || (this.gqlData && Object.keys(this.gqlData).length === 0)) {
-      this.handleInit(graphqlData, type, transformer);
+      this.handleInit(graphqlData, arg);
       return;
     }
     this.mergeData(
-      type,
-      transformer ? this.transformGqlData(graphqlData, transformer) : graphqlData
+      (typeof arg === 'function') ? this.chartType : arg,
+      (typeof arg === 'function') ? this.transformGqlData(graphqlData, arg) : graphqlData
     );
   }
 
+  reform (transformer) {
+    this.gqlData = this.transformGqlData(this.gqlData, transformer);
+    this.data = convert(this.chartType, this.gqlData); 
+  }
+
   mergeData(type, graphqlData) {
-    const oldGqlData = { ...this.gqlData }
+    const oldGqlData = { ...this.gqlData };
     Object.keys(graphqlData).forEach(dsName => {
       if (oldGqlData[dsName]) {
         graphqlData[dsName].forEach((dp) => {
@@ -122,7 +100,7 @@ class Graphql2Chartjs {
           if (!refIndex) {
             refIndex = oldDsLength;
             oldDsLength++;
-            oldGqlData[dsName] = [...oldGqlData[dsName], dp]
+            oldGqlData[dsName] = [...oldGqlData[dsName], { ...dp }]
           } else {
             oldGqlData[dsName][refIndex] = {...oldGqlData[dsName][refIndex], ...dp};
           }

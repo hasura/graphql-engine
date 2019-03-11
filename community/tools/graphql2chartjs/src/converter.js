@@ -1,16 +1,18 @@
 const inflection = require('inflection');
+const arrayFields = require('./array-fields');
 
-const arrayFields = {
-  data: true,
-  backgroundColor: true,
-  borderColor: true,
-  borderWidth: true,
-  hoverBackgroundColor: true,
-  hoverBorderColor: true,
-  hoverBorderWidth: true
-}
+const chartTypeMap = {
+  'line': arrayFields.line,
+  'bar': arrayFields.bar,
+  'radar': arrayFields.radar,
+  'polarArea': arrayFields.polar,
+  'doughnut': arrayFields.pie,
+  'pie': arrayFields.pie,
+  'bubble': arrayFields.bubble,
+  'scatter': arrayFields.scatter
+};
 
-function convert (graphqlData) {
+function convert(graphqlData, chartType) {
   const data = {
     labels: [],
     datasets: [],
@@ -27,28 +29,38 @@ function convert (graphqlData) {
     const dataSetSize = dataSet.length;
     for (let j = 0; j < dataSetSize; j++) {
       const element = dataSet[j];
+      let isRadiusDefined = element.data_r !== undefined;
       if (element.data_x !== undefined) {
         if (element.data_x) {
-          data.datasets[i].data.push({
+          const dataPoint = {
             x: element.data_x,
-            y: element.data_y
-          });
+            y: element.data_y,
+          }
+          if (isRadiusDefined) {
+            dataPoint.r = element.data_r;
+          }
+          data.datasets[i].data.push(dataPoint);
         } else if (element.data_t !== undefined) {
-          data.datasets[i].data.push({
+          data.datasets[i].data.push();
+          let dataPoint = {
             t: element.data_t,
             y: element.data_y
-          });
+          };
+          if (isRadiusDefined) {
+            dataPoint[r] = element.data_r;
+          }
         }
       }
+      const arrayFieldsByType = element.type ? chartTypeMap[element.type] : chartTypeMap[chartType];
       Object.keys(element).forEach(property => {
-        if (property === 'data_x' || property === 'data_t' || property === 'data_y') {
+        if (property === 'data_x' || property === 'data_t' || property === 'data_y' || property === 'data_r') {
           return;
         }
         if (property === 'label') {
           if (i === 0) {
             data.labels.push(element[property]);
           }
-        } else if (arrayFields[property]) {
+        } else if (arrayFieldsByType[property]) {
           if (!data.datasets[i][property]) {
             data.datasets[i][property] = [];
           }
@@ -58,8 +70,7 @@ function convert (graphqlData) {
         }
       });
     }
-  }
-  ;
+  };
   return data;
 }
 
