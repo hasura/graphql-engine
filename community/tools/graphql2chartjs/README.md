@@ -32,10 +32,10 @@ Watch this video below to see a demo/tutorial of using Hasura on an existing Pos
 ```javascript
 import {Query} from 'react-apollo';
 import gql from 'graphql-tag';
-import graphql2chartjs from 'graphql2chartjs';
+import Graphql2Chartjs from 'graphql2chartjs';
 import {Bar} from 'react-chartjs-2';
 
-const g2c = graphql2chartjs();
+const g2c = new Graphql2Chartjs();
 <Query 
   query={gql`
     query {
@@ -75,7 +75,7 @@ query {
 
 ### Scatter / Bubble
 
-Charts of this type need 3 data inputs, `label` and `data_x` and `data_y`.
+Charts of this type need 3 data inputs, `label` and `data_x`, `data_y` (and `data_r` for bubble).
 ```graphql
 query {
   ArticleLikesVsComments : articles {
@@ -103,8 +103,8 @@ query {
 
 graphql2chartjs works in 3 steps:
 
-1. Initialise graphql2chartjs: `const g2c = new graphql2chartjs()`
-2. Add data from your graphql response: `g2c.add(data, 'line')`
+1. Initialise graphql2chartjs: `const g2c = new Graphql2Chartjs()`
+2. Add data from your graphql response: `g2c.add(graphqlResponse.data, 'line')`
 3. Set your chart data to the data properly of the graphql2chartjs instance: `g2c.data`
 
 ### Step 1: Initialiase - `new graphql2chartjs()`
@@ -113,7 +113,7 @@ graphql2chartjs works in 3 steps:
 const g2c = new Graphql2Chartjs();
 ```
 
-### Step 2: (Option 1) Add data for your chart - `graphql2chartjs.add(data, chartType)`
+### Step 2: (Option 1) Add data for your chart - `g2c.add(graphqlResponse.data, chartType)`
 
 Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally:
 
@@ -134,14 +134,14 @@ g2c.add(data, 'line');
 - To customise the UI options of the rendered chart like colors or to create a mixed type chart (one dataset is rendered as a line chart, another as a bar chart) use the `addWithProps` function instead of this one.
 
 
-### Step 2: (Option 2) Add data for your chart with UI properties - `graphql2chartjs.addWithProps(data, addProps())`
+### Step 2: (Option 2) Add data for your chart with UI properties - `graphql2chartjs.add(data, addProps())`
 
 Once you've initialised a `graphql2chartjs` object, you can use the `addWithProps` function to add data for the first time or incrementally. In addition, you can pass a function that specifies the type of chart, chartjs UI properties that apply to the entire dataset or to each point in the dataset.
 
 ```javascript
 await data = runQuery(..);
 
-g2c.addWithProps(data, (datasetName, dataPoint) => {
+g2c.add(data, (datasetName, dataPoint) => {
   return {
     chartType: 'line',
     pointBackgroundColor: 'blue',
@@ -210,4 +210,20 @@ npm install --save graphql2chartjs
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/hasura/graphql-engine/master/community/tools/graphql2chartjs/bundle/js/index.min.js" type="text/javascript"></script>
+```
+
+## Reforming the data
+
+### `reform()`
+
+You can reform the existing data in your `graphql2chartjs` instance using the reform function that takes a reformer function as an argument. This reformer function is run over every datapoint in every dataset. For instance, to scale the x and y coordinates, you would do something like:
+
+```
+g2c.reform((datasetName, dataPoint) => {
+  // scale the x, y coordinates
+  return {
+    data_x: scalingFactor(dataPoint.data_x),
+    data_y: scalingFactor(dataPoint.data_y)
+  }
+})
 ```
