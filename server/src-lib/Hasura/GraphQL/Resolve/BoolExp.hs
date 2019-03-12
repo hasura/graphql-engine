@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
   , pgColValToBoolExp
@@ -21,7 +20,6 @@ import           Hasura.SQL.Value
 
 type OpExp = OpExpG (PGColType, PGColValue)
 
-pattern PGBoolVal o b = PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
 
 parseOpExps
   :: (MonadError QErr m)

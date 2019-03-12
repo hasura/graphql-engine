@@ -135,7 +135,7 @@ mkHsraObjFldInfo
   :: Maybe G.Description
   -> G.Name
   -> ParamMap
-  -> Maybe PGColType
+  -> Maybe PGColTyAnn
   -> G.GType
   -> ObjFldInfo
 mkHsraObjFldInfo descM name params pgTy ty =
@@ -192,19 +192,18 @@ stDWithinInpTy = G.NamedType "st_d_within_input"
 
 
 --- | make compare expression input type
--- TODO Nizar, how does _in comparison work with arrays
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk (Just colTy) colGQLTy) typedOps
-  -- TODO Nizar: Fix me , use an array of PGCol type here
-  , map (mk Nothing $ G.toLT colGQLTy) listOps
-  , bool [] (map (mk (Just $ baseBuiltInTy PGText) $ mkScalarBaseTy PGText) stringOps) isStringTy
+  [ map (mk (Just $ PTCol colTy) colGQLTy) typedOps
+  , map (mk (Just $ arrOfCol colTy) $ G.toLT colGQLTy) listOps
+  , bool [] (map (mk (Just $ PTCol $ baseBuiltInTy PGText) $ mkScalarBaseTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [InpValInfo Nothing "_is_null" Nothing (Just $ baseBuiltInTy PGBoolean) $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , [InpValInfo Nothing "_is_null" Nothing (Just $ PTCol $ baseBuiltInTy PGBoolean) $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
+    arrOfCol = PTArr . PTCol
     tyDesc = mconcat
       [ "expression to compare columns of type "
       , G.Description (T.pack $ show colTy)
@@ -235,7 +234,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
     isJsonbTy = case baseTy of
       Just PGJSONB -> True
       _            -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing (Just $ baseBuiltInTy PGJSONB) ty
+    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing (Just $ PTCol $ baseBuiltInTy PGJSONB) ty
     jsonbOps =
       [ ( "_contains"
         , G.toGT $ mkScalarBaseTy PGJSONB
@@ -261,7 +260,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT stDWithinInpTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing (Just $ PTCol  $ baseBuiltInTy PGGeometry) $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
@@ -270,7 +269,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       _               -> False
 
     geomOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT $ mkScalarBaseTy PGGeometry
+      InpValInfo (Just desc) op Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toGT $ mkScalarBaseTy PGGeometry
     geomOps =
       [
         ( "_st_contains"
@@ -377,8 +376,8 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGTyBase PGGeometry `elem` map pgColTyDetails colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toGT $ G.toNT $ mkScalarBaseTy PGGeometry
-      , InpValInfo Nothing "distance" Nothing (Just $ baseBuiltInTy PGGeometry) $ G.toNT $ G.toNT $ mkScalarBaseTy PGFloat
+      [ InpValInfo Nothing "from" Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toGT $ G.toNT $ mkScalarBaseTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toNT $ G.toNT $ mkScalarBaseTy PGFloat
       ]
 
 emptyGCtx :: GCtx

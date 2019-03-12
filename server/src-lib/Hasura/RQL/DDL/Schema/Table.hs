@@ -29,7 +29,6 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as S
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
@@ -77,9 +76,6 @@ toPGColTypes cols' = do
   return $ flip map pgTysMap
     $ \(PGColInfo' na _ nu,pgColTy) -> PGColInfo na pgColTy nu
   where
-    toColInfo (PGColInfo' na t nu) f = PGColInfo na (f t) nu
-    toColTy ci' typesMap = onNothing (M.lookup ci' typesMap) $ throw500 $
-      "Could not find Postgres type with oid " <> T.pack (show $ pcoiOid ci')
 
 newtype TrackTable
   = TrackTable

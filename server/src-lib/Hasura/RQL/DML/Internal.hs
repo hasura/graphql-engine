@@ -226,18 +226,27 @@ dmlTxErrorHandler p2Res =
 toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy expn = case pgColTyDetails colTy of
   PGTyBase b -> toJSONableExp' strfyNum b expn
-  --TODO Handle the case with an array of geometry types
-  _          -> expn
+  PGTyArray {}  -> maybe expn (\ty -> toJSONableArrExp strfyNum ty expn) $ getArrayBaseTy colTy
+  _             -> expn
+
+toJSONableArrExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
+toJSONableArrExp strfyNum bcolTy expn = case pgColTyDetails bcolTy of
+  PGTyBase b   -> toJSONableArrExp' strfyNum b expn
+  PGTyDomain b -> toJSONableExp strfyNum b expn
+  _            -> expn
+
+toJSONableArrExp' :: Bool -> PGBaseColType -> S.SQLExp -> S.SQLExp
+toJSONableArrExp' strfyNum bColTy expn
+  | bColTy == PGGeometry || bColTy == PGGeography =
+      applyAsGeoJSONArr expn `S.SETyAnn` jsonArrType
+  | isBigNum' bColTy && strfyNum =
+      expn `S.SETyAnn` textArrType
+  | otherwise = expn
 
 toJSONableExp' :: Bool -> PGBaseColType -> S.SQLExp -> S.SQLExp
 toJSONableExp' strfyNum colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
-      S.SEFnApp "ST_AsGeoJSON"
-      [ expn
-      , S.SEUnsafe "15" -- max decimal digits
-      , S.SEUnsafe "4"  -- to print out crs
-      ] Nothing
-      `S.SETyAnn` jsonType
+      applyAsGeoJSON expn
   | isBigNum' colTy && strfyNum =
       expn `S.SETyAnn` textType
   | otherwise = expn

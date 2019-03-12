@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.Introspect
   ( schemaR
   , typeR
@@ -262,7 +261,6 @@ inputValueR fld (InpValInfo descM n defM _ ty) =
     "name"         -> retJ $ G.unName n
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
-    -- TODO: figure out what the spec means by 'string encoding'
     "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 
@@ -328,8 +326,6 @@ schemaR fld =
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortBy (comparing _diName) defaultDirectives)
     _              -> return J.Null
-
-pattern PGTxtVal o t = PGColValue o (PGValBase (PGValKnown (PGValText t)))
 
 typeR
   :: ( MonadReader r m, Has TypeMap r

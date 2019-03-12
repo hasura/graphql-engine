@@ -14,6 +14,7 @@ import           Data.Aeson.Internal
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
+import           Foreign.C.Types
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Text            as AE
@@ -25,13 +26,18 @@ import qualified Data.Vector                as V
 
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
-import Foreign.C.Types
 
 
 data PGColValue = PGColValue !PQ.Oid PGColValue'
   deriving (Show, Eq)
 
 type PGElemOid = PQ.Oid
+
+pattern PGBoolVal :: PQ.Oid -> Bool -> PGColValue
+pattern PGBoolVal o b <- PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
+
+pattern PGTxtVal :: PQ.Oid -> Text -> PGColValue
+pattern PGTxtVal o x = PGColValue o (PGValBase (PGValKnown (PGValText x)))
 
 data PGColValue'
   = PGValBase      !PGBaseColValue
@@ -83,11 +89,12 @@ toPGBinVal :: PGColValue -> Maybe PGColValueBin
 toPGBinVal (PGColValue oid x) = fmap (PGColValueBin oid) $ case x of
   PGNull             -> Just PGNullBin
   PGValComposite _   -> Nothing
+  PGValRange _       -> Nothing
   PGValEnum _        -> Nothing
   PGValDomain b      -> fmap PGValDomainBin $ toPGBinVal b
   PGValArray eOid v  -> fmap (PGValArrayBin eOid) $ mapM toPGBinVal v
   PGValBase b        -> case b of
-                        PGValKnown kb   -> Just (PGValBaseBin kb)
+                        PGValKnown kb  -> Just (PGValBaseBin kb)
                         PGValUnknown{} -> Nothing
 
 --binTyM :: PGColValue -> Maybe PGColValueBin
@@ -98,6 +105,7 @@ txtEncoderG f (PGColValue _ x) = case x of
   PGValBase b      -> f b
   PGValDomain b    -> txtEncoder b
   PGValComposite a -> S.SELit a
+  PGValRange a     -> S.SELit a
   PGValEnum a      -> S.SELit a
   PGValArray _ as  -> S.SEArray $ map (txtEncoderG f) $ V.toList as
   PGNull           -> S.SEUnsafe "NULL"
@@ -155,10 +163,10 @@ paTxtEncBase c = case c of
 
 data TxtEncInfo
   = TxtEncInfo
-  { teiOid            :: PQ.Oid
+  { teiOid           :: PQ.Oid
   -- Should be double quoted if this encoding is for an element of array/composite etc
-  , teiToDoubleQuote  :: Bool
-  , teiEnc            :: Text
+  , teiToDoubleQuote :: Bool
+  , teiEnc           :: Text
   }
 
 paTxtEnc :: PGColValue -> TxtEncInfo
@@ -167,6 +175,7 @@ paTxtEnc (PGColValue oid v) = case v of
   PGValBase (PGValUnknown x) -> TxtEncInfo oid True $ T.pack $ show x
   PGValDomain x              -> paTxtEnc x
   PGValComposite x           -> TxtEncInfo oid True x
+  PGValRange x               -> TxtEncInfo oid True x
   PGValEnum x                -> TxtEncInfo oid True x
   PGNull                     -> TxtEncInfo oid False "NULL"
   PGValArray _ x             -> TxtEncInfo oid True $ asPGArr $ V.toList x
@@ -359,21 +368,55 @@ txtEncWithGeoVal = txtEncoderG txtEncGeoJson
 applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
 applyGeomFromGeoJson v = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 
+applyAsGeoJSON :: S.SQLExp -> S.SQLExp
+applyAsGeoJSON expn = 
+  S.SEFnApp "ST_AsGeoJSON"
+  [ expn
+  , S.SEUnsafe "15" -- max decimal digits
+  , S.SEUnsafe "4"  -- to print out crs
+  ] Nothing
+  `S.SETyAnn` jsonType
+
+applyAsGeoJSONArr :: S.SQLExp -> S.SQLExp
+applyAsGeoJSONArr v =
+  S.SESelect S.mkSelect
+  { S.selExtr =
+    [ flip S.Extractor Nothing $ S.SEFnApp "array_agg" [applyAsGeoJSON $ S.SEIden $ toIden unnestF] Nothing
+    ]
+  , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualUnnestF [v]]
+  } `S.SETyAnn` jsonArrType
+  where
+    qualUnnestF = QualifiedObject catalogSchema unnestF
+    unnestF = FunctionName "unnest"
+
 toPrepParam :: Int -> PGColType -> S.SQLExp
 toPrepParam i ty = withGeom ty $ S.SEPrep i
   where
-    isGeoTy d = case d of
+
+withGeom :: PGColType -> S.SQLExp -> S.SQLExp
+withGeom (PGColType _ _ _ d) = case d of
+  PGTyBase x -> bool id applyGeomFromGeoJson $ isBaseTyGeo x
+  PGTyArray a -> case getArrayBaseTy a of
+    Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $ isBaseTyGeo b
+    _ -> id
+  _ -> id
+  where
+    isBaseTyGeo b =
+      case b of
         PGGeometry  -> True
         PGGeography -> True
         _           -> False
-    --TODO : Change this to (select array_agg(ST_GeomFromGeoJSON(a) from unnest($1 :: ty[]) as a). Will work only for 1d array of Geometric types
-    applyArrGeomFromGeoJson = id
-    withGeom (PGColType _ _ _ d) = case d of
-      PGTyBase x -> bool id applyGeomFromGeoJson $ isGeoTy x
-      PGTyArray a -> case getArrayBaseTy a of
-        Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $ isGeoTy b
-        _ -> id
-      _ -> id
+    applyArrGeomFromGeoJson v =
+      S.SESelect $ S.mkSelect
+      { S.selExtr =
+        [ flip S.Extractor Nothing $ S.SEFnApp "array_agg" [applyGeomFromGeoJson $ S.SEIden $ toIden unnestF] Nothing
+        ]
+      , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualUnnestF [v]]
+      }
+    qualUnnestF =
+      QualifiedObject catalogSchema unnestF
+    unnestF =
+      FunctionName "unnest"
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =

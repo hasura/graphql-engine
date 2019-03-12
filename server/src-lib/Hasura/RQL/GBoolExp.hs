@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
 module Hasura.RQL.GBoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
@@ -19,7 +18,6 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Extended  as T
 
-pattern PGGeomTy a b c  = PGColType a b c (PGTyBase PGGeometry)
 
 parseOpExp
   :: (MonadError QErr m)
@@ -216,13 +214,14 @@ buildMsg ty expTys =
   , T.intercalate "/" $ map (T.dquote . T.pack . show) expTys
   ]
 
+textOnlyOp :: MonadError QErr m => PGColType -> m ()
 textOnlyOp colTy = case  pgColTyDetails colTy of
   PGTyBase b -> textOnlyOp' b
   _          -> onlyTxtTyErr
   where
     textOnlyOp' PGText    = return ()
     textOnlyOp' PGVarchar = return ()
-    textOnlyOp' ty        = onlyTxtTyErr
+    textOnlyOp' _         = onlyTxtTyErr
     onlyTxtTyErr = throwError $ buildMsg colTy $ baseBuiltInTy <$> [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
@@ -250,8 +249,6 @@ annBoolExp
 annBoolExp valParser fim (BoolExp boolExp) =
   traverse (annColExp valParser fim) boolExp
 
-pattern JSONCol a b x y z = PGColInfo a (PGColType x y z (PGTyBase PGJSON)) b
-  
 annColExp
   :: (QErrM m, CacheRM m)
   => ValueParser m a
@@ -261,7 +258,7 @@ annColExp
 annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (JSONCol{}) ->
+    FIColumn (JSONColInfo{}) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     -- FIColumn (PGColInfo _ PGJSONB _) ->
     --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")

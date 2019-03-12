@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Validate.Field
   ( ArgsMap
   , Field(..)
@@ -110,7 +109,6 @@ data FieldGroup
 -- throwGE :: (MonadError QErr m) => Text -> m a
 -- throwGE msg = throwError $ QErr msg []
 
-pattern PGBoolVal o b <- PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
 
 withDirectives
   :: ( MonadReader ValidationCtx m
@@ -186,7 +184,7 @@ processArgs fldParams argsL = do
   inpArgs <- forM args $ \(G.Argument argName argVal) ->
     withPathK (G.unName argName) $ do
       argTy <- getArgTy argName
-      validateInputValue (valueParser $ _iviPGTy argTy) (_iviType argTy) (_iviPGTy argTy) argVal
+      validateInputValue (valueParser $ _iviPGTyAnn argTy) (_iviType argTy) (_iviPGTyAnn argTy) argVal
 
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef

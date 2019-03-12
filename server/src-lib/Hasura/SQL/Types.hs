@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.SQL.Types where
 
 import qualified Database.PG.Query          as Q
@@ -268,6 +269,9 @@ textArrType = AnnType "text[]"
 jsonType :: AnnType
 jsonType = AnnType "json"
 
+jsonArrType :: AnnType
+jsonArrType = AnnType "json[]"
+
 jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
@@ -467,6 +471,12 @@ isNumType = onBaseUDT False isNumType'
 isJSONBType :: PGColType -> Bool
 isJSONBType = onBaseUDT False isJSONBType'
 
+pattern PGGeomTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
+pattern PGGeomTy a b c = PGColType a b c (PGTyBase PGGeometry)
+
+pattern PGJSONTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
+pattern PGJSONTy a b c = PGColType a b c (PGTyBase PGJSON)
+
 --any numeric, string, date/time, network, or enum type, or arrays of these types
 isComparableType :: PGColType -> Bool
 isComparableType t = case pgColTyDetails t of
@@ -507,10 +517,6 @@ isComparableType' PGGeography   = False
 isComparableType' PGBoolean     = False
 isComparableType' (PGUnknown _) = False
 isComparableType' _             = True
-
---TODO Nizar, Check how to handle array of BigNum
-isBigNum :: PGColType -> Bool
-isBigNum = onBaseUDT False isBigNum'
 
 isBigNum' :: PGBaseColType -> Bool
 isBigNum' = \case

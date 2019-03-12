@@ -16,7 +16,6 @@ import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 

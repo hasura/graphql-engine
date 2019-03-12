@@ -50,6 +50,7 @@ module Hasura.GraphQL.Validate.Types
   , getAnnInpValKind
   , getAnnInpValTy
   , GQLColTyMap
+  , PGColTyAnn(..)
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -110,13 +111,18 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
+data PGColTyAnn
+ = PTCol PGColType
+ | PTArr PGColTyAnn
+ deriving (Show, Eq, TH.Lift)
+
 data InpValInfo
   = InpValInfo
-  { _iviDesc   :: !(Maybe G.Description)
-  , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
-  , _iviPGTy   :: !(Maybe PGColType)
-  , _iviType   :: !G.GType
+  { _iviDesc    :: !(Maybe G.Description)
+  , _iviName    :: !G.Name
+  , _iviDefVal  :: !(Maybe G.ValueConst)
+  , _iviPGTyAnn :: !(Maybe PGColTyAnn)
+  , _iviType    :: !G.GType
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType InpValInfo where
@@ -126,7 +132,7 @@ instance EquatableGType InpValInfo where
 fromInpValDef :: G.InputValueDefinition -> GQLColTyMap -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) gctm =
   InpValInfo descM n defM pgTy ty
-  where pgTy = Map.lookup (getBaseTy ty, getArrDim ty) gctm
+  where pgTy = fmap PTCol $ Map.lookup (getBaseTy ty, getArrDim ty) gctm
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
@@ -140,12 +146,12 @@ instance Hashable TypeLoc
 
 data ObjFldInfo
   = ObjFldInfo
-  { _fiDesc   :: !(Maybe G.Description)
-  , _fiName   :: !G.Name
-  , _fiParams :: !ParamMap
-  , _fiPGTy   :: !(Maybe PGColType)
-  , _fiTy     :: !G.GType
-  , _fiLoc    :: !TypeLoc
+  { _fiDesc    :: !(Maybe G.Description)
+  , _fiName    :: !G.Name
+  , _fiParams  :: !ParamMap
+  , _fiPGTyAnn :: !(Maybe PGColTyAnn)
+  , _fiTy      :: !G.GType
+  , _fiLoc     :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType ObjFldInfo where
@@ -157,7 +163,7 @@ fromFldDef (G.FieldDefinition descM n args ty _) gctm loc =
   ObjFldInfo descM n params pgTy ty loc
   where
     params = Map.fromList [(G._ivdName arg, fromInpValDef arg gctm) | arg <- args]
-    pgTy = Map.lookup (getBaseTy ty, getArrDim ty) gctm
+    pgTy = fmap PTCol $ Map.lookup (getBaseTy ty, getArrDim ty) gctm
 
 type ObjFieldMap = Map.HashMap G.Name ObjFldInfo
 
@@ -617,7 +623,7 @@ defaultDirectives =
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing
-           (Just $ baseBuiltInTy PGBoolean) $
+           (Just $ PTCol $ baseBuiltInTy PGBoolean) $
            G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]

@@ -170,7 +170,7 @@ mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n Map.empty (Just colTy) ty
+  mkHsraObjFldInfo Nothing n Map.empty (Just $ PTCol colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
@@ -322,13 +322,13 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = mkHsraObjFldInfo Nothing "count" countParams (Just $ baseBuiltInTy PGInteger) $ G.toGT $ mkScalarBaseTy PGInteger
+    countFld = mkHsraObjFldInfo Nothing "count" countParams (Just $ PTCol $ baseBuiltInTy PGInteger) $ G.toGT $ mkScalarBaseTy PGInteger
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
     countColInpVal = InpValInfo Nothing "columns" Nothing Nothing $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
-    distinctInpVal = InpValInfo Nothing "distinct" Nothing (Just $ baseBuiltInTy PGBoolean) $ G.toGT $ mkScalarBaseTy PGBoolean
+    distinctInpVal = InpValInfo Nothing "distinct" Nothing (Just $ PTCol $ baseBuiltInTy PGBoolean) $ G.toGT $ mkScalarBaseTy PGBoolean
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
     compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
@@ -357,7 +357,7 @@ mkTableColAggFldsObj tn op f cols =
 
     mkColObjFld c = let colTy = pgiType c in
       mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-      Map.empty (Just colTy) $ G.toGT $ f colTy
+      Map.empty (Just $ PTCol colTy) $ G.toGT $ f colTy
 
 {-
 
@@ -399,7 +399,7 @@ mkSelFldPKey tn cols =
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
     colInpVal (PGColInfo n typ _) =
-      InpValInfo Nothing (mkColName n) Nothing (Just typ) $ G.toGT $ G.toNT $ mkScalarTy typ
+      InpValInfo Nothing (mkColName n) Nothing (Just $ PTCol typ) $ G.toGT $ G.toNT $ mkScalarTy typ
 
 {-
 
@@ -511,7 +511,7 @@ mkMutRespObj tn sel nestAlwd =
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
-      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty (Just $ baseBuiltInTy PGInteger) $
+      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty (Just $ PTCol $ baseBuiltInTy PGInteger) $
         G.toGT $ G.toNT $ mkScalarBaseTy PGInteger
       where
         desc = "number of affected rows by the mutation"
@@ -560,7 +560,7 @@ mkBoolExpInp tn fields =
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
-  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing (Just colTy) $
+  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing (Just $ PTCol colTy) $
   mkPGColGTy colTy
   --G.toGT $ mkScalarTy colTy
 
@@ -602,7 +602,7 @@ mkFuncArgsInp funcInfo =
     argInps = procFuncArgs funcArgs mkInpVal
 
     mkInpVal ty t =
-      InpValInfo Nothing (G.Name t) Nothing (Just ty) $ G.toGT $
+      InpValInfo Nothing (G.Name t) Nothing (Just $ PTCol ty) $ G.toGT $
       G.toNT $ mkPGColGTy ty
 
 -- table_set_input
@@ -752,19 +752,19 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGText) $
+    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGText) $
       G.toGT $ G.NamedType "String"
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGInteger) $
+    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGInteger) $
       G.toGT $ G.NamedType "Int"
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ baseBuiltInTy PGText) $
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGText) $
       G.toGT $ G.toLT $ G.NamedType "String"
 
 {-

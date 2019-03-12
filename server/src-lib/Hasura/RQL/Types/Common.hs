@@ -1,5 +1,7 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Hasura.RQL.Types.Common
        ( PGColInfo(..)
+       , PGColInfo(JSONColInfo)
        , RelName(..)
        , RelType(..)
        , relTypeToTxt
@@ -129,6 +131,9 @@ data PGColInfo
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
+pattern JSONColInfo :: PGCol -> Bool -> QualifiedType -> AnnType -> PQ.Oid -> PGColInfo
+pattern JSONColInfo a b x y z = PGColInfo a (PGColType x y z (PGTyBase PGJSON)) b
 
 newtype RelName
   = RelName {getRelTxt :: T.Text}

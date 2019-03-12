@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
 module Hasura.GraphQL.Resolve.InputValue
   ( withNotNull
   , tyMismatch
@@ -121,8 +120,6 @@ parseMany
 parseMany fn v = case v of
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
-
-pattern PGTxtVal o x = PGColValue o (PGValBase (PGValKnown (PGValText x)))
 
 asPGColText
   :: (MonadError QErr m)

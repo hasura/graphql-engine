@@ -20,7 +20,6 @@ import qualified Data.Vector                     as V
 import qualified Language.GraphQL.Draft.Syntax   as G
 
 import           Hasura.GraphQL.Utils
-import           Hasura.SQL.Types
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -37,7 +36,7 @@ pVal = return . P . Just . Right
 resolveVar
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => Maybe PGColType -> G.Variable -> m AnnGValue
+  => Maybe PGColTyAnn -> G.Variable -> m AnnGValue
 resolveVar pgTy var = do
   varVals <- _vcVarVals <$> ask
   -- TODO typecheck
@@ -62,7 +61,7 @@ resolveVar pgTy var = do
 pVar
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => Maybe PGColType -> G.Variable -> m (P a)
+  => Maybe PGColTyAnn -> G.Variable -> m (P a)
 pVar pgTy var = do
   annInpVal <- resolveVar pgTy var
   return . P . Just . Left $ annInpVal
@@ -114,7 +113,7 @@ toJValue = \case
 valueParser
   :: ( MonadError QErr m
      , MonadReader ValidationCtx m)
-  => Maybe PGColType -> InputValueParser G.Value m
+  => Maybe PGColTyAnn -> InputValueParser G.Value m
 valueParser pgTy =
   InputValueParser pScalar pList pObject pEnum
   where
@@ -228,7 +227,7 @@ validateObject valParser tyInfo flds = do
   fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
       fldInfo <- getInpFieldInfo tyInfo fldName
-      convFldVal <- validateInputValue valParser (_iviType fldInfo) (_iviPGTy fldInfo) fldVal
+      convFldVal <- validateInputValue valParser (_iviType fldInfo) (_iviPGTyAnn fldInfo) fldVal
       return (fldName, convFldVal)
 
   where
@@ -273,13 +272,14 @@ validateList
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> G.ListType
+  -> Maybe PGColTyAnn
   -> a
   -> m AnnGValue
-validateList inpValParser listTy val =
+validateList inpValParser listTy pgTyAnn val =
   withParsed (getList inpValParser) val $ \lM -> do
     let baseTy = G.unListType listTy
     AGArray listTy <$>
-      mapM (indexedMapM (validateInputValue inpValParser baseTy Nothing)) lM
+      mapM (indexedMapM (validateInputValue inpValParser baseTy pgTyAnn)) lM
 
 -- validateNonNull
 --   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -299,16 +299,23 @@ validateInputValue
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> G.GType
-  -> Maybe PGColType
+  -> Maybe PGColTyAnn
   -> a
   -> m AnnGValue
 validateInputValue inpValParser ty Nothing val =
   case ty of
     G.TypeNamed _ nt -> validateNamedTypeVal inpValParser nt val
-    G.TypeList _ lt  -> validateList inpValParser lt val
-validateInputValue inpValParser _ (Just pgColTy) val =
-  withParsed (getScalar inpValParser) val $
-    fmap (AGPGVal pgColTy) . mapM (validatePGVal pgColTy)
+    G.TypeList _ lt  -> validateList inpValParser lt Nothing val
+validateInputValue inpValParser ty (Just pgTyAnn) val =
+  case (pgTyAnn,ty) of
+    (PTCol colTy,_) ->
+      withParsed (getScalar inpValParser) val $
+      fmap (AGPGVal colTy) . mapM (validatePGVal colTy)
+    (PTArr pgElemTyAnn,G.TypeList _ lt) ->
+      validateList inpValParser lt (Just pgElemTyAnn) val
+    _ ->
+      throw500 $ "Invalid Postgres column type annotation " <> T.pack (show pgTyAnn)
+      <> " for GraphQL type " <> T.pack (show ty)
   where validatePGVal pct = runAesonParser (parsePGValue pct)
 
 withParsed
