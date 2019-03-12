@@ -55,15 +55,16 @@ parseOpExps annVal = do
       "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 
-      -- geometry type related operators
-      "_st_contains"    -> fmap ASTContains <$> asPGColValM v
-      "_st_crosses"     -> fmap ASTCrosses <$> asPGColValM v
-      "_st_equals"      -> fmap ASTEquals <$> asPGColValM v
-      "_st_intersects"  -> fmap ASTIntersects <$> asPGColValM v
-      "_st_overlaps"    -> fmap ASTOverlaps <$> asPGColValM v
-      "_st_touches"     -> fmap ASTTouches <$> asPGColValM v
-      "_st_within"      -> fmap ASTWithin <$> asPGColValM v
-      "_st_d_within"    -> asObjectM v >>= mapM parseAsSTDWithinObj
+      -- geometry/geography type related operators
+      "_st_contains"            -> fmap ASTContains <$> asPGColValM v
+      "_st_crosses"             -> fmap ASTCrosses <$> asPGColValM v
+      "_st_equals"              -> fmap ASTEquals <$> asPGColValM v
+      "_st_intersects"          -> fmap ASTIntersects <$> asPGColValM v
+      "_st_overlaps"            -> fmap ASTOverlaps <$> asPGColValM v
+      "_st_touches"             -> fmap ASTTouches <$> asPGColValM v
+      "_st_within"              -> fmap ASTWithin <$> asPGColValM v
+      "_st_d_within"            -> asObjectM v >>= mapM parseAsSTDWithinObj
+      "_st_d_within_geography"  -> asObjectM v >>= mapM parseAsSTDWithinObj
 
       _ ->
         throw500
@@ -82,10 +83,11 @@ parseOpExps annVal = do
 
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
-                 throw500 "expected \"distance\" input field in st_d_within_input ty"
+      -- TODO(shahidhk): throw correct error message
+                 throw500 "expected \"distance\" input field in st_d_within(geography)_input type"
       dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
-                 throw500 "expected \"from\" input field in st_d_within_input ty"
+                 throw500 "expected \"from\" input field in st_d_within(geography)_input type"
       from <- asPGColVal fromVal
       return $ ASTDWithin $ WithinOp dist from
 
