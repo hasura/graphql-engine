@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "10"
+curCatalogVer = "11"
 
 migrateMetadata
   :: ( MonadTx m
@@ -251,6 +251,13 @@ from9To10 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_9_to_10.sql")
   return ()
 
+from10To11 :: (MonadTx m) => m ()
+from10To11 = liftTx $ do
+  -- Migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_10_to_11.sql")
+  return ()
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -274,10 +281,13 @@ migrateCatalog migrationTime = do
      | preVer == "7"   -> from7ToCurrent
      | preVer == "8"   -> from8ToCurrent
      | preVer == "9"   -> from9ToCurrent
+     | preVer == "10"   -> from10ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from9ToCurrent = from9To10 >> postMigrate
+    from10ToCurrent = from10To11 >> postMigrate
+
+    from9ToCurrent = from9To10 >> from10ToCurrent
 
     from8ToCurrent = from8To9 >> from9ToCurrent
 

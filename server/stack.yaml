@@ -17,7 +17,7 @@ packages:
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/nizar-m/pg-client-hs.git
-  commit: b9bf15a4bf3f61eaaff36f00cde68e4a0ac9b192
+  commit: 1b53db6d6c8919345afdcc6d4f5b81bea999cc66
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: ff95d9a96aa5ef9e5390f8712958e4118e3831f6
 - ginger-0.8.1.0
@@ -26,6 +26,9 @@ extra-deps:
 - text-builder-0.6.4
 - deferred-folds-0.9.9
 - primitive-0.6.4.0
+
+# extra dep for pg-client-hs 
+- select-0.4.0.1
 
 # jose for the x5t bugfix (0.8.0.0)
 - git: https://github.com/frasertweedale/hs-jose.git
