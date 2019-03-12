@@ -37,6 +37,6 @@ func testMetadataApply(t *testing.T, metadataFile string, endpoint *url.URL) {
 
 	err = opts.run()
 	if err != nil {
-		t.Fatalf("failed exporting metadata: %v", err)
+		t.Fatalf("failed applying metadata: %v", err)
 	}
 }

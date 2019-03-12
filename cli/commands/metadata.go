@@ -72,7 +72,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 		for _, format := range []string{"yaml", "json"} {
 			metadataPath, err := ec.GetMetadataPath(format)
 			if err != nil {
-				return errors.Wrap(err, "cannot save metadata")
+				return errors.Wrap(err, "cannot apply metadata")
 			}
 
 			data, err = getMetadataByte(metadataPath)
@@ -83,6 +83,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 				return err
 			}
 			fileExists = true
+			break
 		}
 
 		if !fileExists {
