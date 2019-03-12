@@ -155,7 +155,11 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``--enabled-apis <APIS>``
      - ``HASURA_GRAPHQL_ENABLED_APIS``
      - Comma separated list of APIs (options: ``metadata`` & ``graphql``) to be enabled.
-       (default: ``metadata,graphql``)
+       (default: metadata,graphql)
 
+   * - ``--verbose-api-response``
+     - ``HASURA_GRAPHQL_VERBOSE_API_RESPONSE``
+     - Enable verbose logging in the API response .
+       (default: false)
 .. note::
   1. When the equivalent flags for environment variables are used, the flags will take precedence.
