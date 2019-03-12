@@ -24,9 +24,7 @@ import {
   SET_COLUMN_EDIT,
   RESET_COLUMN_EDIT,
   EDIT_COLUMN,
-  ADD_PRIMARY_KEY,
-  REMOVE_PRIMARY_KEY,
-  RESET_PRIMARY_KEY,
+  SET_PRIMARY_KEYS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -635,32 +633,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         activeEdit: { ...modifyState.activeEdit, column: newCol },
       };
-    case ADD_PRIMARY_KEY:
-      const pksOnAdd = [
-        ...modifyState.pkModify.slice(0, action.pk),
-        action.column,
-        ...modifyState.pkModify.slice(action.pk + 1),
-      ];
-      if (pksOnAdd[pksOnAdd.length - 1] !== '') {
-        pksOnAdd.push('');
-      }
+    case SET_PRIMARY_KEYS:
       return {
         ...modifyState,
-        pkModify: pksOnAdd,
-      };
-    case REMOVE_PRIMARY_KEY:
-      const pksOnRemove = [
-        ...modifyState.pkModify.slice(0, action.pk),
-        ...modifyState.pkModify.slice(action.pk + 1),
-      ];
-      return {
-        ...modifyState,
-        pkModify: pksOnRemove,
-      };
-    case RESET_PRIMARY_KEY:
-      return {
-        ...modifyState,
-        pkModify: [''],
+        pkModify: action.pks,
       };
     default:
       return modifyState;

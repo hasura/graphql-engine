@@ -1,13 +1,7 @@
 import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
 
-const PrimaryKeySelector = ({
-  primaryKeys,
-  columns,
-  removePk,
-  setPk,
-  dispatch,
-}) => {
+const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
   const numPks = primaryKeys.length;
   const nonPkColumns = columns
     .map((col, _i) => {
@@ -23,10 +17,19 @@ const PrimaryKeySelector = ({
   return primaryKeys.map((pk, i) => {
     let removeIcon;
     const dispatchSet = e => {
-      dispatch(setPk(e.target.value, i));
+      const newPks = [
+        ...primaryKeys.slice(0, i),
+        e.target.value,
+        ...primaryKeys.slice(i + 1),
+      ];
+      if (i + 1 === primaryKeys.length) {
+        newPks.push('');
+      }
+      dispatch(setPk(newPks));
     };
     const dispatchRemove = () => {
-      dispatch(removePk(i));
+      const newPks = [...primaryKeys.slice(0, i), ...primaryKeys.slice(i + 1)];
+      dispatch(setPk(newPks));
     };
     if (i + 1 === numPks) {
       removeIcon = null;

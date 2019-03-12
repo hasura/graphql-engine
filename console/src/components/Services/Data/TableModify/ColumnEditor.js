@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { editColumn } from '../TableModify/ModifyActions';
 import dataTypes from '../Common/DataTypes';
 import { convertListToDictUsingKV } from '../../../../utils/data';
 import {
@@ -21,7 +20,8 @@ const ColumnEditor = ({
   columnComment,
   allowRename,
   columnProperties,
-  columnEdit,
+  selectedProperties,
+  editColumn,
 }) => {
   const colName = columnProperties.name;
   useEffect(
@@ -31,7 +31,7 @@ const ColumnEditor = ({
     [columnComment]
   );
   const c = column;
-  if (!columnEdit[colName]) {
+  if (!selectedProperties[colName]) {
     return null;
   }
   const styles = require('./ModifyTable.scss');
@@ -164,7 +164,7 @@ const ColumnEditor = ({
             <div className="col-xs-6">
               <input
                 className="input-sm form-control"
-                value={columnEdit[colName].name}
+                value={selectedProperties[colName].name}
                 onChange={updateColumnName}
                 type="text"
                 data-test="edit-col-name"
@@ -176,7 +176,7 @@ const ColumnEditor = ({
           <label className="col-xs-3 text-right">Type</label>
           <div className="col-xs-6">
             <select
-              value={columnEdit[colName].type}
+              value={selectedProperties[colName].type}
               onChange={updateColumnType}
               className="input-sm form-control"
               disabled={columnProperties.isPrimaryKey}
@@ -191,7 +191,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={columnEdit[colName].isNullable}
+              value={selectedProperties[colName].isNullable}
               onChange={toggleColumnNullable}
               disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-nullable"
@@ -206,7 +206,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={columnEdit[colName].isUnique.toString()}
+              value={selectedProperties[colName].isUnique.toString()}
               onChange={toggleColumnUnique}
               disabled={columnProperties.isPrimaryKey}
               data-test="edit-col-unique"
@@ -221,7 +221,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
-              value={columnEdit[colName].default || ''}
+              value={selectedProperties[colName].default || ''}
               onChange={updateColumnDef}
               type="text"
               disabled={columnProperties.isPrimaryKey}
@@ -234,7 +234,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
-              value={columnEdit[colName].comment || ''}
+              value={selectedProperties[colName].comment || ''}
               onChange={updateColumnComment}
               type="text"
               data-test="edit-col-comment"

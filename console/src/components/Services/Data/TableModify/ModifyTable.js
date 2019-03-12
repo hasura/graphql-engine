@@ -7,6 +7,7 @@ import {
   saveTableCommentSql,
 } from './ModifyActions';
 import {
+  DELETE_PK_WARNING,
   deleteTableSql,
   untrackTableSql,
   RESET,
@@ -14,10 +15,9 @@ import {
   deleteColumnSql,
   setColumnEdit,
   resetColumnEdit,
-  addPrimaryKey,
-  removePrimaryKey,
-  resetPrimaryKeys,
+  setPrimaryKeys,
   savePrimaryKeys,
+  editColumn,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
 import {
@@ -25,6 +25,7 @@ import {
   fetchTableComment,
   fetchColumnComment,
 } from '../DataActions';
+import { showSuccessNotification } from '../Notification';
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ColumnEditor from './ColumnEditor';
@@ -124,8 +125,7 @@ class ModifyTable extends React.Component {
       const safeOnDelete = () => {
         let confirmMessage = 'Are you sure you want to delete?';
         if (columnProperties.isPrimaryKey) {
-          confirmMessage = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
-        Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
+          confirmMessage = DELETE_PK_WARNING;
         }
         const isOk = window.confirm(confirmMessage);
         if (isOk) {
@@ -182,7 +182,8 @@ class ModifyTable extends React.Component {
               columnComment={columnComment}
               allowRename={this.state.supportTableColumnRename}
               columnProperties={columnProperties}
-              columnEdit={columnEdit}
+              selectedProperties={columnEdit}
+              editColumn={editColumn}
             />
           </div>
         );
@@ -354,23 +355,39 @@ class ModifyTable extends React.Component {
           <div className={`${styles.pkEditorExpanded}`}>
             <PrimaryKeySelector
               dispatch={dispatch}
-              setPk={addPrimaryKey}
-              removePk={removePrimaryKey}
+              setPk={setPrimaryKeys}
               columns={orderedCols}
               primaryKeys={pkModify}
-              service="modify-table"
             />
           </div>
         </div>
       );
 
-      const onSave = () => {
+      const setPkEditState = () => {
+        dispatch(setPrimaryKeys([...orderedPks.map(pk => pk.toString()), '']));
+      };
+
+      const onSave = (e, confirmed) => {
+        if (pkConstraintName && pkModify.length === 1 && !confirmed) {
+          const isOk = window.confirm(DELETE_PK_WARNING);
+          if (!isOk) {
+            setPkEditState();
+            return dispatch(showSuccessNotification('No changes'));
+          }
+        }
         dispatch(savePrimaryKeys(tableName, currentSchema, pkConstraintName));
       };
 
       const onRemove = () => {
-        dispatch(resetPrimaryKeys());
-        onSave();
+        let isOk;
+        if (pkConstraintName) {
+          isOk = window.confirm(DELETE_PK_WARNING);
+          if (!isOk) {
+            return dispatch(showSuccessNotification('No changes'));
+          }
+        }
+        dispatch(setPrimaryKeys(['']));
+        onSave(null, isOk);
       };
 
       /*
@@ -389,13 +406,9 @@ class ModifyTable extends React.Component {
           service="modify-table"
           saveFunc={onSave}
           removeFunc={onRemove}
-          expandCallback={() => {
-            orderedPks.forEach((oPk, __i) => {
-              dispatch(addPrimaryKey(oPk.toString(), __i));
-            });
-          }}
+          expandCallback={setPkEditState}
           collapseCallback={() => {
-            dispatch(resetPrimaryKeys());
+            dispatch(setPrimaryKeys(['']));
           }}
         />
       );

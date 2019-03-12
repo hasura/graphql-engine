@@ -22,6 +22,9 @@ import gqlPattern, {
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
 
+const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
+        Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
+
 const TOGGLE_ACTIVE_COLUMN = 'ModifyTable/TOGGLE_ACTIVE_COLUMN';
 const RESET = 'ModifyTable/RESET';
 
@@ -43,6 +46,7 @@ const TOGGLE_FK_CHECKBOX = 'ModifyTable/TOGGLE_FK_CHECKBOX';
 const ADD_PRIMARY_KEY = 'ModifyTable/ADD_PRIMARY_KEY';
 const REMOVE_PRIMARY_KEY = 'ModifyTable/REMOVE_PRIMARY_KEY';
 const RESET_PRIMARY_KEY = 'ModifyTable/RESET_PRIMARY_KEY';
+const SET_PRIMARY_KEYS = 'ModifyTable/SET_PRIMARY_KEYS';
 
 const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
 const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
@@ -69,6 +73,11 @@ const resetColumnEdit = column => {
     column,
   };
 };
+
+const setPrimaryKeys = pks => ({
+  type: SET_PRIMARY_KEYS,
+  pks,
+});
 
 const addPrimaryKey = (columnIndex, pkIndex) => ({
   type: ADD_PRIMARY_KEY,
@@ -2108,6 +2117,8 @@ export {
   ADD_PRIMARY_KEY,
   REMOVE_PRIMARY_KEY,
   RESET_PRIMARY_KEY,
+  SET_PRIMARY_KEYS,
+  DELETE_PK_WARNING,
   changeTableOrViewName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -2135,5 +2146,6 @@ export {
   addPrimaryKey,
   removePrimaryKey,
   resetPrimaryKeys,
+  setPrimaryKeys,
   savePrimaryKeys,
 };

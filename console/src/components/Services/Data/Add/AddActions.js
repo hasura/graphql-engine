@@ -16,8 +16,6 @@ const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
 const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
 const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
-const ADD_PK = 'AddTable/ADD_PK';
-const REMOVE_PK = 'AddTable/REMOVE_PK';
 const SET_PK = 'AddTable/SET_PK';
 const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
@@ -59,9 +57,7 @@ const setColUnique = (isUnique, index) => ({
   index,
 });
 const addCol = () => ({ type: ADD_COL });
-const addPk = () => ({ type: ADD_PK });
-const removePk = index => ({ type: REMOVE_PK, index });
-const setPk = (pk, index) => ({ type: SET_PK, pk, index });
+const setPk = pks => ({ type: SET_PK, pks });
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -362,28 +358,10 @@ const addTableReducer = (state = defaultState, action) => {
       };
     case ADD_COL:
       return { ...state, columns: [...state.columns, { name: '', type: '' }] };
-    case ADD_PK:
-      return { ...state, primaryKeys: [...state.primaryKeys, ''] };
-    case REMOVE_PK:
-      return {
-        ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
-      };
     case SET_PK:
-      const newPks = [
-        ...state.primaryKeys.slice(0, action.index),
-        action.pk,
-        ...state.primaryKeys.slice(action.index + 1),
-      ];
-      if (action.index + 1 === state.primaryKeys.length) {
-        newPks.push('');
-      }
       return {
         ...state,
-        primaryKeys: newPks,
+        primaryKeys: action.pks,
       };
     default:
       return state;
@@ -403,8 +381,6 @@ export {
   setColDefault,
   removeColDefault,
   addCol,
-  addPk,
-  removePk,
   setPk,
   createTableSql,
 };

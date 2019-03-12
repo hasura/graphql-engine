@@ -22,7 +22,7 @@ import {
   removeColDefault,
   addCol,
 } from './AddActions';
-import { setDefaults, setPk, removePk, createTableSql } from './AddActions';
+import { setDefaults, setPk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
 import {
@@ -351,7 +351,6 @@ class AddTable extends Component {
       <PrimaryKeySelector
         primaryKeys={primaryKeys}
         columns={columns}
-        removePk={removePk}
         setPk={setPk}
         dispatch={dispatch}
         styles={styles}
