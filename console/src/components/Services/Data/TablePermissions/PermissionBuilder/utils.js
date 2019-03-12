@@ -22,7 +22,7 @@ export const PGTypes = {
     'interval',
   ],
   json: ['json', 'jsonb'],
-  postgis: ['geometry'],
+  postgis: ['geometry', 'geography'],
 };
 
 export const notBoolOperators = ['_not'];
