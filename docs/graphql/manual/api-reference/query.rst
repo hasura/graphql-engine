@@ -98,7 +98,7 @@ E.g.
    author {
       id  # scalar field
       name  # scalar field
-      json_field(path: ".property[0]") # scalar field
+      address(path: ".property[0]") # scalar field
 
       article {  # nested object
         title
