@@ -1,0 +1,45 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE hello (
+        id SERIAL PRIMARY KEY,
+        code TEXT,
+        name TEXT
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: hello
+
+- type: run_sql
+  args:
+    sql: |
+      INSERT INTO hello (code, name) VALUES
+      ('felu', 'Pradosh C Mitter'),
+      ('holmes', 'Sherlock Holmes')
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE animals (
+        id SERIAL PRIMARY KEY,
+        common_name TEXT,
+        genus TEXT,
+        species TEXT
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: animals
+
+- type: run_sql
+  args:
+    sql: |
+      INSERT INTO animals (common_name, genus, species) VALUES
+      ('Eurasian Eagle-Owl', 'Bubo', 'bubo'),
+      ('White-eyed Buzzard', 'Butastur', 'teesa'),
+      ('Plum-headed Parakeet', 'Psitaculla', 'cyanocephala')

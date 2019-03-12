@@ -5,71 +5,61 @@ module Hasura.GraphQL.Transport.WebSocket
   , createWSServerEnv
   ) where
 
-import qualified Control.Concurrent.Async                    as A
-import qualified Control.Concurrent.STM                      as STM
-import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.TH                               as J
-import qualified Data.ByteString.Lazy                        as BL
-import qualified Data.CaseInsensitive                        as CI
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.Text                                   as T
-import qualified Data.Text.Encoding                          as TE
-import qualified Language.GraphQL.Draft.Syntax               as G
+import           Control.Concurrent                            (threadDelay)
+import           Data.ByteString                               (ByteString)
+
+import qualified Control.Concurrent.Async                      as A
+import qualified Control.Concurrent.STM                        as STM
+import qualified Data.Aeson                                    as J
+--import qualified Data.Aeson.Casing                             as J
+--import qualified Data.Aeson.TH                                 as J
+import qualified Data.ByteString.Lazy                          as BL
+import qualified Data.CaseInsensitive                          as CI
+import qualified Data.HashMap.Strict                           as Map
+import qualified Data.IORef                                    as IORef
+import qualified Data.Text                                     as T
+import qualified Data.Text.Encoding                            as TE
+import qualified Language.GraphQL.Draft.Syntax                 as G
 import qualified ListT
-import qualified Network.HTTP.Client                         as H
-import qualified Network.HTTP.Types                          as H
-import qualified Network.WebSockets                          as WS
-import qualified STMContainers.Map                           as STMMap
+import qualified Network.HTTP.Client                           as H
+import qualified Network.HTTP.Types                            as H
+import qualified Network.WebSockets                            as WS
+import qualified STMContainers.Map                             as STMMap
 
-import           Control.Concurrent                          (threadDelay)
-import           Data.ByteString                             (ByteString)
-import qualified Data.IORef                                  as IORef
-
-import           Hasura.GraphQL.Context                      (GCtx)
-import           Hasura.GraphQL.Resolve                      (resolveSelSet)
-import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
-import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (getGCtx)
-import qualified Hasura.GraphQL.Transport.HTTP               as TH
+import           Hasura.GraphQL.Context                        (GCtx)
+import           Hasura.GraphQL.Resolve                        (resolveSelSet)
+import           Hasura.GraphQL.Resolve.Context                (LazyRespTx)
+import           Hasura.GraphQL.Schema                         (getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
-import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (QueryParts (..),
-                                                              getQueryParts,
-                                                              validateGQ)
-import qualified Hasura.GraphQL.Validate.Types               as VT
-import qualified Hasura.Logging                              as L
+import           Hasura.GraphQL.Validate                       (QueryParts (..),
+                                                                getQueryParts,
+                                                                validateGQ)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                          (AuthMode,
-                                                              getUserInfo)
+import           Hasura.Server.Auth                            (AuthMode,
+                                                                getUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (bsToTxt)
+import           Hasura.Server.Utils                           (bsToTxt)
 
--- uniquely identifies an operation
-type GOperationId = (WS.WSId, OperationId)
+import qualified Hasura.GraphQL.Resolve.LiveQuery              as LQ
+import qualified Hasura.GraphQL.Transport.HTTP                 as TH
+import qualified Hasura.GraphQL.Transport.WebSocket.Client     as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
+import qualified Hasura.GraphQL.Validate.Types                 as VT
+import qualified Hasura.Logging                                as L
+
 
 type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
 
-newtype WsHeaders
-  = WsHeaders { unWsHeaders :: [H.Header] }
-  deriving (Show, Eq)
-
-data WSConnState
-  -- headers from the client for websockets
-  = CSNotInitialised !WsHeaders
-  | CSInitError Text
-  -- headers from the client (in conn params) to forward to the remote schema
-  | CSInitialised UserInfo [H.Header]
-
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef WSConnState)
+  { _wscState :: !(IORef.IORef WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -80,48 +70,10 @@ type LiveQueryMap = LQ.LiveQueryMap GOperationId
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
+
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn =
   liftIO . WS.sendMsg wsConn . encodeServerMsg
-
-data OpDetail
-  = ODStarted
-  | ODProtoErr !Text
-  | ODQueryErr !QErr
-  | ODCompleted
-  | ODStopped
-  deriving (Show, Eq)
-$(J.deriveToJSON
-  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
-                   , J.sumEncoding = J.TaggedObject "type" "detail"
-                   }
-  ''OpDetail)
-
-data WSEvent
-  = EAccepted
-  | ERejected !QErr
-  | EConnErr !ConnErrMsg
-  | EOperation !OperationId !(Maybe OperationName) !OpDetail
-  | EClosed
-  deriving (Show, Eq)
-$(J.deriveToJSON
-  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
-                   , J.sumEncoding = J.TaggedObject "type" "detail"
-                   }
-  ''WSEvent)
-
-data WSLog
-  = WSLog
-  { _wslWebsocketId :: !WS.WSId
-  , _wslUser        :: !(Maybe UserVars)
-  , _wslEvent       :: !WSEvent
-  , _wslMsg         :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
-
-instance L.ToEngineLog WSLog where
-  toEngineLog wsLog =
-    (L.LevelInfo, "ws-handler", J.toJSON wsLog)
 
 data WSServerEnv
   = WSServerEnv
@@ -205,6 +157,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 
+
 onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
@@ -214,8 +167,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
-  (userInfo, reqHdrs) <- case userInfoM of
-    CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
+  (userInfo, reqHdrs, _) <- case userInfoM of
+    CSInitialised (ConnInitState userInfo reqHdrs st) ->
+      return (userInfo, reqHdrs, st)
     CSInitError initErr -> do
       let connErr = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendConnErr connErr
@@ -242,8 +196,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   case typeLocs of
     []          -> runHasuraQ userInfo gCtx queryParts
     (typeLoc:_) -> case typeLoc of
-      VT.HasuraType       -> runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType _ rsi -> runRemoteQ userInfo reqHdrs opDef rsi
+      VT.HasuraType        -> runHasuraQ userInfo gCtx queryParts
+      VT.RemoteType rn rsi -> runRemoteQ userInfo reqHdrs opDef (rn, rsi)
 
   where
     runHasuraQ :: UserInfo -> GCtx -> QueryParts -> ExceptT () IO ()
@@ -264,26 +218,36 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
           either postExecErr sendSuccResp resp
           sendCompleted
 
-    runRemoteQ :: UserInfo -> [H.Header]
-               -> G.TypedOperationDefinition -> RemoteSchemaInfo
-               -> ExceptT () IO ()
-    runRemoteQ userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr $
-        err400 NotSupported "subscription to remote server is not supported"
-
-      -- if it's not a subscription, use HTTP to execute the query on the remote
-      -- server
-      -- try to parse the (apollo protocol) websocket frame and get only the
-      -- payload
+    runRemoteQ
+      :: UserInfo
+      -> [H.Header]
+      -> G.TypedOperationDefinition
+      -> (RemoteSchemaName, RemoteSchemaInfo)
+      -> ExceptT () IO ()
+    runRemoteQ userInfo reqHdrs opDef (rn, rsi) = do
       sockPayload <- onLeft (J.eitherDecode msgRaw) $
         const $ withComplete $ preExecErr $
         err500 Unexpected "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
-      either postExecErr sendSuccResp resp
-      sendCompleted
+
+      case G._todType opDef of
+        G.OperationTypeSubscription -> do
+          res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
+                 wsConn userInfoR rn opId sockPayload
+          onLeft res $ \e -> do
+            logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
+            withComplete $ sendConnErr . T.pack $ show e
+          logOpEv ODStarted
+        _ -> do
+          -- if it's not a subscription, use HTTP to execute the query on the
+          -- remote server
+          -- try to parse the (apollo protocol) websocket frame and get only the
+          -- payload
+          logOpEv ODStarted
+          let payload = J.encode $ WS._wpPayload sockPayload
+          resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+                  payload rsi opDef
+          either postExecErr sendSuccResp resp
+          sendCompleted
 
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
@@ -360,11 +324,27 @@ onStop serverEnv wsConn (StopMsg opId) = do
       LQ.removeLiveQuery lqMap liveQ (wsId, opId)
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
+
+  connState <- liftIO $ IORef.readIORef stateR
+  let stData = getStateData connState
+  onJust stData $ \(ConnInitState _ _ connMap) ->
+    onJust (findOperationId connMap (wsId, opId)) $ \(rn, wsState) -> do
+      eNewState <- runExceptT $ WS.stopRemote logger wsState opId
+      either preExecErr (WS.updateState stateR rn) eNewState
+
   where
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
+    stateR = _wscState $ WS.getData wsConn
+
+    preExecErr qErr = do
+      logOpEv $ ODQueryErr qErr
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
+
+    logOpEv opDet =
+      logWSEvent logger wsConn $ EOperation opId Nothing opDet
 
 logWSEvent
   :: (MonadIO m)
@@ -372,7 +352,7 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ IORef.readIORef userInfoR
   let userInfoM = case userInfoME of
-        CSInitialised userInfo _ -> return $ userVars userInfo
+        CSInitialised (ConnInitState userInfo _ _) -> return $ userVars userInfo
         _                        -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
   where
@@ -383,18 +363,18 @@ onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
-  headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscUser $ WS.getData wsConn))
+  headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscState $ WS.getData wsConn))
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+      liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
         CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        CSInitialised userInfo paramHeaders
+      liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
+        CSInitialised (ConnInitState userInfo paramHeaders Map.empty)
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -423,6 +403,8 @@ onClose logger lqMap _ wsConn = do
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
+  -- clear remote conns, if any corresponding to this wsId
+  WS.closeRemote logger (_wscState $ WS._wcExtraData wsConn) wsId
   where
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
@@ -445,18 +427,3 @@ createWSServerApp authMode serverEnv =
       (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
-
-
--- | TODO:
--- | The following ADT is required so that we can parse the incoming websocket
--- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
--- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
--- | get only the payload
-data WebsocketPayload
-  = WebsocketPayload
-  { _wpId      :: !Text
-  , _wpType    :: !Text
-  , _wpPayload :: !J.Value
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
