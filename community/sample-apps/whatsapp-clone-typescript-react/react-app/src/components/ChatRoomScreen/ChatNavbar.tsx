@@ -15,7 +15,7 @@ import styled from 'styled-components'
 import * as fragments from '../../graphql/fragments'
 import * as queries from '../../graphql/queries'
 import { useMe } from '../../services/auth.service';
-import { ChatList, DeleteChat } from '../../graphql/types'
+import { ChatList, DeleteChat, ChatsListQueryCache } from '../../graphql/types'
 
 const Style = styled.div`
   padding: 0;
@@ -75,6 +75,21 @@ const query = gql`
   ${fragments.user}
 `
 
+const queryCache = gql`
+  query ChatsListQueryCache($userId: Int!) {
+    chat(order_by:[{messages_aggregate:{max:{created_at:desc}}}]) {
+      ...chat
+      users(where:{user_id:{_neq:$userId}}) {
+        user {
+          ...user
+        }
+      }
+    }
+  }
+  ${fragments.chat}
+  ${fragments.user}
+`;
+
 const mutation = gql`
   mutation deleteChat($chatId: Int!) {
     delete_chat_users(where:{chat_id:{_eq: $chatId}}) {
@@ -110,21 +125,25 @@ export default ({ chatId, history }: ChatNavbarProps) => {
       update: (client, { data: { delete_chat } }) => {
         let chats
         try {
-          chats = client.readQuery<ChatList.Query, ChatList.Variables>({
-            query: queries.chats,
-            variables: { chatId: parsedChatId, userId: me.id }
-          }).chat_users
-        } catch (e) {}
-
-        if (chats && chats.some(chat => chat.chat_id === parsedChatId)) {
-          const index = chats.findIndex(chat => chat.chat_id === parsedChatId)
-          chats.splice(index, 1)
-
-          client.writeQuery<ChatList.Query, ChatList.Variables>({
-            query: queries.chats,
-            variables: { chatId: parsedChatId, userId: me.id },
-            data: { chat_users: chats },
-          })
+          chats = client.readQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+            query: queryCache,
+            variables: {userId: me.id}
+          }).chat
+        } catch(e) {
+          console.error(e)
+        }
+        if (chats) {
+          // filter current parsedChatId
+          chats = chats.filter((chat) => chat.id !== parsedChatId);
+          try {
+            client.writeQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+              query: queryCache,
+              variables: {userId: me.id},
+              data: { chat: chats },
+            })
+          } catch(e) {
+            console.error(e)
+          }
         }
       },
     },
