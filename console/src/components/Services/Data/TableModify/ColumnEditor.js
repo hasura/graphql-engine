@@ -1,14 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router';
-import {
-  fkRefTableChange,
-  fkRColChange,
-  toggleFKCheckBox,
-  isColumnUnique,
-  deleteConstraintSql,
-  setColumnEdit,
-  editColumn,
-} from '../TableModify/ModifyActions';
+import { editColumn } from '../TableModify/ModifyActions';
 import dataTypes from '../Common/DataTypes';
 import { convertListToDictUsingKV } from '../../../../utils/data';
 import {
@@ -22,19 +13,11 @@ import {
   TIMESTAMP,
   TIME,
 } from '../../../../constants';
-import Button from '../../../Common/Button/Button';
-
-const appPrefix = '/data';
 
 const ColumnEditor = ({
   column,
   onSubmit,
-  onDelete,
-  allSchemas,
-  fkAdd,
-  tableName,
   dispatch,
-  currentSchema,
   columnComment,
   allowRename,
   columnProperties,
@@ -51,7 +34,6 @@ const ColumnEditor = ({
   if (!columnEdit[colName]) {
     return null;
   }
-  console.log(columnEdit[colName]);
   const styles = require('./ModifyTable.scss');
   const [iname, inullable, iunique, idefault, icomment, itype] = [
     null,
@@ -62,7 +44,6 @@ const ColumnEditor = ({
     null,
   ];
   // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
-  const tableSchema = allSchemas.find(t => t.table_name === tableName);
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
     'value',

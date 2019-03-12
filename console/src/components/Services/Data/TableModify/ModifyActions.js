@@ -85,61 +85,98 @@ const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
 
-const savePrimaryKeys = (tableName, schemaName) => {
+const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
+    // get selected configuration for PK
     const { pkModify } = getState().tables.modify;
+    // table schema
     const tableSchema = getState().tables.allSchemas.find(
       ts => ts.table_name === tableName
     );
-    const constraintName = tableSchema.primary_key.constraint_name;
-    const migrationUp = [
-      {
+    // form a list of selected PK columns
+    let numSelectedPkColumns = 0;
+    const selectedPkColumns = pkModify.filter(pk => pk !== '').map(pk => {
+      numSelectedPkColumns++;
+      return tableSchema.columns[pk].column_name;
+    });
+    // form a list of existing PK columns
+    const existingPkColumns = tableSchema.primary_key
+      ? tableSchema.primary_key.columns
+      : [];
+    // compare list of existing PKs and newly selected PKs
+    // TODO: Improve algorithm
+    let changeDetected = false;
+    if (selectedPkColumns.length === existingPkColumns.length) {
+      for (let _i = selectedPkColumns.length - 1; _i >= 0; _i--) {
+        if (selectedPkColumns[_i] !== existingPkColumns[_i]) {
+          changeDetected = true;
+          break;
+        }
+      }
+    } else {
+      changeDetected = true;
+    }
+    // Do nothing if no change is detected
+    if (!changeDetected) {
+      return dispatch(showSuccessNotification('No changes'));
+    }
+
+    const migrationUp = [];
+    // skip dropping existing constraint if there is none
+    if (constraintName) {
+      migrationUp.push({
         type: 'run_sql',
         args: {
           sql: `
           alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";
         `,
         },
-      },
-    ];
-    const selectedPkColumns = pkModify.filter(pk => pk !== '').map(pk => {
-      return tableSchema.columns[pk].column_name;
-    });
-    migrationUp.push({
-      type: 'run_sql',
-      args: {
-        sql: `
-          alter table "${schemaName}"."${tableName}"
-          add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
+      });
+    }
+    // skip creating a new config if no columns were selected
+    if (numSelectedPkColumns) {
+      migrationUp.push({
+        type: 'run_sql',
+        args: {
+          sql: `
+            alter table "${schemaName}"."${tableName}"
+            add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
   ', '
 )} );
-        `,
-      },
-    });
-    /* TODO */
-    const migrationDown = [
-      {
+          `,
+        },
+      });
+    }
+
+    const migrationDown = [];
+    // skip dropping in down migration if no constraint was created
+    if (numSelectedPkColumns) {
+      migrationDown.push({
         type: 'run_sql',
         args: {
           sql: `
           alter table "${schemaName}"."${tableName}" drop constraint "${tableName}_pkey";
         `,
         },
-      },
-    ];
-    migrationDown.push({
-      type: 'run_sql',
-      sql: `
-        alter table "${schemaName}"."${tableName}"
-        add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
+      });
+    }
+    // skip creating in down migration if no constraint was dropped in up migration
+    if (constraintName) {
+      migrationDown.push({
+        type: 'run_sql',
+        sql: `
+          alter table "${schemaName}"."${tableName}"
+          add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
   ', '
 )} );
-      `,
-    });
+        `,
+      });
+    }
+    const pkAction = numSelectedPkColumns ? 'Updating' : 'Deleting';
     const migrationName = `modify_primarykey_${schemaName}_${tableName}`;
-    const requestMsg = 'Updating primary key constraint...';
-    const successMsg = 'Updating primary key constraint successful';
-    const errorMsg = 'Updating primary key constraint failed';
+    const requestMsg = `${pkAction} primary key constraint...`;
+    const successMsg = `${pkAction} primary key constraint successful`;
+    const errorMsg = `${pkAction} primary key constraint failed`;
 
     const customOnSuccess = () => {};
     const customOnError = err => {

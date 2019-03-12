@@ -20,7 +20,6 @@ import {
   savePrimaryKeys,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
-import { convertListToDict } from '../../../../utils/data';
 import {
   setTable,
   fetchTableComment,
@@ -84,15 +83,10 @@ class ModifyTable extends React.Component {
     } = this.props;
     const styles = require('./ModifyTable.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
-    const hasPrimaryKeys =
-      tableSchema &&
-      tableSchema.primary_key &&
-      tableSchema.primary_key.columns.length > 0;
-    const primaryKeyDict = hasPrimaryKeys
-      ? convertListToDict(tableSchema.primary_key.columns)
-      : {};
-
     const columns = tableSchema.columns.sort(ordinalColSort);
+    const tablePrimaryKeyColumns = tableSchema.primary_key
+      ? tableSchema.primary_key.columns
+      : [];
     const columnEditors = columns.map((c, i) => {
       const colName = c.column_name;
       const columnProperties = {
@@ -101,7 +95,7 @@ class ModifyTable extends React.Component {
         schemaName: c.table_schema,
         type: c.data_type,
         isNullable: c.is_nullable === 'YES' ? true : false,
-        isPrimaryKey: tableSchema.primary_key.columns.includes(c.column_name),
+        isPrimaryKey: tablePrimaryKeyColumns.includes(c.column_name),
         isUnique: false,
         default: c.column_default || '',
       };
@@ -143,9 +137,10 @@ class ModifyTable extends React.Component {
         if (columnProperties.isPrimaryKey) propertiesList.push('primary key');
         if (columnProperties.isNullable) propertiesList.push('nullable');
         if (columnProperties.isUnique) propertiesList.push('unique');
-        return <i> - {propertiesList.join(', ')}</i>;
+        const keyPropertiesString = propertiesList.join(', ');
+        return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
       };
-      const colEditorCollapsed = () => {
+      const collapsedLabel = () => {
         return (
           <div key={i}>
             <div className="container-fluid">
@@ -159,12 +154,23 @@ class ModifyTable extends React.Component {
           </div>
         );
       };
+      const expandedLabel = () => {
+        return (
+          <div key={i}>
+            <div className="container-fluid">
+              <div className="row">
+                <h5 className={styles.padd_bottom}>
+                  <b>{colName}</b>
+                  &nbsp;
+                </h5>
+              </div>
+            </div>
+          </div>
+        );
+      };
       const colEditorExpanded = () => {
         return (
           <div key={i}>
-            <div className="expandedLabel">
-              <b>{colName}</b>
-            </div>
             <ColumnEditor
               column={c}
               onSubmit={onSubmit}
@@ -183,14 +189,15 @@ class ModifyTable extends React.Component {
       };
       return (
         <ExpandableEditor
-          editorCollapsed={colEditorCollapsed}
           editorExpanded={colEditorExpanded}
           property={'edit-column'}
           ongoingRequest={'oola'}
           service="modify-table"
           saveFunc={onSubmit}
-          removeFunc={primaryKeyDict[colName] ? null : onDelete}
+          removeFunc={columnProperties.isPrimaryKey ? null : onDelete}
           collapsedClass={styles.display_flex}
+          expandedLabel={expandedLabel}
+          collapsedLabel={collapsedLabel}
           expandCallback={() => {
             dispatch(setColumnEdit(columnProperties));
             dispatch(fetchColumnComment(tableName, colName));
@@ -306,30 +313,64 @@ class ModifyTable extends React.Component {
         type: c.data_type,
         index: _i,
       }));
-      const orderedPks = tableSchema.primary_key.columns.map(pk => {
+      const orderedPks = tablePrimaryKeyColumns.map(pk => {
         return orderedCols.find(c => c.name === pk).index;
       });
-      const pkConstraintName = tableSchema.primary_key.constraint_name;
-      const pkEditorCollapsed = () => (
+      const tempPks = pkModify.filter(pkm => pkm !== '').map(pkm => {
+        return orderedCols[pkm].name;
+      });
+
+      const pkConstraintName = tableSchema.primary_key
+        ? tableSchema.primary_key.constraint_name
+        : '';
+      const pkConfigText = tablePrimaryKeyColumns.join(', ');
+      const pkEditorCollapsedLabel = () => (
         <div>
-          <i> {`( ${tableSchema.primary_key.columns.join(', ')} )`} </i>
+          <div className="container-fluid">
+            <div className="row">
+              <h5 className={styles.padd_bottom}>
+                {pkConfigText ? <i> ({pkConfigText}) </i> : 'No primary key'}
+                &nbsp;
+              </h5>
+            </div>
+          </div>
         </div>
       );
+      const pkEditorExpandedLabel = () => (
+        <h5 className={styles.padd_bottom}>
+          <b> {pkConfigText && `(${pkConfigText})`}</b>
+        </h5>
+      );
       const pkEditorExpanded = () => (
-        <div className={`${styles.pkEditorExpanded}`}>
-          <PrimaryKeySelector
-            dispatch={dispatch}
-            setPk={addPrimaryKey}
-            removePk={removePrimaryKey}
-            columns={orderedCols}
-            primaryKeys={pkModify}
-            service="modify-table"
-          />
+        <div>
+          <div className={`container-fluid ${styles.pkEditorExpandedText}`}>
+            <div className="row">
+              <h5 className={styles.padd_bottom}>
+                Selected configuration: <i>{`( ${tempPks.join(', ')} )`}</i>
+                &nbsp;
+              </h5>
+            </div>
+          </div>
+          <div className={`${styles.pkEditorExpanded}`}>
+            <PrimaryKeySelector
+              dispatch={dispatch}
+              setPk={addPrimaryKey}
+              removePk={removePrimaryKey}
+              columns={orderedCols}
+              primaryKeys={pkModify}
+              service="modify-table"
+            />
+          </div>
         </div>
       );
 
       const onSave = () => {
         dispatch(savePrimaryKeys(tableName, currentSchema, pkConstraintName));
+      };
+
+      const onRemove = () => {
+        dispatch(resetPrimaryKeys());
+        onSave();
       };
 
       /*
@@ -340,14 +381,14 @@ class ModifyTable extends React.Component {
 
       return (
         <ExpandableEditor
-          editorCollapsed={pkEditorCollapsed}
+          collapsedLabel={pkEditorCollapsedLabel}
+          expandedLabel={pkEditorExpandedLabel}
           editorExpanded={pkEditorExpanded}
           property={'edit-pks'}
           ongoingRequest={'todo'}
           service="modify-table"
           saveFunc={onSave}
-          removeFunc={() => console.log('PK Removed')}
-          collapsedClass={styles.display_flex}
+          removeFunc={onRemove}
           expandCallback={() => {
             orderedPks.forEach((oPk, __i) => {
               dispatch(addPrimaryKey(oPk.toString(), __i));

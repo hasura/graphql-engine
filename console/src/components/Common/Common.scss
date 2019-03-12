@@ -1201,11 +1201,32 @@ code {
 
 .editorCollapsed {
   display: block;
-  margin: 10px 0;
+  margin-bottom: 10px;
+}
+
+.pkEditorWrapper {
+  width: 325px;
+  text-align: left;
 }
 
 .pkEditorExpanded {
+  display: flex;
+    flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
+
+.pkEditorExpandedTextWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;  
+}
+
+.pkEditorExpandedText {
+  width: 325px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 

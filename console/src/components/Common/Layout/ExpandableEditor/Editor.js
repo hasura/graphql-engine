@@ -76,20 +76,31 @@ class Editor extends React.Component {
 
   render() {
     const { isEditing } = this.state;
-    const { editorCollapsed, editorExpanded, collapsedClass } = this.props;
+    const {
+      editorCollapsed,
+      editorExpanded,
+      collapsedLabel,
+      expandedLabel,
+    } = this.props;
     if (isEditing) {
       return (
         <div className={styles.editorExpanded}>
-          {this.toggleButton()}
-          {editorExpanded()}
+          <div className={styles.display_flex}>
+            {this.toggleButton()}
+            {expandedLabel && expandedLabel()}
+          </div>
+          {editorExpanded && editorExpanded()}
           {this.actionButtons()}
         </div>
       );
     }
     return (
-      <div className={`${styles.editorCollapsed} ${collapsedClass || ''}`}>
-        {this.toggleButton()}
-        {editorCollapsed()}
+      <div className={`${styles.editorCollapsed}`}>
+        <div className={styles.display_flex}>
+          {this.toggleButton()}
+          {collapsedLabel && collapsedLabel()}
+        </div>
+        {editorCollapsed && editorCollapsed()}
       </div>
     );
   }

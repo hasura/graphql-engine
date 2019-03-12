@@ -7,12 +7,7 @@ const PrimaryKeySelector = ({
   removePk,
   setPk,
   dispatch,
-  service,
 }) => {
-  console.log('==============================');
-  console.log(primaryKeys);
-  console.log(columns);
-  console.log('==============================');
   const numPks = primaryKeys.length;
   const nonPkColumns = columns
     .map((col, _i) => {
@@ -45,15 +40,12 @@ const PrimaryKeySelector = ({
     }
 
     return (
-      <div
-        key={i}
-        className={`form-group ${
-          service === 'modify-table' ? styles.display_flex : ''
-        }`}
-      >
+      <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
           value={pk || ''}
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={`${styles.select} ${styles.sample} form-control ${
+            styles.add_pad_left
+          }`}
           onChange={dispatchSet}
           data-test={`primary-key-select-${i}`}
           data-test={`primary-key-select-${i.toString()}`}

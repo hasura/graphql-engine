@@ -112,7 +112,11 @@ a.expanded {
 .tableNameInput {
   width: 300px;
 }
-
+.select {
+  width: 300px;
+  display: inline-block;
+  height: 34px;
+}
 .addCol {
   .input {
     width: 300px;
