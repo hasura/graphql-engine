@@ -197,8 +197,7 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinOpInpVal : map geometryOpToInpVal geomOps) isGeometryTy
-  , bool [] (stDWithinOpInpVal : map geographyOpToInpVal geomOps) isGeographyTy
+  , bool [] (stDWithinOpInpVal : map geoOpToInpVal geoOps) isGeometryOrGeographyTy
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
@@ -259,21 +258,15 @@ mkCompExpInp colTy =
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
-    isGeometryTy = case colTy of
-      PGGeometry -> True
-      _          -> False
-
-    isGeographyTy = case colTy of
+    isGeometryOrGeographyTy = case colTy of
+      PGGeometry  -> True
       PGGeography -> True
-      _          -> False
+      _           -> False
 
-    geometryOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeometry
+    geoOpToInpVal (op, desc) =
+      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy colTy
 
-    geographyOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeography
-
-    geomOps =
+    geoOps =
       [
         ( "_st_contains"
         , "does the column contain the given geometry value"
