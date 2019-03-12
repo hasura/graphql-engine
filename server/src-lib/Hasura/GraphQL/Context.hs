@@ -178,15 +178,24 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
+-- TODO(shahidhk) this should ideally be st_d_within_geometry
 {-
 input st_d_within_input {
   distance: Float!
   from: geometry!
 }
 -}
-
 stDWithinInpTy :: G.NamedType
 stDWithinInpTy = G.NamedType "st_d_within_input"
+
+{-
+input st_d_within_geography_input {
+  distance: Float!
+  from: geography!
+}
+-}
+stDWithinGeographyInpTy :: G.NamedType
+stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
 
 
 --- | make compare expression input type
@@ -197,7 +206,8 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinOpInpVal : map geoOpToInpVal geoOps) isGeometryOrGeographyTy
+  , bool [] (stDWithinOpInpVal : map geoOpToInpVal geoOps) isGeometryType
+  , bool [] (stDWithinGeographyOpInpVal : map geoOpToInpVal geoOps) isGeographyType
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
@@ -253,41 +263,49 @@ mkCompExpInp colTy =
       ]
 
     -- Geometry related ops
+    isGeometryType = case colTy of
+      PGGeometry -> True
+      _          -> False
     stDWithinOpInpVal =
       InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
-    isGeometryOrGeographyTy = case colTy of
-      PGGeometry  -> True
+    -- Geography related ops
+    isGeographyType = case colTy of
       PGGeography -> True
       _           -> False
+    stDWithinGeographyOpInpVal =
+      InpValInfo (Just stDWithinGeographyDesc) "_st_d_within_geography" Nothing $ G.toGT stDWithinGeographyInpTy
+    stDWithinGeographyDesc =
+      "is the column within a distance from a geography value"
 
     geoOpToInpVal (op, desc) =
       InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy colTy
 
+    colTyDesc = G.Description $ T.pack $ show colTy
     geoOps =
       [
         ( "_st_contains"
-        , "does the column contain the given geometry value"
+        , "does the column contain the given " <> colTyDesc <> " value"
         )
       , ( "_st_crosses"
-        , "does the column crosses the given geometry value"
+        , "does the column crosses the given " <> colTyDesc <> " value"
         )
       , ( "_st_equals"
-        , "is the column equal to given geometry value. Directionality is ignored"
+        , "is the column equal to given " <> colTyDesc <> " value. Directionality is ignored"
         )
       , ( "_st_intersects"
-        , "does the column spatially intersect the given geometry value"
+        , "does the column spatially intersect the given " <> colTyDesc <> " value"
         )
       , ( "_st_overlaps"
-        , "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value"
+        , "does the column 'spatially overlap' (intersect but not completely contain) the given " <> colTyDesc <> " value"
         )
       , ( "_st_touches"
-        , "does the column have atleast one point in common with the given geometry value"
+        , "does the column have atleast one point in common with the given " <> colTyDesc <> " value"
         )
       , ( "_st_within"
-        , "is the column contained in the given geometry value"
+        , "is the column contained in the given " <> colTyDesc <> " value"
         )
       ]
 
@@ -341,6 +359,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
                             , TIInpObj <$> stDWithinInpM
+                            , TIInpObj <$> stDWithinGeographyInpM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
@@ -369,10 +388,15 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
           $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
-    stDWithinInpM = bool Nothing (Just stDWithinInp) (PGGeometry `elem` colTys)
-    stDWithinInp =
-      mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+    -- _st_d_within has to stay with geometry type
+    stDWithinInpM =
+      bool Nothing (Just $ stDWithinInp stDWithinInpTy PGGeometry) (PGGeometry `elem` colTys)
+    -- _st_d_within_geography is created for geography type
+    stDWithinGeographyInpM =
+      bool Nothing (Just $ stDWithinInp stDWithinGeographyInpTy PGGeography) (PGGeography `elem` colTys)
+    stDWithinInp inpTy ty =
+      mkHsraInpTyInfo Nothing inpTy $ fromInpValL
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy ty
       , InpValInfo Nothing "distance" Nothing $ G.toNT $ G.toNT $ mkScalarTy PGFloat
       ]
 
