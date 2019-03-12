@@ -86,7 +86,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 		}
 
 		if !fileExists {
-			return errors.New("Unable to locate metadata.yaml|json file under migrations directory")
+			return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
 		}
 
 		err := t.ApplyMetadata(data)

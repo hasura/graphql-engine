@@ -16,7 +16,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply Hasura metadata on a database",
-		Example: `  # Apply Hasura GraphQL Engine metadata present in metadata.yaml file:
+		Example: `  # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
   hasura metadata apply`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
