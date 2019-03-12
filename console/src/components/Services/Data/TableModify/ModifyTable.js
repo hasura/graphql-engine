@@ -2,36 +2,18 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import {
-  activateCommentEdit,
-  updateCommentInput,
-  saveTableCommentSql,
-} from './ModifyActions';
-import {
-  DELETE_PK_WARNING,
   deleteTableSql,
   untrackTableSql,
   RESET,
-  saveColumnChangesSql,
-  deleteColumnSql,
-  setColumnEdit,
-  resetColumnEdit,
-  setPrimaryKeys,
-  savePrimaryKeys,
-  editColumn,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort } from '../utils';
-import {
-  setTable,
-  fetchTableComment,
-  fetchColumnComment,
-} from '../DataActions';
-import { showSuccessNotification } from '../Notification';
+import { setTable, fetchTableComment } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
-import ColumnEditor from './ColumnEditor';
+import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
+import PrimaryKeyEditor from './PrimaryKeyEditor';
+import TableCommentEditor from './TableCommentEditor';
 import semverCheck from '../../../../helpers/semver';
-import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
+import styles from './ModifyTable.scss';
 
 class ModifyTable extends React.Component {
   state = {
@@ -77,140 +59,13 @@ class ModifyTable extends React.Component {
       migrationMode,
       currentSchema,
       tableComment,
-      columnComment,
+      columnComments,
       tableCommentEdit,
       columnEdit,
       pkModify,
     } = this.props;
-    const styles = require('./ModifyTable.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
-    const columns = tableSchema.columns.sort(ordinalColSort);
-    const tablePrimaryKeyColumns = tableSchema.primary_key
-      ? tableSchema.primary_key.columns
-      : [];
-    const columnEditors = columns.map((c, i) => {
-      const colName = c.column_name;
-      const columnProperties = {
-        name: c.column_name,
-        tableName: c.table_name,
-        schemaName: c.table_schema,
-        type: c.data_type,
-        isNullable: c.is_nullable === 'YES' ? true : false,
-        isPrimaryKey: tablePrimaryKeyColumns.includes(c.column_name),
-        isUnique: false,
-        default: c.column_default || '',
-      };
-      for (
-        let uci = tableSchema.unique_constraints.length - 1;
-        uci >= 0;
-        uci--
-      ) {
-        const constraint = tableSchema.unique_constraints[uci];
-        if (
-          constraint.columns.length === 1 &&
-          constraint.columns[0] === c.column_name
-        ) {
-          columnProperties.isUnique = true;
-        }
-      }
-      const onSubmit = () => {
-        dispatch(saveColumnChangesSql(colName, c));
-      };
-      const onDelete = () => {
-        const isOk = confirm('Are you sure you want to delete?');
-        if (isOk) {
-          dispatch(deleteColumnSql(tableName, colName, c));
-        }
-      };
-      const safeOnDelete = () => {
-        let confirmMessage = 'Are you sure you want to delete?';
-        if (columnProperties.isPrimaryKey) {
-          confirmMessage = DELETE_PK_WARNING;
-        }
-        const isOk = window.confirm(confirmMessage);
-        if (isOk) {
-          dispatch(deleteColumnSql(tableName, colName, c));
-        }
-      };
-      const keyProperties = () => {
-        const propertiesList = [];
-        if (columnProperties.isPrimaryKey) propertiesList.push('primary key');
-        if (columnProperties.isNullable) propertiesList.push('nullable');
-        if (columnProperties.isUnique) propertiesList.push('unique');
-        const keyPropertiesString = propertiesList.join(', ');
-        return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
-      };
-      const collapsedLabel = () => {
-        return (
-          <div key={i}>
-            <div className="container-fluid">
-              <div className="row">
-                <h5 className={styles.padd_bottom}>
-                  <b>{colName}</b> {keyProperties()}
-                  &nbsp;
-                </h5>
-              </div>
-            </div>
-          </div>
-        );
-      };
-      const expandedLabel = () => {
-        return (
-          <div key={i}>
-            <div className="container-fluid">
-              <div className="row">
-                <h5 className={styles.padd_bottom}>
-                  <b>{colName}</b>
-                  &nbsp;
-                </h5>
-              </div>
-            </div>
-          </div>
-        );
-      };
-      const colEditorExpanded = () => {
-        return (
-          <div key={i}>
-            <ColumnEditor
-              column={c}
-              onSubmit={onSubmit}
-              onDelete={safeOnDelete}
-              tableName={tableName}
-              dispatch={dispatch}
-              allSchemas={allSchemas}
-              currentSchema={currentSchema}
-              columnComment={columnComment}
-              allowRename={this.state.supportTableColumnRename}
-              columnProperties={columnProperties}
-              selectedProperties={columnEdit}
-              editColumn={editColumn}
-            />
-          </div>
-        );
-      };
-      return (
-        <ExpandableEditor
-          editorExpanded={colEditorExpanded}
-          property={'edit-column'}
-          ongoingRequest={'oola'}
-          service="modify-table"
-          saveFunc={onSubmit}
-          removeFunc={columnProperties.isPrimaryKey ? null : onDelete}
-          collapsedClass={styles.display_flex}
-          expandedLabel={expandedLabel}
-          collapsedLabel={collapsedLabel}
-          expandCallback={() => {
-            dispatch(setColumnEdit(columnProperties));
-            dispatch(fetchColumnComment(tableName, colName));
-          }}
-          collapseCallback={() => {
-            dispatch(resetColumnEdit(colName));
-          }}
-        />
-      );
-    });
 
-    // TODO
     const untrackBtn = (
       <Button
         type="submit"
@@ -229,191 +84,6 @@ class ModifyTable extends React.Component {
       </Button>
     );
 
-    const editCommentClicked = () => {
-      let commentText =
-        tableComment && tableComment.result[1] && tableComment.result[1][0]
-          ? tableComment.result[1][0]
-          : null;
-      commentText = commentText !== 'NULL' ? commentText : null;
-      dispatch(activateCommentEdit(true, commentText));
-    };
-    const commentEdited = e => {
-      dispatch(updateCommentInput(e.target.value));
-    };
-    const commentEditSave = () => {
-      dispatch(saveTableCommentSql(true));
-    };
-    const commentEditCancel = () => {
-      dispatch(activateCommentEdit(false, ''));
-    };
-    let commentText =
-      tableComment && tableComment.result[1] && tableComment.result[1][0]
-        ? tableComment.result[1][0]
-        : null;
-    commentText = commentText !== 'NULL' ? commentText : null;
-    let commentHtml = (
-      <div className={styles.add_pad_bottom}>
-        <div className={styles.commentText}>Add a comment</div>
-        <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
-        </div>
-      </div>
-    );
-    if (commentText && !tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <div className={styles.commentText + ' alert alert-warning'}>
-            {commentText}
-          </div>
-          <div onClick={editCommentClicked} className={styles.commentEdit}>
-            <i className="fa fa-edit" />
-          </div>
-        </div>
-      );
-    } else if (tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <input
-            onChange={commentEdited}
-            className={'form-control ' + styles.commentInput}
-            type="text"
-            value={tableCommentEdit.value}
-            defaultValue={commentText}
-          />
-          <div
-            onClick={commentEditSave}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Save
-          </div>
-          <div
-            onClick={commentEditCancel}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Cancel
-          </div>
-        </div>
-      );
-    }
-
-    const primaryKeyEditors = () => {
-      const orderedCols = columns.map((c, _i) => ({
-        name: c.column_name,
-        type: c.data_type,
-        index: _i,
-      }));
-      const orderedPks = tablePrimaryKeyColumns.map(pk => {
-        return orderedCols.find(c => c.name === pk).index;
-      });
-      const tempPks = pkModify.filter(pkm => pkm !== '').map(pkm => {
-        return orderedCols[pkm].name;
-      });
-
-      const pkConstraintName = tableSchema.primary_key
-        ? tableSchema.primary_key.constraint_name
-        : '';
-      const pkConfigText = tablePrimaryKeyColumns.join(', ');
-      const pkEditorCollapsedLabel = () => (
-        <div>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                {pkConfigText ? <i> ({pkConfigText}) </i> : 'No primary key'}
-                &nbsp;
-              </h5>
-            </div>
-          </div>
-        </div>
-      );
-      const pkEditorExpandedLabel = () => (
-        <h5 className={styles.padd_bottom}>
-          <b> {pkConfigText && `(${pkConfigText})`}</b>
-        </h5>
-      );
-      const pkEditorExpanded = () => (
-        <div>
-          <div className={`container-fluid ${styles.pkEditorExpandedText}`}>
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                Selected configuration: <i>{`( ${tempPks.join(', ')} )`}</i>
-                &nbsp;
-              </h5>
-            </div>
-          </div>
-          <div className={`${styles.pkEditorExpanded}`}>
-            <PrimaryKeySelector
-              dispatch={dispatch}
-              setPk={setPrimaryKeys}
-              columns={orderedCols}
-              primaryKeys={pkModify}
-            />
-          </div>
-        </div>
-      );
-
-      const setPkEditState = () => {
-        dispatch(setPrimaryKeys([...orderedPks.map(pk => pk.toString()), '']));
-      };
-
-      const onSave = (e, confirmed) => {
-        if (pkConstraintName && pkModify.length === 1 && !confirmed) {
-          const isOk = window.confirm(DELETE_PK_WARNING);
-          if (!isOk) {
-            setPkEditState();
-            return dispatch(showSuccessNotification('No changes'));
-          }
-        }
-        dispatch(savePrimaryKeys(tableName, currentSchema, pkConstraintName));
-      };
-
-      const onRemove = () => {
-        let isOk;
-        if (pkConstraintName) {
-          isOk = window.confirm(DELETE_PK_WARNING);
-          if (!isOk) {
-            return dispatch(showSuccessNotification('No changes'));
-          }
-        }
-        dispatch(setPrimaryKeys(['']));
-        onSave(null, isOk);
-      };
-
-      /*
-        TODO
-        Handle cases when there is no primary keys
-        Handle primary key removal
-      */
-
-      return (
-        <ExpandableEditor
-          collapsedLabel={pkEditorCollapsedLabel}
-          expandedLabel={pkEditorExpandedLabel}
-          editorExpanded={pkEditorExpanded}
-          property={'edit-pks'}
-          ongoingRequest={'todo'}
-          service="modify-table"
-          saveFunc={onSave}
-          removeFunc={onRemove}
-          expandCallback={setPkEditState}
-          collapseCallback={() => {
-            dispatch(setPrimaryKeys(['']));
-          }}
-        />
-      );
-    };
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -433,9 +103,22 @@ class ModifyTable extends React.Component {
               styles.modifyMinWidth
             }
           >
-            {commentHtml}
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              styles={styles}
+              dispatch={dispatch}
+            />
             <h4 className={styles.subheading_text}>Columns</h4>
-            {columnEditors}
+            <ColumnEditorList
+              tableSchema={tableSchema}
+              columnEdit={columnEdit}
+              allowRename={this.state.supportTableColumnRename}
+              columnComments={columnComments}
+              dispatch={dispatch}
+              styles={styles}
+              currentSchema={currentSchema}
+            />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
             <ColumnCreator
@@ -445,7 +128,13 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>Primary keys</h4>
-            {primaryKeyEditors()}
+            <PrimaryKeyEditor
+              tableSchema={tableSchema}
+              pkModify={pkModify}
+              styles={styles}
+              dispatch={dispatch}
+              currentSchema={currentSchema}
+            />
             <hr />
             {untrackBtn}
             <Button
@@ -477,7 +166,7 @@ ModifyTable.propTypes = {
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   tableComment: PropTypes.string.isRequired,
-  columnComment: PropTypes.string.isRequired,
+  columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -497,7 +186,7 @@ const mapStateToProps = (state, ownProps) => ({
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   tableComment: state.tables.tableComment,
-  columnComment: state.tables.columnComment,
+  columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   ...state.tables.modify,

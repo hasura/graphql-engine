@@ -14,62 +14,90 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       return null;
     })
     .filter(rc => Boolean(rc));
-  return primaryKeys.map((pk, i) => {
-    let removeIcon;
-    const dispatchSet = e => {
-      const newPks = [
-        ...primaryKeys.slice(0, i),
-        e.target.value,
-        ...primaryKeys.slice(i + 1),
-      ];
-      if (i + 1 === primaryKeys.length) {
-        newPks.push('');
-      }
-      dispatch(setPk(newPks));
-    };
-    const dispatchRemove = () => {
-      const newPks = [...primaryKeys.slice(0, i), ...primaryKeys.slice(i + 1)];
-      dispatch(setPk(newPks));
-    };
-    if (i + 1 === numPks) {
-      removeIcon = null;
-    } else {
-      removeIcon = (
-        <i
-          className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-          onClick={dispatchRemove}
-        />
-      );
-    }
 
+  const pkConfig = primaryKeys
+    .filter(pk => pk !== '')
+    .map(pk => columns[pk].name)
+    .join(', ');
+  const configuration = () => {
     return (
-      <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
-        <select
-          value={pk || ''}
-          className={`${styles.select} ${styles.sample} form-control ${
-            styles.add_pad_left
-          }`}
-          onChange={dispatchSet}
-          data-test={`primary-key-select-${i}`}
-          data-test={`primary-key-select-${i.toString()}`}
-        >
-          {pk === '' ? (
-            <option disabled value="">
-              -- select --
-            </option>
-          ) : (
-            <option value={pk}>{columns[pk].name}</option>
-          )}
-          {nonPkColumns.map(({ name, index }, j) => (
-            <option key={j} value={index}>
-              {name}
-            </option>
-          ))}
-        </select>
-        {removeIcon}
+      <div className={'container-fluid'}>
+        <div className="row">
+          <h5 className={styles.padd_bottom}>
+            Selected configuration: <i>{`( ${pkConfig} )`}</i>
+            &nbsp;
+          </h5>
+        </div>
       </div>
     );
-  });
+  };
+  const pkEditors = () => {
+    return primaryKeys.map((pk, i) => {
+      let removeIcon;
+      const dispatchSet = e => {
+        const newPks = [
+          ...primaryKeys.slice(0, i),
+          e.target.value,
+          ...primaryKeys.slice(i + 1),
+        ];
+        if (i + 1 === primaryKeys.length) {
+          newPks.push('');
+        }
+        dispatch(setPk(newPks));
+      };
+      const dispatchRemove = () => {
+        const newPks = [
+          ...primaryKeys.slice(0, i),
+          ...primaryKeys.slice(i + 1),
+        ];
+        dispatch(setPk(newPks));
+      };
+      if (i + 1 === numPks) {
+        removeIcon = null;
+      } else {
+        removeIcon = (
+          <i
+            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+            onClick={dispatchRemove}
+          />
+        );
+      }
+
+      return (
+        <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
+          <select
+            value={pk || ''}
+            className={`${styles.select} ${styles.sample} form-control ${
+              styles.add_pad_left
+            }`}
+            onChange={dispatchSet}
+            data-test={`primary-key-select-${i}`}
+            data-test={`primary-key-select-${i.toString()}`}
+          >
+            {pk === '' ? (
+              <option disabled value="">
+                -- select --
+              </option>
+            ) : (
+              <option value={pk}>{columns[pk].name}</option>
+            )}
+            {nonPkColumns.map(({ name, index }, j) => (
+              <option key={j} value={index}>
+                {name}
+              </option>
+            ))}
+          </select>
+          {removeIcon}
+        </div>
+      );
+    });
+  };
+  return (
+    <div>
+      {pkConfig && configuration()}
+      {pkEditors()}
+    </div>
+  );
 };
 
 export default PrimaryKeySelector;

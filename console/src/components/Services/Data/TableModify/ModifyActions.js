@@ -973,8 +973,8 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const colType = columnEdit.type;
     const nullable = columnEdit.isNullable;
     const unique = columnEdit.isUnique;
-    const def = columnEdit.default;
-    const comment = columnEdit.comment;
+    const def = columnEdit.default || '';
+    const comment = columnEdit.comment || '';
     const newName = allowRename ? columnEdit.name : null;
     const currentSchema = columnEdit.schemaName;
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
@@ -984,14 +984,10 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     } else {
       defWithQuotes = def;
     }
-    let currentColumnComment = getState().tables.columnComment;
-    currentColumnComment = currentColumnComment
-      ? currentColumnComment.result[1]
-      : null;
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
     const originalColDefault = column.column_default; // null or "value"
-    const originalColComment = currentColumnComment; // null or "value"
+    const originalColComment = getState().tables.columnComments[colName]; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(
       getState().tables.allSchemas.find(
@@ -1503,7 +1499,9 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const successMsg = 'Column modified';
     const errorMsg = 'Modifying column failed';
 
-    const customOnSuccess = () => {};
+    const customOnSuccess = () => {
+      dispatch(setColumnEdit(columnEdit));
+    };
     const customOnError = () => {};
 
     if (schemaChangesUp.length > 0) {

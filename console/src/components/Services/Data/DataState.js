@@ -152,7 +152,7 @@ const defaultState = {
   untrackedSchemas: [],
   information_schema: [],
   tableComment: null,
-  columnComment: null,
+  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
