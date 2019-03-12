@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "v1.0.0"
+exit 0
 GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 GIT_SHA="$(git rev-parse --short HEAD)"
 GIT_TAG_EXACT="$(git describe --tags --exact-match --dirty 2>/dev/null)"
