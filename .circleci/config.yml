@@ -140,12 +140,12 @@ jobs:
     - persist_to_workspace:
         root: /build
         paths:
-        - ciignore  
+        - ciignore
 
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3
+    - image: hasura/graphql-engine-server-builder:20190314
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -206,7 +206,7 @@ jobs:
     environment:
       PG_VERSION: "11_1"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
       # TODO: change this to circleci postgis when they have one for pg 11
     - image: mdillon/postgis:11-alpine
       <<: *test_pg_env
@@ -216,7 +216,7 @@ jobs:
     environment:
       PG_VERSION: "10_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
@@ -225,7 +225,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -234,7 +234,7 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
@@ -380,12 +380,12 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
-        name: upgrade_test 
+        name: upgrade_test
         command: .circleci/server-upgrade/run.sh
     - store_artifacts:
         path: /build/_server_output
         destination: server
-    
+
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
