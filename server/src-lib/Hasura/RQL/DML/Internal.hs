@@ -269,7 +269,7 @@ simplifyError txErr = do
         withCode ConstraintViolation $ "Uniqueness violation. " <> msg
       -- check violation
       ("23514", msg) ->
-        let cvErr m i = return (PermissionError, "Check constraint violation. " <> m, i)
+        let cvErr m i = return (PermissionError, m, i)
         in maybe (cvErr msg Nothing) (uncurry cvErr) $ decodeStrict $ T.encodeUtf8 msg
       -- invalid text representation
       ("22P02", msg) -> withCode DataException msg

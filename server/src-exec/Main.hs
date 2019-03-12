@@ -75,6 +75,7 @@ parseHGECommand =
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
                 <*> parseEnabledAPIs
+                <*> parseVerboseAPIResp
 
 
 parseArgs :: IO HGEOptions
@@ -106,7 +107,7 @@ main =  do
   let logger = mkLogger loggerCtx
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs verboseAPIResp) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -128,7 +129,7 @@ main =  do
 
       pool <- Q.initPGPool ci cp
       (app, cacheRef) <- mkWaiApp isoL loggerCtx pool httpManager
-                         strfyNum am corsCfg enableConsole enableTelemetry enabledAPIs
+                         strfyNum am corsCfg enableConsole enableTelemetry enabledAPIs verboseAPIResp
 
       let warpSettings = Warp.setPort port $ Warp.setHost host Warp.defaultSettings
 

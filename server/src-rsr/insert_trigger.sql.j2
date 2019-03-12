@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION {{function_name}}() RETURNS trigger LANGUAGE plpgsql 
       IF r IS NULL THEN RETURN null; ELSE RETURN r; END IF;
      ELSE RAISE check_violation using message = json_build_array
           (
-               'insert check constraint failed',
+               'Insert permission check failed',
                json_build_object(
                    'input_row',
                    row_to_json(NEW),

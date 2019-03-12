@@ -51,6 +51,7 @@ data RawServeOptions
   , rsoWsReadCookie    :: !Bool
   , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
+  , rsoVerboseAPIResp  :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -68,6 +69,7 @@ data ServeOptions
   , soEnableTelemetry :: !Bool
   , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
+  , soVerboseAPIResp  :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -245,8 +247,9 @@ mkServeOptions rso = do
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+  verboseAPIResp <- withEnvBool (rsoVerboseAPIResp rso) $ fst verboseAPIRespEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs verboseAPIResp
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -492,6 +495,12 @@ enabledAPIsEnv =
   , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
   )
 
+verboseAPIRespEnv :: (String, String)
+verboseAPIRespEnv =
+  ( "HASURA_GARPHQL_VERBOSE_API_RESPONSE"
+  , "Enable verbose logging in the API response (default: false)"
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -726,6 +735,12 @@ parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
          ( long "enabled-apis" <>
            help (snd enabledAPIsEnv)
+         )
+
+parseVerboseAPIResp :: Parser Bool
+parseVerboseAPIResp =
+  switch ( long "verbose-api-response" <>
+           help (snd verboseAPIRespEnv)
          )
 
 -- Init logging related

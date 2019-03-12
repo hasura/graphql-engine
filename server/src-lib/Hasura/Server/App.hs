@@ -90,15 +90,16 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data ServerCtx
   = ServerCtx
-  { scIsolation    :: Q.TxIsolation
-  , scPGPool       :: Q.PGPool
-  , scLogger       :: L.Logger
-  , scCacheRef     :: IORef SchemaCache
-  , scCacheLock    :: MVar ()
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scStringifyNum :: Bool
-  , scEnabledAPIs  :: S.HashSet API
+  { scIsolation      :: Q.TxIsolation
+  , scPGPool         :: Q.PGPool
+  , scLogger         :: L.Logger
+  , scCacheRef       :: IORef SchemaCache
+  , scCacheLock      :: MVar ()
+  , scAuthMode       :: AuthMode
+  , scManager        :: HTTP.Manager
+  , scStringifyNum   :: Bool
+  , scEnabledAPIs    :: S.HashSet API
+  , scVerboseAPIResp :: Bool
   }
 
 data HandlerCtx
@@ -180,7 +181,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
 
   -- log result
   logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+  either (qErrToResp $ scVerboseAPIResp serverCtx) resToResp result
 
   where
     logger = scLogger serverCtx
@@ -304,8 +305,9 @@ mkWaiApp
   -> Bool
   -> Bool
   -> S.HashSet API
+  -> Bool
   -> IO (Wai.Application, IORef SchemaCache)
-mkWaiApp isoLevel loggerCtx pool httpManager strfyNum mode corsCfg enableConsole enableTelemetry apis = do
+mkWaiApp isoLevel loggerCtx pool httpManager strfyNum mode corsCfg enableConsole enableTelemetry apis verboseAPIResp = do
     cacheRef <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager strfyNum pool Q.Serializable buildSchemaCache
@@ -315,7 +317,7 @@ mkWaiApp isoLevel loggerCtx pool httpManager strfyNum mode corsCfg enableConsole
 
     let serverCtx =
           ServerCtx isoLevel pool (L.mkLogger loggerCtx) cacheRef
-          cacheLock mode httpManager strfyNum apis
+          cacheLock mode httpManager strfyNum apis verboseAPIResp
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
