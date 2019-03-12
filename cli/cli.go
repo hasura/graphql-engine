@@ -9,6 +9,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -142,8 +143,8 @@ type ExecutionContext struct {
 	MigrationDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
-	// MetadataFile (optional) is a yaml file where Hasura metadata is stored.
-	MetadataFile string
+	// MetadataFile (optional) is a yaml|json file where Hasura metadata is stored.
+	MetadataFile []string
 
 	// ServerConfig is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
@@ -252,7 +253,8 @@ func (ec *ExecutionContext) Validate() error {
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = filepath.Join(ec.MigrationDir, "metadata.yaml")
+	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.yaml"))
+	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.json"))
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -370,4 +372,16 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+// GetMetadataPath returns the file path based on the format.
+func (ec *ExecutionContext) GetMetadataPath(format string) (string, error) {
+	ext := fmt.Sprintf(".%s", format)
+	for _, filePath := range ec.MetadataFile {
+		switch p := filepath.Ext(filePath); p {
+		case ext:
+			return filePath, nil
+		}
+	}
+	return "", errors.New("unsupported file type")
 }
