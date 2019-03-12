@@ -197,7 +197,8 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
+  , bool [] (stDWithinOpInpVal : map geometryOpToInpVal geomOps) isGeometryTy
+  , bool [] (stDWithinOpInpVal : map geographyOpToInpVal geomOps) isGeographyTy
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
   where
@@ -262,8 +263,16 @@ mkCompExpInp colTy =
       PGGeometry -> True
       _          -> False
 
-    geomOpToInpVal (op, desc) =
+    isGeographyTy = case colTy of
+      PGGeography -> True
+      _          -> False
+
+    geometryOpToInpVal (op, desc) =
       InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeometry
+
+    geographyOpToInpVal (op, desc) =
+      InpValInfo (Just desc) op Nothing $ G.toGT $ mkScalarTy PGGeography
+
     geomOps =
       [
         ( "_st_contains"
