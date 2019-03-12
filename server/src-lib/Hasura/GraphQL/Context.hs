@@ -185,8 +185,8 @@ input st_d_within_input {
   from: geometry!
 }
 -}
-stDWithinInpTy :: G.NamedType
-stDWithinInpTy = G.NamedType "st_d_within_input"
+stDWithinGeometryInpTy :: G.NamedType
+stDWithinGeometryInpTy = G.NamedType "st_d_within_input"
 
 {-
 input st_d_within_geography_input {
@@ -206,7 +206,7 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinOpInpVal : map geoOpToInpVal geoOps) isGeometryType
+  , bool [] (stDWithinGeometryOpInpVal : map geoOpToInpVal geoOps) isGeometryType
   , bool [] (stDWithinGeographyOpInpVal : map geoOpToInpVal geoOps) isGeographyType
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
@@ -266,9 +266,9 @@ mkCompExpInp colTy =
     isGeometryType = case colTy of
       PGGeometry -> True
       _          -> False
-    stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing $ G.toGT stDWithinInpTy
-    stDWithinDesc =
+    stDWithinGeometryOpInpVal =
+      InpValInfo (Just stDWithinGeometryDesc) "_st_d_within" Nothing $ G.toGT stDWithinGeometryInpTy
+    stDWithinGeometryDesc =
       "is the column within a distance from a geometry value"
 
     -- Geography related ops
@@ -358,7 +358,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
-                            , TIInpObj <$> stDWithinInpM
+                            , TIInpObj <$> stDWithinGeometryInpM
                             , TIInpObj <$> stDWithinGeographyInpM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
@@ -389,8 +389,8 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
           ]
 
     -- _st_d_within has to stay with geometry type
-    stDWithinInpM =
-      bool Nothing (Just $ stDWithinInp stDWithinInpTy PGGeometry) (PGGeometry `elem` colTys)
+    stDWithinGeometryInpM =
+      bool Nothing (Just $ stDWithinInp stDWithinGeometryInpTy PGGeometry) (PGGeometry `elem` colTys)
     -- _st_d_within_geography is created for geography type
     stDWithinGeographyInpM =
       bool Nothing (Just $ stDWithinInp stDWithinGeographyInpTy PGGeography) (PGGeography `elem` colTys)
