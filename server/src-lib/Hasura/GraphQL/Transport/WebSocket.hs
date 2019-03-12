@@ -237,7 +237,6 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
             logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
             withComplete $ sendConnErr . T.pack $ show e
           logOpEv ODStarted
-
         _ -> do
           -- if it's not a subscription, use HTTP to execute the query on the
           -- remote server
@@ -326,18 +325,26 @@ onStop serverEnv wsConn (StopMsg opId) = do
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
 
-  -- clear the remote conn states, if any
   connState <- liftIO $ IORef.readIORef stateR
   let stData = getStateData connState
   onJust stData $ \(ConnInitState _ _ connMap) ->
-    onJust (findOperationId connMap opId) $
-      (WS.sendStopMsg . _wpsRemoteConn) >> WS.clearState logger
+    onJust (findOperationId connMap (wsId, opId)) $ \(rn, wsState) -> do
+      eNewState <- runExceptT $ WS.stopRemote logger wsState opId
+      either preExecErr (WS.updateState stateR rn) eNewState
+
   where
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
     stateR = _wscState $ WS.getData wsConn
+
+    preExecErr qErr = do
+      logOpEv $ ODQueryErr qErr
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
+
+    logOpEv opDet =
+      logWSEvent logger wsConn $ EOperation opId Nothing opDet
 
 logWSEvent
   :: (MonadIO m)
@@ -396,12 +403,8 @@ onClose logger lqMap _ wsConn = do
   operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
-
   -- clear remote conns, if any corresponding to this wsId
-  connState <- liftIO $ IORef.readIORef $ _wscState $ WS._wcExtraData wsConn
-  let stData = getStateData connState
-  onJust stData $ \(ConnInitState _ _ connMap) ->
-    onJust (findWebsocketId connMap wsId) (WS.clearState logger)
+  WS.closeRemote logger (_wscState $ WS._wcExtraData wsConn) wsId
   where
     wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn

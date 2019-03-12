@@ -14,7 +14,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 
-import qualified Control.Concurrent.Async                    as A
+--import qualified Control.Concurrent.Async                    as A
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
@@ -53,28 +53,35 @@ type WebsocketProxyState = WebsocketProxyStateG ()
 
 data WebsocketProxyStateG a
   = WebsocketProxyState
-  { _wpsRemoteRcvr      :: !(A.Async a)
-  , _wpsRunClientThread :: !(Maybe ThreadId)
-  , _wpsRemoteConn      :: !WS.Connection
+  { _wpsRunClientThread :: !ThreadId
+  , _wpsRemoteConn      :: !(Maybe WS.Connection)
   , _wpsOperations      :: ![GOperationId]
   }
 
 instance Show (WebsocketProxyStateG a) where
-  show (WebsocketProxyState _ thrdId _ ops) =
-    "WebsocketProxyStateG { "
-    ++ unlines ["AsyncOp", show thrdId, "WebsocketConn", show ops]
+  show (WebsocketProxyState thrdId wscon ops) =
+    "WebsocketProxyState { "
+    ++ "_wpsRunClientThread = " ++ show thrdId
+    ++ ", _wpsRemoteConn = " ++ wsconD
+    ++ ", _wpsOperations = " ++ show ops
     ++ " }"
+    where
+      wsconD = maybe "Nothing" (const "Just <WebsocketConn>") wscon
 
 findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe WebsocketProxyState
 findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
 
-findOperationId :: RemoteConnState -> OperationId -> Maybe WebsocketProxyState
+findOperationId
+  :: RemoteConnState -> GOperationId
+  -> Maybe (RemoteSchemaName, WebsocketProxyState)
 findOperationId connMap opId =
-  snd <$> find (elem opId . map snd . _wpsOperations . snd) (Map.toList connMap)
+  find (elem opId . _wpsOperations . snd) $ Map.toList connMap
 
-findWebsocketId :: RemoteConnState -> WSId -> Maybe WebsocketProxyState
+findWebsocketId
+  :: RemoteConnState -> WSId
+  -> Maybe (RemoteSchemaName, WebsocketProxyState)
 findWebsocketId connMap wsId =
-  snd <$> find (elem wsId . map fst . _wpsOperations . snd) (Map.toList connMap)
+  find (elem wsId . map fst . _wpsOperations . snd) $ Map.toList connMap
 
 getStateData :: WSConnState -> Maybe ConnInitState
 getStateData = \case

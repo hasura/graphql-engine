@@ -1,8 +1,10 @@
 module Hasura.GraphQL.Transport.WebSocket.Client
   ( runGqlClient
-  , clearState
   , WebsocketPayload (..)
   , sendStopMsg
+  , updateState
+  , stopRemote
+  , closeRemote
   )
   where
 
@@ -16,7 +18,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Control.Concurrent.Async                      as A
+--import qualified Control.Concurrent.Async                      as A
 import qualified Data.Aeson                                    as J
 import qualified Data.Aeson.Casing                             as J
 import qualified Data.Aeson.TH                                 as J
@@ -45,36 +47,40 @@ data WebsocketPayload
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
 
-data WebSocketClientErr
-  = WSCEEmptyHostErr
-  | WSCEConnErr Text
-  | WSCEInternal Text
-  deriving (Eq)
 
-instance Show WebSocketClientErr where
-  show = \case
-    WSCEEmptyHostErr -> "empty hostname"
-    WSCEConnErr e    -> T.unpack $ "connection error: " <> e
-    WSCEInternal e   -> T.unpack $ "internal error: " <> e
+sendInit :: WS.Connection -> WebsocketPayload -> IO ()
+sendInit conn payload =
+  WS.sendTextData conn $ J.encode $
+    J.object [ "type" J..= ("connection_init" :: Text)
+             , "payload" J..= _wpPayload payload
+             ]
 
--- this function recieves the start msg (WebsocketPayload) when a subscription
--- query is sent
+sendStopMsg :: WS.Connection -> OperationId -> IO ()
+sendStopMsg conn opId =
+  WS.sendTextData conn $ J.encode $
+    J.object [ "type" J..= ("stop" :: Text)
+             , "id" J..= unOperationId opId
+             ]
+
+
 mkGraphqlProxy
   :: WS.WSConn a
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
-  -> OperationId
   -> WebsocketPayload -- the start msg
   -> WS.ClientApp ()
-mkGraphqlProxy wsconn stRef rn opId payload destConn = do
+mkGraphqlProxy wsconn stRef rn payload destConn = do
   -- setup initial connection protocol
   setupInitialGraphqlProto destConn
+  res <- getWsProxyState stRef rn
+  -- if corresponding state is not found, are we silently ignoring it?
+  -- the state won't have the remote's websocket conn. which is actually problematic
+  onJust res $ \curState -> do
+    let newState = curState{ _wpsRemoteConn = Just destConn }
+    updateState stRef rn newState
+
   -- setting up the proxy from remote to hasura
-  op <- A.async $ proxy destConn srcConn
-  let wsId = WS._wcConnId wsconn
-      newState = WebsocketProxyState op Nothing destConn [(wsId, opId)]
-  updateState stRef rn newState
-  A.wait op
+  proxy destConn srcConn
   where
     srcConn = WS._wcConnRaw wsconn
     proxy recvConn sendConn =
@@ -92,21 +98,6 @@ mkGraphqlProxy wsconn stRef rn opId payload destConn = do
       WS.sendTextData conn $ J.encode payload
 
 
-sendInit :: WS.Connection -> WebsocketPayload -> IO ()
-sendInit conn payload =
-  WS.sendTextData conn $ J.encode $
-    J.object [ "type" J..= ("connection_init" :: Text)
-             , "payload" J..= _wpPayload payload
-             ]
-
-sendStopMsg :: WS.Connection -> OperationId -> IO ()
-sendStopMsg conn opId =
-  WS.sendTextData conn $ J.encode $
-    J.object [ "type" J..= ("stop" :: Text)
-             , "id" J..= unOperationId opId
-             ]
-
-
 runGqlClient'
   :: L.Logger
   -> URI.URI
@@ -115,26 +106,24 @@ runGqlClient'
   -> RemoteSchemaName
   -> OperationId
   -> WebsocketPayload
-  -> ExceptT WebSocketClientErr IO ()
-runGqlClient' (L.Logger logger) url wsConn stRef rn opId payload =
-  case host of
-    Nothing -> throwError WSCEEmptyHostErr
-    Just h  -> do
-      let gqClient = mkGraphqlProxy wsConn stRef rn opId payload
+  -> ExceptT QErr IO ()
+runGqlClient' (L.Logger logger) url wsConn stRef rn opId payload = do
+  host <- maybe (throw500 "empty hostname for websocket conn") return mHost
+  let gqClient = mkGraphqlProxy wsConn stRef rn payload
 
-      thrId <- liftIO $ forkIO $ do
-        res <- try $ WS.runClient h port path gqClient
-        onLeft res $ \e -> do
-          let err = T.pack $ show (e :: SomeException)
-              opDet = ODQueryErr $ err500 Unexpected err
-          logger $ WSLog wsId Nothing (EOperation opId Nothing opDet) Nothing
+  thrId <- liftIO $ forkIO $ do
+    res <- try $ WS.runClient host port path gqClient
+    onLeft res $ \e -> do
+      let err = T.pack $ show (e :: SomeException)
+          opDet = ODQueryErr $ err500 Unexpected err
+      logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
+        (Just "exception from runClient thread")
 
-      res <- getWsProxyState stRef rn
-      onJust res $ \curState -> do
-        let newState = curState{_wpsRunClientThread = Just thrId}
-        liftIO $ updateState stRef rn newState
+  let newState = WebsocketProxyState thrId Nothing [(wsId, opId)]
+  liftIO $ updateState stRef rn newState
+
   where
-    host = (URI.uriUserInfo <$> uriAuth) <> (URI.uriRegName <$> uriAuth)
+    mHost = (URI.uriUserInfo <$> uriAuth) <> (URI.uriRegName <$> uriAuth)
     port = read $ maybe "80" (drop 1 . URI.uriPort) uriAuth
     path = URI.uriPath url
     uriAuth = URI.uriAuthority url
@@ -149,7 +138,7 @@ runGqlClient
   -> RemoteSchemaName
   -> OperationId
   -> WebsocketPayload
-  -> ExceptT WebSocketClientErr IO ()
+  -> ExceptT QErr IO ()
 runGqlClient logger url wsConn stRef rn opId payload = do
   mState <- getWsProxyState stRef rn
   case mState of
@@ -157,10 +146,11 @@ runGqlClient logger url wsConn stRef rn opId payload = do
       runGqlClient' logger url wsConn stRef rn opId payload
     Just st -> do
       -- send init message and the raw message on the existing conn
-      let conn     = _wpsRemoteConn st
+      let wsconn   = _wpsRemoteConn st
           opids    = _wpsOperations st
           wsId     = WS._wcConnId wsConn
           newState = st { _wpsOperations = opids ++ [(wsId, opId)] }
+      conn <- maybe (throwError wsConnErr) return wsconn
       liftIO $ do
         updateState stRef rn newState
         sendInit conn payload
@@ -193,9 +183,41 @@ getWsProxyState ref rn = do
     Nothing                            -> return Nothing
     Just (ConnInitState _ _ rmConnMap) -> return $ Map.lookup rn rmConnMap
 
---stopOperation :: OperationId -> RemoteConnState
-clearState :: L.Logger -> WebsocketProxyState -> IO ()
-clearState (L.Logger logger) (WebsocketProxyState rmOp thrId _ _) = do
-  logger $ L.debugT "cancelling async operations.."
-  A.cancel rmOp
-  onJust thrId killThread
+
+-- given a websocket id (WSId), close connections to that remote from
+-- WSConnState
+-- and updates state :: modifies IORef
+closeRemote :: L.Logger -> IORef.IORef WSConnState -> WS.WSId -> IO ()
+closeRemote (L.Logger logger) stRef wsId = do
+  logger $ L.debugT $ "closing connections belonging to: " <>
+    T.pack (show wsId)
+  connState <- liftIO $ IORef.readIORef stRef
+  let stData = getStateData connState
+  onJust stData $ \ciSt@(ConnInitState _ _ connMap) ->
+    onJust (findWebsocketId connMap wsId) $ \(rn, wst) -> do
+      let (WebsocketProxyState thrId _ _) = wst
+      --A.cancel rmOp
+      liftIO $ killThread thrId
+      let newConnMap = Map.delete rn connMap
+          newState = CSInitialised $ ciSt {_cisRemoteConn = newConnMap }
+      IORef.writeIORef stRef newState
+
+
+stopRemote
+  :: L.Logger -> WebsocketProxyState -> OperationId
+  -> ExceptT QErr IO WebsocketProxyState
+stopRemote (L.Logger logger) wsState aOpId = do
+  liftIO $ logger $ L.debugT "stopping the remote.."
+  let (WebsocketProxyState thrId wsConn ops) = wsState
+  remoteConn <- maybe (throwError wsConnErr) return wsConn
+  liftIO $ sendStopMsg remoteConn aOpId
+  -- remaing operations
+  let remOps = filter (\(_, opId) -> opId /= aOpId) ops
+  when (null remOps) $ do
+    -- close the client connection to remote
+    liftIO $ logger $ L.debugT "no remaining ops; closing remote"
+    liftIO $ killThread thrId
+  return $ wsState { _wpsOperations = remOps }
+
+wsConnErr :: QErr
+wsConnErr = err500 Unexpected "remote websocket conn not found in state"
