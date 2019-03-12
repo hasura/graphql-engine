@@ -102,13 +102,16 @@ refs:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - *wait_for_postgres
     - run:
+        name: Install deps
+        command: |
+          apt-get update
+          apt install --yes pgbouncer jq curl postgresql-client
+    - run:
         name: Run Python tests
         environment:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
-          apt-get update
-          apt install --yes jq curl
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
         name: Generate coverage report
