@@ -162,7 +162,7 @@ For Object relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^
 For object relationships only columns can be used for sorting.
 
-**Example:** Fetch a list of articles that are sorted by their author ids in descending:
+**Example:** Fetch a list of articles that are sorted by their author's ids in descending:
 
 .. graphiql::
   :view_only:
@@ -219,7 +219,7 @@ For Array relationships
 ^^^^^^^^^^^^^^^^^^^^^^^
 For array relationships only aggregates can be used for sorting.
 
-**Example:** Fetch a list of authors sorted by their article count in descending.
+**Example:** Fetch a list of authors sorted in descending order of their article count:
 
 .. graphiql::
   :view_only:
