@@ -46,16 +46,6 @@ saveTableToCatalog (QualifiedObject sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
-data PGColInfo'
-  = PGColInfo'
-  { pgipName       :: !PGCol
-  , pgipType       :: !PGColOidInfo
-  , pgipIsNullable :: !Bool
-  } deriving (Show, Eq)
-
-
-$(deriveJSON (aesonDrop 4 snakeCase) ''PGColInfo')
-
 -- Build the TableInfo with all its columns
 getTableInfo :: (QErrM m, CacheRWM m, MonadTx m) =>
   QualifiedTable -> Bool -> m TableInfo
@@ -75,7 +65,6 @@ toPGColTypes cols' = do
   pgTysMap <- zip cols' <$> toPGColTysWithCaching colOids'
   return $ flip map pgTysMap
     $ \(PGColInfo' na _ nu,pgColTy) -> PGColInfo na pgColTy nu
-  where
 
 newtype TrackTable
   = TrackTable
@@ -180,7 +169,7 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols' alteredCols _ constraints = tableDiff
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {tiUniqOrPrimConstraints = constraints}
 
@@ -189,8 +178,9 @@ processTableChanges ti tableDiff = do
         -- Drop the column from the cache
         delColFromCache droppedCol tn
 
-    procAddedCols tn =
+    procAddedCols tn = do
       -- In the newly added columns check that there is no conflict with relationships
+      addedCols <- toPGColTypes addedCols'
       forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
         case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
           Just (FIRelationship _) ->
@@ -200,7 +190,7 @@ processTableChanges ti tableDiff = do
           _ -> addColToCache colName pci tn
 
     procAlteredCols sc tn = fmap or $
-      forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
+      forM alteredCols $ \(PGColInfo' oColName oColTy _, PGColInfo' nColName nColTy _) ->
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True

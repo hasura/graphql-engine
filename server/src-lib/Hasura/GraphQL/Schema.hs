@@ -174,7 +174,7 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
-    scalarTy = mkScalarTy colTy
+    scalarTy = mkPGColGTy colTy
     notNullTy = G.toGT $ G.toNT scalarTy
     nullTy = G.toGT scalarTy
 

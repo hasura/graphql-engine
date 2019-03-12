@@ -38,7 +38,7 @@ data PGColMeta
   = PGColMeta
   { pcmColumnName      :: !PGCol
   , pcmOrdinalPosition :: !Int
-  , pcmDataType        :: !PGColType
+  , pcmDataType        :: !PGColOidInfo
   , pcmIsNullable      :: !Bool
   } deriving (Show, Eq)
 
@@ -87,9 +87,32 @@ fetchTableMeta = do
         (SELECT
              table_schema,
              table_name,
-             json_agg((SELECT r FROM (SELECT column_name, udt_name AS data_type, ordinal_position, is_nullable::boolean) r)) as columns
+             json_agg((SELECT r FROM (SELECT column_name,
+                                             json_build_object(
+                                                'oid',
+                                                td.atttypid :: int,
+                                                'dimension',
+                                                td.attndims
+                                             ) AS data_type,
+                                             ordinal_position,
+                                             is_nullable::boolean) r)) as columns
          FROM
-             information_schema.columns
+             information_schema.columns c
+             LEFT OUTER JOIN (
+                select pc.relnamespace,
+                       pc.relname,
+                       pa.attname,
+                       pa.attndims,
+                       pa.atttypid,
+                       pa.atttypmod
+                from pg_attribute pa
+                left join pg_class pc
+                on pa.attrelid = pc.oid
+             ) td on
+             ( c.table_schema::regnamespace::oid = td.relnamespace
+               AND c.table_name = td.relname
+               AND c.column_name = td.attname
+             )
          GROUP BY
              table_schema, table_name) c
         ON (t.table_schema = c.table_schema AND t.table_name = c.table_name)
@@ -151,8 +174,8 @@ data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
   , _tdDroppedCols     :: ![PGCol]
-  , _tdAddedCols       :: ![PGColInfo]
-  , _tdAlteredCols     :: ![(PGColInfo, PGColInfo)]
+  , _tdAddedCols       :: ![PGColInfo']
+  , _tdAlteredCols     :: ![(PGColInfo', PGColInfo')]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
@@ -183,7 +206,7 @@ getTableDiff oldtm newtm =
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
     pcmToPci (PGColMeta colName _ colType isNullable)
-      = PGColInfo colName colType isNullable
+      = PGColInfo' colName colType isNullable
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci

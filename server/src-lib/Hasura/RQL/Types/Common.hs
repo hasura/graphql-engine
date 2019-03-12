@@ -2,6 +2,7 @@
 module Hasura.RQL.Types.Common
        ( PGColInfo(..)
        , PGColInfo(JSONColInfo)
+       , PGColInfo'(..)
        , RelName(..)
        , RelType(..)
        , relTypeToTxt
@@ -131,6 +132,15 @@ data PGColInfo
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+
+data PGColInfo'
+  = PGColInfo'
+  { pgipName       :: !PGCol
+  , pgipType       :: !PGColOidInfo
+  , pgipIsNullable :: !Bool
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 4 snakeCase) ''PGColInfo')
 
 pattern JSONColInfo :: PGCol -> Bool -> QualifiedType -> AnnType -> PQ.Oid -> PGColInfo
 pattern JSONColInfo a b x y z = PGColInfo a (PGColType x y z (PGTyBase PGJSON)) b

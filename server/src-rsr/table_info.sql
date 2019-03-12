@@ -50,18 +50,7 @@ from
         AND c.column_name = td.attname
       )
       left outer join pg_type ty
-      on
-      ( ty.typname =
-          case
-            when c.domain_name is not null then c.domain_name
-            else c.udt_name
-          end
-        AND ty.typnamespace::regnamespace::text =
-          case
-            when c.domain_name is not null then c.domain_schema
-            else c.udt_schema
-          end
-      )
+      on td.atttypid = ty.oid
     group by
       c.table_schema,
       c.table_name
