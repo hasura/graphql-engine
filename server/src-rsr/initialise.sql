@@ -433,4 +433,32 @@ LANGUAGE plpgsql;
 CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
   FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
 
-
+CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, trigger_id text, op text, row_data json) RETURNS void AS $$
+  DECLARE
+    id text;
+    payload json;
+    session_variables json;
+    server_version_num int;
+  BEGIN
+    id := gen_random_uuid();
+    server_version_num := current_setting('server_version_num');
+    IF server_version_num >= 90600 THEN
+      session_variables := current_setting('hasura.user', 't');
+    ELSE
+      BEGIN
+        session_variables := current_setting('hasura.user');
+      EXCEPTION WHEN OTHERS THEN
+                  session_variables := NULL;
+      END;
+    END IF;
+    payload := json_build_object(
+      'op', op,
+      'data', row_data,
+      'session_variables', session_variables
+    )::text;
+    INSERT INTO hdb_catalog.event_log
+    (id, schema_name, table_name, trigger_name, trigger_id, payload)
+     VALUES
+    (id, schema_name, table_name, trigger_name, trigger_id, payload);
+  END;
+$$ LANGUAGE plpgsql;

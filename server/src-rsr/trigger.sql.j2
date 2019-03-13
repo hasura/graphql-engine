@@ -2,25 +2,10 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
    LANGUAGE plpgsql
    AS $$
    DECLARE
-   id text;
-   _old record;
-   _new record;
-   _data json;
-   payload json;
-   session_variables json;
-   server_version_num int;
+     _old record;
+     _new record;
+     _data json;
    BEGIN
-     id := gen_random_uuid();
-     server_version_num := current_setting('server_version_num');
-     IF server_version_num >= 90600 THEN
-       session_variables := current_setting('hasura.user', 't');
-     ELSE
-        BEGIN
-          session_variables := current_setting('hasura.user');
-        EXCEPTION WHEN OTHERS THEN
-            session_variables := NULL;
-        END;
-     END IF;
      IF TG_OP = 'UPDATE' THEN
        _old := {{OLD_ROW}};
        _new := {{NEW_ROW}};
@@ -33,19 +18,11 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
        'old', {{OLD_PAYLOAD_EXPRESSION}},
        'new', {{NEW_PAYLOAD_EXPRESSION}}
      );
-     payload := json_build_object(
-                        'op', TG_OP,
-                        'data', _data,
-                        'session_variables', session_variables
-                        )::text;
      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-       INSERT INTO
-       hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
-       VALUES
-       (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', '{{ID}}', payload);
+       PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), CAST('{{ID}}' AS text), TG_OP, _data);
      END IF;
      RETURN NULL;
    END;
-   $$;
-   DROP TRIGGER IF EXISTS {{QUALIFIED_TRIGGER_NAME}} ON {{QUALIFIED_TABLE}};
-   CREATE TRIGGER {{QUALIFIED_TRIGGER_NAME}} AFTER {{OPERATION}} ON {{QUALIFIED_TABLE}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.{{QUALIFIED_TRIGGER_NAME}}();
+$$;
+DROP TRIGGER IF EXISTS {{QUALIFIED_TRIGGER_NAME}} ON {{QUALIFIED_TABLE}};
+CREATE TRIGGER {{QUALIFIED_TRIGGER_NAME}} AFTER {{OPERATION}} ON {{QUALIFIED_TABLE}} FOR EACH ROW EXECUTE PROCEDURE hdb_views.{{QUALIFIED_TRIGGER_NAME}}();
