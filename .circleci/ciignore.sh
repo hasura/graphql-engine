@@ -19,6 +19,12 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     exit
 fi
 
+# always build release branch
+if [[ "$CIRCLE_BRANCH" = "release-"* ]]; then
+    echo "Skipping check for release branch"
+    exit
+fi
+
 if [[ ! -a "$ROOT/.ciignore" ]]; then
     echo "Skipping check since .ciignore is not found"
 	  exit # If .ciignore doesn't exists, just quit this script
