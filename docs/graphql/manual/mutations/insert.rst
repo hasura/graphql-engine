@@ -25,26 +25,7 @@ Auto-generated insert mutation schema
     #data of the affected rows by the mutation
     returning: [article!]!
     #queries in mutation response
-    query: mutation_query!
-  }
-  # perform queries in mutation response
-  type mutation_query {
-    # author table
-    author (
-      distinct_on: [author_select_column]
-      where: author_bool_exp
-      limit: Int
-      offset: Int
-      order_by:  [author_order_by!]
-    ): [author]
-    # article table
-    article (
-      distinct_on: [article_select_column]
-      where: article_bool_exp
-      limit: Int
-      offset: Int
-      order_by:  [article_order_by!]
-    ): [article]
+    query: query_root!
   }
 
 As you can see from the schema:
