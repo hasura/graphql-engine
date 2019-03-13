@@ -24,7 +24,13 @@ Hasura gives you an instant realtime GraphQL API on an existing Postgres databas
 
 Watch this video below to see a demo/tutorial of using Hasura on an existing Postgres database, creating views and using `graphql2chartjs` to build realtime charts in under 5 minutes.
 
-![youtube embed](https://i.imgur.com/eQuK3KK.png)
+[![youtube embed](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/graphql2chartjs/g2c-youtube-embed.png)]()
+
+<div style="text-align:center">
+  <a href="https://www.youtube.com/watch?v=153iv1-qFuc&feature=youtu.be" target="_blank">
+    <img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/graphql2chartjs/g2c-youtube-embed.png" width="1000px" alt="youtube video demo">
+  </a>
+</div>
 
 
 ## Example usage with react, apollo and react-chartjs-2
