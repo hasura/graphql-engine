@@ -87,21 +87,22 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
     -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
 
+    -- geometry types
+    "_st_contains"   -> parseGeometryOp ASTContains
+    "$st_contains"   -> parseGeometryOp ASTContains
+    "_st_crosses"    -> parseGeometryOp ASTCrosses
+    "$st_crosses"    -> parseGeometryOp ASTCrosses
+    "_st_equals"     -> parseGeometryOp ASTEquals
+    "$st_equals"     -> parseGeometryOp ASTEquals
+    "_st_overlaps"   -> parseGeometryOp ASTOverlaps
+    "$st_overlaps"   -> parseGeometryOp ASTOverlaps
+    "_st_touches"    -> parseGeometryOp ASTTouches
+    "$st_touches"    -> parseGeometryOp ASTTouches
+    "_st_within"     -> parseGeometryOp ASTWithin
+    "$st_within"     -> parseGeometryOp ASTWithin
     -- geometry and geography types
-    "_st_contains"   -> parseGeometryOrGeographyOp ASTContains
-    "$st_contains"   -> parseGeometryOrGeographyOp ASTContains
-    "_st_crosses"    -> parseGeometryOrGeographyOp ASTCrosses
-    "$st_crosses"    -> parseGeometryOrGeographyOp ASTCrosses
-    "_st_equals"     -> parseGeometryOrGeographyOp ASTEquals
-    "$st_equals"     -> parseGeometryOrGeographyOp ASTEquals
     "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
     "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
-    "_st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
-    "$st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
-    "_st_touches"    -> parseGeometryOrGeographyOp ASTTouches
-    "$st_touches"    -> parseGeometryOrGeographyOp ASTTouches
-    "_st_within"     -> parseGeometryOrGeographyOp ASTWithin
-    "$st_within"     -> parseGeometryOrGeographyOp ASTWithin
     "_st_d_within"   -> parseSTDWithinObj
     "$st_d_within"   -> parseSTDWithinObj
 
@@ -158,6 +159,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
       PGJSONB -> m
       ty      -> throwError $ buildMsg ty [PGJSONB]
 
+    parseGeometryOp f =
+      geometryOp colTy >> f <$> parseOne
     parseGeometryOrGeographyOp f =
       geometryOrGeographyOp colTy >> f <$> parseOne
 
@@ -178,6 +181,9 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
              "incompatible column types : " <> cn <<> ", " <>> rhsCol
         else return rhsCol
 
+    geometryOp PGGeometry = return ()
+    geometryOp ty =
+      throwError $ buildMsg ty [PGGeometry]
     geometryOrGeographyOp PGGeometry = return ()
     geometryOrGeographyOp PGGeography = return ()
     geometryOrGeographyOp ty =
