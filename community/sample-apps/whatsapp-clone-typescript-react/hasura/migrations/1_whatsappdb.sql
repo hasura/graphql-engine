@@ -7,18 +7,6 @@
 
 -- Started on 2019-03-11 11:42:52 IST
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-SET row_security = off;
-
-SET search_path = public, pg_catalog;
-
---
 -- TOC entry 285 (class 1255 OID 24760)
 -- Name: truncate_tables(character varying); Type: FUNCTION; Schema: public; Owner: -
 --

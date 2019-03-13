@@ -4,13 +4,13 @@
 
 Make sure to setup Hasura GraphQL Engine first.
 
-Run yarn
+####Install Dependencies
 
-    $ yarn install
+    yarn install
 
 Run codegen to generate TypeScript types
 
-    $ yarn generate
+    yarn generate
 
 **Note**: The types are generated from the server! So if you have `admin secret` enabled in your graphql-engine server, make sure to update the headers in `codegen.yml` file.
 
@@ -22,10 +22,10 @@ REACT_APP_AUTH_URL='<auth_server_url'>
 REACT_APP_ENV='dev'
 ```
 
-Run start
+####Start the app
 
 ```
-$ yarn start
+yarn start
 ```
 
 Note that the auth server should run on port `8010`. If you decide to change that, be sure to edit the `.env` file in the auth server.

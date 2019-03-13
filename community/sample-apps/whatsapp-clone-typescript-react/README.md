@@ -1,5 +1,5 @@
 # WhatsApp Clone
-    The react client is a forked version of [urigo/whatsapp-client-react](https://github.com/Urigo/WhatsApp-Clone-Client-React) and the server is backed by Hasura GraphQL Engine
+The react client is a forked version of [urigo/whatsapp-client-react](https://github.com/Urigo/WhatsApp-Clone-Client-React) and the server is backed by Hasura GraphQL Engine
 
 - Checkout the [live app](https://whatsapp-clone.demo.hasura.app/).
 - Explore the backend using [Hasura
@@ -18,13 +18,10 @@
   cd graphql-engine/community/sample-apps/whatsapp-clone-typescript-react
   ```
 - [Install Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
-- Goto `hasura/` and edit `config.yaml`:
-  ```yaml
-  endpoint: https://whatsapp-clone.herokuapp.com
-  ```
 - Apply the migrations:
   ```bash
-  hasura migrate apply
+  cd hasura 
+  hasura migrate apply --endpoint "https://whatsapp-clone.herokuapp.com"
   ```
 
 #### Run the auth server
