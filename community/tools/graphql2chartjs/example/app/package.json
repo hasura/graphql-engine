@@ -8,7 +8,7 @@
     "bootstrap": "^4.3.1",
     "chart.js": "^2.7.3",
     "graphql": "^14.1.1",
-    "graphql2chartjs": "^0.1.1",
+    "graphql2chartjs": "^0.2.1",
     "react": "^16.8.3",
     "react-apollo": "^2.4.1",
     "react-bootstrap": "^1.0.0-beta.5",
