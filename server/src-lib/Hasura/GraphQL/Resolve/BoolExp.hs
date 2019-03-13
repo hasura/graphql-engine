@@ -26,27 +26,27 @@ parseOpExps
 parseOpExps annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) -> case k of
-      "_eq"           -> fmap (AEQ True) <$> asPGColValM v
-      "_ne"           -> fmap (ANE True) <$> asPGColValM v
-      "_neq"          -> fmap (ANE True) <$> asPGColValM v
-      "_is_null"      -> resolveIsNull v
+      "_eq"       -> fmap (AEQ True) <$> asPGColValM v
+      "_ne"       -> fmap (ANE True) <$> asPGColValM v
+      "_neq"      -> fmap (ANE True) <$> asPGColValM v
+      "_is_null"  -> resolveIsNull v
 
-      "_in"           -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
-      "_nin"          -> fmap (ANIN . catMaybes) <$> parseMany asPGColValM v
+      "_in"       -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
+      "_nin"      -> fmap (ANIN . catMaybes) <$> parseMany asPGColValM v
 
-      "_gt"           -> fmap AGT <$> asPGColValM v
-      "_lt"           -> fmap ALT <$> asPGColValM v
-      "_gte"          -> fmap AGTE <$> asPGColValM v
-      "_lte"          -> fmap ALTE <$> asPGColValM v
+      "_gt"       -> fmap AGT <$> asPGColValM v
+      "_lt"       -> fmap ALT <$> asPGColValM v
+      "_gte"      -> fmap AGTE <$> asPGColValM v
+      "_lte"      -> fmap ALTE <$> asPGColValM v
 
-      "_like"         -> fmap ALIKE <$> asPGColValM v
-      "_nlike"        -> fmap ANLIKE <$> asPGColValM v
+      "_like"     -> fmap ALIKE <$> asPGColValM v
+      "_nlike"    -> fmap ANLIKE <$> asPGColValM v
 
-      "_ilike"        -> fmap AILIKE <$> asPGColValM v
-      "_nilike"       -> fmap ANILIKE <$> asPGColValM v
+      "_ilike"    -> fmap AILIKE <$> asPGColValM v
+      "_nilike"   -> fmap ANILIKE <$> asPGColValM v
 
-      "_similar"      -> fmap ASIMILAR <$> asPGColValM v
-      "_nsimilar"     -> fmap ANSIMILAR <$> asPGColValM v
+      "_similar"  -> fmap ASIMILAR <$> asPGColValM v
+      "_nsimilar" -> fmap ANSIMILAR <$> asPGColValM v
 
       -- jsonb related operators
       "_contains"     -> fmap AContains <$> asPGColValM v
@@ -56,14 +56,14 @@ parseOpExps annVal = do
       "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
 
       -- geometry/geography type related operators
-      "_st_contains"            -> fmap ASTContains <$> asPGColValM v
-      "_st_crosses"             -> fmap ASTCrosses <$> asPGColValM v
-      "_st_equals"              -> fmap ASTEquals <$> asPGColValM v
-      "_st_intersects"          -> fmap ASTIntersects <$> asPGColValM v
-      "_st_overlaps"            -> fmap ASTOverlaps <$> asPGColValM v
-      "_st_touches"             -> fmap ASTTouches <$> asPGColValM v
-      "_st_within"              -> fmap ASTWithin <$> asPGColValM v
-      "_st_d_within"            -> asObjectM v >>= mapM parseAsSTDWithinObj
+      "_st_contains"   -> fmap ASTContains <$> asPGColValM v
+      "_st_crosses"    -> fmap ASTCrosses <$> asPGColValM v
+      "_st_equals"     -> fmap ASTEquals <$> asPGColValM v
+      "_st_intersects" -> fmap ASTIntersects <$> asPGColValM v
+      "_st_overlaps"   -> fmap ASTOverlaps <$> asPGColValM v
+      "_st_touches"    -> fmap ASTTouches <$> asPGColValM v
+      "_st_within"     -> fmap ASTWithin <$> asPGColValM v
+      "_st_d_within"   -> asObjectM v >>= mapM parseAsSTDWithinObj
 
       _ ->
         throw500
