@@ -9,6 +9,9 @@ import qualified Data.Aeson                   as J
 import qualified Data.HashSet                 as Set
 import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
+import qualified Data.UUID                    as UUID
+import qualified Data.UUID.V4                 as UUID
+import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
@@ -19,8 +22,12 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
 
-import qualified Hasura.Logging               as L
+newtype InstanceId
+  = InstanceId {getInstanceId :: T.Text}
+    deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
+mkInstanceId :: IO InstanceId
+mkInstanceId = (InstanceId . UUID.toText) <$> UUID.nextRandom
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -79,6 +86,7 @@ data RawConnInfo =
   , connUrl      :: !(Maybe String)
   , connDatabase :: !(Maybe String)
   , connOptions  :: !(Maybe String)
+  , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
 
 data HGECommandG a
@@ -219,9 +227,13 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
   withEnvUrl <- withEnv rawDBUrl $ fst databaseUrlEnv
-  return $ rawConnInfo {connUrl = withEnvUrl}
+  withEnvRetries <- withEnv retries $ fst retriesNumEnv
+  return $ rawConnInfo { connUrl = withEnvUrl
+                       , connRetries = withEnvRetries
+                       }
   where
     rawDBUrl = connUrl rawConnInfo
+    retries = connRetries rawConnInfo
 
 mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
 mkServeOptions rso = do
@@ -309,7 +321,7 @@ mainCmdFooter =
         ]
       ]
 
-    envVarDoc = mkEnvVarDoc [databaseUrlEnv]
+    envVarDoc = mkEnvVarDoc [databaseUrlEnv, retriesNumEnv]
 
 databaseUrlEnv :: (String, String)
 databaseUrlEnv =
@@ -357,7 +369,8 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv,
+        pgStripesEnv, pgConnsEnv, pgTimeoutEnv
       , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
@@ -372,6 +385,12 @@ serveCmdFooter =
         , "Postgres events polling interval"
         )
       ]
+
+retriesNumEnv :: (String, String)
+retriesNumEnv =
+  ( "HASURA_GRAPHQL_NO_OF_RETRIES"
+  , "No.of retries if Postgres connection error occurs (default: 1)"
+  )
 
 servePortEnv :: (String, String)
 servePortEnv =
@@ -496,6 +515,7 @@ parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
               <*> dbUrl <*> dbName <*> pure Nothing
+              <*> retries
   where
     host = optional $
       strOption ( long "host" <>
@@ -534,24 +554,31 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+    retries = optional $
+      option auto ( long "retries" <>
+                    metavar "NO OF RETRIES" <>
+                    help (snd retriesNumEnv)
+                  )
 
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
+mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts
+      return $ Q.ConnInfo host port user pass db opts retries
 
     (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
-                                return $ parseDatabaseUrl dbURL opts
+                                withRetries $ parseDatabaseUrl dbURL opts
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
+    retries = fromMaybe 1 mRetries
+    withRetries ci = return $ ci{Q.connRetries = retries}
     invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
                     ++ "Example postgres://foo:bar@example.com:2345/database"
 
@@ -730,13 +757,14 @@ parseEnabledAPIs = optional $
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog (Q.ConnInfo host port user _ db _) =
+connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
     infoVal = J.object [ "host" J..= host
                        , "port" J..= port
                        , "user" J..= user
                        , "database" J..= db
+                       , "retries" J..= retries
                        ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
