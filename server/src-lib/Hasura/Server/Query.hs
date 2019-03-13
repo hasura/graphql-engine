@@ -73,7 +73,8 @@ data RQLQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
-  | RQDeliverEvent       !DeliverEventQuery
+  | RQRedeliverEvent     !RedeliverEventQuery
+  | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
@@ -208,7 +209,8 @@ queryNeedsReload qi = case qi of
 
   RQCreateEventTrigger _       -> True
   RQDeleteEventTrigger _       -> True
-  RQDeliverEvent _             -> False
+  RQRedeliverEvent _           -> False
+  RQInvokeEventTrigger _       -> False
 
   RQCreateQueryTemplate _      -> True
   RQDropQueryTemplate _        -> True
@@ -268,7 +270,8 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQCreateEventTrigger q -> runCreateEventTriggerQuery q
   RQDeleteEventTrigger q -> runDeleteEventTriggerQuery q
-  RQDeliverEvent q       -> runDeliverEvent q
+  RQRedeliverEvent q     -> runRedeliverEvent q
+  RQInvokeEventTrigger q -> runInvokeEventTrigger q
 
   RQCreateQueryTemplate q     -> runCreateQueryTemplate q
   RQDropQueryTemplate q       -> runDropQueryTemplate q

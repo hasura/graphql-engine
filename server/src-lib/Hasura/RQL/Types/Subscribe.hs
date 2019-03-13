@@ -10,7 +10,8 @@ module Hasura.RQL.Types.Subscribe
   , EventTriggerConf(..)
   , RetryConf(..)
   , DeleteEventTriggerQuery(..)
-  , DeliverEventQuery(..)
+  , RedeliverEventQuery(..)
+  , InvokeEventTriggerQuery(..)
   -- , HeaderConf(..)
   -- , HeaderValue(..)
   -- , HeaderName
@@ -184,9 +185,18 @@ data EventTriggerConf
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
-data DeliverEventQuery
-  = DeliverEventQuery
-  { deqEventId :: !EventId
+data RedeliverEventQuery
+  = RedeliverEventQuery
+  { rdeqEventId :: !EventId
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeliverEventQuery)
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+
+data InvokeEventTriggerQuery
+  = InvokeEventTriggerQuery
+  { ietqName :: !T.Text
+  , ietqNew  :: !Value
+  , ietqOld  :: !Value
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)

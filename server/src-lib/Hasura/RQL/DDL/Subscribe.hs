@@ -3,8 +3,9 @@ module Hasura.RQL.DDL.Subscribe
   , runCreateEventTriggerQuery
   , DeleteEventTriggerQuery
   , runDeleteEventTriggerQuery
-  , DeliverEventQuery
-  , runDeliverEvent
+  , RedeliverEventQuery
+  , runRedeliverEvent
+  , runInvokeEventTrigger
 
   -- TODO: review
   , delEventTriggerFromCatalog
@@ -320,17 +321,44 @@ runDeleteEventTriggerQuery q =
 
 deliverEvent
   :: (QErrM m, MonadTx m)
-  => DeliverEventQuery -> m RespBody
-deliverEvent (DeliverEventQuery eventId) = do
+  => RedeliverEventQuery -> m RespBody
+deliverEvent (RedeliverEventQuery eventId) = do
   _ <- liftTx $ fetchEvent eventId
   liftTx $ markForDelivery eventId
   return successMsg
 
-runDeliverEvent
+runRedeliverEvent
   :: (QErrM m, UserInfoM m, MonadTx m)
-  => DeliverEventQuery -> m RespBody
-runDeliverEvent q =
+  => RedeliverEventQuery -> m RespBody
+runRedeliverEvent q =
   adminOnly >> deliverEvent q
+
+insertManualEvent
+  :: QualifiedTable
+  -> TriggerName
+  -> TriggerId
+  -> Value
+  -> Q.TxE QErr ()
+insertManualEvent qt trn trid rowData = do
+  let op = T.pack $ show MANUAL
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5, $6)
+                |] (sn, tn, trn, trid, op, Q.AltJ $ toJSON rowData) True
+  where
+    QualifiedObject sn tn = qt
+
+runInvokeEventTrigger
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  => InvokeEventTriggerQuery -> m RespBody
+runInvokeEventTrigger (InvokeEventTriggerQuery name new old) = do
+  adminOnly
+  ti  <- askTabInfoFromTrigger name
+  eti <- askEventTriggerInfo name
+  let rowData =  object [ "new" .= new
+                        , "old" .= old
+                        ]
+  liftTx $ insertManualEvent (tiName ti) name (etiId eti) rowData
+  return successMsg
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)
