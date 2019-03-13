@@ -4211,9 +4211,9 @@ graphql-tag@^2.4.2:
   version "2.10.1"
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.10.1.tgz#10aa41f1cd8fae5373eaf11f1f67260a3cad5e02"
 
-graphql2chartjs@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/graphql2chartjs/-/graphql2chartjs-0.1.1.tgz#9feb14c36a6d74934db846b19d64bf2947b45342"
+graphql2chartjs@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/graphql2chartjs/-/graphql2chartjs-0.2.1.tgz#af82a36346f7d5faceac436b913cb8352ffe3b5f"
   dependencies:
     "@babel/polyfill" "^7.2.5"
     inflection "^1.12.0"
