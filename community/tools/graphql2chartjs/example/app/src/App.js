@@ -1,23 +1,24 @@
 import React from 'react';
 import './App.css';
 import graphql2chartjs from 'graphql2chartjs';
-import { Line } from 'react-chartjs-2';
-import { Subscription} from 'react-apollo';
+import { Bar } from 'react-chartjs-2';
+import { Query} from 'react-apollo';
 import gql from 'graphql-tag';
 
-const App = ({ client }) => {
+const App = () => {
 
   return (
-    <Subscription
-      subscription={gql`
-        subscription {
-          AmazonValuation: stocks(where: {ticker: {_eq: "AMZN"}}, order_by: {created: desc}, limit: 100) {
-            data_y: price
-            data_t: created
+    <Query
+      query={gql`
+        query {
+          artist_albums {
+            label: artist {
+              name
+            }
+            data: count
           }
         }
-      `}
-    >
+      `}>
       {
         ({data, error, loading}) => {
           if (error) {
@@ -27,24 +28,18 @@ const App = ({ client }) => {
           if (loading) {
             return "Please wait..";
           }
-          const g2c = new graphql2chartjs(data, 'line');
+          const g2c = new graphql2chartjs(data, (dataset, record) => {
+            return {
+              chartType: 'bar',
+              label: record.label.name
+            };
+          });
           return (
-            <Line
-              data={g2c.data}
-              options={{
-                scales: {
-                  xAxes: [{
-                    type: 'time'
-                  }]
-                },
-                bezierCurve : false
-              }}
-              height={100}
-            />
+            <Bar data={g2c.data} />
           )
         }
       }
-    </Subscription>
+    </Query>
   );
 }
 

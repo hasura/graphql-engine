@@ -10,7 +10,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { HttpLink } from 'apollo-link-http';
 import { ApolloProvider } from 'react-apollo';
 
-const GRAPHQL_ENDPOINT = `graphql2chartjs.hasura.app/v1alpha1/graphql`;
+const GRAPHQL_ENDPOINT = `g2c-test.herokuapp.com/v1alpha1/graphql`;
 
 const httpLink = new HttpLink({
   uri: `https://${GRAPHQL_ENDPOINT}`,
