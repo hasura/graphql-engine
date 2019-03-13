@@ -5,35 +5,25 @@ import { WebSocketLink } from "apollo-link-ws";
 import { split } from "apollo-link";
 import { getMainDefinition } from "apollo-utilities";
 import { SubscriptionClient } from "subscriptions-transport-ws";
-import { setContext } from "apollo-link-context";
 
 import { GRAPHQL_URL, REALTIME_GRAPHQL_URL } from "./utils/constants";
+import auth from "./components/Auth/Auth";
 
 const getHeaders = () => {
-  const token = localStorage.getItem("auth0:id_token");
-  const headers = {
-    authorization: token ? `Bearer ${token}` : ""
-  };
+  const headers = {};
+  const token = auth.getIdToken();
+  if (token) {
+    headers.authorization = `Bearer ${token}`;
+  }
   return headers;
 };
 
 const makeApolloClient = () => {
-  const authLink = setContext((_, { headers }) => {
-    const token = localStorage.getItem("auth0:id_token");
-    return {
-      headers: {
-        ...headers,
-        authorization: token ? `Bearer ${token}` : ""
-      }
-    };
-  });
-
-  const token = localStorage.getItem("auth0:id_token");
   // Create an http link:
   const httpLink = new HttpLink({
     uri: GRAPHQL_URL,
     fetch,
-    headers: getHeaders(token)
+    headers: getHeaders()
   });
 
   // Create a WebSocket link:
@@ -41,8 +31,13 @@ const makeApolloClient = () => {
     new SubscriptionClient(REALTIME_GRAPHQL_URL, {
       reconnect: true,
       timeout: 30000,
-      connectionParams: {
-        headers: getHeaders(token)
+      connectionParams: () => {
+        return { headers: getHeaders() };
+      },
+      connectionCallback: err => {
+        if (err) {
+          wsLink.subscriptionClient.close(false, false);
+        }
       }
     })
   );
@@ -59,7 +54,7 @@ const makeApolloClient = () => {
   );
 
   const client = new ApolloClient({
-    link: authLink.concat(link),
+    link: link,
     cache: new InMemoryCache({
       addTypename: true
     })
