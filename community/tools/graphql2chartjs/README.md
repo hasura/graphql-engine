@@ -22,7 +22,7 @@ The demo above cover the following types of charts: [basic](https://graphql2char
 ## Usage with Hasura
 Hasura gives you an instant realtime GraphQL API on an existing Postgres database. You can create views to capture analytics and aggregations on your database and instantly turn them into charts.
 
-Watch this video below to see a demo/tutorial of using Hasura on an existing Postgres database, creating views and using `graphql2chartjs` to build realtime charts in under 5 minutes.
+Watch this video below to see a demo/tutorial of using Hasura with an existing Postgres database, creating views and building charts.
 
 <div style="text-align:center">
   <a href="https://www.youtube.com/watch?v=153iv1-qFuc&feature=youtu.be" target="_blank">
@@ -36,32 +36,33 @@ Watch this video below to see a demo/tutorial of using Hasura on an existing Pos
 ```javascript
 import {Query} from 'react-apollo';
 import gql from 'graphql-tag';
-import Graphql2Chartjs from 'graphql2chartjs';
+import graphql2chartjs from 'graphql2chartjs';
 import {Bar} from 'react-chartjs-2';
 
-const g2c = new Graphql2Chartjs();
-<Query 
-  query={gql`
-    query {
-      Articles: articleStats {
-        label: title
-        data: num_likes
+const Chart = () => (
+  <Query
+    query={gql`
+      query {
+        Articles: articleStats {
+          label: title
+          data: num_likes
+        }
+      }`}
+    }>
+    {({data} => {
+      if (data) {
+        const g2c = new graphql2chartjs(data, 'bar');
+        return (<Bar data={g2c.data} />);
       }
-    }`}
-  }>
-  {({data} => {
-    if (data) {
-      g2c.add(data, 'bar');
-      return (<Bar data={g2c.data} />);
+      return null;
     }
-    return null;
-  }
-</Query>
+  </Query>
+);
 ```
 
 ## Mapping GraphQL queries to ChartJS charts
 
-Different types of charts need different structures in their datasets. 
+Different types of charts need different structures in their datasets.
 
 For example a bar chart dataset needs labels and data associated for each label; the ChartJS API refers to this as `label` and `data`. Once you alias fields in your graphql query to `label` and `data`, and pass the response through `graphql2chartjs`, your dataset is ready to be used by bar chart in chartjs.
 
@@ -106,27 +107,19 @@ query {
 
 graphql2chartjs works in 3 steps:
 
-1. Initialise graphql2chartjs: `const g2c = new Graphql2Chartjs()`
+1. Initialise graphql2chartjs: `const g2c = new graphql2chartjs()`
 2. Add data from your graphql response: `g2c.add(graphqlResponse.data, 'line')`
 3. Set your chart data to the data properly of the graphql2chartjs instance: `g2c.data`
 
-### Step 1: Initialiase - `new Graphql2Chartjs()`
+### Step 1: Initialiase with data: `new graphql2chartjs()`
+
+#### Option 1: Initialise with data and chart type
+
+**`graphql2chartjs(data, chartType)`**
 
 ```javascript
-const g2c = new Graphql2Chartjs();
+const g2c = new graphql2chartjs(data, 'bar');
 ```
-
-### Step 2: (Option 1) Add data for your chart - `g2c.add(graphqlResponse.data, chartType)`
-
-Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally:
-
-```javascript
-await data = runQuery(..);
-
-g2c.add(data, 'line');
-```
-
-**Arguments:**
 
 - `data`: This is your GraphQL response. This data should have fields `label`, `data` etc. as per the GraphQL querying described above.
 - `chartType`: This is a string that represents valid values of what your chart type is. Valid values include `'line'`, `'bar'`, `'radar'`, `'doughnut'`, `'pie'`, `'polarArea'`, `'bubble'`, `'scatter'`.
@@ -134,29 +127,25 @@ g2c.add(data, 'line');
 **Notes:**
 - This is the simplest way of using `graphql2chartjs`
 - If you have multiple datasets, all of the datasets will be rendered automatically as the same type of chart
-- To customise the UI options of the rendered chart like colors or to create a mixed type chart (one dataset is rendered as a line chart, another as a bar chart) use the `addWithProps` function instead of this one.
+- To customise the UI options of the rendered chart like colors or to create a mixed type chart (one dataset is rendered as a line chart, another as a bar chart) use the next initialisation method instead of this one.
 
 
-### Step 2: (Option 2) Add data for your chart with UI properties - `graphql2chartjs.add(data, addProps())`
+#### Option 2: Initialise with data and a transform function
 
-Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally. In addition, you can pass a function that specifies the type of chart, chartjs UI properties that apply to the entire dataset or to each point in the dataset.
+**`graphql2chartjs(data, transform)`**
+
+The transformation function can add chartjs dataset props or even modify the record data:
 
 ```javascript
-await data = runQuery(..);
-
-g2c.add(data, (datasetName, dataPoint) => {
-  return {                                                                                                                  
-    chartType: 'line',
-    pointBackgroundColor: 'blue',
-    borderColor: 'red'
+const g2c = new graphql2chartjs(data, (datasetName, dataPoint) => {
+  return {
+    chartType: 'bar',
+    backgroundColor: 'yellow'
   };
 });
 ```
 
-**Arguments:**
-
-- `data`: This is an array of objects or an object from your graphql response. This data should have fields `label`, `data` etc. as per the GraphQL querying described above.
-- `addProps(datasetName, dataPoint)`: This function defined by you can take the name of the dataset and the data record that comes from the GraphQL response and returns an object that can should have the `chartType` key and optionally other keys that specify other dataset properties.
+- `transform(datasetName, dataPoint)`: This function defined by you can take the name of the dataset and the data record that comes from the GraphQL response and returns an object that can should have the `chartType` key and optionally other keys that specify other dataset properties.
   - The object returned by this function should look like the following:
   ```javascript
   {
@@ -174,32 +163,38 @@ g2c.add(data, (datasetName, dataPoint) => {
     - Bubble: https://www.chartjs.org/docs/latest/charts/bubble.html#dataset-properties
     - Scatter: https://www.chartjs.org/docs/latest/charts/scatter.html#dataset-properties
 
-### Step 3: Now create your chart with data - `g2c.data`
 
-Now that your data is created by `g2c.add()` or `g2c.addWithProps()`, use it to build your chart!
+### Step 2: Now create your cchart with data - `g2c.data`
 
-`g2c.data` gives you access to the latest chartJS data that can be passed to your chart.
+`g2c.data` gives you access to the latest ChartJS data that can be passed to your chart.
 
-1. New chart:
+1. Javascript
   ```javascript
-  import Chart from 'chart.js';
-
-  var ctx = document.getElementById("myChart");
-
   var myChart = new Chart(ctx, { data: g2c.data });
   ```
-2. Updating chart:
-  ```javascript
-  // Run a query to fetch new data
-  await newData = runQuery(...);
-  
-  // Add new data that will get incrementally added to existing data in your graphql2chartjs instance
-  g2c.add(newData, 'line');
 
-  // Set your chart to this new data and update!
-  myChart.data = g2c.data;
-  myChart.update();
+2. react-chartjs-2
+  ```javascript
+  <Bar data={g2c.data} />
   ```
+
+### Step 3: (optional) Incrementally add data for your chart - `g2c.add(graphqlResponse.data, chartType)`
+
+Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally:
+
+```javascript
+await data = runQuery(..);
+
+// Add for a chart type
+g2c.add(data, 'line');
+
+// Add with a transformation function to change UI props for the new data added or udpated
+g2c.add(data, (datasetName, dataPoint) => {
+  chartType: 'line',
+  pointBackgroundColor: 'yellow'
+});
+```
+
 
 ## Installation
 
