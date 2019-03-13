@@ -524,7 +524,7 @@ mkMutRespObj tn sel nestAlwd =
         retTy = bool (mkTableColTy tn) (mkTableTy tn) nestAlwd
     queryRootFld =
       mkHsraObjFldInfo (Just desc) "query" Map.empty $
-        G.toGT queryRootTy
+        G.toGT $ G.toNT queryRootTy
       where
         desc = "the query root"
 

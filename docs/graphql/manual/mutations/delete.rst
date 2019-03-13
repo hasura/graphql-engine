@@ -32,7 +32,7 @@ As you can see from the schema:
 - ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
   for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
-- You can query any object (except fields and types) present in ``query root`` through ``query`` field.
+- You can query any object present in ``query root`` through ``query`` field.
   See :doc:`Queries <../queries/index>` for more details.
 
 See the :ref:`delete mutation API reference <delete_syntax>` for the full specifications

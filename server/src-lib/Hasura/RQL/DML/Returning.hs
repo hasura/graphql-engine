@@ -48,9 +48,9 @@ hasNestedFld = any isNestedMutFld
 
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColType)]
 pgColsFromMutFld = \case
-  MCount -> []
-  MExp _ -> []
-  MQuery _ -> []
+  MCount       -> []
+  MExp _       -> []
+  MQuery _     -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
     FCol (PGColInfo col colTy _) -> Just (col, colTy)

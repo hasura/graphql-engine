@@ -167,7 +167,7 @@ buildEmptyMutResp mutFlds =
     -- generate empty mutation response
     mkMutResults = forM mutFlds $ \(t, fld) -> (t,) <$>
       case fld of
-        RR.MCount     -> return $ J.encode $ J.toJSON (0 :: Int)
-        RR.MExp e     -> return $ J.encode $ J.toJSON e
-        RR.MRet _     -> return $ J.encode $ J.toJSON ([] :: [J.Value])
+        RR.MCount     -> return $ J.encode (0 :: Int)
+        RR.MExp e     -> return $ J.encode e
+        RR.MRet _     -> return $ J.encode ([] :: [J.Value])
         RR.MQuery qTx -> qTx
