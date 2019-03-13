@@ -16,6 +16,14 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 
+queryRootTy :: G.NamedType
+queryRootTy = G.NamedType "query_root"
+
+mutationRootTy :: G.NamedType
+mutationRootTy = G.NamedType "mutation_root"
+
+subscriptionRootTy :: G.NamedType
+subscriptionRootTy = G.NamedType "subscription_root"
 
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
@@ -328,7 +336,7 @@ defaultTypes = $(fromSchemaDocQ defaultSchema HasuraType)
 mkGCtx :: TyAgg -> RootFlds -> InsCtxMap -> GCtx
 mkGCtx tyAgg (RootFlds flds) insCtxMap =
   let queryRoot = mkHsraObjTyInfo (Just "query root")
-                  (G.NamedType "query_root") Set.empty $
+                  queryRootTy Set.empty $
                   mapFromL _fiName (schemaFld:typeFld:qFlds)
       scalarTys = map (TIScalar . mkHsraScalarTyInfo) (colTys <> toList scalars)
       compTys   = map (TIInpObj . mkCompExpInp) colTys
@@ -349,12 +357,12 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
     mkMutRoot =
-      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
+      mkHsraObjTyInfo (Just "mutation root") mutationRootTy Set.empty .
       mapFromL _fiName
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
     mkSubRoot =
       mkHsraObjTyInfo (Just "subscription root")
-      (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
+      subscriptionRootTy Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
     (qFlds, mFlds) = partitionEithers $ map snd $ Map.elems flds
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $

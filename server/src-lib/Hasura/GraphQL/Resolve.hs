@@ -31,6 +31,7 @@ buildTx userInfo gCtx sqlCtx fld = do
                                , orderByCtx
                                , insCtxMap
                                , sqlCtx
+                               , queryRootResolver
                                ) $ case opCxt of
 
     OCSelect ctx ->
@@ -73,6 +74,9 @@ buildTx userInfo gCtx sqlCtx fld = do
         unless (isJust $ getVarVal hdr receivedVars) $
         throw400 NotFound $ hdr <<> " header is expected but not found"
 
+    queryRootResolver = QueryResolver $
+      resolveSelSet userInfo gCtx sqlCtx G.OperationTypeQuery
+
 -- {-# SCC resolveFld #-}
 resolveFld
   :: (MonadTx m)
@@ -88,10 +92,11 @@ resolveFld userInfo gCtx sqlGenCtx opTy fld =
     _            -> liftTx $ buildTx userInfo gCtx sqlGenCtx fld
   where
     mkRootTypeName :: G.OperationType -> Text
-    mkRootTypeName = \case
-      G.OperationTypeQuery        -> "query_root"
-      G.OperationTypeMutation     -> "mutation_root"
-      G.OperationTypeSubscription -> "subscription_root"
+    mkRootTypeName op = G.unName $ G.unNamedType $
+      case op of
+        G.OperationTypeQuery        -> queryRootTy
+        G.OperationTypeMutation     -> mutationRootTy
+        G.OperationTypeSubscription -> subscriptionRootTy
 
 resolveSelSet
   :: (MonadTx m)

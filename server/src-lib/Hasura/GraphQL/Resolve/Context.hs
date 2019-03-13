@@ -21,6 +21,7 @@ module Hasura.GraphQL.Resolve.Context
   , withArgM
   , nameAsPath
   , PrepArgs
+  , QueryResolver(..)
   , Convert
   , runConvert
   , prepare
@@ -125,11 +126,15 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
+newtype QueryResolver
+  = QueryResolver{getQueryResolver :: SelSet -> RespTx}
+
 type Convert =
   StateT PrepArgs (ReaderT ( FieldMap
                            , OrdByCtx
                            , InsCtxMap
                            , SQLGenCtx
+                           , QueryResolver
                            ) (Except QErr)
                   )
 
@@ -145,7 +150,7 @@ txtConverter = return . uncurry toTxtValue
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
+  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx, QueryResolver)
   -> Convert a
   -> m (a, PrepArgs)
 runConvert ctx m =

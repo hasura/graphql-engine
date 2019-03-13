@@ -38,6 +38,14 @@ mkSelect = Select Nothing [] Nothing
            Nothing Nothing Nothing
            Nothing Nothing Nothing
 
+newtype UnionAllExp
+  = UnionAllExp {getSelects :: [Select]}
+  deriving (Show, Eq)
+
+instance ToSQL UnionAllExp where
+  toSQL (UnionAllExp sels) =
+    "UNION ALL " <+> sels
+
 newtype LimitExp
   = LimitExp SQLExp
   deriving (Show, Eq)
@@ -283,6 +291,11 @@ instance IsIden Alias where
 
 instance ToSQL Alias where
   toSQL (Alias iden) = "AS" <-> toSQL iden
+
+sqlToJSON :: SQLExp -> SQLExp
+sqlToJSON e = SETyAnn toJ jsonType
+  where
+    toJ = SEFnApp "to_json" [e] Nothing
 
 toAlias :: (IsIden a) => a -> Alias
 toAlias = Alias . toIden
@@ -742,11 +755,11 @@ instance ToSQL CTE where
 data SelectWith
   = SelectWith
   { swCTEs   :: [(Alias, CTE)]
-  , swSelect :: !Select
+  , swSelect :: [Select]
   } deriving (Show, Eq)
 
 instance ToSQL SelectWith where
-  toSQL (SelectWith ctes sel) =
-    "WITH " <> (", " <+> map f ctes) <-> toSQL sel
+  toSQL (SelectWith ctes sels) =
+    "WITH " <> (", " <+> map f ctes) <-> toSQL (UnionAllExp sels)
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)

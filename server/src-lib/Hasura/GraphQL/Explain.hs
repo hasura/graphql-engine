@@ -72,11 +72,11 @@ explainField userInfo gCtx sqlGenCtx fld =
         case opCxt of
           OCSelect (SelOpCtx tn hdrs permFilter permLimit) -> do
             validateHdrs hdrs
-            toSQL . RS.mkSQLSelect False <$>
+            toSQL . RS.mkSQLSelect (QuerySingleObj False) <$>
               RS.fromField txtConverter tn permFilter permLimit fld
           OCSelectPkey (SelPkOpCtx tn hdrs permFilter argMap) -> do
             validateHdrs hdrs
-            toSQL . RS.mkSQLSelect True <$>
+            toSQL . RS.mkSQLSelect (QuerySingleObj True) <$>
               RS.fromFieldByPKey txtConverter tn argMap permFilter fld
           OCSelectAgg (SelOpCtx tn hdrs permFilter permLimit) -> do
             validateHdrs hdrs

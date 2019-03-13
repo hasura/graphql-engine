@@ -6,17 +6,18 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
@@ -98,7 +99,7 @@ notBuiltinFld f =
 getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
    tyInfo :: TypeMap <- asks getter
-   return $ sortBy (comparing _otiName) $ Map.elems $ getPossibleObjTypes' tyInfo $ aot
+   return $ sortBy (comparing _otiName) $ Map.elems $ getPossibleObjTypes' tyInfo aot
 
 -- 4.5.2.3
 unionR :: (MonadReader t m, MonadError QErr m, Has TypeMap t) => UnionTyInfo -> Field -> m J.Object
@@ -318,15 +319,15 @@ schemaR fld =
   withSubFields (_fSelSet fld) $ \subFld -> do
   (tyMap :: TypeMap) <- asks getter
   case _fName subFld of
-    "__typename"   -> retJT "__Schema"
-    "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
-                      sortBy (comparing getNamedTy) $ Map.elems tyMap
-    "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
-    "mutationType" -> typeR' "mutation_root" subFld
-    "subscriptionType" -> typeR' "subscription_root" subFld
-    "directives"   -> J.toJSON <$> mapM (directiveR subFld)
-                      (sortBy (comparing _diName) defaultDirectives)
-    _              -> return J.Null
+    "__typename"       -> retJT "__Schema"
+    "types"            -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
+                          sortBy (comparing getNamedTy) $ Map.elems tyMap
+    "queryType"        -> J.toJSON <$> namedTypeR queryRootTy subFld
+    "mutationType"     -> typeR' (G.unNamedType mutationRootTy) subFld
+    "subscriptionType" -> typeR' (G.unNamedType subscriptionRootTy) subFld
+    "directives"       -> J.toJSON <$> mapM (directiveR subFld)
+                          (sortBy (comparing _diName) defaultDirectives)
+    _                  -> return J.Null
 
 typeR
   :: ( MonadReader r m, Has TypeMap r

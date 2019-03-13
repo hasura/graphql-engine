@@ -309,12 +309,13 @@ selectAggP2 (sel, p) =
     selectSQL = toSQL $ mkAggSelect sel
 
 -- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-selectP2 asSingleObject (sel, p) =
+selectP2 ::
+  QuerySingleObj -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectP2 qSingleObject (sel, p) =
   runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect asSingleObject sel
+    selectSQL = toSQL $ mkSQLSelect qSingleObject sel
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
@@ -324,7 +325,7 @@ phaseOne =
 
 phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
 phaseTwo =
-  liftTx . selectP2 False
+  liftTx . selectP2 (QuerySingleObj False)
 
 runSelect
   :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)

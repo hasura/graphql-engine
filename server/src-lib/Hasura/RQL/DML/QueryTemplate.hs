@@ -127,7 +127,7 @@ execQueryTP2 qtProc = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   case qtProc of
     QTPInsert qp -> liftTx $ R.insertP2 strfyNum qp
-    QTPSelect qp -> liftTx $ R.selectP2 False qp
+    QTPSelect qp -> liftTx $ R.selectP2 (QuerySingleObj False) qp
     QTPUpdate qp -> liftTx $ R.updateQueryToTx strfyNum qp
     QTPDelete qp -> liftTx $ R.deleteQueryToTx strfyNum qp
     QTPCount qp  -> RC.countQToTx qp

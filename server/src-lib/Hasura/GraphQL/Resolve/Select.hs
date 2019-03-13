@@ -264,7 +264,7 @@ convertSelect opCtx fld = do
   selData <- withPathK "selectionSet" $
              fromField prepare qt permFilter permLimit fld
   prepArgs <- get
-  return $ RS.selectP2 False (selData, prepArgs)
+  return $ RS.selectP2 (QuerySingleObj False) (selData, prepArgs)
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
 
@@ -274,7 +274,7 @@ convertSelectByPKey opCtx fld = do
   selData <- withPathK "selectionSet" $
              fromFieldByPKey prepare qt colArgMap permFilter fld
   prepArgs <- get
-  return $ RS.selectP2 True (selData, prepArgs)
+  return $ RS.selectP2 (QuerySingleObj True) (selData, prepArgs)
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
 

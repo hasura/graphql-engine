@@ -2,23 +2,25 @@ module Hasura.RQL.DML.Mutation
   ( Mutation(..)
   , runMutation
   , mutateAndFetchCols
+  , execCTEAndBuildMutResp
   )
 where
 
-import qualified Data.Sequence            as DS
+import qualified Data.Sequence                          as DS
 
+import           Hasura.GraphQL.Transport.HTTP.Protocol (mkJSONObj)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances     ()
+import           Hasura.RQL.Instances                   ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Data.HashMap.Strict      as Map
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
+import qualified Data.HashMap.Strict                    as Map
+import qualified Database.PG.Query                      as Q
+import qualified Hasura.SQL.DML                         as S
 
 data Mutation
   = Mutation
@@ -31,19 +33,17 @@ data Mutation
 
 runMutation :: Mutation -> Q.TxE QErr RespBody
 runMutation mut =
-  bool (mutateAndReturn mut) (mutateAndSel mut) $
+  bool (mutateAndReturn qSingleObj mut) (mutateAndSel qSingleObj mut) $
     hasNestedFld $ _mFields mut
-
-mutateAndReturn :: Mutation -> Q.TxE QErr RespBody
-mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
-        (toList p) True
   where
-    selWith = mkSelWith qt cte mutFlds False strfyNum
+    qSingleObj = QuerySingleObj False
 
-mutateAndSel :: Mutation -> Q.TxE QErr RespBody
-mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
+mutateAndReturn :: QuerySingleObj -> Mutation -> Q.TxE QErr RespBody
+mutateAndReturn qSingleObj (Mutation qt cte mutFlds _ strfyNum) =
+  execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
+
+mutateAndSel :: QuerySingleObj -> Mutation -> Q.TxE QErr RespBody
+mutateAndSel qSingleObj (Mutation qt q mutFlds mUniqCols strfyNum) = do
   uniqCols <- onNothing mUniqCols $
               throw500 "uniqCols not found in mutateAndSel"
   let colMap = Map.fromList $ flip map uniqCols $
@@ -58,10 +58,8 @@ mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
                , S.selFrom = Just $ S.FromExp [S.FISimple qt Nothing]
                , S.selWhere = Just $ S.WhereFrag selWhere
                }
-      selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
+  execCTEAndBuildMutResp qt (selCTE, DS.empty) mutFlds qSingleObj strfyNum
   where
     colValToColExp colMap colVal =
       fmap Map.fromList $ forM (Map.toList colVal) $
@@ -81,28 +79,88 @@ mutateAndFetchCols
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr MutateResp
-mutateAndFetchCols qt cols (cte, p) strfyNum =
-  Q.getAltJ . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
+mutateAndFetchCols qt cols cte strfyNum = do
+  res <- execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
+  decodeFromBS res
   where
-    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
-    tabFrom = TableFrom qt $ Just aliasIden
-    tabPerm = TablePerm annBoolExpTrue Nothing
+    qSingleObj = QuerySingleObj False
+    mutFlds = [ ("affected_rows", MCount)
+              , ("returning_columns", MRet selFlds)
+              ]
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiName ci, FCol ci)
 
-    sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
-    select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
-    extrExp = S.applyJsonBuildObj
-              [ S.SELit "affected_rows", affRowsSel
-              , S.SELit "returning_columns", colSel
-              ]
+execCTEAndBuildMutResp
+  :: QualifiedTable
+  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> MutFlds
+  -> QuerySingleObj
+  -> Bool
+  -> Q.TxE QErr RespBody
+execCTEAndBuildMutResp qt (cte, p) mutFlds singleObj strfyNum = do
+  mutResults <-
+    Q.listQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
+  queryResults <- forM qFlds $ \(t, qTx) -> do
+    r <- qTx
+    return (t, r)
+  let resMap = Map.fromList mutResults
+               `Map.union` Map.fromList queryResults
+  mutResp <- forM mutFlds $ \(t, _) -> do
+    r <- onNothing (Map.lookup t resMap) $
+      throw500 $ "alias " <> t <> " not found in results"
+    return (t, r)
+  return $ mkJSONObj mutResp
+  where
+    sql = toSQL selWith
+    alias = Iden $ snakeCaseTable qt <> "__mutation_result_alias"
+    selWith = S.SelectWith [(S.Alias alias, cte)] unionSelects
+    unionSelects = countSels <> expSels <> returningSels
 
-    affRowsSel = S.SESelect $
+    mkExtrs t e =
+      let aliasIden = S.Alias $ Iden "alias"
+          aliasLit = S.SELit t
+          resultIden = S.Alias $ Iden "result"
+      in [ S.Extractor aliasLit (Just aliasIden)
+         , S.Extractor e (Just resultIden)
+         ]
+
+    countFlds = mapMaybe getCount mutFlds
+    countSels = flip map countFlds $ \t ->
       S.mkSelect
-      { S.selExtr = [S.Extractor S.countStar Nothing]
-      , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
+      { S.selExtr = mkExtrs t $ S.sqlToJSON S.countStar
+      , S.selFrom = Just $ S.FromExp $ pure $ S.FIIden alias
       }
-    colSel = S.SESelect $ mkSQLSelect False $
-             AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+
+    expFlds = mapMaybe getExp mutFlds
+    expSels = flip map expFlds $ \(t, e) ->
+      S.mkSelect {S.selExtr = mkExtrs t $ S.sqlToJSON $ S.SELit e}
+
+    returningFlds = mapMaybe getRetFld mutFlds
+    returningSels = flip map returningFlds $ \(t, selFlds) ->
+      let tabFrom = TableFrom qt $ Just alias
+          tabPerm = TablePerm annBoolExpTrue Nothing
+          selExp = S.SESelect $ mkSQLSelect singleObj $
+            AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+      in S.mkSelect {S.selExtr = mkExtrs t selExp}
+
+    qFlds = mapMaybe getQFld mutFlds
+
+    getCount (t, fld) =
+      case fld of
+        MCount -> Just t
+        _      -> Nothing
+
+    getExp (t, fld) =
+      case fld of
+        (MExp e) -> Just (t, e)
+        _        -> Nothing
+
+    getRetFld (t, fld) =
+      case fld of
+        (MRet r) -> Just (t, r)
+        _        -> Nothing
+
+    getQFld (t, fld) =
+      case fld of
+        (MQuery q) -> Just (t, q)
+        _          -> Nothing

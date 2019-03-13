@@ -606,10 +606,11 @@ mkAggSelect annAggSel =
     ArrNode extr _ bn =
       aggSelToArrNode (Iden "root") (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSel -> S.Select
-mkSQLSelect isSingleObject annSel =
+mkSQLSelect :: QuerySingleObj -> AnnSel -> S.Select
+mkSQLSelect qSingleObj annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
+    QuerySingleObj isSingleObject = qSingleObj
     extrs = pure $ asJsonAggExtr isSingleObject rootFldAls $ _bnOrderBy baseNode
     baseNode = annSelToBaseNode (toIden rootFldName) rootFldName annSel
     rootFldName = FieldName "root"
@@ -629,7 +630,7 @@ mkFuncSelectWith qf tn tabPerm tabArgs strfyNum eSelFlds frmItem = selWith
     mainSel = case eSelFlds of
       Left aggFlds  -> mkAggSelect $
                        AnnSelG aggFlds tabFrom tabPerm tabArgs strfyNum
-      Right annFlds -> mkSQLSelect False $
+      Right annFlds -> mkSQLSelect (QuerySingleObj False) $
                        AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
 
     tabFrom = TableFrom tn $ Just $ toIden funcAls
@@ -638,4 +639,4 @@ mkFuncSelectWith qf tn tabPerm tabArgs strfyNum eSelFlds frmItem = selWith
     funcAls = S.Alias $ Iden $
       getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"
 
-    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel
+    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] $ pure mainSel

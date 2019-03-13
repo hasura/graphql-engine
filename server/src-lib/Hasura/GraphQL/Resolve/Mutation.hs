@@ -5,26 +5,26 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Control.Arrow                     (second)
-import           Data.Has                          (getter)
+import           Data.Has                               (getter)
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Language.GraphQL.Draft.Syntax          as G
 
-import qualified Hasura.RQL.DML.Delete             as RD
-import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.DML.Update             as RU
+import qualified Hasura.RQL.DML.Delete                  as RD
+import qualified Hasura.RQL.DML.Returning               as RR
+import qualified Hasura.RQL.DML.Update                  as RU
 
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
+import           Hasura.GraphQL.Resolve.Select          (fromSelSet, withSelSet)
+import           Hasura.GraphQL.Transport.HTTP.Protocol (mkJSONObj)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -39,6 +39,9 @@ convertMutResp ty selSet =
     "affected_rows" -> return RR.MCount
     "returning"     -> fmap RR.MRet $
                        fromSelSet txtConverter (_fType fld) $ _fSelSet fld
+    "query"         -> do
+      resolver <- asks getter
+      return $ RR.MQuery $ getQueryResolver resolver $ _fSelSet fld
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
 
 convertRowObj
@@ -156,11 +159,15 @@ convertDelete opCtx fld = do
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
-buildEmptyMutResp = return . mkTx
+buildEmptyMutResp mutFlds =
+  return $ do
+    mutResults <- mkMutResults
+    return $ mkJSONObj mutResults
   where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
     -- generate empty mutation response
-    convMutFld = \case
-      RR.MCount -> J.toJSON (0 :: Int)
-      RR.MExp e -> J.toJSON e
-      RR.MRet _ -> J.toJSON ([] :: [J.Value])
+    mkMutResults = forM mutFlds $ \(t, fld) -> (t,) <$>
+      case fld of
+        RR.MCount     -> return $ J.encode $ J.toJSON (0 :: Int)
+        RR.MExp e     -> return $ J.encode $ J.toJSON e
+        RR.MRet _     -> return $ J.encode $ J.toJSON ([] :: [J.Value])
+        RR.MQuery qTx -> qTx

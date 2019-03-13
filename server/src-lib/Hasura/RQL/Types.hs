@@ -42,6 +42,7 @@ module Hasura.RQL.Types
        , HeaderObj
 
        , liftMaybe
+       , QuerySingleObj(..)
        , module R
        ) where
 
@@ -359,3 +360,7 @@ successMsg :: BL.ByteString
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
+
+newtype QuerySingleObj
+  = QuerySingleObj {asSingleObject :: Bool}
+  deriving (Show, Eq)

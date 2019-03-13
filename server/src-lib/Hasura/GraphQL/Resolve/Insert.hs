@@ -6,31 +6,31 @@ import           Data.Has
 import           Hasura.Prelude
 import           Hasura.Server.Utils
 
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.TH                     as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Casing                      as J
+import qualified Data.Aeson.TH                          as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
 
-import qualified Database.PG.Query                 as Q
-import qualified Hasura.RQL.DML.Insert             as RI
-import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.GBoolExp               as RB
+import qualified Database.PG.Query                      as Q
+import qualified Hasura.RQL.DML.Insert                  as RI
+import qualified Hasura.RQL.DML.Returning               as RR
+import qualified Hasura.RQL.GBoolExp                    as RB
 
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
+import           Hasura.GraphQL.Transport.HTTP.Protocol (mkJSONObj)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
 import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
+import           Hasura.RQL.GBoolExp                    (toSQLBoolExp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -214,10 +214,10 @@ mkBoolExp tn colInfoVals =
     f ci@(PGColInfo _ colTy _) colVal =
       AVCol ci . pure . AEQ True <$> prepare (colTy, colVal)
 
-asSingleObject
+getSingleObj
   :: MonadError QErr m
   => [ColVals] -> m (Maybe ColVals)
-asSingleObject = \case
+getSingleObj = \case
   []  -> return Nothing
   [a] -> return $ Just a
   _   -> throw500 "more than one row returned"
@@ -262,10 +262,9 @@ execCTEExp
   -> RR.MutFlds
   -> Q.TxE QErr RespBody
 execCTEExp strfyNum tn (CTEExp cteExp args) flds =
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
+  execCTEAndBuildMutResp tn (cteExp, args) flds qSingleObj strfyNum
   where
-    sqlBuilder = toSQL $ RR.mkSelWith tn cteExp flds True strfyNum
+    qSingleObj = QuerySingleObj True
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent
@@ -304,7 +303,7 @@ insertObjRel strfyNum role objRelIns =
   withPathK relNameTxt $ do
     resp <- insertMultipleObjects strfyNum role tn multiObjIns [] mutFlds "data"
     MutateResp aRows colVals <- decodeFromBS resp
-    colValM <- asSingleObject colVals
+    colValM <- getSingleObj colVals
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos pgiName
     let c = mergeListsWith mapCols retColsWithVals
@@ -388,7 +387,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
   RI.setConflictCtx ccM
   MutateResp affRows colVals <-
     mutateAndFetchCols tn (uniqCols `union` arrDepColsWithInfo) (cte, insPArgs) strfyNum
-  colValM <- asSingleObject colVals
+  colValM <- getSingleObj colVals
   cteExp <- mkSelCTE tn uniqCols colValM
 
   arrRelAffRows <- bool (withArrRels arrDepColsWithInfo colValM) (return 0) $ null arrRels
@@ -464,11 +463,12 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       respVals :: [J.Object] <- mapM decodeFromBS rawResps
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
-          RR.MCount   -> return $ J.toJSON affRows
-          RR.MExp txt -> return $ J.toJSON txt
-          RR.MRet _   -> J.toJSON <$> mapM (fetchVal t) respVals
+          RR.MCount     -> return $ J.encode affRows
+          RR.MExp txt   -> return $ J.encode txt
+          RR.MRet _     -> J.encode <$> mapM (fetchVal t) respVals
+          RR.MQuery qTx -> qTx
         return (t, jsonVal)
-      return $ J.encode $ OMap.fromList respTups
+      return $ mkJSONObj respTups
 
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
