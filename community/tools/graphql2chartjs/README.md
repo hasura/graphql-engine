@@ -178,7 +178,9 @@ const g2c = new graphql2chartjs(data, (datasetName, dataPoint) => {
   <Bar data={g2c.data} />
   ```
 
-### Step 3: (optional) Incrementally add data for your chart - `g2c.add(graphqlResponse.data, chartType)`
+### Step 3: (optional) Incrementally add data for your chart
+
+**`g2c.add()`**
 
 Once you've initialised a `graphql2chartjs` object, you can use the `add` function to add data for the first time or incrementally:
 
