@@ -12,8 +12,8 @@ For example, if you're using Postgres and [Hasura](https://hasura.io), this is w
 We've set up a GraphQL server with continuously changing data, so that you can try graphql2chartjs out easily.
 
 
-|[View live charts](https://graphql2chartjs-examples.herokuapp.com) | [Edit in sandbox](https://codesandbox.io/s/p2wpj1o8pj) |
-|---|---|
+|[View live charts](https://graphql2chartjs-examples.herokuapp.com) | [Edit in sandbox](https://codesandbox.io/s/p2wpj1o8pj) | [Open GraphiQL](https://g2c-examples-graphiql.herokuapp.com/) |
+|---|---|---|
 
 ![realtime chart with live data](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/graphql2chartjs/live-chart.gif)
 
