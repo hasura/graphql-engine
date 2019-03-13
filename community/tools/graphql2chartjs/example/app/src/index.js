@@ -9,15 +9,14 @@ import { split } from 'apollo-link';
 import { WebSocketLink } from 'apollo-link-ws';
 import { HttpLink } from 'apollo-link-http';
 import { ApolloProvider } from 'react-apollo';
-import { HGE_URL } from './constants';
 
-const GRAPHQL_ENDPOINT = `${HGE_URL.split('//')[1]}/v1alpha1/graphql`;
+const GRAPHQL_ENDPOINT = `graphql2chartjs.hasura.app/v1alpha1/graphql`;
 
 const httpLink = new HttpLink({
-  uri: `http://${GRAPHQL_ENDPOINT}`,
+  uri: `https://${GRAPHQL_ENDPOINT}`,
 });
 const wsLink = new WebSocketLink({
-  uri: `ws://${GRAPHQL_ENDPOINT}`,
+  uri: `wss://${GRAPHQL_ENDPOINT}`,
   options: {
     reconnect: true,
   }
