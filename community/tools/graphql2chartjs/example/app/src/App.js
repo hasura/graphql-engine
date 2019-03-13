@@ -1,46 +1,28 @@
 import React from 'react';
 import './App.css';
-import graphql2chartjs from 'graphql2chartjs';
-import { Bar } from 'react-chartjs-2';
-import { Query} from 'react-apollo';
-import gql from 'graphql-tag';
+import NavBar from './Navbar';
 
-const App = () => {
+import {
+  BasicBarChart,
+  StyledBarChart,
+  MultiDatasetBarChart,
+  MixedLineBarChart,
+  LiveChart,
+  RealtimeTimeseriesChart
+} from './charts';
 
-  return (
-    <Query
-      query={gql`
-        query {
-          artist_albums {
-            label: artist {
-              name
-            }
-            data: count
-          }
-        }
-      `}>
-      {
-        ({data, error, loading}) => {
-          if (error) {
-            console.error(error);
-            return "Error";
-          }
-          if (loading) {
-            return "Please wait..";
-          }
-          const g2c = new graphql2chartjs(data, (dataset, record) => {
-            return {
-              chartType: 'bar',
-              label: record.label.name
-            };
-          });
-          return (
-            <Bar data={g2c.data} />
-          )
-        }
-      }
-    </Query>
-  );
-}
+const App = () => (
+  <div>
+    <NavBar />
+    <div style={{margin: '10px', paddingTop: '65px'}}>
+      <BasicBarChart/>
+      <StyledBarChart/>
+      <MultiDatasetBarChart />
+      <MixedLineBarChart />
+      <LiveChart />
+      <RealtimeTimeseriesChart />
+     </div>
+  </div>
+);
 
 export default App;

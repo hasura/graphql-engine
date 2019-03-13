@@ -12,19 +12,23 @@ For example, if you're using Postgres and [Hasura](https://hasura.io), this is w
 We've set up a GraphQL server with continuously changing data, so that you can try graphql2chartjs out easily.
 
 
-|[View live charts]() | [Edit in sandbox]() | [Open GraphiQL]() |
-|---|---|---|
+|[View live charts](https://graphql2chartjs-examples.herokuapp.com) | [Edit in sandbox](https://codesandbox.io/s/p2wpj1o8pj) |
+|---|---|
 
-![basic](https://cdn-images-1.medium.com/max/1200/1*CPSTzfUTCCpUbllyiPvl_A.jpeg)
+![realtime chart with live data](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/graphql2chartjs/live-chart.gif)
 
-The demos above cover the following types of charts: [basic](), [multiple datasets](), [mixed chart-types](), [realtime chart with live data](), [realtime time-series]()
+The demo above cover the following types of charts: [basic](https://graphql2chartjs-examples.herokuapp.com/#bar), [multiple datasets](https://graphql2chartjs-examples.herokuapp.com/#multi-bar), [mixed chart-types](https://graphql2chartjs-examples.herokuapp.com/#mixed), [realtime chart with live data](https://graphql2chartjs-examples.herokuapp.com/#live-chart), [realtime time-series](https://graphql2chartjs-examples.herokuapp.com/#timeseries-chart)
 
 ## Usage with Hasura
 Hasura gives you an instant realtime GraphQL API on an existing Postgres database. You can create views to capture analytics and aggregations on your database and instantly turn them into charts.
 
 Watch this video below to see a demo/tutorial of using Hasura on an existing Postgres database, creating views and using `graphql2chartjs` to build realtime charts in under 5 minutes.
 
-![youtube embed](https://i.imgur.com/eQuK3KK.png)
+<div style="text-align:center">
+  <a href="https://www.youtube.com/watch?v=153iv1-qFuc&feature=youtu.be" target="_blank">
+    <img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/graphql2chartjs/g2c-youtube-embed.png" width="1000px" alt="youtube video demo">
+  </a>
+</div>
 
 
 ## Example usage with react, apollo and react-chartjs-2
@@ -75,11 +79,10 @@ query {
 
 ### Scatter / Bubble
 
-Charts of this type need 3 data inputs, `label` and `data_x`, `data_y` (and `data_r` for bubble).
+Charts of this type need 2 data inputs: `data_x`, `data_y` (and `data_r` for bubble).
 ```graphql
 query {
   ArticleLikesVsComments : articles {
-    label: title
     data_x: num_likes
     data_y: num_comments
   }
