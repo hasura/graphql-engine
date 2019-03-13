@@ -21,7 +21,7 @@ import {
   addOrder,
   removeOrder,
 } from './FilterActions.js';
-import { setDefaultQuery, runQuery } from './FilterActions';
+import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 
 const renderCols = (colName, tableSchema, onChange, usage, key) => {
@@ -181,6 +181,7 @@ class FilterQuery extends Component {
         <form
           onSubmit={e => {
             e.preventDefault();
+            dispatch(setOffset(0));
             dispatch(runQuery(tableSchema));
           }}
         >
