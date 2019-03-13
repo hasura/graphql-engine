@@ -267,7 +267,7 @@ mkCompExpInp colTy =
     stDWithinGeoOpInpVal desc ty =
       InpValInfo (Just desc) "_st_d_within" Nothing $ G.toGT ty
     stDWithinGeoDesc =
-      "is the column within a distance from a " <> colTyDesc <> "value"
+      "is the column within a distance from a " <> colTyDesc <> " value"
 
     -- Geometry related ops
     isGeometryType = case colTy of
