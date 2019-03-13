@@ -1,0 +1,44 @@
+description: Test PostGIS spatial operators on a geography column
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    stdwithin:
+    - name: London
+    - name: Paris
+    stintersects:
+    - name: Linestring
+    - name: Point
+query:
+  query: |
+    query geography($point: geography!, $ipoint: geography!) {
+      stdwithin: geog_table(
+        where: {geog_col: {_st_d_within: {distance: 1000000, from: $point}}}
+      ) {
+        name
+      }
+      stintersects: geog_table(
+        where: {geog_col: {_st_intersects: $ipoint}}
+      ) {
+        name
+      }
+    }
+  variables:
+    ipoint:
+      coordinates:
+      - -43.23456
+      - 72.4567772
+      crs:
+        type: name
+        properties:
+          name: urn:ogc:def:crs:EPSG::4326
+      type: Point
+    point:
+      coordinates:
+      - 1
+      - 50
+      crs:
+        type: name
+        properties:
+          name: urn:ogc:def:crs:EPSG::4326
+      type: Point
