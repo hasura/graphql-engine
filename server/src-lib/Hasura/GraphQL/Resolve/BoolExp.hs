@@ -64,7 +64,6 @@ parseOpExps annVal = do
       "_st_touches"             -> fmap ASTTouches <$> asPGColValM v
       "_st_within"              -> fmap ASTWithin <$> asPGColValM v
       "_st_d_within"            -> asObjectM v >>= mapM parseAsSTDWithinObj
-      "_st_d_within_geography"  -> asObjectM v >>= mapM parseAsSTDWithinObj
 
       _ ->
         throw500
@@ -84,10 +83,10 @@ parseOpExps annVal = do
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
       -- TODO(shahidhk): throw correct error message
-                 throw500 "expected \"distance\" input field in st_d_within(geography)_input type"
+                 throw500 "expected \"distance\" input field in st_d_within"
       dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
-                 throw500 "expected \"from\" input field in st_d_within(geography)_input type"
+                 throw500 "expected \"from\" input field in st_d_within"
       from <- asPGColVal fromVal
       return $ ASTDWithin $ WithinOp dist from
 
