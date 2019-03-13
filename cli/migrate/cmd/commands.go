@@ -60,6 +60,29 @@ func (c *CreateOptions) SetMetaUp(data interface{}) error {
 	return nil
 }
 
+func (c *CreateOptions) SetMetaUpFromFile(filePath string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	var metadata []interface{}
+	var q interface{}
+	err = yaml.Unmarshal(data, &q)
+	if err != nil {
+		return err
+	}
+
+	metadata = append(
+		metadata,
+		map[string]interface{}{
+			"type": "replace_metadata",
+			"args": q,
+		},
+	)
+	return c.SetMetaUp(metadata)
+}
+
 func (c *CreateOptions) SetMetaDown(data interface{}) error {
 	t, err := json.Marshal(data)
 	if err != nil {
@@ -75,6 +98,16 @@ func (c *CreateOptions) SetMetaDown(data interface{}) error {
 
 func (c *CreateOptions) SetSQLUp(data string) error {
 	c.SQLUp = []byte(data)
+	return nil
+}
+
+func (c *CreateOptions) SetSQLUpFromFile(filePath string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	c.SQLUp = data
 	return nil
 }
 
