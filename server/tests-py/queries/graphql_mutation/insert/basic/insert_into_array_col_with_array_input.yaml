@@ -5,7 +5,7 @@
     data:
       insert_test_types:
         returning:
-          c34_text_array: ["a","b","c"]
+        - c34_text_array: ["a","b","c"]
   status: 200
   query:
     variables:

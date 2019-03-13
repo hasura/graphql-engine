@@ -141,6 +141,10 @@ mkHsraObjFldInfo
 mkHsraObjFldInfo descM name params pgTy ty =
   ObjFldInfo descM name params pgTy ty HasuraType
 
+mkHsraPGTyObjFld :: Maybe G.Description -> G.Name -> ParamMap -> PGColType -> ObjFldInfo
+mkHsraPGTyObjFld descM name params colTy =
+  mkHsraObjFldInfo descM name params (Just $ PTCol colTy) $ mkPGColGTy colTy
+
 mkHsraObjTyInfo
   :: Maybe G.Description
   -> G.NamedType
@@ -173,8 +177,19 @@ fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
 
 mkCompExpName :: PGColType -> G.Name
-mkCompExpName pgColTy =
-  G.Name $ pgColTyToScalar pgColTy <> "_comparison_exp"
+mkCompExpName colTy =
+  G.Name $ colTyTxt colTy  <> "_comparison_exp"
+  where
+    colTyTxt t = case pgColTyDetails t of
+      PGTyBase b
+        -> T.pack (show b)
+      PGTyDomain b
+        -> colTyTxt b
+      _
+        -> case getArrayBaseTy t of
+             Nothing -> qualTyToScalar (pgColTyName t)
+             -- Array type
+             Just b  -> T.pack $ show b <> "_" <> show (getPGTyArrDim t) <> "d"
 
 mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
@@ -195,12 +210,12 @@ stDWithinInpTy = G.NamedType "st_d_within_input"
 mkCompExpInp :: PGColType -> InpObjTyInfo
 mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk (Just $ PTCol colTy) colGQLTy) typedOps
+  [ map (mkPGTy colTy) typedOps
   , map (mk (Just $ arrOfCol colTy) $ G.toLT colGQLTy) listOps
-  , bool [] (map (mk (Just $ PTCol $ baseBuiltInTy PGText) $ mkScalarBaseTy PGText) stringOps) isStringTy
+  , bool [] (map (mkPGTy $ baseTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [InpValInfo Nothing "_is_null" Nothing (Just $ PTCol $ baseBuiltInTy PGBoolean) $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
+  , [mkPGTyInpVal Nothing "_is_null" $ baseTy PGBoolean]
   ]) HasuraType
   where
     arrOfCol = PTArr . PTCol
@@ -209,14 +224,15 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       , G.Description (T.pack $ show colTy)
       , ". All fields are combined with logical 'AND'."
       ]
-    baseTy = case colDtls of
+    bTy = case colDtls of
       PGTyBase b -> return b
       _          -> Nothing
-    isStringTy = case baseTy of
+    isStringTy = case bTy of
       Just PGVarchar -> True
       Just PGText    -> True
       _              -> False
     mk pt t n = InpValInfo Nothing n Nothing pt $ G.toGT t
+    mkPGTy ty = mk (Just $ PTCol ty) $ mkPGColGTy ty
     colGQLTy = mkPGColGTy colTy
     -- colScalarListTy = GA.GTList colGTy
     typedOps =
@@ -231,45 +247,45 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       , "_similar", "_nsimilar"
       ]
 
-    isJsonbTy = case baseTy of
+    isJsonbTy = case bTy of
       Just PGJSONB -> True
       _            -> False
-    jsonbOpToInpVal (op, ty, desc) = InpValInfo (Just desc) op Nothing (Just $ PTCol $ baseBuiltInTy PGJSONB) ty
+    jsonbOpToInpVal (op, pgTy, desc) = InpValInfo (Just desc) op Nothing (Just pgTy) $ pgTyAnnToGTy pgTy
     jsonbOps =
       [ ( "_contains"
-        , G.toGT $ mkScalarBaseTy PGJSONB
+        , PTCol $ baseTy PGJSONB
         , "does the column contain the given json value at the top level"
         )
       , ( "_contained_in"
-        , G.toGT $ mkScalarBaseTy PGJSONB
+        , PTCol $ baseTy PGJSONB
         , "is the column contained in the given json value"
         )
       , ( "_has_key"
-        , G.toGT $ mkScalarBaseTy PGText
+        , PTCol $ baseTy PGText
         , "does the string exist as a top-level key in the column"
         )
       , ( "_has_keys_any"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarBaseTy PGText
+        , PTArr $ PTCol $ baseTy PGText
         , "do any of these strings exist as top-level keys in the column"
         )
       , ( "_has_keys_all"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarBaseTy PGText
+        , PTArr $ PTCol $ baseTy PGText
         , "do all of these strings exist as top-level keys in the column"
         )
       ]
 
     -- Geometry related ops
     stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing (Just $ PTCol  $ baseBuiltInTy PGGeometry) $ G.toGT stDWithinInpTy
+      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing Nothing $ G.toGT stDWithinInpTy
     stDWithinDesc =
       "is the column within a distance from a geometry value"
 
-    isGeometryTy = case baseTy of
+    isGeometryTy = case bTy of
       Just PGGeometry -> True
       _               -> False
 
     geomOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toGT $ mkScalarBaseTy PGGeometry
+      mkPGTyInpVal (Just desc) op $ baseTy PGGeometry
     geomOps =
       [
         ( "_st_contains"
@@ -376,8 +392,8 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     stDWithinInpM = bool Nothing (Just stDWithinInp) (PGTyBase PGGeometry `elem` map pgColTyDetails colTys)
     stDWithinInp =
       mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toGT $ G.toNT $ mkScalarBaseTy PGGeometry
-      , InpValInfo Nothing "distance" Nothing (Just $ PTCol $ baseBuiltInTy PGGeometry) $ G.toNT $ G.toNT $ mkScalarBaseTy PGFloat
+      [ mkPGTyInpValNT Nothing "from" $ baseTy PGGeometry
+      , mkPGTyInpValNT Nothing "distance" $ baseTy PGFloat
       ]
 
 emptyGCtx :: GCtx

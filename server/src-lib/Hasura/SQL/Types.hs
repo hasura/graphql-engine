@@ -14,7 +14,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Encoding        (text)
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import qualified Language.Haskell.TH.Syntax as TH
 
 import qualified Data.HashMap.Strict.InsOrd as OMap
 import qualified Data.Text.Extended         as T
@@ -96,7 +96,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, TH.Lift)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -140,7 +140,7 @@ isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, TH.Lift)
 
 instance IsIden ConstraintName where
   toIden (ConstraintName t) = Iden t
@@ -150,7 +150,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, TH.Lift)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -166,7 +166,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, TH.Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -184,7 +184,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Ord, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, TH.Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -236,7 +236,7 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, TH.Lift)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -253,7 +253,7 @@ showPGCols cols =
 
 newtype AnnType
   = AnnType {unAnnType :: T.Text}
-  deriving (Show, Eq, Generic, Lift, ToJSON, FromJSON)
+  deriving (Show, Eq, Generic, TH.Lift, ToJSON, FromJSON)
 
 instance Hashable AnnType
 
@@ -276,14 +276,14 @@ jsonbType :: AnnType
 jsonbType = AnnType "jsonb"
 
 newtype PGTyFldName = PGTyFldName { getTyFldText :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Q.ToPrepArg, Q.FromCol, TH.Lift)
 
 
 newtype EnumVal = EnumVal { getEnumVal :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, TH.Lift)
 
 newtype PGTyName = PGTyName { getTyText :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, TH.Lift)
 
 instance ToTxt PGTyName where
   toTxt = getTyText
@@ -311,7 +311,7 @@ data PGBaseColType
   | PGGeometry
   | PGGeography
   | PGUnknown !T.Text
-  deriving (Eq, Lift, Generic)
+  deriving (Eq, TH.Lift, Generic)
 
 instance Hashable PGBaseColType
 
@@ -404,16 +404,22 @@ data PGColTyDetails
   | PGTyEnum   ![EnumVal]
   | PGTyRange
   | PGTyPseudo
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable PGColTyDetails
 
 getArrayBaseTy :: PGColType -> Maybe PGColType
-getArrayBaseTy (PGColType _ _ _ x) = case x of
-  PGTyArray a@(PGColType _ _ _ y) -> case y of
-    PGTyArray{} -> getArrayBaseTy a
-    _ -> Just a
+getArrayBaseTy x = case pgColTyDetails x of
+  PGTyArray b -> case pgColTyDetails b of
+    PGTyArray{} -> getArrayBaseTy b
+    _ -> Just b
   _ -> Nothing
+
+getPGTyArrDim :: PGColType -> Int
+getPGTyArrDim colTy = case pgColTyDetails  colTy of
+  PGTyArray bTy  -> 1 + getPGTyArrDim bTy
+  PGTyDomain bTy -> getPGTyArrDim bTy
+  _              -> 0
 
 data PGColType
   = PGColType
@@ -421,7 +427,7 @@ data PGColType
   , pgColTySqlName :: !AnnType
   , pgColTyOid     :: !PQ.Oid
   , pgColTyDetails :: !PGColTyDetails
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, TH.Lift, Generic)
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 4
@@ -430,8 +436,8 @@ $(deriveJSON
   ''PGColTyDetails)
 $(deriveJSON (aesonDrop 7 camelCase) ''PGColType)
 
-baseBuiltInTy :: PGBaseColType -> PGColType
-baseBuiltInTy b = PGColType qualfdType (AnnType name) (pgTypeOid b)$ PGTyBase b
+baseTy :: PGBaseColType -> PGColType
+baseTy b = PGColType qualfdType (AnnType name) (pgTypeOid b)$ PGTyBase b
   where
     qualfdType = QualifiedObject (SchemaName "pg_catalog") (PGTyName name)
     name = T.pack $ show b

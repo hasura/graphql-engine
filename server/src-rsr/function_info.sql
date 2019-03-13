@@ -12,9 +12,20 @@ SELECT
                 hf.return_type_name,
                 hf.return_type_type,
                 hf.returns_set,
-                hf.input_arg_types,
                 hf.input_arg_names,
-		COALESCE(pp.proallargtypes, pp.proargtypes::int[]) as arg_oids,
+                (
+                  select json_agg(row_to_json(x)) from
+                    ( select
+                      fo.oid as oid,
+                      case
+                        when arr_elem_ty.oid is NOT NULL then 1
+                        else 0
+                      end as dimension
+                      from
+		      (select unnest( COALESCE(pp.proallargtypes, pp.proargtypes) :: int[]) as oid )  fo
+                      left outer join pg_type arr_elem_ty on arr_elem_ty.typarray = fo.oid
+                    ) x
+                )  as input_arg_types,
                 exists(
                   SELECT
                     1

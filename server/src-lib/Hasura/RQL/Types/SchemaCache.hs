@@ -187,7 +187,6 @@ partitionFieldInfosWith fns =
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
 type FieldInfoMap = M.HashMap FieldName FieldInfo
---type FieldInfoMap' = M.HashMap FieldName FieldInfo'
 
 getCols :: FieldInfoMap -> [PGColInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim

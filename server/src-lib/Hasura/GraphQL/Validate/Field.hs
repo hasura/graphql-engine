@@ -184,7 +184,7 @@ processArgs fldParams argsL = do
   inpArgs <- forM args $ \(G.Argument argName argVal) ->
     withPathK (G.unName argName) $ do
       argTy <- getArgTy argName
-      validateInputValue (valueParser $ _iviPGTyAnn argTy) (_iviType argTy) (_iviPGTyAnn argTy) argVal
+      validateInputValue valueParser (_iviType argTy) (_iviPGTyAnn argTy) argVal
 
   forM_ requiredParams $ \argDef -> do
     let param = _iviName argDef

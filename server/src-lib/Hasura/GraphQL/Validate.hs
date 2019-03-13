@@ -8,6 +8,7 @@ module Hasura.GraphQL.Validate
 
 import           Data.Has
 import           Hasura.Prelude
+import           Data.Aeson.Internal                    (JSONPathElement(..))
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -61,7 +62,7 @@ getVarVals
      )
   => [G.VariableDefinition]
   -> VariableValues
-  -> m VarVals
+  -> m VarValsMap
 getVarVals varDefsL inpVals = do
 
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
@@ -80,20 +81,10 @@ getVarVals varDefsL inpVals = do
     -- check that the variable is defined on input types
     when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
 
-    let defM' = bool (defM <|> Just G.VCNull) defM $ G.isNotNull ty
+    let defM' = bool defM (defM <|> Just G.VCNull) $ G.isNotNull ty
     let inpValM = Map.lookup var inpVals
-    when (isNothing inpValM && isNothing defM') $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
+    when (isNothing inpValM && isNothing defM' && G.isNotNull ty) $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
     return (ty,defM',inpValM)
-    --let annValF pgTy = do
-    --      annDefM <- withPathK "defaultValue" $
-    --        mapM (validateInputValue constValueParser ty pgTy) defM'
-
-    --      annInpValM <- withPathK "variableValues" $
-    --        mapM (validateInputValue jsonParser ty pgTy) inpValM
-
-    --      let annValM = annInpValM <|> annDefM
-    --      onNothing annValM $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
-    --return annValF
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
@@ -135,7 +126,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
   -- annotate the variables of this operation
-  annVarVals <- getVarVals (G._todVariableDefinitions opDef) $
+  varVals <- getVarVals (G._todVariableDefinitions opDef) $
                 fromMaybe Map.empty varValsM
 
   -- annotate the fragments
@@ -145,9 +136,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   annFragDefs <- mapM validateFrag fragDefs
 
   -- build a validation ctx
-  let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
+  let valCtx = ValidationCtx (_gTypes ctx) varVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ pathFromRoot $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
   when (G._todType opDef == G.OperationTypeSubscription && length selSet > 1) $
@@ -155,6 +146,11 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
   return (G._todType opDef, selSet)
 
+pathFromRoot :: (MonadError QErr m) => m a -> m a
+pathFromRoot f = f `catchError` (throwError . fromRoot)
+  where
+    fromRoot q = q { qePath = frp $ qePath q}
+      where frp = reverse . takeWhile (/= Key "$") . reverse
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)

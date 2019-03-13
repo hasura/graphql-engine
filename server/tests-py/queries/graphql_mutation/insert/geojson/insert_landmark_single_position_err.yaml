@@ -4,7 +4,7 @@ status: 400
 response:
   errors:
   - extensions:
-      path: '$.variableValues[0].location.coordinates'
+      path: $.variables.landmarks[0].location.coordinates
       code: parse-failed
     message: A Position needs at least 2 elements
 query:

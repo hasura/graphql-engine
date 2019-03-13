@@ -1,6 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Hasura.SQL.Value where
 
+
 import           Hasura.SQL.GeoJSON
 import           Hasura.SQL.Time
 import           Hasura.SQL.Types
@@ -150,7 +151,7 @@ paTxtEncBase c = case c of
   PGValDouble i      -> (oidBuiltIn i, T.pack $ show i)
   PGValNumeric i     -> (oidBuiltIn i, T.pack $ show i)
   PGValBoolean i     -> (oidBuiltIn i, T.pack $ show i)
-  PGValChar i        -> (oidBuiltIn i, T.pack $ show i)
+  PGValChar i        -> (oidBuiltIn i, T.pack [i])
   PGValVarchar t     -> (oidBuiltIn t, t)
   PGValText t        -> (oidBuiltIn t, t)
   PGValDate d        -> (oidBuiltIn d, T.pack $ showGregorian d)
@@ -172,7 +173,7 @@ data TxtEncInfo
 paTxtEnc :: PGColValue -> TxtEncInfo
 paTxtEnc (PGColValue oid v) = case v of
   PGValBase (PGValKnown x)   -> let y = paTxtEncBase x in TxtEncInfo (fst y) True (snd y)
-  PGValBase (PGValUnknown x) -> TxtEncInfo oid True $ T.pack $ show x
+  PGValBase (PGValUnknown x) -> TxtEncInfo oid True  x
   PGValDomain x              -> paTxtEnc x
   PGValComposite x           -> TxtEncInfo oid True x
   PGValRange x               -> TxtEncInfo oid True x

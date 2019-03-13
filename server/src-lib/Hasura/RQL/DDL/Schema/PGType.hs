@@ -21,7 +21,7 @@ toPGColTysWithCaching :: (QErrM m, CacheRWM m, MonadTx m) => [PGColOidInfo] -> m
 toPGColTysWithCaching oids = do
   curTysCache <- addPGTysToCache $ Set.fromList oids
   forM oids $ \oid -> onNothing (Map.lookup oid curTysCache) $ throw500 $
-      "Could not find Postgres type with oid info" <> T.pack (show oid)
+    "Could not find Postgres type with oid info" <> T.pack (show oid)
 
 getPGColTysMap :: Set.HashSet PGColOidInfo -> Q.TxE QErr (Map.HashMap PGColOidInfo PGColType)
 getPGColTysMap ctis = do
@@ -37,7 +37,7 @@ addPGTysToCache i = do
   let inCache x =  isJust $ Map.lookup x tysCache
   if (all inCache i)
     then return tysCache
-    else updatePGTysCache $ Set.union i $ Set.fromList $ Map.keys tysCache
+    else updatePGTysCache i
 
 updatePGTysCache :: (CacheRWM m, MonadTx m) => Set.HashSet PGColOidInfo -> m (Map.HashMap PGColOidInfo PGColType)
 updatePGTysCache iTys = do

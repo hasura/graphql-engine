@@ -12,7 +12,8 @@ module Hasura.GraphQL.Validate.Types
   , FragDef(..)
   , FragDefMap
 --  , AnnVarVals
-  , VarVals
+  , VarVal
+  , VarValsMap
   , EnumTyInfo(..)
   , EnumValInfo(..)
   , InpObjFldMap
@@ -35,8 +36,11 @@ module Hasura.GraphQL.Validate.Types
   , mkScalarBaseTy
   , pgColTyToScalar
   , pgColValToAnnGVal
+  , pgTyAnnToGTy
   , getNamedTy
   , mkTyInfoMap
+  , mkPGTyInpVal
+  , mkPGTyInpValNT
   , fromTyDef
   , fromTyDefQ
   , fromSchemaDoc
@@ -51,6 +55,7 @@ module Hasura.GraphQL.Validate.Types
   , getAnnInpValTy
   , GQLColTyMap
   , PGColTyAnn(..)
+  , qualTyToScalar
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -116,6 +121,10 @@ data PGColTyAnn
  | PTArr PGColTyAnn
  deriving (Show, Eq, TH.Lift)
 
+pgTyAnnToGTy :: PGColTyAnn -> G.GType
+pgTyAnnToGTy (PTCol colTy) = mkPGColGTy colTy
+pgTyAnnToGTy (PTArr p)     = G.toGT $ G.toLT $ G.toNT $ pgTyAnnToGTy p
+
 data InpValInfo
   = InpValInfo
   { _iviDesc    :: !(Maybe G.Description)
@@ -133,6 +142,12 @@ fromInpValDef :: G.InputValueDefinition -> GQLColTyMap -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) gctm =
   InpValInfo descM n defM pgTy ty
   where pgTy = fmap PTCol $ Map.lookup (getBaseTy ty, getArrDim ty) gctm
+
+mkPGTyInpVal :: Maybe G.Description -> G.Name -> PGColType -> InpValInfo
+mkPGTyInpVal desc name colTy = InpValInfo desc name Nothing (Just $ PTCol colTy) $ mkPGColGTy colTy
+
+mkPGTyInpValNT :: Maybe G.Description -> G.Name -> PGColType -> InpValInfo
+mkPGTyInpValNT desc name colTy = InpValInfo desc name Nothing (Just $ PTCol colTy) $ G.toNT $ mkPGColGTy colTy 
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
@@ -504,11 +519,12 @@ isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
 pgColTyToScalar :: PGColType -> Text
 pgColTyToScalar (PGColType qn _ _ d) = case d of
   PGTyBase b -> pgBaseColTyToScalar b
-  _          -> qualTypeToScalar qn
-  where
-    qualTypeToScalar (QualifiedObject (SchemaName s) n)
-      | s `elem` ["pg_catalog","public"] = getTyText n
-      | otherwise = s <> "_" <> getTyText n
+  _          -> qualTyToScalar qn
+
+qualTyToScalar :: QualifiedType -> Text
+qualTyToScalar (QualifiedObject (SchemaName s) n)
+  | s `elem` ["pg_catalog","public"] = getTyText n
+  | otherwise = s <> "_" <> getTyText n
 
 -- map postgres types to builtin scalars
 pgBaseColTyToScalar :: PGBaseColType -> Text
@@ -591,7 +607,7 @@ type GQLColTyMap = Map.HashMap (G.NamedType,ArrDim) PGColType
 
 defaultPGColTyMap :: GQLColTyMap
 defaultPGColTyMap = Map.fromList $
-  map (\(x,y) -> ( (G.NamedType $ G.Name x,0), baseBuiltInTy y)) $
+  map (\(x,y) -> ( (G.NamedType $ G.Name x,0), baseTy y)) $
   [ ("Int"    , PGInteger)
   , ("Float"  , PGFloat  )
   , ("String" , PGText   )
@@ -622,9 +638,8 @@ defaultDirectives =
   [mkDirective "skip", mkDirective "include"]
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
-    args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing
-           (Just $ PTCol $ baseBuiltInTy PGBoolean) $
-           G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
+    args = Map.singleton "if" $ mkPGTyInpValNT Nothing "if" $
+           baseTy PGBoolean
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 
@@ -640,9 +655,10 @@ data FragDef
 
 type FragDefMap = Map.HashMap G.Name FragDef
 
-type VarVals =
-  Map.HashMap G.Variable
-   (G.GType,Maybe G.DefaultValue,Maybe J.Value)
+type VarVal = (G.GType, Maybe G.DefaultValue, Maybe J.Value)
+
+type VarValsMap =
+  Map.HashMap G.Variable VarVal
 
 type AnnGObject = OMap.InsOrdHashMap G.Name AnnGValue
 

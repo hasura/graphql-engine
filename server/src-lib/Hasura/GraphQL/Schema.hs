@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
   , GCtxMap
@@ -185,8 +186,8 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
   [ InpValInfo (Just whereDesc) "where" Nothing Nothing $ G.toGT $ mkBoolExpTy tn
-  , InpValInfo (Just limitDesc) "limit" Nothing Nothing $ G.toGT $ mkScalarBaseTy PGInteger
-  , InpValInfo (Just offsetDesc) "offset" Nothing Nothing $ G.toGT $ mkScalarBaseTy PGInteger
+  , mkPGTyInpVal (Just limitDesc) "limit" $ baseTy PGInteger
+  , mkPGTyInpVal (Just offsetDesc) "offset" $ baseTy PGInteger
   , InpValInfo (Just orderByDesc) "order_by" Nothing Nothing $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
   , InpValInfo (Just distinctDesc) "distinct_on" Nothing Nothing $ G.toGT $ G.toLT $
@@ -322,13 +323,13 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = mkHsraObjFldInfo Nothing "count" countParams (Just $ PTCol $ baseBuiltInTy PGInteger) $ G.toGT $ mkScalarBaseTy PGInteger
+    countFld = mkHsraPGTyObjFld Nothing "count" countParams $ baseTy PGInteger
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
     countColInpVal = InpValInfo Nothing "columns" Nothing Nothing $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
-    distinctInpVal = InpValInfo Nothing "distinct" Nothing (Just $ PTCol $ baseBuiltInTy PGBoolean) $ G.toGT $ mkScalarBaseTy PGBoolean
+    distinctInpVal = mkPGTyInpVal Nothing "distinct" $ baseTy PGBoolean
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
     compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
@@ -346,7 +347,7 @@ type table_<agg-op>_fields{
 mkTableColAggFldsObj
   :: QualifiedTable
   -> G.Name
-  -> (PGColType -> G.NamedType)
+  -> (PGColType -> PGColType)
   -> [PGColInfo]
   -> ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
@@ -356,8 +357,8 @@ mkTableColAggFldsObj tn op f cols =
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
 
     mkColObjFld c = let colTy = pgiType c in
-      mkHsraObjFldInfo Nothing (G.Name $ getPGColTxt $ pgiName c)
-      Map.empty (Just $ PTCol colTy) $ G.toGT $ f colTy
+      mkHsraPGTyObjFld Nothing (G.Name $ getPGColTxt $ pgiName c)
+      Map.empty $ f colTy
 
 {-
 
@@ -511,8 +512,7 @@ mkMutRespObj tn sel nestAlwd =
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
-      mkHsraObjFldInfo (Just desc) "affected_rows" Map.empty (Just $ PTCol $ baseBuiltInTy PGInteger) $
-        G.toGT $ G.toNT $ mkScalarBaseTy PGInteger
+      mkHsraPGTyObjFld (Just desc) "affected_rows" Map.empty $ baseTy PGInteger
       where
         desc = "number of affected rows by the mutation"
     returningFld =
@@ -752,20 +752,18 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGText) $
-      G.toGT $ G.NamedType "String"
+    deleteKeyInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) $ baseTy PGText
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGInteger) $
-      G.toGT $ G.NamedType "Int"
+    deleteElemInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) $ baseTy PGInteger
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTCol $ baseBuiltInTy PGText) $
-      G.toGT $ G.toLT $ G.NamedType "String"
+    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTArr $ PTCol $ baseTy PGText) $
+      G.toGT $ G.toLT $ mkPGColGTy $ baseTy PGText
 
 {-
 
@@ -1401,16 +1399,16 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
 
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
-    onlyFloat = const $ mkScalarBaseTy PGFloat
+    onlyFloat = const $ baseTy PGFloat
 
-    mkTypeMaker "sum" = mkScalarTy
+    mkTypeMaker "sum" = id
     mkTypeMaker _     = onlyFloat
 
     mkColAggFldsObjs flds =
       let numCols = getNumCols flds
           compCols = getCompCols flds
           mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n mkScalarTy compCols
+          mkCompObjFld n = mkTableColAggFldsObj tn n id compCols
           numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
           compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs

@@ -37,7 +37,7 @@ data ValidationCtx
   = ValidationCtx
   { _vcTypeMap    :: !TypeMap
   -- these are in the scope of the operation
-  , _vcVarVals    :: !VarVals
+  , _vcVarVals    :: !VarValsMap
   -- all the fragments
   , _vcFragDefMap :: !FragDefMap
   } deriving (Show, Eq)

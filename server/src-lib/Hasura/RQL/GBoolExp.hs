@@ -78,8 +78,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "$contains"      -> jsonbOnlyOp $ AContains <$> parseOne
     "_contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
     "$contained_in"  -> jsonbOnlyOp $ AContainedIn <$> parseOne
-    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseBuiltInTy PGText)
-    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseBuiltInTy PGText)
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
 
     --FIXME:- Parse a session variable as text array values
     --TODO:- Add following commented operators after fixing above said
@@ -157,14 +157,14 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
 
     jsonbOnlyOp m = case pgColTyDetails colTy of
       PGTyBase PGJSONB -> m
-      _               -> throwError $ buildMsg colTy [baseBuiltInTy PGJSONB]
+      _               -> throwError $ buildMsg colTy [baseTy PGJSONB]
 
     parseGeometryOp f =
       geometryOnlyOp colTy >> f <$> parseOne
 
     parseSTDWithinObj = do
       WithinOp distVal fromVal <- parseVal
-      dist <- withPathK "distance" $ parser (baseBuiltInTy PGFloat) distVal
+      dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
       from <- withPathK "from" $ parser colTy fromVal
       return $ ASTDWithin $ WithinOp dist from
 
@@ -181,7 +181,7 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
 
     geometryOnlyOp (PGGeomTy{}) = return ()
     geometryOnlyOp ty =
-      throwError $ buildMsg ty [baseBuiltInTy PGGeometry]
+      throwError $ buildMsg ty [baseTy PGGeometry]
 
     parseWithTy ty = parser ty val
     parseOne = parseWithTy colTy
@@ -222,7 +222,7 @@ textOnlyOp colTy = case  pgColTyDetails colTy of
     textOnlyOp' PGText    = return ()
     textOnlyOp' PGVarchar = return ()
     textOnlyOp' _         = onlyTxtTyErr
-    onlyTxtTyErr = throwError $ buildMsg colTy $ baseBuiltInTy <$> [PGVarchar, PGText]
+    onlyTxtTyErr = throwError $ buildMsg colTy $ baseTy <$> [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
