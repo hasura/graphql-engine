@@ -14,6 +14,7 @@ import qualified Data.Sequence            as DS
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -24,15 +25,16 @@ import qualified Hasura.SQL.DML           as S
 
 data DeleteQueryP1
   = DeleteQueryP1
-  { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , dqp1MutFlds :: !MutFlds
+  { dqp1Table    :: !QualifiedTable
+  , dqp1Where    :: !(AnnBoolExpSQL, AnnBoolExpSQL)
+  , dqp1MutFlds  :: !MutFlds
+  , dqp1UniqCols :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
-mkSQLDelete
-  :: DeleteQueryP1 -> S.SelectWith
-mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds False
+mkDeleteCTE
+  :: DeleteQueryP1 -> S.CTE
+mkDeleteCTE (DeleteQueryP1 tn (fltr, wc) _ _) =
+  S.CTEDelete delete
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $
@@ -40,10 +42,12 @@ mkSQLDelete (DeleteQueryP1 tn (fltr, wc) mutFlds) =
 
 getDeleteDeps
   :: DeleteQueryP1 -> [SchemaDependency]
-getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds) =
-  mkParentDep tn : whereDeps <> retDeps
+getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds uniqCols) =
+  mkParentDep tn : uniqColDeps <> whereDeps <> retDeps
   where
     whereDeps = getBoolExpDeps tn wc
+    uniqColDeps = map (mkColDep "on_type" tn) $
+                  maybe [] (map pgiName) uniqCols
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
 
@@ -70,6 +74,8 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      uniqCols = getUniqCols (getCols fieldInfoMap) $
+                 tiUniqOrPrimConstraints tableInfo
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
@@ -81,7 +87,7 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
+    (mkDefaultMutFlds mAnnRetCols) uniqCols
 
   where
     selNecessaryMsg =
@@ -90,20 +96,21 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
       <> "without \"select\" permission on the table"
 
 validateDeleteQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
 validateDeleteQ =
   liftDMLP1 . validateDeleteQWith binRHSBuilder
 
-deleteQueryToTx :: (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-deleteQueryToTx (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
+deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx strfyNum (u, p) =
+  runMutation $ Mutation (dqp1Table u) (deleteCTE, p)
+                (dqp1MutFlds u) (dqp1UniqCols u) strfyNum
   where
-    deleteSQL = toSQL $ mkSQLDelete u
+    deleteCTE = mkDeleteCTE u
 
 runDelete
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => DeleteQuery -> m RespBody
-runDelete q =
-  validateDeleteQ q >>= liftTx . deleteQueryToTx
+runDelete q = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  validateDeleteQ q >>= liftTx . deleteQueryToTx strfyNum

@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   getPlaceholder,
@@ -65,7 +65,7 @@ class EditItem extends Component {
       return null;
     }
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const columns = schemas.find(x => x.table_name === tableName).columns;
 
     const refs = {};

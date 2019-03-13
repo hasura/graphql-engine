@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { loginClicked, UPDATE_ADMIN_SECRET_INPUT } from '../Main/Actions';
 
@@ -11,13 +12,18 @@ class Login extends Component {
       data: e.target.value,
     });
   };
+
   loginClicked = () => {
     this.props.dispatch(loginClicked());
   };
+
   render() {
-    const { loginInProgress, loginError } = this.props;
+    const { loginInProgress, loginError, dispatch } = this.props;
+
+    const styles = require('./Login.scss');
+    const hasuraLogo = require('./blue-logo.svg');
+
     let loginText = 'Enter';
-    const styles = require('./Styles.scss');
     if (loginInProgress) {
       loginText = (
         <span>
@@ -29,8 +35,6 @@ class Login extends Component {
       loginText = 'Error. Try again?';
     }
 
-    const hasuraLogo = require('./blue-logo.svg');
-    const { dispatch } = this.props;
     return (
       <div className={styles.mainWrapper + ' container-fluid'}>
         <div className={styles.container + ' container'} id="login">
@@ -54,7 +58,6 @@ class Login extends Component {
                     <input
                       onChange={this.handleAdminSecret}
                       className={styles.form_input + ' form-control'}
-                      placeholder="Password"
                       type="password"
                       placeholder={`Enter ${globals.adminSecretLabel}`}
                       name="password"
@@ -62,9 +65,9 @@ class Login extends Component {
                   </div>
                 </div>
                 <div className={styles.signin_btn}>
-                  <button type="submit" className="form-control">
+                  <Button type="submit" color="green" className="form-control">
                     {loginText}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>

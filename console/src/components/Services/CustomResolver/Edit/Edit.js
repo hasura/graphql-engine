@@ -12,8 +12,8 @@ import { VIEW_RESOLVER } from '../customActions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';
-import CommonTabLayout from '../../Layout/CommonTabLayout/CommonTabLayout';
-import Button from '../../Layout/Button/Button';
+import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
@@ -32,16 +32,19 @@ class Edit extends React.Component {
     this.state = {};
     this.state.deleteConfirmationError = null;
   }
+
   componentDidMount() {
     const { resolverName } = this.props.params;
     if (!resolverName) {
       this.props.dispatch(push(prefixUrl));
     }
+
     Promise.all([
       this.props.dispatch(fetchResolver(resolverName)),
       this.props.dispatch({ type: VIEW_RESOLVER, data: resolverName }),
     ]);
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.params.resolverName !== this.props.params.resolverName) {
       Promise.all([
@@ -53,6 +56,7 @@ class Edit extends React.Component {
       ]);
     }
   }
+
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
@@ -62,9 +66,11 @@ class Edit extends React.Component {
 
   handleDeleteResolver(e) {
     e.preventDefault();
+
     const a = prompt(
       'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete stitched GraphQL schema. Please type "DELETE" (in caps, without quotes) to confirm.\n'
     );
+
     try {
       if (a && typeof a === 'string' && a.trim() === 'DELETE') {
         this.updateDeleteConfirmationError(null);
@@ -78,20 +84,26 @@ class Edit extends React.Component {
       console.error(err);
     }
   }
+
   updateDeleteConfirmationError(data) {
     this.setState({ deleteConfirmationError: data });
   }
+
   modifyClick() {
     this.props.dispatch({ type: TOGGLE_MODIFY });
   }
+
   handleCancelModify() {
     this.props.dispatch({ type: TOGGLE_MODIFY });
   }
+
   editClicked() {
     this.props.dispatch(modifyResolver());
   }
+
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
+
     const { isFetching, isRequesting, editState, migrationMode } = this.props;
     const { resolverName } = this.props.params;
 

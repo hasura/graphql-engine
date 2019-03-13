@@ -105,3 +105,12 @@ With the above steps, Auth0 is configured and ready to be used in the applicatio
 a table, you can setup access control rules.
 
 Refer :doc:`../../auth/basics` for more information.
+
+You can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
+for **unauthorized users** (e.g. ``anonymous``). This will allow you to set permissions for users that are not
+logged in.
+
+The configured unauthorized role will be used whenever an access token is not present in a request to the GraphQL API. 
+
+This can be useful for data that you would like anyone to be able to access and can be configured and restricted
+just like any other role.

@@ -30,12 +30,17 @@ newtype FuncArgItem
   = FuncArgItem {getArgName :: G.Name}
   deriving (Show, Eq)
 
-type FuncArgCtx = Map.HashMap G.NamedType (Seq.Seq FuncArgItem)
+type FuncArgSeq = Seq.Seq FuncArgItem
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
 
-type UpdPermForIns = ([PGCol], AnnBoolExpSQL)
+data UpdPermForIns
+  = UpdPermForIns
+  { upfiCols   :: ![PGCol]
+  , upfiFilter :: !AnnBoolExpSQL
+  , upfiSet    :: !PreSetCols
+  } deriving (Show, Eq)
 
 data InsCtx
   = InsCtx
@@ -44,6 +49,9 @@ data InsCtx
   , icSet       :: !PreSetCols
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
+  , icUniqCols  :: !(Maybe [PGColInfo])
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
+
+type PGColArgMap = Map.HashMap G.Name PGColInfo

@@ -7,7 +7,6 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   viewTableConnector,
   insertItemConnector,
   rawSQLConnector,
@@ -19,13 +18,15 @@ import {
   relationshipsConnector,
   relationshipsViewConnector,
   permissionsConnector,
-  dataHeaderConnector,
+  dataPageConnector,
   migrationsConnector,
   functionWrapperConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
   // metadataConnector,
 } from '.';
+
+import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   fetchDataInit,
@@ -47,9 +48,9 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path="data" component={dataHeaderConnector(connect)}>
+    <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={schemaContainerConnector(connect)}>
+      <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -129,7 +130,7 @@ const makeDataRouter = (
   );
 };
 
-const dataRouter = (connect, store, composeOnEnterHooks) => {
+const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -198,4 +199,4 @@ const dataRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default dataRouter;
+export default dataRouterUtils;

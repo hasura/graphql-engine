@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import {
   removeHeader,
@@ -232,8 +232,8 @@ class AddTrigger extends Component {
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
-    const styles = require('../TableCommon/Table.scss');
-    let createBtnText = 'Create';
+    const styles = require('../TableCommon/EventTable.scss');
+    let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -253,7 +253,6 @@ class AddTrigger extends Component {
       const tableSchema = tableListBySchema.find(
         t => t.table_name === e.target.value
       );
-
       const columns = [];
       if (tableSchema) {
         tableSchema.columns.map(colObj => {
@@ -261,7 +260,7 @@ class AddTrigger extends Component {
           columns.push(column);
         });
       }
-      dispatch(operationToggleAllColumns(columns));
+      dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
     };
 
     const handleOperationSelection = e => {
@@ -271,7 +270,9 @@ class AddTrigger extends Component {
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        dispatch(operationToggleColumn(column, type));
+        dispatch(
+          operationToggleColumn(column, type, supportColumnChangeFeature)
+        );
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName
@@ -296,7 +297,7 @@ class AddTrigger extends Component {
             />
           );
           return (
-            <div key={i} className={styles.noPadd + ' col-md-4'}>
+            <div key={i} className={styles.padd_remove + ' col-md-4'}>
               <div className={'checkbox '}>
                 <label>
                   {inputHtml}
@@ -310,7 +311,6 @@ class AddTrigger extends Component {
       }
       return null;
     };
-
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
@@ -323,7 +323,7 @@ class AddTrigger extends Component {
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
-          <div className={styles.clearBoth + ' ' + styles.listenColumnWrapper}>
+          <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
             {' '}
             {getColumnList('update')}{' '}
           </div>
@@ -470,13 +470,13 @@ class AddTrigger extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.main_wrapper} ${
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
           styles.padd_left
         }`}
       >
         <Helmet title="Add Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new trigger</h2>
+          <h2 className={styles.heading_text}>Add a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />

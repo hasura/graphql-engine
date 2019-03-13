@@ -224,6 +224,9 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_artist_search_tracks_aggregate(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_search_tracks_aggregate.yaml')
 
+    def test_staff_passed_students(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'

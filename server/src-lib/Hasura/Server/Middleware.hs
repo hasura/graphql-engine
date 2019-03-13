@@ -11,7 +11,6 @@ import           Hasura.Server.Utils
 
 import qualified Data.ByteString       as B
 import qualified Data.CaseInsensitive  as CI
-import qualified Data.HashSet          as Set
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
 
@@ -22,8 +21,8 @@ corsMiddleware policy app req sendResp =
 
   where
     handleCors origin = case cpConfig policy of
-      CCDisabled -> app req sendResp
-      CCAllowAll -> sendCors origin
+      CCDisabled _ -> app req sendResp
+      CCAllowAll   -> sendCors origin
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, send cors headers
         | bsToTxt origin `elem` dmFqdns ds   -> sendCors origin
@@ -66,7 +65,3 @@ corsMiddleware policy app req sendResp =
 
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
     mkRespHdrs = map (\(k,v) -> (CI.mk k, v))
-
-    inWildcardList :: Domains -> Text -> Bool
-    inWildcardList (Domains _ wildcards) origin =
-      either (const False) (`Set.member` wildcards) $ parseOrigin origin

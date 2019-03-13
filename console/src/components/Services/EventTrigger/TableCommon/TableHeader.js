@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 
 const TableHeader = ({ triggerName, tabName, count }) => {
-  const styles = require('./Table.scss');
+  const styles = require('./EventTable.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';

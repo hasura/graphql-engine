@@ -1,5 +1,15 @@
 # anchor refs to be used elsewhere
 refs:
+  skip_job_on_ciignore: &skip_job_on_ciignore
+    run:
+      name: checking if job should be terminated or not
+      command: |
+        if [ -f /build/ciignore/skip_job.txt ]; then
+          echo "halting job due to /build/ciignore/skip_job.txt"
+          circleci-agent step halt
+        else
+          echo "no skip_job file present, full steam ahead"
+        fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -65,9 +75,10 @@ refs:
   test_server: &test_server
     working_directory: ~/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - *wait_for_postgres
     - run:
         name: test the server
@@ -79,6 +90,9 @@ refs:
   pytest_server: &pytest_server
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
     - checkout
     - restore_cache:
         keys:
@@ -86,17 +100,18 @@ refs:
     - restore_cache:
         keys:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
-    - attach_workspace:
-        at: /build
     - *wait_for_postgres
+    - run:
+        name: Install deps
+        command: |
+          apt-get update
+          apt install --yes pgbouncer jq curl postgresql-client
     - run:
         name: Run Python tests
         environment:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
-          apt-get update
-          apt install --yes jq curl
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
         name: Generate coverage report
@@ -116,10 +131,16 @@ jobs:
     - image: hasura/graphql-engine-cli-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
     - checkout
     - run:
         name: check build worthiness
         command: .circleci/ciignore.sh
+    - persist_to_workspace:
+        root: /build
+        paths:
+        - ciignore  
 
   # build the server binary, and package into docker image
   build_server:
@@ -127,6 +148,9 @@ jobs:
     - image: hasura/graphql-engine-server-builder:v0.3
     working_directory: ~/graphql-engine
     steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
     - checkout
     - *setup_remote_docker
     - restore_cache:
@@ -223,9 +247,10 @@ jobs:
         POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
@@ -255,9 +280,10 @@ jobs:
         POSTGRES_DB: gql_test
     working_directory: /go/src/github.com/hasura/graphql-engine
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         keys:
         - cli-vendor-{{ checksum "cli/Gopkg.toml" }}-{{ checksum "cli/Gopkg.lock" }}
@@ -301,9 +327,10 @@ jobs:
     working_directory: ~/graphql-engine
     parallelism: 4
     steps:
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - checkout
     - restore_cache:
         key:
           console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
@@ -336,15 +363,39 @@ jobs:
         paths:
           - _console_output
 
+  # test server upgrade from last version to current build
+  test_server_upgrade:
+    docker:
+    - image: hasura/graphql-engine-upgrade-tester:v0.4
+      environment:
+        HASURA_GRAPHQL_DATABASE_URL: postgres://gql_test:@localhost:5432/gql_test
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - run:
+        name: upgrade_test 
+        command: .circleci/server-upgrade/run.sh
+    - store_artifacts:
+        path: /build/_server_output
+        destination: server
+    
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3
     working_directory: ~/graphql-engine
     steps:
-    - *setup_remote_docker
-    - checkout
     - attach_workspace:
         at: /build
+    - *skip_job_on_ciignore
+    - *setup_remote_docker
+    - checkout
     - run:
         name: deploy
         command: .circleci/deploy.sh
@@ -374,6 +425,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
+    - test_server_upgrade:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
@@ -381,8 +436,11 @@ workflows:
         - pytest_server_pg_10.6
         - pytest_server_pg_9.6
         - pytest_server_pg_9.5
+        - test_server_upgrade
     - test_cli_with_last_release:
         <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:

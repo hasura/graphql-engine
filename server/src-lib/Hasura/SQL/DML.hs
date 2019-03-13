@@ -267,6 +267,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SETuples ![SQLExp]
   | SECount !CountType
   deriving (Show, Eq)
 
@@ -323,6 +324,7 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SETuples exps) = paren $ ", " <+> exps
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
@@ -497,6 +499,19 @@ mkExists fromItem whereFrag =
   , selWhere = Just $ WhereFrag whereFrag
   }
 
+mkBoolExpWithColVal
+  :: (PGCol -> SQLExp)
+  -> [HM.HashMap PGCol SQLExp]
+  -> BoolExp
+mkBoolExpWithColVal f colValMaps =
+  case colValMaps of
+    []      -> BELit False
+    l@(h:_) ->
+      let cols = map f $ HM.keys h
+          colTup = SETuples cols
+          valTups = map (SETuples . HM.elems) l
+      in BEIN colTup valTups
+
 instance ToSQL BoolExp where
   toSQL (BELit True)  = TB.text $ T.squote "true"
   toSQL (BELit False) = TB.text $ T.squote "false"
@@ -604,9 +619,17 @@ buildSEI :: PGCol -> Int -> SetExpItem
 buildSEI colName argNumber =
   SetExpItem (colName, SEPrep argNumber)
 
-buildSEWithExcluded :: [PGCol] -> SetExp
-buildSEWithExcluded cols = SetExp $ flip map cols $
-  \col -> SetExpItem (col, SEExcluded $ getPGColTxt col)
+buildUpsertSetExp
+  :: [PGCol]
+  -> HM.HashMap PGCol SQLExp
+  -> SetExp
+buildUpsertSetExp cols preSet =
+  SetExp $ map SetExpItem $ HM.toList setExps
+  where
+    setExps = HM.union preSet $ HM.fromList $
+      flip map cols $ \col ->
+        (col, SEExcluded $ getPGColTxt col)
+
 
 newtype UsingExp = UsingExp [TableName]
                   deriving (Show, Eq)

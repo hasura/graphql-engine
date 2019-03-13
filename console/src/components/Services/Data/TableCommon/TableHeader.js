@@ -1,6 +1,10 @@
 import React from 'react';
+import globals from '../../../../Globals';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { changeTableOrViewName } from '../TableModify/ModifyActions';
+import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
+import { tabNameMap } from '../utils';
 
 const TableHeader = ({
   tableName,
@@ -8,26 +12,40 @@ const TableHeader = ({
   count,
   migrationMode,
   currentSchema,
+  dispatch,
+  allowRename,
 }) => {
-  const styles = require('./Table.scss');
+  const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
   }
-  let activeTab;
-  if (tabName === 'view') {
-    activeTab = 'Browse Rows';
-  } else if (tabName === 'insert') {
-    activeTab = 'Insert Row';
-  } else if (tabName === 'modify') {
-    activeTab = 'Modify';
-  } else if (tabName === 'relationships') {
-    activeTab = 'Relationships';
-  } else if (tabName === 'permissions') {
-    activeTab = 'Permissions';
-  }
+  const activeTab = tabNameMap[tabName];
+
+  const tableRenameCallback = newName => {
+    const currentPath = window.location.pathname.replace(
+      new RegExp(globals.urlPrefix, 'g'),
+      ''
+    );
+    const newPath = currentPath.replace(
+      /(\/schema\/.*)\/tables\/(\w*)(\/.*)?/,
+      `$1/tables/${newName}$3`
+    );
+    window.location.replace(
+      `${window.location.origin}${globals.urlPrefix}${newPath}`
+    );
+  };
+
+  const saveTableNameChange = newName => {
+    dispatch(
+      changeTableOrViewName(true, tableName, newName, () =>
+        tableRenameCallback(newName)
+      )
+    );
+  };
+
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
@@ -52,7 +70,14 @@ const TableHeader = ({
           </Link>{' '}
           <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
         </div>
-        <h2 className={styles.heading_text}>{tableName}</h2>
+        <EditableHeading
+          currentValue={tableName}
+          save={saveTableNameChange}
+          loading={false}
+          editable={tabName === 'modify' && allowRename}
+          dispatch={dispatch}
+          property="table"
+        />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
             <li
