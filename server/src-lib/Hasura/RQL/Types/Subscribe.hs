@@ -38,7 +38,7 @@ type TriggerName = T.Text
 type TriggerId   = T.Text
 type EventId     = T.Text
 
-data Ops = INSERT | UPDATE | DELETE deriving (Show)
+data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
