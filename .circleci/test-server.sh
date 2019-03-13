@@ -128,6 +128,8 @@ export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 
 PID=""
 WH_PID=""
+HS_PID=""
+
 trap stop_services ERR
 trap stop_services INT
 
@@ -355,5 +357,67 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 
 fi
+
+# horizontal scale test
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+unset HASURA_GRAPHQL_ADMIN_SECRET
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
+
+HASURA_HS_TEST_DB='postgres://postgres:postgres@localhost:6543/hs_hge_test'
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database hs_hge_test;"
+
+# create pgbouncer user
+useradd pgbouncer
+cd $CIRCLECI_FOLDER
+chown -R pgbouncer:pgbouncer pgbouncer
+
+# start pgbouncer
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
+
+# start 1st server
+"$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+wait_for_port 8080
+
+# start 2nd server
+"$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve \
+                  --server-port 8081 \
+                  >> "$OUTPUT_FOLDER/hs-graphql-engine.log" 2>&1 & HS_PID=$!
+wait_for_port 8081
+
+# run test
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+
+# Shutdown pgbouncer
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
+
+cd $CIRCLECI_FOLDER
+
+# start pgbouncer again
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
+
+# sleep for 30 seconds
+sleep 30
+
+# run test
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+
+# Shutdown pgbouncer
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
+
+kill $PID
+kill $HS_PID
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database hs_hge_test;"
+sleep 4
+combine_hpc_reports
+unset HASURA_HS_TEST_DB
+
+
+# end horizontal scale test
 
 mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true
