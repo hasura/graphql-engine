@@ -177,7 +177,7 @@ inside which the Hasura specific claims will be present. E.g. - ``https://mydoma
 
 
 ``claims_format``
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 This is an optional field, with only the following possible values:
 - ``json``
 - ``stringified_json``
@@ -386,7 +386,7 @@ The config generated from this page can be directly pasted in yaml files and com
 care of escaping new lines.
 
 .. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
-   :width: 50 %
+   :width: 75%
 
 **See:**
 

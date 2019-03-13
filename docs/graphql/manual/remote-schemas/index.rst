@@ -19,7 +19,7 @@ This is what Hasura running with "Remote schemas" looks like:
 
 .. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
-   :width: 500px
+   :width: 75%
 
 .. note::
 

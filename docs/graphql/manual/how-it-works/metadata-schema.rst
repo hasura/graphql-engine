@@ -32,7 +32,7 @@ Schema
 """"""
 
 .. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_table.jpg
-  :width: 50%
+  :width: 30%
   :alt: hdb_table schema
 
 Column Definitions
@@ -58,7 +58,7 @@ Schema
 """"""
 
 .. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_relationship.jpg
-  :width: 50%
+  :width: 30%
   :alt: hdb_relationship schema
 
 Column Definitions
@@ -102,7 +102,7 @@ Schema
 """"""
 
 .. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_permission.jpg
-  :width: 50%
+  :width: 30%
   :alt: hdb_permission schema
 
 Column Definitions

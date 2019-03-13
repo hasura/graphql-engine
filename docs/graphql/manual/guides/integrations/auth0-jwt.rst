@@ -95,7 +95,7 @@ The config generated from this page can be directly pasted in yaml files and com
 escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
-   :width: 50 %
+   :width: 75%
 
 
 Add Access Control Rules via Hasura Console

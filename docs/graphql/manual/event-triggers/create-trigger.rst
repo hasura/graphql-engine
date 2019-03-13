@@ -40,8 +40,6 @@ Advanced Settings
 -----------------
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
-   :width: 75 %
-
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
