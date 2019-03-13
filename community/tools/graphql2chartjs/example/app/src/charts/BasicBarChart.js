@@ -65,6 +65,7 @@ const BasicBarChart = ({ path }) => {
               </div>
             </div>
           </div>
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/tools/graphql2chartjs/example/app/src/charts/BasicBarChart.js">View source </a>
         <hr />
       </div>
     </div>

@@ -97,7 +97,7 @@ const LiveChart = ({ path }) => {
               </div>
             </div>
           </div>
-          <a href="something">View on codesandbox </a> { ' | ' } <a href="something">View source </a>
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/tools/graphql2chartjs/example/app/src/charts/LiveChart.js">View source </a>
           <br/>
         <hr />
       </div>

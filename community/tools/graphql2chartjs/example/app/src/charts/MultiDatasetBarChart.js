@@ -84,6 +84,7 @@ const MultiDatasetBarChart = ({ path }) => {
               </div>
             </div>
           </div>
+          <a href="https://github.com/hasura/graphql-engine/tree/master/community/tools/graphql2chartjs/example/app/src/charts/MultiDatasetBarChart.js">View source </a>
         <hr />
       </div>
     </div>

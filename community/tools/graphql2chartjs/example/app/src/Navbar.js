@@ -20,6 +20,9 @@ const Bar = () => {
           <Nav.Link href="https://github.com/hasura/graphql-engine/tree/master/community/tools/graphql2chartjs">
             <Button variant="dark" size="sm">GitHub</Button>
           </Nav.Link>
+          <Nav.Link href="https://codesandbox.io/s/p2wpj1o8pj">
+            <Button variant="link" size="sm">Edit in sandbox</Button>
+          </Nav.Link>
         </Nav>
       </Navbar.Collapse>
     </Navbar>
