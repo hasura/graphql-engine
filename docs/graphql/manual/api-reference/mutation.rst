@@ -238,11 +238,34 @@ Mutation Response
 ^^^^^^^^^^^^^^^^^
 .. code-block:: none
 
+    # if table has atleast one primary key or
+    # one unique constraint with not null columns
     {
       affected_rows
       returning {
         response-field1
         response-field2
+        ..
+        relation1{
+          relation1-field1
+          relation1-field2
+          ..
+        }
+        relation2{
+          relation2-field1
+          relation2-field2
+          ..
+        }
+        ..
+      }
+    }
+
+    # if table has no primary key or unique constraints
+    {
+      affected_rows
+      returning {
+        col-field1
+        col-field2
         ..
       }
     }
@@ -251,6 +274,22 @@ E.g.:
 
 .. code-block:: graphql
 
+    # if table has atleast one primary key or
+    # one unique constraint with not null columns
+    {
+      affected_rows
+      returning {
+        id
+        author_id
+        articles{
+          id
+          title
+          content
+        }
+      }
+    }
+
+    # if table has no primary key or unique constraints
     {
       affected_rows
       returning {
@@ -266,6 +305,8 @@ E.g.:
 
 .. code-block:: none
 
+    # if table has atleast one primary key or
+    # one unique constraint with not null columns
     objects: [
       {
         field1: value,
@@ -282,12 +323,23 @@ E.g.:
       },
       ..
     ]
-    # no nested objects
+
+    # if table has no primary key or unique constraints
+    objects: [
+      {
+         col_field1: value,
+         col_field2: value
+         ..
+      },
+      ..
+    ]
 
 E.g.:
 
 .. code-block:: graphql
     
+    # if table has atleast one primary key or
+    # one unique constraint with not null columns
     objects: [
       {
         title: "Software is eating the world",
@@ -298,6 +350,14 @@ E.g.:
             name: "Sydney"
           }
         }
+      }
+    ]
+
+    # if table has no primary key or unique constraints
+    objects: [
+      {
+        title: "Software is eating the world",
+        content: "This week, Hewlett-Packard..."
       }
     ]
 

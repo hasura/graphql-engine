@@ -18,11 +18,30 @@ Auto-generated delete mutation schema
   ): article_mutation_response
 
   # response of any mutation on the table "article"
+
+  # if table has atleast one primary key or
+  # one unique constraint with not null columns
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
+  }
+
+  # if table has no primary key or unique constraints
+  type article_mutation_response {
+    # number of affected rows by the mutation
+    affected_rows: Int!
+    #data of the affected rows by the mutation
+    returning: [article_columns!]!
+  }
+
+  # only columns
+  type article_columns {
+    id
+    title
+    content
+    author_id
   }
 
 As you can see from the schema:
