@@ -4,7 +4,7 @@ This example app is live at https://graphql2chartjs-examples.herokuapp.com
 
 ## Client (React app)
 
-The client directory has the React app that is already set up with a backend.
+The app directory has the React app that is already set up with a backend.
 
 ## Migrations (Hasura migrations)
 
