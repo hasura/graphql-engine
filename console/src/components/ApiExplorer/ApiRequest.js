@@ -1,6 +1,14 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import jwt from 'jsonwebtoken';
+
+import Modal from 'react-bootstrap/lib/Modal';
+
+import TextAreaWithCopy from '../Common/TextAreaWithCopy/TextAreaWithCopy';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+
 import {
   generateApiCodeClicked,
   changeRequestMethod,
@@ -13,6 +21,7 @@ import {
   editGeneratedJson,
   focusHeaderTextbox,
   unfocusTypingHeader,
+  setInitialHeaderState,
 } from './Actions';
 import globals from '../../Globals';
 
@@ -20,11 +29,23 @@ import GraphiQLWrapper from './GraphiQLWrapper';
 
 const styles = require('./ApiExplorer.scss');
 
+const inspectJWTTooltip = <Tooltip id="tooltip-cascade">Decode JWT</Tooltip>;
+
+/* When the page is loaded for the first time, hydrate the header state from the localStorage
+ * Keep syncing the localStorage state when user modifies.
+ * */
+
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
+    this.defaultTokenVal = {
+      header: {},
+      payload: {},
+      error: null,
+    };
     this.state = {
-      deletedHeader: false,
+      isAnalyzingBearer: false,
+      tokenInfo: { ...this.defaultTokenVal },
     };
     this.state.adminSecretVisible = false;
     this.state.bodyAllowedMethods = ['POST'];
@@ -36,8 +57,33 @@ class ApiRequest extends Component {
         window.localStorage.removeItem('graphiql:query');
       }
     }
+    this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
   }
 
+  componentDidMount() {
+    const { headers } = this.props;
+    const HEADER_FROM_LS = localStorage.getItem(
+      'HASURA_CONSOLE_GRAPHIQL_HEADERS'
+    );
+    if (HEADER_FROM_LS) {
+      try {
+        const initialHeader = JSON.parse(HEADER_FROM_LS);
+        this.props.dispatch(setInitialHeaderState(initialHeader));
+      } catch (e) {
+        console.error(e);
+        localStorage.setItem(
+          'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+          JSON.stringify(headers)
+        );
+        // Ignore
+      }
+    } else {
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    }
+  }
   onGenerateApiCodeClicked = () => {
     this.props.dispatch(generateApiCodeClicked());
   };
@@ -58,13 +104,17 @@ class ApiRequest extends Component {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
     const newValue = e.target.value;
-    this.props.dispatch(changeRequestHeader(index, key, newValue, false));
+    this.props
+      .dispatch(changeRequestHeader(index, key, newValue, false))
+      .then(r => this.setLocalStorageHeader(r));
   }
 
   onDeleteHeaderClicked(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
-    this.setState({ deletedHeader: true });
-    this.props.dispatch(removeRequestHeader(index));
+    // this.setState({ deletedHeader: true });
+    this.props
+      .dispatch(removeRequestHeader(index))
+      .then(r => this.setLocalStorageHeader(r));
   }
 
   onShowAdminSecretClicked() {
@@ -88,6 +138,30 @@ class ApiRequest extends Component {
       );
     }
   }
+
+  onAnalyzeBearerClose() {
+    const ctx = this;
+    this.setState({
+      isAnalyzingBearer: false,
+    });
+    /*
+     * Added to delay resetting the state to avoid showing default data for a fraction of a second
+     * */
+    this.setTimeout(() => {
+      this.setState({
+        tokenInfo: {
+          ...ctx.defaultTokenVal,
+        },
+      });
+    }, 0);
+  }
+
+  setLocalStorageHeader = headers => {
+    localStorage.setItem(
+      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+      JSON.stringify(headers)
+    );
+  };
 
   getHTTPMethods = () => {
     const httpMethods = ['POST'];
@@ -157,55 +231,49 @@ class ApiRequest extends Component {
   }
 
   getHeaderRows() {
-    let headers;
-    const headers_map = new Map();
-    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
-      const stored_headers = JSON.parse(
-        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
-      );
-      for (const s_h of this.props.headers) {
-        if (!headers_map.has(s_h.key)) {
-          headers_map.set(s_h.key, 1);
+    /*
+     *  - Implementation notes
+     *    - header object is an array of the object of the form
+     *      - {"key":"content-type","value":"application/json","isActive":true,"isNewHeader":false,"isDisabled":true}
+     *      * isNewHeader determines whether a row is an unfilled row so that when user enters, a next new row can be created.
+     *      * isActive determines whether that header key is active and ok to be sent in the request header.
+     *      * isDisabled determines whether changes for that header key, val is allowed or not
+     * */
+    const rows = this.props.headers.map((header, i) => {
+      /*
+       * - Adding inspector
+       *  - Check whether key is Authorization and value starts with Bearer
+       * */
+
+      let showInspector = false;
+      let matches = [];
+      const parseBearer = /^(bearer) (.*)/gim;
+      if (header.key.toLowerCase() === 'authorization') {
+        matches = parseBearer.exec(header.value);
+        if (matches && matches[1] === 'Bearer') {
+          showInspector = true;
         }
       }
-      //Case when user loads again.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === false
-      ) {
-        const initHeaderCount = this.props.headers.length - 1;
-        const input_row = this.props.headers.pop();
-        for (
-          let i = initHeaderCount;
-          i <= stored_headers.length - initHeaderCount;
-          i++
-        ) {
-          if (!headers_map.has(stored_headers[i].key)) {
-            this.props.headers.push(stored_headers[i]);
-          }
-        }
-        this.props.headers.push(input_row);
-      }
-      //Case when user deletes a header from console.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === true
-      ) {
-        this.setState({ deletedHeader: false });
-      }
-      headers = this.props.headers;
-      localStorage.setItem(
-        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-        JSON.stringify(headers)
-      );
-    } else {
-      headers = this.props.headers;
-      localStorage.setItem(
-        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-        JSON.stringify(headers)
-      );
-    }
-    const rows = headers.map((header, i) => {
+      const adminPasswordViewer =
+        header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}` ? (
+          <i
+            className={styles.showAdminSecret + ' fa fa-eye'}
+            data-header-id={i}
+            aria-hidden="true"
+            onClick={this.onShowAdminSecretClicked.bind(this)}
+          />
+        ) : null;
+
+      const inspectorIcon = showInspector ? (
+        <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+          <i
+            className={styles.showAdminSecret + ' fa fa-plus-square-o'}
+            token={matches[2]}
+            onClick={this.analyzeBearerToken}
+          />
+        </OverlayTrigger>
+      ) : null;
+
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
@@ -290,15 +358,8 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}` ? (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAdminSecretClicked.bind(this)}
-                />
-              ) : null}
+              {adminPasswordViewer}
+              {inspectorIcon}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}
@@ -367,6 +428,34 @@ class ApiRequest extends Component {
     }
   }
 
+  analyzeBearerToken(e) {
+    const token = e.target.getAttribute('token');
+    this.setState({
+      isAnalyzingBearer: true,
+    });
+
+    if (token) {
+      const decoded = jwt.decode(token, { complete: true });
+      if (decoded) {
+        this.setState({
+          tokenInfo: {
+            header: decoded.header,
+            payload: decoded.payload,
+            error: null,
+          },
+        });
+      } else {
+        const message =
+          'This JWT seems to be invalid. Please check the token value and try again!';
+        this.setState({
+          tokenInfo: {
+            error: message,
+          },
+        });
+      }
+    }
+  }
+
   handleFocus = () => {
     this.props.dispatch(focusHeaderTextbox());
   };
@@ -382,6 +471,49 @@ class ApiRequest extends Component {
   }
 
   render() {
+    const { isAnalyzingBearer, tokenInfo } = this.state;
+    const { error } = tokenInfo;
+    const analyzeBearerBody = error ? (
+      <span>{error}</span>
+    ) : (
+      <div>
+        <span className={styles.analyzerLabel}>
+          Header:
+          <span>Algorithm & Token Type</span>
+        </span>
+        <TextAreaWithCopy
+          copyText={JSON.stringify(tokenInfo.header, null, '\t')}
+          textLanguage={'json'}
+          id="headerCopy"
+          containerId="headerCopyBlock"
+        />
+        <br />
+        <span className={styles.analyzerLabel}>
+          Payload:
+          <span>Data</span>
+        </span>
+        <TextAreaWithCopy
+          copyText={JSON.stringify(tokenInfo.payload, null, '\t')}
+          textLanguage={'json'}
+          id="payloadCopy"
+          containerId="payloadCopyBlock"
+        />
+      </div>
+    );
+    const analyzeBearerHtml = (
+      <Modal
+        show={isAnalyzingBearer}
+        onHide={this.onAnalyzeBearerClose.bind(this)}
+        dialogClassName={styles.analyzerBearerModal}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {error ? 'Error deciding JWT' : 'Decoded JWT'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{analyzeBearerBody}</Modal.Body>
+      </Modal>
+    );
     return (
       <div className={styles.apiRequestWrapper}>
         {this.getUrlBar()}
@@ -389,6 +521,7 @@ class ApiRequest extends Component {
         {this.getHeaderTitleView()}
         {this.getHeaderTableView()}
         {this.getValidBody()}
+        {analyzeBearerHtml}
       </div>
     );
   }

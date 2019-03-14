@@ -4,6 +4,24 @@
   display: inline-block;
 }
 
+.analyzerBearerModal {
+  width: 768px;
+}
+.analyzerLabel {
+  text-transform: uppercase;
+	margin: 0;
+	font-size: 12px;
+	color: #000;
+	zoom: 1;
+	border-bottom: 1px solid rgba(155,155,155,0.5);
+	line-height: 2.5;
+	padding-bottom: 2px;
+  span {
+    color: #979797;
+    margin-left: 5px;
+    display: inline-block;
+  }
+}
 .width_80 {
   width: 80%;
 }
