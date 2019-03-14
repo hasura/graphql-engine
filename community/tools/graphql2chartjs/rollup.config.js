@@ -26,7 +26,7 @@ export default [{
   input: './src/index.js',
   output: {
     name: 'main',   // for external calls (need exports)
-    file: 'bundle/js/index.min.js',
+    file: 'bundle/js/index.js',
     format: 'umd',
   },
   moduleName: 'graphql2chartjs',
