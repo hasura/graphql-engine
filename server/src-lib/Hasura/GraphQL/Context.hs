@@ -79,7 +79,6 @@ data OpCtx
   | OCDelete !DelOpCtx
   deriving (Show, Eq)
 
-
 data GCtx
   = GCtx
   { _gTypes     :: !TypeMap
@@ -189,7 +188,9 @@ mkCompExpName colTy =
         -> case getArrayBaseTy t of
              Nothing -> qualTyToScalar (pgColTyName t)
              -- Array type
-             Just b  -> T.pack $ show b <> "_" <> show (getPGTyArrDim t) <> "d"
+             Just b  -> case pgColTyDetails b of
+                PGTyBase bb -> T.pack $ show bb <> "_" <> show (getPGTyArrDim t) <> "d"
+                _          -> qualTyToScalar (pgColTyName b)
 
 mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
@@ -213,6 +214,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
   [ map (mkPGTy colTy) typedOps
   , map (mk (Just $ arrOfCol colTy) $ G.toLT colGQLTy) listOps
   , bool [] (map (mkPGTy $ baseTy PGText) stringOps) isStringTy
+  , bool [] (map (mkPGTy colTy) arrOps) isArrTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
   , [mkPGTyInpVal Nothing "_is_null" $ baseTy PGBoolean]
@@ -221,7 +223,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
     arrOfCol = PTArr . PTCol
     tyDesc = mconcat
       [ "expression to compare columns of type "
-      , G.Description (T.pack $ show colTy)
+      , G.Description (G.showGT $ mkPGColGTy colTy)
       , ". All fields are combined with logical 'AND'."
       ]
     bTy = case colDtls of
@@ -231,6 +233,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       Just PGVarchar -> True
       Just PGText    -> True
       _              -> False
+    isArrTy = getPGTyArrDim colTy > 0
     mk pt t n = InpValInfo Nothing n Nothing pt $ G.toGT t
     mkPGTy ty = mk (Just $ PTCol ty) $ mkPGColGTy ty
     colGQLTy = mkPGColGTy colTy
@@ -246,6 +249,9 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       [ "_like", "_nlike", "_ilike", "_nilike"
       , "_similar", "_nsimilar"
       ]
+
+    arrOps =
+      [ "_contains", "_contained_in"]
 
     isJsonbTy = case bTy of
       Just PGJSONB -> True
