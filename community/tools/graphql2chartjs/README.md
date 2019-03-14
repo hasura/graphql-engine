@@ -209,7 +209,7 @@ npm install --save graphql2chartjs
 ### Use in a script tag
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/hasura/graphql-engine/master/community/tools/graphql2chartjs/bundle/js/index.min.js" type="text/javascript"></script>
+<script src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/tools/graphql2chartjs/index.js" type="application/javascript"></script>
 ```
 
 ## Reforming the data
