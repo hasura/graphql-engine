@@ -30,7 +30,6 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
 
 .. code-block:: javascript
 
-
     function (user, context, callback) {
       const namespace = "https://hasura.io/jwt/claims";
       context.idToken[namespace] = 
@@ -42,6 +41,46 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
         };
       callback(null, user, context);
     }
+
+Test auth0 login and generate sample JWTs for testing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You don't need to integrate your UI with auth0 for testing. You call follow the steps below:
+
+1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/login?client=<client_id>&protocol=oauth2&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile``
+
+   - Replace ``<auth0-domain>`` with your auth0 app domain.
+   - Replace ``callback_uri`` with ``https://localhost:3000/callback`` or the URL you entered above. Note that this URL doesn't really need to exist while you are testing.
+
+2. Once you head to this login page you should see the auth0 login page that you can login with.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-login-page.png
+   :class: no-shadow
+   :alt: Auth0 login page
+
+3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-localhost-callback-404.png
+   :class: no-shadow
+   :alt: Auth0 successful callback 404 page
+
+4. Extract the ``id_token`` value from this URL. This is the JWT.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/id_token-jwt-url.png
+   :class: no-shadow
+   :alt: JWT from id_token query param
+
+5. To test this JWT, and to see if all the Hasura claims are added as per the sections above, lets test this out with `jwt.io <https://jwt.io>`__!
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/jwt-io-debug.png
+   :class: no-shadow
+   :alt: JWT debug on jwt.io
+
+Now you can use this Authorization token in the Hasura console to test if permissions work as expected.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png
+   :class: no-shadow
+   :alt: JWT token used as bearer token on hasura console
 
 Configure Hasura to use Auth0 Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
