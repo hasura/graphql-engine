@@ -30,3 +30,8 @@
 .graphiql-explorer-args-wrapper {
   margin-top: 5px;
 }
+
+.explorerGraphiqlSeparator {
+  cursor: col-resize;
+  border-right: 5px solid transparent;
+}
