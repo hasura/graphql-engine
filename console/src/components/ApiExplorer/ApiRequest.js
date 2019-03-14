@@ -508,7 +508,7 @@ class ApiRequest extends Component {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {error ? 'Error deciding JWT' : 'Decoded JWT'}
+            {error ? 'Error decoding JWT' : 'Decoded JWT'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>{analyzeBearerBody}</Modal.Body>
