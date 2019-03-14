@@ -1,10 +1,12 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
@@ -14,6 +16,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/mholt/caddy/caddyhttp/httpserver"
+	caddyproxy "github.com/mholt/caddy/caddyhttp/proxy"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -118,12 +122,13 @@ func (o *consoleOptions) run() error {
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"proxyPath":       "/apis/proxy",
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
 
-	// Create WaitGroup for running 3 servers
+	// Create WaitGroup for running 2 servers
 	wg := &sync.WaitGroup{}
 	o.WG = wg
 	wg.Add(1)
@@ -189,6 +194,34 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
+		// Server Proxy
+		proxyAPIs := apis.Group("/proxy")
+		{
+			// Proxy Request to server
+			proxyAPIs.Any("*action", func(c *gin.Context) {
+				timeout := 30 * time.Second
+				delay := 300 * time.Millisecond
+				proxy := caddyproxy.NewSingleHostReverseProxy(nurl, "/apis/proxy", 0, timeout, delay)
+				var err error
+				func() {
+					err = proxy.ServeHTTP(c.Writer, c.Request, nil)
+				}()
+
+				if err == nil {
+					return
+				}
+
+				if err == httpserver.ErrMaxBytesExceeded {
+					c.AbortWithError(http.StatusRequestEntityTooLarge, err)
+					return
+				}
+
+				if err == context.Canceled {
+					c.AbortWithError(caddyproxy.CustomStatusContextCancelled, err)
+					return
+				}
+			})
+		}
 	}
 }
 
@@ -225,14 +258,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
-	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
-	config.AddAllowHeaders("X-Hasura-Role")
-	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
-	config.AddAllowMethods("DELETE")
-	config.AllowAllOrigins = true
-	config.AllowCredentials = false
+	config.AllowHeaders = []string{"*"}
+	config.AllowOrigins = []string{"*"}
 	return cors.New(config)
 }
 

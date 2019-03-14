@@ -42,7 +42,7 @@
 
 [[constraint]]
   name = "github.com/gin-contrib/cors"
-  version = "1.2.0"
+  revision = "f9e10995c85a59827f52e1bbcd62ef9590cbe558"
 
 [[constraint]]
   branch = "master"
@@ -95,3 +95,15 @@
 [[constraint]]
   branch = "master"
   name = "github.com/kardianos/osext"
+
+[[constraint]]
+  name = "github.com/mholt/caddy"
+  version = "=0.11.4"
+
+[[override]]
+  name = "github.com/bifurcation/mint"
+  revision = "93c51c6ce11597a26e246fc33a301d62d3439cd2"
+
+[[override]]
+  name = "github.com/lucas-clemente/quic-go"
+  revision = "f90751eabaa39364e3861ee5a8b179f140847d7e"
