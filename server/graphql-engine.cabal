@@ -150,6 +150,7 @@ library
                      , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
+                     , Hasura.Server.SchemaUpdate
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
@@ -181,6 +182,7 @@ library
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Mutation
                      , Hasura.RQL.DML.Returning
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
@@ -321,6 +323,7 @@ executable graphql-engine
                      , wreq
                      , connection
                      , string-conversions
+                     , uuid
 
   other-modules:       Ops
                      , Migrate

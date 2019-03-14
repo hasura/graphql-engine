@@ -32,7 +32,7 @@ class LandingPage extends Component {
               {!isAuthenticated() && (
                 <button
                   id="qsLoginBtn"
-                  bsStyle="primary"
+                  bsstyle="primary"
                   className="btn-margin logoutBtn"
                   onClick={this.login.bind(this)}
                 >
