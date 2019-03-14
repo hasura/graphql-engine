@@ -8,30 +8,21 @@ import {
   MultiDatasetBarChart,
   MixedLineBarChart,
   LiveChart,
-  RealtimeTimeseriesChart 
-  // RealtimeTimeSeriesExample
+  RealtimeTimeseriesChart
 } from './charts';
 
-const App = () => {
-  return (
-    <div>
-      <NavBar />
-      <div style={{margin: '10px', paddingTop: '65px'}}>
-        <BasicBarChart/>
-        <StyledBarChart/>
-        <MultiDatasetBarChart />
-        <MixedLineBarChart />
-        <LiveChart />
-        <RealtimeTimeseriesChart />
-        {
-          /*
-        <RealtimeLiveChartExample />
-        <RealtimeTimeSeriesExample />
-          */
-        }
-       </div>
-    </div>
-  )
-}
+const App = () => (
+  <div>
+    <NavBar />
+    <div style={{margin: '10px', paddingTop: '65px'}}>
+      <BasicBarChart/>
+      <StyledBarChart/>
+      <MultiDatasetBarChart />
+      <MixedLineBarChart />
+      <LiveChart />
+      <RealtimeTimeseriesChart />
+     </div>
+  </div>
+);
 
 export default App;
