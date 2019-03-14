@@ -433,7 +433,7 @@ LANGUAGE plpgsql;
 CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
   FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
 
-CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, trigger_id text, op text, row_data json) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, trigger_id text, op text, row_data json) RETURNS text AS $$
   DECLARE
     id text;
     payload json;
@@ -460,5 +460,6 @@ CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_
     (id, schema_name, table_name, trigger_name, trigger_id, payload)
      VALUES
     (id, schema_name, table_name, trigger_name, trigger_id, payload);
+    RETURN id;
   END;
 $$ LANGUAGE plpgsql;

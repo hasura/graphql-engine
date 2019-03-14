@@ -216,7 +216,7 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete _manual retryConf webhook webhookFromEnv mheaders replace) = do
   adminOnly
   ti <- askTabInfo qt
   -- can only replace for same table
@@ -277,7 +277,7 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
 
 subTableP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
-  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
+  => QualifiedTable -> Bool -> EventTriggerConf -> m TriggerId
 subTableP2 qt replace etc = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
   strfyNum <- stringifyNum <$> askSQLGenCtx
@@ -288,14 +288,15 @@ subTableP2 qt replace etc = do
     else
     liftTx $ addEventTriggerToCatalog qt allCols strfyNum etc
   subTableP2Setup qt trid etc
+  return trid
 
 runCreateEventTriggerQuery
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
   => CreateEventTriggerQuery -> m RespBody
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
-  subTableP2 qt replace etc
-  return successMsg
+  trid <- subTableP2 qt replace etc
+  return $ encode $ object ["id" .= trid]
 
 unsubTableP1
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -338,14 +339,17 @@ insertManualEvent
   -> TriggerName
   -> TriggerId
   -> Value
-  -> Q.TxE QErr ()
+  -> Q.TxE QErr EventId
 insertManualEvent qt trn trid rowData = do
   let op = T.pack $ show MANUAL
-  Q.unitQE defaultTxErrorHandler [Q.sql|
+  eids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5, $6)
                 |] (sn, tn, trn, trid, op, Q.AltJ $ toJSON rowData) True
+  getEid eids
   where
     QualifiedObject sn tn = qt
+    getEid []    = throw500 "could not create manual event"
+    getEid (x:_) = return x
 
 runInvokeEventTrigger
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
@@ -357,8 +361,8 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name new old) = do
   let rowData =  object [ "new" .= new
                         , "old" .= old
                         ]
-  liftTx $ insertManualEvent (tiName ti) name (etiId eti) rowData
-  return successMsg
+  eid <-liftTx $ insertManualEvent (tiName ti) name (etiId eti) rowData
+  return $ encode $ object ["id" .= eid]
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)

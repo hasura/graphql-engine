@@ -238,7 +238,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        DS.subTableP2 (table ^. tmTable) False etc
+        void $ DS.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
