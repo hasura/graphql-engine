@@ -50,6 +50,13 @@ def pytest_addoption(parser):
         help="Run Test cases with GraphQL queries being disabled"
     )
 
+    parser.addoption(
+        "--test-hge-scale-url",
+        metavar="<url>",
+        required=False,
+        help="Run testcases for horizontal scaling"
+    )
+
 
 @pytest.fixture(scope='session')
 def hge_ctx(request):
@@ -63,6 +70,7 @@ def hge_ctx(request):
     hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
     ws_read_cookie = request.config.getoption('--test-ws-init-cookie')
     metadata_disabled = request.config.getoption('--test-metadata-disabled')
+    hge_scale_url = request.config.getoption('--test-hge-scale-url')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -73,7 +81,8 @@ def hge_ctx(request):
             hge_jwt_key_file=hge_jwt_key_file,
             hge_jwt_conf=hge_jwt_conf,
             ws_read_cookie=ws_read_cookie,
-            metadata_disabled=metadata_disabled
+            metadata_disabled=metadata_disabled,
+            hge_scale_url=hge_scale_url
         )
     except HGECtxError as e:
         pytest.exit(str(e))
