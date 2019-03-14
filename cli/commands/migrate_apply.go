@@ -68,8 +68,7 @@ func (o *migrateApplyOptions) run() error {
 	if err != nil {
 		return err
 	}
-	// set DryRun to true
-	migrateDrv.DryRun = true
+	migrateDrv.DryRun = o.dryRun
 
 	err = ExecuteMigration(migrationType, migrateDrv, step)
 	if err != nil {
