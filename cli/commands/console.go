@@ -56,6 +56,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.BoolVar(&opts.enableProxy, "enable-proxy", false, "Enable proxy mode")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -80,7 +81,8 @@ type consoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	StaticDir string
+	StaticDir   string
+	enableProxy bool
 }
 
 func (o *consoleOptions) run() error {
@@ -95,7 +97,8 @@ func (o *consoleOptions) run() error {
 
 	// My Router struct
 	router := &cRouter{
-		r,
+		engine:      r,
+		enableProxy: o.enableProxy,
 	}
 
 	if o.EC.Version == nil {
@@ -111,7 +114,7 @@ func (o *consoleOptions) run() error {
 
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
-	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
+	opts := gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
@@ -122,8 +125,13 @@ func (o *consoleOptions) run() error {
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
-		"proxyPath":       "/apis/proxy",
-	})
+	}
+
+	if o.enableProxy {
+		opts["proxyPath"] = "/apis/proxy"
+	}
+
+	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, opts)
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
@@ -133,7 +141,7 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		err = router.Run(o.Address + ":" + o.APIPort)
+		err = router.engine.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
 		}
@@ -170,11 +178,13 @@ func (o *consoleOptions) run() error {
 }
 
 type cRouter struct {
-	*gin.Engine
+	engine *gin.Engine
+
+	enableProxy bool
 }
 
 func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
-	apis := router.Group("/apis")
+	apis := router.engine.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
@@ -195,32 +205,34 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 		// Server Proxy
-		proxyAPIs := apis.Group("/proxy")
-		{
-			// Proxy Request to server
-			proxyAPIs.Any("*action", func(c *gin.Context) {
-				timeout := 30 * time.Second
-				delay := 300 * time.Millisecond
-				proxy := caddyproxy.NewSingleHostReverseProxy(nurl, "/apis/proxy", 0, timeout, delay)
-				var err error
-				func() {
-					err = proxy.ServeHTTP(c.Writer, c.Request, nil)
-				}()
+		if router.enableProxy {
+			proxyAPIs := apis.Group("/proxy")
+			{
+				// Proxy Request to server
+				proxyAPIs.Any("*action", func(c *gin.Context) {
+					timeout := 30 * time.Second
+					delay := 300 * time.Millisecond
+					proxy := caddyproxy.NewSingleHostReverseProxy(nurl, "/apis/proxy", 0, timeout, delay)
+					var err error
+					func() {
+						err = proxy.ServeHTTP(c.Writer, c.Request, nil)
+					}()
 
-				if err == nil {
-					return
-				}
+					if err == nil {
+						return
+					}
 
-				if err == httpserver.ErrMaxBytesExceeded {
-					c.AbortWithError(http.StatusRequestEntityTooLarge, err)
-					return
-				}
+					if err == httpserver.ErrMaxBytesExceeded {
+						c.AbortWithError(http.StatusRequestEntityTooLarge, err)
+						return
+					}
 
-				if err == context.Canceled {
-					c.AbortWithError(caddyproxy.CustomStatusContextCancelled, err)
-					return
-				}
-			})
+					if err == context.Canceled {
+						c.AbortWithError(caddyproxy.CustomStatusContextCancelled, err)
+						return
+					}
+				})
+			}
 		}
 	}
 }

@@ -84,10 +84,6 @@
   name = "github.com/spf13/cobra"
   version = "0.0.3"
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
 [[constraint]]
   branch = "master"
   name = "github.com/oliveagle/jsonpath"
@@ -107,3 +103,7 @@
 [[override]]
   name = "github.com/lucas-clemente/quic-go"
   revision = "f90751eabaa39364e3861ee5a8b179f140847d7e"
+
+[prune]
+  go-tests = true
+  unused-packages = true
