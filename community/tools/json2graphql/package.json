@@ -14,7 +14,7 @@
     "@oclif/errors": "1.1.2",
     "@oclif/plugin-help": "2.0.5",
     "cli-ux": "4.7.3",
-    "graphqurl": "0.3.2",
+    "graphqurl": "^0.3.3",
     "moment": "2.22.2",
     "node-fetch": "2.2.0"
   },

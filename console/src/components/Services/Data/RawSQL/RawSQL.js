@@ -6,6 +6,7 @@ import 'brace/mode/sql';
 import Modal from 'react-bootstrap/lib/Modal';
 import ModalButton from 'react-bootstrap/lib/Button';
 import Button from '../../../Common/Button/Button';
+import { parseCreateSQL } from './utils';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -63,6 +64,7 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   serverVersion,
+  allSchemas,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -94,6 +96,20 @@ const RawSQL = ({
     );
   }
 
+  const functionText = semverCheck('customFunctionSection', serverVersion)
+    ? 'Function'
+    : '';
+
+  const isSchemaModification = _sql => {
+    const formattedSQL = _sql.toLowerCase();
+
+    return (
+      formattedSQL.includes('create') ||
+      formattedSQL.includes('alter') ||
+      formattedSQL.includes('drop')
+    );
+  };
+
   const submitSQL = () => {
     // check migration mode global
     if (migrationMode) {
@@ -105,13 +121,8 @@ const RawSQL = ({
         migrationName = 'run_sql_migration';
       }
       if (!isMigration && globals.consoleMode === 'cli') {
-        // if migration is not checked, check if the sql text has any of 'create', 'alter', 'drop'
-        const formattedSql = sql.toLowerCase();
-        if (
-          formattedSql.indexOf('create') !== -1 ||
-          formattedSql.indexOf('alter') !== -1 ||
-          formattedSql.indexOf('drop') !== -1
-        ) {
+        // if migration is not checked, check if is schema modification
+        if (isSchemaModification(sql)) {
           // const confirmation = window.confirm('Your SQL Statement has a schema modifying command. Are you sure its not a migration?');
           dispatch(modalOpen());
           const confirmation = false;
@@ -126,6 +137,51 @@ const RawSQL = ({
       }
     } else {
       dispatch(executeSQL(false, ''));
+    }
+  };
+
+  const handleSQLChange = val => {
+    dispatch({ type: SET_SQL, data: val });
+
+    // set migration checkbox true
+    if (isSchemaModification(val)) {
+      dispatch({ type: SET_MIGRATION_CHECKED, data: true });
+    } else {
+      dispatch({ type: SET_MIGRATION_CHECKED, data: false });
+    }
+
+    // set track this checkbox true
+    const objects = parseCreateSQL(val, true);
+    if (objects.length) {
+      let allObjectsTrackable = true;
+
+      const trackedObjectNames = allSchemas.map(schema => {
+        return [schema.table_schema, schema.table_name].join('.');
+      });
+
+      for (let i = 0; i < objects.length; i++) {
+        const object = objects[i];
+
+        if (object.type === 'function') {
+          allObjectsTrackable = false;
+          break;
+        } else {
+          const objectName = [object.schema, object.name].join('.');
+
+          if (trackedObjectNames.includes(objectName)) {
+            allObjectsTrackable = false;
+            break;
+          }
+        }
+      }
+
+      if (allObjectsTrackable) {
+        dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
+      } else {
+        dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
+      }
+    } else {
+      dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
     }
   };
 
@@ -175,10 +231,7 @@ const RawSQL = ({
       </div>
     );
   })();
-  const functionText = semverCheck('customFunctionSection', serverVersion)
-    ? 'Function'
-    : '';
-  const placeholderText = functionText ? 'this' : 'table';
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -203,8 +256,8 @@ const RawSQL = ({
               <li>
                 If you plan to create a Table/View
                 {functionText ? '/' + functionText : ''} using Raw SQL, remember
-                to link it to Hasura DB by checking the{' '}
-                <code>Track {placeholderText}</code> checkbox below.
+                to link it to Hasura DB by checking the <code>Track this</code>{' '}
+                checkbox below.
               </li>
               <li>
                 Please note that if the migrations are enabled,{' '}
@@ -234,34 +287,7 @@ const RawSQL = ({
                 },
               },
             ]}
-            onChange={val => {
-              dispatch({ type: SET_SQL, data: val });
-              const formattedSql = val.toLowerCase();
-              // set migration checkbox true
-              if (
-                formattedSql.indexOf('create') !== -1 ||
-                formattedSql.indexOf('alter') !== -1 ||
-                formattedSql.indexOf('drop') !== -1
-              ) {
-                dispatch({ type: SET_MIGRATION_CHECKED, data: true });
-              } else {
-                dispatch({ type: SET_MIGRATION_CHECKED, data: false });
-              }
-              // set track table checkbox true
-              let regExp;
-              if (functionText) {
-                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
-              } else {
-                regExp = /create\s*(?:|or\s*replace)\s*(?:view|table)/; // eslint-disable-line
-              }
-              // const regExp = /create\s*(?:|or\s*replace)\s*(?:view|table|function)/; // eslint-disable-line
-              const matches = formattedSql.match(new RegExp(regExp, 'gmi'));
-              if (matches) {
-                dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
-              } else {
-                dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
-              }
-            }}
+            onChange={handleSQLChange}
           />
           <hr />
           <div>
@@ -299,7 +325,7 @@ const RawSQL = ({
               }}
               data-test="raw-sql-track-check"
             />
-            Track {placeholderText}
+            Track this
             <OverlayTrigger
               placement="right"
               overlay={trackTableTip(!!functionText)}
@@ -408,6 +434,7 @@ RawSQL.propTypes = {
   resultType: PropTypes.string.isRequired,
   result: PropTypes.array.isRequired,
   resultHeaders: PropTypes.array.isRequired,
+  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object.isRequired,
@@ -423,6 +450,7 @@ const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
+  allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 

@@ -21,7 +21,7 @@ Anonymous (not logged in) users
 - Choose the right set of columns that will get exposed in the GraphQL schema as fields. Ensure that sensitive
   information will not be exposed.
 
-.. image:: ../../../img/graphql/manual/auth/anonymous-role-examples.png
+.. thumbnail:: ../../../img/graphql/manual/auth/anonymous-role-examples.png
    :class: no-shadow
 
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
@@ -38,7 +38,7 @@ Logged-in users
 - Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from
   your :doc:`auth webhook's<./webhook>` response, or as a request as a header if you're testing.
 
-.. image:: ../../../img/graphql/manual/auth/user-select-graphiql.png
+.. thumbnail:: ../../../img/graphql/manual/auth/user-select-graphiql.png
    :class: no-shadow
 
 
@@ -54,7 +54,7 @@ organisation either in the same table or via a related table.
 - ``X-Hasura-Org-Id`` is a :doc:`dynamic variable<./roles-variables>` that is returned by your
   :doc:`auth webhook <./webhook>` for an incoming GraphQL request.
 
-.. image:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
+.. thumbnail:: ../../../img/graphql/manual/auth/org-manager-graphiql.png
    :class: no-shadow
 
 Collaborators of an article
@@ -75,7 +75,7 @@ table that has ``article_id, collaborator_id`` columns.
   - This reads as: Allow the role collaborator to select if ``article.collaborators`` has a ``collaborator_id``
     equal to that of ``X-Hasura-User-Id``.
 
-.. image:: ../../../img/graphql/manual/auth/collaborator-relationship.png
+.. thumbnail:: ../../../img/graphql/manual/auth/collaborator-relationship.png
    :class: no-shadow
 
 Role-based schemas
