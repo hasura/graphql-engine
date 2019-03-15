@@ -243,8 +243,8 @@ Mutation Response
     {
       affected_rows
       returning {
-        response-field1
-        response-field2
+        col-field1
+        col-field2
         ..
         relation1{
           relation1-field1
