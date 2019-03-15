@@ -227,17 +227,15 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   sc <- liftIO $ IORef.readIORef gCtxMapRef
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
 
-  res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  queryParts <- case res of
-    Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
-    Right vals              -> return vals
+  eQueryParts <- runExceptT $ runReaderT (getQueryParts q) gCtx
+  queryParts <- either (withComplete . preExecErr) return eQueryParts
 
   let opDef = qpOpDef queryParts
       topLevelNodes = TH.getTopLevelNodes opDef
       typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
 
-  res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
+  res <- runExceptT $ TH.assertSameLocationNodes typeLocs
+  either (withComplete . preExecErr) return res
 
   case typeLocs of
     []          -> runHasuraQ userInfo gCtx queryParts
