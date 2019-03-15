@@ -1,7 +1,6 @@
 const envObj = `apiHost: '${process.env.API_HOST}',
         apiPort: '${process.env.API_PORT}',
         dataApiUrl: '${process.env.DATA_API_URL}',
-        adminSecret: '${process.env.ADMIN_SECRET}',
         consoleMode: '${process.env.CONSOLE_MODE}',
         nodeEnv: '${process.env.NODE_ENV}',
         urlPrefix: '${process.env.URL_PREFIX}',

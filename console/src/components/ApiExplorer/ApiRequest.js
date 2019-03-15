@@ -107,6 +107,12 @@ class ApiRequest extends Component {
   };
 
   getUrlBar() {
+    const getValidUrl =
+      globals.consoleMode === 'cli' &&
+      globals.proxyPath &&
+      globals.proxyPath.length > 0
+        ? globals.displayApiUrlInProxyMode
+        : this.props.url;
     return (
       <div
         id="stickyHeader"
@@ -134,7 +140,7 @@ class ApiRequest extends Component {
             </div>
             <input
               onChange={this.onUrlChanged}
-              value={this.props.url}
+              value={getValidUrl}
               type="text"
               readOnly
               className={styles.inputGroupInput + ' form-control '}
@@ -206,6 +212,15 @@ class ApiRequest extends Component {
       );
     }
     const rows = headers.map((header, i) => {
+      const adminEyeIcon =
+        header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}` ? (
+          <i
+            className={styles.showAdminSecret + ' fa fa-eye'}
+            data-header-id={i}
+            aria-hidden="true"
+            onClick={this.onShowAdminSecretClicked.bind(this)}
+          />
+        ) : null;
       return (
         <tr key={i}>
           {header.isNewHeader ? null : (
@@ -290,15 +305,7 @@ class ApiRequest extends Component {
           </td>
           {header.isNewHeader ? null : (
             <td>
-              {header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}` ? (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAdminSecretClicked.bind(this)}
-                />
-              ) : null}
+              {adminEyeIcon}
               <i
                 className={styles.closeHeader + ' fa fa-times'}
                 data-header-id={i}

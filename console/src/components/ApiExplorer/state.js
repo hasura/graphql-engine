@@ -1,4 +1,5 @@
 import globals from '../../Globals';
+import { GRAPHQL_PATH } from '../../constants';
 
 const defaultHeader = [
   {
@@ -32,7 +33,7 @@ dataApisContent.push({
   },
   request: {
     method: 'POST',
-    url: getUrl('/v1alpha1/graphql'),
+    url: getUrl(GRAPHQL_PATH),
     headers: defaultHeader,
     bodyType: 'graphql',
     params: JSON.stringify({}, null, 4),

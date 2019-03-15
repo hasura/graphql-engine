@@ -45,10 +45,20 @@ const checkValidity = adminSecret => {
 const validateLogin = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
     // Validate isAdminSecretSet env is set by server or adminSecret env is set by cli
-    if (globals.isAdminSecretSet || globals.adminSecret) {
+    const { proxyPath } = globals;
+    const isCliRunningInProxy =
+      globals.consoleMode === 'cli' && proxyPath && proxyPath.length;
+    if (
+      globals.isAdminSecretSet ||
+      globals.adminSecret ||
+      isCliRunningInProxy
+    ) {
       let adminSecret = '';
       // Check the console mode and retrieve adminSecret accordingly.
+      // If the mode is cli, check for the proxyPath being set or not
       if (globals.consoleMode === SERVER_CONSOLE_MODE) {
+        adminSecret = loadAdminSecretState(CONSOLE_ADMIN_SECRET);
+      } else if (isCliRunningInProxy) {
         adminSecret = loadAdminSecretState(CONSOLE_ADMIN_SECRET);
       } else {
         adminSecret = globals.adminSecret;

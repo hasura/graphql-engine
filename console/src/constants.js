@@ -13,6 +13,7 @@ export const NUMERIC = 'numeric';
 export const DATE = 'date';
 export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
+export const GRAPHQL_PATH = '/v1alpha1/graphql';
 
 export const getPlaceholder = type => {
   switch (type) {

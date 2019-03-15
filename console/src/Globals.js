@@ -5,6 +5,7 @@ import { SERVER_CONSOLE_MODE } from './constants';
 /* eslint-disable */
 import sqlFormatter from './helpers/sql-formatter.min';
 import hljs from './helpers/highlight.min';
+import { GRAPHQL_PATH } from './constants';
 /* eslint-enable */
 
 /* */
@@ -24,6 +25,8 @@ const globals = {
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
+  displayApiUrlInProxyMode:
+    checkExtraSlashes(window.__env.dataApiUrl) + GRAPHQL_PATH,
   devDataApiUrl: window.__env.devDataApiUrl,
   nodeEnv: window.__env.nodeEnv,
   adminSecret: window.__env.adminSecret || window.__env.accessKey,
