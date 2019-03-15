@@ -12,7 +12,7 @@ let appendObj;
 
 if (process.env.ADMIN_SECRET !== undefined) {
   appendObj = `
-  adminSecret: '${process.env.ADMIN_SECRET}`;
+  adminSecret: '${process.env.ADMIN_SECRET}'`;
 } else {
   // ADMIN_SECRET is undefined
   if (process.env.IS_ADMIN_SECRET_SET !== undefined) {
@@ -25,6 +25,12 @@ if (process.env.ADMIN_SECRET !== undefined) {
       appendObj = `isAccessKeySet: ${process.env.IS_ACCESS_KEY_SET}`;
     }
   }
+}
+
+if (process.env.PROXY_PATH) {
+  appendObj += `
+    ,proxyPath: '${process.env.PROXY_PATH}'
+  `;
 }
 
 const env = `

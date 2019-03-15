@@ -20,6 +20,7 @@ const checkExtraSlashes = url => {
 };
 
 const globals = {
+  proxyPath: window.__env.proxyPath,
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
@@ -94,5 +95,10 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     globals.dataApiUrl = globals.devDataApiUrl;
   }
   */
+} else if (globals.proxyPath && globals.proxyPath.length > 0) {
+  globals.dataApiUrl = `${globals.apiHost}:${globals.apiPort}${
+    globals.proxyPath
+  }`;
 }
+
 export default globals;
