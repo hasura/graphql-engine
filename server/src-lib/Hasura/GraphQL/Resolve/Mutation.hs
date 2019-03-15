@@ -52,44 +52,44 @@ convertRowObj val =
     let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
     return (PGCol $ G.unName k, prepExp)
 
-type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
+type ApplySQLOp =  (PGCol, PGColType, S.SQLExp) -> S.SQLExp
 
-rhsExpOp :: S.SQLOp -> AnnType -> ApplySQLOp
-rhsExpOp op annTy (col, e) =
+rhsExpOp :: S.SQLOp -> (PGColType -> AnnType) -> ApplySQLOp
+rhsExpOp op annTyFn (col, ty, e) =
   S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
   where
-    annExp = S.SETyAnn e annTy
+    annExp = S.SETyAnn e $ annTyFn ty
 
-lhsExpOp :: S.SQLOp -> AnnType -> ApplySQLOp
-lhsExpOp op annTy (col, e) =
+lhsExpOp :: S.SQLOp -> (PGColType -> AnnType) -> ApplySQLOp
+lhsExpOp op annTyFn (col, ty, e) =
   S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
   where
-    annExp = S.SETyAnn e annTy
+    annExp = S.SETyAnn e $ annTyFn ty
 
 convObjWithOp
   :: (MonadError QErr m)
   => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  (_, colVal) <- asPGColVal v
+  (ty, colVal) <- asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
-      sqlExp = opFn (pgCol, encVal)
+      sqlExp = opFn (pgCol, ty, encVal)
   return (pgCol, sqlExp)
 
-convDeleteAtPathObj
-  :: (MonadError QErr m)
-  => AnnGValue -> m [(PGCol, S.SQLExp)]
-convDeleteAtPathObj val =
-  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-    vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . snd) vals
-        pgCol = PGCol $ G.unName k
-        annEncVal = S.SETyAnn (S.SEArray valExps) textArrType
-        sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
-                 [S.SEIden $ toIden pgCol, annEncVal]
-    return (pgCol, sqlExp)
 
+--convDeleteAtPathObj
+--  :: (MonadError QErr m)
+--  => AnnGValue -> m [(PGCol, S.SQLExp)]
+--convDeleteAtPathObj val =
+--  flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
+--    keysArr <- asPGColVal v
+--    let valExp = txtEncoder $ snd keysArr
+--        pgCol = PGCol $ G.unName k
+--        annEncVal = S.SETyAnn valExp textArrType
+--        sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
+--                 [S.SEIden $ toIden pgCol, annEncVal]
+--    return (pgCol, sqlExp)
 convertUpdate
   :: UpdOpCtx -- the update context
   -> Field -- the mutation field
@@ -101,27 +101,31 @@ convertUpdate opCtx fld = do
   whereExp <- withArg args "where" (parseBoolExp prepare)
   -- increment operator on integer columns
   incExpM <- withArgM args "_inc" $
-    convObjWithOp $ rhsExpOp S.incOp intType
+    convObjWithOp $ rhsExpOp S.incOp $ const intType
   -- append jsonb value
   appendExpM <- withArgM args "_append" $
-    convObjWithOp $ rhsExpOp S.jsonbConcatOp jsonbType
+    convObjWithOp $ rhsExpOp S.jsonbConcatOp $ const jsonbType
   -- prepend jsonb value
   prependExpM <- withArgM args "_prepend" $
-    convObjWithOp $ lhsExpOp S.jsonbConcatOp jsonbType
+    convObjWithOp $ lhsExpOp S.jsonbConcatOp $ const jsonbType
   -- delete a key in jsonb object
   deleteKeyExpM <- withArgM args "_delete_key" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp textType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp $ const textType
   -- delete an element in jsonb array
   deleteElemExpM <- withArgM args "_delete_elem" $
-    convObjWithOp $ rhsExpOp S.jsonbDeleteOp intType
+    convObjWithOp $ rhsExpOp S.jsonbDeleteOp $ const intType
   -- delete at path in jsonb value
-  deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
+  deleteAtPathExpM <- withArgM args "_delete_at_path" $
+    convObjWithOp $ rhsExpOp S.jsonbDeleteAtPathOp $ const textArrType
+  -- concat operations for array: prepend (or append) element (or array)
+  arrExpsM <- forM arrUpdExps $ \(op,applySQLOp,annTyFn) ->
+    withArgM args op $ convObjWithOp $ applySQLOp S.arrConcatOp annTyFn
 
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
-                 ]
+                 ] <> arrExpsM
       setItems = preSetItems ++ concat (catMaybes updExpsM)
   -- atleast one of update operators is expected
   -- or preSetItems shouldn't be empty
@@ -139,6 +143,13 @@ convertUpdate opCtx fld = do
     UpdOpCtx tn _ filterExp preSetCols uniqCols = opCtx
     args = _fArguments fld
     preSetItems = Map.toList preSetCols
+    getElemTyAnn pct = maybe (pgColTySqlName pct) pgColTySqlName $ getArrayElemTy pct
+    arrUpdExps =
+      [ ("_append_array"   , rhsExpOp, pgColTySqlName)
+      , ("_append_element" , rhsExpOp, getElemTyAnn)
+      , ("_prepend_array"  , lhsExpOp, pgColTySqlName)
+      , ("_prepend_element", lhsExpOp, getElemTyAnn)
+      ]
 
 convertDelete
   :: DelOpCtx -- the delete context

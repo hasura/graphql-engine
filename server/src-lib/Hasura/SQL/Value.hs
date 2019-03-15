@@ -290,9 +290,7 @@ parsePGValue pct val = case pgColTyDetails pct of
   PGTyDomain dom  -> parsePGValue dom val
   PGTyComposite{} -> parseAsComposite val
   PGTyRange{}     -> parseAsRange val
-  PGTyBase pbct   -> case val of
-    String t -> parseAsBase pbct val <|> return (asUnknown pct t)
-    _        -> parseAsBase pbct val
+  PGTyBase pbct   -> parseAsBase pbct val
   where
     parseAsVal :: (FromJSON a) => (a -> PGColValue') -> Value -> AT.Parser PGColValue
     parseAsVal g v =
@@ -302,7 +300,7 @@ parsePGValue pct val = case pgColTyDetails pct of
     parseAsComposite = parseAsVal PGValComposite
     parseAsEnum      = parseAsVal PGValEnum
     parseAsRange     = parseAsVal PGValRange
-    parseAsArray bct v = (flip $ withArray "PGValArray (V.Vector PGColValue)") v $ \a -> do
+    parseAsArray bct v = allowPGEncStr $ (flip $ withArray "[PGColValue]") v $ \a -> do
       let oid   = pgColTyOid pct
       eOid <-  maybe (fail "Array types must return base element type") return $ getArrayBaseTy pct
       let asArr = PGColValue oid . PGValArray (pgColTyOid eOid)
@@ -310,14 +308,18 @@ parsePGValue pct val = case pgColTyDetails pct of
 
     asUnknown bct v = PGColValue (pgColTyOid bct) $ PGValBase $ PGValUnknown v
 
-    parseAsBase bct v =
+    parseAsBase bct v = allowPGEncStr $
       let oid' = pgTypeOid bct
           oidCol = pgColTyOid pct
-          -- For PGUnknown take oid from Column type
-          -- For PGKnown take from type of PGColValue
+          -- For PGUnknown take oid from PGColType
           oid = bool oid' oidCol $ oid' == PTI.auto
           asBaseColVal = PGColValue oid . PGValBase in
       fmap asBaseColVal $ parsePGValue' bct v
+
+    allowPGEncStr :: AT.Parser PGColValue -> AT.Parser PGColValue
+    allowPGEncStr f = case val of
+      String t -> f <|> return (asUnknown pct t)
+      _        -> f
 
 
 convToBin :: PGColType

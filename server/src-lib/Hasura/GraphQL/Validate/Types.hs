@@ -546,7 +546,7 @@ getPGColKind colTy = case pgColTyDetails colTy of
   _           -> "scalar"
 
 mkPGColGTy :: PGColType -> G.GType
-mkPGColGTy colTy = case pgColTyDetails colTy of
+mkPGColGTy colTy = case pgColTyDetails (getUdt colTy) of
   PGTyArray t -> G.toGT $ G.toLT $ mkPGColGTy t
   _           -> G.toGT $ mkScalarTy colTy
 

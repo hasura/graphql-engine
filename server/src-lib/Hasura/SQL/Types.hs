@@ -408,17 +408,21 @@ data PGColTyDetails
 
 instance Hashable PGColTyDetails
 
+getArrayElemTy :: PGColType -> Maybe PGColType
+getArrayElemTy x = case pgColTyDetails (getUdt x) of
+  PGTyArray b -> Just b
+  _           -> Nothing
+
 getArrayBaseTy :: PGColType -> Maybe PGColType
-getArrayBaseTy x = case pgColTyDetails x of
+getArrayBaseTy x = case pgColTyDetails (getUdt x) of
   PGTyArray b -> case pgColTyDetails b of
     PGTyArray{} -> getArrayBaseTy b
     _ -> Just b
   _ -> Nothing
 
 getPGTyArrDim :: PGColType -> Int
-getPGTyArrDim colTy = case pgColTyDetails  colTy of
+getPGTyArrDim colTy = case pgColTyDetails (getUdt colTy) of
   PGTyArray bTy  -> 1 + getPGTyArrDim bTy
-  PGTyDomain bTy -> getPGTyArrDim bTy
   _              -> 0
 
 data PGColType
@@ -428,6 +432,12 @@ data PGColType
   , pgColTyOid     :: !PQ.Oid
   , pgColTyDetails :: !PGColTyDetails
   } deriving (Show, Eq, TH.Lift, Generic)
+
+-- Get underlying data type when PGColType is a domain
+getUdt :: PGColType -> PGColType
+getUdt colTy = case pgColTyDetails colTy of
+  PGTyDomain b -> getUdt b
+  _            -> colTy
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 4
@@ -441,6 +451,20 @@ baseTy b = PGColType qualfdType (AnnType name) (pgTypeOid b)$ PGTyBase b
   where
     qualfdType = QualifiedObject (SchemaName "pg_catalog") (PGTyName name)
     name = T.pack $ show b
+
+arrTyOfBaseQ :: PGBaseColType -> TH.Q TH.Exp
+arrTyOfBaseQ bct = case arrTyOfBase bct of
+  Nothing -> fail $ "Could not find array type for base type " <> show bct
+  Just x  -> TH.lift x
+
+arrTyOfBase :: PGBaseColType -> Maybe PGColType
+arrTyOfBase bct = case PTI.getArrOidOfElem (PTI.ElemOid bOid) of
+  Nothing -> Nothing
+  Just (PTI.ArrOid arrOid) -> return $ PGColType arrQualTy arrSqlName arrOid $ PGTyArray $ baseTy bct
+  where
+    bOid = pgTypeOid bct
+    arrSqlName = AnnType $ T.pack (show bct) <> "[]"
+    arrQualTy = QualifiedObject catalogSchema $ PGTyName $ "_" <> T.pack (show bct)
 
 instance Hashable PGColType
 
@@ -477,6 +501,11 @@ isNumType = onBaseUDT False isNumType'
 isJSONBType :: PGColType -> Bool
 isJSONBType = onBaseUDT False isJSONBType'
 
+isArrType :: PGColType -> Bool
+isArrType colTy = case pgColTyDetails (getUdt colTy) of
+  PGTyArray{} -> True
+  _           -> False
+
 pattern PGGeomTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
 pattern PGGeomTy a b c = PGColType a b c (PGTyBase PGGeometry)
 
@@ -485,18 +514,16 @@ pattern PGJSONTy a b c = PGColType a b c (PGTyBase PGJSON)
 
 --any numeric, string, date/time, network, or enum type, or arrays of these types
 isComparableType :: PGColType -> Bool
-isComparableType t = case pgColTyDetails t of
-  PGTyArray a  ->  isComparableType a
-  PGTyDomain a -> isComparableType a
+isComparableType t = case pgColTyDetails (getUdt t) of
+  PGTyArray a  -> isComparableType a
   PGTyBase   b -> isComparableType' b
   PGTyEnum{}   -> True
   _            -> False
 
 -- Apply the function if the underlying data type is a base data type. Otherwise return the default value
 onBaseUDT :: a -> (PGBaseColType -> a) -> PGColType -> a
-onBaseUDT def f t = case pgColTyDetails t of
+onBaseUDT def f t = case pgColTyDetails (getUdt t) of
   PGTyBase   b -> f b
-  PGTyDomain a -> onBaseUDT def f a
   _            -> def
 
 isIntegerType' :: PGBaseColType -> Bool

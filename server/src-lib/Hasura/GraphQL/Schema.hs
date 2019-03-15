@@ -653,9 +653,12 @@ mkUpdIncInp tn = maybe Nothing mkType
     desc = G.Description $
       "input type for incrementing integer columne in table " <>> tn
 
+mkArrOpTy :: QualifiedTable -> G.Name -> G.NamedType
+mkArrOpTy tn op =
+  G.NamedType $ qualObjectToName tn <> op <> "_input"
+
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
-
 mkJSONOpTy tn op =
   G.NamedType $ qualObjectToName tn <> op <> "_input"
 
@@ -696,6 +699,7 @@ input table_delete_at_path_input {
 }
 -}
 
+
 -- jsonb operators and descriptions
 prependOp :: G.Name
 prependOp = "_prepend"
@@ -730,12 +734,50 @@ deleteAtPathDesc :: G.Description
 deleteAtPathDesc = "delete the field or element with specified path"
                    <> " (for JSON arrays, negative integers count from the end)"
 
+
+mkUpdArrOpInp :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
+mkUpdArrOpInp tn cols = bool arrUpdsInpObjs [] $ null arrCols
+  where
+
+    arrCols = onlyArrCols cols
+
+    arrUpdsInpObjs =  map mkInpTy arrUpdOps
+
+    mkInpTy (opName, desc, f) = mkHsraInpTyInfo (Just desc) (mkArrOpTy tn opName) $
+      fromInpValL $ mapMaybe (mkInpVal f) arrCols
+
+    mkInpVal f col = fmap (mkPGTyInpVal Nothing $ G.Name $ getPGColTxt $ pgiName col) $ f (pgiType col)
+
+arrUpdOps :: [(G.Name, G.Description, PGColType -> Maybe PGColType)]
+arrUpdOps =
+  [ ( "_append_array"
+    , "append existing array value of filtered columns with new array value"
+    , Just . id
+    )
+
+  , ( "_prepend_array"
+    , "prepend existing array value of filtered columns with new array value"
+    , Just . id
+    )
+
+  , ( "_append_element"
+    , "append existing array value of filtered columns with new element value"
+    , getArrayElemTy
+    )
+
+  , ( "_prepend_element"
+    , "prepend existing array value of filtered columns with new element value"
+    , getArrayElemTy
+    )
+  ]
+
 mkUpdJSONOpInp
   :: QualifiedTable -> [PGColInfo] -> [InpObjTyInfo]
 mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
   where
     jsonbCols = onlyJSONBCols cols
     jsonbColNames = map pgiName jsonbCols
+
 
     inpObjs = [ prependInpObj, appendInpObj, deleteKeyInpObj
               , deleteElemInpObj, deleteAtPathInpObj
@@ -762,8 +804,8 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
       fromInpValL $ map deleteAtPathInpVal jsonbColNames
-    deleteAtPathInpVal c = InpValInfo Nothing (G.Name $ getPGColTxt c) Nothing (Just $ PTArr $ PTCol $ baseTy PGText) $
-      G.toGT $ G.toLT $ mkPGColGTy $ baseTy PGText
+    deleteAtPathInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) $
+      $(arrTyOfBaseQ PGText)
 
 {-
 
@@ -786,6 +828,13 @@ mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
     incArgDesc = "increments the integer columns with given value of the filtered values"
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing Nothing $ G.toGT $ mkUpdIncTy tn
+
+mkArrOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
+mkArrOpInpVals tn cols = bool arrOpArgs [] $ null arrCols
+  where
+    arrCols = onlyArrCols cols
+    arrOpArgs = map mkArg arrUpdOps
+    mkArg (op,desc,_) = InpValInfo (Just desc) op Nothing Nothing $ G.toGT $ mkArrOpTy tn op
 
 mkJSONOpInpVals :: QualifiedTable -> [PGColInfo] -> [InpValInfo]
 mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
@@ -818,7 +867,7 @@ mkUpdMutFld tn cols =
     G.toGT $ mkMutRespTy tn
   where
     inputValues = [filterArg, setArg] <> incArg
-                  <> mkJSONOpInpVals tn cols
+                  <> mkJSONOpInpVals tn cols <> mkArrOpInpVals tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
     fldName = "update_" <> qualObjectToName tn
@@ -1274,12 +1323,13 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
     updatableCols = maybe [] (map pgiName) updColsM
     onConflictTypes = mkOnConflictTypes tn constNames updatableCols isUpsertable
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
+    arrOpTys  = fromMaybe [] updArrOpInpObjTysM
     relInsInpObjTys = maybe [] (map TIInpObj) $
                       mutHelper viIsInsertable relInsInpObjsM
 
     funcInpArgTys = bool [] (map TIInpObj funcArgInpObjs) $ isJust selFldsM
 
-    allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys
+    allTypes = relInsInpObjTys <> onConflictTypes <> jsonOpTys <> arrOpTys
                <> queryTypes <> aggQueryTypes <> mutationTypes
                <> funcInpArgTys
 
@@ -1326,6 +1376,8 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
     -- update increment input type
     updIncInpObjM = mkUpdIncInp tn updColsM
     -- update json operator input type
+    updArrOpInpObjsM = mkUpdArrOpInp tn <$> updColsM
+    updArrOpInpObjTysM = map TIInpObj <$> updArrOpInpObjsM
     updJSONOpInpObjsM = mkUpdJSONOpInp tn <$> updColsM
     updJSONOpInpObjTysM = map TIInpObj <$> updJSONOpInpObjsM
     -- fields used in set input object

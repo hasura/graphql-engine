@@ -218,6 +218,9 @@ jsonbDeleteOp = SQLOp "-"
 jsonbDeleteAtPathOp :: SQLOp
 jsonbDeleteAtPathOp = SQLOp "#-"
 
+arrConcatOp :: SQLOp
+arrConcatOp = SQLOp "||"
+
 data CountType
   = CTStar
   | CTSimple ![PGCol]

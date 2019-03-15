@@ -15,6 +15,7 @@ module Hasura.RQL.Types.SchemaCache
        , onlyIntCols
        , onlyNumCols
        , onlyJSONBCols
+       , onlyArrCols
        , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
@@ -151,6 +152,9 @@ onlyNumCols = filter (isNumType . pgiType)
 
 onlyJSONBCols :: [PGColInfo] -> [PGColInfo]
 onlyJSONBCols = filter (isJSONBType . pgiType)
+
+onlyArrCols :: [PGColInfo] -> [PGColInfo]
+onlyArrCols = filter (isArrType . pgiType)
 
 onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
