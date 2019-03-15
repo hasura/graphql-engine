@@ -8,16 +8,22 @@
         cliVersion: {{.cliVersion}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
+        {{- if not .proxyPath }}
         {{- if .hasAccessKey }}
         accessKey: {{.adminSecret}},
         {{ else }}
         adminSecret: {{.adminSecret}},
-        {{ end -}}
+        {{- end }}
+        {{- end }}
         urlPrefix: "/",
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
+        {{- if .proxyPath}}
         enableTelemetry: {{.enableTelemetry}},
         proxyPath: {{.proxyPath}}
+        {{ else }}
+        enableTelemetry: {{.enableTelemetry}}
+        {{ end -}}
       };
     </script>
   </head>
