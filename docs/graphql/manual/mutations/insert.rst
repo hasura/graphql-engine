@@ -6,6 +6,8 @@ Insert mutation
   :depth: 1
   :local:
 
+.. _autogenSchema:
+
 Auto-generated insert mutation schema
 -------------------------------------
 
@@ -37,7 +39,7 @@ Auto-generated insert mutation schema
     returning: [article_columns!]!
   }
 
-  # only columns
+  # only parent table columns; no nested tables' columns
   type article_columns {
     id
     title
@@ -234,6 +236,9 @@ Insert an object and get a nested object in response
       }
     }
 
+.. note::
+  
+  As you can see from the :ref:`auto-generated insert mutation schema <autogenSchema>`, for this to work, the parent table (*in this case,* ``article``) needs to have a primary key or a unique constraint.
 
 Insert an object and its nested object in the same mutation
 -----------------------------------------------------------
@@ -288,6 +293,10 @@ in the response
         }
       }
     }
+
+.. note::
+  
+  As you can see from the :ref:`auto-generated insert mutation schema <autogenSchema>`, for this to work, the parent table (*in this case,* ``article``) needs to have a primary key or a unique constraint.
 
 Insert an object with a JSONB column
 ------------------------------------
