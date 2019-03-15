@@ -187,11 +187,11 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
 };
 /* End of it */
 
-const setInitialHeaderState = headerObj => dispatch => {
-  return dispatch({
+const setInitialHeaderState = headerObj => {
+  return {
     type: SET_INITIAL_HEADER_DATA,
     data: headerObj,
-  });
+  };
 };
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {

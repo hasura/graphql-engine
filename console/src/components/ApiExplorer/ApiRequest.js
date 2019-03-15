@@ -3,11 +3,10 @@ import PropTypes from 'prop-types';
 
 import jwt from 'jsonwebtoken';
 
-import Modal from 'react-bootstrap/lib/Modal';
-
 import TextAreaWithCopy from '../Common/TextAreaWithCopy/TextAreaWithCopy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import ModalWrapper from '../Common/ModalWrapper';
 
 import {
   generateApiCodeClicked,
@@ -140,20 +139,9 @@ class ApiRequest extends Component {
   }
 
   onAnalyzeBearerClose() {
-    const ctx = this;
     this.setState({
       isAnalyzingBearer: false,
     });
-    /*
-     * Added to delay resetting the state to avoid showing default data for a fraction of a second
-     * */
-    this.setTimeout(() => {
-      this.setState({
-        tokenInfo: {
-          ...ctx.defaultTokenVal,
-        },
-      });
-    }, 0);
   }
 
   setLocalStorageHeader = headers => {
@@ -501,18 +489,14 @@ class ApiRequest extends Component {
       </div>
     );
     const analyzeBearerHtml = (
-      <Modal
+      <ModalWrapper
         show={isAnalyzingBearer}
         onHide={this.onAnalyzeBearerClose.bind(this)}
         dialogClassName={styles.analyzerBearerModal}
+        title={error ? 'Error decoding JWT' : 'Decoded JWT'}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {error ? 'Error decoding JWT' : 'Decoded JWT'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{analyzeBearerBody}</Modal.Body>
-      </Modal>
+        {analyzeBearerBody}
+      </ModalWrapper>
     );
     return (
       <div className={styles.apiRequestWrapper}>
