@@ -11,6 +11,9 @@ import OneGraphExplorer from './OneGraphExplorer';
 import './GraphiQL.css';
 import semverCheck from '../../helpers/semver';
 
+const NO_TABLES_MESSAGE =
+  '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+
 class GraphiQLWrapper extends Component {
   constructor(props) {
     super(props);
@@ -91,68 +94,41 @@ class GraphiQLWrapper extends Component {
 
   render() {
     const styles = require('../Common/Common.scss');
-    const { supportAnalyze, analyzeApiChange, queries } = this.state;
+    const {
+      supportAnalyze,
+      analyzeApiChange,
+      queries,
+      headerFocus,
+    } = this.state;
+    const { numberOfTables } = this.props;
+    const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
-      if (this.state.headerFocus) {
+      if (headerFocus) {
         return null;
       }
       return graphQLFetcherFinal(
         graphQLParams,
-        this.props.data.url,
-        this.props.data.headers
+        graphqlNetworkData.url,
+        graphqlNetworkData.headers
       );
     };
-
     const analyzeFetcherInstance = analyzeFetcher(
-      this.props.data.url,
-      this.props.data.headers,
+      graphqlNetworkData.url,
+      graphqlNetworkData.headers,
       analyzeApiChange
     );
-
-    // let content = "fetching schema";
-    let placeholderContent = (
-      <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
-    );
-    let renderGraphiql;
-
-    if (!this.state.error && this.props.numberOfTables !== 0) {
-      if (queries) {
-        renderGraphiql = graphiqlProps => (
-          <GraphiQL
-            fetcher={graphQLFetcher}
-            analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze={supportAnalyze}
-            query={queries}
-            {...graphiqlProps}
-          />
-        );
-      } else {
-        renderGraphiql = graphiqlProps => (
-          <GraphiQL
-            fetcher={graphQLFetcher}
-            analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze={supportAnalyze}
-            {...graphiqlProps}
-          />
-        );
-      }
-    } else if (this.props.numberOfTables === 0) {
-      renderGraphiql = graphiqlProps => (
+    const queryString = numberOfTables ? queries : NO_TABLES_MESSAGE;
+    const renderGraphiql = graphiqlProps => {
+      return (
         <GraphiQL
           fetcher={graphQLFetcher}
-          supportAnalyze={supportAnalyze}
           analyzeFetcher={analyzeFetcherInstance}
-          query={
-            '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
-          }
+          supportAnalyze={supportAnalyze}
+          query={queryString}
           {...graphiqlProps}
         />
       );
-    } else if (this.state.error) {
-      // there is an error parsing graphql schema
-      placeholderContent = () => <div> Error parsing GraphQL Schema </div>;
-    }
-
+    };
     return (
       <ErrorBoundary>
         <div
@@ -163,16 +139,12 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          {renderGraphiql ? (
-            <OneGraphExplorer
-              renderGraphiql={renderGraphiql}
-              endpoint={this.props.data.url}
-              headers={this.props.data.headers}
-              query={queries}
-            />
-          ) : (
-            placeholderContent
-          )}
+          <OneGraphExplorer
+            renderGraphiql={renderGraphiql}
+            endpoint={graphqlNetworkData.url}
+            headers={graphqlNetworkData.headers}
+            query={queryString}
+          />
         </div>
       </ErrorBoundary>
     );

@@ -32,6 +32,18 @@
 }
 
 .explorerGraphiqlSeparator {
+  height: 100%;
+  right: -5px;
+  position: absolute;
+  top: 0;
+  width: 10px;
+  z-index: 10;
+}
+
+.explorerCursorResize {
   cursor: col-resize;
-  border-right: 5px solid transparent;
+}
+
+.gqlexplorer {
+  position: relative;
 }
