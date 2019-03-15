@@ -180,7 +180,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
       method: 'post',
       headers: reqHeaders,
       body: JSON.stringify(editedQuery),
-      credentials: 'include',
+      credentials: 'omit',
     });
   };
 };
