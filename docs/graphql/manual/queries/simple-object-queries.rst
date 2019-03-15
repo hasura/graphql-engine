@@ -44,34 +44,3 @@ For example, fetch a list of authors:
         ]
       }
     }
-
-
-Fetch JSON fields
----------------------
-
-For example, each author has addresses that are stored in ``contacts`` JSON field. We can query address properties with ``path`` argument:
-
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author {
-        addresses: contacts(path: ".addresses")
-        city: contacts(path: ".addresses[0].city")
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "addresses": [{
-              "street": "19th Main Road",
-              "city": "Bangalore",
-              "postal": "560095"
-            }],
-            "city": "Bangalore"
-          }
-        ]
-      }
-    }

@@ -12,7 +12,7 @@ Query/Subscription syntax
 .. code-block:: none
 
     query|subscription [<op-name>] {
-      object [([argument])]{
+      object [(argument1, arugment2, ...)]{
         object-fields
       }
     }
@@ -83,7 +83,7 @@ Simple Object
   object-name {
     field1
     field2
-    json_field(path: String)
+    json_field[(path: String)]
     ..
     nested object1
     nested object2
@@ -91,18 +91,36 @@ Simple Object
     ..
   }
 
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - path
+     - false
+     - Value
+     - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`_. However, prefix symbol ``$.`` is optional.
+
 E.g.
 
 .. code-block:: graphql
 
    author {
-      id  # scalar field
-      name  # scalar field
-      address(path: ".property[0]") # scalar field
+      id  # scalar integer field
+      
+      name  # scalar text field
 
+      address(path: "$.city") # scalar JSON field -> property
+      address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
+      contacts(path: "[0]") # scalar JSON field -> array_item
+      contacts(path: "[0].phone") # scalar JSON field -> array_item_property 
+      
       article {  # nested object
         title
       }
+      
       article_aggregate {  # aggregate nested object
         aggregate {
           count
@@ -401,16 +419,6 @@ Operator
 
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
-       }
-   - ``path`` argument of ``json``/``jsonb`` follow simple `JSONPath specification <https://github.com/json-path/JsonPath>`. However, prefix symbol ``$.`` is optional.
-
-     .. parsed-literal::
-
-       {
-         field_json(path: "$.property[0]")
-         property: field_json(path: "property") # '$.' prefix is optional
-         array_item: field_json(path: "[0]")
-         array_property: field_json(path: "[0].property")
        }
 
 .. _OrderByExp:
