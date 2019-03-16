@@ -69,7 +69,7 @@ class CustomResolver extends React.Component {
               queryDefinition="query { hello }"
               title="Steps to deploy an example GraphQL service to Glitch"
               footerDescription="You just added a remote schema and queried it!"
-              glitchLink="https://glitch.com/edit/#!/hasura-sample-remote-schema-4"
+              glitchLink="https://glitch.com/edit/#!/hasura-sample-remote-schema"
               googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/google-cloud-functions/nodejs"
               MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/azure-functions/nodejs"
               awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs"
