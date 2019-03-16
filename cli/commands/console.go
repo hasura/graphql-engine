@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -214,10 +215,20 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 					delay := 300 * time.Millisecond
 					proxy := caddyproxy.NewSingleHostReverseProxy(nurl, "/apis/proxy", 0, timeout, delay)
 					var err error
-					func() {
-						err = proxy.ServeHTTP(c.Writer, c.Request, nil)
+
+					// capture panic from ServeHTTP
+					defer func() {
+						r := recover()
+						if err, ok := r.(httpserver.NonHijackerError); ok {
+							logger.Debugf("got non-hijack error %s", err.Error())
+							c.AbortWithStatus(http.StatusBadRequest)
+						} else {
+							logger.Debugf("panic recevied %s", string(debug.Stack()))
+							c.AbortWithStatus(http.StatusInternalServerError)
+						}
 					}()
 
+					err = proxy.ServeHTTP(c.Writer, c.Request, nil)
 					if err == nil {
 						return
 					}
