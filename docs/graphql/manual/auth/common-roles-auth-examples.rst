@@ -93,3 +93,103 @@ In this case, anonymous users might have access only to a subset of fields while
 - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
 
   - This reads: Allow users to that are owned by them.
+
+
+Multiple roles per user
+-----------------------
+
+Let's say you want to handle contexts where users can have multiple roles, and each role controls access to different data sets. To understand how to handle such contexts, let's extend the articles/authors context by introducing a new role, ``editor`` i.e. some authors are also editors and they can edit articles written by other authors.
+
+So, our current context is as follows:
+
+* We have the following table:
+
+.. code-block:: sql
+
+  author (
+    id INT PRIMARY KEY,
+    name TEXT
+  )
+
+  article (
+    id INT PRIMARY KEY,
+    title TEXT,
+    author_id INT
+  )
+
+* A foreign key constaint has been set from ``article`` :: ``author_id`` →  ``author`` :: ``id`` and the corresponding object and array relationships.
+
+* The following permission rules have been defined to restrict access for authors (the role ``author``) to only their articles (*for insert, update, select and delete operations*):
+
+.. thumbnail:: ../../../img/graphql/manual/auth/author-article-permissions.png
+
+If were to query the article table as an author with id equal to ``1`` i.e with the header ``X-Hasura-Role`` set to ``author`` ``X-Hasura-User-ID`` set to ``1``, we will see a subset of the data i.e. articles written by this author:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-author-role.png
+
+Add new role
+^^^^^^^^^^^^
+
+To implement our use-case, we will introduce the role ``editor`` and assign this role to this author (``id`` = ``1``). To do this, we'll create a table that captures this mapping of an editor to an article, called ``article_editor``:
+
+.. code-block:: sql
+
+  article_editor (
+    article_id INT PRIMARY KEY,
+    editor_id  INT PRIMARY KEY
+  )
+
+We'll also define foreign keys to the ``article`` and ``author`` tables and define an array relationship called ``editors`` based on one of these foreign key i.e. ``article_editor`` :: ``article_id``  →  ``article``:: ``id``.
+
+Add permissions for new role
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's define a new permission rule for the role ``editor`` for select, update and delete actions, taking advantage of this relationship:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/editor-role-permissions.png
+
+This permission rules translates to "*if an article's editor's ID is the same as the current user's ID, allow access to it*". Notice how you can limit access to only the content (``title``) and not other information like the ``author_id`` field. 
+
+Now let's make the author from the previous query an editor of an article written by someone else by adding an entry into the ``article_editor`` table:
+
++------------+-----------+
+| article_id | editor_id |
++============+===========+
+|   3        | 1         |
++------------+-----------+
+
+Query/mutate data with new role
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We can now see the subset of data from the ``article`` table that is exposed to the same user but now with the ``editor`` role:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-editor-role.png
+
+With the ``editor`` role, this user can now only see those articles that they are an editor for. The user can also update the content for these article, since they have the corresponding update permissions to do so:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-editor-role.png
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
