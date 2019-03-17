@@ -29,6 +29,7 @@ sphinxcontrib-fulltoc==1.2.0
 sphinxcontrib-httpdomain==1.7.0
 sphinxcontrib-swaggerdoc==0.1.7
 sphinxcontrib-websupport==1.0.1
+sphinxcontrib-images==0.7.0
 tornado==4.5.2
 urllib3==1.23
 watchdog==0.8.3

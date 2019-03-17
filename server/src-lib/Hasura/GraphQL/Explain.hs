@@ -22,7 +22,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 import qualified Hasura.GraphQL.Transport.HTTP          as TH
@@ -96,7 +95,6 @@ explainField userInfo gCtx sqlGenCtx fld =
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . uncurry toTxtValue
 
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx

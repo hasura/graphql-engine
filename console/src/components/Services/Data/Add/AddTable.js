@@ -123,19 +123,21 @@ class AddTable extends Component {
       }
       // check for column value being valid graphql
       let isValid = true;
-      this.props.columns.filter(c => c.name !== '').map(c => {
-        if (!gqlPattern.test(c.name)) {
-          this.props.dispatch(
-            showErrorNotification(
-              gqlColumnErrorNotif[0],
-              gqlColumnErrorNotif[1],
-              gqlColumnErrorNotif[2],
-              gqlColumnErrorNotif[3]
-            )
-          );
-          isValid = false;
-        }
-      });
+      this.props.columns
+        .filter(c => c.name !== '')
+        .map(c => {
+          if (!gqlPattern.test(c.name)) {
+            this.props.dispatch(
+              showErrorNotification(
+                gqlColumnErrorNotif[0],
+                gqlColumnErrorNotif[1],
+                gqlColumnErrorNotif[2],
+                gqlColumnErrorNotif[3]
+              )
+            );
+            isValid = false;
+          }
+        });
       if (!isValid) {
         return false;
       }

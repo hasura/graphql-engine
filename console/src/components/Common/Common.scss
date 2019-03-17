@@ -515,6 +515,10 @@ input {
   margin-left: 20px;
 }
 
+.add_mar_left_small {
+  margin-left: 5px;
+}
+
 .add_mar_small {
   margin-right: 10px !important;
 }
@@ -567,6 +571,10 @@ code {
   padding-bottom: 20px;
 }
 
+.add_pad_top {
+  padding-top: 10px;
+}
+
 .add_padd_bottom {
   padding-bottom: 25px;
 }
@@ -601,7 +609,8 @@ code {
     background-color: #59A21C;
     border: 1px solid #539719;
     color: #fff;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -615,7 +624,8 @@ code {
     background-color: #AC2925;
     border: 1px solid #761c19;
     color: #fff;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -629,7 +639,8 @@ code {
     background-color: #E6E6E6;
     border: 1px solid #D7D7D7;
     color: #000;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -643,7 +654,8 @@ code {
     background-color: #59A21C;
     border: 1px solid #539719;
     color: #fff;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -657,7 +669,8 @@ code {
     background-color: #AC2925;
     border: 1px solid #761c19;
     color: #fff;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -671,7 +684,8 @@ code {
     background-color: #E6E6E6;
     border: 1px solid #D7D7D7;
     color: #000;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   button:focus {
@@ -739,7 +753,8 @@ code {
   color: #606060;
   border: 1px solid #FEC53D;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
 
   &:hover {
@@ -749,7 +764,8 @@ code {
 
 .yellow_button1 {
   padding: 5px 10px !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
   line-height: 1.5;
 }
 
@@ -764,8 +780,11 @@ code {
   color: #292929;
   border: 1px solid #292929;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
+  display: flex;
+  align-items: center;
 
   &:hover {
     background-color: #efefef;
@@ -783,7 +802,8 @@ code {
   color: #000;
   border: 1px solid #c9302c;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
 }
 
@@ -797,7 +817,8 @@ code {
   color: #000;
   border: 1px solid #FEC53D;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
 
   &:hover {
@@ -818,7 +839,8 @@ code {
   background-color: #fff;
   border-radius: 5px;
   color: #292929;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   border: 1px solid #292929;
   margin-right: 15px;
   padding: 5px 10px;
@@ -862,49 +884,92 @@ code {
   }
 }
 
+/*Newly added for remote schema page*/
+.headerText {
+  font-size: 24px;
+  font-weight: bold;
+  padding-bottom: 20px;
+}
+
+.addPaddRight {
+  padding-right: 30px;
+}
+
+.subHeaderText {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+
+  img {
+    display: inline-block;
+    width: 8px;
+    margin-right: 12px;
+  }
+}
+
+.descriptionText {
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.fontWeightBold {
+  font-weight: 600;
+}
+
+.noPadd {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/*Newly added for remote schema page*/
+
 .heading_text {
   font-size: 18px;
   font-weight: bold;
   padding-bottom: 20px
 }
 
-.editable_heading_text
-{
+.editable_heading_text {
   font-size: 18px;
   font-weight: bold;
   display: flex;
   align-items: center;
   padding-bottom: 20px;
+
   h2 {
     font-size: 18px;
     font-weight: bold;
     margin-right: 10px;
   }
+
   i {
     cursor: pointer;
   }
 }
-.editable_heading_textbox
-{
+
+.editable_heading_textbox {
   display: flex;
   align-items: center;
   padding-bottom: 12px;
+
   input {
     width: 30%;
     font-weight: normal;
   }
 }
-.editable_heading_action
-{
+
+.editable_heading_action {
   margin-left: 10px;
   display: flex;
   align-items: center;
+
   i {
     margin-top: 2px;
   }
 }
-.editable_heading_action_item
-{
+
+.editable_heading_action_item {
   margin-right: 10px;
   font-size: 14px;
   text-decoration: underline;
@@ -931,7 +996,8 @@ code {
     padding: 3px 8px;
     background-color: #27AE60;
     border: 1px solid #27AE60;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     color: #fff;
     border-radius: 5px;
 

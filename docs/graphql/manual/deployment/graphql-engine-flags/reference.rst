@@ -158,4 +158,5 @@ For ``serve`` sub-command these are the flags and ENV variables available:
        (default: ``metadata,graphql``)
 
 .. note::
-  1. When the equivalent flags for environment variables are used, the flags will take precedence.
+
+  When the equivalent flags for environment variables are used, the flags will take precedence.

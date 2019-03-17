@@ -176,7 +176,7 @@ convToTxt :: PGColType
           -> Value
           -> AT.Parser S.SQLExp
 convToTxt ty val =
-  txtEncoder <$> parsePGValue ty val
+  toTxtValue ty <$> parsePGValue ty val
 
 readEitherTxt :: (Read a) => T.Text -> Either String a
 readEitherTxt = readEither . T.unpack
