@@ -60,9 +60,7 @@ organisation either in the same table or via a related table.
 Collaborators of an article
 ---------------------------
 
-Let's say the "ownership" or "visibility" information for a data model (table) is not present as a column in the
-table, but in a different related table. In this case, let's say there is an ``article`` table and a ``collaborator``
-table that has ``article_id, collaborator_id`` columns.
+Let's say the "ownership" or "visibility" information for a data model (table) is not present as a column in the table, but in a different related table. In this case, let's say there is an ``article`` table and a ``collaborator`` table that has ``article_id, collaborator_id`` columns.
 
 - Create a relationship called ``collaborators`` from the article table.
 
@@ -117,76 +115,111 @@ fields for data that they own.
 Multiple roles per user
 -----------------------
 
-Let's say you want to handle contexts where users can have multiple roles, and each role controls access to different data sets. To understand how to handle such contexts, let's extend the articles/authors context by introducing a new role, ``editor`` i.e. some authors are also editors and they can edit articles written by other authors.
+Sometimes your data/user model requires that users be assigned multiple roles, and each role have access to different parts of your database schema. If you have the information about roles and how they map to your data in the same database as the one configured with GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
 
-So, our current context is as follows:
+To understand how this works, let's model the roles and corresponding permissions in the context of a blog app where:
 
-* We have the following table:
+* Users can submit their own articles as an ``author`` and/or edit certain articles assigned to them as a ``reviewer``.
+
+* Some users are also designated as an ``editor``, allowing them to edit or delete any article.
+
+.. thumbnail:: ../../../img/graphql/manual/auth/multirole-setup.png
+   :class: no-shadow
+
+
+Database Schema
+^^^^^^^^^^^^^^^
+
+We'll create the following tables:
 
 .. code-block:: sql
 
-  author (
+  -- user information from your auth system
+
+  user_info (
     id INT PRIMARY KEY,
     name TEXT
   )
+  
+  -- information about articles and authors
 
-  article (
+  articles (
     id INT PRIMARY KEY,
     title TEXT,
-    author_id INT
+    author_id INT REFERENCES user_info(id) -- Foreign key to user_info :: id
   )
 
-* A foreign key constaint has been set from ``article`` :: ``author_id`` →  ``author`` :: ``id`` and the corresponding object and array relationships.
-
-* The following permission rules have been defined to restrict access for authors (the role ``author``) to only their articles (*for insert, update, select and delete operations*):
-
-.. thumbnail:: ../../../img/graphql/manual/auth/author-article-permissions.png
-
-If were to query the article table as an author with id equal to ``1`` i.e with the header ``X-Hasura-Role`` set to ``author`` ``X-Hasura-User-ID`` set to ``1``, we will see a subset of the data i.e. articles written by this author:
-
-.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-author-role.png
-
-Add new role
-^^^^^^^^^^^^
-
-To implement our use-case, we will introduce the role ``editor`` and assign this role to this author (``id`` = ``1``). To do this, we'll create a table that captures this mapping of an editor to an article, called ``article_editor``:
-
-.. code-block:: sql
-
-  article_editor (
-    article_id INT PRIMARY KEY,
-    editor_id  INT PRIMARY KEY
+  -- mapping of reviewers to articles (many to many)
+  
+  article_reviewer (
+    article_id INT REFERENCES articles(id), -- Foreign key to articles :: id
+    reviewer_id INT REFERENCES user_info(id), -- Foreign key to user_info :: id
+    PRIMARY KEY (article_id, reviewer_id)
   )
 
-We'll also define foreign keys to the ``article`` and ``author`` tables and define an array relationship called ``editors`` based on one of these foreign key i.e. ``article_editor`` :: ``article_id``  →  ``article``:: ``id``.
+  -- a simple list of editors for this blog
 
-Add permissions for new role
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  editors (
+    editor_id INT REFERENCES user_info(id), -- Foreign key to user_info :: id
+    PRIMARY KEY (editor_id)
+  )
 
-Let's define a new permission rule for the role ``editor`` for select, update and delete actions, taking advantage of this relationship:
+Relationships
+^^^^^^^^^^^^^
 
-.. thumbnail:: ../../../img/graphql/manual/auth/editor-role-permissions.png
+Create an array relationship ``reviewers`` based on the foreign key constraint ``article_reviewer`` :: ``article_id``  →  ``articles`` :: ``id``:
 
-This permission rules translates to "*if an article's editor's ID is the same as the current user's ID, allow access to it*". Notice how you can limit access to only the content (``title``) and not other information like the ``author_id`` field. 
+.. thumbnail:: ../../../img/graphql/manual/auth/reviewers-array-relationship.png
+     :class: no-shadow
 
-Now let's make the author from the previous query an editor of an article written by someone else by adding an entry into the ``article_editor`` table:
+Permissions
+^^^^^^^^^^^
 
-+------------+-----------+
-| article_id | editor_id |
-+============+===========+
-|   3        | 1         |
-+------------+-----------+
+We'll now create permission rules to restrict access to rows and columns of the ``articles`` table as per our requirements:
 
-Query/mutate data with new role
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* **Allow users with the role** ``author`` **to insert/select/update/delete only their own articles**
+  
+  For insert permission, we need to just configure a session-variable-based :doc:`column preset <../schema/default-values/column-presets>` for the ``author_id`` column as this will automatically accept only the user's ID i.e. the ``X-Hasura-User-Id`` header's value. It also helps us avoid explicitly passing the user's ID in the mutation.
 
-We can now see the subset of data from the ``article`` table that is exposed to the same user but now with the ``editor`` role:
+  .. thumbnail:: ../../../img/graphql/manual/auth/author-insert-preset.png
+     :class: no-shadow
 
-.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-editor-role.png
+  For update, select and delete permissions, we need to configure the following rule:
 
-With the ``editor`` role, this user can now only see those articles that they are an editor for. The user can also update the content for these article, since they have the corresponding update permissions to do so:
+  .. thumbnail:: ../../../img/graphql/manual/auth/author-update-permissions.png
+     :class: no-shadow
+  
+  The update permission rule shown here translates to "*if the value in the* ``author_id`` *column of this row is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *header's value, allow access to it*". We'll also remove access to the ``author_id`` column in the column permissions so it cannot be modified.
+  
+  The same rule can be used for select and delete too, but the column permission shown above is not required for select (*and is not applicable to delete*).
 
-.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-editor-role.png
+  If we now query the ``articles`` table as an ``author`` i.e with the header ``X-Hasura-Role`` set to ``author`` and ``X-Hasura-User-ID`` set to a user's ID, we will only see articles written by this author in the response:
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-author-role.png
+     :class: no-shadow
+
+* **Allow users with the role** ``reviewer`` **to only view articles assigned to them for reviews and edit only the content of such articles**
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/reviewer-select-permissions.png
+     :class: no-shadow
+
+  The array-relationship based permission rule in the above image reads as "*if the ID of any of reviewers assigned to this article is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *header's value, allow access to it*".
+
+  The same rule can be applied to both update and delete, and in the case of update, we'll use column permissions, as shown above in the update permission for the role ``author``, to restrict access to only the ``title`` column, so that only the content can be updated by a reviewer.
+
+  In the previous example query, if we modify the role from ``author`` to ``reviewer``, we will see only those articles that have been assigned to this user for a review :
+  
+  .. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-reviewer-role.png
+     :class: no-shadow
+
+* **Allow editors to select/update/delete any article**
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/editor-delete-permissions.png
+     :class: no-shadow
+  
+  We can define straightforward permission rules for the ``editor`` role that allows access to any article without any checks. The rule shown in the above image will also work for select and update.
+
+
 
 
 
