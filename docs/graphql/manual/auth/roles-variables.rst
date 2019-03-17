@@ -3,7 +3,7 @@ Roles & Session variables
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 The permissions system offered by Hasura GraphQL engine is extremely flexible and is built to capture complex
@@ -96,27 +96,35 @@ Indicating roles and session-variables in a GraphQL request
 Now that we have these roles and permission rules that use session variables set up, how do we actually use them
 when we make GraphQL requests from an app or from a different service?
 
-Option 1: Development & Testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For Development & Testing
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While you're developing or testing, just indicate your role and your session variables by passing headers along with
 the request:
 
-.. image:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
+.. thumbnail:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
 .. note::
 
-  If you've enabled Hasura GraphQL engine with an admin secret key, make sure you add the ADMIN_SECRET header as well.
+  If you've enabled Hasura GraphQL engine with an admin secret key, make sure you add the ``X-HASURA-ADMIN_SECRET``
+  header as well.
 
 
-Option 2: In production, from apps
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In Production, from apps
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you're making GraphQL queries from your apps, you will probably not (and should not) be sending session variables directly
-from your app because anyone can spoof the role and values of the variables and get access to whatever data they want.
+If you're making GraphQL queries from your apps, you will probably not (and should not) be sending session
+variables directly from your app because anyone can spoof the role and values of the variables and get access
+to whatever data they want.
 
 In this case, you should configure a webhook that will return an object containing the role and session variables
 given the session token (authorization token, JWT, cookie etc.) that your app normally uses.
+
+For **non-logged in users**, you can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the
+``--unauthorized-role`` flag to set a default role (e.g. ``anonymous``). This will allow you to set a role for users
+that are not logged in. The configured unauthorized role will be used whenever an access token is not present in a
+request to the GraphQL API. This can be useful for data that you would like anyone to be able to access and can be
+configured and restricted just like any other role.
 
 See :doc:`webhook` or :doc:`jwt` for more details on passing dynamic session variables in production.
 

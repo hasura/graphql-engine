@@ -24,6 +24,7 @@ module Hasura.GraphQL.Resolve.Context
   , Convert
   , runConvert
   , prepare
+  , txtConverter
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -125,7 +126,12 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT (FieldMap, OrdByCtx, InsCtxMap) (Except QErr))
+  StateT PrepArgs (ReaderT ( FieldMap
+                           , OrdByCtx
+                           , InsCtxMap
+                           , SQLGenCtx
+                           ) (Except QErr)
+                  )
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
@@ -134,9 +140,14 @@ prepare (colTy, colVal) = do
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
 
+txtConverter :: Monad m => PrepFn m
+txtConverter = return . uncurry toTxtValue
+
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap) -> Convert a -> m (a, PrepArgs)
+  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
+  -> Convert a
+  -> m (a, PrepArgs)
 runConvert ctx m =
   either throwError return $
   runExcept $ runReaderT (runStateT m Seq.empty) ctx

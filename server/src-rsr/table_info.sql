@@ -1,6 +1,5 @@
 select
   coalesce(columns.columns, '[]') as columns,
-  coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
   coalesce(views.view_info, 'null') as view_info
 from
@@ -29,24 +28,31 @@ from
     AND tables.table_name = columns.table_name
   )
   left outer join (
-    select * from hdb_catalog.hdb_primary_key
-  ) pk on (
-    tables.table_schema = pk.table_schema
-    AND tables.table_name = pk.table_name
-  )
-  left outer join (
     select
-      c.table_schema,
-      c.table_name,
-      json_agg(constraint_name) as constraints
+      cm.table_schema,
+      cm.table_name,
+      json_agg(
+        json_build_object(
+          'type', cm.constraint_type,
+          'name', cm.constraint_name,
+          'cols', cm.columns
+        )
+      ) as constraints
     from
-      information_schema.table_constraints c
-    where
-      c.constraint_type = 'UNIQUE'
-      or c.constraint_type = 'PRIMARY KEY'
+      (
+        select table_name, table_schema,
+               constraint_name, columns,
+               'PRIMARY KEY' as constraint_type
+          from hdb_catalog.hdb_primary_key
+        union all
+        select table_name, table_schema,
+               constraint_name, columns,
+               'UNIQUE' as constraint_type
+          from hdb_catalog.hdb_unique_constraint
+      ) cm
     group by
-      c.table_schema,
-      c.table_name
+      cm.table_schema,
+      cm.table_name
   ) constraints on (
     tables.table_schema = constraints.table_schema
     AND tables.table_name = constraints.table_name

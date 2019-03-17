@@ -17,13 +17,6 @@ import globals from '../../../../Globals';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
-const refresh = (
-  <Tooltip id="tooltip-cascade">
-    If your remote schema has changed, you need to refresh the GraphQL Engine
-    metadata to query the modified schema
-  </Tooltip>
-);
-
 class ViewStitchedSchema extends React.Component {
   componentDidMount() {
     const { resolverName } = this.props.params;
@@ -35,6 +28,7 @@ class ViewStitchedSchema extends React.Component {
       this.props.dispatch({ type: VIEW_RESOLVER, data: resolverName }),
     ]);
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.params.resolverName !== this.props.params.resolverName) {
       Promise.all([
@@ -46,17 +40,22 @@ class ViewStitchedSchema extends React.Component {
       ]);
     }
   }
+
   componentWillUnmount() {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({ type: VIEW_RESOLVER, data: '' }),
     ]);
   }
+
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
+
     const { resolverName } = this.props.params;
     const { manualUrl, envName, headers } = this.props;
+
     const filterHeaders = headers.filter(h => !!h.name);
+
     const breadCrumbs = [
       {
         title: 'Remote schemas',
@@ -85,6 +84,14 @@ class ViewStitchedSchema extends React.Component {
         url: '',
       });
     }
+
+    const refresh = (
+      <Tooltip id="tooltip-cascade">
+        If your remote schema has changed, you need to refresh the GraphQL
+        Engine metadata to query the modified schema
+      </Tooltip>
+    );
+
     return (
       <div
         className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
@@ -112,17 +119,19 @@ class ViewStitchedSchema extends React.Component {
                     <td>Headers</td>
                     <td>
                       {filterHeaders &&
-                        filterHeaders.filter(k => !!k.name).map((h, i) => [
-                          <tr key={i}>
-                            <td>
-                              {h.name} :{' '}
-                              {h.type === 'static'
-                                ? h.value
-                                : '<' + h.value + '>'}
-                            </td>
-                          </tr>,
-                          i !== filterHeaders.length - 1 ? <hr /> : null,
-                        ])}
+                        filterHeaders
+                          .filter(k => !!k.name)
+                          .map((h, i) => [
+                            <tr key={i}>
+                              <td>
+                                {h.name} :{' '}
+                                {h.type === 'static'
+                                  ? h.value
+                                  : '<' + h.value + '>'}
+                              </td>
+                            </tr>,
+                            i !== filterHeaders.length - 1 ? <hr /> : null,
+                          ])}
                     </td>
                   </tr>
                 ) : null}

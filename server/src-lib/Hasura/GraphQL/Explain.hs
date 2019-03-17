@@ -3,6 +3,8 @@ module Hasura.GraphQL.Explain
   , GQLExplain
   ) where
 
+import           Data.Has                               (getter)
+
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
@@ -20,7 +22,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 import qualified Hasura.GraphQL.Transport.HTTP          as TH
@@ -49,25 +50,25 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx, SQLGenCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx, SQLGenCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
 explainField
   :: (MonadTx m)
-  => UserInfo -> GCtx -> Field -> m FieldPlan
-explainField userInfo gCtx fld =
+  => UserInfo -> GCtx -> SQLGenCtx -> Field -> m FieldPlan
+explainField userInfo gCtx sqlGenCtx fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       opCxt <- getOpCtx fName
-      builderSQL <- runExplain (fldMap, orderByCtx) $
+      builderSQL <- runExplain (fldMap, orderByCtx, sqlGenCtx) $
         case opCxt of
           OCSelect (SelOpCtx tn hdrs permFilter permLimit) -> do
             validateHdrs hdrs
@@ -94,7 +95,6 @@ explainField userInfo gCtx fld =
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = _fName fld
-    txtConverter = return . uncurry toTxtValue
 
     opCtxMap = _gOpCtxMap gCtx
     fldMap = _gFields gCtx
@@ -108,9 +108,10 @@ explainField userInfo gCtx fld =
       validateHdrs hdrs
       (tabArgs, eSel, frmItem) <-
         RS.fromFuncQueryField txtConverter fn argSeq isAgg fld
+      strfyNum <- stringifyNum <$> asks getter
       return $ toSQL $
         RS.mkFuncSelectWith fn tn
-        (RS.TablePerm permFilter permLimit) tabArgs eSel frmItem
+        (RS.TablePerm permFilter permLimit) tabArgs strfyNum eSel frmItem
 
     validateHdrs hdrs = do
       let receivedHdrs = userVars userInfo
@@ -123,9 +124,10 @@ explainGQLQuery
   => Q.PGPool
   -> Q.TxIsolation
   -> SchemaCache
+  -> SQLGenCtx
   -> GQLExplain
   -> m BL.ByteString
-explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
+explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   queryParts <- runReaderT (GV.getQueryParts query) gCtx
   let topLevelNodes = TH.getTopLevelNodes (GV.qpOpDef queryParts)
@@ -136,7 +138,7 @@ explainGQLQuery pool iso sc (GQLExplain query userVarsRaw)= do
   (opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
   unless (opTy == G.OperationTypeQuery) $
     throw400 InvalidParams "only queries can be explained"
-  let tx = mapM (explainField userInfo gCtx) (toList selSet)
+  let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
   plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
   return $ J.encode plans
   where

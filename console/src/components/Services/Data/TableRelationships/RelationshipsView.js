@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import { deleteRelMigrate, addNewRelClicked } from './Actions';
+import { addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
 import AddRelationship from './AddManualRelationship';
 import Button from '../../../Common/Button/Button';
+import RelationshipEditor from './RelationshipEditor';
+import semverCheck from '../../../../helpers/semver';
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 {
@@ -31,70 +33,44 @@ const getObjArrayRelationshipList = relationships => {
   return requiredList;
 };
 
-/* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
-const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
-  const getGrayText = value => <i>{value}</i>;
-  return isObjRel ? (
-    <span>
-      &nbsp;
-      {getGrayText(lcol)}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol}
-    </span>
-  ) : (
-    <span>
-      &nbsp;
-      {rTable} :: {rcol}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {getGrayText(lcol)}
-    </span>
-  );
-};
-
-const relationshipView = (
-  dispatch,
-  tableName,
-  relName,
-  { lcol, rtable, rcol },
-  isObjRel,
-  tableStyles
-) => {
-  const onDelete = e => {
-    e.preventDefault();
-    const isOk = confirm('Are you sure?');
-    if (isOk) {
-      dispatch(
-        deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
-      );
-    }
-  };
-  return (
-    <td>
-      <div>
-        <Button size="sm" color="red" onClick={onDelete}>
-          Remove
-        </Button>
-        &nbsp;
-        <b>{relName}</b>
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelationshipLine(isObjRel, lcol, rcol, rtable)}
-        </div>
-      </div>
-    </td>
-  );
-};
-
 class RelationshipsView extends Component {
+  state = {
+    supportRename: false,
+  };
   componentDidMount() {
-    this.props.dispatch({ type: RESET });
-    this.props.dispatch(setTable(this.props.tableName));
+    const { dispatch, serverVersion, currentSchema, tableName } = this.props;
+    dispatch({ type: RESET });
+    dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
-    this.props.dispatch({
+    dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-      data: this.props.currentSchema,
+      data: currentSchema,
     });
+    if (serverVersion) {
+      this.checkRenameSupport(serverVersion);
+    }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.serverVersion &&
+      nextProps.serverVersion !== this.props.serverVersion
+    ) {
+      this.checkRenameSupport(nextProps.serverVersion);
+    }
+  }
+
+  checkRenameSupport = serverVersion => {
+    try {
+      if (semverCheck('tableColumnRename', serverVersion)) {
+        this.setState({
+          supportRename: true,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
   render() {
     const {
       tableName,
@@ -109,8 +85,8 @@ class RelationshipsView extends Component {
       migrationMode,
       schemaList,
     } = this.props;
-    const styles = require('../TableModify/Modify.scss');
-    const tableStyles = require('../TableCommon/TableStyles.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
+    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
     let alert = null;
@@ -159,26 +135,36 @@ class RelationshipsView extends Component {
               {getObjArrayRelationshipList(tableSchema.relationships).map(
                 (rel, i) => {
                   const column1 = rel.objRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.objRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.objRel),
-                      true,
-                      tableStyles
-                    )
+                    <RelationshipEditor
+                      dispatch={dispatch}
+                      tableName={tableName}
+                      relName={rel.objRel.rel_name}
+                      relConfig={findAllFromRel(
+                        allSchemas,
+                        tableSchema,
+                        rel.objRel
+                      )}
+                      isObjRel
+                      tableStyles={tableStyles}
+                      allowRename={this.state.supportRename}
+                    />
                   ) : (
                     <td />
                   );
                   const column2 = rel.arrRel ? (
-                    relationshipView(
-                      dispatch,
-                      tableName,
-                      rel.arrRel.rel_name,
-                      findAllFromRel(allSchemas, tableSchema, rel.arrRel),
-                      false,
-                      tableStyles
-                    )
+                    <RelationshipEditor
+                      dispatch={dispatch}
+                      tableName={tableName}
+                      relName={rel.arrRel.rel_name}
+                      relConfig={findAllFromRel(
+                        allSchemas,
+                        tableSchema,
+                        rel.arrRel
+                      )}
+                      isObjRel={false}
+                      tableStyles={tableStyles}
+                      allowRename={this.state.supportRename}
+                    />
                   ) : (
                     <td />
                   );
@@ -263,6 +249,7 @@ RelationshipsView.propTypes = {
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -270,6 +257,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });

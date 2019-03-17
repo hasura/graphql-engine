@@ -1,0 +1,16 @@
+@import "../../../Common/Common.scss";
+
+.migration_mode {
+  display: inline-block;
+  margin-left: 10px;
+
+  label {
+    display: flex;
+    align-items: center;
+  }
+
+  span {
+    margin-right: 10px;
+    font-weight: 700;
+  }
+}

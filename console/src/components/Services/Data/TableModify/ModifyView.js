@@ -16,15 +16,43 @@ import {
 import { ordinalColSort } from '../utils';
 import { setTable, fetchTableComment } from '../DataActions';
 import Button from '../../../Common/Button/Button';
+import semverCheck from '../../../../helpers/semver';
 
 class ModifyView extends Component {
+  state = {
+    supportTableColumnRename: false,
+  };
   componentDidMount() {
-    const { dispatch } = this.props;
+    const { dispatch, serverVersion } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
     dispatch(fetchTableComment(this.props.tableName));
+    if (serverVersion) {
+      this.checkTableColumnRenameSupport(serverVersion);
+    }
   }
+
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.serverVersion &&
+      nextProps.serverVersion !== this.props.serverVersion
+    ) {
+      this.checkTableColumnRenameSupport(nextProps.serverVersion);
+    }
+  }
+
+  checkTableColumnRenameSupport = serverVersion => {
+    try {
+      if (semverCheck('tableColumnRename', serverVersion)) {
+        this.setState({
+          supportTableColumnRename: true,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   modifyViewDefinition = viewName => {
     // fetch the definition
@@ -47,7 +75,7 @@ class ModifyView extends Component {
       migrationMode,
     } = this.props;
 
-    const styles = require('./Modify.scss');
+    const styles = require('./ModifyTable.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
 
@@ -191,6 +219,7 @@ class ModifyView extends Component {
           tabName="modify"
           currentSchema={currentSchema}
           migrationMode={migrationMode}
+          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
@@ -261,6 +290,7 @@ ModifyView.propTypes = {
   lastError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -271,6 +301,7 @@ const mapStateToProps = (state, ownProps) => {
     currentSchema: state.tables.currentSchema,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    serverVersion: state.main.serverVersion,
     ...state.tables.modify,
   };
 };

@@ -12,6 +12,7 @@ import {
   passRTAddSuggestedRel,
   failRTAddSuggestedRel,
   checkAddManualRelationshipsButton,
+  passRTRenameRelationship,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
@@ -42,6 +43,7 @@ export const runRelationshipsTests = () => {
     it('Deleting the relationships', passRTDeleteRelationships);
     it('Adding Suggested Relationships Error', failRTAddSuggestedRel);
     it('Adding Suggested Relationships', passRTAddSuggestedRel);
+    it('Rename relationships', passRTRenameRelationship);
     it('Deleting the relationships', passRTDeleteRelationships);
     it('Deleting testing tables', passRTDeleteTables);
   });
