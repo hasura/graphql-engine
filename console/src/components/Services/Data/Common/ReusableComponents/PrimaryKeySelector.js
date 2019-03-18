@@ -21,12 +21,14 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
     .join(', ');
   const configuration = () => {
     return (
-      <div className={'container-fluid'}>
-        <div className="row">
-          <h5 className={styles.padd_bottom}>
-            Selected configuration: <i>{`( ${pkConfig} )`}</i>
-            &nbsp;
-          </h5>
+      <div>
+        <div className={'container-fluid'}>
+          <div className="row">
+            <h5 className={styles.padd_bottom}>
+              Selected configuration: <i>{`( ${pkConfig} )`}</i>
+              &nbsp;
+            </h5>
+          </div>
         </div>
       </div>
     );

@@ -28,7 +28,9 @@ class Editor extends React.Component {
       }-${this.props.property}`}
       onClick={this.toggleEditor}
     >
-      {this.state.isEditing ? 'Close' : 'Edit'}
+      {this.state.isEditing
+        ? this.props.collapseButtonText || 'Close'
+        : this.props.expandButtonText || 'Edit'}
     </Button>
   );
 

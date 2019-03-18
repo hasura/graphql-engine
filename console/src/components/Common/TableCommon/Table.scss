@@ -159,12 +159,15 @@ a.expanded {
     width: 200px;
     margin-right: 0px;
   }
+}
 
-  i:hover {
-    cursor: pointer;
-    color: #B85C27;
-    transition: 0.2s;
-  }
+.iClickable {
+}
+
+.iClickable:hover {
+  cursor: pointer;
+  color: #b85c27;
+  transition: 0.2s;
 }
 
 .insertBox {

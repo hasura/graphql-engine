@@ -6,9 +6,11 @@ import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import ForeignKeyWrapper from './ForeignKeyWrapper';
 
 import dataTypes from '../Common/DataTypes';
 import { showErrorNotification } from '../Notification';
+import { setForeignKeys } from './AddActions';
 
 import {
   setTableName,
@@ -211,6 +213,10 @@ class AddTable extends Component {
     const {
       columns,
       primaryKeys,
+      allSchemas,
+      foreignKeys,
+      tableName,
+      currentSchema,
       dispatch,
       ongoingRequest,
       lastError,
@@ -221,11 +227,15 @@ class AddTable extends Component {
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
-        removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
+        removeIcon = (
+          <i className={`${styles.iClickable} ${styles.fontAwosomeClose}`} />
+        );
       } else {
         removeIcon = (
           <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+            className={`${styles.iClickable} ${
+              styles.fontAwosomeClose
+            } fa-lg fa fa-times`}
             onClick={() => {
               dispatch(removeColumn(i));
             }}
@@ -358,6 +368,7 @@ class AddTable extends Component {
         styles={styles}
       />
     );
+
     let createBtnText = 'Create';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
@@ -405,11 +416,38 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.primaryKeyDescription}
               >
-                <i className="fa fa-question-circle" aria-hidden="true" />
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
             {pks}
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Foreign Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.foreignKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <ForeignKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              foreignKeys={foreignKeys}
+              dispatch={dispatch}
+              styles={styles}
+              setForeignKeys={setForeignKeys}
+            />
             <hr />
             <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>
             <input
@@ -441,7 +479,9 @@ class AddTable extends Component {
 AddTable.propTypes = {
   columns: PropTypes.array.isRequired,
   tableName: PropTypes.string,
+  allSchemas: PropTypes.array.isRequired,
   primaryKeys: PropTypes.array.isRequired,
+  foreignKeys: PropTypes.array.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   internalError: PropTypes.string,
@@ -449,7 +489,11 @@ AddTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({ ...state.addTable.table });
+const mapStateToProps = state => ({
+  ...state.addTable.table,
+  allSchemas: state.tables.allSchemas,
+  currentSchema: state.tables.currentSchema,
+});
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);
 

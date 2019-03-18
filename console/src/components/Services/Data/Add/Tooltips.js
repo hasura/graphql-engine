@@ -16,6 +16,15 @@ export const primaryKeyDescription = (
   </Tooltip>
 );
 
+export const foreignKeyDescription = (
+  <Tooltip id="tooltip-foreign-key-description">
+    A foreign key is a column or group of columns in a table that provides a
+    link between data in two tables. It acts as a cross-reference between tables
+    because it references a unique key of another table, thereby establishing a
+    link between them.
+  </Tooltip>
+);
+
 export const dataTypeDescription = description => (
   <Tooltip id="tooltip-datatype-description">{description}</Tooltip>
 );

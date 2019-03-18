@@ -17,6 +17,7 @@ const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
 const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
 const SET_PK = 'AddTable/SET_PK';
+const SET_FKS = 'AddTable/SET_FKS';
 const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
@@ -58,6 +59,10 @@ const setColUnique = (isUnique, index) => ({
 });
 const addCol = () => ({ type: ADD_COL });
 const setPk = pks => ({ type: SET_PK, pks });
+const setForeignKeys = fks => ({
+  type: SET_FKS,
+  fks,
+});
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -363,6 +368,11 @@ const addTableReducer = (state = defaultState, action) => {
         ...state,
         primaryKeys: action.pks,
       };
+    case SET_FKS:
+      return {
+        ...state,
+        foreignKeys: action.fks,
+      };
     default:
       return state;
   }
@@ -382,6 +392,7 @@ export {
   removeColDefault,
   addCol,
   setPk,
+  setForeignKeys,
   createTableSql,
 };
 export { resetValidation, validationError };
