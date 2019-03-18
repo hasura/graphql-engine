@@ -41,6 +41,7 @@ import           Hasura.GraphQL.Validate                     (QueryParts (..),
 import qualified Hasura.GraphQL.Validate.Types               as VT
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
@@ -50,7 +51,7 @@ import           Hasura.Server.Utils                         (bsToTxt)
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -310,8 +311,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
 
-    sendSuccResp bs =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess bs
+    sendSuccResp encJson =
+      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do

@@ -143,6 +143,7 @@ class GraphiQLWrapper extends Component {
             renderGraphiql={renderGraphiql}
             endpoint={graphqlNetworkData.url}
             headers={graphqlNetworkData.headers}
+            headerFocus={headerFocus}
             query={queryString}
           />
         </div>
