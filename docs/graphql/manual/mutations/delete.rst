@@ -18,7 +18,6 @@ Auto-generated delete mutation schema
   ): article_mutation_response
 
   # response of any mutation on the table "article"
-
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
