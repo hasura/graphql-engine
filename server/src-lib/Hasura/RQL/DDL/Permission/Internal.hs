@@ -202,20 +202,40 @@ getDependentHeaders :: BoolExp -> [T.Text]
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
-valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
-valueParser columnType = \case
-  -- When it is a special variable
-  val@(String t)
-    | isUserVar t -> return $ fromCurSess t
-    | isReqUserId t  -> return $ fromCurSess userIdHeader
-    | otherwise      -> txtRHSBuilder columnType val
-  -- Typical value as Aeson's value
-  val -> txtRHSBuilder columnType val
+valueParser :: (MonadError QErr m) => ValueParser m S.SQLExp
+valueParser = ValueParser parseOne parseMany
   where
+    parseOne columnType = \case
+      -- When it is a special variable
+      val@(String t)
+        | isUserVar t -> return $ fromCurSess t columnType
+        | isReqUserId t  -> return $ fromCurSess userIdHeader columnType
+        | otherwise      -> txtRHSBuilder columnType val
+      -- Typical value as Aeson's value
+      val -> txtRHSBuilder columnType val
+
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
+    fromCurSess hdr colTy = withAnnTy $ withGeoVal colTy $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
+      where withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show colTy
+
+    qualJsonArrElemsTxtF = QualifiedObject (SchemaName "pg_catalog") arrElemsTextF
+    arrElemsTextF = FunctionName "json_array_elements_text"
+    selJsonArrElems colTy x = S.SESelect $ S.mkSelect
+      { S.selExtr = [flip S.Extractor Nothing $ withGeoVal colTy (S.SEIden $ toIden arrElemsTextF) `S.SETyAnn` colTyAnn]
+      , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualJsonArrElemsTxtF [x]]
+      }
+      where colTyAnn = S.AnnType $ T.pack $ show colTy
+
+    parseMany columnType v = case v of
+      (String t)
+        | isUserVar t -> return [selJsonArrElems columnType $ fromCurSess t PGJSON ]
+        -- | otherwise -> fmap return $ parseOne columnType v
+        | otherwise -> throw500 "Unexpected error"
+
+      val -> do
+          vals <- runAesonParser parseJSON val
+          indexedForM vals (parseOne columnType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

@@ -70,7 +70,7 @@ buildPrepArg args pct val =
     Object _ -> do
       tpc <- decodeValue val
       v <- getParamValue args tpc
-      modifyErr (withParamErrMsg tpc) $ binRHSBuilder pct v
+      modifyErr (withParamErrMsg tpc) $  (vpParseOne binRHSBuilder) pct v
     _ -> txtRHSBuilder pct val
   where
     withParamErrMsg tpc t =
@@ -111,7 +111,7 @@ convQT args qt = case qt of
       v <- getParamValue args tpc
       R.decodeInsObjs v
 
-    f = buildPrepArg args
+    f = defaultValueParser $ buildPrepArg args
 
 execQueryTemplateP1
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)

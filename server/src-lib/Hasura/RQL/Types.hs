@@ -42,6 +42,8 @@ module Hasura.RQL.Types
        , HeaderObj
 
        , liftMaybe
+       , ValueParser(..)
+       , defaultValueParser
        , module R
        ) where
 
@@ -359,3 +361,18 @@ successMsg :: BL.ByteString
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text
+
+--type ValueParser m a = PGColType -> Value -> m a
+data ValueParser m a
+  = ValueParser
+  { vpParseOne  :: PGColType -> Value -> m a
+  , vpParseMany :: PGColType -> Value -> m [a]
+  }
+
+defaultValueParser
+  :: MonadError QErr m
+  => (PGColType -> Value -> m a) -> ValueParser m a
+defaultValueParser parseOne = ValueParser parseOne parseMany
+  where parseMany colTy val = do
+          vals <- runAesonParser parseJSON val
+          indexedForM vals (parseOne colTy)

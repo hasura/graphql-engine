@@ -24,7 +24,7 @@ parseOpExp
   -> FieldInfoMap
   -> PGColInfo
   -> (T.Text, Value) -> m (OpExpG a)
-parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
+parseOpExp (ValueParser parseOneFn parseManyFn) fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
   case opStr of
     "$eq"            -> parseEq
     "_eq"            -> parseEq
@@ -163,8 +163,8 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
 
     parseSTDWithinObj = do
       WithinOp distVal fromVal <- parseVal
-      dist <- withPathK "distance" $ parser PGFloat distVal
-      from <- withPathK "from" $ parser colTy fromVal
+      dist <- withPathK "distance" $ parseOneFn PGFloat distVal
+      from <- withPathK "from" $ parseOneFn colTy fromVal
       return $ ASTDWithin $ WithinOp dist from
 
     decodeAndValidateRhsCol =
@@ -182,11 +182,9 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     geometryOnlyOp ty =
       throwError $ buildMsg ty [PGGeometry]
 
-    parseWithTy ty = parser ty val
-    parseOne = parseWithTy colTy
-    parseMany = do
-      vals <- runAesonParser parseJSON val
-      indexedForM vals (parser colTy)
+    parseWithTy ty = parseOneFn ty val
+    parseOne = parseOneFn colTy val
+    parseMany = parseManyFn colTy val
 
     parseVal :: (FromJSON a, QErrM m) => m a
     parseVal = decodeValue val
@@ -198,11 +196,9 @@ parseOpExps
   -> PGColInfo
   -> Value
   -> m [OpExpG a]
-parseOpExps valParser cim colInfo = \case
-  (Object o) -> mapM (parseOpExp valParser cim colInfo)(M.toList o)
-  val        -> pure . AEQ False <$> valParser (pgiType colInfo) val
-
-type ValueParser m a = PGColType -> Value -> m a
+parseOpExps vp@(ValueParser parseOne _)cim colInfo = \case
+  (Object o) -> mapM (parseOpExp vp cim colInfo)(M.toList o)
+  val        -> pure . AEQ False <$> parseOne (pgiType colInfo) val
 
 buildMsg :: PGColType -> [PGColType] -> QErr
 buildMsg ty expTys =

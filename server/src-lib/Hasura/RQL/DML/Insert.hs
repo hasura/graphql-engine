@@ -167,7 +167,7 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
 convInsertQuery
   :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> ValueParser m S.SQLExp
   -> InsertQuery
   -> m InsertQueryP1
 convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
@@ -207,7 +207,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       insView    = ipiView insPerm
 
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
-    convObj prepFn defInsVals setInsVals fieldInfoMap obj
+    convObj (vpParseOne  prepFn) defInsVals setInsVals fieldInfoMap obj
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 

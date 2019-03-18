@@ -144,7 +144,7 @@ convSelectQ
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> ValueParser m S.SQLExp
   -> m AnnSel
 convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
 
@@ -207,7 +207,7 @@ convExtRel
   -> RelName
   -> Maybe RelName
   -> SelectQExt
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> ValueParser m S.SQLExp
   -> m (Either ObjSel ArrSel)
 convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
@@ -279,7 +279,7 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
 
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => ValueParser m S.SQLExp
   -> SelectQuery
   -> m AnnSel
 convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do

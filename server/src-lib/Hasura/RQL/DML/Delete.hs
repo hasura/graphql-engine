@@ -53,7 +53,7 @@ getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds uniqCols) =
 
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => ValueParser m S.SQLExp
   -> DeleteQuery
   -> m DeleteQueryP1
 validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do

@@ -144,13 +144,15 @@ checkPermOnCol pt allowedCols pgCol = do
       , permTypeToCode pt <> " column " <>> pgCol
       ]
 
-binRHSBuilder
-  :: PGColType -> Value -> DMLP1 S.SQLExp
-binRHSBuilder colType val = do
-  preparedArgs <- get
-  binVal <- runAesonParser (convToBin colType) val
-  put (preparedArgs DS.|> binVal)
-  return $ toPrepParam (DS.length preparedArgs + 1) colType
+binRHSBuilder :: ValueParser DMLP1 S.SQLExp
+binRHSBuilder = defaultValueParser parseOne
+  where
+    parseOne colType val = do
+      preparedArgs <- get
+      binVal <- runAesonParser (convToBin colType) val
+      put (preparedArgs DS.|> binVal)
+      return $ toPrepParam (DS.length preparedArgs + 1) colType
+
 
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
@@ -210,7 +212,7 @@ convBoolExp'
   => FieldInfoMap
   -> SelPermInfo
   -> BoolExp
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> ValueParser m S.SQLExp
   -> m AnnBoolExpSQL
 convBoolExp' cim spi be prepValBuilder = do
   abe <- annBoolExp prepValBuilder cim be

@@ -72,7 +72,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => ValueParser m S.SQLExp
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do

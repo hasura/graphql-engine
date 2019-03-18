@@ -56,20 +56,19 @@ $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateQueryTempla
 
 validateParam
   :: (QErrM m)
-  => PGColType
-  -> Value
-  -> m PS.SQLExp
-validateParam pct val =
-  case val of
-    Object _ -> do
-      tpc <- decodeValue val
-      withPathK "default" $
-        maybe (return ()) validateDefault $ tpcDefault tpc
-      return $ PS.SELit "NULL"
-    _ -> txtRHSBuilder pct val
+  => ValueParser m PS.SQLExp
+validateParam = defaultValueParser parseOne
   where
-    validateDefault =
-      void . runAesonParser (convToBin pct)
+    parseOne pct val = case val of
+      Object _ -> do
+        tpc <- decodeValue val
+        withPathK "default" $
+          maybe (return ()) validateDefault $ tpcDefault tpc
+        return $ PS.SELit "NULL"
+      _ -> txtRHSBuilder pct val
+      where
+        validateDefault =
+          void . runAesonParser (convToBin pct)
 
 mkSelQ :: (QErrM m) => SelectQueryT -> m SelectQuery
 mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do

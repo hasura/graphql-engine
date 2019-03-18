@@ -120,7 +120,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => ValueParser m S.SQLExp
   -> UpdateQuery
   -> m UpdateQueryP1
 validateUpdateQueryWith f uq = do
@@ -147,15 +147,16 @@ validateUpdateQueryWith f uq = do
       uniqCols = getUniqCols (getCols fieldInfoMap) $
                  tiUniqOrPrimConstraints tableInfo
 
+  let f' = vpParseOne f
   -- convert the object to SQL set expression
   setItems <- withPathK "$set" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet f'
 
   incItems <- withPathK "$inc" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc f'
 
   mulItems <- withPathK "$mul" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul f
+    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul f'
 
   defItems <- withPathK "$default" $
     convOp fieldInfoMap preSetCols updPerm (zip (uqDefault uq) [()..]) convDefault
