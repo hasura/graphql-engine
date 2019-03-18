@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -140,7 +141,7 @@ trackFunctionP2Setup qf = do
   addFunctionToCache fi
 
 trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
-                => QualifiedFunction -> m RespBody
+                => QualifiedFunction -> m EncJSON
 trackFunctionP2 qf = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
@@ -158,7 +159,7 @@ runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
      , UserInfoM m
      )
-  => TrackFunction -> m RespBody
+  => TrackFunction -> m EncJSON
 runTrackFunc q = do
   trackFunctionP1 q
   trackFunctionP2 $ tfName q
@@ -172,7 +173,7 @@ runUntrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
      , UserInfoM m
      )
-  => UnTrackFunction -> m RespBody
+  => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
   adminOnly
   void $ askFunctionInfo qf

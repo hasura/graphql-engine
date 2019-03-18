@@ -8,12 +8,12 @@ module Hasura.GraphQL.Resolve.LiveQuery
 
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
-import qualified Data.ByteString.Lazy                   as BL
 import qualified ListT
 import qualified StmContainers.Map                      as STMMap
 
 import           Control.Concurrent                     (threadDelay)
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context         (LazyRespTx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
@@ -49,7 +49,7 @@ type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new
 
-type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 removeLiveQuery
   :: (Eq k, Hashable k)
@@ -140,7 +140,7 @@ pollQuery runTx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
   let resp = case res of
         Left e   -> GQExecError [encodeGQErr False e]
-        Right bs -> GQSuccess bs
+        Right bs -> GQSuccess $ encJToLBS bs
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do
@@ -154,7 +154,7 @@ pollQuery runTx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
   -- write to the current websockets if needed
   prevRespM <- STM.readTVarIO respTV
-  when (isExecError resp || Just resp /=  prevRespM) $ do
+  when (isExecError resp || Just resp /= prevRespM) $ do
     runOperations resp curOps
     STM.atomically $ STM.writeTVar respTV $ Just resp
 
