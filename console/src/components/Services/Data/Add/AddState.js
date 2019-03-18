@@ -1,10 +1,7 @@
 const defaultState = {
-  tableName: 'test_table',
+  tableName: null,
   tableComment: null,
-  columns: [
-    { name: 'id', type: 'integer', nullable: false },
-    { name: 'text', type: 'text', nullable: false },
-  ],
+  columns: [{ name: '', type: '', nullable: false }],
   primaryKeys: [''],
   foreignKeys: [
     {
