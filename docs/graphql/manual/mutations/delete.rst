@@ -26,14 +26,6 @@ Auto-generated delete mutation schema
     returning: [article!]!
   }
 
-  # only columns
-  type article_columns {
-    id
-    title
-    content
-    author_id
-  }
-
 As you can see from the schema:
 
 - ``where`` argument is compulsory to filter rows to be deleted. See :doc:`Filter queries <../queries/query-filters>`
@@ -45,9 +37,9 @@ See the :ref:`delete mutation API reference <delete_syntax>` for the full specif
 .. note::
 
   - If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
-  ``delete_<schema_name>_<table_name>``.
-
-  - The auto-generated schema type ``article_mutation_response`` is for the case when the table has at least one primary key or one unique constraint with not null columns. Please see the :ref:`API reference <delete_syntax>` for the generated type when this is not the case (*relationship/nested data is not available in returning*).
+    ``delete_<schema_name>_<table_name>``.
+  - To fetch nested objects using relationships in the mutation response, the table needs to have either a primary
+    key or a unique constraint with not null columns.
 
 Delete based on an object's fields
 ----------------------------------

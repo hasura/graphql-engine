@@ -147,7 +147,8 @@ You can specify ``on_conflict`` clause while inserting nested objects
 
 .. note::
   
-  As you can see from the :doc:`auto-generated insert mutation schema <insert>`, for this to work, the parent table (*in this case,* ``article``) needs to have a primary key or a unique constraint.
+  For this to work, the parent table (*in this case,* ``author``) needs to have either a primary key or a
+  unique constraint.
 
 .. admonition:: Edge-cases
 

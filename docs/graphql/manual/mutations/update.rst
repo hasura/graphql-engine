@@ -20,20 +20,11 @@ Auto-generated update mutation schema
   ): article_mutation_response
 
   # response of any mutation on the table "article"
-
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
-  }
-
-  # only columns
-  type article_columns {
-    id
-    title
-    content
-    author_id
   }
 
 As you can see from the schema:
@@ -48,11 +39,10 @@ See the :ref:`update mutation API reference <update_syntax>` for the full specif
 
   - At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
     ``_delete_elem``, ``_delete_at_path`` is required.
-
   - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
     ``update_<schema_name>_<table_name>``.
-  
-  - The auto-generated schema type ``article_mutation_response`` is for the case when the table has at least one primary key or one unique constraint with not null columns. Please see the :ref:`API reference <update_syntax>` for the generated type when this is not the case (*relationship/nested data is not available in returning*).
+  - To fetch nested objects using relationships in the mutation response, the table needs to have either a primary
+    key or a unique constraint with not null columns.
 
 Update based on an object's fields
 ----------------------------------
