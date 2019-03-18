@@ -21,21 +21,11 @@ Auto-generated update mutation schema
 
   # response of any mutation on the table "article"
 
-  # if table has atleast one primary key or
-  # one unique constraint with not null columns
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
-  }
-
-  # if table has no primary key or unique constraints
-  type article_mutation_response {
-    # number of affected rows by the mutation
-    affected_rows: Int!
-    #data of the affected rows by the mutation
-    returning: [article_columns!]!
   }
 
   # only columns
@@ -61,6 +51,8 @@ See the :ref:`update mutation API reference <update_syntax>` for the full specif
 
   - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
     ``update_<schema_name>_<table_name>``.
+  
+  - The auto-generated schema type ``article_mutation_response`` is for the case when the table has at least one primary key or one unique constraint with not null columns. Please see the :ref:`API reference <update_syntax>` for the generated type when this is not the case (*relationship/nested data is not available in returning*).
 
 Update based on an object's fields
 ----------------------------------

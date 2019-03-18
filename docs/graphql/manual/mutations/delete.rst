@@ -19,21 +19,11 @@ Auto-generated delete mutation schema
 
   # response of any mutation on the table "article"
 
-  # if table has atleast one primary key or
-  # one unique constraint with not null columns
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
     #data of the affected rows by the mutation
     returning: [article!]!
-  }
-
-  # if table has no primary key or unique constraints
-  type article_mutation_response {
-    # number of affected rows by the mutation
-    affected_rows: Int!
-    #data of the affected rows by the mutation
-    returning: [article_columns!]!
   }
 
   # only columns
@@ -54,8 +44,10 @@ See the :ref:`delete mutation API reference <delete_syntax>` for the full specif
 
 .. note::
 
-  If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
+  - If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
   ``delete_<schema_name>_<table_name>``.
+
+  - The auto-generated schema type ``article_mutation_response`` is for the case when the table has at least one primary key or one unique constraint with not null columns. Please see the :ref:`API reference <delete_syntax>` for the generated type when this is not the case (*relationship/nested data is not available in returning*).
 
 Delete based on an object's fields
 ----------------------------------
