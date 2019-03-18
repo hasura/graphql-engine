@@ -34,7 +34,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
 	f.StringVar(&opts.versionMigration, "version", "", "migrate the database to a specific version")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
-	f.BoolVar(&opts.dryRun, "dry-run", false, "")
+	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -55,11 +55,11 @@ type migrateApplyOptions struct {
 	downMigration    string
 	versionMigration string
 	migrationType    string
-	dryRun           bool
+	skipExecution    bool
 }
 
 func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.dryRun)
+	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.skipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -68,7 +68,7 @@ func (o *migrateApplyOptions) run() error {
 	if err != nil {
 		return err
 	}
-	migrateDrv.DryRun = o.dryRun
+	migrateDrv.DryRun = o.skipExecution
 
 	err = ExecuteMigration(migrationType, migrateDrv, step)
 	if err != nil {
