@@ -3,24 +3,40 @@ import { Route, Router } from "react-router-dom";
 
 import Home from "./components/Home/Home";
 import Callback from "./components/Callback/Callback";
-import Auth from "./components/Auth/Auth";
+import auth from "./components/Auth/Auth";
 import LandingPage from "./components/LandingPage/LandingPage";
 import history from "./utils/history";
 
 import { ApolloProvider } from "react-apollo";
 import makeApolloClient from "./apollo";
 
-const client = makeApolloClient();
+let client;
 
-const provideClient = component => {
-  return <ApolloProvider client={client}>{component}</ApolloProvider>;
+const provideClient = (Component, renderProps) => {
+  // check if logged in
+  if (localStorage.getItem("isLoggedIn") === "true") {
+    // check if client exists
+    if (!client) {
+      client = makeApolloClient();
+    }
+    return (
+      <ApolloProvider client={client}>
+        <Component {...renderProps} auth={auth} client={client} />
+      </ApolloProvider>
+    );
+  } else {
+    // not logged in already, hence redirect to login page
+    if (renderProps.match.path !== "/") {
+      window.location.href = "/";
+    } else {
+      return <Component auth={auth} {...renderProps} />;
+    }
+  }
 };
-
-const auth = new Auth();
 
 const handleAuthentication = ({ location }) => {
   if (/access_token|id_token|error/.test(location.hash)) {
-    auth.handleAuthentication(client);
+    auth.handleAuthentication();
   }
 };
 
@@ -31,18 +47,12 @@ export const makeMainRoutes = () => {
         <Route
           exact
           path="/"
-          render={props =>
-            provideClient(
-              <LandingPage auth={auth} client={client} {...props} />
-            )
-          }
+          render={props => provideClient(LandingPage, props)}
         />
         <Route
           exact
           path="/home"
-          render={props =>
-            provideClient(<Home auth={auth} client={client} {...props} />)
-          }
+          render={props => provideClient(Home, props)}
         />
         <Route
           path="/callback"

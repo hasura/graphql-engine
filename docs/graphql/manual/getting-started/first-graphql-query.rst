@@ -23,7 +23,7 @@ the following columns:
     name TEXT
   )
 
-.. image:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+.. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
@@ -43,7 +43,7 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 
 You'll see that you get all the inserted data!
 
-.. image:: ../../../img/graphql/manual/getting-started/profile-query.png
+.. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
 
 Next steps
 ----------

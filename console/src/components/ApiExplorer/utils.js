@@ -1,6 +1,5 @@
-const getHeadersAsJSON = headers => {
+const getHeadersAsJSON = (headers = []) => {
   const headerJSON = {};
-
   const nonEmptyHeaders = headers.filter(header => {
     return header.key && header.isActive;
   });
