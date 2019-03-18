@@ -206,9 +206,9 @@ mkCompExpInp colTy =
   , map (mk $ G.toLT colScalarTy) listOps
   , bool [] (map (mk $ mkScalarTy PGText) stringOps) isStringTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinGeoOpInpVal stDWithinGeoDesc stDWithinGeometryInpTy :
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
              map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
-  , bool [] (stDWithinGeoOpInpVal stDWithinGeoDesc stDWithinGeographyInpTy :
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
              map geoOpToInpVal geoOps) isGeographyType
   , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
   ]) HasuraType
@@ -264,8 +264,8 @@ mkCompExpInp colTy =
         )
       ]
 
-    stDWithinGeoOpInpVal desc ty =
-      InpValInfo (Just desc) "_st_d_within" Nothing $ G.toGT ty
+    stDWithinGeoOpInpVal ty =
+      InpValInfo (Just stDWithinGeoDesc) "_st_d_within" Nothing $ G.toGT ty
     stDWithinGeoDesc =
       "is the column within a distance from a " <> colTyDesc <> " value"
 
