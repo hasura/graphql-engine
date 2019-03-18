@@ -98,7 +98,7 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	metadataPath, err := o.EC.GetMetadataPath("yaml")
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
 	if err != nil {
 		return err
 	}

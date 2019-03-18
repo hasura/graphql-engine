@@ -375,7 +375,7 @@ func (ec *ExecutionContext) setVersion() {
 }
 
 // GetMetadataPath returns the file path based on the format.
-func (ec *ExecutionContext) GetMetadataPath(format string) (string, error) {
+func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
 	ext := fmt.Sprintf(".%s", format)
 	for _, filePath := range ec.MetadataFile {
 		switch p := filepath.Ext(filePath); p {
