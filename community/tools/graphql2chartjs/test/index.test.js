@@ -173,6 +173,38 @@ const runTests = () => {
     'Reset with bar data'
   )
 
+  g2c = new Graphql2Chartjs(vg1.data, 'line');
+  logTestResult(
+    (
+      g2c.data.labels.length === 5 && g2c.data.datasets.length === 1,
+      g2c.data.datasets[0].fill === false &&
+      g2c.data.datasets[0].data[0] === 427014 && g2c.data.datasets[0].pointBackgroundColor[0] === "red" &&
+      g2c.data.datasets[0].data[1] === 220006 && g2c.data.datasets[0].pointBackgroundColor[1] === "yellow" &&
+      g2c.data.datasets[0].data[2] === 71004 && g2c.data.datasets[0].pointBackgroundColor[2] === "#3366ff" &&
+      g2c.data.datasets[0].data[3] === 129769 && g2c.data.datasets[0].pointBackgroundColor[3] === "#330000" &&
+      g2c.data.datasets[0].data[4] === 90808 && g2c.data.datasets[0].pointBackgroundColor[4] === "green" &&
+      true
+    ),
+    'Initialization with constructor'
+  )
+
+  g2c = new Graphql2Chartjs(vg2.data, (dsName, dp) => {
+    return {
+      ...dp, fill: true, chartType: 'line'
+    }
+  })
+  logTestResult(
+    (
+      g2c.data.labels.length === 5 && g2c.data.datasets.length === 1,
+      g2c.data.datasets[0].fill === true &&
+      g2c.data.datasets[0].data[0] === 427014 && g2c.data.datasets[0].pointBackgroundColor[0] === "red" &&
+      g2c.data.datasets[0].data[1] === 220006 && g2c.data.datasets[0].pointBackgroundColor[1] === "yellow" &&
+      g2c.data.datasets[0].data[2] === 71004 && g2c.data.datasets[0].pointBackgroundColor[2] === "#3366ff" &&
+      g2c.data.datasets[0].data[3] === 129222 && g2c.data.datasets[0].pointBackgroundColor[3] === "#330000" &&
+      g2c.data.datasets[0].data[4] === 90808 && g2c.data.datasets[0].pointBackgroundColor[4] === "green"
+    ),
+    'Initialization with constructor with transformer'
+  )
 }
 
 runTests();
