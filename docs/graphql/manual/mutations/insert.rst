@@ -278,7 +278,7 @@ in the response
 
 .. note::
   
-  For this to work, the parent table (*in this case,* ``article``) needs to have a primary key or a
+  For this to work, the parent table (*in this case,* ``article``) needs to have either a primary key or a
   unique constraint.
 
 Insert an object with a JSONB column
