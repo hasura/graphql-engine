@@ -1,3 +1,5 @@
+import inflection from 'inflection';
+
 import {
   makeMigrationCall,
   loadUntrackedRelations,
@@ -7,8 +9,6 @@ import {
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../Notification';
 import suggestedRelationshipsRaw from './autoRelations';
-
-import inflection from 'inflection';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
 export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
@@ -379,18 +379,14 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   }
 };
 
-const sanitizeRelName = arg =>
-  arg
-    .trim()
-    .toLowerCase()
-    .replace(/([^A-Z0-9]+)(.)/gi, function modifyRel() {
-      return arguments[2].toUpperCase();
-    });
+const sanitizeRelName = arg => {
+  arg.trim();
+};
 
 const formRelName = relMeta => {
   try {
     let finalRelName;
-    // remove special chars and change first letter after underscore to uppercase
+
     const targetTable = sanitizeRelName(relMeta.rTable);
     if (relMeta.isObjRel) {
       finalRelName = inflection.singularize(targetTable);
@@ -408,12 +404,14 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
     table_name: table.table_name,
     relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
   }));
+
   const bulkRelTrack = [];
   const bulkRelTrackDown = [];
-  tableRelMapping.map(table => {
+
+  tableRelMapping.forEach(table => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
-      table.relations.objectRel.map(indivObjectRel => {
+      table.relations.objectRel.forEach(indivObjectRel => {
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivObjectRel.tableName,
           formRelName(indivObjectRel),
@@ -423,16 +421,19 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
           true,
           currentSchema
         );
+
         const objTrack = {
           upQuery,
           downQuery,
           data: indivObjectRel,
         };
+
         bulkRelTrack.push(objTrack);
       });
     }
+
     if (table.relations.arrayRel.length) {
-      table.relations.arrayRel.map(indivArrayRel => {
+      table.relations.arrayRel.forEach(indivArrayRel => {
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivArrayRel.tableName,
           formRelName(indivArrayRel),
@@ -442,15 +443,18 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
           false,
           currentSchema
         );
+
         const arrTrack = {
           upQuery,
           downQuery,
           data: indivArrayRel,
         };
+
         bulkRelTrack.push(arrTrack);
       });
     }
   });
+
   return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
