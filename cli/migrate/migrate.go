@@ -92,7 +92,7 @@ type Migrate struct {
 
 	status *Status
 
-	DryRun bool
+	SkipExecution bool
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
@@ -803,7 +803,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 		case *Migration:
 			migr := r.(*Migration)
 			if migr.Body != nil {
-				if !m.DryRun {
+				if !m.SkipExecution {
 					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 						return err
 					}
