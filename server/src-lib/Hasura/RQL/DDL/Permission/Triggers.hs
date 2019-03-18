@@ -44,5 +44,5 @@ buildInsTrigFn fn tn be = do
     tmpltVals = J.object [ "function_name" J..= toSQLTxt fn
                          , "table_name" J..= toSQLTxt tn
                          , "check_expression" J..= toSQLTxt be
-                         , "check_expression_literal" J..= pgFmtLit (toSQLTxt be)
+                         , "check_expression_literal" J..= (toSQLTxt $ S.SELit $ toSQLTxt be)
                          ]
