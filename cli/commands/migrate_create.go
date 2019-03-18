@@ -39,7 +39,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the up actions")
-	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata.yaml file to be used for up actions")
+	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
