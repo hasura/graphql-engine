@@ -39,9 +39,10 @@ See the :ref:`update mutation API reference <update_syntax>` for the full specif
 
   - At least any one of ``_set``, ``_inc`` operators or the jsonb operators ``_append``, ``_prepend``, ``_delete_key``,
     ``_delete_elem``, ``_delete_at_path`` is required.
-
   - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
     ``update_<schema_name>_<table_name>``.
+  - To fetch nested objects using relationships in the mutation response, the table needs to have either a primary
+    key or a unique constraint with not null columns.
 
 Update based on an object's fields
 ----------------------------------
