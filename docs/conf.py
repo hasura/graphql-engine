@@ -26,6 +26,9 @@ sys.setrecursionlimit(2000)
 # Monkey patching StandaloneHTMLBuilder as to not include unnecessary scripts
 
 from sphinx.builders.html import StandaloneHTMLBuilder
+from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+from sphinx.util import compat
+compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
@@ -73,6 +76,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
+    "sphinxcontrib.images",
     "sphinx.ext.todo",
     "global_tabs",
     "sphinx_tabs.tabs",
@@ -80,6 +84,10 @@ extensions = [
     "lexer_jsx",
     "lexer_graphql",
 ]
+
+images_config = {
+    "default_image_width": "auto"
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

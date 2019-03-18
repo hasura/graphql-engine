@@ -20,7 +20,7 @@ import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
-import qualified STMContainers.Map                           as STMMap
+import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
 import           Data.ByteString                             (ByteString)
@@ -227,17 +227,15 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   sc <- liftIO $ IORef.readIORef gCtxMapRef
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
 
-  res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  queryParts <- case res of
-    Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
-    Right vals              -> return vals
+  eQueryParts <- runExceptT $ runReaderT (getQueryParts q) gCtx
+  queryParts <- either (withComplete . preExecErr) return eQueryParts
 
   let opDef = qpOpDef queryParts
       topLevelNodes = TH.getTopLevelNodes opDef
       typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
 
-  res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
+  res <- runExceptT $ TH.assertSameLocationNodes typeLocs
+  either (withComplete . preExecErr) return res
 
   case typeLocs of
     []          -> runHasuraQ userInfo gCtx queryParts
@@ -420,7 +418,7 @@ onClose
   -> IO ()
 onClose logger lqMap _ wsConn = do
   logWSEvent logger wsConn EClosed
-  operations <- STM.atomically $ ListT.toList $ STMMap.stream opMap
+  operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
   void $ A.forConcurrently operations $ \(opId, liveQ) ->
     LQ.removeLiveQuery lqMap liveQ (wsId, opId)
   where

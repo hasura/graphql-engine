@@ -33,8 +33,8 @@ the metadata API.
 Schema
 """"""
 
-.. image:: ../../../img/graphql/manual/engine-internals/hdb_table.jpg
-  :scale: 50%
+.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_table.jpg
+  :width: 30%
   :alt: hdb_table schema
 
 Column Definitions
@@ -59,8 +59,8 @@ the metadata API.
 Schema
 """"""
 
-.. image:: ../../../img/graphql/manual/engine-internals/hdb_relationship.jpg
-  :scale: 50%
+.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_relationship.jpg
+  :width: 30%
   :alt: hdb_relationship schema
 
 Column Definitions
@@ -103,8 +103,8 @@ the metadata API.
 Schema
 """"""
 
-.. image:: ../../../img/graphql/manual/engine-internals/hdb_permission.jpg
-  :scale: 50%
+.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_permission.jpg
+  :width: 30%
   :alt: hdb_permission schema
 
 Column Definitions

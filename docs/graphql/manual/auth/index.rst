@@ -12,7 +12,7 @@ on your data.
 
 **For example:**
 
-.. image:: ../../../img/graphql/manual/auth/hasura-perms.png
+.. thumbnail:: ../../../img/graphql/manual/auth/hasura-perms.png
    :width: 80 %
 
 **While developing**, you can send the session variables as request headers directly.

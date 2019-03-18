@@ -102,13 +102,19 @@ refs:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - *wait_for_postgres
     - run:
+        name: Install deps
+        # if the man directories are missing, postgresql-client fails
+        # to install in debian
+        command: |
+          mkdir -p /usr/share/man/man{1,7}
+          apt-get update
+          apt install --yes pgbouncer jq curl postgresql-client
+    - run:
         name: Run Python tests
         environment:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
-          apt-get update
-          apt install --yes jq curl
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
         name: Generate coverage report
@@ -137,12 +143,12 @@ jobs:
     - persist_to_workspace:
         root: /build
         paths:
-        - ciignore  
+        - ciignore
 
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3
+    - image: hasura/graphql-engine-server-builder:20190314
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -203,7 +209,7 @@ jobs:
     environment:
       PG_VERSION: "11_1"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
       # TODO: change this to circleci postgis when they have one for pg 11
     - image: mdillon/postgis:11-alpine
       <<: *test_pg_env
@@ -213,7 +219,7 @@ jobs:
     environment:
       PG_VERSION: "10_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
@@ -222,7 +228,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -231,7 +237,7 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:v0.3.2
+    - image: hasura/graphql-engine-server-builder:20190314
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
@@ -377,12 +383,12 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
-        name: upgrade_test 
+        name: upgrade_test
         command: .circleci/server-upgrade/run.sh
     - store_artifacts:
         path: /build/_server_output
         destination: server
-    
+
   deploy:
     docker:
     - image: hasura/graphql-engine-deployer:v0.3

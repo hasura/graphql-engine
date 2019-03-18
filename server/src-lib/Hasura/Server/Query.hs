@@ -3,12 +3,14 @@ module Hasura.Server.Query where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.ByteString.Builder            as BB
 import qualified Data.ByteString.Lazy               as BL
 import qualified Data.Vector                        as V
 import qualified Network.HTTP.Client                as HTTP
+
 
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata
@@ -28,6 +30,7 @@ import           Hasura.RQL.DML.Returning           (encodeJSONVector)
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
 import qualified Database.PG.Query                  as Q
@@ -115,6 +118,30 @@ instance HasHttpManager Run where
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _3
 
+fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
+fetchLastUpdate = do
+  l <- Q.listQE defaultTxErrorHandler
+    [Q.sql|
+       SELECT instance_id::text, occurred_at
+       FROM hdb_catalog.hdb_schema_update_event
+       ORDER BY occurred_at DESC LIMIT 1
+          |] () True
+  case l of
+    []           -> return Nothing
+    [(instId, occurredAt)] ->
+      return $ Just (InstanceId instId, occurredAt)
+    -- never happens
+    _            -> throw500 "more than one row returned by query"
+
+recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
+recordSchemaUpdate instanceId =
+  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+             INSERT INTO
+                  hdb_catalog.hdb_schema_update_event
+                  (instance_id, occurred_at)
+             VALUES ($1::uuid, DEFAULT)
+            |] (Identity $ getInstanceId instanceId) True
+
 peelRun
   :: SchemaCache
   -> UserInfo
@@ -130,13 +157,20 @@ peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation -> UserInfo
-  -> SchemaCache -> HTTP.Manager -> Bool
-  -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL userInfo sc hMgr strfyNum query = do
-  res <- liftIO $ runExceptT $
-         peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
-  liftEither res
+  => Q.PGPool -> Q.TxIsolation -> InstanceId
+  -> UserInfo -> SchemaCache -> HTTP.Manager
+  -> Bool -> RQLQuery -> m (BL.ByteString, SchemaCache)
+runQuery pool isoL instanceId userInfo sc hMgr strfyNum query = do
+  resE <- liftIO $ runExceptT $
+    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
+  either throwError withReload resE
+  where
+    withReload r = do
+      when (queryNeedsReload query) $ do
+        e <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing)
+             $ recordSchemaUpdate instanceId
+        liftEither e
+      return r
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
