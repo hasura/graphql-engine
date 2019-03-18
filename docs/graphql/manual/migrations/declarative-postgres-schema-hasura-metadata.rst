@@ -24,6 +24,6 @@ When you're looking to setup migrations, there are two scenarios:
   :maxdepth: 1
   :hidden:
 
-  existing-database
-  new-database
+  Hasura is already set-up <existing-database>
+  Hasura is not set-up yet <new-database>
   

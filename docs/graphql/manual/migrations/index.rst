@@ -1,7 +1,7 @@
 .. _migrations:
 
-Migrations
-==========
+Migrations & Metadata
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -31,21 +31,26 @@ database. We will split the use cases into two:
    <declarative-postgres-schema-hasura-metadata>`. (Hasura will take care of the
    Postgres schema also)
 
-Advanced
---------
+Advanced use cases
+------------------
 
-Here are some advanced use-cases are reference documentation:
 
 - :doc:`auto-apply-migrations`
 - :doc:`advanced/writing-migrations-manually`
-- :doc:`advanced/migration-file-format`
-- :doc:`advanced/metadata-file-format`
 - :doc:`advanced/rolling-back-migrations`
+
+Reference documentation
+-----------------------
+
+- :doc:`reference/how-does-it-work`
+- :doc:`reference/migration-file-format`
+- :doc:`reference/metadata-file-format`
 
 .. toctree::
   :maxdepth: 1
   :hidden:
 
-  declarative-hasura-metadata
-  declarative-postgres-schema-hasura-metadata
-  Advanced use-cases and reference documentation <advanced/index>
+  Manage Metadata <declarative-hasura-metadata>
+  Manage Migrations (Metadata + Postgres Schema) <declarative-postgres-schema-hasura-metadata>
+  Advanced use-cases <advanced/index>
+  Reference documentation <reference/index>
