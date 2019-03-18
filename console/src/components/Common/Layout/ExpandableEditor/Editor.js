@@ -4,7 +4,7 @@ import styles from '../../Common.scss';
 
 class Editor extends React.Component {
   state = {
-    isEditing: false,
+    isEditing: this.props.toggled || false,
   };
 
   toggleEditor = () => {
@@ -18,32 +18,38 @@ class Editor extends React.Component {
     });
   };
 
-  toggleButton = () => (
-    <Button
-      className={`${styles.add_mar_small} ${styles.add_mar_bottom_mid}`}
-      color="white"
-      size="xs"
-      data-test={`${this.props.service}-${
-        this.state.isEditing ? 'close' : 'edit'
-      }-${this.props.property}`}
-      onClick={this.toggleEditor}
-    >
-      {this.state.isEditing
-        ? this.props.collapseButtonText || 'Close'
-        : this.props.expandButtonText || 'Edit'}
-    </Button>
-  );
+  toggleButton = () => {
+    if (this.props.isCollapsable === false && this.state.isEditing) {
+      return null;
+    }
+    return (
+      <Button
+        className={`${styles.add_mar_small} ${styles.add_mar_bottom_mid}`}
+        color="white"
+        size="xs"
+        data-test={`${this.props.service}-${
+          this.state.isEditing ? 'close' : 'edit'
+        }-${this.props.property}`}
+        onClick={this.toggleEditor}
+      >
+        {this.state.isEditing
+          ? this.props.collapseButtonText || 'Close'
+          : this.props.expandButtonText || 'Edit'}
+      </Button>
+    );
+  };
 
   saveButton = saveFunc => {
-    const { service, property, ongoingRequest } = this.props;
+    const { service, property, ongoingRequest, saveButtonColor } = this.props;
     const isProcessing = ongoingRequest === property;
+    const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color="yellow"
+        color={saveButtonColor || 'yellow'}
         size="sm"
         className={styles.add_mar_right}
-        onClick={saveFunc}
+        onClick={saveWithToggle}
         data-test={`${service}-${property}-save`}
         disabled={isProcessing}
       >
@@ -53,14 +59,15 @@ class Editor extends React.Component {
   };
 
   removeButton = removeFunc => {
-    const { service, property, ongoingRequest } = this.props;
+    const { service, property, ongoingRequest, removeButtonColor } = this.props;
     const isProcessing = ongoingRequest === property;
+    const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color="red"
+        color={removeButtonColor || 'red'}
         size="sm"
-        onClick={removeFunc}
+        onClick={removeWithToggle}
         data-test={`${service}-${property}-remove`}
         disabled={isProcessing}
       >
@@ -69,12 +76,15 @@ class Editor extends React.Component {
     );
   };
 
-  actionButtons = () => (
-    <div className={styles.editorActionButtons}>
-      {this.props.saveFunc && this.saveButton(this.props.saveFunc)}
-      {this.props.removeFunc && this.removeButton(this.props.removeFunc)}
-    </div>
-  );
+  actionButtons = () => {
+    const { saveFunc, removeFunc } = this.props;
+    return (
+      <div className={styles.editorActionButtons}>
+        {saveFunc && this.saveButton(saveFunc)}
+        {removeFunc && this.removeButton(removeFunc)}
+      </div>
+    );
+  };
 
   render() {
     const { isEditing } = this.state;

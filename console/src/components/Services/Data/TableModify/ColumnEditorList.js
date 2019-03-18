@@ -76,7 +76,7 @@ const ColumnEditorList = ({
     };
     const collapsedLabel = () => {
       return (
-        <div key={i}>
+        <div key={colName}>
           <div className="container-fluid">
             <div className="row">
               <h5 className={styles.padd_bottom}>
@@ -90,7 +90,7 @@ const ColumnEditorList = ({
     };
     const expandedLabel = () => {
       return (
-        <div key={i}>
+        <div key={colName}>
           <div className="container-fluid">
             <div className="row">
               <h5 className={styles.padd_bottom}>
@@ -104,7 +104,7 @@ const ColumnEditorList = ({
     };
     const colEditorExpanded = () => {
       return (
-        <div key={i}>
+        <div key={colName}>
           <ColumnEditor
             column={c}
             onSubmit={onSubmit}
