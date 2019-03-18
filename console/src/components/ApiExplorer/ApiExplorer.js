@@ -16,6 +16,14 @@ import {
 // import {triggerOnBoarding} from '../Main/Actions';
 
 class ApiExplorer extends Component {
+  componentWillUnmount() {
+    const cmNodes = this.getCodeMirrorIfAvailable();
+    if (cmNodes.length > 0) {
+      cmNodes.forEach(cm => {
+        cm.remove();
+      });
+    }
+  }
   onTabSelectionChanged = tabIndex => {
     this.props.dispatch(changeTabSelection(tabIndex));
   };
@@ -38,6 +46,9 @@ class ApiExplorer extends Component {
     _query.type = type;
     _query.args = JSON.parse(JSON.stringify(args));
     return _query;
+  }
+  getCodeMirrorIfAvailable() {
+    return document.querySelectorAll('.CodeMirror-hints.graphiql');
   }
 
   updateDQBState(data) {
