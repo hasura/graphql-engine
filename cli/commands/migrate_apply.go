@@ -91,7 +91,7 @@ func (o *migrateApplyOptions) run() error {
 
 // Only one flag out of up, down and version can be set at a time. This function
 // checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string, dryRun bool) (string, int64, error) {
+func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string, skipExecution bool) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
@@ -117,8 +117,8 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 		return "", 0, errors.New("Only one migration type can be applied at a time (--up, --down or --goto)")
 	}
 
-	if migrationName != "version" && dryRun {
-		return "", 0, errors.New("--dry-run flag can be set only with --version flag")
+	if migrationName != "version" && skipExecution {
+		return "", 0, errors.New("--skip-execution flag can be set only with --version flag")
 	}
 
 	if stepString == "all" && migrationName != "version" {
