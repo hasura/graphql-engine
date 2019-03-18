@@ -22,7 +22,8 @@ export const PGTypes = {
     'interval',
   ],
   json: ['json', 'jsonb'],
-  postgis: ['geometry', 'geography'],
+  geometry: ['geometry'],
+  geography: ['geography'],
 };
 
 export const notBoolOperators = ['_not'];
@@ -55,25 +56,29 @@ export const textOnlyColumnOperators = [
 
 export const jsonColumnOperators = ['_contains', '_contained_in'];
 
-export const topologyColumnOperators = [
+export const geometryOnlyColumnOperators = [
   '_st_contains',
   '_st_crosses',
   '_st_equals',
-  '_st_intersects',
   '_st_overlaps',
   '_st_touches',
   '_st_within',
-  '_st_d_within',
 ];
 
+export const geographyColumnOperators = ['_st_d_within', '_st_intersects'];
+
 export const boolOperators = notBoolOperators.concat(andOrBoolOperators);
+
+export const geometryColumnOperators = geographyColumnOperators.concat(
+  geometryOnlyColumnOperators
+);
 
 export const columnOperators = genericSimpleColumnOperators
   .concat(genericArrayColumnOperators)
   .concat(genericBoolColumnOperators)
   .concat(textOnlyColumnOperators)
   .concat(jsonColumnOperators)
-  .concat(topologyColumnOperators);
+  .concat(geometryColumnOperators);
 
 export const genericOperators = genericSimpleColumnOperators
   .concat(genericArrayColumnOperators)
@@ -104,7 +109,7 @@ export function isBoolTypeColumnOperator(value) {
 }
 
 export function isJsonTypeColumnOperator(value) {
-  return jsonColumnOperators.concat(topologyColumnOperators).includes(value);
+  return jsonColumnOperators.concat(geometryColumnOperators).includes(value);
 }
 
 export function isColumnOperator(value) {
