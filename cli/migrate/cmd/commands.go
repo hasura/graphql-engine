@@ -25,7 +25,6 @@ type CreateOptions struct {
 	Version   int64
 	Directory string
 	Name      string
-	IsCMD     bool
 	MetaUp    []byte
 	MetaDown  []byte
 	SQLUp     []byte
@@ -40,10 +39,6 @@ func New(version int64, name, directory string) *CreateOptions {
 		Version:   version,
 		Directory: directory,
 		Name:      name,
-		MetaUp:    []byte(`[]`),
-		MetaDown:  []byte(`[]`),
-		SQLUp:     []byte{},
-		SQLDown:   []byte{},
 	}
 }
 
@@ -123,22 +118,38 @@ func (c *CreateOptions) Create() error {
 	if err != nil {
 		return err
 	}
-	// Create MetaUp
-	err = createFile(base+"up.yaml", c.MetaUp)
-	if err != nil {
-		return err
-	}
-	// Create MetaDown
-	err = createFile(base+"down.yaml", c.MetaDown)
-	if err != nil {
-		return err
+
+	// Check if data has been set in one of the files
+	if c.MetaUp == nil && c.MetaDown == nil && c.SQLUp == nil && c.SQLDown == nil {
+		return errors.New("none of the files has been set with data")
 	}
 
-	if c.IsCMD {
+	if c.MetaUp != nil {
+		// Create MetaUp
+		err = createFile(base+"up.yaml", c.MetaUp)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.MetaDown != nil {
+		// Create MetaDown
+		err = createFile(base+"down.yaml", c.MetaDown)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.SQLUp != nil {
+		// Create SQLUp
 		err = createFile(base+"up.sql", c.SQLUp)
 		if err != nil {
 			return err
 		}
+	}
+
+	if c.SQLDown != nil {
+		// Create SQLDown
 		err = createFile(base+"down.sql", c.SQLDown)
 		if err != nil {
 			return err
