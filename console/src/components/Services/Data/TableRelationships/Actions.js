@@ -8,6 +8,8 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../Notification';
 import suggestedRelationshipsRaw from './autoRelations';
 
+import inflection from 'inflection';
+
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
 export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
 export const REL_SET_LCOL = 'ModifyTable/REL_SET_LCOL';
@@ -391,15 +393,9 @@ const formRelName = relMeta => {
     // remove special chars and change first letter after underscore to uppercase
     const targetTable = sanitizeRelName(relMeta.rTable);
     if (relMeta.isObjRel) {
-      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
-      finalRelName = `${targetTable}By${objLCol}`;
+      finalRelName = inflection.singularize(targetTable);
     } else {
-      const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-      finalRelName =
-        `${
-          targetTable
-          // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
-        }s` + `By${arrRCol}`;
+      finalRelName = inflection.pluralize(targetTable);
     }
     return finalRelName;
   } catch (e) {
