@@ -19,8 +19,8 @@ ascending ordering by specifying ``asc_nulls_first`` and last on descending orde
 
 The ``order_by`` argument takes an array of objects to allow sorting by multiple columns.
 
-You can also use nested objects' fields to sort the results. Only columns from **object relationships** and
-are aggregates from **array relationships** can be used for sorting.
+You can also use nested objects' fields to sort the results. Only **columns from object relationships** and
+**aggregates from array relationships** can be used for sorting.
 
 You can see the complete specification of the ``order_by`` argument in the :ref:`API reference <OrderByExp>`.
 
@@ -76,7 +76,8 @@ Fetch list of authors sorted by their names in an ascending order:
 
 Sorting nested objects
 ----------------------
-Fetch a list of authors sorted by their names with a list of their articles that is sorted by their rating:
+**Example:** Fetch a list of authors sorted by their names with a list of their articles that is sorted by
+their rating:
 
 .. graphiql::
   :view_only:
@@ -155,9 +156,13 @@ Fetch a list of authors sorted by their names with a list of their articles that
 
 Sorting based on nested object's fields
 ---------------------------------------
-Only columns in object relationships can be used for sorting.
+Only **columns from object relationships** and **aggregates from array relationships** can be used for sorting.
 
-Fetch a list of articles that are sorted by their author ids in descending:
+For Object relationships
+^^^^^^^^^^^^^^^^^^^^^^^^
+For object relationships only columns can be used for sorting.
+
+**Example:** Fetch a list of articles that are sorted by their author's ids in descending:
 
 .. graphiql::
   :view_only:
@@ -210,18 +215,20 @@ Fetch a list of articles that are sorted by their author ids in descending:
       }
     }
 
-Sorting based on nested objects' aggregates
--------------------------------------------
-Only aggregates in array relationships can be used for sorting.
+For Array relationships
+^^^^^^^^^^^^^^^^^^^^^^^
+For array relationships only aggregates can be used for sorting.
 
-Fetch a list of authors sorted by their article count in descending.
+**Example:** Fetch a list of authors sorted in descending order of their article count:
 
 .. graphiql::
   :view_only:
   :query:
     query {
       author (
-        order_by: {articles_aggregate: {count: desc}}
+        order_by: {
+          articles_aggregate: {count: desc}
+        }
       ) {
         id
         name
@@ -267,11 +274,107 @@ Fetch a list of authors sorted by their article count in descending.
       }
     }
 
+**Example:** Fetch a list of authors sorted in increasing order of their highest article rating:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        order_by: {
+          articles_aggregate: {
+            max: {rating: asc_nulls_last}
+          }
+        }
+      ) {
+        id
+        name
+        articles_aggregate {
+          aggregate{
+            max {rating}
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 7,
+            "name": "Berti",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": 2
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": 3
+                }
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "April",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": 4
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": 4
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "name": "Amii",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": 5
+                }
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "Ninnetta",
+            "articles_aggregate": {
+              "aggregate": {
+                "max": {
+                  "rating": null
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+
 
 Sorting by multiple fields
 --------------------------
-Fetch a list of articles that is sorted by their rating (descending) and then on their published date (ascending with
-nulls first):
+**Example:** Fetch a list of articles that is sorted by their rating (descending) and then on their published
+date (ascending with nulls first):
 
 .. graphiql::
   :view_only:

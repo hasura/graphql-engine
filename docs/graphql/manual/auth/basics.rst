@@ -40,7 +40,7 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 You'll see that this results in a response that contains all the authors because by default the GraphQL query is
 accepted with **admin** permissions.
 
-.. image:: ../../../img/graphql/manual/auth/fetch-authors.png
+.. thumbnail:: ../../../img/graphql/manual/auth/fetch-authors.png
 
 
 Add a simple access control rule for a logged in user
@@ -52,7 +52,7 @@ Head to the ``Permissions`` tab of the ``author`` table.
 
 Now add a ``select`` access control rule for the ``user`` role on the ``author`` table:
 
-.. image:: ../../../img/graphql/manual/auth/author-select-perms.png
+.. thumbnail:: ../../../img/graphql/manual/auth/author-select-perms.png
 
 This rule reads as:
 
@@ -78,7 +78,7 @@ This rule reads as:
 Now, let's make the same query as above but also include two dynamic authorization variables ``X-Hasura-Role`` and
 ``X-Hasura-User-Id`` via request headers. These will automatically get used according to the permission rule we set up.
 
-.. image:: ../../../img/graphql/manual/auth/query-with-perms.png
+.. thumbnail:: ../../../img/graphql/manual/auth/query-with-perms.png
 
 You can notice above how the same query now only includes the right slice of data.
 
@@ -120,7 +120,7 @@ We can restrict the columns of a table that a particular role has access to.
 
 Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
 
-.. image:: ../../../img/graphql/manual/auth/restrict-columns.png
+.. thumbnail:: ../../../img/graphql/manual/auth/restrict-columns.png
 
 .. _limit_rows:
 
@@ -131,7 +131,7 @@ We can set a hard limit on the maximum number of rows that will be returned in a
 
 Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
 
-.. image:: ../../../img/graphql/manual/auth/limit-results.png
+.. thumbnail:: ../../../img/graphql/manual/auth/limit-results.png
 
 More about permissions
 ----------------------

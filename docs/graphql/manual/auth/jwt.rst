@@ -15,7 +15,7 @@ verified by GraphQL engine to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
 
-.. image:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -177,7 +177,7 @@ inside which the Hasura specific claims will be present. E.g. - ``https://mydoma
 
 
 ``claims_format``
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 This is an optional field, with only the following possible values:
 - ``json``
 - ``stringified_json``
@@ -385,8 +385,8 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. image:: ../../../img/graphql/manual/auth/jwt-config-generated.png
-   :scale: 50 %
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+   :width: 75%
 
 **See:**
 

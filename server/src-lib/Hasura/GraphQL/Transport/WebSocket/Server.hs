@@ -31,7 +31,7 @@ import qualified Data.UUID                as UUID
 import qualified Data.UUID.V4             as UUID
 import qualified ListT
 import qualified Network.WebSockets       as WS
-import qualified STMContainers.Map        as STMMap
+import qualified StmContainers.Map        as STMMap
 
 import           Control.Exception        (try)
 import qualified Hasura.Logging           as L
@@ -113,8 +113,8 @@ closeAll :: WSServer a -> BL.ByteString -> IO ()
 closeAll (WSServer (L.Logger writeLog) connMap) msg = do
   writeLog $ L.debugT "closing all connections"
   conns <- STM.atomically $ do
-    conns <- ListT.toList $ STMMap.stream connMap
-    STMMap.deleteAll connMap
+    conns <- ListT.toList $ STMMap.listT connMap
+    STMMap.reset connMap
     return conns
   void $ A.mapConcurrently (flip closeConn msg . snd) conns
 
