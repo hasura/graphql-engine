@@ -212,6 +212,9 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_can_query_jsonb_values_filter_session_vars(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_session_vars.yaml')
 
+    def test_user_can_query_jsonb_values_filter_arr_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_arr_session_vars.yaml')
+
     def test_artist_select_query_Track_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track_fail.yaml')
 

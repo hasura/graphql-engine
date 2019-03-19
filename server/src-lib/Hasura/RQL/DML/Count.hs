@@ -7,7 +7,6 @@ module Hasura.RQL.DML.Count
   , countQToTx
   ) where
 
-import           Data.Aeson
 import           Instances.TH.Lift       ()
 
 import qualified Data.ByteString.Builder as BB

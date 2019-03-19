@@ -7,7 +7,6 @@ module Hasura.RQL.DML.Delete
   , runDelete
   ) where
 
-import           Data.Aeson
 import           Instances.TH.Lift        ()
 
 import qualified Data.Sequence            as DS

@@ -11,7 +11,6 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 import           Control.Lens
-import           Data.Aeson.Types
 
 import qualified Data.HashMap.Strict          as M
 import qualified Data.HashSet                 as HS
