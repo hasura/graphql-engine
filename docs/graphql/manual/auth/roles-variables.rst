@@ -3,7 +3,7 @@ Roles & Session variables
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 The permissions system offered by Hasura GraphQL engine is extremely flexible and is built to capture complex
@@ -96,13 +96,13 @@ Indicating roles and session-variables in a GraphQL request
 Now that we have these roles and permission rules that use session variables set up, how do we actually use them
 when we make GraphQL requests from an app or from a different service?
 
-Option 1: Development & Testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For Development & Testing
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While you're developing or testing, just indicate your role and your session variables by passing headers along with
 the request:
 
-.. image:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
+.. thumbnail:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
 .. note::
 
@@ -110,8 +110,8 @@ the request:
   header as well.
 
 
-Option 2: In production, from apps
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In Production, from apps
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you're making GraphQL queries from your apps, you will probably not (and should not) be sending session
 variables directly from your app because anyone can spoof the role and values of the variables and get access

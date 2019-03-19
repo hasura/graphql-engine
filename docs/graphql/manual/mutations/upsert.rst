@@ -145,6 +145,10 @@ You can specify ``on_conflict`` clause while inserting nested objects
       }
     }
 
+.. note::
+  
+  For this to work, the parent table (*in this case,* ``author``) needs to have either a primary key or a
+  unique constraint.
 
 .. admonition:: Edge-cases
 
