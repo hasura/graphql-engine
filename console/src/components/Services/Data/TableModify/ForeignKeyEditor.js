@@ -87,7 +87,10 @@ const ForeignKeyEditor = ({
 
     if (!isLast) {
       removeFk = () => {
-        dispatch(removeForeignKey(i, tableSchema, orderedColumns));
+        let isOk = window.confirm('Are you sure?');
+        if (isOk) {
+          dispatch(removeForeignKey(i, tableSchema, orderedColumns));
+        }
       }
     }
 

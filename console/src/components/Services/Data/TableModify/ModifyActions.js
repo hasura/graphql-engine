@@ -21,7 +21,7 @@ import gqlPattern, {
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-import { getExistingFKConstraints } from '../Common/ReusableComponents/utils';
+import { getExistingFKConstraints, pgConfTypes } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
         Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
@@ -54,6 +54,8 @@ const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
 const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
 
 const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
+const SAVE_FOREIGN_KEY = 'ModifyTable/SAVE_FOREIGN_KEY';
+const REMOVE_FOREIGN_KEY = 'ModifyTable/REMOVE_FOREIGN_KEY';
 
 const setForeignKeys = (fks) => ({
   type: SET_FOREIGN_KEYS,
@@ -104,6 +106,7 @@ const resetPrimaryKeys = () => ({
 
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
   return (dispatch, getState) => {
+    dispatch({type: SAVE_FOREIGN_KEY});
     // get selected configuration for PK
     const { pkModify } = getState().tables.modify;
     // table schema
@@ -195,7 +198,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const successMsg = `${pkAction} primary key constraint successful`;
     const errorMsg = `${pkAction} primary key constraint failed`;
 
-    const customOnSuccess = () => {};
+    const customOnSuccess = () => {
+    };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
@@ -217,6 +221,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
 
 const saveForeignKeys = (index, tableSchema, columns) => {
   return (dispatch, getState) => {
+    dispatch({type: REMOVE_FOREIGN_KEY});
     const fk = getState().tables.modify.fkModify[index];
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
@@ -239,13 +244,13 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     migrationUp.push({
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete}`
+        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};`
       }
     })
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${tableName}_${lcols.join('_')}`
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${tableName}_${lcols.join('_')};`
       }
     }]
     if (constraintName) {
@@ -253,7 +258,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationDown.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${oldConstraint.on_update} on delete ${oldConstraint.on_delete}`
+          sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${pgConfTypes[oldConstraint.on_update]} on delete ${pgConfTypes[oldConstraint.on_delete]};`
         }
       })
     }
@@ -267,7 +272,25 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     console.log(migrationDown);
     console.log('------------------------------------------------------');
 
-    const customOnSuccess = () => {};
+    const customOnSuccess = () => {
+      if (!constraintName) {
+        dispatch(setForeignKeys([
+          ...getState().tables.modify.fkModify,
+          {
+            refTableName: '',
+            colMappings: { column: '', refColumn: ''},
+            onUpdate: 'restrict',
+            onDelete: 'restrict'
+          }
+        ]))
+      } else {
+        dispatch(setForeignKeys([
+          ...getState().tables.modify.fkModify.slice(0, index),
+          {...fk},
+          ...getState().tables.modify.fkModify.slice(index + 1),
+        ]));
+      }
+    };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
@@ -301,7 +324,7 @@ const removeForeignKey = (index, tableSchema, columns) => {
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${oldConstraint.on_update} on delete ${oldConstraint.on_delete}`
+        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${pgConfTypes[oldConstraint.on_update]} on delete ${pgConfTypes[oldConstraint.on_delete]};`
       }
     }]
     const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
@@ -309,12 +332,12 @@ const removeForeignKey = (index, tableSchema, columns) => {
     const successMsg = `Foreign key deleted`;
     const errorMsg = `Deleting foreign key failed`;
 
-    console.log('------------------Foreign Key Remove -------------------');
-    console.log(migrationUp);
-    console.log(migrationDown);
-    console.log('--------------------------------------------------------');
-
-    const customOnSuccess = () => {};
+    const customOnSuccess = () => {
+      dispatch(setForeignKeys([
+        ...getState().tables.modify.fkModify.slice(0, index),
+        ...getState().tables.modify.fkModify.slice(index + 1),
+      ]))
+    };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
