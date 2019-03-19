@@ -20,10 +20,11 @@ Options
 
 ::
 
-      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL Engine
       --down string           apply all or N down migration steps
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
   -h, --help                  help for apply
+      --skip-execution        skip executing the migration action, but mark them as applied
       --type string           type of migration (up, down) to be used with version flag (default "up")
       --up string             apply all or N up migration steps
       --version string        migrate the database to a specific version
@@ -33,8 +34,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
