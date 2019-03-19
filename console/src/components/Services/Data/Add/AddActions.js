@@ -77,7 +77,7 @@ const createTableSql = () => {
     dispatch(showSuccessNotification('Creating Table...'));
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
-
+    const { foreignKeys } = state;
     // validations
     if (state.tableName.trim() === '') {
       alert('Table name cannot be empty');
@@ -125,6 +125,20 @@ const createTableSql = () => {
       });
       tableColumns = tableColumns.slice(0, -1);
       tableColumns += ') ';
+    }
+    const numFks = foreignKeys.length;
+    if (numFks > 1) {
+      foreignKeys.forEach((fk, _i) => {
+        if (_i === numFks - 1) {
+          return;
+        }
+        const { colMappings, refTableName, onUpdate, onDelete } = fk;
+        const lCols = colMappings.slice(0, -1).map(cm => `"${state.columns[cm.column].name}"`);
+        const rCols = colMappings.slice(0, -1).map(cm => `"${cm.refColumn}"`);
+        const numColMappings = lCols.length;
+        if (lCols.length === 0) return;
+        tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${refTableName}"(${rCols.join(', ')}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      })
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';

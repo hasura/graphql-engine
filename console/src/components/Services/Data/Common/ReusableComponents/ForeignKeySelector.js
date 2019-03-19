@@ -22,27 +22,6 @@ const ForeignKeySelector = ({
   const { refTableName, colMappings, onUpdate, onDelete } = foreignKey;
   const numOfFks = foreignKeys.length;
   const fkConfig = getForeignKeyConfig(foreignKey, orderedColumns);
-  const configuration = () => {
-    if (!fkConfig) return null;
-    return (
-      <div className={`${refTableName ? styles.add_mar_bottom : ''}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Foreign key:</b>
-        </div>
-        <div>
-          <div>
-            Constraint: <i>{fkConfig}</i>
-          </div>
-          <div>
-            On update violation: <i>{onUpdate}</i>
-          </div>
-          <div>
-            On delete violation: <i>{onDelete}</i>
-          </div>
-        </div>
-      </div>
-    );
-  };
   const dispatchSetRefTable = event => {
     const newFks = [...foreignKeys];
     newFks[index].refTableName = event.target.value;
@@ -113,8 +92,8 @@ const ForeignKeySelector = ({
             const newFks = [...foreignKeys];
             newFks[index].colMappings[_i][key] = value;
             if (
-              newFks[index].colMappings[_i].column &&
-              newFks[index].colMappings[_i].refColumn
+              newFks[index].colMappings[numColMappings - 1].column &&
+              newFks[index].colMappings[numColMappings - 1].refColumn
             ) {
               newFks[index].colMappings.push({ column: '', refColumn: '' });
             }
@@ -255,7 +234,6 @@ const ForeignKeySelector = ({
 
   return (
     <div className="form-group">
-      {configuration()}
       {refTableSelect()}
       {columnSelect()}
       {onViolation()}
