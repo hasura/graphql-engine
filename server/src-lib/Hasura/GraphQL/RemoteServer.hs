@@ -188,9 +188,9 @@ mergeTyMaps hTyMap rmTyMap newQR newMR newSR =
       qRoot   = mk "query_root" newQR
       mutRoot = mk "mutation_root" <$> newMR
       subRoot = mk "subscription_root" <$> newSR
-  in ins subRoot $ ins mutRoot $ ins (Just qRoot) newTyMap
+  in foldr insert newTyMap [subRoot, mutRoot, Just qRoot]
   where
-    ins obj m = maybe m (\x -> uncurry Map.insert x m) obj
+    insert obj m = maybe m (\x -> uncurry Map.insert x m) obj
     mk n v = (G.NamedType n, VT.TIObj v)
 
 
