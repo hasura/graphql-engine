@@ -9,6 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/util/fake"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/spf13/pflag"
 )
 
 func TestConsoleCmd(t *testing.T) {
@@ -39,6 +40,7 @@ func TestConsoleCmd(t *testing.T) {
 		ConsolePort:     "9695",
 		Address:         "localhost",
 		DontOpenBrowser: true,
+		flags:           pflag.NewFlagSet("migrate-create-test", pflag.ContinueOnError),
 	}
 	opts.EC.Spinner.Writer = &fake.FakeWriter{}
 	err = opts.EC.ServerConfig.ParseEndpoint()
