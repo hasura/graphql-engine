@@ -125,7 +125,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
       update: (client, { data: { delete_chat } }) => {
         let chats
         try {
-          chats = client.readQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+          chats = client.readQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
             query: queryCache,
             variables: {userId: me.id}
           }).chat
@@ -136,7 +136,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
           // filter current parsedChatId
           chats = chats.filter((chat) => chat.id !== parsedChatId);
           try {
-            client.writeQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+            client.writeQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
               query: queryCache,
               variables: {userId: me.id},
               data: { chat: chats },
