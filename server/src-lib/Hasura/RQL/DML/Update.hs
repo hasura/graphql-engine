@@ -13,6 +13,7 @@ import           Instances.TH.Lift        ()
 import qualified Data.HashMap.Strict      as M
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
@@ -194,7 +195,7 @@ validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
 updateQueryToTx
-  :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+  :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
                 (uqp1MutFlds u) (uqp1UniqCols u) strfyNum
@@ -203,7 +204,7 @@ updateQueryToTx strfyNum (u, p) =
 
 runUpdate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
-  => UpdateQuery -> m RespBody
+  => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum
