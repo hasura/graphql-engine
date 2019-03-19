@@ -439,7 +439,7 @@ class Relationships extends Component {
                     <td />
                   );
                   return (
-                    <tr key={i}>
+                    <tr key={rel.arrRel ? rel.arrRel.rel_name : rel.objRel.rel_name}>
                       {column1}
                       {column2}
                     </tr>
