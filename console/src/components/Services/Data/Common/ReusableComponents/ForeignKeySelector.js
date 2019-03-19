@@ -3,7 +3,7 @@ import { getForeignKeyConfig } from './utils';
 
 const violiationActions = [
   'restrict',
-  'delete',
+  'no action',
   'cascade',
   'set null',
   'set default',
@@ -18,14 +18,18 @@ const ForeignKeySelector = ({
   dispatch,
   styles,
   setForeignKeys,
+  service
 }) => {
   const { refTableName, colMappings, onUpdate, onDelete } = foreignKey;
   const numOfFks = foreignKeys.length;
   const fkConfig = getForeignKeyConfig(foreignKey, orderedColumns);
   const dispatchSetRefTable = event => {
     const newFks = [...foreignKeys];
+    if (newFks[index].refTableName !== event.target.value) {
+      newFks[index].colMappings = [{column: '', refColumn: ''}]
+    }
     newFks[index].refTableName = event.target.value;
-    if (index + 1 === numOfFks) {
+    if (index + 1 === numOfFks && service === 'add-table') {
       newFks.push({
         refTableName: '',
         colMappings: [

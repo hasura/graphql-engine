@@ -25,6 +25,7 @@ import {
   RESET_COLUMN_EDIT,
   EDIT_COLUMN,
   SET_PRIMARY_KEYS,
+  SET_FOREIGN_KEYS
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -638,6 +639,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         pkModify: action.pks,
       };
+    case SET_FOREIGN_KEYS:
+      return {
+        ...modifyState,
+        fkModify: action.fks
+      }
     default:
       return modifyState;
   }

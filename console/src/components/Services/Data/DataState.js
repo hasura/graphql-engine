@@ -92,13 +92,16 @@ const defaultModifyState = {
   columnEdit: {},
   pkEdit: [''],
   pkModify: [''],
-  fkAdd: {
-    refTable: '',
-    pairs: [],
-    lcol: '',
-    rcol: '',
-    fkCheckBox: false,
-  },
+  fkModify: [
+    {
+      refTableName: '',
+      colMappings: [
+        { '': '' }
+      ],
+      onDelete: 'restrict',
+      onUpdate: 'restrict'
+    } 
+  ],
   relAdd: {
     isActive: true,
     name: '',

@@ -21,6 +21,7 @@ import gqlPattern, {
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
+import { getExistingFKConstraints } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
         Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
@@ -51,6 +52,13 @@ const SET_PRIMARY_KEYS = 'ModifyTable/SET_PRIMARY_KEYS';
 const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
 const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
 const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
+
+const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
+
+const setForeignKeys = (fks) => ({
+  type: SET_FOREIGN_KEYS,
+  fks
+});
 
 const editColumn = (column, key, value) => ({
   type: EDIT_COLUMN,
@@ -206,6 +214,76 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     );
   };
 };
+
+const saveForeignKeys = (index, tableSchema, columns) => {
+  return (dispatch, getState) => {
+    const fk = getState().tables.modify.fkModify[index];
+    const tableName = tableSchema.table_name;
+    const schemaName = tableSchema.table_schema;
+    const existingFkConstraints = getExistingFKConstraints(tableSchema, columns) 
+    const {
+      refTableName, colMappings, onUpdate, onDelete, constraintName
+    } = fk;
+    const filteredMappings = colMappings.filter(cm => cm.column && cm.refColumn);
+    const lcols = filteredMappings.map(cm => `"${columns[cm.column].name}"`);
+    const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
+    let migrationUp = [];
+    if (constraintName) {
+      migrationUp.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`
+        }
+      })
+    }
+    migrationUp.push({
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete}`
+      }
+    })
+    const migrationDown = [{
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint "${tableName}_${lcols.join('_')}"`
+      }
+    }]
+    if (constraintName) {
+      const oldConstraint = tableSchema.foreign_key_constraints[index];
+      migrationDown.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${oldConstraint.on_update} on delete ${oldConstraint.on_delete}`
+        }
+      })
+    }
+    const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join('_')}`;
+    const requestMsg = `Saving foreign key...`;
+    const successMsg = `Foreign key saved`;
+    const errorMsg = `Foreign key addition failed`;
+
+    console.log(migrationUp);
+    console.log(migrationDown);
+
+    const customOnSuccess = () => {};
+    const customOnError = err => {
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrationUp,
+      migrationDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  }
+}
 
 const changeTableOrViewName = (isTable, oldName, newName, callback) => {
   return (dispatch, getState) => {
@@ -2117,6 +2195,7 @@ export {
   RESET_PRIMARY_KEY,
   SET_PRIMARY_KEYS,
   DELETE_PK_WARNING,
+  SET_FOREIGN_KEYS,
   changeTableOrViewName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -2146,4 +2225,5 @@ export {
   resetPrimaryKeys,
   setPrimaryKeys,
   savePrimaryKeys,
+  setForeignKeys,
 };

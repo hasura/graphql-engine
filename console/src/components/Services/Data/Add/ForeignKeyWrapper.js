@@ -45,6 +45,7 @@ const ForeignKeyWrapper = ({
         refTables={refTables}
         foreignKey={fk}
         index={i}
+        service="add-table"
         foreignKeys={foreignKeys}
         orderedColumns={orderedColumns}
         dispatch={dispatch}

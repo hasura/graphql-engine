@@ -12,6 +12,7 @@ import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
+import ForeignKeyEditor from './ForeignKeyEditor';
 import semverCheck from '../../../../helpers/semver';
 import styles from './ModifyTable.scss';
 
@@ -63,6 +64,7 @@ class ModifyTable extends React.Component {
       tableCommentEdit,
       columnEdit,
       pkModify,
+      fkModify
     } = this.props;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
@@ -136,6 +138,16 @@ class ModifyTable extends React.Component {
               currentSchema={currentSchema}
             />
             <hr />
+            <h4 className={styles.subheading_text}>Foreign Keys</h4>
+            <ForeignKeyEditor
+              tableSchema={tableSchema}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              dispatch={dispatch}
+              styles={styles}
+              fkModify={fkModify}
+            />
+            <hr />
             {untrackBtn}
             <Button
               type="submit"
@@ -176,6 +188,8 @@ ModifyTable.propTypes = {
   columnEdit: PropTypes.object.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  pkModify: PropTypes.array.isRequired,
+  fkModify: PropTypes.array.isRequired,
   serverVersion: PropTypes.string,
 };
 
@@ -189,6 +203,7 @@ const mapStateToProps = (state, ownProps) => ({
   columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
+  fkModify: state.tables.modify.fkModify,
   ...state.tables.modify,
 });
 
