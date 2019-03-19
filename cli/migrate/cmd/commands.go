@@ -25,7 +25,6 @@ type CreateOptions struct {
 	Version   int64
 	Directory string
 	Name      string
-	IsCMD     bool
 	MetaUp    []byte
 	MetaDown  []byte
 	SQLUp     []byte
@@ -40,10 +39,6 @@ func New(version int64, name, directory string) *CreateOptions {
 		Version:   version,
 		Directory: directory,
 		Name:      name,
-		MetaUp:    []byte(`[]`),
-		MetaDown:  []byte(`[]`),
-		SQLUp:     []byte{},
-		SQLDown:   []byte{},
 	}
 }
 
@@ -58,6 +53,29 @@ func (c *CreateOptions) SetMetaUp(data interface{}) error {
 	}
 	c.MetaUp = yamlData
 	return nil
+}
+
+func (c *CreateOptions) SetMetaUpFromFile(filePath string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	var metadata []interface{}
+	var q interface{}
+	err = yaml.Unmarshal(data, &q)
+	if err != nil {
+		return err
+	}
+
+	metadata = append(
+		metadata,
+		map[string]interface{}{
+			"type": "replace_metadata",
+			"args": q,
+		},
+	)
+	return c.SetMetaUp(metadata)
 }
 
 func (c *CreateOptions) SetMetaDown(data interface{}) error {
@@ -78,6 +96,16 @@ func (c *CreateOptions) SetSQLUp(data string) error {
 	return nil
 }
 
+func (c *CreateOptions) SetSQLUpFromFile(filePath string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	c.SQLUp = data
+	return nil
+}
+
 func (c *CreateOptions) SetSQLDown(data string) error {
 	c.SQLDown = []byte(data)
 	return nil
@@ -90,22 +118,38 @@ func (c *CreateOptions) Create() error {
 	if err != nil {
 		return err
 	}
-	// Create MetaUp
-	err = createFile(base+"up.yaml", c.MetaUp)
-	if err != nil {
-		return err
-	}
-	// Create MetaDown
-	err = createFile(base+"down.yaml", c.MetaDown)
-	if err != nil {
-		return err
+
+	// Check if data has been set in one of the files
+	if c.MetaUp == nil && c.MetaDown == nil && c.SQLUp == nil && c.SQLDown == nil {
+		return errors.New("none of the files has been set with data")
 	}
 
-	if c.IsCMD {
+	if c.MetaUp != nil {
+		// Create MetaUp
+		err = createFile(base+"up.yaml", c.MetaUp)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.MetaDown != nil {
+		// Create MetaDown
+		err = createFile(base+"down.yaml", c.MetaDown)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.SQLUp != nil {
+		// Create SQLUp
 		err = createFile(base+"up.sql", c.SQLUp)
 		if err != nil {
 			return err
 		}
+	}
+
+	if c.SQLDown != nil {
+		// Create SQLDown
 		err = createFile(base+"down.sql", c.SQLDown)
 		if err != nil {
 			return err
