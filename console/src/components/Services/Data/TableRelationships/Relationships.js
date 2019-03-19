@@ -10,6 +10,7 @@ import {
   resetRelationshipForm,
   relManualAddClicked,
   formRelName,
+  getExistingRelMap,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
@@ -51,12 +52,13 @@ const addRelationshipCellView = (
   selectedRelationship,
   selectedRelationshipName,
   tableStyles,
-  relMetaData
+  relMetaData,
+  existingRels
 ) => {
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
-    dispatch(relNameChanged(formRelName(rel)));
+    dispatch(relNameChanged(formRelName(rel, getExistingRelMap(existingRels))));
   };
 
   const onRelationshipNameChanged = e => {
@@ -146,6 +148,8 @@ const AddRelationship = ({
   dispatch,
   tableStyles,
 }) => {
+  const cTable = allSchemas.filter(t => t.table_name === tableName);
+  const existingRels = (cTable.length > 0 && cTable[0].relationships) || {};
   // eslint-disable-line no-unused-vars
   const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
@@ -225,7 +229,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           tableStyles,
-          ['object', i]
+          ['object', i],
+          existingRels
         )
       ) : (
         <td />
@@ -243,7 +248,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           tableStyles,
-          ['array', i]
+          ['array', i],
+          existingRels
         )
       )
     );
