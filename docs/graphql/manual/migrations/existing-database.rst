@@ -92,19 +92,24 @@ Step 3: Initialize the migrations as per your current state
 
   .. code-block:: bash
 
-     hasura migrate create "init" --sql-file "public-schema.sql" --metadata-from-server
+     # create migration files
+     hasura migrate create "init" --sql-from-file "public-schema.sql" --metadata-from-server
+
+     # note down the version
+     # mark the migration as applied on this server, but don't execute
+     hasura migrate apply --version "<version>" --skip-execution
 
   This command will create a new "migration" under the ``migrations`` directory
   with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
   contain the required information to reproduce the current state of the server
-  including the Postgres schema and Hasura metadata. The command will also mark
+  including the Postgres schema and Hasura metadata. The apply command will mark
   this migration as "applied" on the server. If you'd like to read more about
   the format of migration files, checkout the reference doc at
-  :ref:`migration_file_reference`. 
+  :ref:`migration_file_reference`.
 
 .. note::
 
-  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.sql``
+  Migration version cannot be "0". i.e. the files cannot be of the form ``0_<something>.up.yaml``
 
 Step 4: Use the console from the CLI
 ------------------------------------
