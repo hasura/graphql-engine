@@ -404,11 +404,13 @@ class Relationships extends Component {
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
                 (rel, i) => {
-                  const relationshipName = rel.arrRel ? rel.arrRel.rel_name : rel.objRel.rel_name;
+                  console.log(rel);
+                  const relationshipRowKey = rel.arrRel ? `array_${rel.arrRel.rel_name}` : `obj_${rel.objRel.rel_name}`;
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
                       dispatch={dispatch}
                       tableName={tableName}
+                      key={rel.objRel.rel_name}
                       relName={rel.objRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
@@ -424,6 +426,7 @@ class Relationships extends Component {
                   );
                   const column2 = rel.arrRel ? (
                     <RelationshipEditor
+                      key={rel.arrRel.rel_name}
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.arrRel.rel_name}
@@ -440,7 +443,7 @@ class Relationships extends Component {
                     <td />
                   );
                   return (
-                    <tr key={relationshipName}>
+                    <tr>
                       {column1}
                       {column2}
                     </tr>
