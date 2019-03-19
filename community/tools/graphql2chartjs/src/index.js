@@ -10,12 +10,15 @@ function convert (type, graphqlData) {
 }
 
 class Graphql2Chartjs {
-  constructor() {
-    this.data = {}
+  constructor(graphqlData, arg) {
+    this.handleInit(graphqlData, arg);
   }
 
   handleInit (graphqlData, arg) {
     this.data = {};
+    if (!graphqlData) {
+      return;
+    }
     if (typeof arg === 'string') {
       this.gqlData = graphqlData;
       this.chartType = arg;

@@ -1,8 +1,10 @@
-FROM ubuntu:16.04
+# Don't update this without updating the
+# packager imager of graphql-engine
+FROM debian:stretch-20190228-slim
 
 ARG docker_ver="17.09.0-ce"
-ARG resolver="lts-11.15"
-ARG stack_ver="1.7.1"
+ARG resolver="lts-13.12"
+ARG stack_ver="1.9.3"
 
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
@@ -13,6 +15,7 @@ RUN apt-get -y update \
     && curl -sL https://github.com/commercialhaskell/stack/releases/download/v${stack_ver}/stack-${stack_ver}-linux-x86_64.tar.gz \
        | tar xz --wildcards --strip-components=1 -C /usr/local/bin '*/stack' \
     && stack --resolver ${resolver} setup \
+    && stack build Cabal-2.4.1.0 \
     && apt-get -y purge curl \
     && apt-get -y auto-remove \
     && apt-get -y clean \
