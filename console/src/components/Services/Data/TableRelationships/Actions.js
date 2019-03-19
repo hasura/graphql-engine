@@ -383,9 +383,9 @@ const sanitizeRelName = arg => arg.trim();
 
 const fallBackRelName = relMeta => {
   const targetTable = sanitizeRelName(relMeta.rTable);
-  const objLCol = sanitizeRelName(relMeta.lcol.join(','));
   switch (relMeta.isObjRel) {
     case true:
+      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
       return `${inflection.singularize(targetTable)}By${objLCol}`;
     default:
       const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
