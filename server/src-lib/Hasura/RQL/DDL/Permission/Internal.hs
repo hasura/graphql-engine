@@ -230,8 +230,7 @@ valueParser = ValueParser parseOne parseMany
     parseMany columnType v = case v of
       (String t)
         | isUserVar t -> return [selJsonArrElems columnType $ fromCurSess t PGJSON ]
-        -- | otherwise -> fmap return $ parseOne columnType v
-        | otherwise -> throw500 "Unexpected error"
+        | otherwise -> throw400 UnexpectedPayload "Expected Array, encountered String"
 
       val -> do
           vals <- runAesonParser parseJSON val
