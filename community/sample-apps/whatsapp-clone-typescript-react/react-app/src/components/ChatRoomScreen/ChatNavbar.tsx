@@ -15,7 +15,7 @@ import styled from 'styled-components'
 import * as fragments from '../../graphql/fragments'
 import * as queries from '../../graphql/queries'
 import { useMe } from '../../services/auth.service';
-import { ChatList, DeleteChat, ChatsListQueryCache } from '../../graphql/types'
+import { ChatList, DeleteChat, ChatsListCacheQuery } from '../../graphql/types'
 
 const Style = styled.div`
   padding: 0;
@@ -76,7 +76,7 @@ const query = gql`
 `
 
 const queryCache = gql`
-  query ChatsListQueryCache($userId: Int!) {
+  query ChatsListCacheQuery($userId: Int!) {
     chat(order_by:[{messages_aggregate:{max:{created_at:desc}}}]) {
       ...chat
       users(where:{user_id:{_neq:$userId}}) {

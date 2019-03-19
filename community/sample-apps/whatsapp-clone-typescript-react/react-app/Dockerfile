@@ -13,6 +13,7 @@ RUN npm install
 # Bundle app source
 COPY . /app
 #Build react/vue/angular bundle static files
+RUN npm run generate
 RUN npm run build
 
 EXPOSE 8080
