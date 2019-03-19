@@ -8,6 +8,7 @@ where
 import qualified Data.Sequence            as DS
 
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
@@ -29,20 +30,20 @@ data Mutation
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
-runMutation :: Mutation -> Q.TxE QErr RespBody
+runMutation :: Mutation -> Q.TxE QErr EncJSON
 runMutation mut =
   bool (mutateAndReturn mut) (mutateAndSel mut) $
     hasNestedFld $ _mFields mut
 
-mutateAndReturn :: Mutation -> Q.TxE QErr RespBody
+mutateAndReturn :: Mutation -> Q.TxE QErr EncJSON
 mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
     selWith = mkSelWith qt cte mutFlds False strfyNum
 
-mutateAndSel :: Mutation -> Q.TxE QErr RespBody
+mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
   uniqCols <- onNothing mUniqCols $
               throw500 "uniqCols not found in mutateAndSel"
@@ -60,7 +61,7 @@ mutateAndSel (Mutation qt q mutFlds mUniqCols strfyNum) = do
                }
       selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
   where
     colValToColExp colMap colVal =
