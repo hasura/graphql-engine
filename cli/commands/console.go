@@ -16,13 +16,13 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	caddyproxy "github.com/mholt/caddy/caddyhttp/proxy"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -51,13 +51,15 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 	f := consoleCmd.Flags()
+	opts.flags = f
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
-	f.BoolVar(&opts.enableProxy, "enable-proxy", false, "Enable proxy mode")
+	f.StringVar(&opts.apiExternalHost, "api-external-host", "localhost:9693", "")
+	f.StringVar(&opts.apiExternalScheme, "api-external-scheme", "http", "http or https")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -72,7 +74,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type consoleOptions struct {
-	EC *cli.ExecutionContext
+	EC    *cli.ExecutionContext
+	flags *pflag.FlagSet
 
 	APIPort     string
 	ConsolePort string
@@ -82,12 +85,13 @@ type consoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	StaticDir   string
-	enableProxy bool
+	StaticDir         string
+	enableProxy       bool
+	apiExternalHost   string
+	apiExternalScheme string
 }
 
 func (o *consoleOptions) run() error {
-	log := o.EC.Logger
 	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)
 
@@ -96,10 +100,24 @@ func (o *consoleOptions) run() error {
 
 	r.Use(allowCors())
 
-	// My Router struct
+	apiURL := &url.URL{
+		Host:   fmt.Sprintf("%s:%s", o.Address, o.APIPort),
+		Scheme: "http",
+	}
+
+	if o.flags.Changed("api-external-host") {
+		apiURL.Host = o.apiExternalHost
+	}
+
+	if o.flags.Changed("api-external-scheme") {
+		apiURL.Scheme = o.apiExternalScheme
+	}
+
+	// Console Router
 	router := &cRouter{
 		engine:      r,
 		enableProxy: o.enableProxy,
+		ec:          o.EC,
 	}
 
 	if o.EC.Version == nil {
@@ -170,7 +188,7 @@ func (o *consoleOptions) run() error {
 	}
 
 	o.EC.Spinner.Stop()
-	log.Infof("console running at: %s", consoleURL)
+	o.EC.Logger.Infof("console running at: %s", consoleURL)
 
 	o.EC.Telemetry.Beam()
 
@@ -182,14 +200,15 @@ type cRouter struct {
 	engine *gin.Engine
 
 	enableProxy bool
+	ec          *cli.ExecutionContext
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
+func (router *cRouter) setRoutes() {
 	apis := router.engine.Group("/apis")
 	{
-		apis.Use(setLogger(logger))
-		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
+		apis.Use(setLogger(router.ec.Logger))
+		apis.Use(setFilePath(router.ec.MigrationDir))
+		apis.Use(setDataPath(router.ec.ServerConfig.ParsedEndpoint, getAdminSecretHeaderName(router.ec.Version), router.ec.ServerConfig.AdminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -202,7 +221,7 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setMetadataFile(metadataFile))
+			metadataAPIs.Use(setMetadataFile(router.ec.MetadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 		// Server Proxy
@@ -213,7 +232,7 @@ func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metad
 				proxyAPIs.Any("*action", func(c *gin.Context) {
 					timeout := 30 * time.Second
 					delay := 300 * time.Millisecond
-					proxy := caddyproxy.NewSingleHostReverseProxy(nurl, "/apis/proxy", 0, timeout, delay)
+					proxy := caddyproxy.NewSingleHostReverseProxy(router.ec.ServerConfig.ParsedEndpoint, "/apis/proxy", 0, timeout, delay)
 					var err error
 
 					// capture panic from ServeHTTP
