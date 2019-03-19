@@ -379,23 +379,17 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   }
 };
 
-const sanitizeRelName = arg =>
-  arg
-    .trim()
-    .toLowerCase()
-    .replace(/([^A-Z0-9]+)(.)/gi, function modifyRel() {
-      return arguments[2].toUpperCase();
-    });
+const sanitizeRelName = arg => arg.trim();
 
 const fallBackRelName = relMeta => {
   const targetTable = sanitizeRelName(relMeta.rTable);
   const objLCol = sanitizeRelName(relMeta.lcol.join(','));
   switch (relMeta.isObjRel) {
     case true:
-      return `${targetTable}By${objLCol}`;
+      return `${inflection.singularize(targetTable)}By${objLCol}`;
     default:
       const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-      return `${targetTable}s` + `By${arrRCol}`;
+      return `${inflection.pluralize(targetTable)}By${arrRCol}`;
   }
 };
 
@@ -411,7 +405,7 @@ const formRelName = (relMeta, existingRelationships) => {
 
     /* Check if it is existing, fallback to old way of generating */
     if (existingRelationships && finalRelName in existingRelationships) {
-      finalRelName = fallBackRelName(relMeta);
+      finalRelName = inflection.camelize(fallBackRelName(relMeta), true);
     }
     return finalRelName;
   } catch (e) {
