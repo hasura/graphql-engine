@@ -58,8 +58,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
-	f.StringVar(&opts.apiExternalHost, "api-external-host", "localhost:9693", "")
-	f.StringVar(&opts.apiExternalScheme, "api-external-scheme", "http", "http or https")
+	f.StringVar(&opts.apiExternalURL, "api-external-url", "http://localhost:9693", "")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -85,10 +84,9 @@ type consoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	StaticDir         string
-	enableProxy       bool
-	apiExternalHost   string
-	apiExternalScheme string
+	StaticDir      string
+	enableProxy    bool
+	apiExternalURL string
 }
 
 func (o *consoleOptions) run() error {
@@ -105,12 +103,13 @@ func (o *consoleOptions) run() error {
 		Scheme: "http",
 	}
 
-	if o.flags.Changed("api-external-host") {
-		apiURL.Host = o.apiExternalHost
-	}
-
-	if o.flags.Changed("api-external-scheme") {
-		apiURL.Scheme = o.apiExternalScheme
+	if o.flags.Changed("api-external-url") {
+		nurl, err := url.Parse(o.apiExternalURL)
+		if err != nil {
+			return errors.Wrap(err, "cannot parse API external url")
+		}
+		apiURL = nurl
+		o.enableProxy = true
 	}
 
 	// Console Router
@@ -124,7 +123,7 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
+	router.setRoutes()
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
@@ -134,8 +133,7 @@ func (o *consoleOptions) run() error {
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
 	opts := gin.H{
-		"apiHost":         "http://" + o.Address,
-		"apiPort":         o.APIPort,
+		"apiURL":          apiURL.String(),
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
@@ -239,10 +237,10 @@ func (router *cRouter) setRoutes() {
 					defer func() {
 						r := recover()
 						if err, ok := r.(httpserver.NonHijackerError); ok {
-							logger.Debugf("got non-hijack error %s", err.Error())
+							router.ec.Logger.Debugf("got non-hijack error %s", err.Error())
 							c.AbortWithStatus(http.StatusBadRequest)
 						} else {
-							logger.Debugf("panic recevied %s", string(debug.Stack()))
+							router.ec.Logger.Debugf("panic recevied %s", string(debug.Stack()))
 							c.AbortWithStatus(http.StatusInternalServerError)
 						}
 					}()

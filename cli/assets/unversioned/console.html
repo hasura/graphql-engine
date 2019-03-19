@@ -3,8 +3,7 @@
     <link rel="icon" type="image/png" href="https://storage.googleapis.com/hasura-graphql-engine/console/assets/favicon.png" />
     <script>
       window.__env = {
-        apiHost: {{.apiHost}},
-        apiPort: "{{.apiPort}}",
+        apiURL: {{.apiURL}},
         cliVersion: {{.cliVersion}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
@@ -19,11 +18,9 @@
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
         {{- if .proxyPath}}
-        enableTelemetry: {{.enableTelemetry}},
-        proxyPath: {{.proxyPath}}
-        {{ else }}
-        enableTelemetry: {{.enableTelemetry}}
+        proxyPath: {{.proxyPath}},
         {{ end -}}
+        enableTelemetry: {{.enableTelemetry}}
       };
     </script>
   </head>
