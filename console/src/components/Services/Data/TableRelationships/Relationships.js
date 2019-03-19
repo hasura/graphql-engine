@@ -404,7 +404,6 @@ class Relationships extends Component {
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
                 (rel, i) => {
-                  console.log(rel);
                   const relationshipRowKey = rel.arrRel ? `array_${rel.arrRel.rel_name}` : `obj_${rel.objRel.rel_name}`;
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
