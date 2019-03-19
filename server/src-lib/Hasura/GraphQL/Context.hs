@@ -413,7 +413,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
       [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeography
       , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
       , InpValInfo
-        Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toNT $ mkScalarTy PGBoolean
+        Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toGT $ mkScalarTy PGBoolean
       ]
 
 emptyGCtx :: GCtx
