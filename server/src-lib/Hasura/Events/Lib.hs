@@ -450,6 +450,7 @@ fetchEvents =
                     ON (l.trigger_id = e.id)
                     WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
+                    FOR UPDATE SKIP LOCKED
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
       |] () True
