@@ -4,7 +4,8 @@ const baseUrl = globals.dataApiUrl;
 const hasuractlApiHost = globals.apiHost;
 const hasuractlApiPort = globals.apiPort;
 
-const hasuractlUrl = hasuractlApiHost + ':' + hasuractlApiPort;
+const hasuractlUrl =
+  globals.apiURL || hasuractlApiHost + ':' + hasuractlApiPort;
 
 const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,

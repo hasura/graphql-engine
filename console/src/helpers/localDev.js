@@ -26,6 +26,12 @@ if (process.env.ADMIN_SECRET !== undefined) {
   }
 }
 
+if (process.env.API_URL) {
+  appendObj += `
+    ,apiURL: '${process.env.API_URL}'
+  `;
+}
+
 if (process.env.PROXY_PATH) {
   appendObj += `
     ,proxyPath: '${process.env.PROXY_PATH}'

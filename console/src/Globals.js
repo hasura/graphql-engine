@@ -24,6 +24,7 @@ const globals = {
   proxyPath: window.__env.proxyPath,
   apiHost: window.__env.apiHost,
   apiPort: window.__env.apiPort,
+  apiURL: window.__env.apiURL,
   dataApiUrl: checkExtraSlashes(window.__env.dataApiUrl),
   displayApiUrlInProxyMode:
     checkExtraSlashes(window.__env.dataApiUrl) + GRAPHQL_PATH,
@@ -99,9 +100,13 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   }
   */
 } else if (globals.proxyPath && globals.proxyPath.length > 0) {
-  globals.dataApiUrl = `${globals.apiHost}:${globals.apiPort}${
-    globals.proxyPath
-  }`;
+  if (globals.apiURL !== undefined) {
+    globals.dataApiUrl = `${globals.apiURL}${globals.proxyPath}`;
+  } else {
+    globals.dataApiUrl = `${globals.apiHost}:${globals.apiPort}${
+      globals.proxyPath
+    }`;
+  }
 }
 
 export default globals;
