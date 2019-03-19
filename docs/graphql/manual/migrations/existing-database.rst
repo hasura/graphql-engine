@@ -96,7 +96,7 @@ Step 3: Initialize the migrations as per your current state
      hasura migrate create "init" --sql-from-file "public-schema.sql" --metadata-from-server
 
      # note down the version
-     # mark the migration as applied on this server, but don't execute
+     # mark the migration as applied on this server
      hasura migrate apply --version "<version>" --skip-execution
 
   This command will create a new "migration" under the ``migrations`` directory
