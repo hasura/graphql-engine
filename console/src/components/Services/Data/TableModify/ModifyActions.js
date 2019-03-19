@@ -232,7 +232,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName};`
         }
       })
     }
@@ -245,7 +245,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" drop constraint "${tableName}_${lcols.join('_')}"`
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${tableName}_${lcols.join('_')}`
       }
     }]
     if (constraintName) {
@@ -262,8 +262,57 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const successMsg = `Foreign key saved`;
     const errorMsg = `Foreign key addition failed`;
 
+    console.log('------------------Foreign Key Save -------------------');
     console.log(migrationUp);
     console.log(migrationDown);
+    console.log('------------------------------------------------------');
+
+    const customOnSuccess = () => {};
+    const customOnError = err => {
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migrationUp,
+      migrationDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  }
+}
+
+const removeForeignKey = (index, tableSchema, columns) => {
+  return (dispatch, getState) => {
+    const tableName = tableSchema.table_name;
+    const schemaName = tableSchema.table_schema;
+    const oldConstraint = tableSchema.foreign_key_constraints[index];
+    const migrationUp = [{
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${oldConstraint.constraint_name};`
+      }
+    }]
+    const migrationDown = [{
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${oldConstraint.on_update} on delete ${oldConstraint.on_delete}`
+      }
+    }]
+    const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
+    const requestMsg = `Deleting foreign key...`;
+    const successMsg = `Foreign key deleted`;
+    const errorMsg = `Deleting foreign key failed`;
+
+    console.log('------------------Foreign Key Remove -------------------');
+    console.log(migrationUp);
+    console.log(migrationDown);
+    console.log('--------------------------------------------------------');
 
     const customOnSuccess = () => {};
     const customOnError = err => {
@@ -2226,4 +2275,6 @@ export {
   setPrimaryKeys,
   savePrimaryKeys,
   setForeignKeys,
+  saveForeignKeys,
+  removeForeignKey
 };

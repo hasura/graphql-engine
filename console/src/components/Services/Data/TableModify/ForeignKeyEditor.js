@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ordinalColSort } from '../utils';
-import { setForeignKeys } from './ModifyActions';
+import { setForeignKeys, saveForeignKeys, removeForeignKey } from './ModifyActions';
 import { pgConfTypes, getForeignKeyConfig, getExistingFKConstraints } from '../Common/ReusableComponents/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
@@ -15,6 +15,7 @@ const ForeignKeyEditor = ({
   fkModify,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
+  const tableName = tableSchema.table_name;
   const orderedColumns = columns.map((c, i) => ({
     name: c.column_name,
     index: i
@@ -69,12 +70,32 @@ const ForeignKeyEditor = ({
       />
     );
     const expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
+   
+    const resetFk = () => {
+      const newFks = [...fkModify];
+      newFks[i] = existingForeignKeys[i];
+      dispatch(setForeignKeys(newFks));
+    };
+
     const collapseCallback = () => {
       if (isLast) {
         dispatch(setForeignKeys(existingForeignKeys));
       }
     }
     const collapseButtonText = isLast ? 'Cancel' : 'Close';
+    let removeFk;
+
+    if (!isLast) {
+      removeFk = () => {
+        dispatch(removeForeignKey(i, tableSchema, orderedColumns));
+      }
+    }
+
+    let saveFk;
+    if (fkConfig) {
+      saveFk = () => dispatch(saveForeignKeys(i, tableSchema, orderedColumns));
+    }
+
     return (
       <div key={`${i}`}>
         <ExpandableEditor
@@ -82,10 +103,10 @@ const ForeignKeyEditor = ({
           property={'add-fks'}
           ongoingRequest={'oola'}
           service="modify-table"
-          removeFunc={() => {}}
-          saveFunc={() => {}}
+          removeFunc={removeFk}
+          saveFunc={saveFk}
           collapsedLabel={collapsedLabel}
-          collapseCallback={collapseCallback}
+          collapseCallback={resetFk}
           collapseButtonText={collapseButtonText}
           expandButtonText={expandButtonText}
         />
