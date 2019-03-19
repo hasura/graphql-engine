@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
+import OneGraphExplorer from './OneGraphExplorer';
 import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
 
 import './GraphiQL.css';
@@ -50,6 +51,12 @@ class GraphiQLWrapper extends Component {
     } else if (this.state.queries) {
       graphiqlProps.query = this.state.queries;
     }
+    const renderGraphiql = props => (
+      <GraphiQL
+        {...graphiqlProps}
+        {...props}
+      />
+    )
     return (
       <ErrorBoundary>
         <div
@@ -60,7 +67,12 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          <GraphiQL {...graphiqlProps} />
+          <OneGraphExplorer
+            renderGraphiql={renderGraphiql}
+            endpoint={this.props.data.url}
+            headers={this.props.data.headers}
+            query={query}
+          />
         </div>
       </ErrorBoundary>
     );

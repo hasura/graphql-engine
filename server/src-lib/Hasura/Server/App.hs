@@ -37,6 +37,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema.Table
@@ -182,7 +183,7 @@ mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
   -> ServerCtx
-  -> Handler BL.ByteString
+  -> Handler EncJSON
   -> ActionT m ()
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
@@ -200,9 +201,11 @@ mkSpockAction qErrEncoder serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
+  let resLBS = fmap encJToLBS result
+
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+  logResult (Just userInfo) req reqBody serverCtx resLBS $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp resLBS
 
   where
     logger = scLogger serverCtx
@@ -220,7 +223,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
       uncurry setHeader jsonHeader
       lazyBytes resp
 
-v1QueryHandler :: RQLQuery -> Handler BL.ByteString
+v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   bool (fst <$> dbAction) (withSCUpdate scRef dbActionReload) $
@@ -250,7 +253,7 @@ v1QueryHandler query = do
             newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
       return (resp, newSc')
 
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler BL.ByteString
+v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
@@ -263,7 +266,7 @@ v1Alpha1GQHandler query = do
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query reqBody
 
-gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
+gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -293,7 +296,7 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler BL.ByteString
+legacyQueryHandler :: TableName -> T.Text -> Handler EncJSON
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
