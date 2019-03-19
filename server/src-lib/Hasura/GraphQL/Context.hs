@@ -192,6 +192,7 @@ stDWithinGeometryInpTy = G.NamedType "st_d_within_input"
 input st_d_within_geography_input {
   distance: Float!
   from: geography!
+  use_spheroid: Bool!
 }
 -}
 stDWithinGeographyInpTy :: G.NamedType
@@ -397,14 +398,22 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
 
     -- _st_d_within has to stay with geometry type
     stDWithinGeometryInpM =
-      bool Nothing (Just $ stDWithinInp stDWithinGeometryInpTy PGGeometry) (PGGeometry `elem` colTys)
+      bool Nothing (Just $ stDWithinGeomInp) (PGGeometry `elem` colTys)
     -- _st_d_within_geography is created for geography type
     stDWithinGeographyInpM =
-      bool Nothing (Just $ stDWithinInp stDWithinGeographyInpTy PGGeography) (PGGeography `elem` colTys)
-    stDWithinInp inpTy ty =
-      mkHsraInpTyInfo Nothing inpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy ty
-      , InpValInfo Nothing "distance" Nothing $ G.toNT $ G.toNT $ mkScalarTy PGFloat
+      bool Nothing (Just $ stDWithinGeogInp) (PGGeography `elem` colTys)
+
+    stDWithinGeomInp =
+      mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
+      ]
+    stDWithinGeogInp =
+      mkHsraInpTyInfo Nothing stDWithinGeographyInpTy $ fromInpValL
+      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeography
+      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
+      , InpValInfo
+        Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toNT $ mkScalarTy PGBoolean
       ]
 
 emptyGCtx :: GCtx

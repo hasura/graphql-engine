@@ -164,11 +164,19 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     parseGeometryOrGeographyOp f =
       geometryOrGeographyOp colTy >> f <$> parseOne
 
-    parseSTDWithinObj = do
-      WithinOp distVal fromVal <- parseVal
-      dist <- withPathK "distance" $ parser PGFloat distVal
-      from <- withPathK "from" $ parser colTy fromVal
-      return $ ASTDWithin $ WithinOp dist from
+    parseSTDWithinObj = case colTy of
+      PGGeometry -> do
+        DWithinGeomOp distVal fromVal <- parseVal
+        dist <- withPathK "distance" $ parser PGFloat distVal
+        from <- withPathK "from" $ parser colTy fromVal
+        return $ ASTDWithinGeom $ DWithinGeomOp dist from
+      PGGeography -> do
+        DWithinGeogOp distVal fromVal sphVal <- parseVal
+        dist <- withPathK "distance" $ parser PGFloat distVal
+        from <- withPathK "from" $ parser colTy fromVal
+        useSpheroid <- withPathK "use_spheroid" $ parser PGBoolean sphVal
+        return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
+      _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
     decodeAndValidateRhsCol =
       parseVal >>= validateRhsCol
@@ -344,14 +352,16 @@ mkColCompExp qual lhsCol = \case
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
 
-  ASTContains val              -> mkGeomOpBe "ST_Contains" val
-  ASTCrosses val               -> mkGeomOpBe "ST_Crosses" val
-  ASTEquals val                -> mkGeomOpBe "ST_Equals" val
-  ASTIntersects val            -> mkGeomOpBe "ST_Intersects" val
-  ASTOverlaps val              -> mkGeomOpBe "ST_Overlaps" val
-  ASTTouches val               -> mkGeomOpBe "ST_Touches" val
-  ASTWithin val                -> mkGeomOpBe "ST_Within" val
-  ASTDWithin (WithinOp r val)  -> applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTContains val   -> mkGeomOpBe "ST_Contains" val
+  ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
+  ASTEquals val     -> mkGeomOpBe "ST_Equals" val
+  ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
+  ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
+  ASTTouches val    -> mkGeomOpBe "ST_Touches" val
+  ASTWithin val     -> mkGeomOpBe "ST_Within" val
+
+  ASTDWithinGeom (DWithinGeomOp r val)      -> applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTDWithinGeog (DWithinGeogOp r val sph)  -> applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
   ANISNULL         -> S.BENull lhs
   ANISNOTNULL      -> S.BENotNull lhs

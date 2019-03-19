@@ -80,15 +80,16 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
+    -- TODO(shahidhk): implement separate parser for geography
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
-      -- TODO(shahidhk): throw correct error message
                  throw500 "expected \"distance\" input field in st_d_within"
       dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
                  throw500 "expected \"from\" input field in st_d_within"
       from <- asPGColVal fromVal
-      return $ ASTDWithin $ WithinOp dist from
+      return $ ASTDWithinGeom $ DWithinGeomOp dist from
+
 
 parseAsEqOp
   :: (MonadError QErr m)
