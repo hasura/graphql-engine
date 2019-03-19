@@ -30,6 +30,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.EncJSON
 
 convertMutResp
   :: G.NamedType -> SelSet -> Convert RR.MutFlds
@@ -131,7 +132,7 @@ convertUpdate opCtx fld = do
   strfyNum <- stringifyNum <$> asks getter
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds uniqCols
       whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
-      whenEmptyItems = buildEmptyMutResp mutFlds
+      whenEmptyItems = return $ return $ buildEmptyMutResp mutFlds
   -- if there are not set items then do not perform
   -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null setItems
@@ -155,10 +156,10 @@ convertDelete opCtx fld = do
     DelOpCtx tn _ filterExp uniqCols = opCtx
 
 -- | build mutation response for empty objects
-buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
-buildEmptyMutResp = return . mkTx
+buildEmptyMutResp :: RR.MutFlds -> EncJSON
+buildEmptyMutResp = mkTx
   where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
+    mkTx = encJFromJValue . OMap.fromList . map (second convMutFld)
     -- generate empty mutation response
     convMutFld = \case
       RR.MCount -> J.toJSON (0 :: Int)
