@@ -379,9 +379,7 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   }
 };
 
-const sanitizeRelName = arg => {
-  arg.trim();
-};
+const sanitizeRelName = arg => arg.trim();
 
 const formRelName = relMeta => {
   try {
