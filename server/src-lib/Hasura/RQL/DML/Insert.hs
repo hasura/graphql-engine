@@ -10,6 +10,7 @@ import qualified Data.Sequence            as DS
 import qualified Data.Text.Lazy           as LT
 
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
@@ -240,7 +241,7 @@ convInsQ =
   liftDMLP1 .
   convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
-insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
   runMutation $ Mutation (iqp1Table u) (insertCTE, p)
                 (iqp1MutFlds u) (iqp1UniqCols u) strfyNum
@@ -252,7 +253,7 @@ data ConflictCtx
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
-nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 nonAdminInsert strfyNum (insQueryP1, args) = do
   conflictCtxM <- mapM extractConflictCtx conflictClauseP1
   setConflictCtx conflictCtxM
@@ -295,7 +296,7 @@ setConflictCtx conflictCtxM = do
 runInsert
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => InsertQuery
-  -> m RespBody
+  -> m EncJSON
 runInsert q = do
   res <- convInsQ q
   role <- userRole <$> askUserInfo
