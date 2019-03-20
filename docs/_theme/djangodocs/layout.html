@@ -521,5 +521,15 @@
     });
   </script>
 
+  <!-- open external links in new tab -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const externalLinks = $('a.reference.external');
+      for (let i = 0; i < externalLinks.length; i++) {
+        externalLinks[i].setAttribute('target', '_blank');
+      }
+    });
+  </script>
+
   {%- block extrafooter %} {% endblock %}
 {% endblock %}

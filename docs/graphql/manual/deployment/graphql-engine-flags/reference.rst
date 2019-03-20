@@ -162,4 +162,5 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - Enable verbose logging in the API response .
        (default: false)
 .. note::
-  1. When the equivalent flags for environment variables are used, the flags will take precedence.
+
+  When the equivalent flags for environment variables are used, the flags will take precedence.

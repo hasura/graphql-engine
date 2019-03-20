@@ -20,15 +20,21 @@ Options
 
 ::
 
-  -h, --help   help for create
+      --admin-secret string         admin secret for Hasura GraphQL Engine
+      --endpoint string             http(s) endpoint for Hasura GraphQL Engine
+  -h, --help                        help for create
+      --metadata-from-file string   path to a hasura metadata file to be used for up actions
+      --metadata-from-server        take metadata from the server and write it as an up migration file
+      --sql-from-file string        path to an sql file which contains the up actions
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

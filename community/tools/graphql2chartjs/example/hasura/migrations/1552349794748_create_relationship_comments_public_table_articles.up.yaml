@@ -1,0 +1,13 @@
+- args:
+    name: comments
+    table:
+      name: articles
+      schema: public
+    using:
+      manual_configuration:
+        column_mapping:
+          id: article_id
+        remote_table:
+          name: comments
+          schema: public
+  type: create_array_relationship

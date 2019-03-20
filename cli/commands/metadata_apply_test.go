@@ -18,7 +18,7 @@ func testMetadataApply(t *testing.T, metadataFile string, endpoint *url.URL) {
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			MetadataFile: metadataFile,
+			MetadataFile: []string{metadataFile},
 			ServerConfig: &cli.ServerConfig{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
@@ -37,6 +37,6 @@ func testMetadataApply(t *testing.T, metadataFile string, endpoint *url.URL) {
 
 	err = opts.run()
 	if err != nil {
-		t.Fatalf("failed exporting metadata: %v", err)
+		t.Fatalf("failed applying metadata: %v", err)
 	}
 }

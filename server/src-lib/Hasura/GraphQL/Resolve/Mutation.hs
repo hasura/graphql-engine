@@ -30,6 +30,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.EncJSON
 
 convertMutResp
   :: G.NamedType -> SelSet -> Convert RR.MutFlds
@@ -43,7 +44,7 @@ convertMutResp ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => AnnInpVal
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj ->
@@ -68,10 +69,10 @@ lhsExpOp op annTy (col, e) =
 
 convObjWithOp
   :: (MonadError QErr m)
-  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+  => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  (_, colVal) <- asPGColVal v
+  colVal <- _apvValue <$> asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
@@ -79,11 +80,11 @@ convObjWithOp opFn val =
 
 convDeleteAtPathObj
   :: (MonadError QErr m)
-  => AnnGValue -> m [(PGCol, S.SQLExp)]
+  => AnnInpVal -> m [(PGCol, S.SQLExp)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . snd) vals
+    let valExps = map (txtEncoder . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
@@ -131,7 +132,7 @@ convertUpdate opCtx fld = do
   strfyNum <- stringifyNum <$> asks getter
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds uniqCols
       whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
-      whenEmptyItems = buildEmptyMutResp mutFlds
+      whenEmptyItems = return $ return $ buildEmptyMutResp mutFlds
   -- if there are not set items then do not perform
   -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null setItems
@@ -155,10 +156,10 @@ convertDelete opCtx fld = do
     DelOpCtx tn _ filterExp uniqCols = opCtx
 
 -- | build mutation response for empty objects
-buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
-buildEmptyMutResp = return . mkTx
+buildEmptyMutResp :: RR.MutFlds -> EncJSON
+buildEmptyMutResp = mkTx
   where
-    mkTx = return . J.encode . OMap.fromList . map (second convMutFld)
+    mkTx = encJFromJValue . OMap.fromList . map (second convMutFld)
     -- generate empty mutation response
     convMutFld = \case
       RR.MCount -> J.toJSON (0 :: Int)

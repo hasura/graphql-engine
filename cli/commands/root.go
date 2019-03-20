@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const HasuraASCIIText = `
+const hasuraASCIIText = `
     __
    / /_   ____ _ _____ __  __ _____ ____ _
   / __ \ / __ ` + "`" + `// ___// / / // ___// __ ` + "`" + `/
@@ -25,7 +25,7 @@ var ec *cli.ExecutionContext
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
 	Short:         "Hasura GraphQL Engine command line tool",
-	Long:          HasuraASCIIText,
+	Long:          hasuraASCIIText,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {

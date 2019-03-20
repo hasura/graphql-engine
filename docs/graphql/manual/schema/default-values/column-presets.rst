@@ -26,12 +26,12 @@ Step 1: Configure a column preset
 The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
 ``Data -> article -> Permissions``:
 
-.. image:: ../../../../img/graphql/manual/schema/column-presets-option.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-option.png
 
 Enable the column preset option to define presets for one or more columns. For each column, you can pick between
 setting the preset using a static value or from a session variable.
 
-.. image:: ../../../../img/graphql/manual/schema/column-presets-value-options.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-value-options.png
 
 For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
 automatically populated based on the value of ``X-Hasura-User-Id`` session variable.
@@ -54,12 +54,12 @@ to select from the* ``article`` *table*):
 As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header that the field, ``user_id``, is no longer
 available as the mutation type's field:
 
-.. image:: ../../../../img/graphql/manual/schema/column-preset-schema-change-for-role.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-schema-change-for-role.png
 
 Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
 passed in the ``X-Hasura-User-Id`` variable:
 
-.. image:: ../../../../img/graphql/manual/schema/column-preset-mutation-result.png
+.. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-mutation-result.png
 
 .. note::
 
