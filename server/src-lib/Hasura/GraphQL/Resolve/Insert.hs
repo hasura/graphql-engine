@@ -97,11 +97,11 @@ mkAnnInsObj relInfoMap annObj =
 traverseInsObj
   :: (MonadError QErr m, Has InsCtxMap r, MonadReader r m)
   => RelationInfoMap
-  -> (G.Name, AnnGValue)
+  -> (G.Name, AnnInpVal)
   -> AnnInsObj
   -> m AnnInsObj
 traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
-  case annVal of
+  case _aivValue annVal of
     AGScalar colty mColVal -> do
       let col = PGCol $ G.unName gName
           colVal = fromMaybe (PGNull colty) mColVal
@@ -148,15 +148,15 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
 parseOnConflict
   :: (MonadError QErr m)
   => QualifiedTable -> Maybe UpdPermForIns
-  -> AnnGValue -> m RI.ConflictClauseP1
-parseOnConflict tn updPermM val = withPathK "on_conflict" $
+  -> AnnInpVal -> m RI.ConflictClauseP1
+parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
     constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint
       _  -> do
-          UpdPermForIns _ updFiltr preSet <- onNothing updPermM $ throw500
+          UpdPermForIns _ updFiltr preSet <- onNothing updFiltrM $ throw500
             "cannot update columns since update permission is not defined"
           return $ RI.CP1Update constraint updCols preSet $
             toSQLBoolExp (S.mkQual tn) updFiltr
@@ -173,22 +173,28 @@ parseOnConflict tn updPermM val = withPathK "on_conflict" $
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
 
-toSQLExps :: (MonadError QErr m, MonadState PrepArgs m)
-          => [(PGCol, AnnGValue)] -> m [(PGCol, S.SQLExp)]
+toSQLExps
+  :: (MonadError QErr m, MonadState PrepArgs m)
+  => [(PGCol, PGColType, PGColValue)]
+  -> m [(PGCol, S.SQLExp)]
 toSQLExps cols =
-  forM cols $ \(c, v) -> do
-    prepExpM <- asPGColValM v >>= mapM prepare
-    let prepExp = fromMaybe (S.SEUnsafe "NULL") prepExpM
+  forM cols $ \(c, ty, v) -> do
+    prepExp <- prepareColVal ty v
     return (c, prepExp)
 
 mkSQLRow :: Map.HashMap PGCol S.SQLExp -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
 mkSQLRow defVals withPGCol =
   Map.elems $ Map.union (Map.fromList withPGCol) defVals
 
-mkInsertQ :: MonadError QErr m => QualifiedTable
-          -> Maybe RI.ConflictClauseP1 -> [(PGCol, AnnGValue)]
-          -> [PGCol] -> Map.HashMap PGCol S.SQLExp -> RoleName
-          -> m (CTEExp, Maybe RI.ConflictCtx)
+mkInsertQ
+  :: MonadError QErr m
+  => QualifiedTable
+  -> Maybe RI.ConflictClauseP1
+  -> [(PGCol, PGColType, PGColValue)]
+  -> [PGCol]
+  -> Map.HashMap PGCol S.SQLExp
+  -> RoleName
+  -> m (CTEExp, Maybe RI.ConflictCtx)
 mkInsertQ vn onConflictM insCols tableCols defVals role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
@@ -359,7 +365,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
       objRelDeterminedCols = concatMap snd objInsRes
       objRelInsCols = mkPGColWithTypeAndVal allCols objRelDeterminedCols
       addInsCols = mkPGColWithTypeAndVal allCols addCols
-      finalInsCols =  map pgColToAnnGVal (cols <> objRelInsCols <> addInsCols)
+      finalInsCols =  cols <> objRelInsCols <> addInsCols
 
   -- prepare final returning columns
   let arrDepCols = concatMap (map fst . riMapping . _riRelInfo) arrRels
@@ -429,7 +435,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
           tableCols = map pgiName tableColInfos
 
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
-        rowsWithCol <- mapM (toSQLExps . map pgColToAnnGVal) withAddCols
+        rowsWithCol <- mapM toSQLExps withAddCols
         return $ map (mkSQLRow defVals) rowsWithCol
 
       let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds tableColInfos
@@ -518,8 +524,3 @@ mkPGColWithTypeAndVal pgColInfos pgColWithVal =
     mergeListsWith pgColInfos pgColWithVal
     (\ci (c, _) -> pgiName ci == c)
     (\ci (c, v) -> (c, pgiType ci, v))
-
-pgColToAnnGVal
-  :: (PGCol, PGColType, PGColValue)
-  -> (PGCol, AnnGValue)
-pgColToAnnGVal (col, colTy, colVal) = (col, pgColValToAnnGVal colTy colVal)

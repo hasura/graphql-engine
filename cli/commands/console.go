@@ -98,7 +98,12 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger, o.EC.Version)
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	if err != nil {
+		return err
+	}
+
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, metadataPath, o.EC.Logger, o.EC.Version)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()

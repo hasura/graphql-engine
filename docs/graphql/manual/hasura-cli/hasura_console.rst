@@ -31,8 +31,8 @@ Options
 
 ::
 
-      --admin-secret string   admin secret key for Hasura GraphQL Engine
       --address string        address to serve console and migration API from (default "localhost")
+      --admin-secret string   admin secret for Hasura GraphQL Engine
       --api-port string       port for serving migrate api (default "9693")
       --console-port string   port for serving console (default "9695")
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
@@ -45,8 +45,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
