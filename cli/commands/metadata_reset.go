@@ -54,7 +54,7 @@ func (o *metadataResetOptions) run() error {
 	if err != nil {
 		return err
 	}
-	err = executeMetadata(o.actionType, migrateDrv, o.EC.MetadataFile)
+	err = executeMetadata(o.actionType, migrateDrv, o.EC)
 	if err != nil {
 		return errors.Wrap(err, "Cannot reset metadata")
 	}

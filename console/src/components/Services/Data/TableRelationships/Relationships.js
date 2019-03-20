@@ -414,6 +414,7 @@ class Relationships extends Component {
                     <RelationshipEditor
                       dispatch={dispatch}
                       tableName={tableName}
+                      key={rel.objRel.rel_name}
                       relName={rel.objRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
@@ -429,6 +430,7 @@ class Relationships extends Component {
                   );
                   const column2 = rel.arrRel ? (
                     <RelationshipEditor
+                      key={rel.arrRel.rel_name}
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.arrRel.rel_name}
@@ -445,7 +447,7 @@ class Relationships extends Component {
                     <td />
                   );
                   return (
-                    <tr key={i}>
+                    <tr>
                       {column1}
                       {column2}
                     </tr>
