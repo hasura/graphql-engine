@@ -91,17 +91,15 @@ mkSelCTEFromColVals
   :: MonadError QErr m
   => QualifiedTable -> [PGColInfo] -> [ColVals] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
-  case colVals of
-    [] -> return $ S.CTESelect selNoRows
+  S.CTESelect <$> case colVals of
+    [] -> return selNoRows
     _  -> do
       tuples <- mapM mkTupsFromColVal colVals
       let fromItem = S.FIValues (S.ValuesExp tuples) tableAls $ Just colNames
-          selCTE = S.CTESelect $
-                   S.mkSelect
-                   { S.selExtr = [S.selectStar]
-                   , S.selFrom = Just $ S.FromExp [fromItem]
-                   }
-      return selCTE
+      return S.mkSelect
+        { S.selExtr = [S.selectStar]
+        , S.selFrom = Just $ S.FromExp [fromItem]
+        }
   where
     tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
     colNames = map pgiName allCols

@@ -255,8 +255,8 @@ newtype TupleExp
   deriving (Show, Eq)
 
 instance ToSQL TupleExp where
-  toSQL (TupleExp tups) =
-    paren $ ", " <+> tups
+  toSQL (TupleExp exps) =
+    paren $ ", " <+> exps
 
 data SQLExp
   = SEPrep !Int
