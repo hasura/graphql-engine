@@ -145,6 +145,17 @@ kill -INT $PID
 sleep 4
 mv graphql-engine.tix graphql-engine-combined.tix || true
 
+###########
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH VERBOSE API RESPONSE ENABLED #####################################>\n"
+
+"$GRAPHQL_ENGINE" serve  --verbose-api-response >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-verbose-api-response  test_graphql_mutations.py::TestGraphqlInsertPermissionVerboseResponse
+
+kill_hge_and_combine_hpc_reports
+
 ##########
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
 

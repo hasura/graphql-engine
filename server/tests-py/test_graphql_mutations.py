@@ -70,6 +70,17 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
     def dir(cls):
         return "queries/graphql_mutation/insert/onconflict"
 
+@pytest.mark.skipif( not pytest.config.getoption("--test-verbose-api-response"), 
+    reason="--test-verbose-api-response is not set. Skipping" )
+class TestGraphqlInsertPermissionVerboseResponse(DefaultTestQueries):
+
+    def test_student_role_insert_check_bio_fail_verbose_resp(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_student_role_insert_check_bio_fail_verbose_resp.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/permissions"
+
 
 class TestGraphqlInsertPermission(DefaultTestQueries):
 

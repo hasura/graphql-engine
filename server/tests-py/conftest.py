@@ -51,6 +51,11 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-verbose-api-response", action="store_true",
+        help="Run Test cases with GraphQL queries being disabled"
+    )
+
+    parser.addoption(
         "--test-hge-scale-url",
         metavar="<url>",
         required=False,

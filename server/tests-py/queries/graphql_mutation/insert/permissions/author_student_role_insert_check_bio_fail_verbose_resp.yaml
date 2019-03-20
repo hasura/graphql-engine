@@ -1,14 +1,21 @@
-description: Inserts author without bio as a student (Error)
+description: Inserts author without bio as a student (Error) verbose response
 url: /v1alpha1/graphql
 status: 400
 headers:
   X-Hasura-Role: student
 response:
   errors:
-  - extensions:
+  - message: Insert permission check failed
+    extensions:
       code: permission-error
       path: $.selectionSet.insert_author.args.objects
-    message: Insert permission check failed
+      internal:
+        check_constraint: (((NEW."bio") IS NOT NULL) AND ('true')) AND ('true')
+        input_row:
+          bio: null
+          id: 5
+          is_registered: false
+          name: Student 1
 query:
   query: |
     mutation insert_author {
