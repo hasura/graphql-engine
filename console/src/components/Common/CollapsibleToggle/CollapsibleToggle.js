@@ -47,7 +47,9 @@ const CollapsibleToggle = ({ testId, title, isOpen, toggle, children }) => {
         </span>
         <span className={`${styles.titleWrapper}`}>{title}</span>
       </div>
-      {isOpen ? <div className="collapsibleContent">{children}</div> : null}
+      {isOpen ? (
+        <div className={styles.collapsibleContent}>{children}</div>
+      ) : null}
     </div>
   );
 };
