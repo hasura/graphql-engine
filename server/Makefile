@@ -33,6 +33,7 @@ release-image: $(project).cabal
 
 # assumes this is built in circleci
 ci-binary:
+	stack clean
 	mkdir -p packaging/build/rootfs
 	stack $(STACK_FLAGS) build $(BUILD_FLAGS)
 	mkdir -p $(build_output)

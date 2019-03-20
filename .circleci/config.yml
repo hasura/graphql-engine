@@ -96,15 +96,12 @@ refs:
     - checkout
     - restore_cache:
         keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-    - restore_cache:
-        keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+        - server-cache-v1-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - *wait_for_postgres
     - run:
-        name: Install deps
-        # if the man directories are missing, postgresql-client fails
-        # to install in debian
+        name: Install test dependencies
+        # if the man directories are missing, postgresql-client fails to
+        # install in debian
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
@@ -158,10 +155,7 @@ jobs:
     - *setup_remote_docker
     - restore_cache:
         keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+        - server-cache-v1-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - run:
         name: Build the server
         working_directory: ./server
@@ -177,13 +171,10 @@ jobs:
           make ci-image
           make ci-save-image
     - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
-        paths:
-        - ./server/.stack-work
-    - save_cache:
-        key: server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+        key: server-cache-v1-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
         paths:
         - ~/.stack
+        - ./server/.stack-work
     - store_artifacts:
         path: /build/_server_output
         destination: server
