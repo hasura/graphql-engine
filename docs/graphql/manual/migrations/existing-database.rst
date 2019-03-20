@@ -76,7 +76,7 @@ Step 3: Initialize the migrations as per your current state
      docker ps
 
      # dump the public schema into public-schema.sql (repeat for other schemas)
-     docker exec <postgres-container-id> pg_dump -U postgres --schema-only --schema public > public-schema.sql
+     docker exec <postgres-container-id> pg_dump -O -x -U postgres --schema-only --schema public > public-schema.sql
 
   This command will create ``public-schema.sql`` which contains the SQL
   definitions for the public schema.
