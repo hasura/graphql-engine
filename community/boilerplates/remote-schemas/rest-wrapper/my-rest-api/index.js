@@ -16,7 +16,7 @@ app.get('/users/:userId', (req, res) => {
     if(result) {
         res.json(result);
     } else {
-        res.status(404).json({});
+        res.status(404).json("user not found");
     }
 });
 

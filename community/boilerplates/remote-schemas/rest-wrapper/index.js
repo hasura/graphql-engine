@@ -19,10 +19,12 @@ const typeDefs = gql`
   }
 `;
 
+const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
+
 const resolvers = {
     Query: {
         getUser: async (_, { id }) => {
-            return await getData('https://fast-lake-87402.herokuapp.com/users/' + id);
+            return await getData(restAPIEndpoint + '/users/' + id);
         },
 
         users: async (_, { name }) => {
@@ -30,13 +32,13 @@ const resolvers = {
             if (name) {
                 nameParams = '?name=' + name;
             }
-            return await getData('https://fast-lake-87402.herokuapp.com/users' + nameParams );
+            return await getData(restAPIEndpoint + '/users' + nameParams );
         }
     },
 
     Mutation: {
         addUser: async (_, { name, balance } ) => {
-            return await postData('https://fast-lake-87402.herokuapp.com/users', { name, balance } );
+            return await postData(restAPIEndpoint + '/users', { name, balance } );
         }
     }
 };
