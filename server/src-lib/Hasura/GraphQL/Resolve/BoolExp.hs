@@ -50,11 +50,12 @@ parseOpExps annVal = do
       "_nsimilar"     -> fmap ANSIMILAR <$> asPGColValM v
 
       -- jsonb related operators
-      "_contains"     -> fmap AContains <$> asPGColValM v
-      "_contained_in" -> fmap AContainedIn <$> asPGColValM v
-      "_has_key"      -> fmap AHasKey <$> asPGColValM v
-      "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
-      "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
+      "_contains"        -> fmap AContains <$> asPGColValM v
+      "_contained_in"    -> fmap AContainedIn <$> asPGColValM v
+      "_is_contained_by" -> fmap AContainedIn <$> asPGColValM v
+      "_has_key"         -> fmap AHasKey <$> asPGColValM v
+      "_has_keys_any"    -> fmap AHasKeysAny <$> parseMany asPGColText v
+      "_has_keys_all"    -> fmap AHasKeysAll <$> parseMany asPGColText v
 
       -- geometry type related operators
       "_st_contains"    -> fmap ASTContains <$> asPGColValM v

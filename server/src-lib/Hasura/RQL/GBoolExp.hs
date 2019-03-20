@@ -74,10 +74,13 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     "_is_null"       -> parseIsNull
 
     -- jsonb type
-    "_contains"      -> jsonbOrArrOp $ AContains <$> parseOne
-    "$contains"      -> jsonbOrArrOp $ AContains <$> parseOne
-    "_contained_in"  -> jsonbOrArrOp $ AContainedIn <$> parseOne
-    "$contained_in"  -> jsonbOrArrOp $ AContainedIn <$> parseOne
+    "_contains"        -> jsonbOrArrOp $ AContains <$> parseOne
+    "$contains"        -> jsonbOrArrOp $ AContains <$> parseOne
+    "_contained_in"    -> jsonbOrArrOp $ AContainedIn <$> parseOne
+    "$contained_in"    -> jsonbOnlyOp  $ AContainedIn <$> parseOne
+    "$is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
+    "_is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
+
     "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
     "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
 

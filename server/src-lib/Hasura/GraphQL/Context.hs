@@ -251,7 +251,7 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       ]
 
     arrOps =
-      [ "_contains", "_contained_in"]
+      [ "_contains", "_is_contained_by"]
 
     isJsonbTy = case bTy of
       Just PGJSONB -> True
