@@ -19,7 +19,8 @@ const typeDefs = gql`
   }
 `;
 
-const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
+// replace with actual REST endpoint
+const restAPIEndpoint = 'https://rest-user-api.herokuapp.com';
 
 const resolvers = {
     Query: {
