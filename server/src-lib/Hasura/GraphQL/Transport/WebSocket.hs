@@ -199,8 +199,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 
-onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
-onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
+onStart :: WSServerEnv -> WSConn -> StartMsg -> IO ()
+onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -218,7 +218,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       withComplete $ sendConnErr connErr
 
   sc <- liftIO $ IORef.readIORef gCtxMapRef
-  execPlanE <- runExceptT $ E.getExecPlan userInfo sc q
+  execPlanE <- runExceptT $ E.getExecPlan userInfo sc query
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
@@ -238,7 +238,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         V.RSubscription fld -> do
           let tx = withUserInfo userInfo $
                    R.resolveSubsFld userInfo gCtx sqlGenCtx fld
-          let lq = LQ.LiveQuery userInfo q
+          let lq = LQ.LiveQuery userInfo query
           liftIO $ STM.atomically $ STMMap.insert lq opId opMap
           liftIO $ LQ.addLiveQuery runTx lqMap lq
             tx (wsId, opId) liveQOnChange
@@ -260,14 +260,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       -- server
-      -- try to parse the (apollo protocol) websocket frame and get only the
-      -- payload
-      sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr $
-        err500 Unexpected "invalid websocket payload"
-      let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
+      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs query
+              rsi opDef
       either postExecErr sendSuccResp resp
       sendCompleted
 
@@ -277,7 +271,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     WSConnData userInfoR opMap = WS.getData wsConn
 
     logOpEv opDet =
-      logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
+      logWSEvent logger wsConn $ EOperation opId (_grOperationName query) opDet
 
     sendConnErr connErr = do
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
@@ -328,7 +322,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart serverEnv wsConn startMsg msgRaw
+      CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
@@ -431,18 +425,3 @@ createWSServerApp authMode serverEnv =
       (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
-
-
--- | TODO:
--- | The following ADT is required so that we can parse the incoming websocket
--- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `StartMsg` from Websocket.Protocol, but as
--- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
--- | get only the payload
-data WebsocketPayload
-  = WebsocketPayload
-  { _wpId      :: !Text
-  , _wpType    :: !Text
-  , _wpPayload :: !J.Value
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)

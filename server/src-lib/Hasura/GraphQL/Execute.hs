@@ -65,8 +65,7 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> BL.ByteString
-  -- ^ the raw request string
+  -> GraphQLRequest
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
@@ -79,7 +78,7 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
 
-  res  <- liftIO $ try $ Wreq.postWith options (show url) q
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
   resp <- either httpThrow return res
   return $ encJFromLBS $ resp ^. Wreq.responseBody
 

@@ -2,7 +2,6 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -26,15 +25,15 @@ runGQ
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
-  -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
+runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   execPlan <- E.getExecPlan userInfo sc req
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+      E.execRemoteGQ manager userInfo reqHdrs req rsi opDef
+
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
