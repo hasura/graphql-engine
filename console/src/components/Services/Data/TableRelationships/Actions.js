@@ -382,18 +382,21 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
 const sanitizeRelName = arg => arg.trim();
 
 const fallBackRelName = relMeta => {
+  let relName;
+
   const targetTable = sanitizeRelName(relMeta.rTable);
-  switch (relMeta.isObjRel) {
-    case true:
-      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
-      return `${inflection.singularize(targetTable)}By${objLCol}`;
-    default:
-      const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-      return `${inflection.pluralize(targetTable)}By${arrRCol}`;
+  if (relMeta.isObjRel) {
+    const objLCol = sanitizeRelName(relMeta.lcol.join('_'));
+    relName = `${inflection.singularize(targetTable)}_by_${objLCol}`;
+  } else {
+    const arrRCol = sanitizeRelName(relMeta.rcol.join('_'));
+    relName = `${inflection.pluralize(targetTable)}_by_${arrRCol}`;
   }
+
+  return inflection.camelize(relName, true);
 };
 
-const formRelName = (relMeta, existingRelationships) => {
+const formRelName = (relMeta, existingFields) => {
   try {
     let finalRelName;
     const targetTable = sanitizeRelName(relMeta.rTable);
@@ -403,28 +406,35 @@ const formRelName = (relMeta, existingRelationships) => {
       finalRelName = inflection.pluralize(targetTable);
     }
 
-    /* Check if it is existing, fallback to old way of generating */
-    if (existingRelationships && finalRelName in existingRelationships) {
-      finalRelName = inflection.camelize(fallBackRelName(relMeta), true);
+    /* Check if it is existing, fallback to guaranteed unique name */
+    if (existingFields && finalRelName in existingFields) {
+      finalRelName = fallBackRelName(relMeta);
     }
+
     return finalRelName;
   } catch (e) {
     return '';
   }
 };
 
-const getExistingRelMap = relationships => {
-  const relMap = {};
-  relationships.forEach(tr => {
-    relMap[tr.rel_name] = true;
+const getExistingFieldsMap = tableSchema => {
+  const fieldMap = {};
+
+  tableSchema.relationships.forEach(tr => {
+    fieldMap[tr.rel_name] = true;
   });
-  return relMap;
+
+  tableSchema.columns.forEach(tc => {
+    fieldMap[tc.column_name] = true;
+  });
+
+  return fieldMap;
 };
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
   const tableRelMapping = allSchemas.map(table => ({
     table_name: table.table_name,
-    existingRelationships: getExistingRelMap(table.relationships),
+    existingFields: getExistingFieldsMap(table),
     relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
   }));
 
@@ -437,10 +447,10 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
       table.relations.objectRel.forEach(indivObjectRel => {
         const suggestedRelName = formRelName(
           indivObjectRel,
-          table.existingRelationships
+          table.existingFields
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
-        table.existingRelationships[suggestedRelName] = true;
+        table.existingFields[suggestedRelName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivObjectRel.tableName,
           suggestedRelName,
@@ -465,10 +475,10 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
       table.relations.arrayRel.forEach(indivArrayRel => {
         const suggestedRelName = formRelName(
           indivArrayRel,
-          table.existingRelationships
+          table.existingFields
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
-        table.existingRelationships[suggestedRelName] = true;
+        table.existingFields[suggestedRelName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivArrayRel.tableName,
           suggestedRelName,
@@ -573,5 +583,5 @@ export {
   formRelName,
   getAllUnTrackedRelations,
   saveRenameRelationship,
-  getExistingRelMap,
+  getExistingFieldsMap,
 };

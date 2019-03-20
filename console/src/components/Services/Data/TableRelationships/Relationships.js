@@ -10,7 +10,7 @@ import {
   resetRelationshipForm,
   relManualAddClicked,
   formRelName,
-  getExistingRelMap,
+  getExistingFieldsMap,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
@@ -53,12 +53,14 @@ const addRelationshipCellView = (
   selectedRelationshipName,
   tableStyles,
   relMetaData,
-  existingRels
+  tableSchema
 ) => {
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
-    dispatch(relNameChanged(formRelName(rel, getExistingRelMap(existingRels))));
+    dispatch(
+      relNameChanged(formRelName(rel, getExistingFieldsMap(tableSchema)))
+    );
   };
 
   const onRelationshipNameChanged = e => {
@@ -148,9 +150,8 @@ const AddRelationship = ({
   dispatch,
   tableStyles,
 }) => {
-  const cTable = allSchemas.filter(t => t.table_name === tableName);
-  const existingRels = (cTable.length > 0 && cTable[0].relationships) || {};
-  // eslint-disable-line no-unused-vars
+  const cTable = allSchemas.find(t => t.table_name === tableName);
+
   const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
     allSchemas
@@ -218,8 +219,10 @@ const AddRelationship = ({
   const relName = cachedRelationshipData.name
     ? cachedRelationshipData.name
     : '';
+
   const column1 = [];
   const column2 = [];
+
   suggestedRelationshipsData.objectRel.map((rel, i) => {
     column1.push(
       rel.isObjRel ? (
@@ -230,13 +233,14 @@ const AddRelationship = ({
           relName,
           tableStyles,
           ['object', i],
-          existingRels
+          cTable
         )
       ) : (
         <td />
       )
     );
   });
+
   suggestedRelationshipsData.arrayRel.map((rel, i) => {
     column2.push(
       rel.isObjRel ? (
@@ -249,13 +253,15 @@ const AddRelationship = ({
           relName,
           tableStyles,
           ['array', i],
-          existingRels
+          cTable
         )
       )
     );
   });
+
   const length =
     column1.length > column2.length ? column1.length : column2.length;
+
   const combinedRels = [];
   for (let i = 0; i < length; i++) {
     const objRel = column1[i] ? column1[i] : <td />;
@@ -265,6 +271,7 @@ const AddRelationship = ({
       arrRel,
     });
   }
+
   return (
     <div>
       <div>
@@ -409,7 +416,7 @@ class Relationships extends Component {
             </thead>
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
-                (rel, i) => {
+                rel => {
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
                       dispatch={dispatch}
