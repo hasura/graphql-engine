@@ -1,21 +1,20 @@
 module Hasura.RQL.DML.Returning where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
-import qualified Data.Vector             as V
 import qualified Database.PG.Query       as Q
 
 data MutFld
   = MCount
   | MExp !T.Text
   | MRet ![(FieldName, AnnFld)]
-  | MQuery !(Q.TxE QErr RespBody)
+  | MQuery !(Q.TxE QErr EncJSON)
 
 instance Show MutFld where
   show MCount     = "count"
@@ -70,13 +69,6 @@ mkDefaultMutFlds = \case
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
-
-encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
-encodeJSONVector builder xs
-  | V.null xs = BB.char7 '[' <> BB.char7 ']'
-  | otherwise = BB.char7 '[' <> builder (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 ']') (V.unsafeTail xs)
-    where go v b  = BB.char7 ',' <> builder v <> b
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

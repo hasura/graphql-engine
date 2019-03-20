@@ -40,8 +40,10 @@ See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full
 
 .. note::
 
-  If a table is not in the ``public`` Postgres schema, the insert mutation field will be of the format
-  ``insert_<schema_name>_<table_name>``.
+  - If a table is not in the ``public`` Postgres schema, the insert mutation field will be of the format
+    ``insert_<schema_name>_<table_name>``.
+  - To fetch nested objects using relationships in the mutation response, the table needs to have either a primary
+    key or a unique constraint with not null columns.
 
 Insert a single object
 ----------------------
@@ -247,6 +249,10 @@ Insert an object and get a nested object in response
       }
     }
 
+.. note::
+  
+  For this to work, the parent table (*in this case,* ``article``) needs to have either a primary key or a
+  unique constraint.
 
 Insert an object and its nested object in the same mutation
 -----------------------------------------------------------
@@ -301,6 +307,11 @@ in the response
         }
       }
     }
+
+.. note::
+  
+  For this to work, the parent table (*in this case,* ``article``) needs to have either a primary key or a
+  unique constraint.
 
 Insert an object with a JSONB column
 ------------------------------------

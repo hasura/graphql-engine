@@ -4,27 +4,22 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , OperationName(..)
   , VariableValues
   , encodeGQErr
-  , encodeJSONObject
   , encodeGQResp
-  , mkJSONObj
   , GQResp(..)
   , isExecError
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.Types
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Builder       as BB
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Vector                   as V
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Hasura.RQL.Types
 
 newtype GraphQLQuery
   = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
@@ -67,9 +62,9 @@ encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 data GQResp
-  = GQSuccess BL.ByteString
-  | GQPreExecError [J.Value]
-  | GQExecError [J.Value]
+  = GQSuccess !BL.ByteString
+  | GQPreExecError ![J.Value]
+  | GQExecError ![J.Value]
   deriving (Show, Eq)
 
 isExecError :: GQResp -> Bool
@@ -77,24 +72,9 @@ isExecError = \case
   GQExecError _ -> True
   _             -> False
 
-encodeJSONObject :: V.Vector (Text, BL.ByteString) -> BB.Builder
-encodeJSONObject xs
-  | V.null xs = BB.char7 '{' <> BB.char7 '}'
-  | otherwise = BB.char7 '{' <> builder' (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 '}') (V.unsafeTail xs)
-  where
-    go v b  = BB.char7 ',' <> builder' v <> b
-    -- builds "key":value from (key,value)
-    builder' (t, v) =
-      BB.char7 '"' <> TE.encodeUtf8Builder t <> BB.string7 "\":"
-      <> BB.lazyByteString v
-
-encodeGQResp :: GQResp -> BL.ByteString
+encodeGQResp :: GQResp -> EncJSON
 encodeGQResp gqResp =
-  mkJSONObj $ case gqResp of
-    GQSuccess r      -> [("data", r)]
-    GQPreExecError e -> [("errors", J.encode e)]
-    GQExecError e    -> [("data", "null"), ("errors", J.encode e)]
-
-mkJSONObj :: [(Text, BL.ByteString)] -> BL.ByteString
-mkJSONObj = BB.toLazyByteString . encodeJSONObject . V.fromList
+  encJFromAssocList $ case gqResp of
+    GQSuccess r      -> [("data", encJFromLBS r)]
+    GQPreExecError e -> [("errors", encJFromJValue e)]
+    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]

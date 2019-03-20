@@ -20,7 +20,7 @@ module Hasura.RQL.Types.Error
          -- Aeson helpers
        , runAesonParser
        , decodeValue
-       , decodeFromBS
+       , decodeEncJSON
 
          -- Modify error messages
        , modifyErr
@@ -39,13 +39,13 @@ module Hasura.RQL.Types.Error
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query    as Q
+import qualified Database.PG.Query   as Q
+import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Text.Show            (Show (..))
+import           Text.Show           (Show (..))
 
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text            as T
-import qualified Network.HTTP.Types   as N
+import qualified Data.Text           as T
+import qualified Network.HTTP.Types  as N
 
 data Code
   = PermissionDenied
@@ -303,5 +303,6 @@ runAesonParser p =
 decodeValue :: (FromJSON a, QErrM m) => Value -> m a
 decodeValue = liftIResult . ifromJSON
 
-decodeFromBS :: (FromJSON a, QErrM m) => BL.ByteString -> m a
-decodeFromBS = either (throw500 . T.pack) decodeValue . eitherDecode
+decodeEncJSON :: (FromJSON a, QErrM m) => EncJSON -> m a
+decodeEncJSON =
+  either (throw500 . T.pack) decodeValue . eitherDecode . encJToLBS

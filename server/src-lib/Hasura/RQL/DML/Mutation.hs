@@ -6,21 +6,21 @@ module Hasura.RQL.DML.Mutation
   )
 where
 
-import qualified Data.Sequence                          as DS
+import qualified Data.Sequence            as DS
 
-import           Hasura.GraphQL.Transport.HTTP.Protocol (mkJSONObj)
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances                   ()
+import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Data.HashMap.Strict                    as Map
-import qualified Database.PG.Query                      as Q
-import qualified Hasura.SQL.DML                         as S
+import qualified Data.HashMap.Strict      as Map
+import qualified Database.PG.Query        as Q
+import qualified Hasura.SQL.DML           as S
 
 data Mutation
   = Mutation
@@ -31,18 +31,18 @@ data Mutation
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
-runMutation :: Mutation -> Q.TxE QErr RespBody
+runMutation :: Mutation -> Q.TxE QErr EncJSON
 runMutation mut =
   bool (mutateAndReturn qSingleObj mut) (mutateAndSel qSingleObj mut) $
     hasNestedFld $ _mFields mut
   where
     qSingleObj = QuerySingleObj False
 
-mutateAndReturn :: QuerySingleObj -> Mutation -> Q.TxE QErr RespBody
+mutateAndReturn :: QuerySingleObj -> Mutation -> Q.TxE QErr EncJSON
 mutateAndReturn qSingleObj (Mutation qt cte mutFlds _ strfyNum) =
   execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
 
-mutateAndSel :: QuerySingleObj -> Mutation -> Q.TxE QErr RespBody
+mutateAndSel :: QuerySingleObj -> Mutation -> Q.TxE QErr EncJSON
 mutateAndSel qSingleObj (Mutation qt q mutFlds mUniqCols strfyNum) = do
   uniqCols <- onNothing mUniqCols $
               throw500 "uniqCols not found in mutateAndSel"
@@ -81,7 +81,7 @@ mutateAndFetchCols
   -> Q.TxE QErr MutateResp
 mutateAndFetchCols qt cols cte strfyNum = do
   res <- execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
-  decodeFromBS res
+  decodeEncJSON res
   where
     qSingleObj = QuerySingleObj False
     mutFlds = [ ("affected_rows", MCount)
@@ -96,20 +96,20 @@ execCTEAndBuildMutResp
   -> MutFlds
   -> QuerySingleObj
   -> Bool
-  -> Q.TxE QErr RespBody
+  -> Q.TxE QErr EncJSON
 execCTEAndBuildMutResp qt (cte, p) mutFlds singleObj strfyNum = do
   mutResults <-
     Q.listQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
   queryResults <- forM qFlds $ \(t, qTx) -> do
     r <- qTx
-    return (t, r)
+    return (t, encJToLBS r)
   let resMap = Map.fromList mutResults
                `Map.union` Map.fromList queryResults
   mutResp <- forM mutFlds $ \(t, _) -> do
     r <- onNothing (Map.lookup t resMap) $
       throw500 $ "alias " <> t <> " not found in results"
-    return (t, r)
-  return $ mkJSONObj mutResp
+    return (t, encJFromLBS r)
+  return $ encJFromAssocList mutResp
   where
     sql = toSQL selWith
     alias = Iden $ snakeCaseTable qt <> "__mutation_result_alias"

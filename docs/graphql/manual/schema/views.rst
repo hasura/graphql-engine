@@ -27,7 +27,7 @@ Creating views
 Views can be created using SQL which can be run in the Hasura console:
 
 - Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create view SQL statement <https://www.postgresql.org/docs/9.6/static/sql-createview.html>`__
+- Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
 - Select the ``Track this`` checkbox to expose the new view over the GraphQL API
 - Hit the ``Run`` button
 

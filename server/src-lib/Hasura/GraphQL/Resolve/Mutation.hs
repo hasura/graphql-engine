@@ -5,26 +5,26 @@ module Hasura.GraphQL.Resolve.Mutation
   , buildEmptyMutResp
   ) where
 
-import           Data.Has                               (getter)
+import           Data.Has                          (getter)
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                        as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Hasura.RQL.DML.Delete                  as RD
-import qualified Hasura.RQL.DML.Returning               as RR
-import qualified Hasura.RQL.DML.Update                  as RU
+import qualified Hasura.RQL.DML.Delete             as RD
+import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Hasura.RQL.DML.Update             as RU
 
-import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select          (fromSelSet, withSelSet)
-import           Hasura.GraphQL.Transport.HTTP.Protocol (mkJSONObj)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -46,7 +46,7 @@ convertMutResp ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => AnnInpVal
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj ->
@@ -71,10 +71,10 @@ lhsExpOp op annTy (col, e) =
 
 convObjWithOp
   :: (MonadError QErr m)
-  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+  => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  (_, colVal) <- asPGColVal v
+  colVal <- _apvValue <$> asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
@@ -82,11 +82,11 @@ convObjWithOp opFn val =
 
 convDeleteAtPathObj
   :: (MonadError QErr m)
-  => AnnGValue -> m [(PGCol, S.SQLExp)]
+  => AnnInpVal -> m [(PGCol, S.SQLExp)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . snd) vals
+    let valExps = map (txtEncoder . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
@@ -162,12 +162,12 @@ buildEmptyMutResp :: Monad m => RR.MutFlds -> m RespTx
 buildEmptyMutResp mutFlds =
   return $ do
     mutResults <- mkMutResults
-    return $ mkJSONObj mutResults
+    return $ encJFromAssocList mutResults
   where
     -- generate empty mutation response
     mkMutResults = forM mutFlds $ \(t, fld) -> (t,) <$>
       case fld of
-        RR.MCount     -> return $ J.encode (0 :: Int)
-        RR.MExp e     -> return $ J.encode e
-        RR.MRet _     -> return $ J.encode ([] :: [J.Value])
+        RR.MCount     -> return $ encJFromJValue (0 :: Int)
+        RR.MExp e     -> return $ encJFromJValue e
+        RR.MRet _     -> return $ encJFromJValue ([] :: [J.Value])
         RR.MQuery qTx -> qTx

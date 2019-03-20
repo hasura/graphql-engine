@@ -138,7 +138,11 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
-  exposed-modules:     Hasura.Server.App
+  exposed-modules:     Hasura.Prelude
+                     , Hasura.Logging
+                     , Hasura.EncJSON
+
+                     , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
@@ -234,8 +238,6 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Rewrite
-                     , Hasura.Prelude
-                     , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
                      , Migrate

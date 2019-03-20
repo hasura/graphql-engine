@@ -12,6 +12,7 @@ module Hasura.GraphQL.Resolve.Context
   , InsCtxMap
   , RespTx
   , LazyRespTx
+  , AnnPGVal(..)
   , PrepFn
   , InsertTxConflictCtx(..)
   , getFldInfo
@@ -25,6 +26,7 @@ module Hasura.GraphQL.Resolve.Context
   , Convert
   , runConvert
   , prepare
+  , prepareColVal
   , txtConverter
   , module Hasura.GraphQL.Utils
   ) where
@@ -35,7 +37,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                          as J
 import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
-import qualified Data.ByteString.Lazy                as BL
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.Sequence                       as Seq
 import qualified Database.PG.Query                   as Q
@@ -43,6 +44,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -59,10 +61,19 @@ data InsResp
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
-type RespTx = Q.TxE QErr BL.ByteString
+type RespTx = Q.TxE QErr EncJSON
 
-type LazyRespTx = LazyTx QErr BL.ByteString
-type PrepFn m = (PGColType, PGColValue) -> m S.SQLExp
+type LazyRespTx = LazyTx QErr EncJSON
+
+type PrepFn m = AnnPGVal -> m S.SQLExp
+
+data AnnPGVal
+  = AnnPGVal
+  { _apvVariable   :: !(Maybe G.Variable)
+  , _apvIsNullable :: !Bool
+  , _apvType       :: !PGColType
+  , _apvValue      :: !PGColValue
+  } deriving (Show, Eq)
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -89,7 +100,7 @@ getArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> m AnnGValue
+  -> m AnnInpVal
 getArg args arg =
   onNothing (Map.lookup arg args) $
   throw500 $ "missing argument: " <> showName arg
@@ -108,7 +119,7 @@ withArg
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m a
 withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
@@ -117,12 +128,13 @@ withArgM
   :: (MonadError QErr m)
   => ArgsMap
   -> G.Name
-  -> (AnnGValue -> m a)
+  -> (AnnInpVal -> m a)
   -> m (Maybe a)
 withArgM args arg f = prependArgsInPath $ nameAsPath arg $
   mapM f $ handleNull =<< Map.lookup arg args
   where
-    handleNull v = bool (Just v) Nothing $ hasNullVal v
+    handleNull v = bool (Just v) Nothing $
+                   hasNullVal $ _aivValue v
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
@@ -140,13 +152,21 @@ type Convert =
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
-prepare (colTy, colVal) = do
+prepare (AnnPGVal _ _ colTy colVal) =
+  prepareColVal colTy colVal
+
+prepareColVal
+  :: (MonadState PrepArgs m)
+  => PGColType -> PGColValue -> m S.SQLExp
+prepareColVal colTy colVal = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
 
+
 txtConverter :: Monad m => PrepFn m
-txtConverter = return . uncurry toTxtValue
+txtConverter (AnnPGVal _ _ a b) =
+  return $ toTxtValue a b
 
 runConvert
   :: (MonadError QErr m)
