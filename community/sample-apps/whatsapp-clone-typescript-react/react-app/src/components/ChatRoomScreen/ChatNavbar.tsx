@@ -15,7 +15,7 @@ import styled from 'styled-components'
 import * as fragments from '../../graphql/fragments'
 import * as queries from '../../graphql/queries'
 import { useMe } from '../../services/auth.service';
-import { ChatList, DeleteChat, ChatsListQueryCache } from '../../graphql/types'
+import { ChatList, DeleteChat, ChatsListCacheQuery } from '../../graphql/types'
 
 const Style = styled.div`
   padding: 0;
@@ -76,7 +76,7 @@ const query = gql`
 `
 
 const queryCache = gql`
-  query ChatsListQueryCache($userId: Int!) {
+  query ChatsListCacheQuery($userId: Int!) {
     chat(order_by:[{messages_aggregate:{max:{created_at:desc}}}]) {
       ...chat
       users(where:{user_id:{_neq:$userId}}) {
@@ -125,7 +125,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
       update: (client, { data: { delete_chat } }) => {
         let chats
         try {
-          chats = client.readQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+          chats = client.readQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
             query: queryCache,
             variables: {userId: me.id}
           }).chat
@@ -136,7 +136,7 @@ export default ({ chatId, history }: ChatNavbarProps) => {
           // filter current parsedChatId
           chats = chats.filter((chat) => chat.id !== parsedChatId);
           try {
-            client.writeQuery<ChatsListQueryCache.Query, ChatsListQueryCache.Variables>({
+            client.writeQuery<ChatsListCacheQuery.Query, ChatsListCacheQuery.Variables>({
               query: queryCache,
               variables: {userId: me.id},
               data: { chat: chats },

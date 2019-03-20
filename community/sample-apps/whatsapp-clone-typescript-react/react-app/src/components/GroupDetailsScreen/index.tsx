@@ -199,9 +199,9 @@ export default ({ location, match, history }: RouteComponentProps) => {
 
     if (!file) return
 
-    const { url } = await uploadProfilePicture(file)
+    const { secure_url } = await uploadProfilePicture(file)
 
-    setChatPicture(url)
+    setChatPicture(secure_url)
   }
 
   return (
