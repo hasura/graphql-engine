@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError
+from context import HGECtx, HGECtxError, HGECtxServices
 
 
 def pytest_addoption(parser):
@@ -57,12 +57,20 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
-
 @pytest.fixture(scope='session')
-def hge_ctx(request):
+def hge_ctx_svcs():
+    hge_ctx_svcs = HGECtxServices()
+    yield hge_ctx_svcs
+    print("teardown hge_services")
+    hge_ctx_svcs.teardown()
+    time.sleep(1)
+    
+
+@pytest.fixture(scope='module')
+def hge_ctx(request, hge_ctx_svcs):
     print("create hge_ctx")
-    hge_url = request.config.getoption('--hge-url')
-    pg_url = request.config.getoption('--pg-url')
+    hge_urls = request.config.getoption('--hge-url')
+    pg_urls = request.config.getoption('--pg-url')
     hge_key = request.config.getoption('--hge-key')
     hge_webhook = request.config.getoption('--hge-webhook')
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
@@ -73,8 +81,9 @@ def hge_ctx(request):
     hge_scale_url = request.config.getoption('--test-hge-scale-url')
     try:
         hge_ctx = HGECtx(
-            hge_url=hge_url,
-            pg_url=pg_url,
+            hge_ctx_svcs=hge_ctx_svcs,
+            hge_urls=hge_urls,
+            pg_urls=pg_urls,
             hge_key=hge_key,
             hge_webhook=hge_webhook,
             webhook_insecure=webhook_insecure,
@@ -90,7 +99,13 @@ def hge_ctx(request):
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
-    time.sleep(2)
+    time.sleep(1)
+
+@pytest.fixture(scope='class', autouse=True)
+def ws_client(self, request, hge_ctx):
+    client = WSClient(hge_ctx)
+    yield client
+    client.teardown()
 
 @pytest.fixture(scope='class')
 def setup_ctrl(request, hge_ctx):

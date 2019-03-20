@@ -11,7 +11,8 @@ args:
 - type: run_sql
   args:
     sql: |
-      DROP TABLE article;
-      DROP TABLE author;
-      DROP TABLE person;
-      DROP TABLE resident;
+      DROP table article;
+      DROP table author;
+      DROP table person;
+      DROP table resident;
+    cascade: true

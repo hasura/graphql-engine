@@ -244,7 +244,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx):
+    def transact(self, hge_ctx, ws_client):
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_setup.yaml')
         assert st_code == 200, resp
         yield
@@ -254,39 +254,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         st_code, resp = hge_ctx.v1q(self.teardown)
         assert st_code == 200, resp
 
-    def _init(self, hge_ctx):
-        payload = {'type': 'connection_init', 'payload': {}}
-        if hge_ctx.hge_key:
-            payload['payload']['headers'] = {
-                'x-hasura-admin-secret': hge_ctx.hge_key
-            }
-        hge_ctx.ws.send(json.dumps(payload))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
-
-    def _stop(self, hge_ctx, _id):
-        data = {'id': _id, 'type': 'stop'}
-        hge_ctx.ws.send(json.dumps(data))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'complete', ev
-
-    def _send_query(self, hge_ctx, query):
-        self._init(hge_ctx)
-        _id = gen_id()
-        frame = {
-            'id': _id,
-            'type': 'start',
-            'payload': {'query': query},
-        }
-        if hge_ctx.hge_key:
-            frame['payload']['headers'] = {
-                'x-hasura-admin-secret': hge_ctx.hge_key
-            }
-        hge_ctx.ws.send(json.dumps(frame))
-        return _id
-
-    def test_remote_query(self, hge_ctx):
-        self._init(hge_ctx)
+    def test_remote_query(self, ws_client):
         query = """
         query {
           user(id: 2) {
@@ -295,14 +263,13 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = self._send_query(hge_ctx, query)
-        ev = hge_ctx.get_ws_event(3)
+        _id = ws_client.send_query(hge_ctx, query)
+        ev = ws_client.get_ws_event(3)
         assert ev['type'] == 'data' and ev['id'] == _id, ev
         assert ev['payload']['data']['data']['user']['username'] == 'john'
-        self._stop(hge_ctx, _id)
+        ws_client.stop(hge_ctx, _id)
 
-    def test_remote_mutation(self, hge_ctx):
-        self._init(hge_ctx)
+    def test_remote_mutation(self, ws_client):
         query = """
         mutation {
           createUser(id: 42, username: "foobar") {
@@ -313,12 +280,12 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = self._send_query(hge_ctx, query)
-        ev = hge_ctx.get_ws_event(3)
+        _id = ws_client.send_query(query)
+        ev = ws_client.get_ws_event(3)
         assert ev['type'] == 'data' and ev['id'] == _id, ev
         assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
         assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
-        self._stop(hge_ctx, _id)
+        ws_client.stop(hge_ctx, _id)
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:
@@ -418,5 +385,3 @@ def check_introspection_result(res, types, node_names):
 
     return satisfy_node and satisfy_ty
 
-def gen_id(size=6, chars=string.ascii_letters + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))

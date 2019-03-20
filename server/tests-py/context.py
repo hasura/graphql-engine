@@ -10,6 +10,7 @@ import queue
 import socket
 import subprocess
 import time
+import uuid
 
 import yaml
 import requests
@@ -22,6 +23,80 @@ import graphql_server
 class HGECtxError(Exception):
     pass
 
+class GQLWsClient:
+
+    def __init__(self, hge_ctx):
+        self.hge_ctx = hge_ctx
+        self.ws_queue = queue.Queue(maxsize=-1)
+        self.ws_url = urlparse(hge_ctx.hge_url)
+        self.ws_url = self.ws_url._replace(scheme='ws')
+        self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
+        self.ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message, on_close=self._on_close)
+        self.wst = threading.Thread(target=self.ws.run_forever)
+        self.wst.daemon = True
+        self.wst.start()
+        self.remote_closed = False
+        self.init_done = False
+        self.op_ids= Set()
+
+    def get_ws_event(self, timeout):
+        return json.loads(self.ws_queue.get(timeout=timeout))
+
+    def init(self):
+        payload = {'type': 'connection_init', 'payload': {}}
+        if self.hge_ctx.hge_key:
+            payload['payload']['headers'] = {
+                'x-hasura-admin-secret': self.hge_ctx.hge_key
+            }
+        self.ws.send(json.dumps(payload))
+        ev = self.get_ws_event(3)
+        assert ev['type'] == 'connection_ack', ev
+        self.init_done = True
+
+    def stop(self, _id):
+        data = {'id': _id, 'type': 'stop'}
+        self.ws.send(json.dumps(data))
+        ev = self.get_ws_event(3)
+        assert ev['type'] == 'complete', ev
+        self.op_ids.remove(_id)
+
+    def gen_id(self, size=6, chars=string.asciiletters + string.digits):
+        newId = ''.join(random.choice(chars) for _ in range(size))
+        if newId in self.opIds:
+            return gen_id(self,size,chars)
+        else:
+            return newId
+
+    def send_query(self, query, _id=None):
+        if not self.init_done:
+            self.init()
+        if _id == None:
+            _id = self.gen_id()
+        frame = {
+            'id': _id,
+            'type': 'start',
+            'payload': {'query': query},
+        }
+        self.opIds.add(_id)
+        if hge_ctx.hge_key:
+            frame['payload']['headers'] = {
+                'x-hasura-admin-secret': hge_ctx.hge_key
+            }
+        self.ws.send(json.dumps(frame))
+        return _id
+
+    def _on_message(self, message):
+        my_json = json.loads(message)
+        if my_json['type'] != 'ka':
+            self.ws_queue.put(message)
+
+    def _on_close(self)
+        self.remote_closed = True
+
+    def teardown(self):
+        if not self.remote_closed:
+            self.ws.close()
+        self.wst.join()
 
 class WebhookHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -73,24 +148,61 @@ class WebhookServer(http.server.HTTPServer):
         self.socket.bind(self.server_address)
 
 
+class HGECtxServices:
+
+    def __init__(self):
+        # Webhook server for event triggers
+        evt_trggr_server_address = ('127.0.0.1', 5592)
+        self.evt_trggr_resp_queue = queue.Queue(maxsize=1)
+        self.evt_trggr_error_queue = queue.Queue()
+        self.evt_trggr_httpd = WebhookServer(self.evt_trggr_resp_queue, self.evt_trggr_error_queue, evt_trggr_server_address)
+        self.evt_trggr_web_server = threading.Thread(target=self.evt_trggr_httpd.serve_forever)
+        self.evt_trggr_web_server.start()
+
+        # start the graphql server
+        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+        self.gql_srvr_thread.start()
+
+    def get_event(self, timeout):
+        return self.evt_trggr_resp_queue.get(timeout=timeout)
+
+    def get_error_queue_size(self):
+        sz = 0
+        while not self.evt_trggr_error_queue.empty():
+            self.self.evt_trggr_error_queue.get()
+            sz = sz + 1
+        return sz
+
+    def teardown(self):
+        self.evt_trggr_httpd.shutdown()
+        self.evt_trggr_httpd.server_close()
+        graphql_server.stop_server(self.graphql_server)
+        self.gql_srvr_thread.join()
+        self.evt_trggr_web_server.join()
+
+
 class HGECtx:
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
+
+    def choose_urls(self, hge_url_list, pg_url_list):
+        self.hge_url = None
+        self.pge_url = None
+        for i, hge_url in enumerate(hge_url_list):
+            self.hge_url = hge_url_list[i]
+            self.pg_url  = pg_url_list[i]
+            st_code, resp = self.v1q_f('queries/create_type.yaml')
+            if st_code == 200:
+                return True
+        return False
+        
+  
+    def __init__(self, hge_ctx_svcs, hge_urls, pg_urls, hge_key, hge_webhook, webhook_insecure,
                  hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
-        server_address = ('0.0.0.0', 5592)
-
-        self.resp_queue = queue.Queue(maxsize=1)
-        self.error_queue = queue.Queue()
-        self.ws_queue = queue.Queue(maxsize=-1)
-        self.httpd = WebhookServer(self.resp_queue, self.error_queue, server_address)
-        self.web_server = threading.Thread(target=self.httpd.serve_forever)
-        self.web_server.start()
-
-        self.pg_url = pg_url
-        self.engine = create_engine(self.pg_url)
-        self.meta = MetaData()
+        self.hge_ctx_svcs = hge_ctx_svcs
+        hge_url_list = [x.strip() for x in hge_urls.split(',')]
+        pg_url_list  = [x.strip() for x in pg_urls.split(',')]
 
         self.http = requests.Session()
-        self.hge_url = hge_url
         self.hge_key = hge_key
         self.hge_webhook = hge_webhook
         if hge_jwt_key_file is None:
@@ -103,18 +215,12 @@ class HGECtx:
         self.metadata_disabled = metadata_disabled
         self.may_skip_test_teardown = False
 
-        self.ws_url = urlparse(hge_url)
-        self.ws_url = self.ws_url._replace(scheme='ws')
-        self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
-        self.ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message)
-        self.wst = threading.Thread(target=self.ws.run_forever)
-        self.wst.daemon = True
-        self.wst.start()
+        if not self.choose_urls(hge_url_list, pg_url_list):
+            self.http.close()
+            raise HGECtxError("Could not choose a url")
 
-        # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
-        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
-        self.gql_srvr_thread.start()
+        self.engine = create_engine(self.pg_url)
+        self.meta = MetaData()
 
         self.ws_read_cookie = ws_read_cookie
 
@@ -130,23 +236,11 @@ class HGECtx:
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
 
-    def _on_message(self, message):
-        my_json = json.loads(message)
-        if my_json['type'] != 'ka':
-            self.ws_queue.put(message)
-
     def get_event(self, timeout):
-        return self.resp_queue.get(timeout=timeout)
+        return self.hge_ctx_svcs.get_event(timeout)
 
     def get_error_queue_size(self):
-        sz = 0
-        while not self.error_queue.empty():
-            self.error_queue.get()
-            sz = sz + 1
-        return sz
-
-    def get_ws_event(self, timeout):
-        return json.loads(self.ws_queue.get(timeout=timeout))
+        return self.hge_ctx_svcs.get_error_queue_size()
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
@@ -181,12 +275,6 @@ class HGECtx:
             return self.v1q(yaml.load(f))
 
     def teardown(self):
+        self.v1q_f('queries/drop_type.yaml')
         self.http.close()
         self.engine.dispose()
-        self.httpd.shutdown()
-        self.httpd.server_close()
-        self.ws.close()
-        self.web_server.join()
-        self.wst.join()
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()

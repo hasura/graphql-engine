@@ -173,29 +173,6 @@ args:
         bio:
           _is_null: false
 
-#Insert Author table data
-- type: insert
-  args:
-    table: author
-    objects:
-      - name: Author 1
-      - name: Author 2
-
-#Insert aticle table data
-- type: insert
-  args:
-    table: article
-    objects:
-    - content: Sample article content
-      title: Article 1
-      author_id: 1
-    - content: Sample article content
-      title: Article 2
-      author_id: 1
-    - content: Sample article content
-      title: Article 3
-      author_id: 2
-    
 #Company insert permission for user
 - type: create_insert_permission
   args:
@@ -307,17 +284,6 @@ args:
       filter:
         id: X-Hasura-Resident-Id
 
-#Insert residents
-- type: insert
-  args:
-    table: resident
-    objects:
-    - id: 5
-      name: Resident 5
-      age: 21
-    - id: 6
-      name: Resident 6
-      age: 22
 
 #Create blog table
 - type: run_sql
@@ -331,8 +297,6 @@ args:
         last_updated timestamptz,
         updated_by INTEGER REFERENCES author(id)
       );
-      INSERT INTO blog (id, title, author_id) VALUES
-        (1, 'first blog', 1), (2, 'second blog', 2);
 
 - type: track_table
   args:

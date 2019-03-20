@@ -1,0 +1,4 @@
+type: run_sql
+args:
+  sql: |
+    drop type if exists hge_test_check;

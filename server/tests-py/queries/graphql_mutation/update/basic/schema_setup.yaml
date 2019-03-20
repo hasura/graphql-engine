@@ -7,8 +7,7 @@ args:
     sql: |
       create table author(
           id serial primary key, 
-          name text unique, 
-          is_registered boolean not null default false
+          name text unique
       );
 - type: track_table
   args:
@@ -32,7 +31,8 @@ args:
     schema: public
     name: article
 
-#Create relationships
+
+#Object relationship
 - type: create_object_relationship
   args:
     table: article
@@ -40,6 +40,7 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
+#Array relationship
 - type: create_array_relationship
   args:
     table: author
@@ -49,22 +50,16 @@ args:
         table: article
         column: author_id
 
-#Insert Author table data
-- type: insert
-  args:
-    table: author
-    objects:
-      - name: Author 1
-      - name: Author 2
+#Person table
 
-#Insert aticle table data
-- type: insert
+- type: run_sql
   args:
-    table: article
-    objects:
-    - content: Sample article content
-      title: Article 1
-    - content: Sample article content
-      title: Article 2
-    - content: Sample article content
-      title: Article 3
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        details JSONB NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: person

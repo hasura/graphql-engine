@@ -1,61 +1,51 @@
 import pytest
 import yaml
 from validate import check_query_f
-from super_classes import DefaultTestQueries
+from super_classes import DefaultTestQueries, DefaultTestMutations
 
 
-class TestGraphQLInsert(DefaultTestQueries):
+class TestGraphQLInsert(DefaultTestMutations):
 
     def test_inserts_author_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_article.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_inserts_various_postgres_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_various_postgres_types.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/348")
     def test_insert_into_array_col_with_array_input(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_into_array_col_with_array_input.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_using_variable(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb_variable.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_using_array_variable(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb_variable_array.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_person(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_person_array(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_jsonb_array.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/basic"
 
 
-class TestGraphqlInsertOnConflict(DefaultTestQueries):
+class TestGraphqlInsertOnConflict(DefaultTestMutations):
 
     def test_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
 
     def test_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_ignore_constraint.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_on_conflict_update_empty_cols(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_empty_update_columns.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_err_missing_article_constraint(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_error_missing_article_constraint.yaml")
@@ -71,7 +61,7 @@ class TestGraphqlInsertOnConflict(DefaultTestQueries):
         return "queries/graphql_mutation/insert/onconflict"
 
 
-class TestGraphqlInsertPermission(DefaultTestQueries):
+class TestGraphqlInsertPermission(DefaultTestMutations):
 
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
@@ -81,7 +71,6 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
 
     def test_user_role_on_conflict_ignore(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_on_conflict_ignore_user_role.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_user_err_missing_article_constraint(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_article_on_conflict_error_missing_article_constraint.yaml")
@@ -149,37 +138,30 @@ class TestGraphqlInsertConstraints(DefaultTestQueries):
         return "queries/graphql_mutation/insert/constraints"
 
 
-class TestGraphqlInsertGeoJson(DefaultTestQueries):
+class TestGraphqlInsertGeoJson(DefaultTestMutations):
 
     def test_insert_point_landmark(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_landmark.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_3d_point_drone_loc(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_drone_3d_location.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_landmark_single_position_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_landmark_single_position_err.yaml")
 
     def test_insert_line_string_road(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_road.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_road_single_point_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_road_single_point_err.yaml")
 
     def test_insert_multi_point_service_locations(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_service_locations.yaml")
-        hge_ctx.may_skip_test_teardown = True
-
     def test_insert_multi_line_string_route(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_route.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_polygon(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_area.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_linear_ring_less_than_4_points_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_area_less_than_4_points_err.yaml")
@@ -189,11 +171,9 @@ class TestGraphqlInsertGeoJson(DefaultTestQueries):
 
     def test_insert_multi_polygon_compounds(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_compounds.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_geometry_collection(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_geometry_collection.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_insert_unexpected_geometry_type_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_geometry_unexpected_type_err.yaml")
@@ -203,7 +183,7 @@ class TestGraphqlInsertGeoJson(DefaultTestQueries):
         return "queries/graphql_mutation/insert/geojson"
 
 
-class TestGraphqlNestedInserts(DefaultTestQueries):
+class TestGraphqlNestedInserts(DefaultTestMutations):
 
     def test_author_with_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
@@ -237,7 +217,7 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
         return "queries/graphql_mutation/insert/nested"
 
 
-class TestGraphqlInsertViews(DefaultTestQueries):
+class TestGraphqlInsertViews(DefaultTestMutations):
 
     def test_insert_view_author_simple(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_view_author_simple.yaml")
@@ -256,7 +236,7 @@ class TestGraphqlInsertViews(DefaultTestQueries):
         return "queries/graphql_mutation/insert/views"
 
 
-class TestGraphqlUpdateBasic(DefaultTestQueries):
+class TestGraphqlUpdateBasic(DefaultTestMutations):
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
@@ -279,7 +259,7 @@ class TestGraphqlUpdateBasic(DefaultTestQueries):
         return "queries/graphql_mutation/update/basic"
 
 
-class TestGraphqlUpdateJsonB(DefaultTestQueries):
+class TestGraphqlUpdateJsonB(DefaultTestMutations):
 
     def test_jsonb_append_object(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_append_object.yaml")
@@ -304,22 +284,19 @@ class TestGraphqlUpdateJsonB(DefaultTestQueries):
         return "queries/graphql_mutation/update/jsonb"
 
 
-class TestGraphqlUpdatePermissions(DefaultTestQueries):
+class TestGraphqlUpdatePermissions(DefaultTestMutations):
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
 
     def test_user_cannot_update_published_version_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_version.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_user_cannot_update_another_users_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_user_cannot_update_id_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
-        hge_ctx.may_skip_test_teardown = True
 
     def test_user_update_resident_preset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset.yaml')
