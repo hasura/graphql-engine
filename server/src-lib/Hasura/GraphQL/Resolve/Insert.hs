@@ -374,7 +374,6 @@ insertObj strfyNum role tn singleObjIns addCols = do
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
     mkInsertQ vn onConflictM finalInsCols (map pgiName allCols) defVals role
-  -- allCols <- onNothing uniqColsM $ throw500 "unique columns not found in relational insert"
 
   RI.setConflictCtx ccM
   MutateResp affRows colVals <-

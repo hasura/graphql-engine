@@ -275,7 +275,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
-  | SETuples !TupleExp
+  | SETuple !TupleExp
   | SECount !CountType
   deriving (Show, Eq)
 
@@ -332,7 +332,7 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
-  toSQL (SETuples tups) = toSQL tups
+  toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
@@ -411,9 +411,9 @@ mkSelFromItem = FISelect (Lateral False)
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
-toColTups :: [PGCol] -> SQLExp
-toColTups =
-  SETuples . TupleExp . map (SEIden . Iden . getPGColTxt)
+toColTupExp :: [PGCol] -> SQLExp
+toColTupExp =
+  SETuple . TupleExp . map (SEIden . Iden . getPGColTxt)
 
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
@@ -425,7 +425,8 @@ instance ToSQL FromItem where
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIValues valsExp al mCols) =
-    paren (toSQL valsExp) <-> toSQL al <-> toSQL (toColTups <$> mCols)
+    paren (toSQL valsExp) <-> toSQL al
+    <-> toSQL (toColTupExp <$> mCols)
   toSQL (FIJoin je) =
     toSQL je
 
