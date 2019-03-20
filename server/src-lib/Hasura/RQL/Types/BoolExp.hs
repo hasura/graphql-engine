@@ -109,11 +109,6 @@ data DWithinGeogOp a =
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
-data DWithinGeoOp a
-  = DWGOGeom !(DWithinGeomOp a)
-  | DWGOGeog !(DWithinGeogOp a)
-  deriving (Show, Eq, Functor, Foldable, Traversable)
-
 data OpExpG a
   = AEQ !Bool !a
   | ANE !Bool !a

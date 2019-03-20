@@ -15,15 +15,17 @@ import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
+import           Hasura.SQL.Types
 
 type OpExp = OpExpG AnnPGVal
 
 parseOpExps
   :: (MonadError QErr m)
-  => AnnInpVal -> m [OpExp]
-parseOpExps annVal = do
+  => PGColType -> AnnInpVal -> m [OpExp]
+parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
-    forM (OMap.toList obj) $ \(k, v) -> case k of
+    forM (OMap.toList obj) $ \(k, v) -> do
+    case k of
       "_eq"       -> fmap (AEQ True) <$> asPGColValM v
       "_ne"       -> fmap (ANE True) <$> asPGColValM v
       "_neq"      -> fmap (ANE True) <$> asPGColValM v
@@ -78,16 +80,22 @@ parseOpExps annVal = do
       AGScalar _ _ -> throw500 "boolean value is expected"
       _ -> tyMismatch "pgvalue" v
 
-    -- TODO(shahidhk): implement separate parser for geography
     parseAsSTDWithinObj obj = do
       distanceVal <- onNothing (OMap.lookup "distance" obj) $
-                 throw500 "expected \"distance\" input field in st_d_within"
+                throw500 "expected \"distance\" input field in st_d_within"
       dist <- asPGColVal distanceVal
       fromVal <- onNothing (OMap.lookup "from" obj) $
-                 throw500 "expected \"from\" input field in st_d_within"
+                throw500 "expected \"from\" input field in st_d_within"
       from <- asPGColVal fromVal
-      return $ ASTDWithinGeom $ DWithinGeomOp dist from
-
+      case colTy of
+        PGGeography -> do
+          useSpheroidVal <- onNothing (OMap.lookup "use_spheroid" obj) $
+                    throw500 "expected \"use_spheroid\" input field in st_d_within"
+          useSpheroid <- asPGColVal useSpheroidVal
+          return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
+        PGGeometry -> do
+          return $ ASTDWithinGeom $ DWithinGeomOp dist from
+        _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
 
 parseAsEqOp
   :: (MonadError QErr m)
@@ -103,8 +111,8 @@ parseColExp
 parseColExp f nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left  pgColInfo -> do
-      opExps <- parseOpExps val
+    Left pgColInfo -> do
+      opExps <- parseOpExps (pgiType pgColInfo) val
       AVCol pgColInfo <$> traverse (traverse f) opExps
     Right (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp f val

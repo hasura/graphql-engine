@@ -209,11 +209,22 @@ validateObject valParser tyInfo flds = do
         "field " <> G.unName fldName <> " of type " <> G.showGT ty
         <> " is required, but not found"
 
-  fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
+  -- get default values object
+  defValObj <- fmap (OMap.fromList . catMaybes) $
+    forM (Map.toList $ _iotiFields tyInfo) $
+    \(fldName, inpValInfo) -> do
+      let defValM = _iviDefVal inpValInfo
+      fldTy <- getInpFieldInfo tyInfo fldName
+      convDefValM <-
+        validateInputValue constValueParser fldTy `mapM` defValM
+      return $ (fldName,) <$> convDefValM
+
+  inpObj <- fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
       fldTy <- getInpFieldInfo tyInfo fldName
       convFldVal <- validateInputValue valParser fldTy fldVal
       return (fldName, convFldVal)
+  return $ inpObj `OMap.union` defValObj
 
   where
     inpFldNames = map fst flds
