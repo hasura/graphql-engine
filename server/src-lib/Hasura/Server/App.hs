@@ -256,7 +256,7 @@ v1QueryHandler query = do
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
-  reqBody <- asks hcReqBody
+  --reqBody <- asks hcReqBody
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -264,7 +264,7 @@ v1Alpha1GQHandler query = do
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query reqBody
+  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do

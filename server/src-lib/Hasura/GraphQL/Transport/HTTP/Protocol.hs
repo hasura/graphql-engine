@@ -13,17 +13,20 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Parser as G
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                                as J
+import qualified Data.Aeson.Casing                         as J
+import qualified Data.Aeson.TH                             as J
+import qualified Data.ByteString.Lazy                      as BL
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.Text.Lazy                            as TL
+import qualified Data.Text.Lazy.Encoding                   as TL
+import qualified Language.GraphQL.Draft.Parser             as G
+import qualified Language.GraphQL.Draft.Printer.ByteString as PP
+import qualified Language.GraphQL.Draft.Syntax             as G
 
 newtype GraphQLQuery
   = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
-  deriving (Show, Eq, Hashable)
+  deriving (Show, Eq, Hashable, Generic)
 
 instance J.FromJSON GraphQLQuery where
   parseJSON = J.withText "GraphQLQuery" $ \t ->
@@ -32,8 +35,9 @@ instance J.FromJSON GraphQLQuery where
       Right q -> return $ GraphQLQuery $ G.getExecutableDefinitions q
 
 instance J.ToJSON GraphQLQuery where
-  -- TODO, add pretty printer in graphql-parser
-  toJSON _ = J.String "toJSON not implemented for GraphQLQuery"
+  -- TODO: use toEncoding and the builder directly
+  toJSON q = J.String $ TL.toStrict $ TL.decodeUtf8 $ PP.renderExecutableDoc $
+             G.ExecutableDocument $ unGraphQLQuery q
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }

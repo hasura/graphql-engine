@@ -9,7 +9,6 @@ module Hasura.GraphQL.Transport.HTTP
 import           Control.Exception                      (try)
 import           Control.Lens
 
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
@@ -21,13 +20,13 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Prelude
-import           Hasura.EncJSON
 
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as VQ
@@ -43,9 +42,8 @@ runGQ
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
-  -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
+runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
@@ -65,7 +63,7 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
       VT.HasuraType ->
         runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts
       VT.RemoteType _ rsi ->
-        runRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+        runRemoteGQ manager userInfo reqHdrs req rsi opDef
   where
     gCtxRoleMap = scGCtxMap sc
 
@@ -125,8 +123,7 @@ runRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> BL.ByteString
-  -- ^ the raw request string
+  -> GraphQLRequest
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
@@ -139,7 +136,7 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
       options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
 
-  res  <- liftIO $ try $ Wreq.postWith options (show url) q
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
   resp <- either httpThrow return res
   return $ encJFromLBS $ resp ^. Wreq.responseBody
 
