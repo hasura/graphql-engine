@@ -12,6 +12,7 @@ import           Instances.TH.Lift        ()
 
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
@@ -101,7 +102,7 @@ validateDeleteQ
 validateDeleteQ =
   liftDMLP1 . validateDeleteQWith binRHSBuilder
 
-deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (dqp1Table u) (deleteCTE, p)
                 (dqp1MutFlds u) (dqp1UniqCols u) strfyNum
@@ -110,7 +111,7 @@ deleteQueryToTx strfyNum (u, p) =
 
 runDelete
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
-  => DeleteQuery -> m RespBody
+  => DeleteQuery -> m EncJSON
 runDelete q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateDeleteQ q >>= liftTx . deleteQueryToTx strfyNum
