@@ -470,7 +470,7 @@ class ApiRequest extends Component {
           <span>Algorithm & Token Type</span>
         </span>
         <TextAreaWithCopy
-          copyText={JSON.stringify(tokenInfo.header, null, '\t')}
+          copyText={JSON.stringify(tokenInfo.header, null, 2)}
           textLanguage={'json'}
           id="headerCopy"
           containerId="headerCopyBlock"
@@ -481,7 +481,7 @@ class ApiRequest extends Component {
           <span>Data</span>
         </span>
         <TextAreaWithCopy
-          copyText={JSON.stringify(tokenInfo.payload, null, '\t')}
+          copyText={JSON.stringify(tokenInfo.payload, null, 2)}
           textLanguage={'json'}
           id="payloadCopy"
           containerId="payloadCopyBlock"
