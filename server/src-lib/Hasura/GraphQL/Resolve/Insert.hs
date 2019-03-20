@@ -367,21 +367,16 @@ insertObj strfyNum role tn singleObjIns addCols = do
       addInsCols = mkPGColWithTypeAndVal allCols addCols
       finalInsCols =  cols <> objRelInsCols <> addInsCols
 
-  -- prepare final returning columns
-  let arrDepCols = concatMap (map fst . riMapping . _riRelInfo) arrRels
-      arrDepColsWithInfo = getColInfos arrDepCols allCols
-
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
     mkInsertQ vn onConflictM finalInsCols (map pgiName allCols) defVals role
 
   RI.setConflictCtx ccM
-  MutateResp affRows colVals <-
-    mutateAndFetchCols tn (allCols `union` arrDepColsWithInfo) (cte, insPArgs) strfyNum
+  MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
   cteExp <- mkSelCTE tn allCols colValM
 
-  arrRelAffRows <- bool (withArrRels arrDepColsWithInfo colValM) (return 0) $ null arrRels
+  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
   let totAffRows = objRelAffRows + affRows + arrRelAffRows
 
   return (totAffRows, cteExp)
@@ -389,9 +384,12 @@ insertObj strfyNum role tn singleObjIns addCols = do
     AnnIns annObj onConflictM vn allCols defVals = singleObjIns
     AnnInsObj cols objRels arrRels = annObj
 
-    withArrRels arrDepCols colValM = do
+    arrRelDepCols = flip getColInfos allCols $
+      concatMap (map fst . riMapping . _riRelInfo) arrRels
+
+    withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrDepCols pgiName
+      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiName
 
       arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
 
