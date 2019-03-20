@@ -87,7 +87,7 @@ $ heroku create
 ```bash
 $ git push heroku master
 ```
-
+This will return an endpoint for your REST API. Update the GraphQL API code to use this endpoint.
 
 #### For GraphQL API
 
