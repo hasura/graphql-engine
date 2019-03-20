@@ -62,52 +62,40 @@ getUser: async (_, { id }) => {
 
 ## Deployment (Using Heroku)
 
-We need to deploy the REST API and then the GraphQL service.
-For both, the deployment instructions are the same but the source code is in different folders.
-
 You need a Heroku account and heroku-cli installed.
 
-#### For REST API
-
 1. Log into Heroku
+
+```bash
+$ heroku login
+```
+
+2. Create REST API app
 
 ```bash
 # in my-rest-api directory (community/boilerplates/remote-schemas/rest-wrapper/my-rest-api)
-$ heroku login
-```
-
-2. Create app
-
-```bash
 $ heroku create
 ```
 
-3. Git push
+3. Deploy REST API app
 
 ```bash
 $ git push heroku master
 ```
-This will return an endpoint for your REST API. Update the GraphQL API code to use this endpoint.
 
-#### For GraphQL API
+4. The above step will return an endpoint for your REST API. Update the constant `restAPIEndpoint` in `index.js` with this endpoint.
 
-1. Log into Heroku
+5. Create GRAPHQL API app
 
 ```bash
 # in current directory (community/boilerplates/remote-schemas/rest-wrapper)
-$ heroku login
-```
-
-2. Create app
-
-```bash
 $ heroku create
 ```
 
-3. Git push
+6. Deploy GRAPHQL API app
 
 ```bash
 $ git push heroku master
 ```
 
-The final step above will also return a HTTPS URL in the output. Now, you can go to Hasura console and add this URL as a Remote Schema.
+The final step will also return a HTTPS URL in the output. Now, you can go to Hasura console and add this URL as a Remote Schema to allow querying it via Hasura.
