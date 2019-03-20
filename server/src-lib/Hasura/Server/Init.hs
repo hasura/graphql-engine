@@ -23,11 +23,15 @@ import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
 
 newtype InstanceId
-  = InstanceId {getInstanceId :: T.Text}
-    deriving (Show, Eq, J.ToJSON, J.FromJSON)
+  = InstanceId { getInstanceId :: Text }
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
+newtype VerboseLogging
+  = VerboseLogging { unVerboseLogging :: Bool }
+  deriving (Show, Eq)
 
 mkInstanceId :: IO InstanceId
-mkInstanceId = (InstanceId . UUID.toText) <$> UUID.nextRandom
+mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
 
 initErrExit :: (Show e) => e -> IO a
 initErrExit e = print e >> exitFailure
@@ -58,6 +62,7 @@ data RawServeOptions
   , rsoWsReadCookie    :: !Bool
   , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
+  , rsoVerboseLogging  :: !VerboseLogging
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -75,6 +80,7 @@ data ServeOptions
   , soEnableTelemetry :: !Bool
   , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
+  , soVerboseLogging  :: !VerboseLogging
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -243,22 +249,25 @@ mkServeOptions rso = do
           withEnv (rsoHost rso) (fst serveHostEnv)
 
   connParams <- mkConnParams $ rsoConnParams rso
-  txIso <- fromMaybe Q.ReadCommitted <$>
-           withEnv (rsoTxIso rso) (fst txIsoEnv)
+  txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
-  enableConsole <- withEnvBool (rsoEnableConsole rso) $
-                   fst enableConsoleEnv
+  enableConsole <- withEnvBool (rsoEnableConsole rso) $ fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
-  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
-                     withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+  strfyNum    <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  enabledAPIs <- Set.fromList . fromMaybe [METADATA, GRAPHQL] <$>
+                 withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+  verboseLogging <- VerboseLogging <$>
+                    withEnvBool (unVerboseLogging $ rsoVerboseLogging rso)
+                                (fst verboseLoggingEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
+                        unAuthRole corsCfg enableConsole enableTelemetry
+                        strfyNum enabledAPIs verboseLogging
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -375,6 +384,7 @@ serveCmdFooter =
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
+      , verboseLoggingEnv
       ]
 
     eventEnvs =
@@ -510,6 +520,13 @@ enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
   , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
   )
+
+verboseLoggingEnv :: (String, String)
+verboseLoggingEnv =
+  ( "HASURA_GRAPHQL_VERBOSE_LOGGING"
+  , "Enable verbose logging (default: false)"
+  )
+
 
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
@@ -668,6 +685,7 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "GRAPHQL"  -> Right GRAPHQL
           _          -> Left "Only expecting list of comma separated API types metadata / graphql"
 
+
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
   AuthHookG <$> url <*> urlType
@@ -754,6 +772,13 @@ parseEnabledAPIs = optional $
          ( long "enabled-apis" <>
            help (snd enabledAPIsEnv)
          )
+
+parseVerboseLogging :: Parser VerboseLogging
+parseVerboseLogging = VerboseLogging <$>
+  switch ( long "verbose-logging" <>
+           help (snd verboseLoggingEnv)
+         )
+
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog

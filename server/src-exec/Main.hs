@@ -76,6 +76,7 @@ parseHGECommand =
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
                 <*> parseEnabledAPIs
+                <*> parseVerboseLogging
 
 
 parseArgs :: IO HGEOptions
@@ -113,7 +114,8 @@ main =  do
       pgLogger = mkPGLogger logger
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
+                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum
+                enabledAPIs verboseLogging) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -136,8 +138,8 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx strfyNum pool httpManager am
-          corsCfg enableConsole enableTelemetry instanceId enabledAPIs
+        mkWaiApp isoL loggerCtx strfyNum pool httpManager am corsCfg
+          enableConsole enableTelemetry instanceId enabledAPIs verboseLogging
 
       -- start a background thread for schema sync
       startSchemaSync strfyNum pool logger httpManager

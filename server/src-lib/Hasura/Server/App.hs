@@ -306,13 +306,21 @@ legacyQueryHandler tn queryType =
 
 
 mkWaiApp
-  :: Q.TxIsolation -> L.LoggerCtx -> Bool
-  -> Q.PGPool -> HTTP.Manager -> AuthMode
-  -> CorsConfig -> Bool -> Bool
-  -> InstanceId -> S.HashSet API
+  :: Q.TxIsolation
+  -> L.LoggerCtx
+  -> Bool
+  -> Q.PGPool
+  -> HTTP.Manager
+  -> AuthMode
+  -> CorsConfig
+  -> Bool
+  -> Bool
+  -> InstanceId
+  -> S.HashSet API
+  -> VerboseLogging
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
-         enableConsole enableTelemetry instanceId apis = do
+mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg enableConsole
+         enableTelemetry instanceId apis verLog = do
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
                 httpManager strfyNum pool Q.Serializable $ do
