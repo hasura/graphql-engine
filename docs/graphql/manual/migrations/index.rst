@@ -11,13 +11,24 @@ Migrations & Metadata
 Introduction
 ------------
 
-When you're in the development phase, you'll be using the Hasura Console to
-create and track tables, create relationships, add permissions etc. When you
-need to move to a new environment, it will become quite hard to re-do all these
-operations using the console again on a fresh database. You might be looking for
-a way to declaratively export the Hasura metadata so that you can apply it on
-another instance from a CI/CD setup to reproduce the same setup. You might be
-looking for a way to do a dev --> staging --> production promotion scenario.
+It is typical for developers to use some kind of "migration" tool to track
+changes to the Postgres schema. Usually the SQL statements used to create the
+tables, views etc. are stored as a single file or multiple files. Certain tools
+also let's you add an "up" and a "down" step so that you can roll-back the
+changes.
+
+When you connect Hasura to a Postgres database and use the Console to "track" a
+table, a piece of information is added to the Hasura "metadata" (configuration)
+indicating this table in Postgres should be exposed via GraphQL. Similarly, when
+most of the actions on the Console updates the metadata.
+
+In the development phase, you'll be using the Hasura Console to create and track
+tables, create relationships, add permissions etc. When you need to move to a
+new environment, it will become quite hard to re-do all these operations using
+the console again on a fresh database. You might be looking for a way to export
+the Hasura metadata so that you can apply it on another instance from a CI/CD
+setup to reproduce the same setup. You might also be looking for a way to do a
+dev --> staging --> production environment promotion scenario.
 
 Well, you've come to the right place. To address all these scenarios, Hasura is
 bundled with a schema/metadata migration system which can be used to
