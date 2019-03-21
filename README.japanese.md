@@ -189,10 +189,7 @@ Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなど�
 
 ## ライセンス
 
-GraphQLのコアライセンスは[GNU Affero General Public License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0)
-に準拠しています。AGPLでできる事とできない事については[こちら](https://github.com/hasura/graphql-engine/wiki/License-Explained)の記事を参考してください。
-
-**商用ライセンス** をリクエストに応じて提供できます。AGPLライセンスの下でHasura GraphQLエンジンを使用したくない場合は、通常それらはサポートプランとSLAにバンドルされています。 build@hasura.io または[ウェブサイトチャット]（https://hasura.io）でお気軽にお問い合わせください。
+GraphQLエンジンのコアは[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)（Apache-2.0）の下で提供されています。
 
 全ての **その他のコンテンツ** ([`サーバー`](server), [`クライアント`](cli) と
 [`コンソール`](console) ディレクトリ以外) は [MITライセンス](LICENSE-community)の下に提供されます。
