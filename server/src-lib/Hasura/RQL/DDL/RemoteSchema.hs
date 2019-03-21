@@ -7,10 +7,10 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP2
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 
 import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Lazy        as BL
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
 
@@ -24,7 +24,7 @@ runAddRemoteSchema
      , MonadIO m
      , HasHttpManager m
      )
-  => AddRemoteSchemaQuery -> m RespBody
+  => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
   adminOnly
   addRemoteSchemaP2 q
@@ -37,7 +37,7 @@ addRemoteSchemaP2
      , HasHttpManager m
      )
   => AddRemoteSchemaQuery
-  -> m BL.ByteString
+  -> m EncJSON
 addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   rsi <- validateRemoteSchemaDef def
   manager <- askHttpManager
@@ -89,7 +89,7 @@ refreshGCtxMapInSchema = do
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => RemoveRemoteSchemaQuery -> m RespBody
+  => RemoveRemoteSchemaQuery -> m EncJSON
 runRemoveRemoteSchema q =
   removeRemoteSchemaP1 q >>= removeRemoteSchemaP2
 
@@ -106,7 +106,7 @@ removeRemoteSchemaP2
      , HasHttpManager m
      )
   => RemoveRemoteSchemaQuery
-  -> m BL.ByteString
+  -> m EncJSON
 removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   mSchema <- liftTx $ fetchRemoteSchemaDef name
   _ <- liftMaybe (err400 NotExists "no such remote schema") mSchema

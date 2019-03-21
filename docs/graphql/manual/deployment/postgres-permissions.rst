@@ -38,9 +38,9 @@ Here's a sample SQL block that you can run on your database to create the right 
     CREATE SCHEMA IF NOT EXISTS hdb_catalog;
     CREATE SCHEMA IF NOT EXISTS hdb_views;
 
-    -- grant all privileges on system schemas
-    GRANT ALL PRIVILEGES ON SCHEMA hdb_catalog TO hasurauser;
-    GRANT ALL PRIVILEGES ON SCHEMA hdb_views TO hasurauser;
+    -- make the user an owner of system schemas
+    ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+    ALTER SCHEMA hdb_views OWNER TO hasurauser;
 
     -- grant select permissions on information_schema and pg_catalog. This is
     -- required for hasura to query list of available tables

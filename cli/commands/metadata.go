@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -26,22 +27,27 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, metadataPath string) error {
+func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
 	switch cmd {
 	case "export":
 		metaData, err := t.ExportMetadata()
 		if err != nil {
-			return errors.Wrap(err, "Cannot export metadata")
+			return errors.Wrap(err, "cannot export metadata")
 		}
 
 		t, err := json.Marshal(metaData)
 		if err != nil {
-			return errors.Wrap(err, "Cannot Marshal metadata")
+			return errors.Wrap(err, "cannot Marshal metadata")
 		}
 
 		data, err := yaml.JSONToYAML(t)
 		if err != nil {
 			return err
+		}
+
+		metadataPath, err := ec.GetMetadataFilePath("yaml")
+		if err != nil {
+			return errors.Wrap(err, "cannot save metadata")
 		}
 
 		err = ioutil.WriteFile(metadataPath, data, 0644)
@@ -51,29 +57,46 @@ func executeMetadata(cmd string, t *migrate.Migrate, metadataPath string) error 
 	case "reset":
 		err := t.ResetMetadata()
 		if err != nil {
-			return errors.Wrap(err, "Cannot reset Metadata")
+			return errors.Wrap(err, "cannot reset Metadata")
 		}
 	case "reload":
 		err := t.ReloadMetadata()
 		if err != nil {
-			return errors.Wrap(err, "Cannot reload Metadata")
+			return errors.Wrap(err, "cannot reload Metadata")
 		}
 	case "apply":
-		data, err := ioutil.ReadFile(metadataPath)
-		if err != nil {
-			return errors.Wrap(err, "cannot read metadata file")
+		var data interface{}
+		var metadataContent []byte
+		for _, format := range []string{"yaml", "json"} {
+			metadataPath, err := ec.GetMetadataFilePath(format)
+			if err != nil {
+				return errors.Wrap(err, "cannot apply metadata")
+			}
+
+			metadataContent, err = ioutil.ReadFile(metadataPath)
+			if err != nil {
+				if os.IsNotExist(err) {
+					continue
+				}
+				return err
+			}
+			break
 		}
 
-		var q interface{}
-		err = yaml.Unmarshal(data, &q)
+		if metadataContent == nil {
+			return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
+		}
+
+		err := yaml.Unmarshal(metadataContent, &data)
 		if err != nil {
 			return errors.Wrap(err, "cannot parse metadata file")
 		}
 
-		err = t.ApplyMetadata(q)
+		err = t.ApplyMetadata(data)
 		if err != nil {
 			return errors.Wrap(err, "cannot apply metadata on the database")
 		}
+		return nil
 	}
 	return nil
 }
