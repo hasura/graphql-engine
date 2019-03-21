@@ -21,7 +21,7 @@ import gqlPattern, {
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-import { getExistingFKConstraints, pgConfTypes } from '../Common/ReusableComponents/utils';
+import { getExistingFKConstraints, pgConfTypes, getExpectedFkConstraintName } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
         Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
@@ -250,7 +250,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${tableName}_${lcols.join('_')};`
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${getExpectedFkConstraintName(tableName, lcols, tableSchema.foreign_key_constraints)};`
       }
     }]
     if (constraintName) {
@@ -278,7 +278,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           ...getState().tables.modify.fkModify,
           {
             refTableName: '',
-            colMappings: { column: '', refColumn: ''},
+            colMappings: [{ column: '', refColumn: ''}],
             onUpdate: 'restrict',
             onDelete: 'restrict'
           }

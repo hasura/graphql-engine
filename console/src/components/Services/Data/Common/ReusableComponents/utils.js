@@ -36,7 +36,27 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
       column: orderedColumns.find(oc => oc.name === lc).index.toString(),
       refColumn: fkc.column_mapping[lc]
     }));
-    fk.colMappings.push({'': ''});
+    fk.colMappings.push({column: '', refColumn: ''});
     return fk;
   });
+};
+
+export const getExpectedFkConstraintName = (tableName, lCols, existingConstraints) => {
+  const expectedNamePrefix = `${tableName}_${lCols.map(lc => lc.replace(/"/g, '')).join('_')}_fkey`;
+  const prefixLength = expectedNamePrefix.length;
+  let suffix;
+  for (var i = existingConstraints.length - 1; i >= 0; i--) {
+    const existingConstraintName = existingConstraints[i].constraint_name;
+    if(existingConstraintName.indexOf(expectedNamePrefix) === 0) {
+      const intSuffix = parseInt(existingConstraintName.slice(prefixLength), 10);
+      if (!isNan(intSuffix) && ((!suffix) || (suffix && intSuffix > suffix))) {
+        suffix = intSuffix
+      }
+    }
+  }
+  if (suffix === undefined) {
+    return expectedNamePrefix;
+  } else {
+    return `${expectedNamePrefix}${suffix + 1}`;
+  }
 }

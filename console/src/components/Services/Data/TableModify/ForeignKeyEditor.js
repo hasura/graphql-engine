@@ -39,6 +39,7 @@ const ForeignKeyEditor = ({
       c => c.column_name
     );
   });
+  const numFks = fkModify.length;
   return fkModify.map((fk, i) => {
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
     const collapsedLabel = () => (
@@ -54,7 +55,7 @@ const ForeignKeyEditor = ({
       </div>
     );
 
-    const isLast = i + 1 === fkModify.length;
+    const isLast = i + 1 === numFks;
 
     const expandedContent = () => (
       <ForeignKeySelector
@@ -100,7 +101,7 @@ const ForeignKeyEditor = ({
     }
 
     return (
-      <div key={`${i}`}>
+      <div key={`${i}_${numFks- 1 - i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           property={'add-fks'}
@@ -112,6 +113,7 @@ const ForeignKeyEditor = ({
           collapseCallback={resetFk}
           collapseButtonText={collapseButtonText}
           expandButtonText={expandButtonText}
+          isToggled={isLast ? false : null}
         />
       </div>
     )
