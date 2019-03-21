@@ -2,9 +2,9 @@
 
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
-import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
@@ -352,7 +352,7 @@ buildSchemaCache = do
   gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
 
   remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
-    (,) n <$> validateRemoteSchemaDef def
+    (,) n <$> validateRemoteSchema n def
   let rmScMap = M.fromList remoteScConf
   (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
   writeRemoteSchemasToCache mergedGCtxMap rmScMap

@@ -39,23 +39,6 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
 
 type RemoteSchemaMap = Map.HashMap RemoteSchemaName RemoteSchemaInfo
 
--- instance J.ToJSON RemoteSchemaDef where
---   toJSON (RemoteSchemaDef name eUrlVal headers fwdHdrs) =
---     case eUrlVal of
---       Left url ->
---         J.object [ "url" J..= url
---                  , "headers" J..= headers
---                  , "name" J..= name
---                  , "forward_client_headers" J..= fwdHdrs
---                  ]
---       Right urlFromEnv ->
---         J.object [ "url_from_env" J..= urlFromEnv
---                  , "headers" J..= headers
---                  , "name" J..= name
---                  , "forward_client_headers" J..= fwdHdrs
---                  ]
-
-
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
   { _arsqName       :: !RemoteSchemaName -- TODO: name validation: cannot be empty?
@@ -64,14 +47,6 @@ data AddRemoteSchemaQuery
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
-
--- data AddRemoteSchemaQuery'
---   = AddRemoteSchemaQuery'
---   { _arsqUrl                  :: !(Maybe N.URI)
---   , _arsqUrlFromEnv           :: !(Maybe Text)
---   , _arsqHeaders              :: !(Maybe [HeaderConf])
---   , _arsqForwardClientHeaders :: !Bool
---   } deriving (Show, Eq, Lift)
 
 data RemoveRemoteSchemaQuery
   = RemoveRemoteSchemaQuery
@@ -90,20 +65,3 @@ getUrlFromEnv urlFromEnv = do
     invalidUri uri = "not a valid URI: " <> T.pack uri
     envNotFoundMsg e =
       "cannot find environment variable " <> e <> " for custom resolver"
-
-validateRemoteSchemaDef
-  :: (MonadError QErr m, MonadIO m)
-  => RemoteSchemaDef
-  -> m RemoteSchemaInfo
-validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs) =
-  case (mUrl, mUrlEnv) of
-    (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
-    (Nothing, Just urlEnv) -> do
-      url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
-    (Nothing, Nothing)     ->
-        throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
-    (Just _, Just _)       ->
-        throw400 InvalidParams "both `url` and `url_from_env` can't be present"
-  where hdrs = fromMaybe [] hdrC
