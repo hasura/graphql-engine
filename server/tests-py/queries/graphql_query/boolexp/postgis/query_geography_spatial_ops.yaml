@@ -6,6 +6,9 @@ response:
     stdwithin:
     - name: London
     - name: Paris
+    stdwithin_sph_false:
+    - name: London
+    - name: Paris
     stintersects:
     - name: Linestring
     - name: Point
@@ -14,6 +17,11 @@ query:
     query geography($point: geography!, $ipoint: geography!) {
       stdwithin: geog_table(
         where: {geog_col: {_st_d_within: {distance: 1000000, from: $point}}}
+      ) {
+        name
+      }
+      stdwithin_sph_false: geog_table(
+        where: {geog_col: {_st_d_within: {distance: 1000000, from: $point, use_spheroid: false}}}
       ) {
         name
       }
