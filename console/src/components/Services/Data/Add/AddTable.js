@@ -359,15 +359,6 @@ class AddTable extends Component {
         </div>
       );
     });
-    const pks = (
-      <PrimaryKeySelector
-        primaryKeys={primaryKeys}
-        columns={columns}
-        setPk={setPk}
-        dispatch={dispatch}
-        styles={styles}
-      />
-    );
 
     let createBtnText = 'Create';
     if (ongoingRequest) {
@@ -423,7 +414,13 @@ class AddTable extends Component {
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
-            {pks}
+              <PrimaryKeySelector
+                primaryKeys={primaryKeys}
+                columns={columns}
+                setPk={setPk}
+                dispatch={dispatch}
+                styles={styles}
+              />
             <hr />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;

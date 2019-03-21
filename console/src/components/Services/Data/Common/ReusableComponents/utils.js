@@ -41,15 +41,21 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
   });
 };
 
-export const getExpectedFkConstraintName = (tableName, lCols, existingConstraints) => {
-  const expectedNamePrefix = `${tableName}_${lCols.map(lc => lc.replace(/"/g, '')).join('_')}_fkey`;
+export const generateFKConstraintName = (tableName, lCols, existingConstraints) => {
+  const expectedNamePrefix = `${tableName}_${lCols.map(lc => lc.replace(/"/g, '')).join('_')}_fkey`.substring(0, 60);
   const prefixLength = expectedNamePrefix.length;
   let suffix;
-  for (var i = existingConstraints.length - 1; i >= 0; i--) {
+  for (let i = existingConstraints.length - 1; i >= 0; i--) {
     const existingConstraintName = existingConstraints[i].constraint_name;
     if(existingConstraintName.indexOf(expectedNamePrefix) === 0) {
+      if (existingConstraintName === expectedNamePrefix) {
+        if (!suffix) {
+          suffix = 1;
+          continue;
+        }
+      }
       const intSuffix = parseInt(existingConstraintName.slice(prefixLength), 10);
-      if (!isNaN(intSuffix) && ((!suffix) || (suffix && intSuffix > suffix))) {
+      if (!isNaN(intSuffix) && ((!suffix) || (suffix && intSuffix >= suffix))) {
         suffix = intSuffix
       }
     }
@@ -59,4 +65,4 @@ export const getExpectedFkConstraintName = (tableName, lCols, existingConstraint
   } else {
     return `${expectedNamePrefix}${suffix + 1}`;
   }
-}
+};

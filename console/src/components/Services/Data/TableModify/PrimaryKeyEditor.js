@@ -19,18 +19,25 @@ const PrimaryKeyEditor = ({
   const tablePrimaryKeyColumns = tableSchema.primary_key
     ? tableSchema.primary_key.columns
     : [];
+
+  // generate columns in a proper order
   const orderedCols = columns.map((c, _i) => ({
     name: c.column_name,
     type: c.data_type,
     index: _i,
   }));
+
+  // generate primary keys in the order respecting the column order
   const orderedPks = tablePrimaryKeyColumns.map(pk => {
     return orderedCols.find(c => c.name === pk).index;
   });
 
+  // get PK constraint name
   const pkConstraintName = tableSchema.primary_key
     ? tableSchema.primary_key.constraint_name
     : '';
+
+  // label next to the button when the editor is collapsed
   const pkConfigText = tablePrimaryKeyColumns.join(', ');
   const pkEditorCollapsedLabel = () => (
     <div>
@@ -44,11 +51,15 @@ const PrimaryKeyEditor = ({
       </div>
     </div>
   );
+
+  // label next to the button when the editor is expanded
   const pkEditorExpandedLabel = () => (
     <h5 className={styles.padd_bottom}>
       <b> {pkConfigText && `( ${pkConfigText} )`}</b>
     </h5>
   );
+
+  // expanded editor content
   const pkEditorExpanded = () => (
     <div>
       <div className={`${styles.pkEditorExpanded}`}>
@@ -62,14 +73,17 @@ const PrimaryKeyEditor = ({
     </div>
   );
 
+  // set PK edit state when editor is expanded
   const setPkEditState = () => {
     dispatch(setPrimaryKeys([...orderedPks.map(pk => pk.toString()), '']));
   };
 
+  // reset PK edit state when the editor is collapsed
   const resetPkEditState = () => {
     dispatch(setPrimaryKeys(['']));
   };
 
+  // save 
   const onSave = (e, confirmed) => {
     if (pkConstraintName && pkModify.length === 1 && !confirmed) {
       const isOk = window.confirm(DELETE_PK_WARNING);
@@ -83,6 +97,7 @@ const PrimaryKeyEditor = ({
     );
   };
 
+  // remove
   const onRemove = () => {
     let isOk;
     if (pkConstraintName) {
@@ -95,6 +110,11 @@ const PrimaryKeyEditor = ({
     onSave(null, isOk);
   };
 
+  // Button text when the editor is expanded and collapsed
+  const expandButtonText = pkConfigText ? 'Edit' : 'Add';
+  const collapsedButtonText = pkConfigText ? 'Close' : 'Cancel';
+
+  // Wrap inside an expandable editor
   return (
     <ExpandableEditor
       collapsedLabel={pkEditorCollapsedLabel}
@@ -106,6 +126,7 @@ const PrimaryKeyEditor = ({
       saveFunc={onSave}
       removeFunc={onRemove}
       expandCallback={setPkEditState}
+      expandButtonText={expandButtonText}
       collapseCallback={resetPkEditState}
     />
   );

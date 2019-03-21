@@ -3,6 +3,8 @@ import styles from '../../../../Common/TableCommon/Table.scss';
 
 const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
   const numPks = primaryKeys.length;
+
+  // list of columns not included in the PK constraint
   const nonPkColumns = columns
     .map((col, _i) => {
       if (!primaryKeys.includes(_i.toString()) && col.name && col.type) {
@@ -15,10 +17,13 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
     })
     .filter(rc => Boolean(rc));
 
+  // get PK config text
   const pkConfig = primaryKeys
     .filter(pk => pk !== '')
     .map(pk => columns[pk].name)
     .join(', ');
+
+  // get PK configuration content
   const configuration = () => {
     return (
       <div>
@@ -33,9 +38,13 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       </div>
     );
   };
+
+  // map over the primary keys
   const pkEditors = () => {
     return primaryKeys.map((pk, i) => {
       let removeIcon;
+
+      // dispatch action for a column in PK state
       const dispatchSet = e => {
         const newPks = [
           ...primaryKeys.slice(0, i),
@@ -47,6 +56,8 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         }
         dispatch(setPk(newPks));
       };
+
+      // dispatch action for a column in PK state
       const dispatchRemove = () => {
         const newPks = [
           ...primaryKeys.slice(0, i),
@@ -54,6 +65,8 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         ];
         dispatch(setPk(newPks));
       };
+
+      // show remove icon for all columns except last
       if (i + 1 === numPks) {
         removeIcon = null;
       } else {

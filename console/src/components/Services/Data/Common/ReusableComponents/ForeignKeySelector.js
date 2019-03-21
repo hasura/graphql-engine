@@ -22,63 +22,73 @@ const ForeignKeySelector = ({
 }) => {
   const { refTableName, colMappings, onUpdate, onDelete } = foreignKey;
   const numOfFks = foreignKeys.length;
-  const fkConfig = getForeignKeyConfig(foreignKey, orderedColumns);
-  const dispatchSetRefTable = event => {
-    const newFks = [...foreignKeys];
-    if (newFks[index].refTableName !== event.target.value) {
-      newFks[index].colMappings = [{column: '', refColumn: ''}]
-    }
-    newFks[index].refTableName = event.target.value;
-    if (index + 1 === numOfFks && service === 'add-table') {
-      newFks.push({
-        refTableName: '',
-        colMappings: [
-          {
-            column: '',
-            refColumn: '',
-          },
-        ],
-        onUpdate: 'restrict',
-        onDelete: 'restrict',
-      });
-    }
-    dispatch(setForeignKeys(newFks));
-  };
-  const refTableSelect = () => (
-    <div className={`${refTableName ? styles.add_mar_bottom : ''}`}>
-      <div className={`${styles.add_mar_bottom_mid}`}>
-        <b>Reference Table:</b>
-      </div>
-      <select
-        value={refTableName || ''}
-        className={`${styles.select} ${styles.sample} form-control ${
-          styles.add_pad_left
-        }`}
-        data-test={`foreign-key-ref-table-${index}`}
-        data-test={`foreign-key-ref-table-${index}`}
-        onChange={dispatchSetRefTable}
-      >
-        {// default unselected option
-          refTableName === '' && (
-            <option value={''} disabled>
-              {'-- reference table --'}
-            </option>
-          )}
-        {// all reference table options
-          Object.keys(refTables).map((rt, j) => (
-            <option key={j} value={rt}>
-              {rt}
-            </option>
-          ))}
-      </select>
-    </div>
-  );
+  const numColMappings = colMappings.length;
+  // generate FK config
+  const fkConfig =  numColMappings <= 1 ? '' : getForeignKeyConfig(foreignKey, orderedColumns);
 
+  // html for ref table dropdown
+  const refTableSelect = () => {
+    // dispatch action for setting reference table
+    const dispatchSetRefTable = event => {
+      const newFks = [...foreignKeys];
+      if (newFks[index].refTableName !== event.target.value) {
+        newFks[index].colMappings = [{column: '', refColumn: ''}]
+      }
+      newFks[index].refTableName = event.target.value;
+      if (index + 1 === numOfFks && service === 'add-table') {
+        newFks.push({
+          refTableName: '',
+          colMappings: [
+            {
+              column: '',
+              refColumn: '',
+            },
+          ],
+          onUpdate: 'restrict',
+          onDelete: 'restrict',
+        });
+      }
+      dispatch(setForeignKeys(newFks));
+    };
+
+    return (
+      <div className={`${refTableName ? styles.add_mar_bottom : ''}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Reference Table:</b>
+        </div>
+        <select
+          value={refTableName || ''}
+          className={`${styles.select} ${styles.sample} form-control ${
+            styles.add_pad_left
+          }`}
+          data-test={`foreign-key-ref-table-${index}`}
+          data-test={`foreign-key-ref-table-${index}`}
+          onChange={dispatchSetRefTable}
+        >
+          {// default unselected option
+            refTableName === '' && (
+              <option value={''} disabled>
+                {'-- reference table --'}
+              </option>
+            )}
+          {// all reference table options
+            Object.keys(refTables).map((rt, j) => (
+              <option key={j} value={rt}>
+                {rt}
+              </option>
+            ))}
+        </select>
+      </div>
+    )
+  };
+
+  // html for column mapping dropdowns
   const columnSelect = () => {
+    // Do not allow selecting columns if ref table hasn't been selected
     if (!refTableName) {
       return null;
     }
-    const numColMappings = colMappings.length;
+
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
@@ -90,8 +100,13 @@ const ForeignKeySelector = ({
           </div>
         </div>
         {colMappings.map((colMap, _i) => {
+          // from column
           const lc = colMap.column;
+
+          // to column
           const rc = colMap.refColumn;
+
+          // dispatch action for setting column config
           const dispatchSetCols = (key, value) => {
             const newFks = [...foreignKeys];
             newFks[index].colMappings[_i][key] = value;
@@ -103,12 +118,18 @@ const ForeignKeySelector = ({
             }
             dispatch(setForeignKeys(newFks));
           };
+
+          // dispatch action for setting the "from" column
           const dispatchSetLcol = event => {
             dispatchSetCols('column', event.target.value);
           };
+
+          // dispatch action for setting the "to" column
           const dispatchSetRcol = event => {
             dispatchSetCols('refColumn', event.target.value);
           };
+
+          // dispatch action for removing a pair from column mapping
           const dispatchRemoveCol = () => {
             const newFks = [...foreignKeys];
             const newColMapping = [
@@ -118,6 +139,8 @@ const ForeignKeySelector = ({
             newFks[index].colMappings = newColMapping;
             dispatch(setForeignKeys(newFks));
           };
+
+          // show remove icon for all column pairs except last
           let removeIcon;
           if (_i + 1 === numColMappings) {
             removeIcon = null;
@@ -129,6 +152,7 @@ const ForeignKeySelector = ({
               />
             );
           }
+
           return (
             <div
               className={`row ${styles.add_mar_bottom_mid} ${
@@ -189,10 +213,14 @@ const ForeignKeySelector = ({
     );
   };
 
+
   const onViolation = () => {
-    if (!fkConfig) {
+    // Do not allow selecting on violation conditions if no column mapping is selected
+    if (numColMappings <= 1) {
       return null;
     }
+
+    // Generate radios for violation actions
     const radios = action => {
       const selected = foreignKey[action];
       return (
@@ -218,6 +246,7 @@ const ForeignKeySelector = ({
         </div>
       );
     };
+
     return (
       <div>
         <div className={`${styles.add_mar_bottom}`}>

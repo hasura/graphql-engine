@@ -53,13 +53,16 @@ const ForeignKeyEditor = ({
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
 
+    const isLast = i + 1 === numFks;
+
     // Label to show next to the 'Edit' button (the FK configuration)
+    const collapsedLabelText = (isLast && numFks === 1) ? "No foreign keys" : <i>{fkConfig}</i>;
     const collapsedLabel = () => (
       <div>
         <div className="container-fluid">
           <div className="row">
             <h5 className={styles.padd_bottom}>
-              <i> {fkConfig} </i>
+              {collapsedLabelText}
               &nbsp;
             </h5>
           </div>
@@ -67,7 +70,6 @@ const ForeignKeyEditor = ({
       </div>
     );
 
-    const isLast = i + 1 === numFks;
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -85,7 +87,10 @@ const ForeignKeyEditor = ({
     );
 
     // The collapse button text when the editor is collapsed
-    const expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
+    let expandButtonText = 'Edit';
+    if (isLast) {
+      expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
+    }
 
     // If the user made some changes and collapses the editor, the changes are lost   
     const resetFk = () => {

@@ -21,7 +21,7 @@ import gqlPattern, {
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-import { getExistingFKConstraints, pgConfTypes, getExpectedFkConstraintName } from '../Common/ReusableComponents/utils';
+import { getExistingFKConstraints, pgConfTypes, generateFKConstraintName } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
         Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
@@ -241,16 +241,19 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         }
       })
     }
+
+    const generatedConstraintName = generateFKConstraintName(tableName, lcols, tableSchema.foreign_key_constraints);
+
     migrationUp.push({
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};`
+        sql: `alter table "${schemaName}"."${tableName}" add constraint ${generatedConstraintName} foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};`
       }
     })
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${getExpectedFkConstraintName(tableName, lcols, tableSchema.foreign_key_constraints)};`
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${generatedConstraintName};`
       }
     }]
     if (constraintName) {
