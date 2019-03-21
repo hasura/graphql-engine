@@ -49,7 +49,7 @@ export const getExpectedFkConstraintName = (tableName, lCols, existingConstraint
     const existingConstraintName = existingConstraints[i].constraint_name;
     if(existingConstraintName.indexOf(expectedNamePrefix) === 0) {
       const intSuffix = parseInt(existingConstraintName.slice(prefixLength), 10);
-      if (!isNan(intSuffix) && ((!suffix) || (suffix && intSuffix > suffix))) {
+      if (!isNaN(intSuffix) && ((!suffix) || (suffix && intSuffix > suffix))) {
         suffix = intSuffix
       }
     }

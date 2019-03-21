@@ -11,6 +11,7 @@ const ForeignKeyWrapper = ({
   dispatch,
   styles,
 }) => {
+  // columns in the right order with their indices
   const orderedColumns = columns
     .filter(c => Boolean(c.name))
     .map((c, i) => ({
@@ -18,6 +19,8 @@ const ForeignKeyWrapper = ({
       type: c.type,
       index: i,
     }));
+
+  // Generate a list of reference tables and their columns  
   const refTables = {};
   allSchemas.forEach(tableSchema => {
     refTables[tableSchema.table_name] = tableSchema.columns.map(
@@ -26,20 +29,14 @@ const ForeignKeyWrapper = ({
   });
 
   // TODO check out match full
+
+  // Map the foreign keys in the fkModify state and render  
   return foreignKeys.map((fk, i) => {
+
+    // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
-    const collapsedLabel = () => (
-      <div>
-        <div className="container-fluid">
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              {fkConfig ? <i> {fkConfig} </i> : null}
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
+
+    // The content when the editor is expanded
     const expandedContent = () => (
       <ForeignKeySelector
         refTables={refTables}
@@ -56,6 +53,7 @@ const ForeignKeyWrapper = ({
 
     // TODO handle ongoing request
 
+    // Function to remove FK (is undefined for the last FK)
     let removeFk;
     const isLast = i + 1 === foreignKeys.length;
     if (!isLast) {
@@ -68,8 +66,10 @@ const ForeignKeyWrapper = ({
       };
     }
 
+    // The collapse button text when the editor is collapsed
     const expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
 
+    // Wrap the collapsed and expanded content in the reusable editor
     return (
       <div key={`${i}_${isLast}`}>
         <ExpandableEditor

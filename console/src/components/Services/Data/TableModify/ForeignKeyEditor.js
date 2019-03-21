@@ -16,10 +16,14 @@ const ForeignKeyEditor = ({
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
   const tableName = tableSchema.table_name;
+
+  // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
     name: c.column_name,
     index: i
   }));
+
+  // restructure the existing foreign keys and add it to fkModify (for easy processing)
   const existingForeignKeys = getExistingFKConstraints(tableSchema, orderedColumns);
   existingForeignKeys.push({
     refTableName: '',
@@ -33,6 +37,8 @@ const ForeignKeyEditor = ({
     },
     []
   )
+
+  // Generate a list of reference tables and their columns
   const refTables = {};
   allSchemas.forEach(tableSchema => {
     refTables[tableSchema.table_name] = tableSchema.columns.map(
@@ -40,8 +46,14 @@ const ForeignKeyEditor = ({
     );
   });
   const numFks = fkModify.length;
+
+  // Map the foreign keys in the fkModify state and render  
   return fkModify.map((fk, i) => {
+
+    // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
+
+    // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => (
       <div>
         <div className="container-fluid">
@@ -57,6 +69,7 @@ const ForeignKeyEditor = ({
 
     const isLast = i + 1 === numFks;
 
+    // The content when the editor is expanded
     const expandedContent = () => (
       <ForeignKeySelector
         refTables={refTables}
@@ -70,22 +83,21 @@ const ForeignKeyEditor = ({
         setForeignKeys={setForeignKeys}
       />
     );
+
+    // The collapse button text when the editor is collapsed
     const expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
-   
+
+    // If the user made some changes and collapses the editor, the changes are lost   
     const resetFk = () => {
       const newFks = [...fkModify];
       newFks[i] = existingForeignKeys[i];
       dispatch(setForeignKeys(newFks));
     };
 
-    const collapseCallback = () => {
-      if (isLast) {
-        dispatch(setForeignKeys(existingForeignKeys));
-      }
-    }
     const collapseButtonText = isLast ? 'Cancel' : 'Close';
-    let removeFk;
 
+    // Function to remove FK (is undefined for the last FK)
+    let removeFk;
     if (!isLast) {
       removeFk = () => {
         let isOk = window.confirm('Are you sure?');
@@ -95,13 +107,15 @@ const ForeignKeyEditor = ({
       }
     }
 
+    // Function to save the FK
     let saveFk;
     if (fkConfig) {
       saveFk = () => dispatch(saveForeignKeys(i, tableSchema, orderedColumns));
     }
 
+    // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}_${numFks- 1 - i}`}>
+      <div key={`fk_${i}_${numFks- 1 - i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           property={'add-fks'}
