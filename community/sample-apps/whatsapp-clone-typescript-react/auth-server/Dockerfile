@@ -1,4 +1,4 @@
-FROM node:alpine
+FROM node:8.9.1
 
 RUN mkdir -p /opt/app
 
