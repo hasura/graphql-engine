@@ -15,6 +15,7 @@ import           Control.Exception                             (SomeException,
 
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..))
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -26,9 +27,11 @@ import qualified Data.ByteString.Lazy                          as BL
 import qualified Data.HashMap.Strict                           as Map
 import qualified Data.IORef                                    as IORef
 import qualified Data.Text                                     as T
+import qualified Network.HTTP.Types                            as HTTP
 import qualified Network.URI                                   as URI
 import qualified Network.WebSockets                            as WS
 
+import qualified Hasura.GraphQL.Transport.WebSocket.Protocol   as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.Logging                                as L
 
@@ -48,12 +51,14 @@ data WebsocketPayload
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
 
 
-sendInit :: WS.Connection -> WebsocketPayload -> IO ()
-sendInit conn payload =
+sendInit :: WS.Connection -> [HTTP.Header] -> IO ()
+sendInit conn reqHdrs =
   WS.sendTextData conn $ J.encode $
     J.object [ "type" J..= ("connection_init" :: Text)
-             , "payload" J..= _wpPayload payload
+             , "payload" J..= connParams
              ]
+  where
+    connParams = (WS.ConnParams . Just . Map.fromList . hdrsToText) reqHdrs
 
 sendStopMsg :: WS.Connection -> OperationId -> IO ()
 sendStopMsg conn opId =
@@ -67,9 +72,10 @@ mkGraphqlProxy
   :: WS.WSConn a
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
+  -> [HTTP.Header]    -- connection params in conn_init from the client
   -> WebsocketPayload -- the start msg
   -> WS.ClientApp ()
-mkGraphqlProxy wsconn stRef rn payload destConn = do
+mkGraphqlProxy wsconn stRef rn hdrs payload destConn = do
   -- setup initial connection protocol
   setupInitialGraphqlProto destConn
   res <- getWsProxyState stRef rn
@@ -94,7 +100,7 @@ mkGraphqlProxy wsconn stRef rn payload destConn = do
     -- send an init message with the same payload recieved, and then send the
     -- payload as it is (assuming this is the start msg)
     setupInitialGraphqlProto conn = do
-      sendInit conn payload
+      sendInit conn hdrs
       WS.sendTextData conn $ J.encode payload
 
 
@@ -105,11 +111,12 @@ runGqlClient'
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
+  -> [HTTP.Header]
   -> WebsocketPayload
   -> ExceptT QErr IO ()
-runGqlClient' (L.Logger logger) url wsConn stRef rn opId payload = do
+runGqlClient' (L.Logger logger) url wsConn stRef rn opId hdrs payload = do
   host <- maybe (throw500 "empty hostname for websocket conn") return mHost
-  let gqClient = mkGraphqlProxy wsConn stRef rn payload
+  let gqClient = mkGraphqlProxy wsConn stRef rn hdrs payload
 
   thrId <- liftIO $ forkIO $ do
     res <- try $ WS.runClient host port path gqClient
@@ -137,13 +144,14 @@ runGqlClient
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
+  -> [HTTP.Header]
   -> WebsocketPayload
   -> ExceptT QErr IO ()
-runGqlClient logger url wsConn stRef rn opId payload = do
+runGqlClient logger url wsConn stRef rn opId hdrs startMsg = do
   mState <- getWsProxyState stRef rn
   case mState of
     Nothing ->
-      runGqlClient' logger url wsConn stRef rn opId payload
+      runGqlClient' logger url wsConn stRef rn opId hdrs startMsg
     Just st -> do
       -- send init message and the raw message on the existing conn
       let wsconn   = _wpsRemoteConn st
@@ -153,8 +161,8 @@ runGqlClient logger url wsConn stRef rn opId payload = do
       conn <- maybe (throwError wsConnErr) return wsconn
       liftIO $ do
         updateState stRef rn newState
-        sendInit conn payload
-        WS.sendTextData conn $ J.encode payload
+        sendInit conn hdrs
+        WS.sendTextData conn $ J.encode startMsg
 
 updateState
   :: IORef.IORef WSConnState

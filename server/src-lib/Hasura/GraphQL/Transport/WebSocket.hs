@@ -24,6 +24,7 @@ import qualified Network.HTTP.Types                            as H
 import qualified Network.WebSockets                            as WS
 import qualified StmContainers.Map                             as STMMap
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context                        (GCtx)
 import           Hasura.GraphQL.Resolve                        (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context                (LazyRespTx)
@@ -35,7 +36,6 @@ import           Hasura.GraphQL.Validate                       (QueryParts (..),
                                                                 getQueryParts,
                                                                 validateGQ)
 import           Hasura.Prelude
-import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                            (AuthMode,
                                                                 getUserInfo)
@@ -229,7 +229,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       case G._todType opDef of
         G.OperationTypeSubscription -> do
           res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
-                 wsConn userInfoR rn opId sockPayload
+                 wsConn userInfoR rn opId reqHdrs sockPayload
           onLeft res $ \e -> do
             logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
             withComplete $ sendConnErr . T.pack $ show e
@@ -371,7 +371,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
       liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
-        CSInitialised (ConnInitState userInfo paramHeaders Map.empty)
+        CSInitialised (ConnInitState userInfo headers Map.empty)
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?

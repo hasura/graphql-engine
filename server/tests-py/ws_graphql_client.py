@@ -7,17 +7,8 @@ import threading
 
 
 class GraphQLClient():
-    """
-    A simple GraphQL client that works over Websocket as the transport
-    protocol, instead of HTTP.
-    This follows the Apollo protocol.
-    https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
-    """
 
     def __init__(self, hge_ctx):
-        #self.ws_url = url
-        #self._conn = websocket.create_connection(self.ws_url, on_message=self._on_message)
-        #self._conn.on_message = self._on_message
         self.ctx = hge_ctx
         self._subscription_running = False
         self._st_id = None
