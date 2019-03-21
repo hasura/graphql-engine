@@ -26,10 +26,6 @@ newtype InstanceId
   = InstanceId { getInstanceId :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
-newtype VerboseLogging
-  = VerboseLogging { unVerboseLogging :: Bool }
-  deriving (Show, Eq)
-
 mkInstanceId :: IO InstanceId
 mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
 
@@ -806,6 +802,7 @@ serveOptsToLog so =
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "verbose_logging" J..= soVerboseLogging so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

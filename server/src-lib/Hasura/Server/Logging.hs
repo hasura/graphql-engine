@@ -8,6 +8,7 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
+  , VerboseLogging(..)
   ) where
 
 import           Crypto.Hash                 (Digest, SHA1, hash)
@@ -27,6 +28,7 @@ import           Network.Wai                 (Request (..))
 import           System.ByteOrder            (ByteOrder (..), byteOrder)
 import           Text.Printf                 (printf)
 
+import qualified Data.Aeson                  as J
 import qualified Data.ByteString.Char8       as BS
 import qualified Data.CaseInsensitive        as CI
 import qualified Network.HTTP.Types          as N
@@ -37,6 +39,11 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
+
+
+newtype VerboseLogging
+  = VerboseLogging { unVerboseLogging :: Bool }
+  deriving (Show, Eq, Generic, J.ToJSON)
 
 data StartupLog
   = StartupLog
@@ -131,7 +138,7 @@ instance ToJSON AccessLog where
 data LogDetail
   = LogDetail
   { _ldQuery :: !TBS.TByteString
-  , _ldError :: !Value
+  , _ldError :: !(Maybe Value)
   } deriving (Show, Eq)
 
 instance ToJSON LogDetail where
@@ -141,28 +148,38 @@ instance ToJSON LogDetail where
            ]
 
 ravenLogGen
-  :: (BL.ByteString, Either QErr BL.ByteString)
+  :: VerboseLogging
+  -> (BL.ByteString, Either QErr BL.ByteString)
   -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
-ravenLogGen (reqBody, res) =
+ravenLogGen verLog (reqBody, res) =
   (status, toJSON <$> logDetail, Just qh, Just size)
   where
     status = either qeStatus (const N.status200) res
-    logDetail = either (Just . qErrToLogDetail) (const Nothing) res
+    logDetail = either (Just . qErrToLogDetail) (const logVerbose) res
     reqBodyTxt = TBS.fromLBS reqBody
     qErrToLogDetail qErr =
-      LogDetail reqBodyTxt $ toJSON qErr
+      LogDetail reqBodyTxt $ Just $ toJSON qErr
+
     size = BL.length $ either encode id res
+
     qh = T.pack . show $ sha1 reqBody
+
     sha1 :: BL.ByteString -> Digest SHA1
     sha1 = hash . BL.toStrict
 
+    logVerbose = if unVerboseLogging verLog
+                 then Just $ LogDetail reqBodyTxt Nothing
+                 else Nothing
+
+
 mkAccessLog
-  :: Maybe UserInfo -- may not have been resolved
+  :: VerboseLogging
+  -> Maybe UserInfo -- may not have been resolved
   -> Request
   -> (BL.ByteString, Either QErr BL.ByteString)
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
-mkAccessLog userInfoM req r mTimeT =
+mkAccessLog verLog userInfoM req r mTimeT =
   AccessLog
   { alStatus       = status
   , alMethod       = bsToTxt $ requestMethod req
@@ -177,7 +194,7 @@ mkAccessLog userInfoM req r mTimeT =
   , alQueryHash    = queryHash
   }
   where
-    (status, mDetail, queryHash, size) = ravenLogGen r
+    (status, mDetail, queryHash, size) = ravenLogGen verLog r
     diffTime = case mTimeT of
       Nothing       -> Nothing
       Just (t1, t2) -> Just $ diffUTCTime t2 t1

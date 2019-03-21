@@ -113,15 +113,16 @@ withSCUpdate scr action = do
 
 data ServerCtx
   = ServerCtx
-  { scIsolation    :: Q.TxIsolation
-  , scPGPool       :: Q.PGPool
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scStringifyNum :: Bool
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
+  { scIsolation      :: Q.TxIsolation
+  , scPGPool         :: Q.PGPool
+  , scLogger         :: L.Logger
+  , scCacheRef       :: SchemaCacheRef
+  , scAuthMode       :: AuthMode
+  , scManager        :: HTTP.Manager
+  , scStringifyNum   :: Bool
+  , scEnabledAPIs    :: S.HashSet API
+  , scInstanceId     :: InstanceId
+  , scVerboseLogging :: VerboseLogging
   }
 
 data HandlerCtx
@@ -144,9 +145,9 @@ isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 parseBody :: (FromJSON a) => Handler a
 parseBody = do
   reqBody <- hcReqBody <$> ask
-  case decode' reqBody of
-    Just jVal -> decodeValue jVal
-    Nothing   -> throw400 InvalidJSON "invalid json"
+  case eitherDecode' reqBody of
+    Left e     -> throw400 InvalidJSON (T.pack e)
+    Right jVal -> decodeValue jVal
 
 onlyAdmin :: Handler ()
 onlyAdmin = do
@@ -168,8 +169,9 @@ logResult
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
 logResult userInfoM req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
+  liftIO $ logger $ mkAccessLog verbose userInfoM req (reqBody, res) qTime
   where
+    verbose = scVerboseLogging sc
     logger = L.unLogger $ scLogger sc
 
 logError
@@ -334,7 +336,8 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg enableConsole
 
     let schemaCacheRef = SchemaCacheRef cacheLock cacheRef
         serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
-            schemaCacheRef mode httpManager strfyNum apis instanceId
+                    schemaCacheRef mode httpManager strfyNum apis instanceId
+                    verLog
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry

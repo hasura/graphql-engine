@@ -97,7 +97,7 @@ startSchemaSync strfyNum pool logger httpMgr cacheRef instanceId cacheInitTime =
     logThreadStarted threadType threadId =
       let msg = T.pack (show threadType) <> " thread started"
       in unLogger logger $
-         StartupLog LevelInfo "threads" $
+         StartupLog LevelInfo "schema-sync" $
            object [ "instance_id" .= getInstanceId instanceId
                   , "thread_id" .= show threadId
                   , "message" .= msg
