@@ -12,7 +12,7 @@ Run codegen to generate TypeScript types
 
     yarn generate
 
-**Note**: The types are generated from the server! So if you have `admin secret` enabled in your graphql-engine server, make sure to update the headers in `codegen.yml` file.
+**Note**: The types are generated from the server! So if you have `admin secret` enabled in your graphql-engine server, make sure to update the headers in `codegen.js` file.
 
 Set environment variables. Open `.env` file and add the following env
 
