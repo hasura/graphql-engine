@@ -73,6 +73,13 @@ export const showValidationError = message => {
   };
 };
 
+export const TOGGLE_CASCADE_PENDING_EVENTS =
+  'ModifyTrigger/TOGGLE_CASCADE_PENDING_EVENTS';
+export const toggleCascadePendingEvents = checked => ({
+  type: TOGGLE_CASCADE_PENDING_EVENTS,
+  checked,
+});
+
 export const save = (property, triggerName) => {
   return (dispatch, getState) => {
     const { modifyTrigger } = getState();
@@ -122,20 +129,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
     }
     const upQuery = {
       type: 'bulk',
@@ -293,6 +302,11 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         headers: tNewHeaders,
+      };
+    case TOGGLE_CASCADE_PENDING_EVENTS:
+      return {
+        ...state,
+        cascadePendingEvents: action.checked,
       };
     case REQUEST_ONGOING:
       return {

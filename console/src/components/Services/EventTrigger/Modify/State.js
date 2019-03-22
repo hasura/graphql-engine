@@ -2,6 +2,7 @@ const defaultState = {
   definition: {},
   webhookURL: '',
   webhookUrlType: 'url',
+  cascadePendingEvents: false,
   retryConf: {
     numRetrys: 0,
     retryInterval: 10,
