@@ -4,7 +4,7 @@ version  := $(shell ../scripts/get-version.sh)
 
 # TODO: needs to be replaced with something like yq
 stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
-packager_ver := 1.2
+packager_ver := 20190314
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 
@@ -33,6 +33,7 @@ release-image: $(project).cabal
 
 # assumes this is built in circleci
 ci-binary:
+	stack clean
 	mkdir -p packaging/build/rootfs
 	stack $(STACK_FLAGS) build $(BUILD_FLAGS)
 	mkdir -p $(build_output)

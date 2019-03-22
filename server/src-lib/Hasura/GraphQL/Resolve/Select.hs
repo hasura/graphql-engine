@@ -171,7 +171,7 @@ parseOrderBy
      , MonadReader r m
      , Has OrdByCtx r
      )
-  => AnnGValue -> m [RS.AnnOrderByItem]
+  => AnnInpVal -> m [RS.AnnOrderByItem]
 parseOrderBy = fmap concat . withArray f
   where
     f _ = mapM (withObject (getAnnObItems id))
@@ -246,9 +246,9 @@ parseOrderByEnum = \case
   G.EnumValue v                   -> throw500 $
     "enum value " <> showName v <> " not found in type order_by"
 
-parseLimit :: ( MonadError QErr m ) => AnnGValue -> m Int
+parseLimit :: ( MonadError QErr m ) => AnnInpVal -> m Int
 parseLimit v = do
-  (_, pgColVal) <- asPGColVal v
+  pgColVal <- _apvValue <$> asPGColVal v
   limit <- maybe noIntErr return $ pgColValueToInt pgColVal
   -- validate int value
   onlyPositiveInt limit
@@ -297,7 +297,7 @@ convertSelectByPKey opCtx fld = do
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
 
 -- agg select related
-parseColumns :: MonadError QErr m => AnnGValue -> m [PGCol]
+parseColumns :: MonadError QErr m => AnnInpVal -> m [PGCol]
 parseColumns val =
   flip withArray val $ \_ vals ->
     forM vals $ \v -> do
@@ -311,7 +311,7 @@ convertCount args = do
   maybe (return S.CTStar) (mkCType isDistinct) columnsM
   where
     parseDistinct v = do
-      (_, val) <- asPGColVal v
+      val <- _apvValue <$> asPGColVal v
       case val of
         PGValBoolean b -> return b
         _              ->
@@ -397,7 +397,7 @@ fromFuncQueryField f qf argSeq isAgg fld = fieldAsPath fld $ do
 
 parseFunctionArgs
   ::(MonadError QErr m)
-  => PrepFn m -> FuncArgSeq -> AnnGValue -> m [S.SQLExp]
+  => PrepFn m -> FuncArgSeq -> AnnInpVal -> m [S.SQLExp]
 parseFunctionArgs fn argSeq val =
   flip withObject val $ \nTy obj ->
     fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do

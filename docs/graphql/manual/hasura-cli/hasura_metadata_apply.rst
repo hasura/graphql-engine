@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # Apply Hasura GraphQL Engine metadata present in metadata.yaml file:
+    # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
     hasura metadata apply
 
 Options
@@ -28,7 +28,7 @@ Options
 
 ::
 
-      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL Engine
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
   -h, --help                  help for apply
 
@@ -37,8 +37,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

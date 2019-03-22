@@ -71,6 +71,7 @@ page for reference on how to do this.
 - Before adding an image to docs, first compress it via some tool to ensure users won't have to unnecessarily 
 download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by 
 upto 75% without losing any visible quality.
+- Use the thumbnail directive for images if you want to allow click to zoom.
 - Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
 some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
 X and Y ...", make "create a relationship" a link to the `Create relationships` page.
