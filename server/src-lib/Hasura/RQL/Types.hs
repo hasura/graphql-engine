@@ -53,7 +53,7 @@ import           Hasura.RQL.Types.Error        as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.Subscribe    as R
+import           Hasura.RQL.Types.EventTrigger as R
 
 import           Hasura.SQL.Types
 
