@@ -142,7 +142,9 @@ args:
           c41_range_numeric numrange,
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
-          c44_xml xml
+          c44_xml xml,
+          c45_geom_array geometry(Point)[],
+          c46_range_numeric_array numrange[]
       );
 - type: track_table
   args:

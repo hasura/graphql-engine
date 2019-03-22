@@ -172,7 +172,7 @@ publicSchema :: SchemaName
 publicSchema = SchemaName "public"
 
 catalogSchema :: SchemaName
-catalogSchema = SchemaName "catalog"
+catalogSchema = SchemaName "pg_catalog"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
@@ -447,7 +447,7 @@ $(deriveJSON
 $(deriveJSON (aesonDrop 7 camelCase) ''PGColType)
 
 baseTy :: PGBaseColType -> PGColType
-baseTy b = PGColType qualfdType (AnnType name) (pgTypeOid b)$ PGTyBase b
+baseTy b = PGColType qualfdType (AnnType name) (pgBaseTyOid b)$ PGTyBase b
   where
     qualfdType = QualifiedObject (SchemaName "pg_catalog") (PGTyName name)
     name = T.pack $ show b
@@ -462,34 +462,45 @@ arrTyOfBase bct = case PTI.getArrOidOfElem (PTI.ElemOid bOid) of
   Nothing -> Nothing
   Just (PTI.ArrOid arrOid) -> return $ PGColType arrQualTy arrSqlName arrOid $ PGTyArray $ baseTy bct
   where
-    bOid = pgTypeOid bct
+    bOid = pgBaseTyOid bct
     arrSqlName = AnnType $ T.pack (show bct) <> "[]"
     arrQualTy = QualifiedObject catalogSchema $ PGTyName $ "_" <> T.pack (show bct)
 
 instance Hashable PGColType
 
-pgTypeOid :: PGBaseColType -> PQ.Oid
-pgTypeOid PGSmallInt    = PTI.int2
-pgTypeOid PGInteger     = PTI.int4
-pgTypeOid PGBigInt      = PTI.int8
-pgTypeOid PGSerial      = PTI.int4
-pgTypeOid PGBigSerial   = PTI.int8
-pgTypeOid PGFloat       = PTI.float4
-pgTypeOid PGDouble      = PTI.float8
-pgTypeOid PGNumeric     = PTI.numeric
-pgTypeOid PGBoolean     = PTI.bool
-pgTypeOid PGChar        = PTI.char
-pgTypeOid PGVarchar     = PTI.varchar
-pgTypeOid PGText        = PTI.text
-pgTypeOid PGDate        = PTI.date
-pgTypeOid PGTimeStampTZ = PTI.timestamptz
-pgTypeOid PGTimeTZ      = PTI.timetz
-pgTypeOid PGJSON        = PTI.json
-pgTypeOid PGJSONB       = PTI.jsonb
+pgTyOid :: PGColType -> PQ.Oid
+pgTyOid ct = case pgColTyDetails (getUdt ct) of
+  PGTyBase bt  -> let tryOid = pgBaseTyOid bt in
+                  bool origOid tryOid $ tryOid /= PTI.auto
+  PGTyArray bt -> case PTI.getArrOidOfElem (PTI.ElemOid $ pgTyOid bt) of
+    Nothing               -> origOid
+    Just (PTI.ArrOid oid) -> oid
+  _            -> origOid
+  where
+    origOid = pgColTyOid ct
+
+pgBaseTyOid :: PGBaseColType -> PQ.Oid
+pgBaseTyOid PGSmallInt    = PTI.int2
+pgBaseTyOid PGInteger     = PTI.int4
+pgBaseTyOid PGBigInt      = PTI.int8
+pgBaseTyOid PGSerial      = PTI.int4
+pgBaseTyOid PGBigSerial   = PTI.int8
+pgBaseTyOid PGFloat       = PTI.float4
+pgBaseTyOid PGDouble      = PTI.float8
+pgBaseTyOid PGNumeric     = PTI.numeric
+pgBaseTyOid PGBoolean     = PTI.bool
+pgBaseTyOid PGChar        = PTI.char
+pgBaseTyOid PGVarchar     = PTI.varchar
+pgBaseTyOid PGText        = PTI.text
+pgBaseTyOid PGDate        = PTI.date
+pgBaseTyOid PGTimeStampTZ = PTI.timestamptz
+pgBaseTyOid PGTimeTZ      = PTI.timetz
+pgBaseTyOid PGJSON        = PTI.json
+pgBaseTyOid PGJSONB       = PTI.jsonb
 -- we are using the ST_GeomFromGeoJSON($i) instead of $i
-pgTypeOid PGGeometry    = PTI.text
-pgTypeOid PGGeography   = PTI.text
-pgTypeOid (PGUnknown _) = PTI.auto
+pgBaseTyOid PGGeometry    = PTI.text
+pgBaseTyOid PGGeography   = PTI.text
+pgBaseTyOid (PGUnknown _) = PTI.auto
 
 
 isIntegerType :: PGColType -> Bool

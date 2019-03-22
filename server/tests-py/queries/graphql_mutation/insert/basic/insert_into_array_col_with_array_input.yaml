@@ -1,28 +1,60 @@
   #Inserting data into test_types table
-- description: Inserts Array into an Array column
+- description: Inserts Arrays into an Array columns
   url: /v1alpha1/graphql
   response:
     data:
       insert_test_types:
         returning:
-        - c34_text_array: ["a","b","c"]
+        - c34_text_array: &text_arr
+            ["\"a\\\"","'b'","c"]
+          c35_integer_2d_array: &int_arr
+          - [1,2,3,4]
+          - [5,6,7,8]
+          - [9,10,11,12]
+          c45_geom_array: &geom_arr
+          - coordinates: [43.75049, 11.03207]
+            type: Point
+            crs: &crs
+              type: name
+              properties:
+                name: 'urn:ogc:def:crs:EPSG::4326'
+          - coordinates: [43.76417, 11.25869]
+            type: Point
+            crs: *crs
+          c46_range_numeric_array: &range_arr
+          - '[123,456)'
+          - '[142,225]'
+          - '(241,325)'
+          - '(242,526]'
   status: 200
   query:
     variables:
-      textArray: ["a","b","c"]
+      textArray: *text_arr
+      intArray: *int_arr
+      geomArray: *geom_arr
+      rangeArray: *range_arr
     query: |
       mutation insert_test_types
-      ($textArray: [String])
+      ( $textArray: [String]
+      , $geomArray: [json]
+      , $intArray: [[Int]]
+      , $rangeArray:[numrange] )
       {
         insert_test_types(
           objects: [
             {
             c34_text_array: $textArray
+            c35_integer_2d_array: $intArray
+            c45_geom_array: $geomArray
+            c46_range_numeric_array: $rangeArray
             }
           ]
         ) {
           returning {
             c34_text_array
+            c35_integer_2d_array
+            c45_geom_array
+            c46_range_numeric_array
           }
         }
       }

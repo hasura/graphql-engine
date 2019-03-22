@@ -1,7 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Hasura.SQL.Value where
 
-
 import           Hasura.SQL.GeoJSON
 import           Hasura.SQL.Time
 import           Hasura.SQL.Types
@@ -301,19 +300,14 @@ parsePGValue pct val = case pgColTyDetails pct of
     parseAsEnum      = parseAsVal PGValEnum
     parseAsRange     = parseAsVal PGValRange
     parseAsArray bct v = allowPGEncStr $ (flip $ withArray "[PGColValue]") v $ \a -> do
-      let oid   = pgColTyOid pct
-      eOid <-  maybe (fail "Array types must return base element type") return $ getArrayBaseTy pct
-      let asArr = PGColValue oid . PGValArray (pgColTyOid eOid)
+      let elemOid = maybe (pgColTyOid bct) pgTyOid $ getArrayBaseTy pct
+          asArr = PGColValue (pgTyOid pct) . PGValArray elemOid
       fmap asArr $ mapM (parsePGValue bct) a
 
     asUnknown bct v = PGColValue (pgColTyOid bct) $ PGValBase $ PGValUnknown v
 
     parseAsBase bct v = allowPGEncStr $
-      let oid' = pgTypeOid bct
-          oidCol = pgColTyOid pct
-          -- For PGUnknown take oid from PGColType
-          oid = bool oid' oidCol $ oid' == PTI.auto
-          asBaseColVal = PGColValue oid . PGValBase in
+      let asBaseColVal = PGColValue (pgTyOid pct) . PGValBase in
       fmap asBaseColVal $ parsePGValue' bct v
 
     allowPGEncStr :: AT.Parser PGColValue -> AT.Parser PGColValue
@@ -394,12 +388,11 @@ applyAsGeoJSONArr v =
 
 toPrepParam :: Int -> PGColType -> S.SQLExp
 toPrepParam i ty = withGeom ty $ S.SEPrep i
-  where
 
 withGeom :: PGColType -> S.SQLExp -> S.SQLExp
-withGeom (PGColType _ _ _ d) = case d of
+withGeom ty@(PGColType _ _ _ d) = case d of
   PGTyBase x -> bool id applyGeomFromGeoJson $ isBaseTyGeo x
-  PGTyArray a -> case getArrayBaseTy a of
+  PGTyArray{} -> case getArrayBaseTy ty of
     Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $ isBaseTyGeo b
     _ -> id
   _ -> id

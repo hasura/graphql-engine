@@ -517,9 +517,12 @@ isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
     notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
 
 pgColTyToScalar :: PGColType -> Text
-pgColTyToScalar (PGColType qn _ _ d) = case d of
-  PGTyBase b -> pgBaseColTyToScalar b
-  _          -> qualTyToScalar qn
+pgColTyToScalar t = case (pgColTyName udt, pgColTyDetails udt) of
+  (_ , PGTyBase b)   -> pgBaseColTyToScalar b
+  (_ , PGTyArray t') -> pgColTyToScalar t'
+  (qn, _)            -> qualTyToScalar qn
+  where
+    udt = getUdt t
 
 qualTyToScalar :: QualifiedType -> Text
 qualTyToScalar (QualifiedObject (SchemaName s) n)
