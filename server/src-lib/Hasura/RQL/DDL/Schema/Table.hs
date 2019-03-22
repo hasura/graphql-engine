@@ -1,5 +1,8 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
@@ -52,8 +55,8 @@ getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
-      return $ mkTableInfo qt isSystemDefined cons cols viewInfoM
+    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable
@@ -78,7 +81,7 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => QualifiedTable -> Bool -> m RespBody
+  => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
@@ -98,7 +101,7 @@ runTrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, UserInfoM m
      )
-  => TrackTable -> m RespBody
+  => TrackTable -> m EncJSON
 runTrackTableQ q = do
   trackExistingTableOrViewP1 q
   trackExistingTableOrViewP2 (tName q) False
@@ -248,7 +251,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
 
 unTrackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => UntrackTable -> m RespBody
+  => UntrackTable -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
 
@@ -278,7 +281,7 @@ runUntrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, UserInfoM m
      )
-  => UntrackTable -> m RespBody
+  => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
@@ -419,8 +422,16 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-execRawSQL :: (MonadTx m) => T.Text -> m RunSQLRes
+instance Q.FromRes RunSQLRes where
+  fromRes (Q.ResultOkEmpty _) =
+    return $ RunSQLRes "CommandOk" Null
+  fromRes (Q.ResultOkData res) = do
+    csvRows <- resToCSV res
+    return $ RunSQLRes "TuplesOk" $ toJSON csvRows
+
+execRawSQL :: (MonadTx m) => T.Text -> m EncJSON
 execRawSQL =
+  fmap (encJFromJValue @RunSQLRes) .
   liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
   where
     rawSqlErrHandler txe =
@@ -429,7 +440,7 @@ execRawSQL =
 
 execWithMDCheck
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => RunSQL -> m RunSQLRes
+  => RunSQL -> m EncJSON
 execWithMDCheck (RunSQL t cascade _) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
@@ -523,11 +534,11 @@ isAltrDropReplace = either throwErr return . matchRegex regex False
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => RunSQL -> m RespBody
+  => RunSQL -> m EncJSON
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
   isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
-  encode <$> bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
+  bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]
@@ -548,10 +559,3 @@ resToCSV r =  do
 
   where
     decodeBS = either (throwError . T.pack . show) return . TE.decodeUtf8'
-
-instance Q.FromRes RunSQLRes where
-  fromRes (Q.ResultOkEmpty _) =
-    return $ RunSQLRes "CommandOk" Null
-  fromRes (Q.ResultOkData res) = do
-    csvRows <- resToCSV res
-    return $ RunSQLRes "TuplesOk" $ toJSON csvRows

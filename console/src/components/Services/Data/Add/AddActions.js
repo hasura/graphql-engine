@@ -133,12 +133,17 @@ const createTableSql = () => {
           return;
         }
         const { colMappings, refTableName, onUpdate, onDelete } = fk;
-        const lCols = colMappings.slice(0, -1).map(cm => `"${state.columns[cm.column].name}"`);
+        const lCols = colMappings
+          .slice(0, -1)
+          .map(cm => `"${state.columns[cm.column].name}"`);
         const rCols = colMappings.slice(0, -1).map(cm => `"${cm.refColumn}"`);
-        const numColMappings = lCols.length;
         if (lCols.length === 0) return;
-        tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${refTableName}"(${rCols.join(', ')}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
-      })
+        tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
+          ', '
+        )}) REFERENCES "${refTableName}"(${rCols.join(
+          ', '
+        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      });
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';

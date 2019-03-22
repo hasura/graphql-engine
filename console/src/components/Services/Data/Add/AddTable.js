@@ -414,13 +414,13 @@ class AddTable extends Component {
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
-              <PrimaryKeySelector
-                primaryKeys={primaryKeys}
-                columns={columns}
-                setPk={setPk}
-                dispatch={dispatch}
-                styles={styles}
-              />
+            <PrimaryKeySelector
+              primaryKeys={primaryKeys}
+              columns={columns}
+              setPk={setPk}
+              dispatch={dispatch}
+              styles={styles}
+            />
             <hr />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;

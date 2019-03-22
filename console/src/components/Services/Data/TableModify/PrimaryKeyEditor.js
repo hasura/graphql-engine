@@ -83,7 +83,7 @@ const PrimaryKeyEditor = ({
     dispatch(setPrimaryKeys(['']));
   };
 
-  // save 
+  // save
   const onSave = (e, confirmed) => {
     if (pkConstraintName && pkModify.length === 1 && !confirmed) {
       const isOk = window.confirm(DELETE_PK_WARNING);
@@ -110,7 +110,7 @@ const PrimaryKeyEditor = ({
     onSave(null, isOk);
   };
 
-  // Button text when the editor is expanded and collapsed
+  // Toggle button text when the editor is expanded and collapsed
   const expandButtonText = pkConfigText ? 'Edit' : 'Add';
   const collapsedButtonText = pkConfigText ? 'Close' : 'Cancel';
 
@@ -126,6 +126,7 @@ const PrimaryKeyEditor = ({
       saveFunc={onSave}
       removeFunc={onRemove}
       expandCallback={setPkEditState}
+      collapseButtonText={collapsedButtonText}
       expandButtonText={expandButtonText}
       collapseCallback={resetPkEditState}
     />

@@ -133,12 +133,13 @@ class RelationshipsView extends Component {
             </thead>
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
-                (rel, i) => {
+                rel => {
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.objRel.rel_name}
+                      key={rel.objRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
                         tableSchema,
@@ -156,6 +157,7 @@ class RelationshipsView extends Component {
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.arrRel.rel_name}
+                      key={rel.arrRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
                         tableSchema,
@@ -169,7 +171,7 @@ class RelationshipsView extends Component {
                     <td />
                   );
                   return (
-                    <tr key={i}>
+                    <tr>
                       {column1}
                       {column2}
                     </tr>

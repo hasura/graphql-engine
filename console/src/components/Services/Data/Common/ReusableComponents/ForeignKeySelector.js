@@ -1,5 +1,4 @@
 import React from 'react';
-import { getForeignKeyConfig } from './utils';
 
 const violiationActions = [
   'restrict',
@@ -18,13 +17,11 @@ const ForeignKeySelector = ({
   dispatch,
   styles,
   setForeignKeys,
-  service
+  service,
 }) => {
-  const { refTableName, colMappings, onUpdate, onDelete } = foreignKey;
+  const { refTableName, colMappings } = foreignKey;
   const numOfFks = foreignKeys.length;
   const numColMappings = colMappings.length;
-  // generate FK config
-  const fkConfig =  numColMappings <= 1 ? '' : getForeignKeyConfig(foreignKey, orderedColumns);
 
   // html for ref table dropdown
   const refTableSelect = () => {
@@ -32,7 +29,7 @@ const ForeignKeySelector = ({
     const dispatchSetRefTable = event => {
       const newFks = [...foreignKeys];
       if (newFks[index].refTableName !== event.target.value) {
-        newFks[index].colMappings = [{column: '', refColumn: ''}]
+        newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
       newFks[index].refTableName = event.target.value;
       if (index + 1 === numOfFks && service === 'add-table') {
@@ -79,7 +76,7 @@ const ForeignKeySelector = ({
             ))}
         </select>
       </div>
-    )
+    );
   };
 
   // html for column mapping dropdowns
@@ -212,7 +209,6 @@ const ForeignKeySelector = ({
       </div>
     );
   };
-
 
   const onViolation = () => {
     // Do not allow selecting on violation conditions if no column mapping is selected

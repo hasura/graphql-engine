@@ -1,7 +1,6 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
-import { getForeignKeyConfig } from '../Common/ReusableComponents/utils';
 import { setForeignKeys } from './AddActions';
 
 const ForeignKeyWrapper = ({
@@ -20,7 +19,7 @@ const ForeignKeyWrapper = ({
       index: i,
     }));
 
-  // Generate a list of reference tables and their columns  
+  // Generate a list of reference tables and their columns
   const refTables = {};
   allSchemas.forEach(tableSchema => {
     refTables[tableSchema.table_name] = tableSchema.columns.map(
@@ -30,12 +29,8 @@ const ForeignKeyWrapper = ({
 
   // TODO check out match full
 
-  // Map the foreign keys in the fkModify state and render  
+  // Map the foreign keys in the fkModify state and render
   return foreignKeys.map((fk, i) => {
-
-    // FK config (example: (a, b) -> refTable(c, d))
-    const fkConfig = getForeignKeyConfig(fk, orderedColumns);
-
     // The content when the editor is expanded
     const expandedContent = () => (
       <ForeignKeySelector
@@ -79,7 +74,6 @@ const ForeignKeyWrapper = ({
           service="modify-table"
           removeButtonColor="white"
           removeFunc={removeFk}
-          collapsedLabel={collapsedLabel}
           expandButtonText={expandButtonText}
           isCollapsable={false}
           toggled={!isLast}

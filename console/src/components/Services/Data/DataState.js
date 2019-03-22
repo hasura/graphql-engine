@@ -95,12 +95,10 @@ const defaultModifyState = {
   fkModify: [
     {
       refTableName: '',
-      colMappings: [
-        { '': '' }
-      ],
+      colMappings: [{ '': '' }],
       onDelete: 'restrict',
-      onUpdate: 'restrict'
-    } 
+      onUpdate: 'restrict',
+    },
   ],
   relAdd: {
     isActive: true,

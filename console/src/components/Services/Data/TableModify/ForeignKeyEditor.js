@@ -1,62 +1,64 @@
 import React, { useEffect } from 'react';
 import { ordinalColSort } from '../utils';
-import { setForeignKeys, saveForeignKeys, removeForeignKey } from './ModifyActions';
-import { pgConfTypes, getForeignKeyConfig, getExistingFKConstraints } from '../Common/ReusableComponents/utils';
+import {
+  setForeignKeys,
+  saveForeignKeys,
+  removeForeignKey,
+} from './ModifyActions';
+import {
+  getForeignKeyConfig,
+  getExistingFKConstraints,
+} from '../Common/ReusableComponents/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 
-
 const ForeignKeyEditor = ({
   tableSchema,
-  currentSchema,
   allSchemas,
   dispatch,
   styles,
   fkModify,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
-  const tableName = tableSchema.table_name;
 
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
     name: c.column_name,
-    index: i
+    index: i,
   }));
 
   // restructure the existing foreign keys and add it to fkModify (for easy processing)
-  const existingForeignKeys = getExistingFKConstraints(tableSchema, orderedColumns);
+  const existingForeignKeys = getExistingFKConstraints(
+    tableSchema,
+    orderedColumns
+  );
   existingForeignKeys.push({
     refTableName: '',
     onUpdate: 'restrict',
     onDelete: 'restrict',
-    colMappings: [{ column: '', refColumn: '' }]
+    colMappings: [{ column: '', refColumn: '' }],
   });
-  useEffect(
-    () => {
-      dispatch(setForeignKeys(existingForeignKeys))
-    },
-    []
-  )
+  useEffect(() => {
+    dispatch(setForeignKeys(existingForeignKeys));
+  }, []);
 
   // Generate a list of reference tables and their columns
   const refTables = {};
-  allSchemas.forEach(tableSchema => {
-    refTables[tableSchema.table_name] = tableSchema.columns.map(
-      c => c.column_name
-    );
+  allSchemas.forEach(ts => {
+    refTables[ts.table_name] = ts.columns.map(c => c.column_name);
   });
   const numFks = fkModify.length;
 
-  // Map the foreign keys in the fkModify state and render  
+  // Map the foreign keys in the fkModify state and render
   return fkModify.map((fk, i) => {
-
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
 
     const isLast = i + 1 === numFks;
 
     // Label to show next to the 'Edit' button (the FK configuration)
-    const collapsedLabelText = (isLast && numFks === 1) ? "No foreign keys" : <i>{fkConfig}</i>;
+    const collapsedLabelText =
+      isLast && numFks === 1 ? 'No foreign keys' : <i>{fkConfig}</i>;
     const collapsedLabel = () => (
       <div>
         <div className="container-fluid">
@@ -69,7 +71,6 @@ const ForeignKeyEditor = ({
         </div>
       </div>
     );
-
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -92,7 +93,7 @@ const ForeignKeyEditor = ({
       expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
     }
 
-    // If the user made some changes and collapses the editor, the changes are lost   
+    // If the user made some changes and collapses the editor, the changes are lost
     const resetFk = () => {
       const newFks = [...fkModify];
       newFks[i] = existingForeignKeys[i];
@@ -105,11 +106,11 @@ const ForeignKeyEditor = ({
     let removeFk;
     if (!isLast) {
       removeFk = () => {
-        let isOk = window.confirm('Are you sure?');
+        const isOk = window.confirm('Are you sure?');
         if (isOk) {
           dispatch(removeForeignKey(i, tableSchema, orderedColumns));
         }
-      }
+      };
     }
 
     // Function to save the FK
@@ -135,8 +136,8 @@ const ForeignKeyEditor = ({
           isToggled={isLast ? false : null}
         />
       </div>
-    )
-  }) 
-}
+    );
+  });
+};
 
 export default ForeignKeyEditor;
