@@ -20,6 +20,7 @@ import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
@@ -30,7 +31,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.EncJSON
 
 convertMutResp
   :: G.NamedType -> SelSet -> Convert RR.MutFlds
@@ -130,14 +130,14 @@ convertUpdate opCtx fld = do
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
   strfyNum <- stringifyNum <$> asks getter
-  let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds uniqCols
+  let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds allCols
       whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
       whenEmptyItems = return $ return $ buildEmptyMutResp mutFlds
   -- if there are not set items then do not perform
   -- update and return empty mutation response
   bool whenNonEmptyItems whenEmptyItems $ null setItems
   where
-    UpdOpCtx tn _ filterExp preSetCols uniqCols = opCtx
+    UpdOpCtx tn _ filterExp preSetCols allCols = opCtx
     args = _fArguments fld
     preSetItems = Map.toList preSetCols
 
@@ -149,11 +149,11 @@ convertDelete opCtx fld = do
   whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
-  let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds uniqCols
+  let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds allCols
   strfyNum <- stringifyNum <$> asks getter
   return $ RD.deleteQueryToTx strfyNum (p1, args)
   where
-    DelOpCtx tn _ filterExp uniqCols = opCtx
+    DelOpCtx tn _ filterExp allCols = opCtx
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: RR.MutFlds -> EncJSON
