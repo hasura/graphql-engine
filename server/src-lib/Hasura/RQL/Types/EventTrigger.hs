@@ -165,7 +165,8 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
-  { detqName :: !T.Text
+  { detqName    :: !T.Text
+  , detqCascade :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)

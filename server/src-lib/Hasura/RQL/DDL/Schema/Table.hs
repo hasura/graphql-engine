@@ -6,6 +6,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
@@ -14,7 +15,6 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -126,7 +126,7 @@ purgeDep schemaObjId = case schemaObjId of
     delFunctionFromCache qf
 
   (SOTableObj qt (TOTrigger trn)) -> do
-    liftTx $ delEventTriggerFromCatalog trn
+    liftTx $ delEventTriggerFromCatalog trn False
     delEventTriggerFromCache qt trn
 
   _                              -> throw500 $

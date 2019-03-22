@@ -151,14 +151,28 @@ addEventTriggerToCatalog qt allCols strfyNum etc = do
     QualifiedObject sn tn = qt
     (EventTriggerConf name opsdef _ _ _ _) = etc
 
-delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
-delEventTriggerFromCatalog trn = do
+delEventTriggerFromCatalog :: TriggerName -> Bool -> Q.TxE QErr ()
+delEventTriggerFromCatalog trn cascade = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                   hdb_catalog.event_triggers
            WHERE name = $1
                 |] (Identity trn) True
   delTriggerQ trn
+  bool (return ()) (deleteAllEventsForTrigger trn) cascade
+  where
+    deleteAllEventsForTrigger trn' = do
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+             DELETE FROM
+             hdb_catalog.event_invocation_logs
+             WHERE event_id IN (SELECT id FROM hdb_catalog.event_log
+                               WHERE trigger_name = $1);
+                 |] (Identity trn') True
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+             DELETE FROM
+             hdb_catalog.event_log
+             WHERE trigger_name = $1
+                 |] (Identity trn') True
 
 updateEventTriggerToCatalog
   :: QualifiedTable
@@ -288,7 +302,7 @@ runCreateEventTriggerQuery q = do
 unsubTableP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => DeleteEventTriggerQuery -> m QualifiedTable
-unsubTableP1 (DeleteEventTriggerQuery name)  = do
+unsubTableP1 (DeleteEventTriggerQuery name _)  = do
   adminOnly
   ti <- askTabInfoFromTrigger name
   return $ tiName ti
@@ -296,9 +310,9 @@ unsubTableP1 (DeleteEventTriggerQuery name)  = do
 unsubTableP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => DeleteEventTriggerQuery -> QualifiedTable -> m EncJSON
-unsubTableP2 (DeleteEventTriggerQuery name) qt = do
+unsubTableP2 (DeleteEventTriggerQuery name cascadeM) qt = do
   delEventTriggerFromCache qt name
-  liftTx $ delEventTriggerFromCatalog name
+  liftTx $ delEventTriggerFromCatalog name (fromMaybe False cascadeM)
   return successMsg
 
 runDeleteEventTriggerQuery
