@@ -3,6 +3,7 @@ module Hasura.RQL.DML.Mutation
   , runMutation
   , mutateAndFetchCols
   , execCTEAndBuildMutResp
+  , mkSelCTEFromColVals
   )
 where
 
@@ -27,7 +28,7 @@ data Mutation
   { _mTable    :: !QualifiedTable
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
   , _mFields   :: !MutFlds
-  , _mUniqCols :: !(Maybe [PGColInfo])
+  , _mCols     :: ![PGColInfo]
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
 
@@ -43,35 +44,12 @@ mutateAndReturn qSingleObj (Mutation qt cte mutFlds _ strfyNum) =
   execCTEAndBuildMutResp qt cte mutFlds qSingleObj strfyNum
 
 mutateAndSel :: QuerySingleObj -> Mutation -> Q.TxE QErr EncJSON
-mutateAndSel qSingleObj (Mutation qt q mutFlds mUniqCols strfyNum) = do
-  uniqCols <- onNothing mUniqCols $
-              throw500 "uniqCols not found in mutateAndSel"
-  let colMap = Map.fromList $ flip map uniqCols $
-               \ci -> (pgiName ci, ci)
+mutateAndSel qSingleObj (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ colVals <- mutateAndFetchCols qt uniqCols q strfyNum
-  colExps <- mapM (colValToColExp colMap) colVals
-  let selWhere = S.mkBoolExpWithColVal mkQIdenExp colExps
-      selCTE = S.CTESelect $
-               S.mkSelect
-               { S.selExtr = [S.selectStar]
-               , S.selFrom = Just $ S.FromExp [S.FISimple qt Nothing]
-               , S.selWhere = Just $ S.WhereFrag selWhere
-               }
+  MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals qt allCols colVals
   -- Perform select query and fetch returning fields
-  execCTEAndBuildMutResp qt (selCTE, DS.empty) mutFlds qSingleObj strfyNum
-  where
-    colValToColExp colMap colVal =
-      fmap Map.fromList $ forM (Map.toList colVal) $
-      \(pgCol, val) -> do
-        colInfo <- onNothing (Map.lookup pgCol colMap) $
-          throw500 "colInfo not found; colValToColExp"
-        sqlExp <- runAesonParser (convToTxt (pgiType colInfo)) val
-        return (pgCol, sqlExp)
-
-    mkQIdenExp col =
-      S.SEQIden $ S.QIden (S.mkQual qt) $ Iden $ getPGColTxt col
-
+  execCTEAndBuildMutResp qt (selCTE, DS.empty) mutFlds qSingleObj False
 
 mutateAndFetchCols
   :: QualifiedTable
@@ -89,6 +67,35 @@ mutateAndFetchCols qt cols cte strfyNum = do
               ]
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiName ci, FCol ci)
+
+mkSelCTEFromColVals
+  :: MonadError QErr m
+  => QualifiedTable -> [PGColInfo] -> [ColVals] -> m S.CTE
+mkSelCTEFromColVals qt allCols colVals =
+  S.CTESelect <$> case colVals of
+    [] -> return selNoRows
+    _  -> do
+      tuples <- mapM mkTupsFromColVal colVals
+      let fromItem = S.FIValues (S.ValuesExp tuples) tableAls $ Just colNames
+      return S.mkSelect
+        { S.selExtr = [S.selectStar]
+        , S.selFrom = Just $ S.FromExp [fromItem]
+        }
+  where
+    tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
+    colNames = map pgiName allCols
+    mkTupsFromColVal colVal =
+      fmap S.TupleExp $ forM allCols $ \ci -> do
+        let pgCol = pgiName ci
+        val <- onNothing (Map.lookup pgCol colVal) $
+          throw500 $ "column " <> pgCol <<> " not found in returning values"
+        runAesonParser (convToTxt (pgiType ci)) val
+
+    selNoRows =
+      S.mkSelect { S.selExtr = [S.selectStar]
+                 , S.selFrom = Just $ S.mkSimpleFromExp qt
+                 , S.selWhere = Just $ S.WhereFrag $ S.BELit False
+                 }
 
 execCTEAndBuildMutResp
   :: QualifiedTable

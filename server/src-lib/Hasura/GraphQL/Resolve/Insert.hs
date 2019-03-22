@@ -48,7 +48,6 @@ data AnnIns a
   , _aiView           :: !QualifiedTable
   , _aiTableCols      :: ![PGColInfo]
   , _aiDefVals        :: !(Map.HashMap PGCol S.SQLExp)
-  , _aiUniqCols       :: !(Maybe [PGColInfo])
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
 type SingleObjIns = AnnIns AnnInsObj
@@ -120,14 +119,14 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
                    throw500 $ "relation " <> relName <<> " not found"
 
         let rTable = riRTable relInfo
-        InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm rtUniqCols <- getInsCtx rTable
+        InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
 
         withPathK (G.unName gName) $ case riType relInfo of
           ObjRel -> do
             dataObj <- asObject dataVal
             annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
             ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals rtUniqCols
+            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
                 objRelIns = RelIns singleObjIns relInfo
             return (AnnInsObj cols (objRelIns:objRels) arrRels)
 
@@ -138,7 +137,7 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
                     dataObj <- asObject arrDataVal
                     mkAnnInsObj rtRelInfoMap dataObj
                   ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-                  let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals rtUniqCols
+                  let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
                       arrRelIns = RelIns multiObjIns relInfo
                   return (AnnInsObj cols objRels (arrRelIns:arrRels))
             -- if array relation insert input data has empty objects
@@ -199,7 +198,8 @@ mkInsertQ vn onConflictM insCols tableCols defVals role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
       sqlExps = mkSQLRow defVals givenCols
-      sqlInsert = S.SQLInsert vn tableCols [sqlExps] sqlConflict $ Just S.returningStar
+      valueExp = S.ValuesExp [S.TupleExp sqlExps]
+      sqlInsert = S.SQLInsert vn tableCols valueExp sqlConflict $ Just S.returningStar
       adminIns = return (CTEExp (S.CTEInsert sqlInsert) args, Nothing)
       nonAdminInsert = do
         ccM <- mapM RI.extractConflictCtx onConflictM
@@ -207,19 +207,6 @@ mkInsertQ vn onConflictM insCols tableCols defVals role = do
         return (CTEExp cteIns args, ccM)
 
   bool nonAdminInsert adminIns $ isAdmin role
-
-mkBoolExp
-  :: (MonadError QErr m, MonadState PrepArgs m)
-  => QualifiedTable -> [(PGColInfo, PGColValue)]
-  -> m S.BoolExp
-mkBoolExp _ []           = return $ S.BELit False
-mkBoolExp tn colInfoVals =
-  RB.toSQLBoolExp (S.mkQual tn) . BoolAnd <$>
-  mapM (fmap BoolFld . uncurry f) colInfoVals
-  where
-    f ci@(PGColInfo _ colTy _) colVal =
-      AVCol ci . pure . AEQ True <$>
-      prepare (AnnPGVal Nothing True colTy colVal)
 
 getSingleObj
   :: MonadError QErr m
@@ -249,18 +236,9 @@ mkSelCTE
   -> [PGColInfo]
   -> Maybe ColVals
   -> m CTEExp
-mkSelCTE tn uniqCols colValM = do
-  (whereExp, args) <- case colValM of
-    Nothing -> return (S.BELit False, Seq.empty)
-    Just colVal -> do
-      colInfoWithVals <- fetchFromColVals colVal uniqCols id
-      flip runStateT Seq.Empty $ mkBoolExp tn colInfoWithVals
-  let sqlSel = S.mkSelect { S.selExtr = [S.selectStar]
-                          , S.selFrom = Just $ S.mkSimpleFromExp tn
-                          , S.selWhere = Just $ S.WhereFrag whereExp
-                          }
-
-  return $ CTEExp (S.CTESelect sqlSel) args
+mkSelCTE tn allCols colValM = do
+  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
+  return $ CTEExp selCTE Seq.Empty
 
 execCTEExp
   :: Bool
@@ -383,32 +361,29 @@ insertObj strfyNum role tn singleObjIns addCols = do
       addInsCols = mkPGColWithTypeAndVal allCols addCols
       finalInsCols =  cols <> objRelInsCols <> addInsCols
 
-  -- prepare final returning columns
-  let arrDepCols = concatMap (map fst . riMapping . _riRelInfo) arrRels
-      arrDepColsWithInfo = getColInfos arrDepCols allCols
-
   -- prepare insert query as with expression
   (CTEExp cte insPArgs, ccM) <-
     mkInsertQ vn onConflictM finalInsCols (map pgiName allCols) defVals role
-  uniqCols <- onNothing uniqColsM $ throw500 "unique columns not found in relational insert"
 
   RI.setConflictCtx ccM
-  MutateResp affRows colVals <-
-    mutateAndFetchCols tn (uniqCols `union` arrDepColsWithInfo) (cte, insPArgs) strfyNum
+  MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- getSingleObj colVals
-  cteExp <- mkSelCTE tn uniqCols colValM
+  cteExp <- mkSelCTE tn allCols colValM
 
-  arrRelAffRows <- bool (withArrRels arrDepColsWithInfo colValM) (return 0) $ null arrRels
+  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
   let totAffRows = objRelAffRows + affRows + arrRelAffRows
 
   return (totAffRows, cteExp)
   where
-    AnnIns annObj onConflictM vn allCols defVals uniqColsM = singleObjIns
+    AnnIns annObj onConflictM vn allCols defVals = singleObjIns
     AnnInsObj cols objRels arrRels = annObj
 
-    withArrRels arrDepCols colValM = do
+    arrRelDepCols = flip getColInfos allCols $
+      concatMap (map fst . riMapping . _riRelInfo) arrRels
+
+    withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrDepCols pgiName
+      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiName
 
       arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
 
@@ -432,7 +407,7 @@ insertMultipleObjects
 insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    AnnIns insObjs onConflictM vn tableColInfos defVals uniqCols = multiObjIns
+    AnnIns insObjs onConflictM vn tableColInfos defVals = multiObjIns
     singleObjInserts = multiToSingles multiObjIns
     insCols = map _aioColumns insObjs
     allInsObjRels = concatMap _aioObjRels insObjs
@@ -454,7 +429,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
         rowsWithCol <- mapM toSQLExps withAddCols
         return $ map (mkSQLRow defVals) rowsWithCol
 
-      let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds uniqCols
+      let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds tableColInfos
           p1 = (insQP1, prepArgs)
       bool (RI.nonAdminInsert strfyNum p1) (RI.insertP2 strfyNum p1) $ isAdmin role
 
@@ -497,11 +472,11 @@ convertInsert role tn fld = prefixErrPath fld $ do
   bool (withNonEmptyObjs annVals mutFlds) (buildEmptyMutResp mutFlds) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
-      InsCtx vn tableCols defValMap relInfoMap updPerm uniqCols <- getInsCtx tn
+      InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
       annObjs <- mapM asObject annVals
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
-      let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap uniqCols
+      let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"

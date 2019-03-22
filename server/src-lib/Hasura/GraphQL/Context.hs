@@ -65,15 +65,15 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocFilter     :: !AnnBoolExpSQL
   , _uocPresetCols :: !PreSetCols
-  , _uocUniqCols   :: !(Maybe [PGColInfo])
+  , _uocAllCols    :: ![PGColInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
   = DelOpCtx
-  { _docTable    :: !QualifiedTable
-  , _docHeaders  :: ![T.Text]
-  , _docFilter   :: !AnnBoolExpSQL
-  , _docUniqCols :: !(Maybe [PGColInfo])
+  { _docTable   :: !QualifiedTable
+  , _docHeaders :: ![T.Text]
+  , _docFilter  :: !AnnBoolExpSQL
+  , _docAllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
 data OpCtx
