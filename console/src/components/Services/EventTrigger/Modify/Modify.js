@@ -10,6 +10,7 @@ import WebhookEditor from './WebhookEditor';
 import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
+// import Options from './Options';
 import ActionButtons from './ActionButtons';
 
 import { save, setDefaults } from './Actions';
@@ -26,6 +27,7 @@ class Modify extends React.Component {
       migrationMode,
       dispatch,
       tableSchemas,
+      serverVersion,
     } = this.props;
 
     const currentTrigger = triggerList.find(
@@ -65,7 +67,6 @@ class Modify extends React.Component {
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
             schemaName={currentTrigger.schema_name}
-            triggerId={currentTrigger.id}
             styles={styles}
           />
           <WebhookEditor
@@ -91,7 +92,7 @@ class Modify extends React.Component {
             modifyTrigger={modifyTrigger}
             styles={styles}
             save={() => dispatch(save('retry', modifyTriggerName))}
-            serverVersion={this.props.serverVersion}
+            serverVersion={serverVersion}
             dispatch={dispatch}
           />
           <HeadersEditor
@@ -101,6 +102,13 @@ class Modify extends React.Component {
             save={() => dispatch(save('headers', modifyTriggerName))}
             dispatch={dispatch}
           />
+          {/*
+              <Options
+                dispatch={dispatch}
+                serverVersion={serverVersion}
+                modifyTrigger={modifyTrigger}
+              />
+            */}
           <ActionButtons
             styles={styles}
             dispatch={dispatch}

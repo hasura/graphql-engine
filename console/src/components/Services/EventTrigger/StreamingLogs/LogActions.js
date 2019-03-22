@@ -38,7 +38,7 @@ const vMakeRequest = triggerName => {
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
-    countQuery.columns = ['id'];
+    countQuery.columns = ['name'];
 
     currentQuery.where = { event: { trigger_name: triggerName } };
 
@@ -105,7 +105,7 @@ const loadNewerEvents = (latestTimestamp, triggerName) => {
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
-    countQuery.columns = ['id'];
+    countQuery.columns = ['name'];
 
     currentQuery.where = {
       event: { trigger_name: triggerName },
@@ -195,7 +195,7 @@ const loadOlderEvents = (oldestTimestamp, triggerName) => {
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
-    countQuery.columns = ['id'];
+    countQuery.columns = ['name'];
 
     currentQuery.where = {
       event: { trigger_name: triggerName },
