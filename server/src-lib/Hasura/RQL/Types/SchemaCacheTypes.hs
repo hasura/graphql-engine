@@ -10,7 +10,7 @@ import qualified Data.Text                   as T
 
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.Subscribe
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 data TableObjId

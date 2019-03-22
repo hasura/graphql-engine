@@ -14,7 +14,7 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.Subscribe
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -333,13 +333,13 @@ buildSchemaCache = do
     addQTemplateToCache qti deps
 
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
+  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
 
     let qt = QualifiedObject sn tn
-    subTableP2Setup qt trid etc
+    subTableP2Setup qt etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkTriggerQ trid trn qt allCols strfyNum (etcDefinition etc)
+    liftTx $ mkTriggerQ trn qt allCols strfyNum (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
@@ -396,7 +396,7 @@ buildSchemaCache = do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
+               SELECT e.schema_name, e.table_name, e.name, e.configuration::json
                  FROM hdb_catalog.event_triggers e
                |] () False
     fetchFunctions =
@@ -514,8 +514,7 @@ execWithMDCheck (RunSQL t cascade _) = do
               cols = getCols $ tiFieldInfoMap ti
           forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
             let opsDef = etiOpsDef eti
-                trid = etiId eti
-            liftTx $ mkTriggerQ trid trn tn cols strfyNum opsDef
+            liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
 
   bool withoutReload withReload reloadRequired
 

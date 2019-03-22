@@ -10,7 +10,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
-import qualified Hasura.RQL.DDL.Subscribe           as DS
+import qualified Hasura.RQL.DDL.EventTrigger as DS
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
