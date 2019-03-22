@@ -105,9 +105,9 @@ export default ({ history }: RouteComponentProps) => {
 
     if (!file) return
 
-    const { url } = await uploadProfilePicture(file)
+    const { secure_url } = await uploadProfilePicture(file)
 
-    setMyPicture(url)
+    setMyPicture(secure_url)
   }
 
   return (
