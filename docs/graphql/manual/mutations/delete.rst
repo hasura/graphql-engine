@@ -35,10 +35,8 @@ See the :ref:`delete mutation API reference <delete_syntax>` for the full specif
 
 .. note::
 
-  - If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
-    ``delete_<schema_name>_<table_name>``.
-  - To fetch nested objects using relationships in the mutation response, the table needs to have either a primary
-    key or a unique constraint with not null columns.
+  If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
+  ``delete_<schema_name>_<table_name>``.
 
 Delete based on an object's fields
 ----------------------------------
