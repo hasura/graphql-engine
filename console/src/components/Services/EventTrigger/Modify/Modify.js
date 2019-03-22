@@ -10,7 +10,6 @@ import WebhookEditor from './WebhookEditor';
 import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
-// import Options from './Options';
 import ActionButtons from './ActionButtons';
 
 import { save, setDefaults } from './Actions';
@@ -102,18 +101,14 @@ class Modify extends React.Component {
             save={() => dispatch(save('headers', modifyTriggerName))}
             dispatch={dispatch}
           />
-          {/*
-              <Options
-                dispatch={dispatch}
-                serverVersion={serverVersion}
-                modifyTrigger={modifyTrigger}
-              />
-            */}
           <ActionButtons
             styles={styles}
             dispatch={dispatch}
             ongoingRequest={modifyTrigger.ongoingRequest}
             triggerName={modifyTriggerName}
+            modifyTrigger={modifyTrigger}
+            serverVersion={serverVersion}
+            styles={styles}
           />
         </div>
         <br />

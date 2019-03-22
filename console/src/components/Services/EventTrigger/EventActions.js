@@ -453,7 +453,7 @@ const makeMigrationCall = (
   );
 };
 
-const deleteTrigger = triggerName => {
+const deleteTrigger = (triggerName, cascade, supportCascade) => {
   return (dispatch, getState) => {
     dispatch(showSuccessNotification('Deleting Trigger...'));
     const currentTriggerInfo = getState().triggers.triggerList.filter(
@@ -461,11 +461,15 @@ const deleteTrigger = triggerName => {
     )[0];
     // apply migrations
     const migrationName = 'delete_trigger_' + triggerName.trim();
+    const payloadArgs = {
+      name: triggerName,
+    };
+    if (supportCascade) {
+      payloadArgs.cascade = cascade;
+    }
     const payload = {
       type: 'delete_event_trigger',
-      args: {
-        name: triggerName,
-      },
+      args: payloadArgs,
     };
     const downPayload = {
       type: 'create_event_trigger',
