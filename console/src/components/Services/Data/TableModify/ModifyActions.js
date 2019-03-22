@@ -241,6 +241,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       });
     }
+    console.log('1');
+    console.log(migrationUp);
 
     const generatedConstraintName = generateFKConstraintName(
       tableName,
@@ -259,6 +261,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         )}) on update ${onUpdate} on delete ${onDelete};`,
       },
     });
+    console.log('2');
+    console.log(migrationUp);
     const migrationDown = [
       {
         type: 'run_sql',
@@ -268,8 +272,13 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       },
     ];
+    console.log('3');
+    console.log(migrationDown);
     if (constraintName) {
       const oldConstraint = tableSchema.foreign_key_constraints[index];
+      console.log(index);
+      console.log(tableSchema.foreign_key_constraints);
+      console.log(oldConstraint);
       migrationDown.push({
         type: 'run_sql',
         args: {
@@ -287,6 +296,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       });
     }
+    console.log('4');
+    console.log(migrationDown);
     const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join(
       '_'
     )}`;
@@ -296,15 +307,16 @@ const saveForeignKeys = (index, tableSchema, columns) => {
 
     const customOnSuccess = () => {
       if (!constraintName) {
+        const newFks = [...getState().tables.modify.fkModify];
+        newFks[index].constraintName = generatedConstraintName;
         dispatch(
           setForeignKeys([
-            ...getState().tables.modify.fkModify,
+            ...newFks,
             {
               refTableName: '',
               colMappings: [{ column: '', refColumn: '' }],
               onUpdate: 'restrict',
               onDelete: 'restrict',
-              constraintName: generatedConstraintName,
             },
           ])
         );

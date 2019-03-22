@@ -104,21 +104,19 @@ const ColumnEditorList = ({
     };
     const colEditorExpanded = () => {
       return (
-        <div key={colName}>
-          <ColumnEditor
-            column={c}
-            onSubmit={onSubmit}
-            onDelete={safeOnDelete}
-            tableName={tableName}
-            dispatch={dispatch}
-            currentSchema={currentSchema}
-            columnComment={columnComments[c.column_name]}
-            allowRename={allowRename}
-            columnProperties={columnProperties}
-            selectedProperties={columnEdit}
-            editColumn={editColumn}
-          />
-        </div>
+        <ColumnEditor
+          column={c}
+          onSubmit={onSubmit}
+          onDelete={safeOnDelete}
+          tableName={tableName}
+          dispatch={dispatch}
+          currentSchema={currentSchema}
+          columnComment={columnComments[c.column_name]}
+          allowRename={allowRename}
+          columnProperties={columnProperties}
+          selectedProperties={columnEdit}
+          editColumn={editColumn}
+        />
       );
     };
     const editorExpandCallback = () => {
@@ -129,19 +127,21 @@ const ColumnEditorList = ({
       dispatch(resetColumnEdit(colName));
     };
     return (
-      <ExpandableEditor
-        editorExpanded={colEditorExpanded}
-        property={'edit-column'}
-        ongoingRequest={'oola'}
-        service="modify-table"
-        saveFunc={onSubmit}
-        removeFunc={columnProperties.isPrimaryKey ? null : onDelete}
-        collapsedClass={styles.display_flex}
-        expandedLabel={expandedLabel}
-        collapsedLabel={collapsedLabel}
-        expandCallback={editorExpandCallback}
-        collapseCallback={editorCollapseCallback}
-      />
+      <div key={colName}>
+        <ExpandableEditor
+          editorExpanded={colEditorExpanded}
+          property={'edit-column'}
+          ongoingRequest={'oola'}
+          service="modify-table"
+          saveFunc={onSubmit}
+          removeFunc={columnProperties.isPrimaryKey ? null : onDelete}
+          collapsedClass={styles.display_flex}
+          expandedLabel={expandedLabel}
+          collapsedLabel={collapsedLabel}
+          expandCallback={editorExpandCallback}
+          collapseCallback={editorCollapseCallback}
+        />
+      </div>
     );
   });
 };

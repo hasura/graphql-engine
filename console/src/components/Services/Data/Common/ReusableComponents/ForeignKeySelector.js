@@ -228,7 +228,10 @@ const ForeignKeySelector = ({
               dispatch(setForeignKeys(newFks));
             };
             return (
-              <div className={`col-sm-2 ${styles.display_flex}`}>
+              <div
+                className={`col-sm-2 ${styles.display_flex}`}
+                key={`${action}_${va}`}
+              >
                 <input
                   type="radio"
                   checked={selected === va}
