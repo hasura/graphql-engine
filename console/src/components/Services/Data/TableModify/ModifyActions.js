@@ -247,13 +247,13 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     migrationUp.push({
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add constraint ${generatedConstraintName} foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};`
+        sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName || generatedConstraintName} foreign key (${lcols.join(', ')}) references "${refTableName}"(${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};`
       }
     })
     const migrationDown = [{
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${generatedConstraintName};`
+        sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName || generatedConstraintName};`
       }
     }]
     if (constraintName) {
@@ -261,7 +261,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationDown.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${pgConfTypes[oldConstraint.on_update]} on delete ${pgConfTypes[oldConstraint.on_delete]};`
+          sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName} foreign key (${Object.keys(oldConstraint.column_mapping).map(lc =>`"${lc}"`).join(', ')}) references "${oldConstraint.ref_table}"(${Object.values(oldConstraint.column_mapping).map(rc =>`"${rc}"`).join(', ')}) on update ${pgConfTypes[oldConstraint.on_update]} on delete ${pgConfTypes[oldConstraint.on_delete]};`
         }
       })
     }
@@ -269,11 +269,6 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const requestMsg = `Saving foreign key...`;
     const successMsg = `Foreign key saved`;
     const errorMsg = `Foreign key addition failed`;
-
-    console.log('------------------Foreign Key Save -------------------');
-    console.log(migrationUp);
-    console.log(migrationDown);
-    console.log('------------------------------------------------------');
 
     const customOnSuccess = () => {
       if (!constraintName) {
@@ -283,7 +278,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
             refTableName: '',
             colMappings: [{ column: '', refColumn: ''}],
             onUpdate: 'restrict',
-            onDelete: 'restrict'
+            onDelete: 'restrict',
+            constraintName: generateFKConstraintName
           }
         ]))
       } else {

@@ -120,7 +120,7 @@ const ForeignKeyEditor = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`fk_${i}_${numFks- 1 - i}`}>
+      <div key={`fk_${fk.constraintName || 'new'}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           property={'add-fks'}
