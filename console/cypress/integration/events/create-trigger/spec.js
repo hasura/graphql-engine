@@ -143,9 +143,10 @@ export const insertTableRow = () => {
   cy.wait(300);
   validateInsert(getTableName(0, testName), 1);
   // now it should invoke the trigger to webhook
-  cy.wait(10000);
+  cy.wait(5000);
   // check if processed events has a row and it is a successful response
   cy.visit(`/events/manage/triggers/${getTriggerName(0, testName)}/processed`);
+  cy.wait(5000);
   cy.get(getElementFromAlias('trigger-processed-events')).contains('1');
 };
 
@@ -158,7 +159,10 @@ export const deleteCTTestTrigger = () => {
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm
   cy.on('window:confirm', str => {
-    expect(str === 'Are you sure?').to.be.true;
+    expect(
+      str ===
+        'Are you sure you want to delete the trigger? The event data will still remain in the database'
+    ).to.be.true;
     return true;
   });
   cy.wait(7000);
