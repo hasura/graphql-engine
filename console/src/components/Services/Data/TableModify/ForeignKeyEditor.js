@@ -116,7 +116,9 @@ const ForeignKeyEditor = ({
     // Function to save the FK
     let saveFk;
     if (fkConfig) {
-      saveFk = () => dispatch(saveForeignKeys(i, tableSchema, orderedColumns));
+      saveFk = () => {
+        dispatch(saveForeignKeys(i, tableSchema, orderedColumns));
+      };
     }
 
     // Wrap the collapsed and expanded content in the reusable editor

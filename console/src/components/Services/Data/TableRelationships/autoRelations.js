@@ -24,6 +24,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
           if (currentObjRels[k].rel_def.foreign_key_constraint_on) {
             // check if this is already an existing relationship
             if (
+              lcol.length === 1 &&
               currentObjRels[k].rel_def.foreign_key_constraint_on === lcol[0]
             ) {
               // existing relationship
@@ -74,7 +75,6 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
               relDef.manual_configuration.column_mapping
             );
           }
-
           if (
             currRCol.sort().join(',') === rcol.sort().join(',') &&
             getTableName(currTable) === constraint.table_name

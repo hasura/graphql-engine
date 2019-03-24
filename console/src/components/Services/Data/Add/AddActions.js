@@ -1,7 +1,10 @@
 import defaultState from './AddState';
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
@@ -127,16 +130,24 @@ const createTableSql = () => {
       tableColumns += ') ';
     }
     const numFks = foreignKeys.length;
+    let errorColumn = null;
     if (numFks > 1) {
       foreignKeys.forEach((fk, _i) => {
         if (_i === numFks - 1) {
           return;
         }
+        const mappingObj = {};
         const { colMappings, refTableName, onUpdate, onDelete } = fk;
-        const lCols = colMappings
-          .slice(0, -1)
-          .map(cm => `"${state.columns[cm.column].name}"`);
-        const rCols = colMappings.slice(0, -1).map(cm => `"${cm.refColumn}"`);
+        const rCols = [];
+        const lCols = [];
+        colMappings.slice(0, -1).forEach(cm => {
+          if (mappingObj[cm.column] !== undefined) {
+            errorColumn = state.columns[cm.column].name;
+          }
+          mappingObj[cm.column] = cm.refColumn;
+          lCols.push(`"${state.columns[cm.column].name}"`);
+          rCols.push(`"${cm.refColumn}"`);
+        });
         if (lCols.length === 0) return;
         tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
           ', '
@@ -144,6 +155,14 @@ const createTableSql = () => {
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });
+    }
+    if (errorColumn) {
+      return dispatch(
+        showErrorNotification(
+          'Create table failed',
+          `The column "${errorColumn}" seems to be referencing multiple foreign columns`
+        )
+      );
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';

@@ -5,17 +5,14 @@ export const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
   const finalRTable = rTable.name ? rTable.name : rTable;
   return isObjRel ? (
     <span>
-      &nbsp;
-      {lcol.join(',')}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: {rcol.join(',')}
+      &nbsp; ( {lcol.join(', ')} ) &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
+      {rTable} :: ( {rcol.join(', ')} )
     </span>
   ) : (
     <span>
       &nbsp;
-      {finalRTable} :: {rcol.join(',')}
-      &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {lcol.join(',')}
+      {finalRTable} :: ( {rcol.join(', ')} ) &nbsp;&nbsp;&rarr;&nbsp;&nbsp; ({' '}
+      {lcol.join(', ')} )
     </span>
   );
 };

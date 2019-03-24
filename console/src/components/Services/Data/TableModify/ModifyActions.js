@@ -227,9 +227,25 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       onDelete,
       constraintName,
     } = fk;
-    const filteredMappings = colMappings.filter(
-      cm => cm.column && cm.refColumn
-    );
+    const mappingObj = {};
+    const filteredMappings = [];
+    for (let _i = colMappings.length - 1; _i >= 0; _i--) {
+      const cm = colMappings[_i];
+      if (cm.column && cm.refColumn) {
+        if (mappingObj[cm.column] !== undefined) {
+          return dispatch(
+            showErrorNotification(
+              'Failed setting foreign key',
+              `The column "${
+                columns[cm.column].name
+              }" seems to be referencing multiple foreign columns`
+            )
+          );
+        }
+        mappingObj[cm.column] = cm.refColumn;
+        filteredMappings.push(cm);
+      }
+    }
     const lcols = filteredMappings.map(cm => `"${columns[cm.column].name}"`);
     const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
     const migrationUp = [];
@@ -241,8 +257,6 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       });
     }
-    console.log('1');
-    console.log(migrationUp);
 
     const generatedConstraintName = generateFKConstraintName(
       tableName,
@@ -261,8 +275,6 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         )}) on update ${onUpdate} on delete ${onDelete};`,
       },
     });
-    console.log('2');
-    console.log(migrationUp);
     const migrationDown = [
       {
         type: 'run_sql',
@@ -272,13 +284,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       },
     ];
-    console.log('3');
-    console.log(migrationDown);
     if (constraintName) {
       const oldConstraint = tableSchema.foreign_key_constraints[index];
-      console.log(index);
-      console.log(tableSchema.foreign_key_constraints);
-      console.log(oldConstraint);
       migrationDown.push({
         type: 'run_sql',
         args: {
@@ -296,14 +303,12 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
       });
     }
-    console.log('4');
-    console.log(migrationDown);
     const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join(
       '_'
     )}`;
     const requestMsg = 'Saving foreign key...';
     const successMsg = 'Foreign key saved';
-    const errorMsg = 'Foreign key addition failed';
+    const errorMsg = 'Failed setting foreign key';
 
     const customOnSuccess = () => {
       if (!constraintName) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '../../../../Common/TableCommon/Table.scss';
 
 const violiationActions = [
   'restrict',
@@ -15,7 +16,6 @@ const ForeignKeySelector = ({
   foreignKeys,
   orderedColumns,
   dispatch,
-  styles,
   setForeignKeys,
   service,
 }) => {
@@ -27,7 +27,7 @@ const ForeignKeySelector = ({
   const refTableSelect = () => {
     // dispatch action for setting reference table
     const dispatchSetRefTable = event => {
-      const newFks = [...foreignKeys];
+      const newFks = JSON.parse(JSON.stringify(foreignKeys));
       if (newFks[index].refTableName !== event.target.value) {
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
@@ -105,7 +105,7 @@ const ForeignKeySelector = ({
 
           // dispatch action for setting column config
           const dispatchSetCols = (key, value) => {
-            const newFks = [...foreignKeys];
+            const newFks = JSON.parse(JSON.stringify(foreignKeys));
             newFks[index].colMappings[_i][key] = value;
             if (
               newFks[index].colMappings[numColMappings - 1].column &&
@@ -128,7 +128,7 @@ const ForeignKeySelector = ({
 
           // dispatch action for removing a pair from column mapping
           const dispatchRemoveCol = () => {
-            const newFks = [...foreignKeys];
+            const newFks = JSON.parse(JSON.stringify(foreignKeys));
             const newColMapping = [
               ...colMappings.slice(0, _i),
               ...colMappings.slice(_i + 1),
@@ -223,7 +223,7 @@ const ForeignKeySelector = ({
         <div className={'row'}>
           {violiationActions.map(va => {
             const onCheck = () => {
-              const newFks = [...foreignKeys];
+              const newFks = JSON.parse(JSON.stringify(foreignKeys));
               newFks[index][action] = va;
               dispatch(setForeignKeys(newFks));
             };
