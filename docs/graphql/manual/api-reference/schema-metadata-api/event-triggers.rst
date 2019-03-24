@@ -113,7 +113,8 @@ delete_event_trigger
    {
        "type" : "delete_event_trigger",
        "args" : {
-           "name": "sample_trigger"
+           "name": "sample_trigger",
+           "cascade": false
        }
    }
 
@@ -133,6 +134,11 @@ Args syntax
      - true
      - TriggerName_
      - Name of the event trigger
+   * - cascade
+     - false
+     - Boolean
+     - If set to true, all the associated events and logs
+       are deleted. Default: false
  
 .. _TriggerName:
 
