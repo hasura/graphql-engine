@@ -36,11 +36,11 @@ const vMakeRequest = () => {
     const originalTrigger = getState().triggers.currentTrigger;
     const triggerList = getState().triggers.triggerList;
     const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
-    const triggerId = triggerSchema[0].id;
+    const triggerName = triggerSchema[0].name;
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
-    countQuery.columns = ['id'];
+    countQuery.columns = ['name'];
 
     // delivered = false and error = false
     // where clause for relationship
@@ -52,7 +52,7 @@ const vMakeRequest = () => {
       finalAndClause.push({ error: false });
       currentQuery.columns[1].where = { $and: finalAndClause };
       currentQuery.where = { name: state.triggers.currentTrigger };
-      countQuery.where.$and.push({ trigger_id: triggerId });
+      countQuery.where.$and.push({ trigger_name: triggerName });
     } else {
       // reset where for events
       if (currentQuery.columns[1]) {
