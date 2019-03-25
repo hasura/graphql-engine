@@ -3,7 +3,6 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query            as Q
 
 import           Options.Applicative
-import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
 import qualified Data.HashSet                 as Set
@@ -28,9 +27,6 @@ newtype InstanceId
 
 mkInstanceId :: IO InstanceId
 mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
-
-initErrExit :: (Show e) => e -> IO a
-initErrExit e = print e >> exitFailure
 
 data RawConnParams
   = RawConnParams
