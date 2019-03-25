@@ -381,19 +381,27 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
 
 const sanitizeRelName = arg => arg.trim();
 
-const fallBackRelName = relMeta => {
+const fallBackRelName = (relMeta, existingFields, iterNumber = 0) => {
   let relName;
-
   const targetTable = sanitizeRelName(relMeta.rTable);
   if (relMeta.isObjRel) {
     const objLCol = sanitizeRelName(relMeta.lcol.join('_'));
-    relName = `${inflection.singularize(targetTable)}_by_${objLCol}`;
+    relName = `${inflection.singularize(targetTable)}_by_${objLCol}${
+      iterNumber ? '_' + iterNumber : ''
+    }`;
   } else {
     const arrRCol = sanitizeRelName(relMeta.rcol.join('_'));
-    relName = `${inflection.pluralize(targetTable)}_by_${arrRCol}`;
+    relName = `${inflection.pluralize(targetTable)}_by_${arrRCol}${
+      iterNumber ? '_' + iterNumber : ''
+    }`;
   }
-
-  return inflection.camelize(relName, true);
+  relName = inflection.camelize(relName, true);
+  /*
+   * Recurse until a unique relationship name is found and keep prefixing an integer at the end to fix collision
+   * */
+  return relName in existingFields
+    ? fallBackRelName(relMeta, existingFields, ++iterNumber)
+    : relName;
 };
 
 const formRelName = (relMeta, existingFields) => {
@@ -408,7 +416,7 @@ const formRelName = (relMeta, existingFields) => {
 
     /* Check if it is existing, fallback to guaranteed unique name */
     if (existingFields && finalRelName in existingFields) {
-      finalRelName = fallBackRelName(relMeta);
+      finalRelName = fallBackRelName(relMeta, existingFields);
     }
 
     return finalRelName;
