@@ -40,7 +40,7 @@ const vMakeRequest = () => {
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
-    countQuery.columns = ['name'];
+    countQuery.columns = ['id'];
 
     // delivered = false and error = false
     // where clause for relationship
