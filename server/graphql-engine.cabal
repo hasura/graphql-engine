@@ -231,6 +231,7 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.Parser.JSONPath
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types

@@ -15,6 +15,7 @@ module Hasura.GraphQL.Resolve.Select
 
 import           Control.Arrow                     (first)
 import           Data.Has
+import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
@@ -44,6 +45,21 @@ withSelSet selSet f =
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp t = case parseJSONPath t of
+  Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
+  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  where
+    elToColExp (Key k)   = S.SELit k
+    elToColExp (Index i) = S.SELit $ T.pack (show i)
+
+
+argsToColOp :: (MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
+argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
+  where
+    toJsonPathExp = fmap (RS.ColOp S.jsonbPathOp) . jsonPathToColExp
+    toOp v = asPGColTextM v >>= mapM toJsonPathExp
+
 fromSelSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
@@ -58,7 +74,9 @@ fromSelSet f fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left colInfo -> return $ RS.FCol colInfo
+          Left colInfo ->
+            (RS.FCol colInfo) <$> (argsToColOp $ _fArguments fld)
+            -- let jsonCol = return $ RS.FCol $ colInfo { pgiName = PGCol $ T.pack "metadata->'name'" }
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo

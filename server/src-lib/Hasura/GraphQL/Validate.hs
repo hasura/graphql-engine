@@ -20,7 +20,6 @@ import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
-
 data QueryParts
   = QueryParts
   { qpOpDef     :: !G.TypedOperationDefinition
