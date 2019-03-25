@@ -208,8 +208,9 @@ library
                      , Hasura.GraphQL.Validate.Context
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
-                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Explain
+                     , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context

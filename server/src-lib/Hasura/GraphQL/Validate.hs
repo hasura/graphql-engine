@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , RootSelSet(..)
   , getTypedOp
   , GraphQLRequest
   , QueryParts (..)
@@ -10,6 +11,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
@@ -109,25 +111,21 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
+data RootSelSet
+  = RQuery !SelSet
+  | RMutation !SelSet
+  | RSubscription !Field
+  deriving (Show, Eq)
+
 -- {-# SCC validateGQ #-}
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m (G.OperationType, SelSet)
+  -> m RootSelSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
-  -- get the operation that needs to be evaluated
-  --opDef <- getTypedOp opNameM selSets opDefs
-
   ctx <- ask
-  -- -- get the operation root
-  -- opRoot <- case G._todType opDef of
-  --   G.OperationTypeQuery        -> return $ _gQueryRoot ctx
-  --   G.OperationTypeMutation     ->
-  --     onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
-  --   G.OperationTypeSubscription ->
-  --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
   -- annotate the variables of this operation
   annVarVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
@@ -145,11 +143,16 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
-  when (G._todType opDef == G.OperationTypeSubscription && length selSet > 1) $
-    throwVE "subscription must select only one top level field"
-
-  return (G._todType opDef, selSet)
-
+  case G._todType opDef of
+    G.OperationTypeQuery -> return $ RQuery selSet
+    G.OperationTypeMutation -> return $ RMutation selSet
+    G.OperationTypeSubscription ->
+      case Seq.viewl selSet of
+        Seq.EmptyL     -> throw500 "empty selset for subscription"
+        fld Seq.:< rst -> do
+          unless (null rst) $
+            throwVE "subscription must select only one top level field"
+          return $ RSubscription fld
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)
