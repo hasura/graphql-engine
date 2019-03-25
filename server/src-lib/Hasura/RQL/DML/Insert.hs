@@ -233,7 +233,7 @@ decodeInsObjs v = do
   return objs
 
 convInsQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
   => InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
 convInsQ =
@@ -293,11 +293,11 @@ setConflictCtx conflictCtxM = do
                <> " " <> toSQLTxt (S.WhereFrag filtr)
 
 runInsert
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasServeOptsCtx m)
   => InsertQuery
   -> m RespBody
 runInsert q = do
   res <- convInsQ q
   role <- userRole <$> askUserInfo
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- socStringifyNum <$> askServeOptsCtx
   liftTx $ bool (nonAdminInsert strfyNum res) (insertP2 strfyNum res) $ isAdmin role

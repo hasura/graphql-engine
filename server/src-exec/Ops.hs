@@ -24,7 +24,7 @@ import qualified Database.PG.Query.Connection as Q
 
 initCatalogSafe
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
@@ -59,7 +59,7 @@ initCatalogSafe initTime =  do
 
 initCatalogStrict
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
@@ -132,7 +132,7 @@ cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 execQuery
   :: ( MonadTx m, CacheRWM m, MonadIO m
-     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
+     , UserInfoM m, HasHttpManager m, HasServeOptsCtx m
      )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do

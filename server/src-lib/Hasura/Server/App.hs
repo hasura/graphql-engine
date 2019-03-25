@@ -118,7 +118,7 @@ data ServerCtx
   , scCacheRef     :: SchemaCacheRef
   , scAuthMode     :: AuthMode
   , scManager      :: HTTP.Manager
-  , scStringifyNum :: Bool
+  , scServeOpts    :: ServeOptsCtx
   , scEnabledAPIs  :: S.HashSet API
   , scInstanceId   :: InstanceId
   }
@@ -158,8 +158,8 @@ buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
   cache <- liftIO $ readIORef $ _scrCache scRef
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  return $ QCtx userInfo cache $ SQLGenCtx strfyNum
+  serveOptsCtx <- scServeOpts . hcServerCtx <$> ask
+  return $ QCtx userInfo cache serveOptsCtx
 
 logResult
   :: (MonadIO m)
@@ -232,11 +232,11 @@ v1QueryHandler query = do
       scRef <- scCacheRef . hcServerCtx <$> ask
       schemaCache <- liftIO $ readIORef $ _scrCache scRef
       httpMgr <- scManager . hcServerCtx <$> ask
-      strfyNum <- scStringifyNum . hcServerCtx <$> ask
+      serveOptsCtx <- scServeOpts . hcServerCtx <$> ask
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pool isoL instanceId userInfo schemaCache httpMgr strfyNum query
+      runQuery pool isoL instanceId userInfo schemaCache httpMgr serveOptsCtx query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -260,8 +260,8 @@ v1Alpha1GQHandler query = do
   sc <- liftIO $ readIORef $ _scrCache scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query reqBody
+  serveOptsCtx <- scServeOpts . hcServerCtx <$> ask
+  GH.runGQ pool isoL userInfo serveOptsCtx sc manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler BL.ByteString
 gqlExplainHandler query = do
@@ -270,8 +270,8 @@ gqlExplainHandler query = do
   sc <- liftIO $ readIORef $ _scrCache scRef
   pool <- scPGPool . hcServerCtx <$> ask
   isoL <- scIsolation . hcServerCtx <$> ask
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
+  serveOptsCtx <- scServeOpts . hcServerCtx <$> ask
+  GE.explainGQLQuery pool isoL sc serveOptsCtx query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -303,16 +303,16 @@ legacyQueryHandler tn queryType =
 
 
 mkWaiApp
-  :: Q.TxIsolation -> L.LoggerCtx -> Bool
+  :: Q.TxIsolation -> L.LoggerCtx -> ServeOptsCtx
   -> Q.PGPool -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx serveOptsCtx pool httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis = do
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager strfyNum pool Q.Serializable $ do
+                httpManager serveOptsCtx pool Q.Serializable $ do
                   buildSchemaCache
                   liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
@@ -323,16 +323,15 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
 
     let schemaCacheRef = SchemaCacheRef cacheLock cacheRef
         serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
-            schemaCacheRef mode httpManager strfyNum apis instanceId
+            schemaCacheRef mode httpManager serveOptsCtx apis instanceId
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
     let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
         corsPolicy = mkDefaultCorsPolicy corsCfg
-        sqlGenCtx = SQLGenCtx strfyNum
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager sqlGenCtx
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager serveOptsCtx
                    cacheRef runTx corsPolicy
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv

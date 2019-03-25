@@ -27,7 +27,7 @@ newtype DMLP1 a
            )
 
 liftDMLP1
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
   => DMLP1 a -> m (a, DS.Seq Q.PrepArg)
 liftDMLP1 =
   liftP1 . flip runStateT DS.empty . unDMLP1
@@ -38,8 +38,8 @@ instance CacheRM DMLP1 where
 instance UserInfoM DMLP1 where
   askUserInfo = DMLP1 $ lift askUserInfo
 
-instance HasSQLGenCtx DMLP1 where
-  askSQLGenCtx = DMLP1 $ lift askSQLGenCtx
+instance HasServeOptsCtx DMLP1 where
+  askServeOptsCtx = DMLP1 $ lift askServeOptsCtx
 
 mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =

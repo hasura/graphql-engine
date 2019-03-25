@@ -128,7 +128,7 @@ convertUpdate opCtx fld = do
   unless (any isJust updExpsM || not (null preSetItems)) $ throwVE $
     "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
     <> " _delete_at_path operator is expected"
-  strfyNum <- stringifyNum <$> asks getter
+  strfyNum <- socStringifyNum <$> asks getter
   let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds uniqCols
       whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
       whenEmptyItems = buildEmptyMutResp mutFlds
@@ -149,7 +149,7 @@ convertDelete opCtx fld = do
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
   args <- get
   let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds uniqCols
-  strfyNum <- stringifyNum <$> asks getter
+  strfyNum <- socStringifyNum <$> asks getter
   return $ RD.deleteQueryToTx strfyNum (p1, args)
   where
     DelOpCtx tn _ filterExp uniqCols = opCtx

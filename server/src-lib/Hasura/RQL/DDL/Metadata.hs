@@ -16,6 +16,12 @@ module Hasura.RQL.DDL.Metadata
 
   , DumpInternalState(..)
   , runDumpInternalState
+
+  , GetInconsistentObjects
+  , runGetInconsistentObjects
+
+  , DropInconsistentObjects
+  , runDropInconsistentObjects
   ) where
 
 import           Control.Lens
@@ -121,7 +127,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => ClearMetadata -> m RespBody
 runClearMetadata _ = do
@@ -198,7 +204,7 @@ applyQP2
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      )
   => ReplaceMetadata
   -> m RespBody
@@ -267,7 +273,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
 runReplaceMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => ReplaceMetadata -> m RespBody
 runReplaceMetadata q = do
@@ -414,7 +420,7 @@ $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadTx m, MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => ReloadMetadata -> m RespBody
 runReloadMetadata _ = do
@@ -437,3 +443,40 @@ runDumpInternalState
 runDumpInternalState _ = do
   adminOnly
   encode <$> askSchemaCache
+
+
+data GetInconsistentObjects
+  = GetInconsistentObjects
+  deriving (Show, Eq, Lift)
+
+instance FromJSON GetInconsistentObjects where
+  parseJSON _ = return GetInconsistentObjects
+
+$(deriveToJSON defaultOptions ''GetInconsistentObjects)
+
+runGetInconsistentObjects
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => GetInconsistentObjects -> m RespBody
+runGetInconsistentObjects _ = do
+  adminOnly
+  (encode . scInconsistentObjs) <$> askSchemaCache
+
+data DropInconsistentObjects
+ = DropInconsistentObjects
+ deriving(Show, Eq, Lift)
+
+instance FromJSON DropInconsistentObjects where
+  parseJSON _ = return DropInconsistentObjects
+
+$(deriveToJSON defaultOptions ''DropInconsistentObjects)
+
+runDropInconsistentObjects
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropInconsistentObjects -> m RespBody
+runDropInconsistentObjects _ = do
+  adminOnly
+  sc <- askSchemaCache
+  let inconsSchObjs = map ioObject $ scInconsistentObjs sc
+  forM_ inconsSchObjs $ DT.purgeDep False
+  writeSchemaCache sc{scInconsistentObjs = []}
+  return successMsg

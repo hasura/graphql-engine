@@ -129,7 +129,7 @@ type Convert =
   StateT PrepArgs (ReaderT ( FieldMap
                            , OrdByCtx
                            , InsCtxMap
-                           , SQLGenCtx
+                           , ServeOptsCtx
                            ) (Except QErr)
                   )
 
@@ -145,7 +145,7 @@ txtConverter = return . uncurry toTxtValue
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
+  => (FieldMap, OrdByCtx, InsCtxMap, ServeOptsCtx)
   -> Convert a
   -> m (a, PrepArgs)
 runConvert ctx m =

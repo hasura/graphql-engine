@@ -60,6 +60,9 @@ data RQLQuery
   | RQDropDeletePermission !DropDelPerm
   | RQSetPermissionComment !SetPermComment
 
+  | RQGetInconsistentObjects !GetInconsistentObjects
+  | RQDropInconsistentObjects !DropInconsistentObjects
+
   | RQInsert !InsertQuery
   | RQSelect !SelectQuery
   | RQUpdate !UpdateQuery
@@ -88,7 +91,6 @@ data RQLQuery
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
-
   deriving (Show, Eq, Lift)
 
 $(deriveJSON
@@ -98,11 +100,11 @@ $(deriveJSON
   ''RQLQuery)
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, ServeOptsCtx) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
+           , MonadReader (UserInfo, HTTP.Manager, ServeOptsCtx)
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -115,8 +117,8 @@ instance UserInfoM Run where
 instance HasHttpManager Run where
   askHttpManager = asks _2
 
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _3
+instance HasServeOptsCtx Run where
+  askServeOptsCtx = asks _3
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -146,23 +148,22 @@ peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
-  -> Bool
+  -> ServeOptsCtx
   -> Q.PGPool -> Q.TxIsolation
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
+peelRun sc userInfo httMgr serveOptsCtx pgPool txIso (Run m) =
   runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
-    sqlGenCtx = SQLGenCtx strfyNum
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, serveOptsCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> Bool -> RQLQuery -> m (BL.ByteString, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr strfyNum query = do
+  -> ServeOptsCtx -> RQLQuery -> m (BL.ByteString, SchemaCache)
+runQuery pool isoL instanceId userInfo sc hMgr serveOptsCtx query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
+    peelRun sc userInfo hMgr serveOptsCtx pool isoL $ runQueryM query
   either throwError withReload resE
   where
     withReload r = do
@@ -197,6 +198,9 @@ queryNeedsReload qi = case qi of
   RQDropDeletePermission _     -> True
   RQSetPermissionComment _     -> False
 
+  RQGetInconsistentObjects _   -> False
+  RQDropInconsistentObjects _  -> True
+
   RQInsert _                   -> False
   RQSelect _                   -> False
   RQUpdate _                   -> False
@@ -228,7 +232,7 @@ queryNeedsReload qi = case qi of
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
      )
   => RQLQuery
   -> m RespBody
@@ -256,6 +260,9 @@ runQueryM rq = withPathK "args" $ case rq of
   RQDropUpdatePermission q -> runDropPerm q
   RQDropDeletePermission q -> runDropPerm q
   RQSetPermissionComment q -> runSetPermComment q
+
+  RQGetInconsistentObjects q -> runGetInconsistentObjects q
+  RQDropInconsistentObjects q -> runDropInconsistentObjects q
 
   RQInsert q -> runInsert q
   RQSelect q -> runSelect q

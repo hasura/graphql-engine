@@ -18,7 +18,7 @@ renameRelP2
      , CacheRWM m
      , MonadIO m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      )
   => QualifiedTable -> RelName -> RelInfo -> m ()
 renameRelP2 qt newRN relInfo = do
@@ -44,7 +44,7 @@ runRenameRel
      , UserInfoM m
      , MonadIO m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      )
   => RenameRel -> m RespBody
 runRenameRel defn = do

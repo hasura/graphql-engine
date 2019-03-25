@@ -37,7 +37,7 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> SQLGenCtx
+  -> ServeOptsCtx
   -> SchemaCache
   -> HTTP.Manager
   -> [N.Header]
@@ -103,7 +103,7 @@ runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> SQLGenCtx
+  -> ServeOptsCtx
   -> SchemaCache
   -> VQ.QueryParts
   -> m BL.ByteString

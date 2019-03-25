@@ -273,11 +273,11 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
       SubCArray pgcols -> pgcols
 
 subTableP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasServeOptsCtx m)
   => QualifiedTable -> Bool -> EventTriggerConf -> m ()
 subTableP2 qt replace etc = do
   allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- socStringifyNum <$> askServeOptsCtx
   trid <- if replace
     then do
     delEventTriggerFromCache qt (etcName etc)
@@ -287,7 +287,7 @@ subTableP2 qt replace etc = do
   subTableP2Setup qt trid etc
 
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasServeOptsCtx m)
   => CreateEventTriggerQuery -> m RespBody
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q

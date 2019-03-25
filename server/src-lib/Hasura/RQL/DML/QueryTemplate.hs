@@ -92,7 +92,7 @@ mkSelQWithArgs (DMLQuery tn (SelectG c w o lim offset)) args = do
   return $ DMLQuery tn $ SelectG c w o intLim intOffset
 
 convQT
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasServeOptsCtx m)
   => TemplateArgs
   -> QueryT
   -> m QueryTProc
@@ -114,17 +114,17 @@ convQT args qt = case qt of
     f = buildPrepArg args
 
 execQueryTemplateP1
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasServeOptsCtx m)
   => ExecQueryTemplate -> m QueryTProc
 execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
   (QueryTemplateInfo _ qt) <- askQTemplateInfo qtn
   convQT args qt
 
 execQueryTP2
-  :: (QErrM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRM m, MonadTx m, HasServeOptsCtx m)
   => QueryTProc -> m RespBody
 execQueryTP2 qtProc = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- socStringifyNum <$> askServeOptsCtx
   case qtProc of
     QTPInsert qp -> liftTx $ R.insertP2 strfyNum qp
     QTPSelect qp -> liftTx $ R.selectP2 False qp
@@ -138,7 +138,7 @@ execQueryTP2 qtProc = do
 
 runExecQueryTemplate
   :: ( QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m
+     , MonadTx m, HasServeOptsCtx m
      )
   => ExecQueryTemplate -> m RespBody
 runExecQueryTemplate q =

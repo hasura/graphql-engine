@@ -27,7 +27,7 @@ migrateMetadata
      , CacheRWM m
      , UserInfoM m
      , MonadIO m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      )
   => Bool -> RQLQuery -> m ()
 migrateMetadata buildSC rqlQuery = do
@@ -116,7 +116,7 @@ from08To1 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 from1To2
   :: ( MonadTx m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      , CacheRWM m
      , UserInfoM m
      , MonadIO m
@@ -144,7 +144,7 @@ from2To3 = liftTx $ Q.catchE defaultTxErrorHandler $ do
 from4To5
   :: ( MonadTx m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      , CacheRWM m
      , UserInfoM m
      , MonadIO m
@@ -203,7 +203,7 @@ from6To7 = liftTx $ do
 from7To8
   :: ( MonadTx m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      , CacheRWM m
      , UserInfoM m
      , MonadIO m
@@ -226,7 +226,7 @@ from7To8 = do
 from8To9
   :: ( MonadTx m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      , CacheRWM m
      , UserInfoM m
      , MonadIO m
@@ -264,7 +264,7 @@ migrateCatalog
      , MonadIO m
      , UserInfoM m
      , HasHttpManager m
-     , HasSQLGenCtx m
+     , HasServeOptsCtx m
      )
   => UTCTime -> m String
 migrateCatalog migrationTime = do

@@ -132,7 +132,7 @@ data WSServerEnv
   , _wseGCtxMap    :: !(IORef.IORef SchemaCache)
   , _wseHManager   :: !H.Manager
   , _wseCorsPolicy :: !CorsPolicy
-  , _wseSQLCtx     :: !SQLGenCtx
+  , _wseSQLCtx     :: !ServeOptsCtx
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -429,7 +429,7 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> SQLGenCtx -> IORef.IORef SchemaCache
+  -> H.Manager -> ServeOptsCtx -> IORef.IORef SchemaCache
   -> TxRunner -> CorsPolicy -> IO WSServerEnv
 createWSServerEnv logger httpManager sqlGenCtx cacheRef runTx corsPolicy = do
   (wsServer, lqMap) <-

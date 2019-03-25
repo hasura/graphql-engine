@@ -67,3 +67,10 @@ data SchemaDependency
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 instance Hashable SchemaDependency
+
+data InconsistentObj
+  = InconsistentObj
+  { ioObject       :: !SchemaObjId
+  , ioErrorMessage :: !T.Text
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''InconsistentObj)

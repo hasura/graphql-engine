@@ -24,7 +24,7 @@ import qualified Hasura.GraphQL.Resolve.Mutation        as RM
 import qualified Hasura.GraphQL.Resolve.Select          as RS
 
 -- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> SQLGenCtx -> Field -> Q.TxE QErr BL.ByteString
+buildTx :: UserInfo -> GCtx -> ServeOptsCtx -> Field -> Q.TxE QErr BL.ByteString
 buildTx userInfo gCtx sqlCtx fld = do
   opCxt <- getOpCtx $ _fName fld
   join $ fmap fst $ runConvert ( fldMap
@@ -76,7 +76,7 @@ buildTx userInfo gCtx sqlCtx fld = do
 -- {-# SCC resolveFld #-}
 resolveFld
   :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx
+  => UserInfo -> GCtx -> ServeOptsCtx
   -> G.OperationType
   -> Field
   -> m BL.ByteString
@@ -95,7 +95,7 @@ resolveFld userInfo gCtx sqlGenCtx opTy fld =
 
 resolveSelSet
   :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx
+  => UserInfo -> GCtx -> ServeOptsCtx
   -> G.OperationType
   -> SelSet
   -> m BL.ByteString

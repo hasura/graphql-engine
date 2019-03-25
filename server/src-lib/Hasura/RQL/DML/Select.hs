@@ -140,7 +140,7 @@ convOrderByElem (flds, spi) = \case
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasServeOptsCtx m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
@@ -181,7 +181,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       tabArgs = TableArgs wClause annOrdByM mQueryLimit
                 (S.intToSQLExp <$> mQueryOffset) Nothing
 
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- socStringifyNum <$> askServeOptsCtx
   return $ AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
 
   where
@@ -202,7 +202,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasServeOptsCtx m)
   => FieldInfoMap
   -> RelName
   -> Maybe RelName
@@ -278,7 +278,7 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
     getAnnSel (ASAgg _)      = Nothing
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasServeOptsCtx m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSel
@@ -317,7 +317,7 @@ selectP2 asSingleObject (sel, p) =
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
 phaseOne
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
   => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
 phaseOne =
   liftDMLP1 . convSelectQuery binRHSBuilder
@@ -327,7 +327,7 @@ phaseTwo =
   liftTx . selectP2 False
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, HasServeOptsCtx m, MonadTx m)
   => SelectQuery -> m RespBody
 runSelect q =
   phaseOne q >>= phaseTwo
