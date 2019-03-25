@@ -433,7 +433,7 @@ export const checkViewRelationship = () => {
   cy.wait(7000);
   validateCT(getTableName(0, testName), 'success');
   // Add foreign key
-  cy.get(getElementFromAlias('edit-someID')).click();
+  cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('foreign-key-checkbox')).check();
   cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
   cy.get(getElementFromAlias('ref-col')).select(getColName(0));
