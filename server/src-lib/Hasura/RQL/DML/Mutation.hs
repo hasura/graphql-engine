@@ -69,7 +69,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     tabFrom = TableFrom qt $ Just aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiName ci, FCol ci)
+              \ci -> (fromPGCol $ pgiName ci, FCol ci Nothing)
 
     sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select

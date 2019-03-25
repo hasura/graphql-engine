@@ -164,7 +164,7 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
-                     , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
@@ -180,7 +180,7 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
-                     , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DML.Delete
@@ -232,6 +232,7 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.Parser.JSONPath
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types
