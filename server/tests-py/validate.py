@@ -20,7 +20,7 @@ def check_ev_payload_shape(ev_payload):
     event_keys = ["data", "op"]
     check_keys(event_keys, ev_payload['event'])
 
-    trigger_keys = ["id", "name"]
+    trigger_keys = ["name"]
     check_keys(trigger_keys, ev_payload['trigger'])
 
 

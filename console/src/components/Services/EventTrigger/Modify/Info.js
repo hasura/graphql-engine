@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from './Tooltip';
 
-const Info = ({ triggerName, tableName, schemaName, triggerId, styles }) => (
+const Info = ({ triggerName, tableName, schemaName, styles }) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>
@@ -15,10 +15,6 @@ const Info = ({ triggerName, tableName, schemaName, triggerId, styles }) => (
             <tr>
               <td>Trigger name</td>
               <td>{triggerName}</td>
-            </tr>
-            <tr>
-              <td>Trigger ID</td>
-              <td>{triggerId}</td>
             </tr>
             <tr>
               <td>Table</td>
