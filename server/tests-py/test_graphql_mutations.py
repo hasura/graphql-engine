@@ -351,6 +351,9 @@ class TestGraphqlDeleteBasic(DefaultTestQueries):
     def test_article_delete_returning(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
 
+    def test_article_delete_returning_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
