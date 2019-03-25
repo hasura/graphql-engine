@@ -70,7 +70,6 @@ const ForeignKeyWrapper = ({
         <ExpandableEditor
           editorExpanded={expandedContent}
           property={`fk-${i}`}
-          ongoingRequest={'oola'}
           service="add-table"
           removeButtonColor="white"
           removeFunc={removeFk}

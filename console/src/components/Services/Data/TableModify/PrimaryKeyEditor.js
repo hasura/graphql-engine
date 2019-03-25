@@ -121,7 +121,6 @@ const PrimaryKeyEditor = ({
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
       property={'pks'}
-      ongoingRequest={'todo'}
       service="modify-table"
       saveFunc={onSave}
       removeFunc={onRemove}

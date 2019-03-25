@@ -127,7 +127,6 @@ const ForeignKeyEditor = ({
         <ExpandableEditor
           editorExpanded={expandedContent}
           property={`fk-${i}`}
-          ongoingRequest={'oola'}
           service="modify-table"
           removeFunc={removeFk}
           saveFunc={saveFk}

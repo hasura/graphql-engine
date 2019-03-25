@@ -131,7 +131,6 @@ const ColumnEditorList = ({
         <ExpandableEditor
           editorExpanded={colEditorExpanded}
           property={`column-${i}`}
-          ongoingRequest={'oola'}
           service="modify-table"
           saveFunc={onSubmit}
           removeFunc={columnProperties.isPrimaryKey ? null : onDelete}
