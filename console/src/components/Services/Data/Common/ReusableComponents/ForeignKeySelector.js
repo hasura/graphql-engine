@@ -59,7 +59,6 @@ const ForeignKeySelector = ({
             styles.add_pad_left
           }`}
           data-test={`foreign-key-ref-table-${index}`}
-          data-test={`foreign-key-ref-table-${index}`}
           onChange={dispatchSetRefTable}
         >
           {// default unselected option
@@ -236,6 +235,7 @@ const ForeignKeySelector = ({
                   type="radio"
                   checked={selected === va}
                   onChange={onCheck}
+                  data-test={`${action}-${va}`}
                   className={styles.add_mar_right_small}
                 />
                 <div>{va.toLowerCase()}</div>

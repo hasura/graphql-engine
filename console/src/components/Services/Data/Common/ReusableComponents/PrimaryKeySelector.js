@@ -30,7 +30,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         <div className={'container-fluid'}>
           <div className="row">
             <h5 className={styles.padd_bottom}>
-              Selected configuration: <i>{`( ${pkConfig} )`}</i>
+              Key: <i>{`( ${pkConfig} )`}</i>
               &nbsp;
             </h5>
           </div>
@@ -87,7 +87,6 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
             }`}
             onChange={dispatchSet}
             data-test={`primary-key-select-${i}`}
-            data-test={`primary-key-select-${i.toString()}`}
           >
             {pk === '' ? (
               <option disabled value="">

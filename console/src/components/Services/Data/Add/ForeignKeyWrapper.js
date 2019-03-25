@@ -69,9 +69,9 @@ const ForeignKeyWrapper = ({
       <div key={`${i}_${isLast}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
-          property={'add-fks'}
+          property={`fk-${i}`}
           ongoingRequest={'oola'}
-          service="modify-table"
+          service="add-table"
           removeButtonColor="white"
           removeFunc={removeFk}
           expandButtonText={expandButtonText}
