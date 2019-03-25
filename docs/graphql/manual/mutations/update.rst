@@ -70,12 +70,6 @@ Update based on an object's fields
           content
           rating
         }
-        query {
-          author(where: {id: {_eq: 1}){
-            id
-            name
-          }
-        }
       }
     }
   :response:
@@ -90,15 +84,7 @@ Update based on an object's fields
               "content": "dolor sit amet",
               "rating": 2
             }
-          ],
-          "query": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Author 1"
-              }
-            ]
-          }
+          ]
         }
       }
     }
