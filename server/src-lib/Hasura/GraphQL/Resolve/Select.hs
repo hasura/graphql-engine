@@ -261,9 +261,9 @@ fromFieldByPKey f tn colArgMap permFilter fld = fieldAsPath fld $ do
 convertSelect
   :: SelOpCtx -> Field -> Convert RespTx
 convertSelect opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromField prepare qt permFilter permLimit fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromField prepare qt permFilter permLimit fld
   return $ RS.selectP2 False (selData, prepArgs)
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
@@ -271,9 +271,9 @@ convertSelect opCtx fld = do
 convertSelectByPKey
   :: SelPkOpCtx -> Field -> Convert RespTx
 convertSelectByPKey opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromFieldByPKey prepare qt colArgMap permFilter fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromFieldByPKey prepare qt colArgMap permFilter fld
   return $ RS.selectP2 True (selData, prepArgs)
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
@@ -349,9 +349,9 @@ fromAggField f tn permFilter permLimit fld = fieldAsPath fld $ do
 
 convertAggSelect :: SelOpCtx -> Field -> Convert RespTx
 convertAggSelect opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromAggField prepare qt permFilter permLimit fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromAggField prepare qt permFilter permLimit fld
   return $ RS.selectAggP2 (selData, prepArgs)
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
@@ -391,10 +391,10 @@ parseFunctionArgs fn argSeq val =
 convertFuncQuery
   :: FuncQOpCtx -> Bool -> Field -> Convert RespTx
 convertFuncQuery funcOpCtx isAgg fld = do
-  (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
+  ((tableArgs, sel, frmItem), prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
     fromFuncQueryField prepare qf argSeq isAgg fld
   let tabPerm = RS.TablePerm permFilter permLimit
-  prepArgs <- get
   strfyNum <- stringifyNum <$> asks getter
   return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs strfyNum (sel, prepArgs)
   where
