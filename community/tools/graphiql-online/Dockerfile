@@ -9,12 +9,12 @@ RUN npm -g install serve
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 
-# RUN npm ci
+RUN npm install
 
 # Bundle app source
 COPY . /app
 #Build react/vue/angular bundle static files
-# RUN npm run build
+RUN npm run build
 
 RUN rm -Rf node_modules
 EXPOSE 8080
