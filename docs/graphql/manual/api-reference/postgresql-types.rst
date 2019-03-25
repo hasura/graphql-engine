@@ -217,7 +217,7 @@ E.g.
      }
    }
 
-variable:
+variables:
 
 .. code-block:: json
 
@@ -252,7 +252,7 @@ E.g.
      }
    }
 
-varables:
+variables:
 
 .. code-block:: json
 
@@ -289,7 +289,7 @@ E.g.
      }
    }
 
-varables:
+variables:
 
 .. code-block:: json
 
