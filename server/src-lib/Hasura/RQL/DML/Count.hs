@@ -13,6 +13,7 @@ import           Instances.TH.Lift       ()
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
@@ -113,11 +114,11 @@ validateCountQ =
 
 countQToTx
   :: (QErrM m, MonadTx m)
-  => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+  => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
 countQToTx (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
           (Q.fromBuilder countSQL) (toList p) True
-  return $ BB.toLazyByteString $ encodeCount qRes
+  return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
@@ -125,6 +126,6 @@ countQToTx (u, p) = do
 
 runCount
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasServeOptsCtx m)
-  => CountQuery -> m RespBody
+  => CountQuery -> m EncJSON
 runCount q =
   validateCountQ q >>= countQToTx

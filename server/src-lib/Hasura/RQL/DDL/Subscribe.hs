@@ -16,6 +16,7 @@ module Hasura.RQL.DDL.Subscribe
   ) where
 
 import           Data.Aeson
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
@@ -288,7 +289,7 @@ subTableP2 qt replace etc = do
 
 runCreateEventTriggerQuery
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasServeOptsCtx m)
-  => CreateEventTriggerQuery -> m RespBody
+  => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
   subTableP2 qt replace etc
@@ -304,7 +305,7 @@ unsubTableP1 (DeleteEventTriggerQuery name)  = do
 
 unsubTableP2
   :: (QErrM m, CacheRWM m, MonadTx m)
-  => DeleteEventTriggerQuery -> QualifiedTable -> m RespBody
+  => DeleteEventTriggerQuery -> QualifiedTable -> m EncJSON
 unsubTableP2 (DeleteEventTriggerQuery name) qt = do
   delEventTriggerFromCache qt name
   liftTx $ delEventTriggerFromCatalog name
@@ -312,13 +313,13 @@ unsubTableP2 (DeleteEventTriggerQuery name) qt = do
 
 runDeleteEventTriggerQuery
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => DeleteEventTriggerQuery -> m RespBody
+  => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery q =
   unsubTableP1 q >>= unsubTableP2 q
 
 deliverEvent
   :: (QErrM m, MonadTx m)
-  => DeliverEventQuery -> m RespBody
+  => DeliverEventQuery -> m EncJSON
 deliverEvent (DeliverEventQuery eventId) = do
   _ <- liftTx $ fetchEvent eventId
   liftTx $ markForDelivery eventId
@@ -326,7 +327,7 @@ deliverEvent (DeliverEventQuery eventId) = do
 
 runDeliverEvent
   :: (QErrM m, UserInfoM m, MonadTx m)
-  => DeliverEventQuery -> m RespBody
+  => DeliverEventQuery -> m EncJSON
 runDeliverEvent q =
   adminOnly >> deliverEvent q
 

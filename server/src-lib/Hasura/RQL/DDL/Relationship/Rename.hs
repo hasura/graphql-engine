@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.Relationship.Rename
 where
 
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
@@ -46,7 +47,7 @@ runRenameRel
      , HasHttpManager m
      , HasServeOptsCtx m
      )
-  => RenameRel -> m RespBody
+  => RenameRel -> m EncJSON
 runRenameRel defn = do
   ri <- validateRelP1 qt rn
   renameRelP2 qt newRN ri

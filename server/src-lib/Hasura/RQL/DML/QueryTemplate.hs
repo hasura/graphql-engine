@@ -3,10 +3,10 @@ module Hasura.RQL.DML.QueryTemplate
   , runExecQueryTemplate
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.GBoolExp          (txtRHSBuilder)
 import           Hasura.RQL.Instances         ()
 import           Hasura.RQL.Types
@@ -26,10 +26,8 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift            ()
 import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.ByteString.Builder      as BB
 import qualified Data.HashMap.Strict          as M
 import qualified Data.Sequence                as DS
-import qualified Data.Vector                  as V
 
 type TemplateArgs = M.HashMap TemplateParam Value
 
@@ -122,7 +120,7 @@ execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
 
 execQueryTP2
   :: (QErrM m, CacheRM m, MonadTx m, HasServeOptsCtx m)
-  => QueryTProc -> m RespBody
+  => QueryTProc -> m EncJSON
 execQueryTP2 qtProc = do
   strfyNum <- socStringifyNum <$> askServeOptsCtx
   case qtProc of
@@ -131,15 +129,12 @@ execQueryTP2 qtProc = do
     QTPUpdate qp -> liftTx $ R.updateQueryToTx strfyNum qp
     QTPDelete qp -> liftTx $ R.deleteQueryToTx strfyNum qp
     QTPCount qp  -> RC.countQToTx qp
-    QTPBulk qps  -> do
-      respList <- mapM execQueryTP2 qps
-      let bsVector = V.fromList respList
-      return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
+    QTPBulk qps  -> encJFromList <$> mapM execQueryTP2 qps
 
 runExecQueryTemplate
   :: ( QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasServeOptsCtx m
      )
-  => ExecQueryTemplate -> m RespBody
+  => ExecQueryTemplate -> m EncJSON
 runExecQueryTemplate q =
   execQueryTemplateP1 q >>= execQueryTP2

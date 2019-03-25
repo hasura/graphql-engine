@@ -8,7 +8,6 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Control.Exception                      (try)
 import           Control.Lens
-import           Hasura.Prelude
 
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
@@ -27,6 +26,8 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Prelude
+import           Hasura.EncJSON
 
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as VQ
@@ -43,7 +44,7 @@ runGQ
   -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
-  -> m BL.ByteString
+  -> m EncJSON
 runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
@@ -106,7 +107,7 @@ runHasuraGQ
   -> ServeOptsCtx
   -> SchemaCache
   -> VQ.QueryParts
-  -> m BL.ByteString
+  -> m EncJSON
 runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   (opTy, fields) <- runReaderT (VQ.validateGQ queryParts) gCtx
@@ -114,7 +115,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx sc queryParts = do
     "subscriptions are not supported over HTTP, use websockets instead"
   let tx = R.resolveSelSet userInfo gCtx sqlGenCtx opTy fields
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ encodeGQResp $ GQSuccess resp
+  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
   where
     gCtxMap = scGCtxMap sc
     runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
@@ -128,7 +129,7 @@ runRemoteGQ
   -- ^ the raw request string
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
-  -> m BL.ByteString
+  -> m EncJSON
 runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
@@ -140,7 +141,7 @@ runRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
-  return $ resp ^. Wreq.responseBody
+  return $ encJFromLBS $ resp ^. Wreq.responseBody
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi

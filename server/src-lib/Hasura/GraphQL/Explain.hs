@@ -8,13 +8,13 @@ import           Data.Has                               (getter)
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
 
 import           Hasura.GraphQL.Context
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
@@ -126,7 +126,7 @@ explainGQLQuery
   -> SchemaCache
   -> ServeOptsCtx
   -> GQLExplain
-  -> m BL.ByteString
+  -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   queryParts <- runReaderT (GV.getQueryParts query) gCtx
@@ -140,7 +140,8 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
     throw400 InvalidParams "only queries can be explained"
   let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
   plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ J.encode plans
+  return $ encJFromJValue plans
+
   where
     gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw

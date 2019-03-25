@@ -1478,9 +1478,7 @@ span.CodeMirror-selectedtext {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  height: 34px;
-  line-height: 14px;
-  padding: 8px 8px 5px;
+  align-items: center;
   position: relative;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1497,7 +1495,6 @@ span.CodeMirror-selectedtext {
   flex: 1;
   font-weight: bold;
   overflow-x: hidden;
-  padding: 10px 0 10px 10px;
   text-align: center;
   text-overflow: ellipsis;
   -webkit-user-select: initial;

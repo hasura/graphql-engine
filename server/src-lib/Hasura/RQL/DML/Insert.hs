@@ -9,6 +9,7 @@ import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
 import qualified Data.Text.Lazy           as LT
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
@@ -39,15 +40,16 @@ data InsertQueryP1
   , iqp1Tuples   :: ![[S.SQLExp]]
   , iqp1Conflict :: !(Maybe ConflictClauseP1)
   , iqp1MutFlds  :: !MutFlds
-  , iqp1UniqCols :: !(Maybe [PGColInfo])
+  , iqp1AllCols  :: ![PGColInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
 mkInsertCTE (InsertQueryP1 _ vn cols vals c _ _) =
   S.CTEInsert insert
   where
+    tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert vn cols vals (toSQLConflict <$> c) $ Just S.returningStar
+      S.SQLInsert vn cols tupVals (toSQLConflict <$> c) $ Just S.returningStar
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -147,8 +149,7 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = map tcName $
-            tiUniqOrPrimConstraints tableInfo
+      let tableConsNames = tiUniqOrPrimConstraints tableInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
@@ -189,8 +190,6 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
       setInsVals = ipiSet insPerm
-      uniqCols = getUniqCols (getCols fieldInfoMap) $
-                 tiUniqOrPrimConstraints tableInfo
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols -> do
@@ -203,6 +202,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
   let mutFlds = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = mkDefValMap fieldInfoMap
+      allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
       insView    = ipiView insPerm
 
@@ -219,7 +219,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       buildConflictClause tableInfo inpCols c
 
   return $ InsertQueryP1 tableName insView insCols sqlExps
-           conflictClause mutFlds uniqCols
+           conflictClause mutFlds allCols
 
   where
     selNecessaryMsg =
@@ -240,10 +240,10 @@ convInsQ =
   liftDMLP1 .
   convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
 
-insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
   runMutation $ Mutation (iqp1Table u) (insertCTE, p)
-                (iqp1MutFlds u) (iqp1UniqCols u) strfyNum
+                (iqp1MutFlds u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
 
@@ -252,7 +252,7 @@ data ConflictCtx
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
 
-nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 nonAdminInsert strfyNum (insQueryP1, args) = do
   conflictCtxM <- mapM extractConflictCtx conflictClauseP1
   setConflictCtx conflictCtxM
@@ -295,7 +295,7 @@ setConflictCtx conflictCtxM = do
 runInsert
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasServeOptsCtx m)
   => InsertQuery
-  -> m RespBody
+  -> m EncJSON
 runInsert q = do
   res <- convInsQ q
   role <- userRole <$> askUserInfo
