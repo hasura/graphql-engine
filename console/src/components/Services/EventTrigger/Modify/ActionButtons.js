@@ -83,7 +83,7 @@ const Buttons = ({
               className={styles.add_mar_right_small}
             />
           </div>
-          <div>Drop pending events</div>
+          <div>Delete existing events (including pending events)</div>
         </div>
         {confirmationError && (
           <div className={`${styles.display_flex}`}>
