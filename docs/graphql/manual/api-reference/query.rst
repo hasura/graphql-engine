@@ -12,7 +12,7 @@ Query/Subscription syntax
 .. code-block:: none
 
     query|subscription [<op-name>] {
-      object [(argument1, arugment2, ...)]{
+      object [([argument])]{
         object-fields
       }
     }
