@@ -73,6 +73,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         removeIcon = (
           <i
             className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+            data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
           />
         );

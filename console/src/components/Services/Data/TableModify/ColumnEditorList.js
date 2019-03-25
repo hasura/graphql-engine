@@ -130,7 +130,7 @@ const ColumnEditorList = ({
       <div key={colName}>
         <ExpandableEditor
           editorExpanded={colEditorExpanded}
-          property={'edit-column'}
+          property={`column-${i}`}
           ongoingRequest={'oola'}
           service="modify-table"
           saveFunc={onSubmit}

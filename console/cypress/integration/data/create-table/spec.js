@@ -124,12 +124,12 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
     getTableName(0, testName)
   );
-  cy.get(getElementFromAlias('foreign-key-lcol-0')).select('0');
-  cy.get(getElementFromAlias('foreign-key-rcol-0')).select(getColName(0));
-  cy.get(getElementFromAlias('foreign-key-lcol-1')).select('1');
-  cy.get(getElementFromAlias('foreign-key-rcol-1')).select(getColName(1));
-  cy.get(getElementFromAlias('onUpdate-cascade')).check();
-  cy.get(getElementFromAlias('onDelete-cascade')).check();
+  cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('0');
+  cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select(getColName(0));
+  cy.get(getElementFromAlias('foreign-key-0-lcol-1')).select('1');
+  cy.get(getElementFromAlias('foreign-key-0-rcol-1')).select(getColName(1));
+  cy.get(getElementFromAlias('foreign-key-0-onUpdate-cascade')).check();
+  cy.get(getElementFromAlias('foreign-key-0-onDelete-cascade')).check();
   //  Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);

@@ -126,7 +126,7 @@ const ForeignKeyEditor = ({
       <div key={`fk_${fk.constraintName || 'new'}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
-          property={'add-fks'}
+          property={`fk-${i}`}
           ongoingRequest={'oola'}
           service="modify-table"
           removeFunc={removeFk}

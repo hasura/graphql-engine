@@ -161,7 +161,7 @@ const ForeignKeySelector = ({
                   className={'form-control'}
                   value={lc}
                   onChange={dispatchSetLcol}
-                  data-test={`foreign-key-lcol-${_i}`}
+                  data-test={`foreign-key-${index}-lcol-${_i}`}
                   disabled={!refTableName}
                 >
                   {lc === '' && (
@@ -184,7 +184,7 @@ const ForeignKeySelector = ({
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}
-                  data-test={`foreign-key-rcol-${_i}`}
+                  data-test={`foreign-key-${index}-rcol-${_i}`}
                 >
                   {rc === '' && (
                     <option value="" disabled>
@@ -235,7 +235,7 @@ const ForeignKeySelector = ({
                   type="radio"
                   checked={selected === va}
                   onChange={onCheck}
-                  data-test={`${action}-${va}`}
+                  data-test={`foreign-key-${index}-${action}-${va}`}
                   className={styles.add_mar_right_small}
                 />
                 <div>{va.toLowerCase()}</div>
