@@ -96,6 +96,11 @@ uFromItem fromItem = case fromItem of
     newSel <- restoringIdens $ uSelect sel
     newAls <- addAlias al
     return $ S.FISelect isLateral newSel newAls
+  S.FIValues (S.ValuesExp tups) als mCols -> do
+    newValExp <- fmap S.ValuesExp $
+                 forM tups $ \(S.TupleExp ts) ->
+                               S.TupleExp <$> mapM uSqlExp ts
+    return $ S.FIValues newValExp als mCols
   S.FIJoin joinExp ->
     S.FIJoin <$> uJoinExp joinExp
 
@@ -171,7 +176,7 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
-  S.SETuples l                  ->
+  S.SETuple (S.TupleExp l)     ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   where
