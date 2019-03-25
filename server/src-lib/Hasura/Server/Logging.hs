@@ -1,4 +1,5 @@
 -- This is taken from wai-logger and customised for our use
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.Server.Logging
   ( StartupLog(..)
@@ -23,6 +24,7 @@ import qualified Data.Text                   as T
 import qualified Data.Text.Encoding          as TE
 import           Data.Time.Clock
 import           Data.Word                   (Word32)
+import           Debug.Trace
 import           Network.Socket              (SockAddr (..))
 import           Network.Wai                 (Request (..))
 import           System.ByteOrder            (ByteOrder (..), byteOrder)
@@ -33,9 +35,11 @@ import qualified Data.ByteString.Char8       as BS
 import qualified Data.CaseInsensitive        as CI
 import qualified Network.HTTP.Types          as N
 
+import qualified Hasura.GraphQL.Explain      as GE
 import           Hasura.HTTP
 import qualified Hasura.Logging              as L
 import           Hasura.Prelude
+import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
@@ -137,28 +141,31 @@ instance ToJSON AccessLog where
 
 data LogDetail
   = LogDetail
-  { _ldQuery :: !TBS.TByteString
-  , _ldError :: !(Maybe Value)
+  { _ldQuery        :: !TBS.TByteString
+  , _ldError        :: !(Maybe Value)
+  , _ldGeneratedSql :: !(Maybe Text)
   } deriving (Show, Eq)
 
 instance ToJSON LogDetail where
-  toJSON (LogDetail q e) =
+  toJSON (LogDetail q e sql) =
     object [ "request"  .= q
            , "error" .= e
+           , "sql" .= sql
            ]
 
 ravenLogGen
   :: VerboseLogging
   -> (BL.ByteString, Either QErr BL.ByteString)
+  -> SchemaCache -> SQLGenCtx -> Maybe UserInfo
   -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
-ravenLogGen verLog (reqBody, res) =
+ravenLogGen verLog (reqBody, res) sc sqlGenCtx userInfoM =
   (status, toJSON <$> logDetail, Just qh, Just size)
   where
     status = either qeStatus (const N.status200) res
     logDetail = either (Just . qErrToLogDetail) (const logVerbose) res
     reqBodyTxt = TBS.fromLBS reqBody
     qErrToLogDetail qErr =
-      LogDetail reqBodyTxt $ Just $ toJSON qErr
+      LogDetail reqBodyTxt (Just $ toJSON qErr) Nothing
 
     size = BL.length $ either encode id res
 
@@ -168,9 +175,17 @@ ravenLogGen verLog (reqBody, res) =
     sha1 = hash . BL.toStrict
 
     logVerbose = if unVerboseLogging verLog
-                 then Just $ LogDetail reqBodyTxt Nothing
+                 then Just $ LogDetail reqBodyTxt Nothing genedSql
                  else Nothing
 
+    genedSql :: Maybe Text
+    genedSql = do
+      -- try to parse the query as graphql explain query, log nothing if parsing fails
+      req <- J.decode reqBody
+      userInfo <- userInfoM
+      x <- runExceptT $ GE.genSql sc sqlGenCtx req userInfo
+      traceM $ show x
+      either (const Nothing) (Just . T.intercalate "\n") x
 
 mkAccessLog
   :: VerboseLogging
@@ -178,8 +193,10 @@ mkAccessLog
   -> Request
   -> (BL.ByteString, Either QErr BL.ByteString)
   -> Maybe (UTCTime, UTCTime)
+  -> SchemaCache
+  -> SQLGenCtx
   -> AccessLog
-mkAccessLog verLog userInfoM req r mTimeT =
+mkAccessLog verLog userInfoM req r mTimeT sc sqlGenCtx =
   AccessLog
   { alStatus       = status
   , alMethod       = bsToTxt $ requestMethod req
@@ -194,7 +211,7 @@ mkAccessLog verLog userInfoM req r mTimeT =
   , alQueryHash    = queryHash
   }
   where
-    (status, mDetail, queryHash, size) = ravenLogGen verLog r
+    (status, mDetail, queryHash, size) = ravenLogGen verLog r sc sqlGenCtx userInfoM
     diffTime = case mTimeT of
       Nothing       -> Nothing
       Just (t1, t2) -> Just $ diffUTCTime t2 t1

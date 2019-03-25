@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Explain
   ( explainGQLQuery
   , GQLExplain
+  , genSql
   ) where
 
 import           Data.Has                               (getter)
@@ -13,8 +14,8 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
 
-import           Hasura.GraphQL.Context
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
@@ -127,7 +128,7 @@ explainGQLQuery
   -> SQLGenCtx
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
+explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw) = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
   queryParts <- runReaderT (GV.getQueryParts query) gCtx
   let topLevelNodes = TH.getTopLevelNodes (GV.qpOpDef queryParts)
@@ -155,3 +156,79 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
             VT.HasuraType     -> True
             VT.RemoteType _ _ -> False
       in all isHasuraNode typeLocs
+
+genFieldSql
+  :: (MonadError QErr m)
+  => UserInfo -> GCtx -> SQLGenCtx -> Field -> m Text
+genFieldSql userInfo gCtx sqlGenCtx fld =
+  case fName of
+    "__type"     -> return $ ""
+    "__schema"   -> return $ ""
+    "__typename" -> return $ ""
+    _            -> do
+      opCtx <- getOpCtx fName
+      builderSQL <- runExplain (fldMap, orderByCtx, sqlGenCtx) $
+        case opCtx of
+          OCSelect (SelOpCtx tn hdrs permFilter permLimit) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect False <$>
+              RS.fromField txtConverter tn permFilter permLimit fld
+          OCSelectPkey (SelPkOpCtx tn hdrs permFilter argMap) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkSQLSelect True <$>
+              RS.fromFieldByPKey txtConverter tn argMap permFilter fld
+          OCSelectAgg (SelOpCtx tn hdrs permFilter permLimit) -> do
+            validateHdrs hdrs
+            toSQL . RS.mkAggSelect <$>
+              RS.fromAggField txtConverter tn permFilter permLimit fld
+          OCFuncQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq False
+          OCFuncAggQuery (FuncQOpCtx tn hdrs permFilter permLimit fn argSeq) ->
+            procFuncQuery tn fn permFilter permLimit hdrs argSeq True
+          _ -> throw500 "unexpected mut field info for explain"
+
+      return $ TB.run builderSQL
+  where
+    fName = _fName fld
+
+    opCtxMap = _gOpCtxMap gCtx
+    fldMap = _gFields gCtx
+    orderByCtx = _gOrdByCtx gCtx
+
+    getOpCtx f =
+      onNothing (Map.lookup f opCtxMap) $ throw500 $
+      "lookup failed: opctx: " <> showName f
+
+    procFuncQuery tn fn permFilter permLimit hdrs argSeq isAgg = do
+      validateHdrs hdrs
+      (tabArgs, eSel, frmItem) <-
+        RS.fromFuncQueryField txtConverter fn argSeq isAgg fld
+      strfyNum <- stringifyNum <$> asks getter
+      return $ toSQL $
+        RS.mkFuncSelectWith fn tn
+        (RS.TablePerm permFilter permLimit) tabArgs strfyNum eSel frmItem
+
+    validateHdrs hdrs = do
+      let receivedHdrs = userVars userInfo
+      forM_ hdrs $ \hdr ->
+        unless (isJust $ getVarVal hdr receivedHdrs) $
+        throw400 NotFound $ hdr <<> " header is expected but not found"
+
+
+genSql
+  :: (MonadError QErr m)
+  => SchemaCache
+  -> SQLGenCtx
+  -> GV.GraphQLRequest
+  -> UserInfo
+  -> m [Text]
+genSql sc sqlGenCtx query userInfo = do
+  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
+  queryParts <- runReaderT (GV.getQueryParts query) gCtx
+
+  (opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
+  unless (opTy == G.OperationTypeQuery) $
+    throw400 InvalidParams "only queries can be explained"
+  mapM (genFieldSql userInfo gCtx sqlGenCtx) (toList selSet)
+  where
+    gCtxMap = scGCtxMap sc

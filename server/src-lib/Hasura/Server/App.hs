@@ -169,11 +169,14 @@ logResult
   => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult userInfoM req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog verbose userInfoM req (reqBody, res) qTime
+logResult userInfoM req reqBody sc res qTime = do
+  scache <- liftIO $ readIORef $ _scrCache $ scCacheRef sc
+  liftIO $ logger $ mkAccessLog verbose userInfoM req (reqBody, res) qTime scache
+    (SQLGenCtx strfyNum)
   where
     verbose = scVerboseLogging sc
     logger = L.unLogger $ scLogger sc
+    strfyNum = scStringifyNum sc
 
 logError
   :: MonadIO m
@@ -278,6 +281,7 @@ gqlExplainHandler query = do
   isoL <- scIsolation . hcServerCtx <$> ask
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
+
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
