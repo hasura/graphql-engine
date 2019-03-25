@@ -258,24 +258,12 @@ from10To11 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_10_to_11.sql")
   return ()
 
-from11To12
-  :: ( MonadTx m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     )
-  => m ()
-from11To12 = do
+from11To12 :: (MonadTx m) => m ()
+from11To12 = liftTx $ do
   -- Migrate database
-  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
     $(Q.sqlFromFile "src-rsr/migrate_from_11_to_12.sql")
-  -- Migrate metadata
-  migrateMetadata True migrateMetadataFrom11
-  where
-    migrateMetadataFrom11 =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_11_to_12.yaml" :: Q (TExp RQLQuery)))
+  return ()
 
 migrateCatalog
   :: ( MonadTx m
