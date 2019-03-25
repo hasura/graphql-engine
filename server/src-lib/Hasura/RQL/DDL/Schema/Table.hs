@@ -304,14 +304,19 @@ buildSchemaCache = do
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) ->
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+    let qt = QualifiedObject sn tn
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
-    ObjRel -> do
-      using <- decodeValue rDef
-      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
-    ArrRel -> do
-      using <- decodeValue rDef
-      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
+      ObjRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateObjRel qt relDef
+        objRelP2Setup qt relDef
+      ArrRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateArrRel qt relDef
+        arrRelP2Setup qt relDef
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
