@@ -1,17 +1,25 @@
 {
   "version": 2,
-	"name": "graphqurl-graphiql",
-	"alias": "hasura-graphiql.now.sh",
-	"builds": [
-        { "src": "package.json", "use": "@now/static-build", "config": { "distDir": "static/build" } }
-    ],
-    "routes": [
-      { "src": "/static/(.*)", "headers": { "cache-control": "s-maxage=31536000,immutable" }, "dest": "/static/$1" },
-      { "src": "/favicon.ico", "dest": "/favicon.ico" },
-      { "src": "/asset-manifest.json", "dest": "/asset-manifest.json" },
-      { "src": "/manifest.json", "dest": "/manifest.json" },
-      { "src": "/precache-manifest.(.*)", "dest": "/precache-manifest.$1" },
-      { "src": "/service-worker.js", "headers": { "cache-control": "s-maxage=0" }, "dest": "/service-worker.js" },
-      { "src": "/(.*)", "headers": {"cache-control": "s-maxage=0"}, "dest": "/index.html" }
-    ]
+  "name": "graphiql-online",
+  "alias": ["graphiql-online.com"],
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@now/static-build",
+      "config": { "distDir": "static" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000,immutable" },
+      "dest": "/static/$1"
+    },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    {
+      "src": "/(.*)",
+      "headers": { "cache-control": "s-maxage=0" },
+      "dest": "/static/index.html"
+    }
+  ]
 }

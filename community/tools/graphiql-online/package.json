@@ -13,6 +13,7 @@
     "start": "concurrently --kill-others \"npm run start-prod\"",
     "start-prod": "better-npm-run start-prod",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "now-build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "lint": "eslint -c .eslintrc src api",
     "start-dev": "better-npm-run start-dev",
