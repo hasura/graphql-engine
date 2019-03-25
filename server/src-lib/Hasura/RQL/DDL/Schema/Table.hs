@@ -2,9 +2,9 @@
 
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
-import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
@@ -55,8 +55,8 @@ getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
-      return $ mkTableInfo qt isSystemDefined cons cols viewInfoM
+    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable
@@ -304,14 +304,19 @@ buildSchemaCache = do
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) ->
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+    let qt = QualifiedObject sn tn
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
-    ObjRel -> do
-      using <- decodeValue rDef
-      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
-    ArrRel -> do
-      using <- decodeValue rDef
-      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
+      ObjRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateObjRel qt relDef
+        objRelP2Setup qt relDef
+      ArrRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateArrRel qt relDef
+        arrRelP2Setup qt relDef
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
