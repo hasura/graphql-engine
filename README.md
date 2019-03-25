@@ -210,4 +210,4 @@ directories.
 
 This readme is available in the following translations:
 
-- [Japanese :jp:](README.japanese.md) (:pray: @moksahero)
+- [Japanese :jp:](README.japanese.md) (:pray: [https://github.com/moksahero](@moksahero))
