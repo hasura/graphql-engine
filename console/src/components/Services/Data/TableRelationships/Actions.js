@@ -1,3 +1,5 @@
+import inflection from 'inflection';
+
 import {
   makeMigrationCall,
   loadUntrackedRelations,
@@ -377,84 +379,135 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   }
 };
 
-const sanitizeRelName = arg =>
-  arg
-    .trim()
-    .toLowerCase()
-    .replace(/([^A-Z0-9]+)(.)/gi, function modifyRel() {
-      return arguments[2].toUpperCase();
-    });
+const sanitizeRelName = arg => arg.trim();
 
-const formRelName = relMeta => {
+const fallBackRelName = (relMeta, existingFields, iterNumber = 0) => {
+  let relName;
+  const targetTable = sanitizeRelName(relMeta.rTable);
+  if (relMeta.isObjRel) {
+    const objLCol = sanitizeRelName(relMeta.lcol.join('_'));
+    relName = `${inflection.singularize(targetTable)}_by_${objLCol}${
+      iterNumber ? '_' + iterNumber : ''
+    }`;
+  } else {
+    const arrRCol = sanitizeRelName(relMeta.rcol.join('_'));
+    relName = `${inflection.pluralize(targetTable)}_by_${arrRCol}${
+      iterNumber ? '_' + iterNumber : ''
+    }`;
+  }
+  relName = inflection.camelize(relName, true);
+  /*
+   * Recurse until a unique relationship name is found and keep prefixing an integer at the end to fix collision
+   * */
+  return relName in existingFields
+    ? fallBackRelName(relMeta, existingFields, ++iterNumber)
+    : relName;
+};
+
+const formRelName = (relMeta, existingFields) => {
   try {
     let finalRelName;
-    // remove special chars and change first letter after underscore to uppercase
     const targetTable = sanitizeRelName(relMeta.rTable);
     if (relMeta.isObjRel) {
-      const objLCol = sanitizeRelName(relMeta.lcol.join(','));
-      finalRelName = `${targetTable}By${objLCol}`;
+      finalRelName = inflection.singularize(targetTable);
     } else {
-      const arrRCol = sanitizeRelName(relMeta.rcol.join(','));
-      finalRelName =
-        `${
-          targetTable
-          // (targetTable[targetTable.length - 1] !== 's' ? 's' : '') + // add s only if the last char is not s
-        }s` + `By${arrRCol}`;
+      finalRelName = inflection.pluralize(targetTable);
     }
+
+    /* Check if it is existing, fallback to guaranteed unique name */
+    if (existingFields && finalRelName in existingFields) {
+      finalRelName = fallBackRelName(relMeta, existingFields);
+    }
+
     return finalRelName;
   } catch (e) {
     return '';
   }
 };
 
+const getExistingFieldsMap = tableSchema => {
+  const fieldMap = {};
+
+  tableSchema.relationships.forEach(tr => {
+    fieldMap[tr.rel_name] = true;
+  });
+
+  tableSchema.columns.forEach(tc => {
+    fieldMap[tc.column_name] = true;
+  });
+
+  return fieldMap;
+};
+
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
   const tableRelMapping = allSchemas.map(table => ({
     table_name: table.table_name,
+    existingFields: getExistingFieldsMap(table),
     relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
   }));
+
   const bulkRelTrack = [];
   const bulkRelTrackDown = [];
-  tableRelMapping.map(table => {
+
+  tableRelMapping.forEach(table => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
-      table.relations.objectRel.map(indivObjectRel => {
+      table.relations.objectRel.forEach(indivObjectRel => {
+        const suggestedRelName = formRelName(
+          indivObjectRel,
+          table.existingFields
+        );
+        /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
+        table.existingFields[suggestedRelName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivObjectRel.tableName,
-          formRelName(indivObjectRel),
+          suggestedRelName,
           indivObjectRel.lcol,
           indivObjectRel.rTable,
           indivObjectRel.rcol,
           true,
           currentSchema
         );
+
         const objTrack = {
           upQuery,
           downQuery,
           data: indivObjectRel,
         };
+
         bulkRelTrack.push(objTrack);
       });
     }
+
     if (table.relations.arrayRel.length) {
-      table.relations.arrayRel.map(indivArrayRel => {
+      table.relations.arrayRel.forEach(indivArrayRel => {
+        const suggestedRelName = formRelName(
+          indivArrayRel,
+          table.existingFields
+        );
+        /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
+        table.existingFields[suggestedRelName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivArrayRel.tableName,
-          formRelName(indivArrayRel),
+          suggestedRelName,
           indivArrayRel.lcol,
           indivArrayRel.rTable,
           indivArrayRel.rcol,
           false,
           currentSchema
         );
+
         const arrTrack = {
           upQuery,
           downQuery,
           data: indivArrayRel,
         };
+
         bulkRelTrack.push(arrTrack);
       });
     }
   });
+
   return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
@@ -538,4 +591,5 @@ export {
   formRelName,
   getAllUnTrackedRelations,
   saveRenameRelationship,
+  getExistingFieldsMap,
 };
