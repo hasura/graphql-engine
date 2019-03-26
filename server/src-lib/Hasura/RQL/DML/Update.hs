@@ -28,11 +28,11 @@ import qualified Hasura.SQL.DML           as S
 
 data UpdateQueryP1
   = UpdateQueryP1
-  { uqp1Table    :: !QualifiedTable
-  , uqp1SetExps  :: ![(PGCol, S.SQLExp)]
-  , uqp1Where    :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , uqp1MutFlds  :: !MutFlds
-  , uqp1UniqCols :: !(Maybe [PGColInfo])
+  { uqp1Table   :: !QualifiedTable
+  , uqp1SetExps :: ![(PGCol, S.SQLExp)]
+  , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
+  , uqp1MutFlds :: !MutFlds
+  , uqp1AllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
 mkUpdateCTE
@@ -48,12 +48,11 @@ mkUpdateCTE (UpdateQueryP1 tn setExps (permFltr, wc) _ _) =
 getUpdateDeps
   :: UpdateQueryP1
   -> [SchemaDependency]
-getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds uniqCols) =
-  mkParentDep tn : colDeps <> uniqColDeps <> whereDeps <> retDeps
+getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds allCols) =
+  mkParentDep tn : colDeps <> allColDeps <> whereDeps <> retDeps
   where
     colDeps   = map (mkColDep "on_type" tn . fst) setExps
-    uniqColDeps = map (mkColDep "on_type" tn) $
-                  maybe [] (map pgiName) uniqCols
+    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
     whereDeps = getBoolExpDeps tn wc
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
@@ -143,10 +142,9 @@ validateUpdateQueryWith f uq = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
-      uniqCols = getUniqCols (getCols fieldInfoMap) $
-                 tiUniqOrPrimConstraints tableInfo
 
   -- convert the object to SQL set expression
   setItems <- withPathK "$set" $
@@ -180,7 +178,7 @@ validateUpdateQueryWith f uq = do
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
     (mkDefaultMutFlds mAnnRetCols)
-    uniqCols
+    allCols
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
@@ -198,7 +196,7 @@ updateQueryToTx
   :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1UniqCols u) strfyNum
+                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 

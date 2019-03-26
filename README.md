@@ -57,6 +57,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 - [Contributing](#contributing)
 - [Brand assets](#brand-assets)
 - [License](#license)
+- [Translations](#translations)
 
 <!-- markdown-toc end -->
 
@@ -204,3 +205,9 @@ All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
+
+## Translations
+
+This readme is available in the following translations:
+
+- [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))

@@ -6,7 +6,7 @@ module Hasura.GraphQL.Resolve.Mutation
   ) where
 
 import           Control.Arrow                     (second)
-import           Data.Has                          (getter)
+import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
@@ -20,6 +20,7 @@ import qualified Hasura.RQL.DML.Update             as RU
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
@@ -30,10 +31,12 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.EncJSON
 
 convertMutResp
-  :: G.NamedType -> SelSet -> Convert RR.MutFlds
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => G.NamedType -> SelSet -> m RR.MutFlds
 convertMutResp ty selSet =
   withSelSet selSet $ \fld -> case _fName fld of
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
@@ -44,7 +47,7 @@ convertMutResp ty selSet =
 
 convertRowObj
   :: (MonadError QErr m, MonadState PrepArgs m)
-  => AnnGValue
+  => AnnInpVal
   -> m [(PGCol, S.SQLExp)]
 convertRowObj val =
   flip withObject val $ \_ obj ->
@@ -69,10 +72,10 @@ lhsExpOp op annTy (col, e) =
 
 convObjWithOp
   :: (MonadError QErr m)
-  => ApplySQLOp -> AnnGValue -> m [(PGCol, S.SQLExp)]
+  => ApplySQLOp -> AnnInpVal -> m [(PGCol, S.SQLExp)]
 convObjWithOp opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
-  (_, colVal) <- asPGColVal v
+  colVal <- _apvValue <$> asPGColVal v
   let pgCol = PGCol $ G.unName k
       encVal = txtEncoder colVal
       sqlExp = opFn (pgCol, encVal)
@@ -80,22 +83,27 @@ convObjWithOp opFn val =
 
 convDeleteAtPathObj
   :: (MonadError QErr m)
-  => AnnGValue -> m [(PGCol, S.SQLExp)]
+  => AnnInpVal -> m [(PGCol, S.SQLExp)]
 convDeleteAtPathObj val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
     vals <- flip withArray v $ \_ annVals -> mapM asPGColVal annVals
-    let valExps = map (txtEncoder . snd) vals
+    let valExps = map (txtEncoder . _apvValue) vals
         pgCol = PGCol $ G.unName k
         annEncVal = S.SETyAnn (S.SEArray valExps) S.textArrType
         sqlExp = S.SEOpApp S.jsonbDeleteAtPathOp
                  [S.SEIden $ toIden pgCol, annEncVal]
     return (pgCol, sqlExp)
 
-convertUpdate
-  :: UpdOpCtx -- the update context
+convertUpdateP1
+  :: ( MonadError QErr m
+     , MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     , MonadState PrepArgs m
+     )
+  => UpdOpCtx -- the update context
   -> Field -- the mutation field
-  -> Convert RespTx
-convertUpdate opCtx fld = do
+  -> m RU.UpdateQueryP1
+convertUpdateP1 opCtx fld = do
   -- a set expression is same as a row object
   setExpM   <- withArgM args "_set" convertRowObj
   -- where bool expression to filter column
@@ -117,43 +125,54 @@ convertUpdate opCtx fld = do
     convObjWithOp $ rhsExpOp S.jsonbDeleteOp S.intType
   -- delete at path in jsonb value
   deleteAtPathExpM <- withArgM args "_delete_at_path" convDeleteAtPathObj
-
   mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
-  prepArgs <- get
   let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
                  ]
       setItems = preSetItems ++ concat (catMaybes updExpsM)
+
   -- atleast one of update operators is expected
   -- or preSetItems shouldn't be empty
+  -- this is not equivalent to (null setItems)
   unless (any isJust updExpsM || not (null preSetItems)) $ throwVE $
-    "atleast any one of _set, _inc, _append, _prepend, _delete_key, _delete_elem and "
-    <> " _delete_at_path operator is expected"
-  strfyNum <- stringifyNum <$> asks getter
-  let p1 = RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds uniqCols
-      whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
-      whenEmptyItems = return $ return $ buildEmptyMutResp mutFlds
-  -- if there are not set items then do not perform
-  -- update and return empty mutation response
-  bool whenNonEmptyItems whenEmptyItems $ null setItems
+    "atleast any one of _set, _inc, _append, _prepend, "
+    <> "_delete_key, _delete_elem and "
+    <> "_delete_at_path operator is expected"
+
+  return $ RU.UpdateQueryP1 tn setItems (filterExp, whereExp) mutFlds allCols
   where
-    UpdOpCtx tn _ filterExp preSetCols uniqCols = opCtx
+    UpdOpCtx tn _ filterExp preSetCols allCols = opCtx
     args = _fArguments fld
     preSetItems = Map.toList preSetCols
+
+convertUpdate
+  :: UpdOpCtx -- the update context
+  -> Field -- the mutation field
+  -> Convert RespTx
+convertUpdate opCtx fld = do
+  (p1, prepArgs) <- withPrepArgs $ convertUpdateP1 opCtx fld
+  strfyNum <- stringifyNum <$> asks getter
+  let whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
+      whenEmptyItems    = return $ return $
+                          buildEmptyMutResp $ RU.uqp1MutFlds p1
+   -- if there are not set items then do not perform
+   -- update and return empty mutation response
+  bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps p1
 
 convertDelete
   :: DelOpCtx -- the delete context
   -> Field -- the mutation field
   -> Convert RespTx
 convertDelete opCtx fld = do
-  whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
-  mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
-  args <- get
-  let p1 = RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds uniqCols
+  (p1, prepArgs) <- p1m
   strfyNum <- stringifyNum <$> asks getter
-  return $ RD.deleteQueryToTx strfyNum (p1, args)
+  return $ RD.deleteQueryToTx strfyNum (p1, prepArgs)
   where
-    DelOpCtx tn _ filterExp uniqCols = opCtx
+    DelOpCtx tn _ filterExp allCols = opCtx
+    p1m = withPrepArgs $ do
+      whereExp <- withArg (_fArguments fld) "where" (parseBoolExp prepare)
+      mutFlds  <- convertMutResp (_fType fld) $ _fSelSet fld
+      return $ RD.DeleteQueryP1 tn (filterExp, whereExp) mutFlds allCols
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: RR.MutFlds -> EncJSON

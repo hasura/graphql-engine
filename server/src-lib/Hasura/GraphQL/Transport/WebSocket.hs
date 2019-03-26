@@ -26,15 +26,10 @@ import qualified StmContainers.Map                             as STMMap
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context                        (GCtx)
-import           Hasura.GraphQL.Resolve                        (resolveSelSet)
 import           Hasura.GraphQL.Resolve.Context                (LazyRespTx)
-import           Hasura.GraphQL.Schema                         (getGCtx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
-import           Hasura.GraphQL.Validate                       (QueryParts (..),
-                                                                getQueryParts,
-                                                                validateGQ)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                            (AuthMode,
@@ -42,11 +37,12 @@ import           Hasura.Server.Auth                            (AuthMode,
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                           (bsToTxt)
 
+import qualified Hasura.GraphQL.Execute                        as E
+import qualified Hasura.GraphQL.Resolve                        as R
 import qualified Hasura.GraphQL.Resolve.LiveQuery              as LQ
-import qualified Hasura.GraphQL.Transport.HTTP                 as TH
 import qualified Hasura.GraphQL.Transport.WebSocket.Client     as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
-import qualified Hasura.GraphQL.Validate.Types                 as VT
+import qualified Hasura.GraphQL.Validate                       as V
 import qualified Hasura.Logging                                as L
 
 
@@ -176,52 +172,76 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let connErr = "start received before the connection is initialised"
       withComplete $ sendConnErr connErr
 
-  -- validate and build tx
   sc <- liftIO $ IORef.readIORef gCtxMapRef
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
-
-  eQueryParts <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  queryParts <- either (withComplete . preExecErr) return eQueryParts
-
-  let opDef = qpOpDef queryParts
-      topLevelNodes = TH.getTopLevelNodes opDef
-      typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
-
-  res <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  either (withComplete . preExecErr) return res
-
-  case typeLocs of
-    []          -> runHasuraQ userInfo gCtx queryParts
-    (typeLoc:_) -> case typeLoc of
-      VT.HasuraType        -> runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType rn rsi -> runRemoteQ userInfo reqHdrs opDef (rn, rsi)
-
+  execPlanE <- runExceptT $ E.getExecPlan userInfo sc q
+  execPlan <- either (withComplete . preExecErr) return execPlanE
+  case execPlan of
+    E.GExPHasura gCtx rootSelSet ->
+      runHasuraGQ userInfo gCtx rootSelSet
+    E.GExPRemote rn rsi opDef  ->
+      runRemoteGQ userInfo reqHdrs opDef (rn, rsi)
   where
-    runHasuraQ :: UserInfo -> GCtx -> QueryParts -> ExceptT () IO ()
-    runHasuraQ userInfo gCtx queryParts = do
-      (opTy, fields) <- either (withComplete . preExecErr) return $
-                        runReaderT (validateGQ queryParts) gCtx
-      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx sqlGenCtx opTy fields
-      case opTy of
-        G.OperationTypeSubscription -> do
+    runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
+    runHasuraGQ userInfo gCtx rootSelSet =
+      case rootSelSet of
+        V.RQuery selSet ->
+          execQueryOrMut $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
+        V.RMutation selSet ->
+          execQueryOrMut $ R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
+        V.RSubscription fld -> do
+          let tx = R.resolveSubsFld userInfo gCtx sqlGenCtx fld
           let lq = LQ.LiveQuery userInfo q
           liftIO $ STM.atomically $ STMMap.insert lq opId opMap
           liftIO $ LQ.addLiveQuery runTx lqMap lq
-            qTx (wsId, opId) liveQOnChange
+            tx (wsId, opId) liveQOnChange
           logOpEv ODStarted
-        _ ->  do
-          logOpEv ODStarted
-          resp <- liftIO $ runTx qTx
-          either postExecErr sendSuccResp resp
-          sendCompleted
 
-    runRemoteQ
-      :: UserInfo
-      -> [H.Header]
+    -- runRemoteQ
+    --   :: UserInfo
+    --   -> [H.Header]
+    --   -> G.TypedOperationDefinition
+    --   -> (RemoteSchemaName, RemoteSchemaInfo)
+    --   -> ExceptT () IO ()
+    -- runRemoteQ userInfo reqHdrs opDef (rn, rsi) = do
+    --   sockPayload <- onLeft (J.eitherDecode msgRaw) $
+    --     const $ withComplete $ preExecErr $
+    --     err500 Unexpected "invalid websocket payload"
+
+    --   case G._todType opDef of
+    --     G.OperationTypeSubscription -> do
+    --       res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
+    --              wsConn userInfoR rn opId reqHdrs sockPayload
+    --       onLeft res $ \e -> do
+    --         logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
+    --         withComplete $ sendConnErr . T.pack $ show e
+    --       logOpEv ODStarted
+    --     _ -> do
+    --       -- if it's not a subscription, use HTTP to execute the query on the
+    --       -- remote server
+    --       -- try to parse the (apollo protocol) websocket frame and get only the
+    --       -- payload
+    --       logOpEv ODStarted
+    --       let payload = J.encode $ WS._wpPayload sockPayload
+    --       resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+    --               payload rsi opDef
+    --       either postExecErr sendSuccResp resp
+    --       sendCompleted
+
+
+    execQueryOrMut tx = do
+      logOpEv ODStarted
+      resp <- liftIO $ runTx tx
+      either postExecErr sendSuccResp resp
+      sendCompleted
+
+    runRemoteGQ
+      :: UserInfo -> [H.Header]
       -> G.TypedOperationDefinition
       -> (RemoteSchemaName, RemoteSchemaInfo)
       -> ExceptT () IO ()
-    runRemoteQ userInfo reqHdrs opDef (rn, rsi) = do
+    runRemoteGQ userInfo reqHdrs opDef (rn, rsi) = do
+      -- try to parse the (apollo protocol) websocket frame and get only the
+      -- payload
       sockPayload <- onLeft (J.eitherDecode msgRaw) $
         const $ withComplete $ preExecErr $
         err500 Unexpected "invalid websocket payload"
@@ -232,20 +252,17 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
                  wsConn userInfoR rn opId reqHdrs sockPayload
           onLeft res $ \e -> do
             logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
-            withComplete $ sendConnErr . T.pack $ show e
+            withComplete $ preExecErr e
           logOpEv ODStarted
+
         _ -> do
           -- if it's not a subscription, use HTTP to execute the query on the
           -- remote server
-          -- try to parse the (apollo protocol) websocket frame and get only the
-          -- payload
-          logOpEv ODStarted
           let payload = J.encode $ WS._wpPayload sockPayload
-          resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+          resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
                   payload rsi opDef
           either postExecErr sendSuccResp resp
           sendCompleted
-
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 

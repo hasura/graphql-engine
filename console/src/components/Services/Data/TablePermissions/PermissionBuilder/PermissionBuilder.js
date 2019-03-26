@@ -24,7 +24,8 @@ import {
   genericOperators,
   textColumnOperators,
   jsonColumnOperators,
-  topologyColumnOperators,
+  geometryColumnOperators,
+  geographyColumnOperators,
   PGTypes,
 } from './utils';
 
@@ -424,7 +425,8 @@ class PermissionBuilder extends React.Component {
             _val = Number(val);
           } else if (
             (PGTypes.json.includes(valueType) ||
-              PGTypes.postgis.includes(valueType)) &&
+              PGTypes.geometry.includes(valueType) ||
+              PGTypes.geography.includes(valueType)) &&
             isJsonString(val)
           ) {
             _val = JSON.parse(val);
@@ -453,7 +455,8 @@ class PermissionBuilder extends React.Component {
         input = renderBoolSelect(dispatchInput, value);
       } else if (
         PGTypes.json.includes(valueType) ||
-        PGTypes.postgis.includes(valueType)
+        PGTypes.geometry.includes(valueType) ||
+        PGTypes.geography.includes(valueType)
       ) {
         input = inputBox();
         suggestion = jsonSuggestion();
@@ -509,8 +512,10 @@ class PermissionBuilder extends React.Component {
         operators = textColumnOperators;
       } else if (PGTypes.json.includes(valueType)) {
         operators = jsonColumnOperators;
-      } else if (PGTypes.postgis.includes(valueType)) {
-        operators = topologyColumnOperators;
+      } else if (PGTypes.geometry.includes(valueType)) {
+        operators = geometryColumnOperators;
+      } else if (PGTypes.geography.includes(valueType)) {
+        operators = geographyColumnOperators;
       } else {
         operators = genericOperators;
       }
