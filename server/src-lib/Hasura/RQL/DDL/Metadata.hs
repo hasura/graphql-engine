@@ -37,15 +37,15 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query              as Q
+import qualified Hasura.RQL.DDL.EventTrigger    as DS
 import qualified Hasura.RQL.DDL.Permission      as DP
 import qualified Hasura.RQL.DDL.QueryTemplate   as DQ
 import qualified Hasura.RQL.DDL.Relationship    as DR
 import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
 import qualified Hasura.RQL.DDL.Schema.Function as DF
 import qualified Hasura.RQL.DDL.Schema.Table    as DT
-import qualified Hasura.RQL.DDL.EventTrigger    as DS
-import qualified Hasura.RQL.Types.RemoteSchema  as TRS
 import qualified Hasura.RQL.Types.EventTrigger  as DTS
+import qualified Hasura.RQL.Types.RemoteSchema  as TRS
 
 data TableMeta
   = TableMeta
@@ -241,7 +241,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        void $ DS.subTableP2 (table ^. tmTable) False etc
+        DS.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
