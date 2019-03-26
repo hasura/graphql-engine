@@ -406,14 +406,6 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const sessionVariableSuggestion = dispatchInput => {
-      return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
-    };
-
-    const jsonSuggestion = dispatchInput => {
-      return renderSuggestion(dispatchInput, '{}', 'JSON');
-    };
-
     const renderValue = (dispatchFunc, value, prefix, valueType) => {
       const dispatchInput = val => {
         let _val = val;
@@ -439,6 +431,14 @@ class PermissionBuilder extends React.Component {
         return renderInput(dispatchInput, value);
       };
 
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
+      };
+
+      const jsonSuggestion = () => {
+        return renderSuggestion(dispatchInput, '{}', 'JSON');
+      };
+
       let input;
       let suggestion;
 
@@ -446,10 +446,10 @@ class PermissionBuilder extends React.Component {
         input = renderBoolSelect(dispatchInput, value);
       } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
-        suggestion = jsonSuggestion(dispatchInput);
+        suggestion = jsonSuggestion();
       } else {
         input = wrapDoubleQuotes(inputBox());
-        suggestion = sessionVariableSuggestion(dispatchInput);
+        suggestion = sessionVariableSuggestion();
       }
 
       return (
@@ -462,6 +462,10 @@ class PermissionBuilder extends React.Component {
     const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
       const dispatchInput = val => {
         dispatchFunc({ prefix: prefix, value: val });
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-Allowed-Ids');
       };
 
       const inputArray = [];
