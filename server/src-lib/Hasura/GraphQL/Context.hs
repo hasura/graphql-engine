@@ -16,7 +16,6 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 
-
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
 data InsOpCtx

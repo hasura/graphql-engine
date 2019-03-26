@@ -108,7 +108,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.Subscribe
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -256,8 +256,7 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId          :: !TriggerId
-   , etiName        :: !TriggerName
+   { etiName        :: !TriggerName
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo

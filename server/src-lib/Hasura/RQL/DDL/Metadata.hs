@@ -49,9 +49,9 @@ import qualified Hasura.RQL.DDL.Relationship    as DR
 import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
 import qualified Hasura.RQL.DDL.Schema.Function as DF
 import qualified Hasura.RQL.DDL.Schema.Table    as DT
-import qualified Hasura.RQL.DDL.Subscribe       as DS
+import qualified Hasura.RQL.DDL.EventTrigger    as DS
 import qualified Hasura.RQL.Types.RemoteSchema  as TRS
-import qualified Hasura.RQL.Types.Subscribe     as DTS
+import qualified Hasura.RQL.Types.EventTrigger  as DTS
 
 data TableMeta
   = TableMeta
