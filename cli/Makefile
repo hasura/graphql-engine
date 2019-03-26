@@ -7,7 +7,7 @@ OUTPUT_DIR := _output
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
+	go-bindata --pkg assets -o assets/assets.go assets/**/*.html metadata/sql/*.tmpl
 
 HAS_GOX := $(shell command -v gox;)
 HAS_DEP := $(shell command -v dep;)

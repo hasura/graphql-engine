@@ -95,3 +95,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/kardianos/osext"
+
+[[constraint]]
+  name = "github.com/gobuffalo/flect"
+  version = "0.1.1"

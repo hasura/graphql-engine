@@ -182,6 +182,14 @@
   version = "v1.2"
 
 [[projects]]
+  digest = "1:ab58dc28f93d8d11026c53866a62490bafca88d215a76cd1d5c56f90e88724e4"
+  name = "github.com/gobuffalo/flect"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8be8acaa37de767be990a13e6c73ac43c8f00b34"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:c594a691090b434d55c67f6cc8e326ef5ba49452abc059821bd5d4fd4cdef08c"
   name = "github.com/gofrs/uuid"
   packages = ["."]
@@ -548,6 +556,7 @@
     "github.com/gin-contrib/static",
     "github.com/gin-gonic/contrib/renders/multitemplate",
     "github.com/gin-gonic/gin",
+    "github.com/gobuffalo/flect",
     "github.com/gofrs/uuid",
     "github.com/kardianos/osext",
     "github.com/lib/pq",
@@ -562,6 +571,7 @@
     "github.com/skratchdot/open-golang/open",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
+    "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
   ]

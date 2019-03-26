@@ -23,6 +23,8 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataResetCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataTrackCmd(ec),
+		newMetadataUnTrackCmd(ec),
 	)
 	return metadataCmd
 }
