@@ -26,19 +26,16 @@ import           Control.Concurrent                          (threadDelay)
 import           Data.ByteString                             (ByteString)
 import qualified Data.IORef                                  as IORef
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context                      (GCtx)
-import           Hasura.GraphQL.Resolve                      (resolveSelSet)
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Resolve                      as R
 import           Hasura.GraphQL.Resolve.Context              (LazyRespTx)
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
-import           Hasura.GraphQL.Schema                       (getGCtx)
-import qualified Hasura.GraphQL.Transport.HTTP               as TH
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import           Hasura.GraphQL.Validate                     (QueryParts (..),
-                                                              getQueryParts,
-                                                              validateGQ)
-import qualified Hasura.GraphQL.Validate.Types               as VT
+import qualified Hasura.GraphQL.Validate                     as V
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -50,7 +47,7 @@ import           Hasura.Server.Utils                         (bsToTxt)
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
 
-type TxRunner = LazyRespTx -> IO (Either QErr BL.ByteString)
+type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 type OperationMap
   = STMMap.Map OperationId LQ.LiveQuery
@@ -223,51 +220,40 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let connErr = "start received before the connection is initialised"
       withComplete $ sendConnErr connErr
 
-  -- validate and build tx
   sc <- liftIO $ IORef.readIORef gCtxMapRef
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) (scGCtxMap sc)
-
-  res <- runExceptT $ runReaderT (getQueryParts q) gCtx
-  queryParts <- case res of
-    Left (QErr _ _ err _ _) -> withComplete $ sendConnErr err
-    Right vals              -> return vals
-
-  let opDef = qpOpDef queryParts
-      topLevelNodes = TH.getTopLevelNodes opDef
-      typeLocs = TH.gatherTypeLocs gCtx topLevelNodes
-
-  res' <- runExceptT $ TH.assertSameLocationNodes typeLocs
-  either (\(QErr _ _ err _ _) -> withComplete $ sendConnErr err) return res'
-
-  case typeLocs of
-    []          -> runHasuraQ userInfo gCtx queryParts
-    (typeLoc:_) -> case typeLoc of
-      VT.HasuraType       -> runHasuraQ userInfo gCtx queryParts
-      VT.RemoteType _ rsi -> runRemoteQ userInfo reqHdrs opDef rsi
-
+  execPlanE <- runExceptT $ E.getExecPlan userInfo sc q
+  execPlan <- either (withComplete . preExecErr) return execPlanE
+  case execPlan of
+    E.GExPHasura gCtx rootSelSet ->
+      runHasuraGQ userInfo gCtx rootSelSet
+    E.GExPRemote rsi opDef  ->
+      runRemoteGQ userInfo reqHdrs opDef rsi
   where
-    runHasuraQ :: UserInfo -> GCtx -> QueryParts -> ExceptT () IO ()
-    runHasuraQ userInfo gCtx queryParts = do
-      (opTy, fields) <- either (withComplete . preExecErr) return $
-                        runReaderT (validateGQ queryParts) gCtx
-      let qTx = withUserInfo userInfo $ resolveSelSet userInfo gCtx sqlGenCtx opTy fields
-      case opTy of
-        G.OperationTypeSubscription -> do
+    runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
+    runHasuraGQ userInfo gCtx rootSelSet =
+      case rootSelSet of
+        V.RQuery selSet ->
+          execQueryOrMut $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
+        V.RMutation selSet ->
+          execQueryOrMut $ R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
+        V.RSubscription fld -> do
+          let tx = R.resolveSubsFld userInfo gCtx sqlGenCtx fld
           let lq = LQ.LiveQuery userInfo q
           liftIO $ STM.atomically $ STMMap.insert lq opId opMap
           liftIO $ LQ.addLiveQuery runTx lqMap lq
-            qTx (wsId, opId) liveQOnChange
+            tx (wsId, opId) liveQOnChange
           logOpEv ODStarted
-        _ ->  do
-          logOpEv ODStarted
-          resp <- liftIO $ runTx qTx
-          either postExecErr sendSuccResp resp
-          sendCompleted
 
-    runRemoteQ :: UserInfo -> [H.Header]
-               -> G.TypedOperationDefinition -> RemoteSchemaInfo
-               -> ExceptT () IO ()
-    runRemoteQ userInfo reqHdrs opDef rsi = do
+    execQueryOrMut tx = do
+      logOpEv ODStarted
+      resp <- liftIO $ runTx tx
+      either postExecErr sendSuccResp resp
+      sendCompleted
+
+    runRemoteGQ :: UserInfo -> [H.Header]
+                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> ExceptT () IO ()
+    runRemoteGQ userInfo reqHdrs opDef rsi = do
       when (G._todType opDef == G.OperationTypeSubscription) $
         withComplete $ preExecErr $
         err400 NotSupported "subscription to remote server is not supported"
@@ -280,7 +266,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         const $ withComplete $ preExecErr $
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ TH.runRemoteGQ httpMgr userInfo reqHdrs
+      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
               payload rsi opDef
       either postExecErr sendSuccResp resp
       sendCompleted
@@ -312,8 +298,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
 
-    sendSuccResp bs =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess bs
+    sendSuccResp encJson =
+      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do

@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # Bash
+  # Bash
       # Linux
         # Add Bash completion file using:
         $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
@@ -63,8 +63,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

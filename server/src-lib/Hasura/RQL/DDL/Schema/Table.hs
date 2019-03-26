@@ -1,5 +1,8 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Hasura.RQL.DDL.Schema.Table where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
@@ -11,7 +14,7 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.Subscribe
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -52,8 +55,8 @@ getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
-      return $ mkTableInfo qt isSystemDefined cons cols viewInfoM
+    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
+      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
 
 newtype TrackTable
@@ -78,7 +81,7 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
 
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => QualifiedTable -> Bool -> m RespBody
+  => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
@@ -98,7 +101,7 @@ runTrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, UserInfoM m
      )
-  => TrackTable -> m RespBody
+  => TrackTable -> m EncJSON
 runTrackTableQ q = do
   trackExistingTableOrViewP1 q
   trackExistingTableOrViewP2 (tName q) False
@@ -248,7 +251,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
 
 unTrackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => UntrackTable -> m RespBody
+  => UntrackTable -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
 
@@ -278,7 +281,7 @@ runUntrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
      , MonadIO m, HasHttpManager m, UserInfoM m
      )
-  => UntrackTable -> m RespBody
+  => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
@@ -301,14 +304,19 @@ buildSchemaCache = do
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) ->
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+    let qt = QualifiedObject sn tn
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
-    ObjRel -> do
-      using <- decodeValue rDef
-      objRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
-    ArrRel -> do
-      using <- decodeValue rDef
-      arrRelP2Setup (QualifiedObject sn tn) $ RelDef rn using Nothing
+      ObjRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateObjRel qt relDef
+        objRelP2Setup qt relDef
+      ArrRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateArrRel qt relDef
+        arrRelP2Setup qt relDef
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
@@ -330,13 +338,13 @@ buildSchemaCache = do
     addQTemplateToCache qti deps
 
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trid, trn, Q.AltJ configuration) -> do
+  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
 
     let qt = QualifiedObject sn tn
-    subTableP2Setup qt trid etc
+    subTableP2Setup qt etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkTriggerQ trid trn qt allCols strfyNum (etcDefinition etc)
+    liftTx $ mkTriggerQ trn qt allCols strfyNum (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
@@ -393,7 +401,7 @@ buildSchemaCache = do
 
     fetchEventTriggers =
       Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.id, e.name, e.configuration::json
+               SELECT e.schema_name, e.table_name, e.name, e.configuration::json
                  FROM hdb_catalog.event_triggers e
                |] () False
     fetchFunctions =
@@ -419,8 +427,16 @@ data RunSQLRes
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RunSQLRes)
 
-execRawSQL :: (MonadTx m) => T.Text -> m RunSQLRes
+instance Q.FromRes RunSQLRes where
+  fromRes (Q.ResultOkEmpty _) =
+    return $ RunSQLRes "CommandOk" Null
+  fromRes (Q.ResultOkData res) = do
+    csvRows <- resToCSV res
+    return $ RunSQLRes "TuplesOk" $ toJSON csvRows
+
+execRawSQL :: (MonadTx m) => T.Text -> m EncJSON
 execRawSQL =
+  fmap (encJFromJValue @RunSQLRes) .
   liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
   where
     rawSqlErrHandler txe =
@@ -429,7 +445,7 @@ execRawSQL =
 
 execWithMDCheck
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => RunSQL -> m RunSQLRes
+  => RunSQL -> m EncJSON
 execWithMDCheck (RunSQL t cascade _) = do
 
   -- Drop hdb_views so no interference is caused to the sql query
@@ -503,8 +519,7 @@ execWithMDCheck (RunSQL t cascade _) = do
               cols = getCols $ tiFieldInfoMap ti
           forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
             let opsDef = etiOpsDef eti
-                trid = etiId eti
-            liftTx $ mkTriggerQ trid trn tn cols strfyNum opsDef
+            liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
 
   bool withoutReload withReload reloadRequired
 
@@ -523,11 +538,11 @@ isAltrDropReplace = either throwErr return . matchRegex regex False
 
 runRunSQL
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => RunSQL -> m RespBody
+  => RunSQL -> m EncJSON
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly
   isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
-  encode <$> bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
+  bool (execRawSQL t) (execWithMDCheck q) isMDChkNeeded
 
 -- Should be used only after checking the status
 resToCSV :: PQ.Result -> ExceptT T.Text IO [[T.Text]]
@@ -548,10 +563,3 @@ resToCSV r =  do
 
   where
     decodeBS = either (throwError . T.pack . show) return . TE.decodeUtf8'
-
-instance Q.FromRes RunSQLRes where
-  fromRes (Q.ResultOkEmpty _) =
-    return $ RunSQLRes "CommandOk" Null
-  fromRes (Q.ResultOkData res) = do
-    csvRows <- resToCSV res
-    return $ RunSQLRes "TuplesOk" $ toJSON csvRows

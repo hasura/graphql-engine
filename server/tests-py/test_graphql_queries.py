@@ -298,6 +298,9 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_using_polygon(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_using_polygon.yaml')
 
+    def test_query_geography_spatial_ops(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/postgis'

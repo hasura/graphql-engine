@@ -14,6 +14,7 @@ module Hasura.RQL.DDL.QueryTemplate
   , runSetQueryTemplateComment
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp        (txtRHSBuilder)
 import           Hasura.RQL.Types
@@ -148,7 +149,7 @@ createQueryTemplateP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => CreateQueryTemplate
   -> WithDeps QueryTemplateInfo
-  -> m RespBody
+  -> m EncJSON
 createQueryTemplateP2 cqt (qti, deps) = do
   addQTemplateToCache qti deps
   liftTx $ addQTemplateToCatalog cqt
@@ -156,7 +157,7 @@ createQueryTemplateP2 cqt (qti, deps) = do
 
 runCreateQueryTemplate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
-  => CreateQueryTemplate -> m RespBody
+  => CreateQueryTemplate -> m EncJSON
 runCreateQueryTemplate q =
   createQueryTemplateP1 q >>= createQueryTemplateP2 q
 
@@ -179,7 +180,7 @@ delQTemplateFromCatalog qtn =
 
 runDropQueryTemplate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropQueryTemplate -> m RespBody
+  => DropQueryTemplate -> m EncJSON
 runDropQueryTemplate q = do
   withPathK "name" $ void $ askQTemplateInfo qtn
   delQTemplateFromCache qtn
@@ -204,7 +205,7 @@ setQueryTemplateCommentP1 (SetQueryTemplateComment qtn _) = do
   void $ askQTemplateInfo qtn
 
 setQueryTemplateCommentP2
-  :: (QErrM m, MonadTx m) => SetQueryTemplateComment -> m RespBody
+  :: (QErrM m, MonadTx m) => SetQueryTemplateComment -> m EncJSON
 setQueryTemplateCommentP2 apc = do
   liftTx $ setQueryTemplateCommentTx apc
   return successMsg
@@ -222,7 +223,7 @@ setQueryTemplateCommentTx (SetQueryTemplateComment qtn comment) =
 
 runSetQueryTemplateComment
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => SetQueryTemplateComment -> m RespBody
+  => SetQueryTemplateComment -> m EncJSON
 runSetQueryTemplateComment q = do
   setQueryTemplateCommentP1 q
   setQueryTemplateCommentP2 q

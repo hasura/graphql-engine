@@ -1,0 +1,17 @@
+{
+  "name": "rest-remote-schema",
+  "version": "1.0.0",
+  "description": "This is a GraphQL backend to wrap a REST API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.4.8",
+    "graphql": "^14.1.1",
+    "graphql-tag": "^2.10.1",
+    "node-fetch": "^2.3.0"
+  }
+}

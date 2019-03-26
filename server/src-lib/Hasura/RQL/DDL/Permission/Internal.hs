@@ -16,6 +16,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Text.Extended         as T
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -341,7 +342,7 @@ runCreatePerm
   :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
      )
-  => CreatePerm a -> m RespBody
+  => CreatePerm a -> m EncJSON
 runCreatePerm defn@(WithTable tn pd) = do
   permInfo <- createPermP1 defn
   addPermP2 tn pd permInfo
@@ -368,7 +369,7 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
 
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropPerm a -> m RespBody
+  => DropPerm a -> m EncJSON
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn
   dropPermP2 defn permInfo
