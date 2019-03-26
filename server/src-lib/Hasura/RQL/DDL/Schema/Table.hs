@@ -294,17 +294,90 @@ runUntrackTableQ q = do
 
 handleInconsistentObj
   :: (QErrM m, CacheRWM m)
-  => Bool -> SchemaObjId -> m () -> m ()
-handleInconsistentObj False _ act = act
-handleInconsistentObj True obj action =
+  => (T.Text -> InconsistentSchemaObj)
+  -> m ()
+  -> m ()
+handleInconsistentObj f action =
   action `catchError` \err -> do
     sc <- askSchemaCache
-    let inconsObj = InconsistentObj obj $ qeError err
+    let inconsObj = f $ qeError err
         allInconsObjs = inconsObj:scInconsistentObjs sc
     writeSchemaCache $ sc{scInconsistentObjs = allInconsObjs}
 
+mkInconsistentTable
+  :: QualifiedTable
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentTable tn rsn =
+  InconsistentSchemaObj (SOTable tn) "table" def rsn
+  where
+    def = toJSON $ TrackTable tn
+
+mkInconsistentRel
+  :: QualifiedTable
+  -> RelName
+  -> RelType
+  -> Value
+  -> Maybe T.Text
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentRel tn rn rt rDef cmnt rsn =
+  InconsistentSchemaObj objId ty def rsn
+  where
+    objId = SOTableObj tn $ TORel rn
+    def = toJSON $ WithTable tn $ RelDef rn rDef cmnt
+    ty = case rt of
+      ObjRel -> "object_relation"
+      ArrRel -> "array_relation"
+
+mkInconsistentPerm
+  :: QualifiedTable
+  -> RoleName
+  -> PermType
+  -> Value
+  -> Maybe T.Text
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentPerm tn rn pt pDef cmnt rsn =
+  InconsistentSchemaObj objId ty def rsn
+  where
+    objId = SOTableObj tn $ TOPerm rn pt
+    ty = T.pack $ show pt <> "_permission"
+    def = toJSON $ WithTable tn $ PermDef rn pDef cmnt
+
+mkInconsistentQTemplate
+  :: TQueryName
+  -> Value
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentQTemplate qtName qtDef rsn =
+  InconsistentSchemaObj (SOQTemplate qtName) "query_template" def rsn
+  where
+    def = object ["name" .= qtName, "template" .= qtDef]
+
+mkInconsistentTrigger
+  :: QualifiedTable
+  -> TriggerName
+  -> Value
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentTrigger tn trn config rsn =
+  InconsistentSchemaObj objId "event_trigger" def rsn
+  where
+    objId = SOTableObj tn $ TOTrigger trn
+    def = object ["table" .= tn, "configuration" .= config]
+
+mkInconsistentFunction
+  :: QualifiedFunction
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentFunction fn rsn =
+  InconsistentSchemaObj (SOFunction fn) "function" def rsn
+  where
+    def = toJSON $ TrackFunction fn
+
 buildSchemaCache
-  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasServeOptsCtx m)
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
 buildSchemaCache = do
   -- clean hdb_views
@@ -312,22 +385,24 @@ buildSchemaCache = do
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
-  serveOptsCtx@(ServeOptsCtx strfyNum softStart) <- askServeOptsCtx
+  sqlGenCtx <- askSQLGenCtx
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) -> do
     let qt = QualifiedObject sn tn
-    handleInconsistentObj softStart (SOTable qt) $
-      modifyErr (\e -> "table " <> tn <<> "; " <> e) $
+        mkInconsObj = mkInconsistentTable qt
+    modifyErr (\e -> "table " <> tn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
       trackExistingTableOrViewP2Setup qt isSystemDefined
 
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef, cmnt) -> do
     let qt = QualifiedObject sn tn
-        schObj = SOTableObj qt $ TORel rn
-    handleInconsistentObj softStart schObj $
-      modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
+        mkInconsObj = mkInconsistentRel qt rn rt rDef cmnt
+    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
+      case rt of
         ObjRel -> do
           using <- decodeValue rDef
           let relDef = RelDef rn using Nothing
@@ -342,22 +417,23 @@ buildSchemaCache = do
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
-  forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) -> do
-    let schObj = SOTableObj (QualifiedObject sn tn) $ TOPerm rn pt
-    handleInconsistentObj softStart schObj $
-      modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
-          PTInsert -> permHelper serveOptsCtx sn tn rn pDef PAInsert
-          PTSelect -> permHelper serveOptsCtx sn tn rn pDef PASelect
-          PTUpdate -> permHelper serveOptsCtx sn tn rn pDef PAUpdate
-          PTDelete -> permHelper serveOptsCtx sn tn rn pDef PADelete
+  forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef, cmnt) -> do
+    let mkInconsObj = mkInconsistentPerm (QualifiedObject sn tn) rn pt pDef cmnt
+    modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
+      case pt of
+          PTInsert -> permHelper sqlGenCtx sn tn rn pDef PAInsert
+          PTSelect -> permHelper sqlGenCtx sn tn rn pDef PASelect
+          PTUpdate -> permHelper sqlGenCtx sn tn rn pDef PAUpdate
+          PTDelete -> permHelper sqlGenCtx sn tn rn pDef PADelete
 
   -- Fetch all the query templates
   qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
-    let schObj = SOQTemplate qtn
-    handleInconsistentObj softStart schObj $ do
+    let mkInconsObj = mkInconsistentQTemplate qtn qtDefVal
+    handleInconsistentObj mkInconsObj $ do
       qtDef <- decodeValue qtDefVal
-      qCtx <- mkAdminQCtx serveOptsCtx <$> askSchemaCache
+      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
              CreateQueryTemplate qtn qtDef Nothing
       addQTemplateToCache qti deps
@@ -365,20 +441,20 @@ buildSchemaCache = do
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
     let qt = QualifiedObject sn tn
-        schObj = SOTableObj qt $ TOTrigger trn
-    handleInconsistentObj softStart schObj $ do
+        mkInconsObj = mkInconsistentTrigger qt trn configuration
+    handleInconsistentObj mkInconsObj $ do
       etc <- decodeValue configuration
-
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-      liftTx $ mkTriggerQ trn qt allCols strfyNum (etcDefinition etc)
+      liftTx $ mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) -> do
-    let schObj = SOFunction $ QualifiedObject sn fn
-    handleInconsistentObj softStart schObj $
-      modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-      trackFunctionP2Setup (QualifiedObject sn fn)
+    let qf = QualifiedObject sn fn
+        mkInconsObj = mkInconsistentFunction qf
+    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
+      trackFunctionP2Setup qf
 
   -- remote schemas
   res <- liftTx fetchRemoteSchemas
@@ -394,8 +470,8 @@ buildSchemaCache = do
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
   where
-    permHelper serveOptsCtx sn tn rn pDef pa = do
-      qCtx <- mkAdminQCtx serveOptsCtx <$> askSchemaCache
+    permHelper sqlGenCtx sn tn rn pDef pa = do
+      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       perm <- decodeValue pDef
       let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
@@ -413,13 +489,13 @@ buildSchemaCache = do
 
     fetchRelationships =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json
+                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
                     |] () False
 
     fetchPermissions =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, role_name, perm_type, perm_def::json
+                SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
                     |] () False
 
@@ -473,7 +549,7 @@ execRawSQL =
       in e {qeInternal = Just $ toJSON txe}
 
 execWithMDCheck
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasServeOptsCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => RunSQL -> m EncJSON
 execWithMDCheck (RunSQL t cascade _) = do
 
@@ -541,7 +617,7 @@ execWithMDCheck (RunSQL t cascade _) = do
           forM_ (M.elems $ tiRolePermInfoMap ti) $ \rpi ->
             maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
 
-        strfyNum <- socStringifyNum <$> askServeOptsCtx
+        strfyNum <- stringifyNum <$> askSQLGenCtx
         --recreate triggers
         forM_ (M.elems $ scTables postSc) $ \ti -> do
           let tn = tiName ti
@@ -566,7 +642,7 @@ isAltrDropReplace = either throwErr return . matchRegex regex False
     regex = "alter|drop|replace|create function"
 
 runRunSQL
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => RunSQL -> m EncJSON
 runRunSQL q@(RunSQL t _ mChkMDCnstcy) = do
   adminOnly

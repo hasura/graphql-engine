@@ -9,6 +9,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
@@ -17,7 +18,6 @@ import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -95,11 +95,11 @@ $(deriveJSON
   ''RQLQuery)
 
 newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, ServeOptsCtx) (LazyTx QErr)) a}
+  = Run {unRun :: StateT SchemaCache (ReaderT (UserInfo, HTTP.Manager, SQLGenCtx) (LazyTx QErr)) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadState SchemaCache
-           , MonadReader (UserInfo, HTTP.Manager, ServeOptsCtx)
+           , MonadReader (UserInfo, HTTP.Manager, SQLGenCtx)
            , CacheRM
            , CacheRWM
            , MonadTx
@@ -112,8 +112,8 @@ instance UserInfoM Run where
 instance HasHttpManager Run where
   askHttpManager = asks _2
 
-instance HasServeOptsCtx Run where
-  askServeOptsCtx = asks _3
+instance HasSQLGenCtx Run where
+  askSQLGenCtx = asks _3
 
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
@@ -143,22 +143,22 @@ peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> Q.PGPool -> Q.TxIsolation
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr serveOptsCtx pgPool txIso (Run m) =
+peelRun sc userInfo httMgr sqlGenCtx pgPool txIso (Run m) =
   runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
   where
-    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, serveOptsCtx)
+    lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> ServeOptsCtx -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr serveOptsCtx query = do
+  -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pool isoL instanceId userInfo sc hMgr sqlGenCtx query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr serveOptsCtx pool isoL $ runQueryM query
+    peelRun sc userInfo hMgr sqlGenCtx pool isoL $ runQueryM query
   either throwError withReload resE
   where
     withReload r = do
@@ -227,7 +227,7 @@ queryNeedsReload qi = case qi of
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => RQLQuery
   -> m EncJSON

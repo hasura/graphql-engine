@@ -48,17 +48,17 @@ data FieldPlan
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 type Explain =
-  (ReaderT (FieldMap, OrdByCtx, ServeOptsCtx) (Except QErr))
+  (ReaderT (FieldMap, OrdByCtx, SQLGenCtx) (Except QErr))
 
 runExplain
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, ServeOptsCtx) -> Explain a -> m a
+  => (FieldMap, OrdByCtx, SQLGenCtx) -> Explain a -> m a
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
 explainField
   :: (MonadTx m)
-  => UserInfo -> GCtx -> ServeOptsCtx -> Field -> m FieldPlan
+  => UserInfo -> GCtx -> SQLGenCtx -> Field -> m FieldPlan
 explainField userInfo gCtx sqlGenCtx fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
@@ -106,7 +106,7 @@ explainField userInfo gCtx sqlGenCtx fld =
       validateHdrs hdrs
       (tabArgs, eSel, frmItem) <-
         RS.fromFuncQueryField txtConverter fn argSeq isAgg fld
-      strfyNum <- socStringifyNum <$> asks getter
+      strfyNum <- stringifyNum <$> asks getter
       return $ toSQL $
         RS.mkFuncSelectWith fn tn
         (RS.TablePerm permFilter permLimit) tabArgs strfyNum eSel frmItem
@@ -122,7 +122,7 @@ explainGQLQuery
   => Q.PGPool
   -> Q.TxIsolation
   -> SchemaCache
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do

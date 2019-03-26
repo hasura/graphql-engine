@@ -14,7 +14,7 @@ import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types             (RoleName (..))
+import           Hasura.RQL.Types             (RoleName (..), SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
@@ -53,7 +53,6 @@ data RawServeOptions
   , rsoEnableTelemetry :: !(Maybe Bool)
   , rsoWsReadCookie    :: !Bool
   , rsoStringifyNum    :: !Bool
-  , rsoEnableSoftStart :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
@@ -71,7 +70,6 @@ data ServeOptions
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
   , soStringifyNum    :: !Bool
-  , soEnableSoftStart :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
@@ -253,12 +251,11 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
-  softStart <- withEnvBool (rsoEnableSoftStart rso) $ fst softStartEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole enableTelemetry
-                        strfyNum softStart enabledAPIs
+                        strfyNum enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -374,7 +371,7 @@ serveCmdFooter =
       , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, softStartEnv, enabledAPIsEnv
+      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       ]
 
     eventEnvs =
@@ -503,12 +500,6 @@ stringifyNumEnv :: (String, String)
 stringifyNumEnv =
   ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
   , "Stringify numeric types (default: false)"
-  )
-
-softStartEnv :: (String, String)
-softStartEnv =
-  ( "HASURA_GRAPHQL_ENABLE_SOFT_START"
-  , "Enable soft start by ignoring inconsistent objects (default: false)"
   )
 
 enabledAPIsEnv :: (String, String)
@@ -754,12 +745,6 @@ parseStringifyNum =
            help (snd stringifyNumEnv)
          )
 
-parseEnableSoftStart :: Parser Bool
-parseEnableSoftStart =
-  switch ( long "enable-soft-start" <>
-           help (snd softStartEnv)
-         )
-
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -793,9 +778,14 @@ serveOptsToLog so =
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
-                       , "enable_soft_start" J..= soEnableSoftStart so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog
 mkGenericStrLog k msg =
   StartupLog L.LevelInfo k $ J.toJSON msg
+
+inconsistentObjsLog :: SchemaCache -> StartupLog
+inconsistentObjsLog sc =
+  StartupLog L.LevelInfo "inconsistent_objects" infoVal
+  where
+    infoVal = J.object ["objects" J..= scInconsistentObjs sc]

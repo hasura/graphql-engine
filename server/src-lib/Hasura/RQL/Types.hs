@@ -16,8 +16,8 @@ module Hasura.RQL.Types
        , HasHttpManager (..)
        , HasGCtxMap (..)
 
-       , ServeOptsCtx(..)
-       , HasServeOptsCtx(..)
+       , SQLGenCtx(..)
+       , HasSQLGenCtx(..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -50,10 +50,10 @@ import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Common       as R
 import           Hasura.RQL.Types.DML          as R
 import           Hasura.RQL.Types.Error        as R
+import           Hasura.RQL.Types.EventTrigger as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.EventTrigger as R
 
 import           Hasura.SQL.Types
 
@@ -79,7 +79,7 @@ data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
-  , qcSQLCtx      :: !ServeOptsCtx
+  , qcSQLCtx      :: !SQLGenCtx
   } deriving (Show, Eq)
 
 class HasQCtx a where
@@ -88,7 +88,7 @@ class HasQCtx a where
 instance HasQCtx QCtx where
   getQCtx = id
 
-mkAdminQCtx :: ServeOptsCtx -> SchemaCache ->  QCtx
+mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
 mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 
 class (Monad m) => UserInfoM m where
@@ -138,8 +138,8 @@ instance UserInfoM P1 where
 instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
-instance HasServeOptsCtx P1 where
-  askServeOptsCtx = qcSQLCtx <$> ask
+instance HasSQLGenCtx P1 where
+  askSQLGenCtx = qcSQLCtx <$> ask
 
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
@@ -147,14 +147,13 @@ class (Monad m) => HasHttpManager m where
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
 
-data ServeOptsCtx
-  = ServeOptsCtx
-  { socStringifyNum :: !Bool
-  , socSoftStart    :: !Bool
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
   } deriving (Show, Eq)
 
-class (Monad m) => HasServeOptsCtx m where
-  askServeOptsCtx :: m ServeOptsCtx
+class (Monad m) => HasSQLGenCtx m where
+  askSQLGenCtx :: m SQLGenCtx
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -249,12 +248,12 @@ liftP1
   :: ( QErrM m
      , UserInfoM m
      , CacheRM m
-     , HasServeOptsCtx m
+     , HasSQLGenCtx m
      ) => P1 a -> m a
 liftP1 m = do
   ui <- askUserInfo
   sc <- askSchemaCache
-  sqlCtx <- askServeOptsCtx
+  sqlCtx <- askSQLGenCtx
   let qCtx = QCtx ui sc sqlCtx
   liftP1WithQCtx qCtx m
 

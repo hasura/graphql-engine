@@ -21,18 +21,18 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation
   -> UserInfo
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> SchemaCache
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL userInfo serveOptsCtx sc manager reqHdrs req rawReq = do
+runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
   execPlan <- E.getExecPlan userInfo sc req
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo serveOptsCtx gCtx rootSelSet
+      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
@@ -41,16 +41,16 @@ runHasuraGQ
   => Q.PGPool
   -> Q.TxIsolation
   -> UserInfo
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> GCtx
   -> V.RootSelSet
   -> m EncJSON
-runHasuraGQ pool isoL userInfo serveOptsCtx gCtx rootSelSet = do
+runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet = do
   tx <- case rootSelSet of
     V.RQuery selSet ->
-      return $ R.resolveQuerySelSet userInfo gCtx serveOptsCtx selSet
+      return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
     V.RMutation selSet ->
-      return $ R.resolveMutSelSet userInfo gCtx serveOptsCtx selSet
+      return $ R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
     V.RSubscription _  ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

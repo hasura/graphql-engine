@@ -2,8 +2,8 @@ module Hasura.RQL.DDL.Relationship.Rename
   (runRenameRel)
 where
 
-import           Hasura.Prelude
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
@@ -19,7 +19,7 @@ renameRelP2
      , CacheRWM m
      , MonadIO m
      , HasHttpManager m
-     , HasServeOptsCtx m
+     , HasSQLGenCtx m
      )
   => QualifiedTable -> RelName -> RelInfo -> m ()
 renameRelP2 qt newRN relInfo = do
@@ -45,7 +45,7 @@ runRenameRel
      , UserInfoM m
      , MonadIO m
      , HasHttpManager m
-     , HasServeOptsCtx m
+     , HasSQLGenCtx m
      )
   => RenameRel -> m EncJSON
 runRenameRel defn = do

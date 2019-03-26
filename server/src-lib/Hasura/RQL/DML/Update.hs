@@ -187,7 +187,7 @@ validateUpdateQueryWith f uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
@@ -201,8 +201,8 @@ updateQueryToTx strfyNum (u, p) =
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m EncJSON
 runUpdate q = do
-  strfyNum <- socStringifyNum <$> askServeOptsCtx
+  strfyNum <- stringifyNum <$> askSQLGenCtx
   validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum

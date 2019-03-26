@@ -72,24 +72,24 @@ $(deriveToJSON
 
 -- | An IO action that enables metadata syncing
 startSchemaSync
-  :: ServeOptsCtx
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
-startSchemaSync serveOptsCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
+startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
   -- Init events queue
   eventsQueue <- STM.newTQueueIO
 
   -- Start listener thread
-  lTId <- C.forkIO $ listener serveOptsCtx pool
+  lTId <- C.forkIO $ listener sqlGenCtx pool
     logger httpMgr eventsQueue cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pTId <- C.forkIO $ processor serveOptsCtx pool
+  pTId <- C.forkIO $ processor sqlGenCtx pool
     logger httpMgr eventsQueue cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
@@ -105,7 +105,7 @@ startSchemaSync serveOptsCtx pool logger httpMgr cacheRef instanceId cacheInitTi
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue
 listener
-  :: ServeOptsCtx
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
@@ -113,7 +113,7 @@ listener
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
-listener serveOptsCtx pool logger httpMgr eventsQueue
+listener sqlGenCtx pool logger httpMgr eventsQueue
   cacheRef instanceId cacheInitTime =
   -- Never exits
   forever $ do
@@ -133,7 +133,7 @@ listener serveOptsCtx pool logger httpMgr eventsQueue
     refreshCache Nothing = return ()
     refreshCache (Just (dbInstId, accrdAt)) =
       when (shouldRefresh dbInstId accrdAt) $
-        refreshSchemaCache serveOptsCtx pool logger httpMgr cacheRef
+        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
           threadType "schema cache reloaded after postgres listen init"
 
     notifyHandler = \case
@@ -160,21 +160,21 @@ listener serveOptsCtx pool logger httpMgr eventsQueue
 
 -- | An IO action that processes events from Queue
 processor
-  :: ServeOptsCtx
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> STM.TQueue EventPayload
   -> SchemaCacheRef
   -> InstanceId -> IO ()
-processor serveOptsCtx pool logger httpMgr eventsQueue
+processor sqlGenCtx pool logger httpMgr eventsQueue
   cacheRef instanceId =
   -- Never exits
   forever $ do
     event <- STM.atomically $ STM.readTQueue eventsQueue
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
-      refreshSchemaCache serveOptsCtx pool logger httpMgr cacheRef
+      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
         threadType "schema cache reloaded"
   where
     threadType = TTProcessor
@@ -183,18 +183,18 @@ processor serveOptsCtx pool logger httpMgr eventsQueue
     shouldReload payload = _epInstanceId payload /= instanceId
 
 refreshSchemaCache
-  :: ServeOptsCtx
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> SchemaCacheRef
   -> ThreadType
   -> T.Text -> IO ()
-refreshSchemaCache serveOptsCtx pool logger httpManager cacheRef threadType msg = do
+refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef $
            peelRun emptySchemaCache adminUserInfo
-           httpManager serveOptsCtx pool PG.Serializable buildSchemaCache
+           httpManager sqlGenCtx pool PG.Serializable buildSchemaCache
   case resE of
     Left e -> logError logger threadType $ TEQueryError e
     Right _ ->

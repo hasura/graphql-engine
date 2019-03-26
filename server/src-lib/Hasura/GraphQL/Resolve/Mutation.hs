@@ -34,7 +34,7 @@ import           Hasura.SQL.Value
 
 convertMutResp
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has ServeOptsCtx r
+     , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m RR.MutFlds
 convertMutResp ty selSet =
@@ -97,7 +97,7 @@ convDeleteAtPathObj val =
 convertUpdateP1
   :: ( MonadError QErr m
      , MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has ServeOptsCtx r
+     , Has OrdByCtx r, Has SQLGenCtx r
      , MonadState PrepArgs m
      )
   => UpdOpCtx -- the update context
@@ -151,7 +151,7 @@ convertUpdate
   -> Convert RespTx
 convertUpdate opCtx fld = do
   (p1, prepArgs) <- withPrepArgs $ convertUpdateP1 opCtx fld
-  strfyNum <- socStringifyNum <$> asks getter
+  strfyNum <- stringifyNum <$> asks getter
   let whenNonEmptyItems = return $ RU.updateQueryToTx strfyNum (p1, prepArgs)
       whenEmptyItems    = return $ return $
                           buildEmptyMutResp $ RU.uqp1MutFlds p1
@@ -165,7 +165,7 @@ convertDelete
   -> Convert RespTx
 convertDelete opCtx fld = do
   (p1, prepArgs) <- p1m
-  strfyNum <- socStringifyNum <$> asks getter
+  strfyNum <- stringifyNum <$> asks getter
   return $ RD.deleteQueryToTx strfyNum (p1, prepArgs)
   where
     DelOpCtx tn _ filterExp allCols = opCtx

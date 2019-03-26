@@ -142,7 +142,7 @@ type Convert =
   (ReaderT ( FieldMap
            , OrdByCtx
            , InsCtxMap
-           , ServeOptsCtx
+           , SQLGenCtx
            ) (Except QErr)
   )
 
@@ -169,7 +169,7 @@ withPrepArgs m = runStateT m Seq.empty
 
 runConvert
   :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, ServeOptsCtx)
+  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
   -> Convert a
   -> m a
 runConvert ctx m =

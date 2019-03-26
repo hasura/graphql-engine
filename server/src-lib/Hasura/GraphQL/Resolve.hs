@@ -33,7 +33,7 @@ validateHdrs userInfo hdrs = do
 resolvePGFld
   :: UserInfo
   -> GCtx
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> Field
   -> Q.TxE QErr EncJSON
 resolvePGFld userInfo gCtx sqlCtx fld = do
@@ -84,7 +84,7 @@ resolveQuerySelSet
   :: (MonadTx m)
   => UserInfo
   -> GCtx
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> SelSet
   -> m EncJSON
 resolveQuerySelSet userInfo gCtx sqlGenCtx fields =
@@ -101,7 +101,7 @@ resolveMutSelSet
   :: (MonadTx m)
   => UserInfo
   -> GCtx
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> SelSet
   -> m EncJSON
 resolveMutSelSet userInfo gCtx sqlGenCtx fields =
@@ -116,7 +116,7 @@ resolveSubsFld
   :: (MonadTx m)
   => UserInfo
   -> GCtx
-  -> ServeOptsCtx
+  -> SQLGenCtx
   -> Field
   -> m EncJSON
 resolveSubsFld userInfo gCtx sqlGenCtx fld = do

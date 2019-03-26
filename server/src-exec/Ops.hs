@@ -8,8 +8,8 @@ import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 import           Migrate                      (curCatalogVer)
 
-import           Hasura.Prelude
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
@@ -25,7 +25,7 @@ import qualified Database.PG.Query.Connection as Q
 
 initCatalogSafe
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => UTCTime -> m String
 initCatalogSafe initTime =  do
@@ -60,7 +60,7 @@ initCatalogSafe initTime =  do
 
 initCatalogStrict
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasServeOptsCtx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
   => Bool -> UTCTime -> m String
 initCatalogStrict createSchema initTime =  do
@@ -133,7 +133,7 @@ cleanCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
 
 execQuery
   :: ( MonadTx m, CacheRWM m, MonadIO m
-     , UserInfoM m, HasHttpManager m, HasServeOptsCtx m
+     , UserInfoM m, HasHttpManager m, HasSQLGenCtx m
      )
   => BL.ByteString -> m BL.ByteString
 execQuery queryBs = do

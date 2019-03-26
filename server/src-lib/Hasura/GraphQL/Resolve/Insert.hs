@@ -482,7 +482,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
       let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
-      strfyNum <- socStringifyNum <$> asks getter
+      strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
     withEmptyObjs mutFlds =

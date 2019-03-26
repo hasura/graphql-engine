@@ -95,7 +95,7 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
       <> "without \"select\" permission on the table"
 
 validateDeleteQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
 validateDeleteQ =
   liftDMLP1 . validateDeleteQWith binRHSBuilder
@@ -108,8 +108,8 @@ deleteQueryToTx strfyNum (u, p) =
     deleteCTE = mkDeleteCTE u
 
 runDelete
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => DeleteQuery -> m EncJSON
 runDelete q = do
-  strfyNum <- socStringifyNum <$> askServeOptsCtx
+  strfyNum <- stringifyNum <$> askSQLGenCtx
   validateDeleteQ q >>= liftTx . deleteQueryToTx strfyNum

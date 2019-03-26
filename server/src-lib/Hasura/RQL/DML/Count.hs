@@ -107,7 +107,7 @@ validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
       "Relationships can't be used in \"distinct\"."
 
 validateCountQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
   liftDMLP1 . validateCountQWith binRHSBuilder
@@ -125,7 +125,7 @@ countQToTx (u, p) = do
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
 runCount
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasServeOptsCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => CountQuery -> m EncJSON
 runCount q =
   validateCountQ q >>= countQToTx

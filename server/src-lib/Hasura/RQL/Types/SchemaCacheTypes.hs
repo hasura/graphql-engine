@@ -6,11 +6,11 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
 
-import qualified Data.Text                   as T
+import qualified Data.Text                     as T
 
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 
 data TableObjId
@@ -49,7 +49,6 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> trn
 
-
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
 
@@ -68,9 +67,17 @@ data SchemaDependency
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 instance Hashable SchemaDependency
 
-data InconsistentObj
-  = InconsistentObj
-  { ioObject       :: !SchemaObjId
-  , ioErrorMessage :: !T.Text
+data InconsistentSchemaObj
+  = InconsistentSchemaObj
+  { _soId     :: !SchemaObjId
+  , _soType   :: !T.Text
+  , _soDef    :: !Value
+  , _soReason :: !T.Text
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''InconsistentObj)
+
+instance ToJSON InconsistentSchemaObj where
+  toJSON (InconsistentSchemaObj _ ty info rsn) =
+    object [ "type" .= ty
+           , "definition" .= info
+           , "reason" .= rsn
+           ]
