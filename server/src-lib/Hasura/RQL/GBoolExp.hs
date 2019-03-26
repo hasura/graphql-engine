@@ -80,12 +80,10 @@ parseOpExp (ValueParser parseOneFn parseManyFn) fim (PGColInfo cn colTy _) (opSt
     "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
     "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy PGText
 
-    --FIXME:- Parse a session variable as text array values
-    --TODO:- Add following commented operators after fixing above said
-    -- "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseVal
-    -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
-    -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
+    "_has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithTy PGText
+    "$has_keys_any"  -> jsonbOnlyOp $ AHasKeysAny <$> parseManyWithTy PGText
+    "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithTy PGText
+    "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseManyWithTy PGText
 
     -- geometry types
     "_st_contains"   -> parseGeometryOp ASTContains
@@ -198,6 +196,7 @@ parseOpExp (ValueParser parseOneFn parseManyFn) fim (PGColInfo cn colTy _) (opSt
       throwError $ buildMsg ty [PGGeometry, PGGeography]
 
     parseWithTy ty = parseOneFn ty val
+    parseManyWithTy ty = parseManyFn ty val
     parseOne = parseOneFn colTy val
     parseMany = parseManyFn colTy val
 
@@ -345,8 +344,8 @@ mkColCompExp qual lhsCol = \case
   AContains val    -> S.BECompare S.SContains lhs val
   AContainedIn val -> S.BECompare S.SContainedIn lhs val
   AHasKey val      -> S.BECompare S.SHasKey lhs val
-  AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
-  AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
+  AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ either (S.SESelect . arrAgg) toTextArray keys
+  AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ either (S.SESelect . arrAgg) toTextArray keys
 
   ASTContains val   -> mkGeomOpBe "ST_Contains" val
   ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
@@ -372,14 +371,21 @@ mkColCompExp qual lhsCol = \case
     lhs = mkQCol lhsCol
 
     toTextArray arr =
-      S.SETyAnn (S.SEArray $ map (txtEncoder . PGValText) arr) S.textArrType
+      S.SEArray arr `S.SETyAnn` S.textArrType
+
+    arrAgg (S.Select a [(S.Extractor fe alias)] from b c d e f g)
+      = (S.Select a [S.Extractor (doArrAgg fe) alias] from b c d e f g)
+      where doArrAgg v = S.SEFnApp "array_agg" [v] Nothing
+    --Return the same expression if the underlying expression has more than one extractor
+    arrAgg e = e
 
     mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 
     applySQLFn f exps = S.BEExp $ S.SEFnApp f exps Nothing
 
-    handleEmptyIn []   = S.BELit False
-    handleEmptyIn vals = S.BEIN lhs vals
+    handleEmptyIn (Left s)     = S.BEIN lhs [S.SESelect s]
+    handleEmptyIn (Right [])   = S.BELit False
+    handleEmptyIn (Right vals) = S.BEIN lhs vals
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case

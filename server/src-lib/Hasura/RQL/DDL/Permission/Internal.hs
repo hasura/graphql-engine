@@ -222,7 +222,7 @@ valueParser = ValueParser parseOne parseMany
 
     qualJsonArrElemsTxtF = QualifiedObject (SchemaName "pg_catalog") arrElemsTextF
     arrElemsTextF = FunctionName "json_array_elements_text"
-    selJsonArrElems colTy x = S.SESelect $ S.mkSelect
+    selJsonArrElems colTy x = S.mkSelect
       { S.selExtr = [flip S.Extractor Nothing $ withGeoVal colTy (S.SEIden $ toIden arrElemsTextF) `S.SETyAnn` colTyAnn]
       , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualJsonArrElemsTxtF [x]]
       }
@@ -230,12 +230,12 @@ valueParser = ValueParser parseOne parseMany
 
     parseMany columnType v = case v of
       (String t)
-        | isUserVar t -> return [selJsonArrElems columnType $ fromCurSess t PGJSON ]
+        | isUserVar t -> return $ Left $ selJsonArrElems columnType $ fromCurSess t PGJSON
         | otherwise -> throw400 UnexpectedPayload "Expected Array, encountered String"
 
       val -> do
           vals <- runAesonParser parseJSON val
-          indexedForM vals (parseOne columnType)
+          fmap Right $ indexedForM vals (parseOne columnType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

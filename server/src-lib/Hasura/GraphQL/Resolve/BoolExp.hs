@@ -31,8 +31,8 @@ parseOpExps colTy annVal = do
       "_neq"      -> fmap (ANE True) <$> asPGColValM v
       "_is_null"  -> resolveIsNull v
 
-      "_in"       -> fmap (AIN . catMaybes) <$> parseMany asPGColValM v
-      "_nin"      -> fmap (ANIN . catMaybes) <$> parseMany asPGColValM v
+      "_in"       -> fmap (AIN . Right . catMaybes) <$> parseMany asPGColValM v
+      "_nin"      -> fmap (ANIN . Right . catMaybes) <$> parseMany asPGColValM v
 
       "_gt"       -> fmap AGT <$> asPGColValM v
       "_lt"       -> fmap ALT <$> asPGColValM v
@@ -52,8 +52,8 @@ parseOpExps colTy annVal = do
       "_contains"     -> fmap AContains <$> asPGColValM v
       "_contained_in" -> fmap AContainedIn <$> asPGColValM v
       "_has_key"      -> fmap AHasKey <$> asPGColValM v
-      "_has_keys_any" -> fmap AHasKeysAny <$> parseMany asPGColText v
-      "_has_keys_all" -> fmap AHasKeysAll <$> parseMany asPGColText v
+      "_has_keys_any" -> fmap (AHasKeysAny . Right . catMaybes) <$> parseMany asPGColValM v
+      "_has_keys_all" -> fmap (AHasKeysAll . Right . catMaybes) <$> parseMany asPGColValM v
 
       -- geometry/geography type related operators
       "_st_contains"   -> fmap ASTContains <$> asPGColValM v

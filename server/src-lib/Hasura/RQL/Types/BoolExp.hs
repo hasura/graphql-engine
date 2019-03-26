@@ -113,8 +113,8 @@ data OpExpG a
   = AEQ !Bool !a
   | ANE !Bool !a
 
-  | AIN  ![a]
-  | ANIN ![a]
+  | AIN  !(Either S.Select [a])
+  | ANIN !(Either S.Select [a])
 
   | AGT !a
   | ALT !a
@@ -133,8 +133,8 @@ data OpExpG a
   | AContains !a
   | AContainedIn !a
   | AHasKey !a
-  | AHasKeysAny [Text]
-  | AHasKeysAll [Text]
+  | AHasKeysAny !(Either S.Select [a])
+  | AHasKeysAll !(Either S.Select [a])
 
   | ASTContains !a
   | ASTCrosses !a
@@ -163,8 +163,8 @@ opExpToJPair f = \case
   AEQ _ a          -> ("_eq", f a)
   ANE _ a          -> ("_ne", f a)
 
-  AIN a          -> ("_in", toJSON $ map f a)
-  ANIN a         -> ("_nin", toJSON $ map f a)
+  AIN a          -> ("_in",  manyToJson a)
+  ANIN a         -> ("_nin", manyToJson a)
 
   AGT a          -> ("_gt", f a)
   ALT a          -> ("_lt", f a)
@@ -183,8 +183,8 @@ opExpToJPair f = \case
   AContains a    -> ("_contains", f a)
   AContainedIn a -> ("_contained_in", f a)
   AHasKey a      -> ("_has_key", f a)
-  AHasKeysAny a  -> ("_has_keys_any", toJSON a)
-  AHasKeysAll a  -> ("_has_keys_all", toJSON a)
+  AHasKeysAny a  -> ("_has_keys_any", manyToJson a)
+  AHasKeysAll a  -> ("_has_keys_all", manyToJson a)
 
   ASTContains a    -> ("_st_contains", f a)
   ASTCrosses a     -> ("_st_crosses", f a)
@@ -205,6 +205,7 @@ opExpToJPair f = \case
   CLT a          -> ("_clt", toJSON a)
   CGTE a         -> ("_cgte", toJSON a)
   CLTE a         -> ("_clte", toJSON a)
+  where manyToJson = either (toJSON . S.SESelect) $ toJSON . map f
 
 data AnnBoolExpFld a
   = AVCol !PGColInfo ![OpExpG a]

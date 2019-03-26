@@ -58,6 +58,7 @@ import           Hasura.RQL.Types.SchemaCache  as R
 import           Hasura.RQL.Types.EventTrigger as R
 
 import           Hasura.SQL.Types
+import qualified Hasura.SQL.DML                as S
 
 import qualified Hasura.GraphQL.Context        as GC
 
@@ -363,7 +364,7 @@ type HeaderObj = M.HashMap T.Text T.Text
 data ValueParser m a
   = ValueParser
   { vpParseOne  :: PGColType -> Value -> m a
-  , vpParseMany :: PGColType -> Value -> m [a]
+  , vpParseMany :: PGColType -> Value -> m (Either S.Select [a])
   }
 
 defaultValueParser
@@ -372,4 +373,4 @@ defaultValueParser
 defaultValueParser parseOne = ValueParser parseOne parseMany
   where parseMany colTy val = do
           vals <- runAesonParser parseJSON val
-          indexedForM vals (parseOne colTy)
+          fmap Right $ indexedForM vals (parseOne colTy)

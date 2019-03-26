@@ -178,7 +178,7 @@ class HGECtx:
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            return self.v1q(yaml.load(f))
+            return self.v1q(yaml.safe_load(f))
 
     def teardown(self):
         self.http.close()

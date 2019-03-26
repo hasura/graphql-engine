@@ -172,12 +172,11 @@ class TestV1SelectBoolExpJSONB(DefaultTestSelectQueries):
     def test_select_author_article_jsonb_contains_bestseller(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_jsonb_contains_bestseller.yaml')
 
-    # TODO:- Uncomment the following after adding has_keys_all and has_keys_any operators
-    # def test_select_product_jsonb_has_keys_all_ram_touchscreen(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
+    def test_select_product_jsonb_has_keys_all_ram_touchscreen(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_all_ram_touchscreen.yaml')
 
-    # def test_select_product_jsonb_has_keys_any_os_operating_system(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_any_os_operating_system.yaml')
+    def test_select_product_jsonb_has_keys_any_os_operating_system(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_keys_any_os_operating_system.yaml')
 
     def test_select_product_jsonb_has_key_sim_type(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_product_jsonb_has_key_sim_type.yaml')
