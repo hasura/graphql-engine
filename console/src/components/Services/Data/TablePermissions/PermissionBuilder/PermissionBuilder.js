@@ -406,6 +406,14 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
+    const sessionVariableSuggestion = dispatchInput => {
+      return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
+    };
+
+    const jsonSuggestion = dispatchInput => {
+      return renderSuggestion(dispatchInput, '{}', 'JSON');
+    };
+
     const renderValue = (dispatchFunc, value, prefix, valueType) => {
       const dispatchInput = val => {
         let _val = val;
@@ -431,14 +439,6 @@ class PermissionBuilder extends React.Component {
         return renderInput(dispatchInput, value);
       };
 
-      const sessionVariableSuggestion = () => {
-        return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
-      };
-
-      const jsonSuggestion = () => {
-        return renderSuggestion(dispatchInput, '{}', 'JSON');
-      };
-
       let input;
       let suggestion;
 
@@ -446,10 +446,10 @@ class PermissionBuilder extends React.Component {
         input = renderBoolSelect(dispatchInput, value);
       } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
-        suggestion = jsonSuggestion();
+        suggestion = jsonSuggestion(dispatchInput);
       } else {
         input = wrapDoubleQuotes(inputBox());
-        suggestion = sessionVariableSuggestion();
+        suggestion = sessionVariableSuggestion(dispatchInput);
       }
 
       return (
@@ -460,7 +460,12 @@ class PermissionBuilder extends React.Component {
     };
 
     const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
-      const _inputArray = [];
+      const dispatchInput = val => {
+        dispatchFunc({ prefix: prefix, value: val });
+      };
+
+      const inputArray = [];
+
       (values || []).concat(['']).map((val, i) => {
         const input = renderValue(
           dispatchFunc,
@@ -468,16 +473,24 @@ class PermissionBuilder extends React.Component {
           addToPrefix(prefix, i),
           valueType
         );
-        _inputArray.push(input);
+        inputArray.push(input);
       });
 
       const unselectedElements = [(values || []).length];
 
-      return (
+      const _inputArray = (
         <QueryBuilderJson
-          element={_inputArray}
+          element={inputArray}
           unselectedElements={unselectedElements}
         />
+      );
+
+      const _suggestion = sessionVariableSuggestion(dispatchInput);
+
+      return (
+        <span>
+          {_inputArray} {_suggestion}
+        </span>
       );
     };
 
@@ -509,7 +522,10 @@ class PermissionBuilder extends React.Component {
       if (operator) {
         const operatorInputType = getOperatorInputType(operator) || valueType;
 
-        if (isArrayColumnOperator(operator)) {
+        if (
+          isArrayColumnOperator(operator) &&
+          operationValue instanceof Array
+        ) {
           _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
