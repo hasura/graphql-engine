@@ -11,7 +11,7 @@ module Hasura.RQL.DDL.EventTrigger
   , delEventTriggerFromCatalog
   , subTableP2
   , subTableP2Setup
-  , mkTriggerQ
+  , mkAllTriggersQ
   , getEventTriggerDef
   , updateEventTriggerDef
   ) where
@@ -57,7 +57,7 @@ getTriggerSql
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
-  -> Maybe SubscribeOpSpec
+  -> SubscribeOpSpec
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
@@ -65,10 +65,10 @@ getTriggerSql op trn qt allCols strfyNum spec =
                    , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]
-      opCtx = maybe HashMap.empty (createOpCtx op) spec
+      opCtx = createOpCtx op spec
       context = HashMap.union globalCtx opCtx
   in
-      spec >> renderGingerTmplt context <$> triggerTmplt
+      renderGingerTmplt context <$> triggerTmplt
   where
     createOpCtx op1 (SubscribeOpSpec columns payload) =
       HashMap.fromList
@@ -115,18 +115,32 @@ getTriggerSql op trn qt allCols strfyNum spec =
 
     fromMaybePayload = fromMaybe SubCStar
 
-mkTriggerQ
+mkAllTriggersQ
   :: TriggerName
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ trn qt allCols strfyNum (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT trn qt allCols strfyNum insert
-             <> getTriggerSql UPDATE trn qt allCols strfyNum update
-             <> getTriggerSql DELETE trn qt allCols strfyNum delete
-  case msql of
+mkAllTriggersQ trn qt allCols strfyNum fullspec = do
+  let insertDef = tdInsert fullspec
+      updateDef = tdUpdate fullspec
+      deleteDef = tdDelete fullspec
+  onJust insertDef (mkTriggerQ trn qt allCols strfyNum INSERT)
+  onJust updateDef (mkTriggerQ trn qt allCols strfyNum UPDATE)
+  onJust deleteDef (mkTriggerQ trn qt allCols strfyNum DELETE)
+
+mkTriggerQ
+  :: TriggerName
+  -> QualifiedTable
+  -> [PGColInfo]
+  -> Bool
+  -> Ops
+  -> SubscribeOpSpec
+  -> Q.TxE QErr ()
+mkTriggerQ trn qt allCols strfyNum op spec = do
+  let mTriggerSql = getTriggerSql op trn qt allCols strfyNum spec
+  case mTriggerSql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing  -> throw500 "no trigger sql generated"
 
@@ -149,10 +163,10 @@ addEventTriggerToCatalog qt allCols strfyNum etc = do
            VALUES ($1, 'table', $2, $3, $4)
          |] (name, sn, tn, Q.AltJ $ toJSON etc) True
 
-  mkTriggerQ name qt allCols strfyNum opsdef
+  mkAllTriggersQ name qt allCols strfyNum fullspec
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name opsdef _ _ _ _) = etc
+    (EventTriggerConf name fullspec _ _ _ _) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -171,9 +185,9 @@ updateEventTriggerToCatalog
   -> Q.TxE QErr ()
 updateEventTriggerToCatalog qt allCols strfyNum etc = do
   delTriggerQ name
-  mkTriggerQ name qt allCols strfyNum opsdef
-  where
-    EventTriggerConf name opsdef _ _ _ _ = etc
+  mkAllTriggersQ name qt allCols strfyNum fullspec
+ where
+    EventTriggerConf name fullspec _ _ _ _ = etc
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do

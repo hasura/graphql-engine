@@ -6,6 +6,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
@@ -14,7 +15,6 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -344,7 +344,7 @@ buildSchemaCache = do
     let qt = QualifiedObject sn tn
     subTableP2Setup qt etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkTriggerQ trn qt allCols strfyNum (etcDefinition etc)
+    liftTx $ mkAllTriggersQ trn qt allCols strfyNum (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
@@ -518,8 +518,8 @@ execWithMDCheck (RunSQL t cascade _) = do
           let tn = tiName ti
               cols = getCols $ tiFieldInfoMap ti
           forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-            let opsDef = etiOpsDef eti
-            liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
+            let fullspec = etiOpsDef eti
+            liftTx $ mkAllTriggersQ trn tn cols strfyNum fullspec
 
   bool withoutReload withReload reloadRequired
 
