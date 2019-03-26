@@ -81,11 +81,20 @@ Step 3: Initialize the migrations as per your current state
   This command will create ``public-schema.sql`` which contains the SQL
   definitions for the public schema.
 
-  .. note::
+- Clean up the SQL file to remove some un-necessary statements:
 
-     You should edit this SQL file and remove the initial ~20 lines which are
-     ``SET`` statements including ``SELECT pg_catalog.set_config('search_path',
-     '', false);``.
+  .. code-block:: bash
+
+     # download the bash script to clean the SQL file (using sed)
+     # from gist: https://gist.github.com/shahidhk/98da4438e3a8a50264c9ef21d89100df
+     wget https://gist.githubusercontent.com/shahidhk/98da4438e3a8a50264c9ef21d89100df/raw/a58d284f46b534b637dba633a59708b46e7e1395/process_pg_dump.sh
+
+     # make it executable
+     chmod +x process_pg_dump.sh
+
+     # clean up public-schema.sql
+     ./process_pg_dump.sh public-schema.sql
+  
 
 - Create a migration called ``init`` using this SQL file and the metadata that
   is on the server right now:
