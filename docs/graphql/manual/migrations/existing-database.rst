@@ -66,7 +66,9 @@ Hasura migrations. You can commit this directory to version control.
 Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
-- Use ``pg_dump`` to export the database schema. We're using the ``pg_dump``
+- Use ``pg_dump`` to export the database schema:
+
+  If Postgres is running in docker, we can use the ``pg_dump``
   command bundled within the ``postgres`` docker container. If you have
   ``pg_dump`` installed on your machine, you could use that as well.
 
@@ -78,8 +80,19 @@ Step 3: Initialize the migrations as per your current state
      # dump the public schema into public-schema.sql (repeat for other schemas)
      docker exec <postgres-container-id> pg_dump -O -x -U postgres --schema-only --schema public > public-schema.sql
 
+  If Postgres is on Heroku, install ``pg_dump`` on your machine and use it.
+
+  .. code-block:: bash
+
+     # Get the DATABASE_URL from Heroku Dashbaord -> Settings -> Reveal Config Vars
+
+     # dump the public schema into public-schema.sql (repeat for other schemas)
+     pg_dump -O -x "<DATABASE_URL>" --schema-only --schema public > public-schema.sql
+
+
   This command will create ``public-schema.sql`` which contains the SQL
   definitions for the public schema.
+
 
 - Clean up the SQL file to remove some un-necessary statements:
 
