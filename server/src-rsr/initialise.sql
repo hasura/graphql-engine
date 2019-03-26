@@ -278,8 +278,7 @@ $$;
 
 CREATE TABLE hdb_catalog.event_triggers
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT UNIQUE,
+  name TEXT PRIMARY KEY,
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
@@ -294,7 +293,6 @@ CREATE TABLE hdb_catalog.event_log
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  trigger_id TEXT NOT NULL,
   trigger_name TEXT NOT NULL,
   payload JSONB NOT NULL,
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
@@ -305,7 +303,7 @@ CREATE TABLE hdb_catalog.event_log
   next_retry_at TIMESTAMP
 );
 
-CREATE INDEX ON hdb_catalog.event_log (trigger_id);
+CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (

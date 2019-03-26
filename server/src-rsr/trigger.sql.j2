@@ -19,7 +19,7 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
       'new', {{NEW_PAYLOAD_EXPRESSION}}
     );
     IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-      PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), CAST('{{ID}}' AS text), TG_OP, _data);
+      PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('{{NAME}}' AS text), TG_OP, _data);
     END IF;
     RETURN NULL;
   END;

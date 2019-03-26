@@ -135,7 +135,8 @@ ul {
   margin-bottom: 30px;
 }
 
-#docs-content img.no-shadow {
+#docs-content img.no-shadow,
+#docs-content a.no-shadow img {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;

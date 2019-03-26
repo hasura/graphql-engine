@@ -1,30 +1,28 @@
-CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, trigger_id text, op text, row_data json) RETURNS text AS $$
-  DECLARE
-    id text;
-    payload json;
-    session_variables json;
-    server_version_num int;
-  BEGIN
-    id := gen_random_uuid();
-    server_version_num := current_setting('server_version_num');
-    IF server_version_num >= 90600 THEN
-      session_variables := current_setting('hasura.user', 't');
-    ELSE
-      BEGIN
-        session_variables := current_setting('hasura.user');
-      EXCEPTION WHEN OTHERS THEN
-                  session_variables := NULL;
-      END;
-    END IF;
-    payload := json_build_object(
-      'op', op,
-      'data', row_data,
-      'session_variables', session_variables
-    )::text;
-    INSERT INTO hdb_catalog.event_log
-    (id, schema_name, table_name, trigger_name, trigger_id, payload)
-     VALUES
-    (id, schema_name, table_name, trigger_name, trigger_id, payload);
-    RETURN id;
-  END;
-$$ LANGUAGE plpgsql;
+ALTER TABLE hdb_catalog.event_triggers
+  DROP CONSTRAINT event_triggers_pkey;
+
+ALTER TABLE hdb_catalog.event_triggers
+  DROP CONSTRAINT event_triggers_name_key;
+
+ALTER TABLE hdb_catalog.event_triggers
+  ADD PRIMARY KEY (name);
+
+ALTER TABLE hdb_catalog.event_triggers
+  DROP COLUMN id;
+
+ALTER TABLE hdb_catalog.event_log
+  DROP COLUMN trigger_id;
+
+CREATE INDEX ON hdb_catalog.event_log (trigger_name);
+
+UPDATE hdb_catalog.hdb_relationship
+   SET rel_def = '{"manual_configuration":{"remote_table":{"schema":"hdb_catalog","name":"event_log"},"column_mapping":{"name":"trigger_name"}}}'
+ WHERE table_schema = 'hdb_catalog'
+       AND table_name = 'event_triggers'
+       AND rel_name = 'events';
+
+UPDATE hdb_catalog.hdb_relationship
+   SET rel_def = '{"manual_configuration":{"remote_table":{"schema":"hdb_catalog","name":"event_triggers"},"column_mapping":{"trigger_name":"name"}}}'
+ WHERE table_schema = 'hdb_catalog'
+       AND table_name = 'event_log'
+       AND rel_name = 'trigger';
