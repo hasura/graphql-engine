@@ -247,6 +247,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         err500 Unexpected "invalid websocket payload"
 
       case G._todType opDef of
+        -- TODO: this should go into execRemoteGQ?
         G.OperationTypeSubscription -> do
           res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
                  wsConn userInfoR rn opId reqHdrs sockPayload
