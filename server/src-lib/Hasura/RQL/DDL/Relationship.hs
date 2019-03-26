@@ -1,6 +1,8 @@
 module Hasura.RQL.DDL.Relationship
-  ( objRelP2Setup
+  ( validateObjRel
+  , objRelP2Setup
   , objRelP2
+  , validateArrRel
   , arrRelP2Setup
   , arrRelP2
   , delRelFromCatalog
@@ -79,12 +81,13 @@ checkForColConfilct tabInfo f =
       ]
     Nothing -> return ()
 
-objRelP1
+validateObjRel
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => QualifiedTable
   -> ObjRelDef
   -> m ()
-objRelP1 tabInfo (RelDef rn ru _) = do
+validateObjRel qt (RelDef rn ru _) = do
+  tabInfo <- askTabInfo qt
   checkForColConfilct tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
@@ -97,8 +100,7 @@ createObjRelP1
   -> m ()
 createObjRelP1 (WithTable qt rd) = do
   adminOnly
-  tabInfo <- askTabInfo qt
-  objRelP1 tabInfo rd
+  validateObjRel qt rd
 
 objRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -112,6 +114,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
+      -- TODO: validation should account for this too
       res  <- liftTx $ Q.catchE defaultTxErrorHandler $ fetchFKeyDetail cn
       case mapMaybe processRes res of
         [] -> throw400 ConstraintError
@@ -173,13 +176,13 @@ runCreateObjRel defn = do
 createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
 createArrRelP1 (WithTable qt rd) = do
   adminOnly
-  tabInfo    <- askTabInfo qt
-  arrRelP1 tabInfo rd
+  validateArrRel qt rd
 
-arrRelP1
+validateArrRel
   :: (QErrM m, CacheRM m)
-  => TableInfo -> ArrRelDef -> m ()
-arrRelP1 tabInfo (RelDef rn ru _) = do
+  => QualifiedTable -> ArrRelDef -> m ()
+validateArrRel qt (RelDef rn ru _) = do
+  tabInfo <- askTabInfo qt
   checkForColConfilct tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
@@ -204,6 +207,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       let QualifiedObject refSn refTn = refqt
+      -- TODO: validation should account for this too
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
         fetchFKeyDetail refSn refTn refCol
       case mapMaybe processRes res of

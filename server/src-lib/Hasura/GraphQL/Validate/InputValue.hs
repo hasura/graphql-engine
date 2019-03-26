@@ -199,21 +199,31 @@ validateObject valParser tyInfo flds = do
     <> ", the following fields are duplicated: "
     <> showNames dups
 
-  -- check fields with not null types
-  forM_ (Map.toList $ _iotiFields tyInfo) $
+  -- make default values object
+  defValObj <- fmap (OMap.fromList . catMaybes) $
+    forM (Map.toList $ _iotiFields tyInfo) $
     \(fldName, inpValInfo) -> do
       let ty = _iviType inpValInfo
           isNotNull = G.isNotNull ty
+          defValM = _iviDefVal inpValInfo
+          hasDefVal = isJust defValM
           fldPresent = fldName `elem` inpFldNames
-      when (not fldPresent && isNotNull) $ throwVE $
-        "field " <> G.unName fldName <> " of type " <> G.showGT ty
-        <> " is required, but not found"
 
-  fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
+      when (not fldPresent && isNotNull && not hasDefVal) $
+        throwVE $ "field " <> G.unName fldName <> " of type "
+                  <> G.showGT ty <> " is required, but not found"
+
+      convDefValM <- validateInputValue constValueParser ty `mapM` defValM
+      return $ (fldName,) <$> convDefValM
+
+  -- compute input values object
+  inpValObj <- fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
       fldTy <- getInpFieldInfo tyInfo fldName
       convFldVal <- validateInputValue valParser fldTy fldVal
       return (fldName, convFldVal)
+
+  return $ inpValObj `OMap.union` defValObj
 
   where
     inpFldNames = map fst flds
