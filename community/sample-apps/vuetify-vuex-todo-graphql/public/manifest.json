@@ -1,5 +1,5 @@
 {
-  "name": "vuetify-todo-pwa",
+  "name": "vuetify-vuex-todo-graphql",
   "short_name": "vuetify-todo",
   "icons": [
     {
