@@ -10,9 +10,9 @@ Synopsis
 
 
 Export Hasura metadata and save it in migrations/metadata.yaml file.
-The output is a yaml file which captures all the metadata required 
+The output is a yaml file which captures all the metadata required
 by GraphQL Engine. This includes info about tables that are tracked,
-permission rules, relationships and event triggers that are defined 
+permission rules, relationships and event triggers that are defined
 on those tables.
 
 ::
@@ -32,7 +32,7 @@ Options
 
 ::
 
-      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL Engine
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
   -h, --help                  help for export
 
@@ -41,8 +41,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
