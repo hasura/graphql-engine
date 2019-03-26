@@ -126,7 +126,7 @@ instance FromJSON CreateEventTriggerQuery where
     insert         <- o .:? "insert"
     update         <- o .:? "update"
     delete         <- o .:? "delete"
-    manual         <- o .:? "manual" .!= True
+    manual         <- o .:? "manual"
     retryConf      <- o .:? "retry_conf"
     webhook        <- o .:? "webhook"
     webhookFromEnv <- o .:? "webhook_from_env"
@@ -137,18 +137,18 @@ instance FromJSON CreateEventTriggerQuery where
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
-    case insert <|> update <|> delete of
-      Just _  -> return ()
-      Nothing -> if manual
-                 then return ()
-                 else fail "at least one among the insert/update/delete/manual operation specs must be provided"
+    let allowManual = fromMaybe False manual
+    if any isJust [insert, update, delete] || allowManual then
+      return ()
+      else
+      fail "at least one among the insert/update/delete/manual specs must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete manual retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery name table insert update delete allowManual retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
