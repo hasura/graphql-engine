@@ -380,6 +380,45 @@ args:
         jsonb_col:
           $has_key: X-Hasura-Has-Key
 
+# Using jsonb column and $nin operator
+- type: create_select_permission
+  args:
+    table: jsonb_table
+    role: user3
+    permission:
+      columns:
+      - id
+      - jsonb_col
+      filter:
+        jsonb_col:
+          $nin: X-Hasura-Protected-Jsons
+
+# Using jsonb column and $has_keys_any operator
+- type: create_select_permission
+  args:
+    table: jsonb_table
+    role: user4
+    permission:
+      columns:
+      - id
+      - jsonb_col
+      filter:
+        jsonb_col:
+          $has_keys_any: X-Hasura-Json-Keys
+
+# Using jsonb column and $has_keys_all operator
+- type: create_select_permission
+  args:
+    table: jsonb_table
+    role: user5
+    permission:
+      columns:
+      - id
+      - jsonb_col
+      filter:
+        jsonb_col:
+          $has_keys_all: X-Hasura-Json-Required-Keys
+
 #Insert data
 - type: insert
   args:
