@@ -65,12 +65,6 @@ Insert a single object
           id
           title
         }
-        query {
-          author(where: {id: {_eq: 1}){
-            id
-            name
-          }
-        }
       }
     }
   :response:
@@ -83,15 +77,7 @@ Insert a single object
               "id": 21,
               "title": "Article 1"
             }
-          ],
-          "query": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Author 1"
-              }
-            ]
-          }
+          ]
         }
       }
     }
@@ -109,12 +95,6 @@ Insert a single object (using variables)
           id
           title
         }
-        query {
-          author(where: {id: {_eq: 1}){
-            id
-            name
-          }
-        }
       }
     }
   :response:
@@ -127,15 +107,7 @@ Insert a single object (using variables)
               "id": 21,
               "title": "Article 1"
             }
-          ],
-          "query": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Author 1"
-              }
-            ]
-          }
+          ]
         }
       }
     }

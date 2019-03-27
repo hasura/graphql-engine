@@ -54,27 +54,13 @@ Delete based on an object's fields
         where: {rating: {_lt: 3}}
       ) {
         affected_rows
-        query {
-          author(where: {id: {_eq: 1}){
-            id
-            name
-          }
-        }
       }
     }
   :response:
     {
       "data": {
         "delete_low_rated_articles": {
-          "affected_rows": 8,
-          "query": {
-            "author": [
-              {
-                "id": 1,
-                "name": "Author 1"
-              }
-            ]
-          }
+          "affected_rows": 8
         }
       }
     }
