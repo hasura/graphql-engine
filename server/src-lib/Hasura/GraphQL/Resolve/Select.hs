@@ -15,6 +15,7 @@ module Hasura.GraphQL.Resolve.Select
 
 import           Control.Arrow                     (first)
 import           Data.Has
+import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict               as Map
@@ -44,6 +45,21 @@ withSelSet selSet f =
     res <- f fld
     return (G.unName $ G.unAlias $ _fAlias fld, res)
 
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp t = case parseJSONPath t of
+  Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
+  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  where
+    elToColExp (Key k)   = S.SELit k
+    elToColExp (Index i) = S.SELit $ T.pack (show i)
+
+
+argsToColOp :: (MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
+argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
+  where
+    toJsonPathExp = fmap (RS.ColOp S.jsonbPathOp) . jsonPathToColExp
+    toOp v = asPGColTextM v >>= mapM toJsonPathExp
+
 fromSelSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
@@ -58,7 +74,9 @@ fromSelSet f fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
-          Left colInfo -> return $ RS.FCol colInfo
+          Left colInfo ->
+            (RS.FCol colInfo) <$> (argsToColOp $ _fArguments fld)
+            -- let jsonCol = return $ RS.FCol $ colInfo { pgiName = PGCol $ T.pack "metadata->'name'" }
           Right (relInfo, isAgg, tableFilter, tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
@@ -261,9 +279,9 @@ fromFieldByPKey f tn colArgMap permFilter fld = fieldAsPath fld $ do
 convertSelect
   :: SelOpCtx -> Field -> Convert RespTx
 convertSelect opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromField prepare qt permFilter permLimit fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromField prepare qt permFilter permLimit fld
   return $ RS.selectP2 (QuerySingleObj False) (selData, prepArgs)
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
@@ -271,9 +289,9 @@ convertSelect opCtx fld = do
 convertSelectByPKey
   :: SelPkOpCtx -> Field -> Convert RespTx
 convertSelectByPKey opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromFieldByPKey prepare qt colArgMap permFilter fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromFieldByPKey prepare qt colArgMap permFilter fld
   return $ RS.selectP2 (QuerySingleObj True) (selData, prepArgs)
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
@@ -349,9 +367,9 @@ fromAggField f tn permFilter permLimit fld = fieldAsPath fld $ do
 
 convertAggSelect :: SelOpCtx -> Field -> Convert RespTx
 convertAggSelect opCtx fld = do
-  selData <- withPathK "selectionSet" $
-             fromAggField prepare qt permFilter permLimit fld
-  prepArgs <- get
+  (selData, prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
+    fromAggField prepare qt permFilter permLimit fld
   return $ RS.selectAggP2 (selData, prepArgs)
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
@@ -391,10 +409,10 @@ parseFunctionArgs fn argSeq val =
 convertFuncQuery
   :: FuncQOpCtx -> Bool -> Field -> Convert RespTx
 convertFuncQuery funcOpCtx isAgg fld = do
-  (tableArgs, sel, frmItem) <- withPathK "selectionSet" $
+  ((tableArgs, sel, frmItem), prepArgs) <-
+    withPathK "selectionSet" $ withPrepArgs $
     fromFuncQueryField prepare qf argSeq isAgg fld
   let tabPerm = RS.TablePerm permFilter permLimit
-  prepArgs <- get
   strfyNum <- stringifyNum <$> asks getter
   return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs strfyNum (sel, prepArgs)
   where

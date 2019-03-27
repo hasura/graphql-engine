@@ -52,8 +52,8 @@ pgColsFromMutFld = \case
   MQuery _     -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (PGColInfo col colTy _) -> Just (col, colTy)
-    _                            -> Nothing
+    FCol (PGColInfo col colTy _) _ -> Just (col, colTy)
+    _                              -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -61,7 +61,7 @@ pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 pgColsToSelFlds :: [PGColInfo] -> [(FieldName, AnnFld)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
+  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColInfo] -> MutFlds
 mkDefaultMutFlds = \case

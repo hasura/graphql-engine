@@ -142,8 +142,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col    -> toJSONableExp strfyNum (pgiType col) $
-                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FCol col args  -> toSQLCol col args
       FExp e      -> S.SELit e
       FObj objSel ->
         let qual = mkObjRelTableAls pfx $ aarName objSel
@@ -152,6 +151,14 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         let arrPfx = snd $ mkArrNodePfx pfx parAls arrRelCtx $
                      ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
+
+    toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
+    toSQLCol col colOpM =
+      toJSONableExp strfyNum (pgiType col) $ case colOpM of
+        Nothing              -> colNameExp
+        Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
+      where
+        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
 
 -- uses row_to_json to build a json object
 withRowToJSON

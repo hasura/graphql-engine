@@ -66,7 +66,7 @@ mutateAndFetchCols qt cols cte strfyNum = do
               , ("returning_columns", MRet selFlds)
               ]
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiName ci, FCol ci)
+              \ci -> (fromPGCol $ pgiName ci, FCol ci Nothing)
 
 mkSelCTEFromColVals
   :: MonadError QErr m

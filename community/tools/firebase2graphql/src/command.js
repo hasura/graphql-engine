@@ -77,13 +77,13 @@ Firebase2GraphQL.description = `firebase2graphql: Import JSON data to Hasura Gra
 # Examples:
 
 # Import data from a Firebase JSON database to Hasura GraphQL Engine without admin secret
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json
 
 # Import data from a Firebase JSON database to Hasura GraphQL Engine with admin secret
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json -s <admin-secret>
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json -s <admin-secret>
 
 # Import data from a Firebase JSON database to Hasura GraphQL Engine while normalizing it
-json2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
+firebase2graphql https://hge.herokuapp.com --db=./path/to/db.json -n
 `;
 
 Firebase2GraphQL.usage = 'URL [-s SECRET]';
@@ -109,7 +109,7 @@ Firebase2GraphQL.flags = {
 
   db: flags.string({
     char: 'd',
-    description: 'Path to the .js files that exports a JSON database',
+    description: 'Path to the .js files that exports a firebase JSON database',
   }),
 
   normalize: flags.boolean({
