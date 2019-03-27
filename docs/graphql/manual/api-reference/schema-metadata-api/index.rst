@@ -150,6 +150,30 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
+       
+   * - :ref:`reload_metadata`
+     - :ref:`Empty Object`
+     - Refresh metadata cache from database
+
+   * - :ref:`clear_metadata`
+     - :ref:`Empty Object`
+     - Remove all user defined metadata
+
+   * - :ref:`export_metadata`
+     - :ref:`Empty Object`
+     - Export all user defined metadata objects
+
+   * - :ref:`replace_metadata`
+     - `Metadata Objects`
+     - Replace metadata with given objects
+
+   * - :ref:`get_inconsistent_objects`
+     - :ref:`Empty Object`
+     - List all inconsistent metadata objects
+       
+   * - :ref:`drop_inconsistent_objects`
+     - :ref:`Empty Object`
+     - Drop all inconsistent metadata objects
 
 **See:**
 
@@ -159,6 +183,7 @@ The various types of queries are listed in the following table:
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
+- :doc:`Metadata Management <metadata-management>`
 
 Response structure
 ------------------
@@ -222,4 +247,5 @@ Error codes
   Permissions <permission>
   Event Triggers <event-triggers>
   Syntax definitions <syntax-defs>
+  Metadata Management <metadata-management>
 
