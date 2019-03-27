@@ -332,5 +332,52 @@ args:
         last_updated: 'NOW()'
         updated_by: X-Hasura-User-Id
 
+- type: run_sql
+  args:
+    sql: |
+     CREATE TABLE computer (
+       id          SERIAL PRIMARY KEY,
+       name        TEXT    NOT NULL,
+       spec        JSONB   NOT NULL
+     );
 
+- type: track_table
+  args:
+    name: computer
+    schema: public
 
+- type: create_insert_permission
+  args:
+    table: computer
+    role: seller
+    permission:
+      check:
+        spec:
+          _has_keys_all: X-Hasura-Spec-Required-Keys
+      columns: '*'
+
+- type: create_insert_permission
+  args:
+    table: computer
+    role: developer
+    permission:
+      check:
+        spec:
+          _has_keys_any: X-Hasura-Spec-Keys
+      columns: '*'
+
+- type: create_select_permission
+  args:
+    table: computer
+    role: seller
+    permission:
+      columns: '*'
+      filter: {}
+
+- type: create_select_permission
+  args:
+    table: computer
+    role: developer
+    permission:
+      columns: '*'
+      filter: {}
