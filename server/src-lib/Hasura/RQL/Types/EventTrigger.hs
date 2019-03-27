@@ -1,9 +1,8 @@
-module Hasura.RQL.Types.Subscribe
+module Hasura.RQL.Types.EventTrigger
   ( CreateEventTriggerQuery(..)
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName
-  , TriggerId
   , Ops(..)
   , EventId
   , TriggerOpsDef(..)
@@ -35,7 +34,6 @@ import qualified Data.Text                  as T
 import qualified Text.Regex.TDFA            as TDFA
 
 type TriggerName = T.Text
-type TriggerId   = T.Text
 type EventId     = T.Text
 
 data Ops = INSERT | UPDATE | DELETE deriving (Show)

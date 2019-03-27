@@ -1,0 +1,26 @@
+description: Query data from geog_table using st_d_within
+url: /v1/query
+status: 200
+response:
+- name: London
+- name: Paris
+query:
+  type: select
+  args:
+    table: geog_table
+    where:
+      geog_col:
+        $st_d_within:
+          use_spheroid: true
+          distance: 1000000
+          from:
+            coordinates:
+            - 1
+            - 50
+            crs:
+              type: name
+              properties:
+                name: urn:ogc:def:crs:EPSG::4326
+            type: Point
+    columns:
+    - name

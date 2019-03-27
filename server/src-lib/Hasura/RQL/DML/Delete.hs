@@ -26,10 +26,10 @@ import qualified Hasura.SQL.DML           as S
 
 data DeleteQueryP1
   = DeleteQueryP1
-  { dqp1Table    :: !QualifiedTable
-  , dqp1Where    :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , dqp1MutFlds  :: !MutFlds
-  , dqp1UniqCols :: !(Maybe [PGColInfo])
+  { dqp1Table   :: !QualifiedTable
+  , dqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
+  , dqp1MutFlds :: !MutFlds
+  , dqp1AllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
 mkDeleteCTE
@@ -43,12 +43,11 @@ mkDeleteCTE (DeleteQueryP1 tn (fltr, wc) _ _) =
 
 getDeleteDeps
   :: DeleteQueryP1 -> [SchemaDependency]
-getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds uniqCols) =
-  mkParentDep tn : uniqColDeps <> whereDeps <> retDeps
+getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds allCols) =
+  mkParentDep tn : allColDeps <> whereDeps <> retDeps
   where
     whereDeps = getBoolExpDeps tn wc
-    uniqColDeps = map (mkColDep "on_type" tn) $
-                  maybe [] (map pgiName) uniqCols
+    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
 
@@ -75,8 +74,7 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
-      uniqCols = getUniqCols (getCols fieldInfoMap) $
-                 tiUniqOrPrimConstraints tableInfo
+      allCols = getCols fieldInfoMap
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
@@ -88,7 +86,7 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   return $ DeleteQueryP1 tableName
     (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols) uniqCols
+    (mkDefaultMutFlds mAnnRetCols) allCols
 
   where
     selNecessaryMsg =
@@ -105,7 +103,7 @@ validateDeleteQ =
 deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (dqp1Table u) (deleteCTE, p)
-                (dqp1MutFlds u) (dqp1UniqCols u) strfyNum
+                (dqp1MutFlds u) (dqp1AllCols u) strfyNum
   where
     deleteCTE = mkDeleteCTE u
 
