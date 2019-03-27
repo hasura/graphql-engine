@@ -58,10 +58,8 @@ instance L.ToEngineLog EventInternalErr where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", toJSON qerr )
 
 data TriggerMeta
-  = TriggerMeta
-  { tmId   :: TriggerId
-  , tmName :: TriggerName
-  } deriving (Show, Eq)
+  = TriggerMeta { tmName :: TriggerName }
+  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
 
@@ -447,18 +445,18 @@ fetchEvents =
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
                     JOIN hdb_catalog.event_triggers e
-                    ON (l.trigger_id = e.id)
+                    ON (l.trigger_name = e.name)
                     WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                     FOR UPDATE SKIP LOCKED
                     LIMIT 100 )
-      RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) =
+  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
           Event
           { eId        = id'
           , eTable     = QualifiedObject sn tn
-          , eTrigger   = TriggerMeta trid trn
+          , eTrigger   = TriggerMeta trn
           , eEvent     = payload
           , eTries     = tries
           , eCreatedAt = created

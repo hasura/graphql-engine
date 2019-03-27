@@ -31,14 +31,14 @@ import           Data.Has
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Subscribe
+import           Hasura.RQL.Types.EventTrigger
 
 type HLogger = (LogLevel, EngineLogType, J.Value) -> IO ()
 
 data ExtraContext
   = ExtraContext
   { elEventCreatedAt :: Time.UTCTime
-  , elEventId        :: TriggerId
+  , elEventId        :: EventId
   } deriving (Show, Eq)
 
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraContext)
