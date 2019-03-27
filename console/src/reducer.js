@@ -7,6 +7,7 @@ import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
 import telemetryReducer from './telemetry/Actions';
+import { metadataReducer } from './components/Services/Data/Metadata/Actions';
 
 import { reducer as notifications } from 'react-notification-system-redux';
 
@@ -20,6 +21,7 @@ const reducer = combineReducers({
   customResolverData: customResolverReducer,
   telemetry: telemetryReducer,
   notifications,
+  metadata: metadataReducer,
 });
 
 export default reducer;

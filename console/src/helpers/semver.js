@@ -17,6 +17,7 @@ const componentsSemver = {
   tableColumnRename: '1.0.0-alpha39',
   triggerRetryTimeout: '1.0.0-alpha38',
   permUpdatePresets: '1.0.0-alpha38',
+  inconsistentState: '1.0.0-alpha42',
 };
 
 const getPreRelease = version => {
