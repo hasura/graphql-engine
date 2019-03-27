@@ -137,6 +137,18 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_arr_sess_var_insert_article_as_editor_err_not_allowed_user_id(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_article_arr_sess_var_editors_err_not_allowed_user_id.yaml")
 
+    def test_seller_insert_computer_json_has_keys_all(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_pass.yaml")
+
+    def test_seller_insert_computer_json_has_keys_all_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/seller_insert_computer_has_keys_all_fail.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_pass.yaml")
+
+    def test_developer_insert_computer_json_has_keys_any_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/developer_insert_has_keys_any_fail.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"

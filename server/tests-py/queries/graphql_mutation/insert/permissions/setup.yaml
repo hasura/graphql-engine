@@ -6,8 +6,8 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
-          name text unique, 
+          id serial primary key,
+          name text unique,
           bio text,
           is_registered boolean not null default false
       );
@@ -219,7 +219,7 @@ args:
     - content: Sample article content
       title: Article 3
       author_id: 2
-    
+
 #Company insert permission for user
 - type: create_insert_permission
   args:
@@ -362,7 +362,7 @@ args:
   args:
     name: blog
     schema: public
-    
+
 - type: create_select_permission
   args:
     table: blog
@@ -392,5 +392,52 @@ args:
         last_updated: 'NOW()'
         updated_by: X-Hasura-User-Id
 
+- type: run_sql
+  args:
+    sql: |
+     CREATE TABLE computer (
+       id          SERIAL PRIMARY KEY,
+       name        TEXT    NOT NULL,
+       spec        JSONB   NOT NULL
+     );
 
+- type: track_table
+  args:
+    name: computer
+    schema: public
 
+- type: create_insert_permission
+  args:
+    table: computer
+    role: seller
+    permission:
+      check:
+        spec:
+          _has_keys_all: X-Hasura-Spec-Required-Keys
+      columns: '*'
+
+- type: create_insert_permission
+  args:
+    table: computer
+    role: developer
+    permission:
+      check:
+        spec:
+          _has_keys_any: X-Hasura-Spec-Keys
+      columns: '*'
+
+- type: create_select_permission
+  args:
+    table: computer
+    role: seller
+    permission:
+      columns: '*'
+      filter: {}
+
+- type: create_select_permission
+  args:
+    table: computer
+    role: developer
+    permission:
+      columns: '*'
+      filter: {}
