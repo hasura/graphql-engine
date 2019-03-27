@@ -33,7 +33,7 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultSetState = {
+const defaultPresetsState = {
   insert: {
     key: '',
     value: '',
@@ -49,12 +49,11 @@ const defaultQueryPermissions = {
     allow_upsert: true,
     set: {},
     columns: [],
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.insert,
+        ...defaultPresetsState.insert,
       },
     ],
-    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -66,12 +65,11 @@ const defaultQueryPermissions = {
     columns: [],
     filter: {},
     set: {},
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.update,
+        ...defaultPresetsState.update,
       },
     ],
-    isSetConfigChecked: false,
   },
   delete: {
     filter: {},
@@ -166,5 +164,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultSetState,
+  defaultPresetsState,
 };

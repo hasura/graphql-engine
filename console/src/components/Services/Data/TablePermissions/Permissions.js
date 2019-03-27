@@ -9,12 +9,10 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  getQueriesWithPermColumns,
   permChangeTypes,
   permOpenEdit,
   permAddTableSchemas,
   permSetFilter,
-  permSetFilterSameAs,
   permToggleColumn,
   permToggleAllColumns,
   permAllowAll,
@@ -30,50 +28,47 @@ import {
   permRemoveMultipleRoles,
   permSetSameSelect,
   applySamePermissionsBulk,
-  UPDATE_PERM_SET_KEY_VALUE,
-  CREATE_NEW_SET_VAL,
-  DELETE_SET_VAL,
-  TOGGLE_PERM_SET_OPERATION_CHECK,
-  setConfigValueType,
+  SET_PRESET_VALUE,
+  CREATE_NEW_PRESET,
+  DELETE_PRESET,
   X_HASURA_CONST,
 } from './Actions';
+
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
+import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import EnhancedInput from '../../../Common/InputChecker/InputChecker';
+
 import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
-import { getIngForm, escapeRegExp } from '../utils';
+import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import semverCheck from '../../../../helpers/semver';
 import Button from '../../../Common/Button/Button';
-
-/* */
-import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-/* */
+import { defaultPresetsState } from '../DataState';
 
 class Permissions extends Component {
   constructor() {
     super();
+
     this.state = {};
-    this.state.setOperations = {
+    this.state.viewInfo = {};
+    this.state.showAggregation = false;
+    this.state.showIshowInsertPresets = false;
+    this.state.showUpdatePresets = false;
+    this.state.presetsInfo = {
       insert: {
-        isChecked: false,
         columnTypeMap: {},
       },
       update: {
-        isChecked: false,
         columnTypeMap: {},
       },
     };
-    this.state.viewInfo = {};
-    this.state.showAggregation = false;
-    this.state.showInsertPrefix = false;
-    this.state.showUpdatePresets = false;
   }
+
   componentDidMount() {
     if (this.props.serverVersion) {
       this.checkSemVer(this.props.serverVersion);
-      this.checkPrefixVer(this.props.serverVersion);
-      this.checkUpdatePresetVer(this.props.serverVersion);
     }
     this.props.dispatch({ type: RESET });
     const currentSchema = this.props.allSchemas.find(
@@ -103,125 +98,16 @@ class Permissions extends Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion);
-      this.checkPrefixVer(nextProps.serverVersion);
-      this.checkUpdatePresetVer(nextProps.serverVersion);
     }
   }
 
-  onSetValueChange(e, queryType) {
-    // Get the index of the changed value and if both key and value are set create one more object in set
-    const inputNode = e.target;
-
-    const indexId =
-      inputNode && parseInt(inputNode.getAttribute('data-index-id'), 10);
-    const prefixVal = inputNode && inputNode.getAttribute('data-prefix-val');
-    const actionData = {};
-
-    if (indexId >= 0) {
-      actionData.key = 'value';
-      actionData.value = (prefixVal || '') + inputNode.value;
-      actionData.index = indexId;
-
-      this.props.dispatch({
-        type: UPDATE_PERM_SET_KEY_VALUE,
-        data: { ...actionData, queryType },
-      });
-    }
-  }
-
-  onSetKeyChange = (e, queryType) => {
-    // Get the index of the changed value and if both key and value are set create one more object in set
-    const selectNode = e.target;
-    const selectedOption = e.target.selectedOptions[0];
-
-    const indexId =
-      selectNode && parseInt(selectNode.getAttribute('data-index-id'), 10);
-    const actionData = {};
-
-    if (selectedOption && indexId >= 0) {
-      actionData.key = 'key';
-      actionData.value = selectNode.value;
-      actionData.index = indexId;
-
-      const columnType = selectedOption.getAttribute('data-column-type');
-
-      this.props.dispatch({
-        type: UPDATE_PERM_SET_KEY_VALUE,
-        data: { ...actionData, queryType },
-      });
-      if (
-        indexId + 1 ===
-        this.props.permissionsState[queryType].localSet.length
-      ) {
-        this.addNewPresetColumn(queryType);
-      }
-      this.setState({
-        setOperations: {
-          ...this.state.setOperations,
-          [queryType]: {
-            ...this.state.setOperations[queryType],
-            columnTypeMap: {
-              ...this.state.setOperations[queryType].columnTypeMap,
-              [indexId]: columnType,
-            },
-          },
-        },
-      });
-    }
-  };
-  onSetTypeChange(e, queryType) {
-    const selectNode = e.target;
-
-    const indexId =
-      selectNode && parseInt(selectNode.getAttribute('data-index-id'), 10);
-    if (indexId >= 0) {
-      // Clearing the stuff just to filter out errored cases
-      const actionData = {};
-      actionData.key = 'value';
-      actionData.value = e.target.value === 'session' ? X_HASURA_CONST : '';
-      actionData.index = indexId;
-
-      this.props.dispatch({
-        type: UPDATE_PERM_SET_KEY_VALUE,
-        data: { ...actionData, queryType },
-      });
-    }
-  }
   checkSemVer(version) {
     this.setState({
       showAggregation: semverCheck('aggregationPerm', version),
       showUpsertSection: !semverCheck('permHideUpsertSection', version),
-    });
-  }
-  checkPrefixVer(version) {
-    this.setState({
-      showInsertPrefix: semverCheck('insertPrefix', version),
-    });
-  }
-  checkUpdatePresetVer(version) {
-    this.setState({
+      showInsertPresets: semverCheck('insertPrefix', version),
       showUpdatePresets: semverCheck('permUpdatePresets', version),
-    });
-  }
-  deleteSetKeyVal(e, queryType) {
-    const deleteIndex = parseInt(e.target.getAttribute('data-index-id'), 10);
-    if (deleteIndex >= 0) {
-      this.props.dispatch({
-        type: DELETE_SET_VAL,
-        data: {
-          index: deleteIndex,
-          queryType,
-        },
-      });
-    }
-  }
-  addNewPresetColumn(queryType) {
-    this.props.dispatch({ type: CREATE_NEW_SET_VAL, data: { queryType } });
-  }
-  togglePresetChecked(queryType) {
-    this.props.dispatch({
-      type: TOGGLE_PERM_SET_OPERATION_CHECK,
-      data: { queryType },
+      allowInsertPermColumns: semverCheck('insertPermRestrictColumns', version),
     });
   }
 
@@ -239,7 +125,7 @@ class Permissions extends Component {
       migrationMode,
       currentSchema,
     } = this.props;
-    const { showAggregation, showInsertPrefix, showUpdatePresets } = this.state;
+
     const styles = require('../TableModify/ModifyTable.scss');
 
     const getAllRoles = allTableSchemas => {
@@ -259,6 +145,19 @@ class Permissions extends Component {
 
       return _allRoles;
     };
+
+    const addTooltip = (text, tooltip) => {
+      return (
+        <span>
+          <span className={styles.add_mar_right_small}>{text}</span>
+          <OverlayTrigger placement="right" overlay={tooltip}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </span>
+      );
+    };
+
+    /********************/
 
     const getAlertHtml = (
       _ongoingRequest,
@@ -289,325 +188,37 @@ class Permissions extends Component {
       );
     };
 
-    const getEditLink = () => (
-      <span className={styles.editPermissionLink}>
-        <i className="fa fa-pencil" aria-hidden="true" />
-      </span>
-    );
-
-    const getRoleQueryPermission = (
-      tableSchema,
-      role,
-      queryType,
-      permissionsSymbols
-    ) => {
-      let _permission;
-
-      const rolePermissions = {};
-      tableSchema.permissions.forEach(
-        p => (rolePermissions[p.role_name] = p.permissions)
-      );
-
-      if (role === 'admin') {
-        _permission = permissionsSymbols.fullAccess;
-      } else if (!Object.keys(rolePermissions).includes(role)) {
-        _permission = permissionsSymbols.noAccess;
-      } else {
-        const permissions = rolePermissions[role][queryType];
-
-        if (permissions) {
-          let checkColumns;
-          let filterKey;
-
-          if (queryType === 'select' || queryType === 'update') {
-            checkColumns = true;
-            filterKey = 'filter';
-          } else if (queryType === 'insert') {
-            checkColumns = true;
-            filterKey = 'check';
-          } else if (queryType === 'delete') {
-            checkColumns = false;
-            filterKey = 'filter';
-          }
-
-          if (JSON.stringify(permissions[filterKey]) === '{}') {
-            if (
-              checkColumns &&
-              !permissions.columns.includes('*') &&
-              permissions.columns.length !== tableSchema.columns.length
-            ) {
-              _permission = permissionsSymbols.partialAccess;
-            } else {
-              _permission = permissionsSymbols.fullAccess;
-            }
-          } else {
-            _permission = permissionsSymbols.partialAccess;
-          }
-        } else {
-          _permission = permissionsSymbols.noAccess;
-        }
-      }
-
-      return _permission;
-    };
-
-    const getPermissionsTableRow = (
-      tableSchema,
-      role,
-      roleList,
-      queryTypes,
-      permissionsSymbols,
-      permsState,
-      newPermRow
-    ) => {
-      const dispatchOpenEdit = queryType => () => {
-        if (newPermRow && permsState.newRole !== '') {
-          dispatch(permOpenEdit(tableSchema, permsState.newRole, queryType));
-        } else if (role !== '') {
-          const allowInsertPermColumns = semverCheck(
-            'insertPermRestrictColumns',
-            this.props.serverVersion
-          );
-
-          dispatch(
-            permOpenEdit(tableSchema, role, queryType, allowInsertPermColumns)
-          );
-        } else {
-          document.getElementById('newRoleInput').focus();
-        }
+    const getHeader = tableSchema => {
+      const getViewHeader = () => {
+        return (
+          <ViewHeader
+            dispatch={dispatch}
+            tableName={tableName}
+            tabName="permissions"
+            migrationMode={migrationMode}
+            currentSchema={currentSchema}
+          />
+        );
       };
 
-      const dispatchCloseEdit = () => {
-        dispatch(permCloseEdit());
+      const getTableHeader = () => {
+        return (
+          <TableHeader
+            dispatch={dispatch}
+            tableName={tableName}
+            tabName="permissions"
+            migrationMode={migrationMode}
+            currentSchema={currentSchema}
+          />
+        );
       };
 
-      const dispatchRoleNameChange = e => {
-        dispatch(permSetRoleName(e.target.value));
-      };
+      const isView = tableSchema.detail.table_type !== 'BASE TABLE';
 
-      const dispatchBulkSelect = e => {
-        const isChecked = e.target.checked;
-        const selectedRole = e.target.getAttribute('data-role');
-        dispatch(permSetBulkSelect(isChecked, selectedRole));
-      };
-
-      // const dispatchDeletePermission = () => {
-      //   const isConfirm = window.confirm(
-      //     'Are you sure you want to delete the permission for role ' + role + '?'
-      //   );
-      //   if (isConfirm) {
-      //     dispatch(permRemoveRole(tableSchema, role));
-      //   }
-      // };
-
-      const _permissionsRowHtml = [];
-      if (role === 'admin' || role === '') {
-        _permissionsRowHtml.push(<td key={-1} />);
-      } else {
-        const bulkSelect = permsState.bulkSelect;
-
-        // const deleteIcon = (
-        //   <i
-        //     onClick={dispatchDeletePermission}
-        //     className={styles.permissionDelete + ' fa fa-close'}
-        //     title="Remove all permissions"
-        //     aria-hidden="true"
-        //   />
-        // );
-
-        _permissionsRowHtml.push(
-          <td key={-1}>
-            <div>
-              <input
-                onChange={dispatchBulkSelect}
-                checked={bulkSelect.filter(e => e === role).length}
-                data-role={role}
-                title="Select for bulk actions"
-                type="checkbox"
-              />
-              {/*{deleteIcon}*/}
-            </div>
-          </td>
-        );
-      }
-
-      if (newPermRow) {
-        const isNewRole = !roleList.includes(permsState.newRole);
-
-        _permissionsRowHtml.push(
-          <td key={-2}>
-            <input
-              id="newRoleInput"
-              className={`form-control ${styles.newRoleInput}`}
-              onChange={dispatchRoleNameChange}
-              type="text"
-              placeholder="Enter new role"
-              value={isNewRole ? permsState.newRole : ''}
-              data-test="role-textbox"
-            />
-          </td>
-        );
-      } else {
-        _permissionsRowHtml.push(<td key={-2}>{role}</td>);
-      }
-
-      queryTypes.forEach((queryType, i) => {
-        const isEditAllowed = role !== 'admin';
-        const isCurrEdit =
-          permsState.role === role && permsState.query === queryType;
-
-        let editLink = '';
-        let className = '';
-        let onClick = () => {};
-        if (isEditAllowed) {
-          editLink = getEditLink();
-
-          className += styles.clickableCell;
-          onClick = dispatchOpenEdit(queryType);
-          if (isCurrEdit) {
-            onClick = dispatchCloseEdit;
-            className += ` ${styles.currEdit}`;
-          }
-        }
-
-        if (role === '') {
-          className += ` ${styles.newRoleTd}`;
-        }
-
-        _permissionsRowHtml.push(
-          <td
-            key={i}
-            className={className}
-            onClick={onClick}
-            title="Edit permissions"
-            data-test={`${role}-${queryType}`}
-          >
-            {getRoleQueryPermission(
-              tableSchema,
-              role,
-              queryType,
-              permissionsSymbols
-            )}
-            {editLink}
-          </td>
-        );
-      });
-
-      return _permissionsRowHtml;
+      return isView ? getViewHeader() : getTableHeader();
     };
 
-    const getPermissionsTableBody = (
-      tableSchema,
-      queryTypes,
-      permissionsSymbols,
-      permsState,
-      roleList
-    ) => {
-      const _permissionsRowsHtml = [];
-
-      // add admin to roles
-      const _roleList = ['admin'].concat(roleList);
-
-      _roleList.forEach((role, i) => {
-        _permissionsRowsHtml.push(
-          <tr key={i}>
-            {getPermissionsTableRow(
-              tableSchema,
-              role,
-              roleList,
-              queryTypes,
-              permissionsSymbols,
-              permsState
-            )}
-          </tr>
-        );
-      });
-
-      // new role row
-      _permissionsRowsHtml.push(
-        <tr key="newPerm">
-          {getPermissionsTableRow(
-            tableSchema,
-            '',
-            roleList,
-            queryTypes,
-            permissionsSymbols,
-            permsState,
-            true
-          )}
-        </tr>
-      );
-
-      return <tbody>{_permissionsRowsHtml}</tbody>;
-    };
-
-    const getPermissionsTableHead = queryTypes => {
-      const _permissionsHead = [];
-
-      _permissionsHead.push(<td key={-1}>Actions</td>);
-      _permissionsHead.push(<td key={-2}>Role</td>);
-
-      queryTypes.forEach((queryType, i) => {
-        _permissionsHead.push(<td key={i}>{queryType}</td>);
-      });
-
-      return (
-        <thead>
-          <tr>{_permissionsHead}</tr>
-        </thead>
-      );
-    };
-
-    const getPermissionsLegend = permissionsSymbols => (
-      <div>
-        <div className={styles.permissionsLegend}>
-          <span className={styles.permissionsLegendValue}>
-            {permissionsSymbols.fullAccess} : full access
-          </span>
-          <span className={styles.permissionsLegendValue}>
-            {permissionsSymbols.noAccess} : no access
-          </span>
-          <span className={styles.permissionsLegendValue}>
-            {permissionsSymbols.partialAccess} : partial access
-          </span>
-        </div>
-      </div>
-    );
-
-    const getViewPermissionNote = () => {
-      let showNote = false;
-      if (
-        tableType === 'view' &&
-        !(
-          this.state.viewInfo &&
-          'is_insertable_into' in this.state.viewInfo &&
-          this.state.viewInfo.is_insertable_into === 'YES'
-        ) &&
-        !(
-          this.state.viewInfo &&
-          'is_updatable' in this.state.viewInfo &&
-          this.state.viewInfo.is_updatable === 'YES'
-        )
-      ) {
-        showNote = true;
-      }
-
-      return showNote ? (
-        <div className={styles.permissionsLegend}>
-          <i className="fa fa-question-circle" aria-hidden="true" />
-          &nbsp; You cannot insert/update into this view
-        </div>
-      ) : (
-        ''
-      );
-    };
-
-    const getPermissionsTable = (
-      tableSchema,
-      queryTypes,
-      permsState,
-      roleList
-    ) => {
+    const getPermissionsTable = (tableSchema, queryTypes, roleList) => {
       const permissionsSymbols = {
         fullAccess: (
           <i
@@ -629,537 +240,1106 @@ class Permissions extends Component {
         ),
       };
 
+      const getPermissionsLegend = () => (
+        <div>
+          <div className={styles.permissionsLegend}>
+            <span className={styles.permissionsLegendValue}>
+              {permissionsSymbols.fullAccess} : full access
+            </span>
+            <span className={styles.permissionsLegendValue}>
+              {permissionsSymbols.noAccess} : no access
+            </span>
+            <span className={styles.permissionsLegendValue}>
+              {permissionsSymbols.partialAccess} : partial access
+            </span>
+          </div>
+        </div>
+      );
+
+      const getViewPermissionNote = () => {
+        let note;
+
+        let showNote = false;
+        if (
+          tableType === 'view' &&
+          !(
+            this.state.viewInfo &&
+            'is_insertable_into' in this.state.viewInfo &&
+            this.state.viewInfo.is_insertable_into === 'YES'
+          ) &&
+          !(
+            this.state.viewInfo &&
+            'is_updatable' in this.state.viewInfo &&
+            this.state.viewInfo.is_updatable === 'YES'
+          )
+        ) {
+          showNote = true;
+        }
+
+        if (showNote) {
+          note = (
+            <div className={styles.permissionsLegend}>
+              <i className="fa fa-question-circle" aria-hidden="true" />
+              &nbsp; You cannot insert/update into this view
+            </div>
+          );
+        }
+
+        return note;
+      };
+
+      const getPermissionsTableHead = () => {
+        const _permissionsHead = [];
+
+        _permissionsHead.push(<td key={-1}>Actions</td>);
+        _permissionsHead.push(<td key={-2}>Role</td>);
+
+        queryTypes.forEach((queryType, i) => {
+          _permissionsHead.push(<td key={i}>{queryType}</td>);
+        });
+
+        return (
+          <thead>
+            <tr>{_permissionsHead}</tr>
+          </thead>
+        );
+      };
+
+      const getPermissionsTableBody = () => {
+        const _permissionsRowsHtml = [];
+
+        const getPermissionsTableRow = (role, newPermRow = null) => {
+          const { allowInsertPermColumns } = this.state;
+
+          const dispatchOpenEdit = queryType => () => {
+            if (newPermRow && permissionsState.newRole !== '') {
+              dispatch(
+                permOpenEdit(tableSchema, permissionsState.newRole, queryType)
+              );
+            } else if (role !== '') {
+              dispatch(
+                permOpenEdit(
+                  tableSchema,
+                  role,
+                  queryType,
+                  allowInsertPermColumns
+                )
+              );
+            } else {
+              document.getElementById('newRoleInput').focus();
+            }
+          };
+
+          const dispatchCloseEdit = () => {
+            dispatch(permCloseEdit());
+          };
+
+          const dispatchRoleNameChange = e => {
+            dispatch(permSetRoleName(e.target.value));
+          };
+
+          const dispatchBulkSelect = e => {
+            const isChecked = e.target.checked;
+            const selectedRole = e.target.getAttribute('data-role');
+            dispatch(permSetBulkSelect(isChecked, selectedRole));
+          };
+
+          // const dispatchDeletePermission = () => {
+          //   const isConfirm = window.confirm(
+          //     'Are you sure you want to delete the permission for role ' + role + '?'
+          //   );
+          //   if (isConfirm) {
+          //     dispatch(permRemoveRole(tableSchema, role));
+          //   }
+          // };
+
+          const getEditLink = () => {
+            return (
+              <span className={styles.editPermissionLink}>
+                <i className="fa fa-pencil" aria-hidden="true" />
+              </span>
+            );
+          };
+
+          const getRoleQueryPermission = queryType => {
+            let _permission;
+
+            const rolePermissions = {};
+            tableSchema.permissions.forEach(
+              p => (rolePermissions[p.role_name] = p.permissions)
+            );
+
+            if (role === 'admin') {
+              _permission = permissionsSymbols.fullAccess;
+            } else if (!Object.keys(rolePermissions).includes(role)) {
+              _permission = permissionsSymbols.noAccess;
+            } else {
+              const permissions = rolePermissions[role][queryType];
+
+              if (permissions) {
+                let checkColumns;
+                let filterKey;
+
+                if (queryType === 'select' || queryType === 'update') {
+                  checkColumns = true;
+                  filterKey = 'filter';
+                } else if (queryType === 'insert') {
+                  checkColumns = true;
+                  filterKey = 'check';
+                } else if (queryType === 'delete') {
+                  checkColumns = false;
+                  filterKey = 'filter';
+                }
+
+                if (JSON.stringify(permissions[filterKey]) === '{}') {
+                  if (
+                    checkColumns &&
+                    !permissions.columns.includes('*') &&
+                    permissions.columns.length !== tableSchema.columns.length
+                  ) {
+                    _permission = permissionsSymbols.partialAccess;
+                  } else {
+                    _permission = permissionsSymbols.fullAccess;
+                  }
+                } else {
+                  _permission = permissionsSymbols.partialAccess;
+                }
+              } else {
+                _permission = permissionsSymbols.noAccess;
+              }
+            }
+
+            return _permission;
+          };
+
+          const _permissionsRowHtml = [];
+          if (role === 'admin' || role === '') {
+            _permissionsRowHtml.push(<td key={-1} />);
+          } else {
+            const bulkSelect = permissionsState.bulkSelect;
+
+            // const deleteIcon = (
+            //   <i
+            //     onClick={dispatchDeletePermission}
+            //     className={styles.permissionDelete + ' fa fa-close'}
+            //     title="Remove all permissions"
+            //     aria-hidden="true"
+            //   />
+            // );
+
+            _permissionsRowHtml.push(
+              <td key={-1}>
+                <div>
+                  <input
+                    onChange={dispatchBulkSelect}
+                    checked={bulkSelect.filter(e => e === role).length}
+                    data-role={role}
+                    title="Select for bulk actions"
+                    type="checkbox"
+                  />
+                  {/*{deleteIcon}*/}
+                </div>
+              </td>
+            );
+          }
+
+          if (newPermRow) {
+            const isNewRole = !roleList.includes(permissionsState.newRole);
+
+            _permissionsRowHtml.push(
+              <td key={-2}>
+                <input
+                  id="newRoleInput"
+                  className={`form-control ${styles.newRoleInput}`}
+                  onChange={dispatchRoleNameChange}
+                  type="text"
+                  placeholder="Enter new role"
+                  value={isNewRole ? permissionsState.newRole : ''}
+                  data-test="role-textbox"
+                />
+              </td>
+            );
+          } else {
+            _permissionsRowHtml.push(<td key={-2}>{role}</td>);
+          }
+
+          queryTypes.forEach((queryType, i) => {
+            const isEditAllowed = role !== 'admin';
+            const isCurrEdit =
+              permissionsState.role === role &&
+              permissionsState.query === queryType;
+
+            let editLink = '';
+            let className = '';
+            let onClick = () => {};
+            if (isEditAllowed) {
+              editLink = getEditLink();
+
+              className += styles.clickableCell;
+              onClick = dispatchOpenEdit(queryType);
+              if (isCurrEdit) {
+                onClick = dispatchCloseEdit;
+                className += ` ${styles.currEdit}`;
+              }
+            }
+
+            if (role === '') {
+              className += ` ${styles.newRoleTd}`;
+            }
+
+            _permissionsRowHtml.push(
+              <td
+                key={i}
+                className={className}
+                onClick={onClick}
+                title="Edit permissions"
+                data-test={`${role}-${queryType}`}
+              >
+                {getRoleQueryPermission(queryType)}
+                {editLink}
+              </td>
+            );
+          });
+
+          return _permissionsRowHtml;
+        };
+
+        // add admin to roles
+        const _roleList = ['admin'].concat(roleList);
+
+        _roleList.forEach((role, i) => {
+          _permissionsRowsHtml.push(
+            <tr key={i}>{getPermissionsTableRow(role)}</tr>
+          );
+        });
+
+        // new role row
+        _permissionsRowsHtml.push(
+          <tr key="newPerm">{getPermissionsTableRow('', true)}</tr>
+        );
+
+        return <tbody>{_permissionsRowsHtml}</tbody>;
+      };
+
       return (
         <div>
-          {getPermissionsLegend(permissionsSymbols)}
+          {getPermissionsLegend()}
           {getViewPermissionNote()}
           <table className={`table table-bordered ${styles.permissionsTable}`}>
-            {getPermissionsTableHead(queryTypes)}
-            {getPermissionsTableBody(
-              tableSchema,
-              queryTypes,
-              permissionsSymbols,
-              permsState,
-              roleList
-            )}
+            {getPermissionsTableHead()}
+            {getPermissionsTableBody()}
           </table>
         </div>
       );
     };
-    const getUpsertSection = permsState => {
-      if (!this.state.showUpsertSection) {
-        return null;
+
+    const getBulkSection = tableSchema => {
+      if (!permissionsState.bulkSelect.length) {
+        return;
       }
 
-      let _upsertSection;
-      const query = permsState.query;
+      const getSelectedRoles = () => {
+        const bulkSelect = permissionsState.bulkSelect;
 
-      if (query === 'insert') {
+        return bulkSelect.map(r => {
+          return (
+            <span key={r} className={styles.add_pad_right}>
+              <b>{r}</b>{' '}
+            </span>
+          );
+        });
+      };
+
+      const handleBulkRemoveClick = () => {
+        if (window.confirm('Are you sure?')) {
+          dispatch(permRemoveMultipleRoles(tableSchema));
+        }
+      };
+
+      return (
+        <div className={styles.activeEdit}>
+          <div className={styles.editPermissionsHeading}>
+            Apply Bulk Actions
+          </div>
+          <div>
+            <span className={styles.add_pad_right}>Selected Roles</span>
+            {getSelectedRoles()}
+          </div>
+          <div className={styles.add_mar_top + ' ' + styles.add_mar_bottom_mid}>
+            <Button onClick={handleBulkRemoveClick} color="red" size="sm">
+              Remove All Permissions
+            </Button>
+          </div>
+        </div>
+      );
+    };
+
+    const getEditSection = (tableSchema, queryTypes, roleList) => {
+      if (!permissionsState.role || !permissionsState.query) {
+        return;
+      }
+
+      const dispatchCloseEdit = () => {
+        dispatch(permCloseEdit());
+      };
+
+      // TODO: display current status in subSectionTitles
+
+      const {
+        showAggregation,
+        showUpsertSection,
+        showInsertPresets,
+        showUpdatePresets,
+      } = this.state;
+
+      const query = permissionsState.query;
+
+      const noPermissions = !permissionsState[query];
+      const noPermissionsMsg = `Set row ${query} permissions first`;
+
+      const getRowSection = () => {
+        const filterKey = query === 'insert' ? 'check' : 'filter';
+
+        let filterString = '';
+        if (permissionsState[query]) {
+          filterString = JSON.stringify(permissionsState[query][filterKey]);
+        }
+
+        // replace legacy operator values
+        allOperators.forEach(operator => {
+          const currentString = '"' + operator + '"';
+          const legacyString = '"' + getLegacyOperator(operator) + '"';
+
+          filterString = filterString.replace(
+            new RegExp(escapeRegExp(legacyString), 'g'),
+            currentString
+          );
+        });
+
+        const getFilterOptions = () => {
+          const dispatchAllowAll = () => {
+            dispatch(permAllowAll());
+          };
+
+          const dispatchCustomChecked = () => {
+            dispatch(permCustomChecked());
+          };
+
+          const _filterOptionsSection = [];
+
+          const selectedValue = (
+            <AceEditor
+              mode="json"
+              value={filterString}
+              readOnly
+              theme="github"
+              height="5em"
+              maxLines={5}
+              width="100%"
+              showPrintMargin={false}
+              key={-3}
+            />
+          );
+
+          const getFilterRadio = (key, checked, value, onClick, label) => (
+            <div className="radio" key={key}>
+              <label>
+                <input
+                  type="radio"
+                  checked={checked}
+                  value={value}
+                  onClick={onClick}
+                  readOnly
+                />
+                {label}
+              </label>
+            </div>
+          );
+
+          const addNoChecksOption = () => {
+            const isSelected =
+              !permissionsState.custom_checked && filterString === '{}';
+
+            const allowAllLabel = (
+              <span data-test="without-checks">Without any checks</span>
+            );
+
+            _filterOptionsSection.push(
+              getFilterRadio(
+                -1,
+                isSelected,
+                'AllowAll',
+                dispatchAllowAll,
+                allowAllLabel
+              )
+            );
+
+            if (isSelected) {
+              _filterOptionsSection.push(selectedValue);
+            }
+          };
+
+          // TODO: add no access option
+
+          const addCustomCheckOption = () => {
+            const dispatchFuncSetFilter = filter =>
+              permSetFilter(JSON.parse(filter));
+
+            const dispatchFuncAddTableSchemas = schemaNames =>
+              permAddTableSchemas(schemaNames);
+
+            const isCustomFilter = () => {
+              return filterString !== '' && filterString !== '{}';
+            };
+
+            const isSelected =
+              permissionsState.custom_checked ||
+              isCustomFilter(queryTypes, permissionsState, filterString);
+
+            const customCheckToolTip = (
+              <Tooltip id="tooltip-custom-check">
+                Create custom check using permissions builder
+              </Tooltip>
+            );
+
+            const customChecklabel = (
+              <span data-test="custom-check">
+                <span className={styles.add_mar_right}>With custom check:</span>
+                <OverlayTrigger placement="right" overlay={customCheckToolTip}>
+                  <i className="fa fa-question-circle" aria-hidden="true" />
+                </OverlayTrigger>
+              </span>
+            );
+
+            _filterOptionsSection.push(
+              getFilterRadio(
+                -2,
+                isSelected,
+                'Custom',
+                dispatchCustomChecked,
+                customChecklabel
+              )
+            );
+
+            if (isSelected) {
+              _filterOptionsSection.push(selectedValue);
+
+              _filterOptionsSection.push(
+                <PermissionBuilder
+                  dispatchFuncSetFilter={dispatchFuncSetFilter}
+                  dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
+                  tableName={tableName}
+                  schemaName={currentSchema}
+                  allTableSchemas={permissionsState.tableSchemas}
+                  filter={filterString}
+                  dispatch={dispatch}
+                  key={-4}
+                />
+              );
+            }
+          };
+
+          addNoChecksOption();
+          addCustomCheckOption();
+
+          return _filterOptionsSection;
+        };
+
+        const getLimitSection = () => {
+          const dispatchLimit = limit => {
+            const parsedLimit = parseInt(limit, 10);
+            dispatch(permToggleModifyLimit(parsedLimit));
+          };
+
+          let _limitSection;
+
+          const rowLimitTooltip = (
+            <Tooltip id="tooltip-row-permissions">
+              Set limit on number of rows fetched per request
+            </Tooltip>
+          );
+
+          if (query === 'select') {
+            const limitValue =
+              permissionsState.select && permissionsState.select.limit
+                ? permissionsState.select.limit
+                : '';
+
+            _limitSection = (
+              <div className={styles.inline_block}>
+                <label>Limit number of rows:</label>
+                <input
+                  className={
+                    styles.mar_small_left + ' form-control ' + styles.limitInput
+                  }
+                  value={limitValue}
+                  onChange={e => dispatchLimit(e.target.value)}
+                  type="number"
+                  min="0"
+                />
+                <div className={styles.clear_fix} />
+              </div>
+            );
+
+            return addTooltip(_limitSection, rowLimitTooltip);
+          }
+        };
+
+        const rowPermissionTooltip = (
+          <Tooltip id="tooltip-row-permissions">
+            Set permission rule for {getIngForm(permissionsState.query)} rows
+          </Tooltip>
+        );
+
+        const rowSectionTitle = 'Row ' + query + ' permissions';
+
+        return (
+          <CollapsibleToggle
+            title={addTooltip(rowSectionTitle, rowPermissionTooltip)}
+            defaultTitle
+          >
+            <div className={styles.editPermissionsSection}>
+              <div>
+                Allow role <b>{permissionsState.role}</b> to{' '}
+                {permissionsState.query} <b>rows</b>:{getFilterOptions()}
+              </div>
+              <div className={styles.add_mar_top}>{getLimitSection()}</div>
+            </div>
+          </CollapsibleToggle>
+        );
+      };
+
+      const getColumnSection = () => {
+        const { allowInsertPermColumns } = this.state;
+
+        const getQueriesWithPermColumns = allowInsert => {
+          const queries = ['select', 'update'];
+          if (allowInsert) {
+            queries.push('insert');
+          }
+          return queries;
+        };
+
+        const getColumnList = () => {
+          const _columnList = [];
+
+          const dispatchToggleColumn = e => {
+            const column = e.target.value;
+            dispatch(permToggleColumn(column));
+          };
+
+          tableSchema.columns.forEach((colObj, i) => {
+            const column = colObj.column_name;
+            const checked = permissionsState[query]
+              ? permissionsState[query].columns.includes(column)
+              : false;
+
+            _columnList.push(
+              <div key={i} className={styles.columnListElement}>
+                <div className="checkbox">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      value={column}
+                      onChange={dispatchToggleColumn}
+                      disabled={noPermissions}
+                      title={noPermissions ? noPermissionsMsg : ''}
+                    />
+                    {column}
+                  </label>
+                </div>
+              </div>
+            );
+          });
+
+          _columnList.push(<div key={-1} className={styles.clear_fix} />);
+
+          return _columnList;
+        };
+
+        const getRelationshipsMsg = () => {
+          let _relationshipsMsg = '';
+
+          const relationships = tableSchema.relationships.map(
+            relObj => relObj.rel_name
+          );
+
+          if (relationships.length) {
+            _relationshipsMsg = (
+              <div className={styles.add_mar_top_small}>
+                For <b>relationships</b>, set permissions for the corresponding
+                tables/views.
+              </div>
+            );
+          }
+
+          return _relationshipsMsg;
+        };
+
+        const getToggleAllBtn = () => {
+          const dispatchToggleAllColumns = () => {
+            const allColumns = tableSchema.columns.map(c => c.column_name);
+
+            dispatch(permToggleAllColumns(allColumns));
+          };
+
+          return (
+            <Button
+              size={'xs'}
+              onClick={dispatchToggleAllColumns}
+              disabled={noPermissions}
+              title={noPermissions ? noPermissionsMsg : ''}
+            >
+              Toggle all
+            </Button>
+          );
+        };
+
+        let _columnSection = '';
+
+        const queriesWithPermColumns = getQueriesWithPermColumns(
+          allowInsertPermColumns
+        );
+
+        if (queriesWithPermColumns.includes(query)) {
+          const getAccessText = () => {
+            let accessText;
+            if (query === 'insert') {
+              accessText = 'to set input for';
+            } else if (query === 'select') {
+              accessText = 'to access';
+            } else {
+              accessText = 'to update';
+            }
+            return accessText;
+          };
+
+          const colPermissionTooltip = (
+            <Tooltip id="tooltip-row-permissions">
+              Choose columns allowed to be {getEdForm(permissionsState.query)}
+            </Tooltip>
+          );
+
+          const colSectionTitle = 'Column ' + query + ' permissions';
+
+          _columnSection = (
+            <CollapsibleToggle
+              title={addTooltip(colSectionTitle, colPermissionTooltip)}
+              defaultTitle
+            >
+              <div className={styles.editPermissionsSection}>
+                <div>
+                  <span className={styles.add_mar_right}>
+                    Allow role <b>{permissionsState.role}</b> {getAccessText()}{' '}
+                    <b>columns</b>:
+                  </span>
+
+                  {getToggleAllBtn()}
+                </div>
+
+                {getColumnList()}
+
+                {getRelationshipsMsg()}
+              </div>
+            </CollapsibleToggle>
+          );
+        }
+
+        return _columnSection;
+      };
+
+      const getUpsertSection = () => {
+        if (query !== 'insert') {
+          return;
+        }
+
         const dispatchToggleAllowUpsert = checked => {
           dispatch(permToggleAllowUpsert(checked));
         };
 
-        const upsertAllowed = permsState.insert
-          ? permsState.insert.allow_upsert
+        const upsertAllowed = permissionsState.insert
+          ? permissionsState.insert.allow_upsert
           : false;
 
-        // Upsert Tooltip
         const upsertToolTip = (
           <Tooltip id="tooltip-upsert">
-            Upsert updates a row if it already exists, otherwise inserts it
+            Allow upsert queries. Upsert lets you update a row if it already
+            exists, otherwise insert it
           </Tooltip>
         );
 
-        _upsertSection = (
-          <div>
+        return (
+          <CollapsibleToggle
+            title={addTooltip('Upsert queries permissions', upsertToolTip)}
+            defaultTitle
+          >
             <div className="radio">
               <label>
                 <div className={styles.center_radio_label_input}>
                   <input
                     type="checkbox"
-                    disabled={!permsState.insert}
                     checked={upsertAllowed}
                     value="toggle_upsert"
                     onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
+                    disabled={noPermissions}
                   />
                   <span className={styles.mar_left}>
-                    Allow role '{permsState.role}' to make upsert queries &nbsp;
-                    <OverlayTrigger placement="right" overlay={upsertToolTip}>
-                      <i className="fa fa-question-circle" aria-hidden="true" />
-                    </OverlayTrigger>
+                    <span className={styles.add_mar_right}>
+                      Allow role <b>{permissionsState.role}</b> to make upsert
+                      queries
+                    </span>
                   </span>
                 </div>
               </label>
             </div>
-          </div>
+          </CollapsibleToggle>
         );
-      }
-      return _upsertSection;
-    };
+      };
 
-    const getInsertSetPermission = (tableSchema, permsState) => {
-      const query = permsState.query;
+      const getPresetsSection = action => {
+        if (query !== action) {
+          return;
+        }
 
-      if (query === 'insert') {
-        const insertState = permsState.insert;
         const { columns } = tableSchema;
-        const isSetValues = !!(
-          insertState &&
-          'localSet' in insertState &&
-          insertState.isSetConfigChecked
-        );
-        const insertSetTooltip = (
+        const queryState = permissionsState[query];
+
+        const getPresetValues = () => {
+          const presets = (queryState && queryState.localPresets) || [
+            defaultPresetsState[query],
+          ];
+
+          const setPresetValue = e => {
+            // Get the index of the changed value and if both key and value are set create one more object in set
+            const inputNode = e.target;
+
+            const indexId =
+              inputNode &&
+              parseInt(inputNode.getAttribute('data-index-id'), 10);
+            const prefixVal =
+              inputNode && inputNode.getAttribute('data-prefix-val');
+            const actionData = {};
+
+            if (indexId >= 0) {
+              actionData.key = 'value';
+              actionData.value = (prefixVal || '') + inputNode.value;
+              actionData.index = indexId;
+
+              this.props.dispatch({
+                type: SET_PRESET_VALUE,
+                data: { ...actionData, queryType: query },
+              });
+            }
+          };
+
+          const setPresetKey = e => {
+            // Get the index of the changed value and if both key and value are set create one more object in set
+            const selectNode = e.target;
+            const selectedOption = e.target.selectedOptions[0];
+
+            const indexId =
+              selectNode &&
+              parseInt(selectNode.getAttribute('data-index-id'), 10);
+            const actionData = {};
+
+            if (selectedOption && indexId >= 0) {
+              actionData.key = 'key';
+              actionData.value = selectNode.value;
+              actionData.index = indexId;
+
+              const columnType = selectedOption.getAttribute(
+                'data-column-type'
+              );
+
+              this.props.dispatch({
+                type: SET_PRESET_VALUE,
+                data: { ...actionData, queryType: query },
+              });
+
+              if (indexId === presets.length - 1) {
+                this.props.dispatch({
+                  type: CREATE_NEW_PRESET,
+                  data: { query },
+                });
+              }
+
+              this.setState({
+                presetsInfo: {
+                  ...this.state.presetsInfo,
+                  [query]: {
+                    ...this.state.presetsInfo[query],
+                    columnTypeMap: {
+                      ...this.state.presetsInfo[query].columnTypeMap,
+                      [indexId]: columnType,
+                    },
+                  },
+                },
+              });
+            }
+          };
+
+          const setPresetType = e => {
+            const selectNode = e.target;
+
+            const indexId =
+              selectNode &&
+              parseInt(selectNode.getAttribute('data-index-id'), 10);
+            if (indexId >= 0) {
+              // Clearing the stuff just to filter out errored cases
+              const actionData = {};
+              actionData.key = 'value';
+              actionData.value =
+                e.target.value === 'session' ? X_HASURA_CONST : '';
+              actionData.index = indexId;
+
+              this.props.dispatch({
+                type: SET_PRESET_VALUE,
+                data: { ...actionData, queryType: query },
+              });
+            }
+          };
+
+          const deletePreset = e => {
+            const deleteIndex = parseInt(
+              e.target.getAttribute('data-index-id'),
+              10
+            );
+            if (deleteIndex >= 0) {
+              this.props.dispatch({
+                type: DELETE_PRESET,
+                data: {
+                  index: deleteIndex,
+                  queryType: query,
+                },
+              });
+            }
+          };
+
+          const getPresetValueType = preset => {
+            let _valueType = '';
+
+            if (preset.key || preset.value) {
+              const value = preset.value;
+              if (
+                typeof value === 'string' &&
+                value.toLowerCase().indexOf(X_HASURA_CONST) === 0
+              ) {
+                _valueType = 'session';
+              } else {
+                _valueType = 'static';
+              }
+            }
+
+            return _valueType;
+          };
+
+          const getPresetColumnSelect = (preset, index) => {
+            const getColumnOptions = () => {
+              const _columnOptions = [];
+
+              _columnOptions.push(
+                <option value="" disabled key={-1}>
+                  Column Name
+                </option>
+              );
+
+              if (columns && columns.length > 0) {
+                columns.forEach((c, i) => {
+                  _columnOptions.push(
+                    <option
+                      value={c.column_name}
+                      data-column-type={c.data_type}
+                      key={i}
+                    >
+                      {c.column_name}
+                    </option>
+                  );
+                });
+              }
+
+              return _columnOptions;
+            };
+
+            return (
+              <select
+                className="input-sm form-control"
+                value={preset.key}
+                onChange={setPresetKey}
+                data-index-id={index}
+                data-test={'column-presets-column-' + index}
+                disabled={noPermissions}
+                title={noPermissions ? noPermissionsMsg : ''}
+              >
+                {getColumnOptions()}
+              </select>
+            );
+          };
+
+          const getPresetTypeSelect = (preset, index) => {
+            const presetType = getPresetValueType(preset);
+
+            const selectTypeDisabled = !preset.key;
+
+            return (
+              <select
+                className="input-sm form-control"
+                onChange={setPresetType}
+                data-index-id={index}
+                data-test={'column-presets-type-' + index}
+                value={presetType}
+                disabled={selectTypeDisabled}
+                title={selectTypeDisabled ? 'Choose column first' : ''}
+              >
+                <option value="" disabled>
+                  Select Preset Type
+                </option>
+                <option value="static">static</option>
+                <option value="session">from session variable</option>
+              </select>
+            );
+          };
+
+          const getPresetInput = (preset, index) => {
+            let _presetInput;
+
+            const presetType = getPresetValueType(preset);
+
+            const presetInputDisabled = !preset.key;
+
+            if (presetType === 'session') {
+              _presetInput = (
+                <InputGroup>
+                  <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                  <input
+                    className={'input-sm form-control '}
+                    placeholder="column_value"
+                    value={preset.value.slice(X_HASURA_CONST.length)}
+                    onChange={setPresetValue}
+                    data-test={'column-presets-value-' + index}
+                    data-index-id={index}
+                    data-prefix-val={X_HASURA_CONST}
+                  />
+                </InputGroup>
+              );
+            } else {
+              _presetInput = (
+                <EnhancedInput
+                  placeholder="column_value"
+                  type={
+                    index in this.state.presetsInfo[query].columnTypeMap
+                      ? this.state.presetsInfo[query].columnTypeMap[index]
+                      : ''
+                  }
+                  value={preset.value}
+                  onChange={setPresetValue}
+                  data-test={'column-presets-value-' + index}
+                  indexId={index}
+                  data-prefix-val={X_HASURA_CONST}
+                  disabled={presetInputDisabled}
+                  title={presetInputDisabled ? 'Choose column first' : ''}
+                />
+              );
+            }
+
+            return _presetInput;
+          };
+
+          const getPresetExample = preset => {
+            let _presetExample;
+
+            const presetType = getPresetValueType(preset);
+
+            if (presetType === 'session') {
+              _presetExample = 'e.g. X-Hasura-User-Id';
+            } else {
+              _presetExample = 'e.g. false, 1, some-text';
+            }
+
+            return <i>{_presetExample}</i>;
+          };
+
+          const getDeleteButton = (preset, index) => {
+            let _deleteBtn;
+
+            const presetType = getPresetValueType(preset);
+
+            if (presetType) {
+              _deleteBtn = (
+                <i
+                  className="fa-lg fa fa-times"
+                  onClick={deletePreset}
+                  data-index-id={index}
+                />
+              );
+            }
+
+            return _deleteBtn;
+          };
+
+          return presets.map((preset, i) => {
+            const rowElementStyle = `${styles.display_inline} ${
+              styles.add_mar_right
+            } ${styles.input_element_wrapper}`;
+
+            return (
+              <div className={styles.insertSetConfigRow} key={i}>
+                <div className={rowElementStyle}>
+                  {getPresetColumnSelect(preset, i)}
+                </div>
+                <div className={rowElementStyle}>
+                  {getPresetTypeSelect(preset, i)}
+                </div>
+                <div className={rowElementStyle}>
+                  {getPresetInput(preset, i)}
+                </div>
+                <div className={rowElementStyle}>
+                  {getPresetExample(preset)}
+                </div>
+                <div className={rowElementStyle}>
+                  {getDeleteButton(preset, i)}
+                </div>
+              </div>
+            );
+          });
+        };
+
+        const presetTooltip = (
           <Tooltip id="tooltip-insert-set-operations">
-            Preset values for columns for this role. Set static values or use
-            session variables.
+            Set static values or session variables as default values for columns
+            while {getIngForm(query)}
           </Tooltip>
         );
 
-        const setOptions =
-          insertState && insertState.localSet && insertState.localSet.length > 0
-            ? insertState.localSet.map((s, i) => {
-              return (
-                <div className={styles.insertSetConfigRow} key={i}>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      value={s.key}
-                      onChange={e => this.onSetKeyChange(e, 'insert')}
-                      data-index-id={i}
-                      data-test={'column-presets-column-' + i}
-                    >
-                      <option value="" disabled>
-                          Column Name
-                      </option>
-                      {columns && columns.length > 0
-                        ? columns.map((c, key) => (
-                          <option
-                            value={c.column_name}
-                            data-column-type={c.data_type}
-                            key={key}
-                          >
-                            {c.column_name}
-                          </option>
-                        ))
-                        : null}
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      onChange={e => this.onSetTypeChange(e, 'insert')}
-                      data-index-id={i}
-                      data-test={'column-presets-type-' + i}
-                      value={setConfigValueType(s.value) || ''}
-                    >
-                      <option value="" disabled>
-                          Select Preset Type
-                      </option>
-                      <option value="static">static</option>
-                      <option value="session">from session variable</option>
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <InputGroup>
-                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                        <input
-                          className={'input-sm form-control '}
-                          placeholder="column_value"
-                          value={s.value.slice(X_HASURA_CONST.length)}
-                          onChange={e => this.onSetValueChange(e, 'insert')}
-                          data-test={'column-presets-value-' + i}
-                          data-index-id={i}
-                          data-prefix-val={X_HASURA_CONST}
-                        />
-                      </InputGroup>
-                    ) : (
-                      <EnhancedInput
-                        placeholder="column_value"
-                        type={
-                          i in this.state.setOperations.insert.columnTypeMap
-                            ? this.state.setOperations.insert.columnTypeMap[i]
-                            : ''
-                        }
-                        value={s.value}
-                        onChange={e => this.onSetValueChange(e, 'insert')}
-                        data-test={'column-presets-value-' + i}
-                        indexId={i}
-                        data-prefix-val={X_HASURA_CONST}
-                      />
-                    )}
-                  </div>
-                  {setConfigValueType(s.value) === 'session' ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. X-Hasura-User-Id
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. false, 1, some-text
-                    </div>
-                  )}
-                  {i !== insertState.localSet.length - 1 ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    >
-                      <i
-                        className="fa-lg fa fa-times"
-                        onClick={e => this.deleteSetKeyVal(e, 'insert')}
-                        data-index-id={i}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    />
-                  )}
-                </div>
-              );
-            })
-            : null;
-
         return (
-          <div
-            className={
-              styles.editPermissionsSection + ' ' + styles.removePadding
-            }
+          <CollapsibleToggle
+            title={addTooltip('Column presets', presetTooltip)}
+            defaultTitle
           >
-            <form className={styles.form_permission_insert_set_wrapper}>
-              <div className={styles.permission_insert_set_wrapper}>
-                <div className={styles.configure_insert_set_checkbox}>
-                  <label>
-                    <div
-                      className={styles.center_radio_label_input}
-                      onClick={() => this.togglePresetChecked('insert')}
-                      disabled={!permsState.insert}
-                    >
-                      <div className={styles.chevron_mar_right}>
-                        <i
-                          className={
-                            isSetValues
-                              ? 'fa fa-chevron-down'
-                              : 'fa fa-chevron-right'
-                          }
-                          data-test="toggle-column-presets"
-                        />
-                      </div>
-                      <span>
-                        Configure column presets &nbsp;
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={insertSetTooltip}
-                        >
-                          <i
-                            className="fa fa-question-circle"
-                            aria-hidden="true"
-                          />
-                        </OverlayTrigger>
-                      </span>
-                    </div>
-                  </label>
+            <div className={styles.editPermissionsSection}>
+              <form className={styles.form_permission_insert_set_wrapper}>
+                <div className={styles.permission_insert_set_wrapper}>
+                  {getPresetValues()}
                 </div>
-                {isSetValues && setOptions}
-              </div>
-            </form>
-          </div>
+              </form>
+            </div>
+          </CollapsibleToggle>
         );
-      }
-      return null;
-    };
+      };
 
-    const getUpdateSetSection = (tableSchema, permsState) => {
-      const query = permsState.query;
-      if (query === 'update') {
-        const updateState = permsState.update;
-        const { columns } = tableSchema;
-        const isSetValues = !!(
-          updateState &&
-          'localSet' in updateState &&
-          updateState.isSetConfigChecked
-        );
-        const updateSetTooltip = (
-          <Tooltip id="tooltip-update-set-operations">
-            Preset values for columns for this role. Set static values or use
-            session variables.
-          </Tooltip>
-        );
+      const getAggregationSection = () => {
+        if (query !== 'select') {
+          return;
+        }
 
-        const setOptions =
-          updateState && updateState.localSet && updateState.localSet.length > 0
-            ? updateState.localSet.map((s, i) => {
-              return (
-                <div className={styles.insertSetConfigRow} key={i}>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      value={s.key}
-                      data-test={'column-presets-column-' + i}
-                      onChange={e => this.onSetKeyChange(e, 'update')}
-                      data-index-id={i}
-                    >
-                      <option value="" disabled>
-                          Column Name
-                      </option>
-                      {columns && columns.length > 0
-                        ? columns.map((c, key) => (
-                          <option
-                            value={c.column_name}
-                            data-column-type={c.data_type}
-                            key={key}
-                          >
-                            {c.column_name}
-                          </option>
-                        ))
-                        : null}
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    <select
-                      className="input-sm form-control"
-                      onChange={e => this.onSetTypeChange(e, 'update')}
-                      data-index-id={i}
-                      data-test={'column-presets-type-' + i}
-                      value={setConfigValueType(s.value) || ''}
-                    >
-                      <option value="" disabled>
-                          Select Preset Type
-                      </option>
-                      <option value="static">static</option>
-                      <option value="session">from session variable</option>
-                    </select>
-                  </div>
-                  <div
-                    className={
-                      styles.display_inline +
-                        ' ' +
-                        styles.add_mar_right +
-                        ' ' +
-                        styles.input_element_wrapper
-                    }
-                  >
-                    {setConfigValueType(s.value) === 'session' ? (
-                      <InputGroup>
-                        <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
-                        <input
-                          className={'input-sm form-control '}
-                          placeholder="column_value"
-                          value={s.value.slice(X_HASURA_CONST.length)}
-                          onChange={e => this.onSetValueChange(e, 'update')}
-                          data-index-id={i}
-                          data-prefix-val={X_HASURA_CONST}
-                          data-test={'column-presets-value-' + i}
-                        />
-                      </InputGroup>
-                    ) : (
-                      <EnhancedInput
-                        placeholder="column_value"
-                        type={
-                          i in this.state.setOperations.update.columnTypeMap
-                            ? this.state.setOperations.update.columnTypeMap[i]
-                            : ''
-                        }
-                        value={s.value}
-                        onChange={e => this.onSetValueChange(e, 'update')}
-                        indexId={i}
-                        data-prefix-val={X_HASURA_CONST}
-                        data-test={'column-presets-value-' + i}
-                      />
-                    )}
-                  </div>
-                  {setConfigValueType(s.value) === 'session' ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. X-Hasura-User-Id
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper +
-                          ' ' +
-                          styles.e_g_text
-                      }
-                    >
-                        e.g. false, 1, some-text
-                    </div>
-                  )}
-                  {i !== updateState.localSet.length - 1 ? (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    >
-                      <i
-                        className="fa-lg fa fa-times"
-                        onClick={e => this.deleteSetKeyVal(e, 'update')}
-                        data-index-id={i}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={
-                        styles.display_inline +
-                          ' ' +
-                          styles.add_mar_right +
-                          ' ' +
-                          styles.input_element_wrapper
-                      }
-                    />
-                  )}
-                </div>
-              );
-            })
-            : null;
-        return (
-          <div
-            className={
-              styles.editPermissionsSection + ' ' + styles.removePadding
-            }
-          >
-            <form className={styles.form_permission_insert_set_wrapper}>
-              <div className={styles.permission_insert_set_wrapper}>
-                <div
-                  className={styles.configure_insert_set_checkbox}
-                  onClick={() => this.togglePresetChecked('update')}
-                  disabled={!permsState.update}
-                >
-                  <label>
-                    <div className={styles.center_radio_label_input}>
-                      <div className={styles.chevron_mar_right}>
-                        <i
-                          className={
-                            isSetValues
-                              ? 'fa fa-chevron-down'
-                              : 'fa fa-chevron-right'
-                          }
-                          data-test="toggle-column-presets"
-                        />
-                      </div>
-                      <span>
-                        Configure column presets &nbsp;
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={updateSetTooltip}
-                        >
-                          <i
-                            className="fa fa-question-circle"
-                            aria-hidden="true"
-                          />
-                        </OverlayTrigger>
-                      </span>
-                    </div>
-                  </label>
-                </div>
-                {isSetValues && setOptions}
-              </div>
-            </form>
-          </div>
-        );
-      }
-      return null;
-    };
-    const getAggregationSection = permsState => {
-      let _aggregationSection = '';
-      const query = permsState.query;
-
-      if (query === 'select') {
         const dispatchToggleAllowAggregation = checked => {
           dispatch(permToggleAllowAggregation(checked));
         };
 
-        const aggregationAllowed = permsState.select
-          ? permsState.select.allow_aggregations
+        const aggregationAllowed = permissionsState.select
+          ? permissionsState.select.allow_aggregations
           : false;
 
-        // Aggregation Tooltip
         const aggregationToolTip = (
           <Tooltip id="tooltip-aggregation">
             Allow queries with aggregate functions like sum, count, avg, max,
@@ -1167,432 +1347,54 @@ class Permissions extends Component {
           </Tooltip>
         );
 
-        _aggregationSection = (
-          <div className={styles.mar_small_neg_left_1}>
-            <div className="radio">
-              <label>
-                <input
-                  type="checkbox"
-                  disabled={!permsState.select}
-                  checked={aggregationAllowed}
-                  value="toggle_aggregation"
-                  onChange={e =>
-                    dispatchToggleAllowAggregation(e.target.checked)
-                  }
-                />
-                <span className={styles.mar_small_left}>
-                  Allow role '{permsState.role}' to make aggregation queries
-                  &nbsp;
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={aggregationToolTip}
-                  >
-                    <i className="fa fa-question-circle" aria-hidden="true" />
-                  </OverlayTrigger>
-                </span>
-              </label>
+        return (
+          <CollapsibleToggle
+            title={addTooltip(
+              'Aggregation queries permissions',
+              aggregationToolTip
+            )}
+            defaultTitle
+          >
+            <div className={styles.mar_small_neg_left_1}>
+              <div className="radio">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={aggregationAllowed}
+                    value="toggle_aggregation"
+                    onChange={e =>
+                      dispatchToggleAllowAggregation(e.target.checked)
+                    }
+                    disabled={noPermissions}
+                    title={noPermissions ? noPermissionsMsg : ''}
+                  />
+                  <span className={styles.mar_small_left}>
+                    Allow role <b>{permissionsState.role}</b> to make
+                    aggregation queries
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
+          </CollapsibleToggle>
         );
-      }
-
-      return _aggregationSection;
-    };
-
-    const getColumnList = (tableSchema, permsState) => {
-      const _columnList = [];
-
-      const query = permsState.query;
-
-      const dispatchToggleColumn = e => {
-        const column = e.target.value;
-        dispatch(permToggleColumn(column));
       };
 
-      tableSchema.columns.forEach((colObj, i) => {
-        const column = colObj.column_name;
-        const checked = permsState[query]
-          ? permsState[query].columns.includes(column)
-          : false;
-
-        _columnList.push(
-          <div key={i} className={styles.columnListElement}>
-            <div className="checkbox">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  value={column}
-                  onChange={dispatchToggleColumn}
-                />
-                {column}
-              </label>
-            </div>
-          </div>
-        );
-      });
-
-      _columnList.push(<div key={-1} className={styles.clear_fix} />);
-
-      return _columnList;
-    };
-
-    const getRelationshipsMsg = tableSchema => {
-      let _relationshipsMsg = '';
-
-      const relationships = tableSchema.relationships.map(
-        relObj => relObj.rel_name
-      );
-
-      if (relationships.length) {
-        _relationshipsMsg = (
-          <div className={styles.add_mar_top_small}>
-            For{' '}
-            <b>
-              relationship
-              {relationships.length !== 1 ? 's' : ''}
-            </b>
-            : <i>{relationships.join(', ')}</i>.
-            <span className={styles.mar_left}>
-              Set permissions on the corresponding table/view.
-            </span>
-          </div>
-        );
-      }
-
-      return _relationshipsMsg;
-    };
-
-    const getColumnSection = (tableSchema, permsState) => {
-      const { serverVersion } = this.props;
-
-      let _columnSection = '';
-
-      const query = permsState.query;
-
-      const allowInsertPermColumns = semverCheck(
-        'insertPermRestrictColumns',
-        serverVersion
-      );
-      const queriesWithPermColumns = getQueriesWithPermColumns(
-        allowInsertPermColumns
-      );
-
-      if (queriesWithPermColumns.includes(query)) {
-        const dispatchToggleAllColumns = () => {
-          const allColumns = tableSchema.columns.map(c => c.column_name);
-          dispatch(permToggleAllColumns(allColumns));
+      const getClonePermSection = () => {
+        const applySameSelected = e => {
+          const isChecked = e.target.checked;
+          const selectedRole = e.target.getAttribute('data-role');
+          dispatch(permSetSameSelect(isChecked, selectedRole));
         };
 
-        let accessText;
-        if (query === 'insert') {
-          accessText = 'input for';
-        } else if (query === 'select') {
-          accessText = 'access to';
-        } else {
-          accessText = 'updates to';
-        }
+        const applySameBulk = () => {
+          if (window.confirm('Are you sure?')) {
+            dispatch(applySamePermissionsBulk(tableSchema));
+          }
+        };
 
-        _columnSection = (
-          <div className={styles.editPermissionsSection}>
-            <div>
-              Allow {accessText} these <b>columns</b>:
-              <span
-                className={styles.toggleAll}
-                onClick={dispatchToggleAllColumns}
-              >
-                Toggle all
-              </span>
-            </div>
-
-            {getColumnList(tableSchema, permsState)}
-
-            {getRelationshipsMsg(tableSchema)}
-          </div>
-        );
-      }
-
-      return _columnSection;
-    };
-
-    const getLimitSection = permsState => {
-      const dispatchLimit = limit => {
-        const parsedLimit = parseInt(limit, 10);
-        dispatch(permToggleModifyLimit(parsedLimit));
-      };
-      const query = permsState.query;
-      const limitValue =
-        permsState.select && permsState.select.limit
-          ? permsState.select.limit
-          : '';
-
-      if (query === 'select') {
-        const _limitSection = (
-          <div className={styles.mar_small_neg_left}>
-            <div className="radio">
-              <label>
-                <span className={styles.mar_small_left}>
-                  Limit the no of rows
-                </span>
-              </label>
-              <input
-                className={
-                  styles.mar_small_left + ' form-control ' + styles.limitInput
-                }
-                value={limitValue}
-                onChange={e => dispatchLimit(e.target.value)}
-                type="number"
-                min="0"
-              />
-            </div>
-            <div className={styles.clear_fix} />
-          </div>
-        );
-        return _limitSection;
-      }
-    };
-
-    const getFilterQueries = (queryTypes, permsState) => {
-      const _filterQueries = {};
-
-      queryTypes.forEach(queryType => {
-        if (queryType === permsState.query) {
-          return;
-        }
-
-        const queryFilterKey = queryType === 'insert' ? 'check' : 'filter';
-
-        let queryFilterString = '';
-        if (permsState[queryType]) {
-          queryFilterString = JSON.stringify(
-            permsState[queryType][queryFilterKey]
-          );
-        }
-
-        if (queryFilterString) {
-          _filterQueries[queryFilterString] =
-            _filterQueries[queryFilterString] || [];
-          _filterQueries[queryFilterString].push(queryType);
-        }
-      });
-
-      return _filterQueries;
-    };
-
-    const isUniqueFilter = (queryTypes, permsState, filterString) => {
-      const filterQueries = getFilterQueries(queryTypes, permsState);
-
-      return (
-        filterString !== '' &&
-        filterString !== '{}' &&
-        !filterQueries[filterString]
-      );
-    };
-
-    const getFilterRadio = (key, checked, value, onClick, label) => (
-      <div className="radio" key={key}>
-        <label>
-          <input
-            type="radio"
-            checked={checked}
-            value={value}
-            onClick={onClick}
-            readOnly
-          />
-          {label}
-        </label>
-      </div>
-    );
-
-    const getFilterOptions = (queryTypes, permsState, filterString) => {
-      const dispatchAllowAll = () => {
-        dispatch(permAllowAll());
-      };
-
-      const dispatchSetFilterSameAs = filter => () => {
-        dispatch(permSetFilterSameAs(JSON.parse(filter)));
-      };
-
-      const dispatchCustomChecked = () => {
-        dispatch(permCustomChecked());
-      };
-
-      const _filterOptionsSection = [];
-
-      const filterQueries = getFilterQueries(queryTypes, permsState);
-
-      let isSelected;
-      const selectedValue = (
-        <AceEditor
-          mode="json"
-          value={filterString}
-          readOnly
-          theme="github"
-          height="5em"
-          maxLines={5}
-          width="100%"
-          showPrintMargin={false}
-          key={-3}
-        />
-      );
-
-      // Add allow all option
-      isSelected = !permsState.custom_checked && filterString === '{}';
-      let allowAllQueryInfo = '';
-      if (filterQueries['{}']) {
-        allowAllQueryInfo = (
-          <span>
-            (Same as <b>{filterQueries['{}'].join(', ')}</b>)
-          </span>
-        );
-      }
-      const allowAllLabel = (
-        <span data-test="without-checks">
-          Without any checks {allowAllQueryInfo}
-        </span>
-      );
-      _filterOptionsSection.push(
-        getFilterRadio(
-          -1,
-          isSelected,
-          'AllowAll',
-          dispatchAllowAll,
-          allowAllLabel
-        )
-      );
-      if (isSelected) {
-        _filterOptionsSection.push(selectedValue);
-      }
-
-      // Add other query options
-      Object.keys(filterQueries).forEach((filter, i) => {
-        isSelected = !permsState.custom_checked && filterString === filter;
-        if (filter === '{}') {
-          return;
-        }
-        const queries = filterQueries[filter].join(', ');
-        const queryLabel = (
-          <span data-test="mutual-check">
-            With same checks as <b>{queries}</b>
-          </span>
-        );
-        _filterOptionsSection.push(
-          getFilterRadio(
-            i,
-            isSelected,
-            queries,
-            dispatchSetFilterSameAs(filter),
-            queryLabel
-          )
-        );
-        if (isSelected) {
-          _filterOptionsSection.push(selectedValue);
-        }
-      });
-
-      // Add custom option
-      isSelected =
-        permsState.custom_checked ||
-        isUniqueFilter(queryTypes, permsState, filterString);
-      const dispatchFuncSetFilter = filter => permSetFilter(JSON.parse(filter));
-      const dispatchFuncAddTableSchemas = schemaNames =>
-        permAddTableSchemas(schemaNames);
-      const customCheckToolTip = (
-        <Tooltip id="tooltip-custom-check">
-          Create custom check using permissions builder
-        </Tooltip>
-      );
-      const customChecklabel = (
-        <span data-test="custom-check">
-          With custom check: &nbsp;
-          <OverlayTrigger placement="right" overlay={customCheckToolTip}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </span>
-      );
-      _filterOptionsSection.push(
-        getFilterRadio(
-          -2,
-          isSelected,
-          'Custom',
-          dispatchCustomChecked,
-          customChecklabel
-        )
-      );
-      if (isSelected) {
-        _filterOptionsSection.push(selectedValue);
-        _filterOptionsSection.push(
-          <PermissionBuilder
-            dispatchFuncSetFilter={dispatchFuncSetFilter}
-            dispatchFuncAddTableSchemas={dispatchFuncAddTableSchemas}
-            tableName={tableName}
-            schemaName={currentSchema}
-            allTableSchemas={permissionsState.tableSchemas}
-            filter={filterString}
-            dispatch={dispatch}
-            key={-4}
-          />
-        );
-      }
-
-      return _filterOptionsSection;
-    };
-
-    const getRowSection = (queryTypes, permsState) => {
-      const query = permsState.query;
-
-      const filterKey = query === 'insert' ? 'check' : 'filter';
-
-      let filterString = '';
-      if (permsState[query]) {
-        filterString = JSON.stringify(permsState[query][filterKey]);
-      }
-
-      // replace legacy operator values
-      allOperators.forEach(operator => {
-        const currentString = '"' + operator + '"';
-        const legacyString = '"' + getLegacyOperator(operator) + '"';
-
-        filterString = filterString.replace(
-          new RegExp(escapeRegExp(legacyString), 'g'),
-          currentString
-        );
-      });
-
-      return (
-        <div className={styles.editPermissionsSection}>
-          Allow {getIngForm(permsState.query)} <b>rows</b> for role '
-          {permsState.role}
-          ':
-          <div>{getFilterOptions(queryTypes, permsState, filterString)}</div>
-        </div>
-      );
-    };
-
-    const getBulkApplySection = (tableSchema, permsState, roleList) => {
-      const applySameSelected = e => {
-        const isChecked = e.target.checked;
-        const selectedRole = e.target.getAttribute('data-role');
-        dispatch(permSetSameSelect(isChecked, selectedRole));
-      };
-
-      const applySameBulk = () => {
-        if (window.confirm('Are you sure?')) {
-          dispatch(applySamePermissionsBulk(tableSchema));
-        }
-      };
-
-      const rolePermissions = tableSchema.permissions.find(
-        p => p.role_name === permsState.role
-      );
-      const currQueryPermissions = rolePermissions
-        ? rolePermissions.permissions[permsState.query]
-        : null;
-
-      const roleListHtml = [];
-      if (currQueryPermissions) {
+        const roleListHtml = [];
         roleList.forEach(role => {
-          if (role !== permsState.role) {
+          if (role !== permissionsState.role) {
             roleListHtml.push(
               <div
                 key={role}
@@ -1618,222 +1420,138 @@ class Permissions extends Component {
             );
           }
         });
-      }
 
-      let applyBulkPermissions = null;
-      if (roleListHtml.length) {
-        applyBulkPermissions = (
-          <div
-            className={
-              styles.editPermissionsSection + ' ' + styles.removePadding
-            }
+        let applyBulkPermissions = null;
+        if (roleListHtml.length) {
+          const cloneToolTip = (
+            <Tooltip id="tooltip-clone">
+              Apply same permissions to other roles
+            </Tooltip>
+          );
+
+          applyBulkPermissions = (
+            <div>
+              <hr />
+              <CollapsibleToggle
+                title={addTooltip('Clone permissions', cloneToolTip)}
+                defaultTitle
+              >
+                <div className={styles.editPermissionsSection}>
+                  <div>
+                    Apply same {permissionsState.query} permissions for roles:
+                  </div>
+                  <div className={styles.add_mar_top_small}>{roleListHtml}</div>
+                  <Button
+                    onClick={applySameBulk}
+                    className={styles.add_mar_top}
+                    color="yellow"
+                    size="sm"
+                    disabled={!permissionsState.applySamePermissions.length}
+                  >
+                    Save permissions
+                  </Button>
+                </div>
+              </CollapsibleToggle>
+            </div>
+          );
+        }
+
+        return applyBulkPermissions;
+      };
+
+      const getButtonsSection = () => {
+        const dispatchSavePermissions = () => {
+          dispatch(permChangePermissions(permChangeTypes.save));
+        };
+
+        const dispatchRemoveAccess = () => {
+          const isOk = confirm('Are you sure?');
+          if (isOk) {
+            dispatch(permChangePermissions(permChangeTypes.delete));
+          }
+        };
+
+        const getButton = (value, color, onClickFn, disabled, title) => (
+          <Button
+            className={styles.add_mar_right}
+            color={color}
+            size="sm"
+            onClick={onClickFn}
+            disabled={disabled}
+            title={title}
+            data-test={`${value.split(' ').join('-')}-button`}
           >
-            <hr />
-            <div>Apply same {permsState.query} permissions to other roles:</div>
-            <div className={styles.add_mar_top_small}>{roleListHtml}</div>
-            <Button
-              onClick={applySameBulk}
-              className={styles.bulkApplyBtn}
-              color="white"
-              size="sm"
-              disabled={!permsState.applySamePermissions.length}
-            >
-              Save permissions
-            </Button>
+            {value}
+          </Button>
+        );
+
+        const rolePermissions = tableSchema.permissions.find(
+          p => p.role_name === permissionsState.role
+        );
+        const currQueryPermissions = rolePermissions
+          ? rolePermissions.permissions[permissionsState.query]
+          : undefined;
+        const newQueryPermissions = permissionsState[permissionsState.query];
+
+        const disableSave =
+          permissionsState.applySamePermissions.length ||
+          JSON.stringify(newQueryPermissions) ===
+            JSON.stringify(currQueryPermissions);
+        const disableRemoveAccess = !currQueryPermissions;
+
+        const saveButton = getButton(
+          'Save permissions',
+          'yellow',
+          dispatchSavePermissions,
+          disableSave,
+          disableSave ? 'No changes made' : ''
+        );
+
+        const removeAccessButton = getButton(
+          'Delete permissions',
+          'red',
+          dispatchRemoveAccess,
+          disableRemoveAccess,
+          disableRemoveAccess ? 'No changes made' : ''
+        );
+
+        return (
+          <div className={styles.add_mar_top}>
+            {saveButton}
+            {removeAccessButton}
           </div>
         );
-      }
-
-      return applyBulkPermissions;
-    };
-
-    const getButton = (value, color, onClickFn, disabled) => (
-      <Button
-        className={styles.editActionButton}
-        color={color}
-        size="sm"
-        onClick={onClickFn}
-        disabled={disabled}
-        data-test={`${value.split(' ').join('-')}-button`}
-      >
-        {value}
-      </Button>
-    );
-
-    const getButtonsSection = (tableSchema, permsState) => {
-      const dispatchSavePermissions = () => {
-        dispatch(permChangePermissions(permChangeTypes.save));
-      };
-
-      const dispatchRemoveAccess = () => {
-        const isOk = confirm('Are you sure?');
-        if (isOk) {
-          dispatch(permChangePermissions(permChangeTypes.delete));
-        }
-      };
-
-      const dispatchCloseEdit = () => {
-        dispatch(permCloseEdit());
-      };
-
-      const rolePermissions = tableSchema.permissions.find(
-        p => p.role_name === permsState.role
-      );
-      const currQueryPermissions = rolePermissions
-        ? rolePermissions.permissions[permsState.query]
-        : undefined;
-      const newQueryPermissions = permsState[permsState.query];
-
-      const disableSave =
-        permsState.applySamePermissions.length ||
-        JSON.stringify(newQueryPermissions) ===
-          JSON.stringify(currQueryPermissions);
-      const disableRemoveAccess = !currQueryPermissions;
-
-      const saveButton = getButton(
-        'Save permissions',
-        'yellow',
-        dispatchSavePermissions,
-        disableSave
-      );
-
-      const removeAccessButton = getButton(
-        'Remove',
-        'red',
-        dispatchRemoveAccess,
-        disableRemoveAccess
-      );
-
-      const closeButton = getButton('Close', 'white', dispatchCloseEdit);
-
-      return (
-        <div className={styles.editPermissionsSection}>
-          {saveButton}
-          {removeAccessButton}
-          {closeButton}
-        </div>
-      );
-    };
-
-    const getEditPermissions = (
-      tableSchema,
-      queryTypes,
-      permsState,
-      roleList
-    ) => (
-      <div className={styles.activeEdit}>
-        <div className={styles.editPermissionsHeading}>
-          Role: {permsState.role}
-          &nbsp;&nbsp;&nbsp;Query: {permsState.query}
-        </div>
-        <hr className={styles.remove_margin} />
-        <div>
-          {getRowSection(queryTypes, permsState)}
-          {getColumnSection(tableSchema, permsState)}
-          {showAggregation && getAggregationSection(permsState)}
-          {getLimitSection(permsState)}
-          {getUpsertSection(permsState)}
-          {showInsertPrefix && getInsertSetPermission(tableSchema, permsState)}
-          {showUpdatePresets && getUpdateSetSection(tableSchema, permsState)}
-          {getButtonsSection(tableSchema, permsState)}
-          {getBulkApplySection(tableSchema, permsState, roleList)}
-        </div>
-      </div>
-    );
-
-    const getEditSection = (tableSchema, queryTypes, permsState, roleList) => {
-      let _editSection = '';
-
-      if (permsState.role && permsState.query) {
-        _editSection = getEditPermissions(
-          tableSchema,
-          queryTypes,
-          permsState,
-          roleList
-        );
-      }
-
-      return _editSection;
-    };
-
-    const getBulkSection = (tableSchema, queryTypes, permsState) => {
-      if (!permsState.bulkSelect.length) {
-        return null;
-      }
-      // const currentPermissions = tableSchema.permissions;
-      const bulkSelect = permsState.bulkSelect;
-      const handleBulkRemoveClick = () => {
-        if (window.confirm('Are you sure?')) {
-          dispatch(permRemoveMultipleRoles(tableSchema));
-        }
       };
 
       return (
         <div className={styles.activeEdit}>
           <div className={styles.editPermissionsHeading}>
-            Apply Bulk Actions
-          </div>
-          <hr className={styles.remove_margin} />
-          <div className={styles.padd_top + ' ' + styles.padd_bottom}>
-            <span className={styles.selectedRoles + ' ' + styles.add_pad_right}>
-              Selected Roles
+            <span className={styles.add_mar_right}>
+              <Button
+                size="xs"
+                onClick={dispatchCloseEdit}
+                data-test={'close-button'}
+              >
+                Close
+              </Button>
             </span>
-            {bulkSelect.map(r => {
-              return (
-                <span key={r} className={styles.add_pad_right}>
-                  <b>{r}</b>{' '}
-                </span>
-              );
-            })}
+            <span className={styles.add_mar_right}>
+              Role: {permissionsState.role}
+            </span>
+            <span>Action: {permissionsState.query}</span>
           </div>
-          <div className={styles.padd_bottom}>
-            <Button onClick={handleBulkRemoveClick} color="red" size="sm">
-              Remove All Permissions
-            </Button>
+          <div>
+            {getRowSection()}
+            {getColumnSection()}
+            {showAggregation && getAggregationSection()}
+            {showUpsertSection && getUpsertSection()}
+            {showInsertPresets && getPresetsSection('insert')}
+            {showUpdatePresets && getPresetsSection('update')}
+            {getButtonsSection()}
+            {getClonePermSection()}
           </div>
         </div>
       );
-    };
-
-    /*
-    const getEditRoleSection = (tableSchema, permsState) => {
-      let _editSection = '';
-
-      if (permsState.role && permsState.query) {
-        _editSection = getEditPermissions(tableSchema, permsState);
-      }
-
-      return _editSection;
-    };
-    */
-
-    const getHeader = tableSchema => {
-      let _header;
-
-      const isView = tableSchema.detail.table_type !== 'BASE TABLE';
-      if (isView) {
-        _header = (
-          <ViewHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      } else {
-        _header = (
-          <TableHeader
-            dispatch={dispatch}
-            tableName={tableName}
-            tabName="permissions"
-            migrationMode={migrationMode}
-            currentSchema={currentSchema}
-          />
-        );
-      }
-
-      return _header;
     };
 
     /********************/
@@ -1875,14 +1593,9 @@ class Permissions extends Component {
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
             <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(
-              tSchema,
-              qTypes,
-              permissionsState,
-              allRolesList
-            )}
-            {getBulkSection(tSchema, qTypes, permissionsState)}
-            {getEditSection(tSchema, qTypes, permissionsState, allRolesList)}
+            {getPermissionsTable(tSchema, qTypes, allRolesList)}
+            {getBulkSection(tSchema)}
+            {getEditSection(tSchema, qTypes, allRolesList)}
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>

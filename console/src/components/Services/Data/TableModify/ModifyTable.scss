@@ -255,12 +255,6 @@ hr {
   height: auto;
 }
 
-.bulkApplyBtn {
-  display: block;
-  margin-top: 10px;
-  clear: both;
-}
-
 .center_radio_label_input {
   display: flex;
   align-content: center;
@@ -288,18 +282,6 @@ hr {
       margin-right: 50px;
     }
 
-    .toggleAll {
-      display: inline-block;
-      margin-left: 30px;
-      text-decoration: underline;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .editActionButton {
-      margin-right: 20px;
-    }
-
     .form_permission_insert_set_wrapper {
       .permission_insert_set_wrapper {
         .configure_insert_set_checkbox {
@@ -323,10 +305,6 @@ hr {
           margin: 10px 0px;
           display: flex;
           align-items: center;
-
-          .e_g_text {
-            font-style: italic;
-          }
 
           .input_element_wrapper {
             width: 20%;
