@@ -12,6 +12,8 @@ module Hasura.GraphQL.Execute
   , EP.clearPlanCache
   , EP.dumpPlanCache
 
+  , module EL
+
   ) where
 
 import           Control.Exception                      (try)
@@ -37,6 +39,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Execute.Context         as EC
+import           Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
