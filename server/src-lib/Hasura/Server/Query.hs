@@ -25,7 +25,7 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
-import           Hasura.RQL.Misc.GetVersion
+import           Hasura.RQL.Misc.Config
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
@@ -85,7 +85,7 @@ data RQLQuery
 
   | RQDumpInternalState !DumpInternalState
 
-  | RQGetVersion !GetVersion
+  | RQGetConfig !GetConfig
 
   deriving (Show, Eq, Lift)
 
@@ -222,7 +222,7 @@ queryNeedsReload qi = case qi of
 
   RQDumpInternalState _        -> False
 
-  RQGetVersion _               -> False
+  RQGetConfig _               -> False
 
   RQBulk qs                    -> any queryNeedsReload qs
 
@@ -282,7 +282,7 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQDumpInternalState q        -> runDumpInternalState q
 
-  RQGetVersion q               -> runGetVersion q
+  RQGetConfig q               -> runGetConfig q
 
   RQRunSql q                   -> runRunSQL q
 
