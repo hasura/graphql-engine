@@ -25,7 +25,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet, withSelSet)
+import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -146,9 +146,13 @@ convertUpdateP1 opCtx fld = do
     preSetItems = Map.toList preSetCols
 
 convertUpdate
-  :: UpdOpCtx -- the update context
+  :: ( MonadError QErr m
+     , MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => UpdOpCtx -- the update context
   -> Field -- the mutation field
-  -> Convert RespTx
+  -> m RespTx
 convertUpdate opCtx fld = do
   (p1, prepArgs) <- withPrepArgs $ convertUpdateP1 opCtx fld
   strfyNum <- stringifyNum <$> asks getter
@@ -160,9 +164,13 @@ convertUpdate opCtx fld = do
   bool whenNonEmptyItems whenEmptyItems $ null $ RU.uqp1SetExps p1
 
 convertDelete
-  :: DelOpCtx -- the delete context
+  :: ( MonadError QErr m
+     , MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => DelOpCtx -- the delete context
   -> Field -- the mutation field
-  -> Convert RespTx
+  -> m RespTx
 convertDelete opCtx fld = do
   (p1, prepArgs) <- p1m
   strfyNum <- stringifyNum <$> asks getter

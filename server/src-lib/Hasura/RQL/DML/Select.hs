@@ -1,9 +1,11 @@
 module Hasura.RQL.DML.Select
   ( selectP2
-  , selectAggP2
-  , funcQueryTx
+  , selectQuerySQL
+  , selectAggQuerySQL
+  , funcQuerySQL
   , convSelectQuery
   , getSelectDeps
+  , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
   , runSelect
   )
@@ -290,24 +292,14 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
 
-funcQueryTx
+funcQuerySQL
   :: S.FromItem -> QualifiedFunction -> QualifiedTable
   -> TablePerm -> TableArgs -> Bool
-  -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr EncJSON
-funcQueryTx frmItem fn tn tabPerm tabArgs strfyNum (eSelFlds, p) =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
-  where
-    sqlBuilder = toSQL $
-      mkFuncSelectWith fn tn tabPerm tabArgs strfyNum eSelFlds frmItem
-
-selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-selectAggP2 (sel, p) =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
-  where
-    selectSQL = toSQL $ mkAggSelect sel
+  -> Either TableAggFlds AnnFlds
+  -> Q.Query
+funcQuerySQL frmItem fn tn tabPerm tabArgs strfyNum eSelFlds =
+  Q.fromBuilder $ toSQL $
+  mkFuncSelectWith fn tn tabPerm tabArgs strfyNum eSelFlds frmItem
 
 selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =
@@ -315,6 +307,19 @@ selectP2 asSingleObject (sel, p) =
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
+
+selectQuerySQL :: Bool -> AnnSel -> Q.Query
+selectQuerySQL asSingleObject sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect asSingleObject sel
+
+selectAggQuerySQL :: AnnAggSel -> Q.Query
+selectAggQuerySQL =
+  Q.fromBuilder . toSQL . mkAggSelect
+
+asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler query args True
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)

@@ -27,14 +27,11 @@ import           Data.ByteString                             (ByteString)
 import qualified Data.IORef                                  as IORef
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context                      (GCtx)
 import qualified Hasura.GraphQL.Execute                      as E
-import qualified Hasura.GraphQL.Resolve                      as R
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import qualified Hasura.GraphQL.Validate                     as V
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -123,10 +120,11 @@ data WSServerEnv
   , _wseServer     :: !WSServer
   , _wseRunTx      :: !LQ.TxRunner
   , _wseLiveQMap   :: !LiveQueryMap
-  , _wseGCtxMap    :: !(IORef.IORef SchemaCache)
+  , _wseGCtxMap    :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
   , _wseHManager   :: !H.Manager
   , _wseCorsPolicy :: !CorsPolicy
   , _wseSQLCtx     :: !SQLGenCtx
+  , _wseQueryCache :: !E.PlanCache
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -217,27 +215,25 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let connErr = "start received before the connection is initialised"
       withComplete $ sendConnErr connErr
 
-  sc <- liftIO $ IORef.readIORef gCtxMapRef
-  execPlanE <- runExceptT $ E.getExecPlan userInfo sc q
+  (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
+  execPlanE <- runExceptT $ E.getResolvedExecPlan
+               planCache userInfo sqlGenCtx sc scVer q
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ userInfo gCtx rootSelSet
+    E.GExPHasura (opTy, opTx) ->
+      runHasuraGQ userInfo (opTy, opTx)
     E.GExPRemote rsi opDef  ->
       runRemoteGQ userInfo reqHdrs opDef rsi
   where
-    runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
-    runHasuraGQ userInfo gCtx rootSelSet =
-      case rootSelSet of
-        V.RQuery selSet ->
-          execQueryOrMut $ withUserInfo userInfo $
-          R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
-        V.RMutation selSet ->
-          execQueryOrMut $ withUserInfo userInfo $
-          R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
-        V.RSubscription fld -> do
-          let tx = withUserInfo userInfo $
-                   R.resolveSubsFld userInfo gCtx sqlGenCtx fld
+    runHasuraGQ :: UserInfo -> (G.OperationType, LazyRespTx) -> ExceptT () IO ()
+    runHasuraGQ userInfo (opTy, opTx) =
+      case opTy of
+        G.OperationTypeQuery ->
+          execQueryOrMut $ withUserInfo userInfo opTx
+        G.OperationTypeMutation ->
+          execQueryOrMut $ withUserInfo userInfo opTx
+        G.OperationTypeSubscription -> do
+          let tx = withUserInfo userInfo opTx
           let lq = LQ.LiveQuery userInfo q
           liftIO $ STM.atomically $ STMMap.insert lq opId opMap
           liftIO $ LQ.addLiveQuery runTx lqMap lq
@@ -271,7 +267,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
-    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _
+      sqlGenCtx planCache = serverEnv
 
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
@@ -414,13 +411,17 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> SQLGenCtx -> IORef.IORef SchemaCache
-  -> LQ.TxRunner -> CorsPolicy -> IO WSServerEnv
-createWSServerEnv logger httpManager sqlGenCtx cacheRef runTx corsPolicy = do
+  -> H.Manager -> SQLGenCtx
+  -> IORef.IORef (SchemaCache, SchemaCacheVer)
+  -> LQ.TxRunner -> CorsPolicy
+  -> E.PlanCache
+  -> IO WSServerEnv
+createWSServerEnv logger httpManager sqlGenCtx cacheRef
+  runTx corsPolicy planCache = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
   return $ WSServerEnv logger wsServer runTx lqMap cacheRef
-    httpManager corsPolicy sqlGenCtx
+    httpManager corsPolicy sqlGenCtx planCache
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

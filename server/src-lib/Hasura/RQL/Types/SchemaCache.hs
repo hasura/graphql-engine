@@ -4,6 +4,9 @@
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
        , SchemaCache(..)
+       , SchemaCacheVer
+       , initSchemaCacheVer
+       , incSchemaCacheVer
        , emptySchemaCache
        , TableInfo(..)
        , TableConstraint(..)
@@ -419,6 +422,17 @@ addToDepMap schObj deps =
 removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
+
+newtype SchemaCacheVer
+  = SchemaCacheVer { unSchemaCacheVer :: Word64 }
+  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+
+initSchemaCacheVer :: SchemaCacheVer
+initSchemaCacheVer = SchemaCacheVer 0
+
+incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
+incSchemaCacheVer (SchemaCacheVer prev) =
+  SchemaCacheVer $ prev + 1
 
 data SchemaCache
   = SchemaCache

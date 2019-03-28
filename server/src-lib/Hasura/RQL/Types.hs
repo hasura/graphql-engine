@@ -10,6 +10,9 @@ module Hasura.RQL.Types
        , runLazyTx
        , withUserInfo
 
+       , RespTx
+       , LazyRespTx
+
        , UserInfoM(..)
        , successMsg
 
@@ -182,6 +185,9 @@ runLazyTx pgPool txIso = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+
+type RespTx = Q.TxE QErr EncJSON
+type LazyRespTx = LazyTx QErr EncJSON
 
 setHeadersTx :: UserVars -> Q.TxE QErr ()
 setHeadersTx uVars =
