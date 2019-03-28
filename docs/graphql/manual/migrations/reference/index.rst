@@ -1,10 +1,10 @@
-Migrations Reference
-====================
+Migrations reference documentation
+==================================
 
 .. toctree::
   :maxdepth: 1
 
-  how-does-it-work
-  migration-file-format
-  metadata-file-format
+  how-it-works
+  Migration file format <migration-file-format>
+  Metadata file format <metadata-file-format>
   

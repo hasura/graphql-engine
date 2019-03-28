@@ -15,8 +15,6 @@ database.
 The top level keys will be the following arrays:
 
 .. code-block:: yaml
-   :caption: metadata.yaml
-   :linenos:
 
    functions: []
    remote_schemas: []
@@ -28,9 +26,9 @@ keys will have elements inside them.
 The ``table`` will have permission rules, relationships and event triggers
 defined for each table. Here is an example metadata file:
 
+**metadata.yaml**
+
 .. code-block:: yaml
-   :caption: metadata.yaml
-   :linenos:
 
    functions:
    - search_articles

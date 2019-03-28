@@ -1,7 +1,7 @@
 .. _manage_hasura_metadata:
 
-Managing Hasura Metadata Declaratively
-======================================
+Managing Hasura Metadata
+========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -9,12 +9,12 @@ Managing Hasura Metadata Declaratively
   :local:
 
 If your Postgres schema is already managed with a tool like knex, TypeORM,
-Django/Rails Migrations, you'd need a way to export the actions you performed on
-the Hasura console and apply it later on another Hasura instance.
+Django/Rails Migrations, you will still need a way to export the actions you
+performed on the Hasura console to apply it later on another Hasura instance.
 
 All the actions performed on the console, like tracking tables/views/functions,
-crating relationships, configuring permissions, creating event triggers and
-creating remote schemas can be exported as a JSON file which can be version
+creating relationships, configuring permissions, creating event triggers and remote
+schemas, etc. can be exported as a JSON file which can be version
 controlled. The contents of this JSON file is called "Hasura metadata". The
 metadata file can be later imported to another Hasura instance to get the same
 configuration. You can also manually edit the JSON file to add more objects to
@@ -34,7 +34,8 @@ Exporting Hasura metadata
 
   .. tab:: API
 
-     The export can be done via the :ref:`Metadata API <metadata_apis>` too.
+     The export can be done via the :doc:`Metadata API
+     <../api-reference/schema-metadata-api/manage-metadata>` too.
      Response will be a JSON object with the Hasura metadata. Here is a example
      using ``curl`` to save this as a file:
 
@@ -60,13 +61,14 @@ the existing metadata with that instance.
 
      1. Click on the Settings gear icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
-     3. Choose the ``metadata.json`` file that was exported earlier.
+     3. Choose a ``metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :ref:`Metadata API
-     <metadata_apis>`. Here is a example using ``curl``:
+     The exported JSON can be imported via the :doc:`Metadata API
+     <../api-reference/schema-metadata-api/manage-metadata>` too.
+     Here is a example using ``curl``:
 
      .. code-block:: bash
 
@@ -87,5 +89,5 @@ the existing metadata with that instance.
 
 The ``curl`` based API calls can be easily integrated with your CI/CD workflows.
 In case you need an automated way of applying/importing the metadata, take a
-look at the :ref:`CLI-Migrations <auto_apply_migrations>` docker image, which
+look at the :doc:`CLI-Migrations <auto-apply-migrations>` docker image, which
 can start GraphQL Engine after automatically importing a mounted metadata file. 

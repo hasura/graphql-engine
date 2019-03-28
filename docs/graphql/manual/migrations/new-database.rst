@@ -72,6 +72,7 @@ should now use the console by running:
 
 .. code-block:: bash
 
+   # in project dir
    hasura console
 
 Step 4: Add a new table and see how a migration is added
@@ -88,10 +89,11 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
 
 .. code-block:: bash
 
+   # in project dir
    hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
 
 In case you need an automated way of applying the migrations, take a look at the
-:ref:`CLI-Migrations <auto_apply_migrations>` docker image, which can start
+:doc:`CLI-Migrations <auto-apply-migrations>` docker image, which can start
 GraphQL Engine after automatically applying the migrations which are
 mounted into a directory.
 
@@ -100,6 +102,7 @@ Step 6: Check status of migrations
 
 .. code-block:: bash
 
+   # in project dir
    hasura migrate status
 
 This command will print out each migration version present in the ``migrations``

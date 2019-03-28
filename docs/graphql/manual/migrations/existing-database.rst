@@ -117,8 +117,7 @@ Step 3: Initialize the migrations as per your current state
   contain the required information to reproduce the current state of the server
   including the Postgres schema and Hasura metadata. The apply command will mark
   this migration as "applied" on the server. If you'd like to read more about
-  the format of migration files, checkout the reference doc at
-  :ref:`migration_file_reference`.
+  the format of migration files, check out the :ref:`migration_file_format`.
 
 .. note::
 
@@ -133,6 +132,7 @@ by running:
 
 .. code-block:: bash
 
+   # in project dir
    hasura console
 
 Step 5: Add a new table and see how a migration is added
@@ -153,10 +153,11 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
 
 .. code-block:: bash
 
+   # in project dir
    hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
 
 In case you need an automated way of applying the migrations, take a look at the
-:ref:`CLI-Migrations <auto_apply_migrations>` docker image, which can start
+:doc:`CLI-Migrations <auto-apply-migrations>` docker image, which can start
 GraphQL Engine after automatically applying the migrations which are
 mounted into a directory.  
 
@@ -165,6 +166,7 @@ Step 7: Check status of migrations
 
 .. code-block:: bash
 
+   # in project dir
    hasura migrate status
 
 This command will print out each migration version present in the ``migrations``

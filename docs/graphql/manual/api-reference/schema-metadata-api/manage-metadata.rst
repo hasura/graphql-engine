@@ -35,7 +35,7 @@ replace_metadata
 ``replace_metadata`` is used to replace/import metadata into Hasura. Existing
 metadata will be replaced with the new one.
 
-.. code-block:: http
+.. code-block:: none
 
    POST /v1/query HTTP/1.1
    Content-Type: application/json

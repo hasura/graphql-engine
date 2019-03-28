@@ -1,5 +1,5 @@
-Migrations - advanced use-cases and reference documentation
-===========================================================
+Migrations advanced use cases
+=============================
 
 .. toctree::
   :maxdepth: 1

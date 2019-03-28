@@ -1,5 +1,5 @@
-How does Hasura Migrations work?
-================================
+How Hasura Migrations work?
+===========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -7,7 +7,7 @@ How does Hasura Migrations work?
   :local:
 
 This is an explainer on how the Hasura Migration system works. To understand how
-to use the system, refer to :ref:`migrations`.
+to use the system, refer to :doc:`Migrations & Metadata <../index>`.
 
 Metadata
 --------
@@ -24,7 +24,7 @@ options are available on the console, CLI and via the API. This file when
 imported on to an existing or new Hasura instance, will clear out
 ``hdb_catalog`` schema on that instance and populates it again with the imported
 data. One thing to note is that all the Postgres resources the metadata refers
-to should already exist when the import happens. Otherwise Hasura will throw an
+to should already exist when the import happens, otherwise Hasura will throw an
 error. 
 
 To understand the format of the ``metadata.json`` file, refer to :ref:`metadata_file_format`.

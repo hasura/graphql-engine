@@ -22,7 +22,7 @@ Postgres Schema and YAML for Hasura metadata actions.
 
 #. Edit the file and add your migration actions. For the file format and
    instructions on what actions can be added, refer to
-   :ref:`migration_file_format`.
+   :doc:`../reference/migration-file-format`.
 
 #. Apply the migration:
 
