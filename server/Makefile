@@ -12,7 +12,7 @@ build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 build_output := /build/_server_output
 
 build:
-	stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
+	VERSION=$(VERSION) stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
 
 exec:
 	stack exec graphql-engine -- serve

@@ -5,15 +5,12 @@ import qualified Database.PG.Query.Connection as Q
 import           Data.Aeson
 import           Data.List.Split
 import           Network.URI
-import           System.Exit
-import           System.Process
 import           System.Environment
 
 import qualified Data.ByteString              as B
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
-import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
