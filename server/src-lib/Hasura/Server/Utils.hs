@@ -7,6 +7,7 @@ import           Data.List.Split
 import           Network.URI
 import           System.Exit
 import           System.Process
+import           System.Environment
 
 import qualified Data.ByteString              as B
 import qualified Data.Text                    as T
@@ -76,17 +77,13 @@ uriAuthParameters uriAuth = port . host . auth
                  [u, p] -> \info -> info { Q.connUser = unEscapeString u, Q.connPassword = unEscapeString $ dropLast p }
                  _      -> id
 
--- Running shell script during compile time
-runScript :: FilePath -> TH.Q TH.Exp
-runScript fp = do
-  TH.addDependentFile fp
-  fileContent <- TH.runIO $ TI.readFile fp
-  (exitCode, stdOut, stdErr) <- TH.runIO $
-    readProcessWithExitCode "/bin/sh" [] $ T.unpack fileContent
-  when (exitCode /= ExitSuccess) $ fail $
-    "Running shell script " ++ fp ++ " failed with exit code : "
-    ++ show exitCode ++ " and with error : " ++ stdErr
-  TH.lift stdOut
+-- Get an env var during compile time
+getValFromEnv :: String -> TH.Q TH.Exp
+getValFromEnv n = do
+  maybeVal <- TH.runIO $ lookupEnv n
+  case maybeVal of
+    Just val -> TH.lift val
+    Nothing -> fail $ "env var " ++ n ++ " is not set"
 
 -- Ginger Templating
 type GingerTmplt = TG.Template TG.SourcePos
