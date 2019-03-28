@@ -1,3 +1,4 @@
+.EXPORT_ALL_VARIABLES:
 project  := graphql-engine
 registry := hasura
 VERSION  ?= $(shell ../scripts/get-version.sh)
@@ -12,10 +13,16 @@ build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 build_output := /build/_server_output
 
 build:
-	VERSION=$(VERSION) stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
+	stack build --fast --ghc-options '-j$(nproc)'
 
-exec:
+build-local-console:
+	stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
+
+exec: build
 	stack exec graphql-engine -- serve
+
+exec-local-console: build-local-console
+	stack exec graphql-engine -- serve --enable-console
 
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(VERSION)" \
@@ -71,4 +78,4 @@ push-latest:
 packager: packaging/packager.df
 	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
 
-.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec
+.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec build-local-console exec-local-console
