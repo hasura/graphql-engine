@@ -27,7 +27,7 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.CalledAs() == "reset" {
-				opts.EC.Logger.Info("metadata reset command is deprecated, use metadata clear instead")
+				opts.EC.Logger.Warn("metadata reset command is deprecated, use metadata clear instead")
 			}
 			return opts.run()
 		},
