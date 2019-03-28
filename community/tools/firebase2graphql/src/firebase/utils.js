@@ -42,47 +42,104 @@ const isList = obj => {
   if (Object.keys(obj).length === 0) {
     return false;
   }
-  for (var objKey in obj) {
-    if (obj[objKey] === null) {
+  if (obj.constructor.name === 'Array') {
+    let arrayElementDataType = null;
+    for (let _i = obj.length - 1; _i >= 0; _i--) {
+      if (arrayElementDataType === null) {
+        arrayElementDataType = typeof obj[_i];
+      } else if (arrayElementDataType !== typeof obj[_i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  for (var objkey in obj) {
+    if (obj[objkey] === null) {
       return false;
     }
-    if (obj[objKey].constructor.name !== 'Boolean' || !obj[objKey]) {
+    if (obj[objkey].constructor.name !== 'boolean' || !obj[objkey]) {
       return false;
     }
   }
   return true;
 };
+
+const makeFirebaseListFromObj = obj => {
+  if (obj.constructor.name === 'Array') {
+    const firebaseList = {};
+    for (var i = obj.length - 1; i >= 0; i--) {
+      const element = obj[i];
+      firebaseList[i.toString()] = element;
+    }
+    return firebaseList;
+  }
+  return obj;
+};
+
+const makeFirebaseListFromArr = obj => {
+  if (obj.constructor.name === 'Array') {
+    const firebaseList = {};
+    for (var i = obj.length - 1; i >= 0; i--) {
+      const element = obj[i];
+      firebaseList[element] = true;
+    }
+    return firebaseList;
+  }
+  return obj;
+
+}
 
 const isObjectList = obj => {
   if (obj === null || obj === undefined) {
     return false;
   }
   const listChildStructure = {};
-  for (var key in obj) {
-    if (obj[key] === null) {
+  const checkElementConsistency = element => {
+    if (element === null) {
       return false;
     }
-    if (typeof obj[key] !== 'object') {
+    if (typeof element !== 'object') {
       return false;
     }
-    if (Object.keys(obj[key]).length === 0) {
+    if (Object.keys(obj).length === 0) {
       return false;
     }
-
-    for (var childKey in obj[key]) {
+    for (var childKey in element) {
       if (!listChildStructure[childKey]) {
-        if (obj[key][childKey] !== null && obj[key][childKey] !== undefined) {
-          listChildStructure[childKey] = typeof obj[key][childKey];
+        if (element[childKey] !== null && element[childKey] !== undefined) {
+          listChildStructure[childKey] = typeof element[childKey];
         }
-      } else if (obj[key][childKey] !== null && obj[key][childKey] !== undefined) {
-        if (typeof obj[key][childKey] !== listChildStructure[childKey]) {
+      } else if (element[childKey] !== null && element[childKey] !== undefined) {
+        if (typeof element[childKey] !== listChildStructure[childKey]) {
           return false;
         }
       }
     }
+    return true;
+  };
+  if (obj.constructor.name === 'Array') {
+    for (let _i = obj.length - 1; _i >= 0; _i--) {
+      let element = obj[_i];
+      let consistent = checkElementConsistency(element);
+      if (!consistent) {
+        return false;
+      }
+    }
+    return true;
+  }
+  for (var key in obj) {
+    const element = obj[key];
+    let consistent = checkElementConsistency(element);
+    if (!consistent) {
+      return false;
+    }
   }
   return true;
 };
+
+const x =  [
+  "https://firebasestorage.googleapis.comd2e34932caf"
+];
 
 module.exports = {
   getParentPrimaryKeyMap,
@@ -91,4 +148,6 @@ module.exports = {
   isRandomList,
   isList,
   isObjectList,
+  makeFirebaseListFromObj,
+  makeFirebaseListFromArr
 };
