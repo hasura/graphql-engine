@@ -1,7 +1,7 @@
-.EXPORT_ALL_VARIABLES:
 project  := graphql-engine
 registry := hasura
 VERSION  ?= $(shell ../scripts/get-version.sh)
+export VERSION
 nproc    := $(shell nproc)
 
 # TODO: needs to be replaced with something like yq
