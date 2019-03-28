@@ -247,6 +247,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
     def transact(self, hge_ctx, ws_client):
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_setup.yaml')
         assert st_code == 200, resp
+        ws_client.init()
         yield
         # teardown
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
@@ -263,11 +264,13 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = ws_client.send_query(hge_ctx, query)
-        ev = ws_client.get_ws_event(3)
-        assert ev['type'] == 'data' and ev['id'] == _id, ev
-        assert ev['payload']['data']['data']['user']['username'] == 'john'
-        ws_client.stop(hge_ctx, _id)
+        _id = ws_client.send_query(query)
+        try:
+            ev = ws_client.get_ws_event(3)
+            assert ev['type'] == 'data' and ev['id'] == _id, ev
+            assert ev['payload']['data']['data']['user']['username'] == 'john'
+        finally:
+            ws_client.stop(_id)
 
     def test_remote_mutation(self, ws_client):
         query = """
@@ -281,11 +284,13 @@ class TestRemoteSchemaQueriesOverWebsocket:
         }
         """
         _id = ws_client.send_query(query)
-        ev = ws_client.get_ws_event(3)
-        assert ev['type'] == 'data' and ev['id'] == _id, ev
-        assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
-        assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
-        ws_client.stop(hge_ctx, _id)
+        try:
+            ev = ws_client.get_ws_event(3)
+            assert ev['type'] == 'data' and ev['id'] == _id, ev
+            assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
+            assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
+        finally:
+            ws_client.stop(_id)
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:

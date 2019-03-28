@@ -27,7 +27,7 @@ def init_ws_conn(hge_ctx, ws_client):
 
 class TestSubscriptionCtrl(object):
 
-    def test_init_without_payload(hge_ctx, ws_client):
+    def test_init_without_payload(self, hge_ctx, ws_client):
         if hge_ctx.hge_key is not None:
             pytest.skip("Payload is needed when admin secret is set")
         obj = {
@@ -42,14 +42,14 @@ class TestSubscriptionCtrl(object):
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
     '''
 
-    def test_init(hge_ctx, ws_client):
+    def test_init(self, hge_ctx, ws_client):
         init_ws_conn(hge_ctx, ws_client)
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
     '''
 
-    def test_connection_terminate(hge_ctx, ws_client):
+    def test_connection_terminate(self, hge_ctx, ws_client):
         obj = {
             'type': 'connection_terminate'
         }
@@ -73,7 +73,7 @@ class TestSubscriptionBasic(object):
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
     '''
 
-    def test_connection_error(self, hge_ctx):
+    def test_connection_error(self, ws_client):
         ws_client.ws.send("test")
         ev = ws_client.get_ws_event(3)
         assert ev['type'] == 'connection_error', ev
@@ -82,7 +82,7 @@ class TestSubscriptionBasic(object):
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_start
     '''
 
-    def test_start(self, hge_ctx, ws_client):
+    def test_start(self, ws_client):
         query = """
         subscription {
         hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
@@ -110,8 +110,8 @@ class TestSubscriptionBasic(object):
     '''
 
     @pytest.mark.skip(reason="refer https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
-    def test_start_duplicate(self, hge_ctx, ws_client):
-        self.test_start(hge_ctx, ws_client)
+    def test_start_duplicate(self, ws_client):
+        self.test_start(ws_client)
 
     def test_stop_without_id(self, ws_client):
         obj = {
@@ -134,9 +134,9 @@ class TestSubscriptionBasic(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-    def test_start_after_stop(self, hge_ctx, ws_client):
-        self.test_start(hge_ctx, ws_client)
-        self.test_stop(hge_ctx)
+    def test_start_after_stop(self, ws_client):
+        self.test_start(ws_client)
+        self.test_stop(ws_client)
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
