@@ -4,13 +4,7 @@ module Hasura.GraphQL.Resolve.Select
   , convertAggSelect
   , convertFuncQuery
   , parseColumns
-  , withSelSet
   , fromSelSet
-  , fieldAsPath
-  , fromField
-  , fromFieldByPKey
-  , fromAggField
-  , fromFuncQueryField
   ) where
 
 import           Control.Arrow                     (first)
@@ -24,6 +18,7 @@ import qualified Data.List.NonEmpty                as NE
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
+import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
@@ -38,12 +33,6 @@ import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
 jsonPathToColExp t = case parseJSONPath t of
@@ -105,9 +94,6 @@ fromAggSelSet fn fldTy selSet = fmap toFields $
       "aggregate"  -> RS.TAFAgg <$> convertAggFld fTy fSelSet
       "nodes"      -> RS.TAFNodes <$> fromSelSet fn fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
-
-fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
-fieldAsPath = nameAsPath . _fName
 
 parseTableArgs
   :: ( MonadError QErr m, MonadReader r m
@@ -277,22 +263,28 @@ fromFieldByPKey f tn colArgMap permFilter fld = fieldAsPath fld $ do
     fldTy = _fType fld
 
 convertSelect
-  :: SelOpCtx -> Field -> Convert RespTx
-convertSelect opCtx fld = do
-  (selData, prepArgs) <-
-    withPathK "selectionSet" $ withPrepArgs $
-    fromField prepare qt permFilter permLimit fld
-  return $ RS.selectP2 False (selData, prepArgs)
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => PrepFn m -> SelOpCtx -> Field -> m Q.Query
+convertSelect fn opCtx fld = do
+  selData <-
+    withPathK "selectionSet" $
+    fromField fn qt permFilter permLimit fld
+  return $ RS.selectQuerySQL False selData
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
 
 convertSelectByPKey
-  :: SelPkOpCtx -> Field -> Convert RespTx
-convertSelectByPKey opCtx fld = do
-  (selData, prepArgs) <-
-    withPathK "selectionSet" $ withPrepArgs $
-    fromFieldByPKey prepare qt colArgMap permFilter fld
-  return $ RS.selectP2 True (selData, prepArgs)
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => PrepFn m -> SelPkOpCtx -> Field -> m Q.Query
+convertSelectByPKey fn opCtx fld = do
+  selData <-
+    withPathK "selectionSet" $
+    fromFieldByPKey fn qt colArgMap permFilter fld
+  return $ RS.selectQuerySQL True selData
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
 
@@ -365,14 +357,29 @@ fromAggField f tn permFilter permLimit fld = fieldAsPath fld $ do
   where
     args = _fArguments fld
 
-convertAggSelect :: SelOpCtx -> Field -> Convert RespTx
-convertAggSelect opCtx fld = do
-  (selData, prepArgs) <-
-    withPathK "selectionSet" $ withPrepArgs $
-    fromAggField prepare qt permFilter permLimit fld
-  return $ RS.selectAggP2 (selData, prepArgs)
+convertAggSelect
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => PrepFn m -> SelOpCtx -> Field -> m Q.Query
+convertAggSelect fn opCtx fld = do
+  selData <-
+    withPathK "selectionSet" $
+    fromAggField fn qt permFilter permLimit fld
+  return $ RS.selectAggQuerySQL selData
   where
     SelOpCtx qt _ permFilter permLimit = opCtx
+
+parseFunctionArgs
+  ::(MonadError QErr m)
+  => PrepFn m -> FuncArgSeq -> AnnInpVal -> m [S.SQLExp]
+parseFunctionArgs fn argSeq val =
+  flip withObject val $ \nTy obj ->
+    fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
+      argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
+                "argument " <> showName argName <> " required in input type "
+                <> showNamedTy nTy
+      fn =<< asPGColVal argVal
 
 fromFuncQueryField
   ::( MonadError QErr m, MonadReader r m, Has FieldMap r
@@ -389,31 +396,22 @@ fromFuncQueryField f qf argSeq isAgg fld = fieldAsPath fld $ do
   return (tableArgs, eSelFlds, funcFrmItem)
   where
     args = _fArguments fld
-
     nonAggSel = Right <$>
       fromSelSet f (_fType fld) (_fSelSet fld)
     aggSel = Left <$>
       fromAggSelSet f (_fType fld) (_fSelSet fld)
 
-parseFunctionArgs
-  ::(MonadError QErr m)
-  => PrepFn m -> FuncArgSeq -> AnnInpVal -> m [S.SQLExp]
-parseFunctionArgs fn argSeq val =
-  flip withObject val $ \nTy obj ->
-    fmap toList $ forM argSeq $ \(FuncArgItem argName) -> do
-      argVal <- onNothing (OMap.lookup argName obj) $ throw500 $
-                "argument " <> showName argName <> " required in input type "
-                <> showNamedTy nTy
-      fn =<< asPGColVal argVal
-
 convertFuncQuery
-  :: FuncQOpCtx -> Bool -> Field -> Convert RespTx
-convertFuncQuery funcOpCtx isAgg fld = do
-  ((tableArgs, sel, frmItem), prepArgs) <-
-    withPathK "selectionSet" $ withPrepArgs $
-    fromFuncQueryField prepare qf argSeq isAgg fld
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => PrepFn m -> FuncQOpCtx -> Bool -> Field -> m Q.Query
+convertFuncQuery fn funcOpCtx isAgg fld = do
+  (tableArgs, sel, frmItem) <-
+    withPathK "selectionSet" $
+    fromFuncQueryField fn qf argSeq isAgg fld
   let tabPerm = RS.TablePerm permFilter permLimit
   strfyNum <- stringifyNum <$> asks getter
-  return $ RS.funcQueryTx frmItem qf qt tabPerm tableArgs strfyNum (sel, prepArgs)
+  return $ RS.funcQuerySQL frmItem qf qt tabPerm tableArgs strfyNum sel
   where
     FuncQOpCtx qt _ permFilter permLimit qf argSeq = funcOpCtx

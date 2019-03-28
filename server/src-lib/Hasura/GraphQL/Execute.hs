@@ -1,7 +1,17 @@
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
+  , ExecPlanResolved
+  , ExecPlanUnresolved
+
   , getExecPlan
+  , getResolvedExecPlan
   , execRemoteGQ
+
+  , EP.PlanCache
+  , EP.initPlanCache
+  , EP.clearPlanCache
+  , EP.dumpPlanCache
+
   ) where
 
 import           Control.Exception                      (try)
@@ -26,22 +36,30 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
+import qualified Hasura.GraphQL.Execute.Context         as EC
+import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
-data GQExecPlan
-  = GExPHasura !GCtx !VQ.RootSelSet
+data GQExecPlan a
+  = GExPHasura !a
   | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  deriving (Functor, Foldable, Traversable)
+
+type ExecPlanUnresolved
+  = GQExecPlan (GCtx, VQ.RootSelSet, [G.VariableDefinition])
+type ExecPlanResolved
+  = GQExecPlan (G.OperationType, LazyRespTx)
 
 getExecPlan
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
   -> GQLReqParsed
-  -> m GQExecPlan
+  -> m ExecPlanUnresolved
 getExecPlan userInfo sc req = do
 
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
+  (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -53,12 +71,57 @@ getExecPlan userInfo sc req = do
   typeLoc <- assertSameLocationNodes typeLocs
 
   case typeLoc of
-    VT.HasuraType ->
-      GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
+    VT.HasuraType -> do
+      rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
+      let varDefs = G._todVariableDefinitions $ VQ.qpOpDef queryParts
+      return $ GExPHasura (gCtx, rootSelSet, varDefs)
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
     gCtxRoleMap = scGCtxMap sc
+
+getResolvedExecPlan
+  :: (MonadError QErr m, MonadIO m)
+  => EP.PlanCache
+  -> UserInfo
+  -> SQLGenCtx
+  -> SchemaCache
+  -> SchemaCacheVer
+  -> GQLReqUnparsed
+  -> m ExecPlanResolved
+getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer reqUnparsed = do
+  queryPlanM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+                opNameM queryStr planCache
+  case queryPlanM of
+    -- plans are only for queries and subscriptions
+    Just queryPlan -> do
+      (isSubs, tx) <- EP.mkNewQueryTx queryVars queryPlan
+      let opTy = bool G.OperationTypeQuery G.OperationTypeSubscription isSubs
+      return $ GExPHasura (opTy, tx)
+    Nothing -> do
+       req      <- toParsed reqUnparsed
+       execPlan <- getExecPlan userInfo sc req
+       forM execPlan $ \(gCtx, rootSelSet, varDefs) ->
+         case rootSelSet of
+           VQ.RMutation selSet -> do
+             mutTx <- EC.getMutTx gCtx sqlGenCtx userInfo selSet
+             return (G.OperationTypeMutation, mutTx)
+           VQ.RQuery selSet -> do
+             (queryTx, planM) <- EC.getQueryTx gCtx sqlGenCtx
+                                 userInfo selSet varDefs
+             forM_ planM $ \plan ->
+               liftIO $ EP.addPlan scVer (userRole userInfo)
+               opNameM queryStr plan planCache
+             return (G.OperationTypeQuery, queryTx)
+           VQ.RSubscription fld -> do
+             (queryTx, planM) <- EC.getSubsTx gCtx sqlGenCtx
+                                 userInfo fld varDefs
+             forM_ planM $ \plan ->
+               liftIO $ EP.addPlan scVer (userRole userInfo)
+               opNameM queryStr plan planCache
+             return (G.OperationTypeSubscription, queryTx)
+  where
+    GQLReq opNameM queryStr queryVars = reqUnparsed
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)

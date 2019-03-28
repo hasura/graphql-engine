@@ -465,10 +465,13 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: RoleName
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
+     )
+  => RoleName
   -> QualifiedTable -- table
   -> Field -- the mutation field
-  -> Convert RespTx
+  -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
   mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
   annVals <- withArg arguments "objects" asArray

@@ -141,6 +141,7 @@ library
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
+                     , Hasura.Cache
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
@@ -210,6 +211,8 @@ library
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Context
                      , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp

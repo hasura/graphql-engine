@@ -21,13 +21,16 @@ module Hasura.GraphQL.Resolve.Context
   , withArg
   , withArgM
   , nameAsPath
+
   , PrepArgs
-  , Convert
-  , runConvert
-  , withPrepArgs
   , prepare
   , prepareColVal
+  , withPrepArgs
+
   , txtConverter
+
+  , withSelSet
+  , fieldAsPath
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -44,7 +47,6 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -60,10 +62,6 @@ data InsResp
   , _irResponse     :: !(Maybe J.Object)
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
-
-type RespTx = Q.TxE QErr EncJSON
-
-type LazyRespTx = LazyTx QErr EncJSON
 
 type PrepFn m = AnnPGVal -> m S.SQLExp
 
@@ -138,18 +136,13 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
-type Convert =
-  (ReaderT ( FieldMap
-           , OrdByCtx
-           , InsCtxMap
-           , SQLGenCtx
-           ) (Except QErr)
-  )
-
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
 prepare (AnnPGVal _ _ colTy colVal) =
   prepareColVal colTy colVal
+
+withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
+withPrepArgs m = runStateT m Seq.empty
 
 prepareColVal
   :: (MonadState PrepArgs m)
@@ -159,19 +152,15 @@ prepareColVal colTy colVal = do
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
 
-
 txtConverter :: Monad m => PrepFn m
 txtConverter (AnnPGVal _ _ a b) =
   return $ toTxtValue a b
 
-withPrepArgs :: StateT PrepArgs Convert a -> Convert (a, PrepArgs)
-withPrepArgs m = runStateT m Seq.empty
+withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
+withSelSet selSet f =
+  forM (toList selSet) $ \fld -> do
+    res <- f fld
+    return (G.unName $ G.unAlias $ _fAlias fld, res)
 
-runConvert
-  :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
-  -> Convert a
-  -> m a
-runConvert ctx m =
-  either throwError return $
-  runExcept $ runReaderT m ctx
+fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
+fieldAsPath = nameAsPath . _fName
