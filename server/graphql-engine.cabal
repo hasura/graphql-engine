@@ -195,6 +195,7 @@ library
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.DML.QueryTemplate
                      , Hasura.RQL.GBoolExp
+                     , Hasura.RQL.Misc.GetVersion
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
                      , Hasura.GraphQL.Transport.HTTP
