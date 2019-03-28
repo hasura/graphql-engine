@@ -86,8 +86,7 @@ const makeFirebaseListFromArr = obj => {
     return firebaseList;
   }
   return obj;
-
-}
+};
 
 const isObjectList = obj => {
   if (obj === null || obj === undefined) {
@@ -137,10 +136,6 @@ const isObjectList = obj => {
   return true;
 };
 
-const x =  [
-  "https://firebasestorage.googleapis.comd2e34932caf"
-];
-
 module.exports = {
   getParentPrimaryKeyMap,
   getLastPrimaryKey,
@@ -149,5 +144,5 @@ module.exports = {
   isList,
   isObjectList,
   makeFirebaseListFromObj,
-  makeFirebaseListFromArr
+  makeFirebaseListFromArr,
 };
