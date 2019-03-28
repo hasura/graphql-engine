@@ -134,7 +134,7 @@ class Schema extends Component {
     for (let i = 0; i < untrackedTables.length; i++) {
       untrackedHtml.push(
         <div className={styles.padd_bottom} key={`${i}untracked`}>
-          <div className={`${styles.display_inline} ${styles.padd_right}`}>
+          <div className={styles.inline_block}>
             <Button
               data-test={`add-track-table-${untrackedTables[i].table_name}`}
               className={`${styles.display_inline}`}
@@ -149,7 +149,7 @@ class Schema extends Component {
               Add
             </Button>
           </div>
-          <div className={`${styles.padd_right} ${styles.inline_block}`}>
+          <div className={styles.inline_block}>
             {untrackedTables[i].table_name}
           </div>
         </div>
@@ -231,7 +231,7 @@ class Schema extends Component {
                     dispatch(addAllUntrackedTablesSql(untrackedTables));
                   }}
                 >
-                  Add all
+                  Track All
                 </Button>
               ) : null}
             </div>

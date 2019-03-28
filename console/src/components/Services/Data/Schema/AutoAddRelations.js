@@ -1,6 +1,3 @@
-/* eslint-disable space-infix-ops */
-/* eslint-disable no-loop-func  */
-
 import PropTypes from 'prop-types';
 
 import React, { Component } from 'react';
@@ -8,7 +5,7 @@ import {
   autoTrackRelations,
   autoAddRelName,
 } from '../TableRelationships/Actions';
-import { getRelationshipLine } from '../TableRelationships/Relationships';
+import { getRelDef } from '../TableRelationships/Relationships';
 import Button from '../../../Common/Button/Button';
 
 class AutoAddRelations extends Component {
@@ -20,10 +17,6 @@ class AutoAddRelations extends Component {
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
     const { untrackedRelations, dispatch } = this.props;
-
-    const handleAutoAddIndivRel = obj => {
-      dispatch(autoAddRelName(obj));
-    };
 
     if (untrackedRelations.length === 0) {
       return (
@@ -37,30 +30,43 @@ class AutoAddRelations extends Component {
     }
 
     const untrackData = untrackedRelations.map((obj, i) => {
+      const objData = obj.data;
+
+      const addRel = () => {
+        dispatch(autoAddRelName(obj));
+      };
+
+      const handleAddRel = e => {
+        e.preventDefault();
+        addRel();
+      };
+
       return (
         <div
           className={styles.padd_top_medium}
-          key={`${obj.data.tableName}-${obj.data.rTable}-${i}`}
+          key={`${objData.tableName}-${objData.rTable}-${i}`}
         >
           <Button
-            className={`${styles.display_inline}`}
+            className={styles.display_inline}
             size="xs"
             color="white"
-            onClick={e => {
-              e.preventDefault();
-              handleAutoAddIndivRel(obj);
-            }}
+            onClick={handleAddRel}
           >
             Add
           </Button>
-          <div className={styles.display_inline + ' ' + styles.add_pad_left}>
-            <b>{obj.data.tableName}</b> -{' '}
-            {getRelationshipLine(
-              obj.data.isObjRel,
-              obj.data.lcol,
-              obj.data.rcol,
-              obj.data.rTable
-            )}
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <span>
+              <b>{objData.tableName}</b> &rarr; <b>{objData.rTable}</b>
+            </span>
+            &nbsp;&nbsp; - &nbsp;&nbsp;
+            <span>
+              {getRelDef(
+                objData.isObjRel,
+                objData.lcol,
+                objData.rcol,
+                objData.rTable
+              )}
+            </span>
           </div>
         </div>
       );

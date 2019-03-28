@@ -16,7 +16,7 @@ import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { getRelationshipLine } from './utils';
+import { getRelDef } from './utils';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -51,10 +51,11 @@ const addRelationshipCellView = (
   rel,
   selectedRelationship,
   selectedRelationshipName,
-  tableStyles,
   relMetaData,
   tableSchema
 ) => {
+  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
@@ -109,8 +110,8 @@ const addRelationshipCellView = (
             Add
           </Button>
         )}
-        {getRelationshipLine(rel.isObjRel, rel.lcol, rel.rcol, rel.rTable)}{' '}
         &nbsp;
+        {getRelDef(rel.isObjRel, rel.lcol, rel.rcol, rel.rTable)} &nbsp;
       </div>
       {selectedRelationship === rel ? (
         <form className="form-inline" onSubmit={onSave}>
@@ -148,15 +149,17 @@ const AddRelationship = ({
   allSchemas,
   cachedRelationshipData,
   dispatch,
-  tableStyles,
 }) => {
+  const styles = require('../TableModify/ModifyTable.scss');
+  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
   const cTable = allSchemas.find(t => t.table_name === tableName);
 
   const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
     allSchemas
   );
-  const styles = require('../TableModify/ModifyTable.scss');
+
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&
     suggestedRelationshipsData.arrayRel.length < 1
@@ -231,7 +234,6 @@ const AddRelationship = ({
           rel,
           selectedRelationship,
           relName,
-          tableStyles,
           ['object', i],
           cTable
         )
@@ -251,7 +253,6 @@ const AddRelationship = ({
           rel,
           selectedRelationship,
           relName,
-          tableStyles,
           ['array', i],
           cTable
         )
@@ -429,7 +430,6 @@ class Relationships extends Component {
                         rel.objRel
                       )}
                       isObjRel
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (
@@ -447,7 +447,6 @@ class Relationships extends Component {
                         rel.arrRel
                       )}
                       isObjRel={false}
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (
@@ -488,7 +487,6 @@ class Relationships extends Component {
                   tableName={tableName}
                   allSchemas={allSchemas}
                   cachedRelationshipData={relAdd}
-                  tableStyles={tableStyles}
                   dispatch={dispatch}
                 />
               </div>
@@ -581,4 +579,4 @@ const relationshipsConnector = connect =>
 
 export default relationshipsConnector;
 
-export { getRelationshipLine };
+export { getRelDef };
