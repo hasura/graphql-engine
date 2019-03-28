@@ -17,7 +17,7 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataResetCmd := &cobra.Command{
 		Use:     "clear",
 		Aliases: []string{"reset"},
-		Short:   "Reset or clean Hasura GraphQL Engine metadata on the database",
+		Short:   "Clear Hasura GraphQL Engine metadata on the database",
 		Example: `  # Clean all the metadata information from database:
   hasura metadata clear`,
 		SilenceUsage: true,
