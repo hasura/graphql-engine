@@ -80,7 +80,9 @@ Step 3: Initialize the migrations as per your current state
      # dump the public schema into public-schema.sql (repeat for other schemas)
      docker exec <postgres-container-id> pg_dump -O -x -U postgres --schema-only --schema public > public-schema.sql
 
-  If Postgres is on Heroku, install ``pg_dump`` on your machine and use it.
+  If Postgres is on Heroku or elsewhere, install ``pg_dump`` on your machine and
+  use it. It comes with a standard Postgres installation which you can download
+  and install from `here <https://www.postgresql.org/download/>`__.
 
   .. code-block:: bash
 
