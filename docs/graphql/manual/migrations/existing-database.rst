@@ -87,29 +87,18 @@ Step 3: Initialize the migrations as per your current state
   .. code-block:: bash
 
      # Get the DATABASE_URL from Heroku Dashbaord -> Settings -> Reveal Config Vars
-
      # dump the public schema into public-schema.sql (repeat for other schemas)
      pg_dump -O -x "<DATABASE_URL>" --schema-only --schema public > public-schema.sql
 
-
   This command will create ``public-schema.sql`` which contains the SQL
   definitions for the public schema.
-
 
 - Clean up the SQL file to remove some un-necessary statements:
 
   .. code-block:: bash
 
-     # download the bash script to clean the SQL file (using sed)
-     # from gist: https://gist.github.com/shahidhk/98da4438e3a8a50264c9ef21d89100df
-     wget https://gist.githubusercontent.com/shahidhk/98da4438e3a8a50264c9ef21d89100df/raw/a58d284f46b534b637dba633a59708b46e7e1395/process_pg_dump.sh
-
-     # make it executable
-     chmod +x process_pg_dump.sh
-
-     # clean up public-schema.sql
-     ./process_pg_dump.sh public-schema.sql
-  
+     # POST the SQL to a serverless function and save the response
+     curl --data-binary @public-schema.sql https://hasura-edit-pg-dump.now.sh > public-schema-edited.sql
 
 - Create a migration called ``init`` using this SQL file and the metadata that
   is on the server right now:
@@ -117,7 +106,7 @@ Step 3: Initialize the migrations as per your current state
   .. code-block:: bash
 
      # create migration files
-     hasura migrate create "init" --sql-from-file "public-schema.sql" --metadata-from-server
+     hasura migrate create "init" --sql-from-file "public-schema-edited.sql" --metadata-from-server
 
      # note down the version
      # mark the migration as applied on this server
