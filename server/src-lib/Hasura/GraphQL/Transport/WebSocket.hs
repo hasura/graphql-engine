@@ -42,6 +42,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
 import           Hasura.Server.Cors
+import qualified Hasura.Server.Logging                       as SL
 import           Hasura.Server.Utils                         (bsToTxt)
 
 -- uniquely identifies an operation
@@ -94,11 +95,20 @@ $(J.deriveToJSON
                    }
   ''OpDetail)
 
+data OperationDetails
+  = OperationDetails
+  { _odOperationId   :: !OperationId
+  , _odOperationName :: !(Maybe OperationName)
+  , _odOperationType :: !OpDetail
+  , _odQuery         :: !(Maybe GraphQLRequest)
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''OperationDetails)
+
 data WSEvent
   = EAccepted
   | ERejected !QErr
   | EConnErr !ConnErrMsg
-  | EOperation !OperationId !(Maybe OperationName) !OpDetail
+  | EOperation !OperationDetails
   | EClosed
   deriving (Show, Eq)
 $(J.deriveToJSON
@@ -122,14 +132,15 @@ instance L.ToEngineLog WSLog where
 
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger     :: !L.Logger
-  , _wseServer     :: !WSServer
-  , _wseRunTx      :: !TxRunner
-  , _wseLiveQMap   :: !LiveQueryMap
-  , _wseGCtxMap    :: !(IORef.IORef SchemaCache)
-  , _wseHManager   :: !H.Manager
-  , _wseCorsPolicy :: !CorsPolicy
-  , _wseSQLCtx     :: !SQLGenCtx
+  { _wseLogger         :: !L.Logger
+  , _wseServer         :: !WSServer
+  , _wseRunTx          :: !TxRunner
+  , _wseLiveQMap       :: !LiveQueryMap
+  , _wseGCtxMap        :: !(IORef.IORef SchemaCache)
+  , _wseHManager       :: !H.Manager
+  , _wseCorsPolicy     :: !CorsPolicy
+  , _wseSQLCtx         :: !SQLGenCtx
+  , _wseVerboseLogging :: !SL.VerboseLogging
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -272,13 +283,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
 
-    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
+    WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx verboseLog = serverEnv
 
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
-    logOpEv opDet =
-      logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
+    logOpEv opTy =
+      logWSEvent logger wsConn $ EOperation opDet
+      where
+        opDet = OperationDetails opId (_grOperationName q) opTy gq
+        gq = bool Nothing (Just q) $ SL.unVerboseLogging verboseLog
 
     sendConnErr connErr = do
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
@@ -342,7 +356,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
   case opM of
     Just liveQ -> do
       let opNameM = _grOperationName $ LQ._lqRequest liveQ
-      logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
+      logWSEvent logger wsConn $ EOperation $ opDet opNameM
       LQ.removeLiveQuery lqMap liveQ (wsId, opId)
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
@@ -351,6 +365,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
     lqMap  = _wseLiveQMap serverEnv
     wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
+    opDet n = OperationDetails opId n ODStopped Nothing
 
 logWSEvent
   :: (MonadIO m)
@@ -416,11 +431,11 @@ onClose logger lqMap _ wsConn = do
 createWSServerEnv
   :: L.Logger
   -> H.Manager -> SQLGenCtx -> IORef.IORef SchemaCache
-  -> TxRunner -> CorsPolicy -> IO WSServerEnv
-createWSServerEnv logger httpManager sqlGenCtx cacheRef runTx corsPolicy = do
+  -> TxRunner -> CorsPolicy -> SL.VerboseLogging -> IO WSServerEnv
+createWSServerEnv logger httpManager sqlGenCtx cacheRef runTx corsPolicy vl = do
   (wsServer, lqMap) <-
     STM.atomically $ (,) <$> WS.createWSServer logger <*> LQ.newLiveQueryMap
-  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager corsPolicy sqlGenCtx
+  return $ WSServerEnv logger wsServer runTx lqMap cacheRef httpManager corsPolicy sqlGenCtx vl
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

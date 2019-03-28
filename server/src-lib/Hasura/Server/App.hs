@@ -357,8 +357,8 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg enableConsole
         corsPolicy = mkDefaultCorsPolicy corsCfg
         sqlGenCtx = SQLGenCtx strfyNum
 
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager sqlGenCtx
-                   cacheRef runTx corsPolicy
+    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
+                   sqlGenCtx cacheRef runTx corsPolicy verLog
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp

@@ -12,36 +12,36 @@ module Hasura.Server.Logging
   , VerboseLogging(..)
   ) where
 
-import           Crypto.Hash                 (Digest, SHA1, hash)
+import           Crypto.Hash            (Digest, SHA1, hash)
 import           Data.Aeson
-import           Data.Bits                   (shift, (.&.))
-import           Data.ByteString.Char8       (ByteString)
-import qualified Data.ByteString.Lazy        as BL
-import           Data.Int                    (Int64)
-import           Data.List                   (find)
-import qualified Data.TByteString            as TBS
-import qualified Data.Text                   as T
-import qualified Data.Text.Encoding          as TE
+import           Data.Bits              (shift, (.&.))
+import           Data.ByteString.Char8  (ByteString)
+import qualified Data.ByteString.Lazy   as BL
+import           Data.Int               (Int64)
+import           Data.List              (find)
+import qualified Data.TByteString       as TBS
+import qualified Data.Text              as T
+import qualified Data.Text.Encoding     as TE
 import           Data.Time.Clock
-import           Data.Word                   (Word32)
+import           Data.Word              (Word32)
 import           Debug.Trace
-import           Network.Socket              (SockAddr (..))
-import           Network.Wai                 (Request (..))
-import           System.ByteOrder            (ByteOrder (..), byteOrder)
-import           Text.Printf                 (printf)
+import           Network.Socket         (SockAddr (..))
+import           Network.Wai            (Request (..))
+import           System.ByteOrder       (ByteOrder (..), byteOrder)
+import           Text.Printf            (printf)
 
-import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Char8       as BS
-import qualified Data.CaseInsensitive        as CI
-import qualified Network.HTTP.Types          as N
+import qualified Data.Aeson             as J
+import qualified Data.ByteString.Char8  as BS
+import qualified Data.CaseInsensitive   as CI
+import qualified Network.HTTP.Types     as N
 
-import qualified Hasura.GraphQL.Explain      as GE
+import qualified Hasura.GraphQL.Explain as GE
 import           Hasura.HTTP
-import qualified Hasura.Logging              as L
+import qualified Hasura.Logging         as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Permission
+--import           Hasura.RQL.Types.Error
+--import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
 
 
