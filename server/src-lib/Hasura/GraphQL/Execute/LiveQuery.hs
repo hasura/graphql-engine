@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Resolve.LiveQuery
+module Hasura.GraphQL.Execute.LiveQuery
   ( LiveQuery(..)
   , LiveQueryMap
   , newLiveQueryMap
@@ -15,7 +15,6 @@ import qualified StmContainers.Map                      as STMMap
 import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Resolve.Context         (LazyRespTx)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
