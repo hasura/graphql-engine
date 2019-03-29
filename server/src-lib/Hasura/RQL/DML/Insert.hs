@@ -3,11 +3,10 @@ module Hasura.RQL.DML.Insert where
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
-import qualified Data.Aeson.Text          as AT
+import qualified Data.Aeson.Extended      as J
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
-import qualified Data.Text.Lazy           as LT
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -279,12 +278,10 @@ setConflictCtx conflictCtxM = do
       q = Q.fromBuilder $ setVar <> setVal
   Q.unitQE defaultTxErrorHandler q () False
   where
-    encToText = LT.toStrict . AT.encodeToLazyText
-
     conflictCtxToJSON (CCDoNothing constrM) =
-        encToText $ InsertTxConflictCtx CAIgnore constrM Nothing
+        J.encodeToStrictText $ InsertTxConflictCtx CAIgnore constrM Nothing
     conflictCtxToJSON (CCUpdate constr updCols preSet filtr) =
-        encToText $ InsertTxConflictCtx CAUpdate (Just constr) $
+        J.encodeToStrictText $ InsertTxConflictCtx CAUpdate (Just constr) $
         Just $ toSQLTxt (S.buildUpsertSetExp updCols preSet)
                <> " " <> toSQLTxt (S.WhereFrag filtr)
 

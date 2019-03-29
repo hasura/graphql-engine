@@ -110,7 +110,11 @@ binEncoder colVal = case colVal of
   PGValGeo o ->
     Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
   PGValUnknown t ->
-    (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+    textToPrepVal t
+
+textToPrepVal :: Text -> Q.PrepArg
+textToPrepVal t =
+  (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 parsePGValue' :: PGColType
              -> Value
