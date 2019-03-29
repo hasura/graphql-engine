@@ -240,7 +240,8 @@ v1QueryHandler query = do
       pool <- scPGPool . hcServerCtx <$> ask
       isoL <- scIsolation . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pool isoL instanceId userInfo schemaCache httpMgr strfyNum query
+      authMode <- scAuthMode . hcServerCtx <$> ask
+      runQuery pool isoL instanceId userInfo schemaCache httpMgr strfyNum authMode query
 
     -- Also update the schema cache
     dbActionReload = do

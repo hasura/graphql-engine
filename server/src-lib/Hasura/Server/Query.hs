@@ -28,6 +28,7 @@ import           Hasura.RQL.Misc.Config
 import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
+import Hasura.Server.Auth (AuthMode)
 
 import qualified Database.PG.Query                  as Q
 
@@ -157,10 +158,10 @@ runQuery
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> Q.TxIsolation -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> Bool -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr strfyNum query = do
+  -> Bool -> AuthMode -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pool isoL instanceId userInfo sc hMgr strfyNum authMode query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
+    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM authMode query
   either throwError withReload resE
   where
     withReload r = do
@@ -230,9 +231,10 @@ runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
-  => RQLQuery
+  => AuthMode
+  -> RQLQuery
   -> m EncJSON
-runQueryM rq = withPathK "args" $ case rq of
+runQueryM am rq = withPathK "args" $ case rq of
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
@@ -282,8 +284,8 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQDumpInternalState q        -> runDumpInternalState q
 
-  RQGetConfig q                -> runGetConfig q
+  RQGetConfig _                -> runGetConfig am
 
   RQRunSql q                   -> runRunSQL q
 
-  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+  RQBulk qs                    -> encJFromList <$> indexedMapM (runQueryM am) qs

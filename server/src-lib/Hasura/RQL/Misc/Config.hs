@@ -12,6 +12,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import Hasura.Server.Auth (AuthMode)
 import qualified Hasura.Server.Auth.JWT     as J
 import qualified Hasura.Server.Version      as V
 
@@ -44,17 +45,14 @@ data ServerConfig
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: (UserInfoM m, MonadTx m) => GetConfig -> m EncJSON
-runGetConfig _ = do
+runGetConfig :: (UserInfoM m, MonadTx m) => AuthMode -> m EncJSON
+runGetConfig am = do
   adminOnly
-  return $ encJFromJValue fetchConfig
-
--- TODO(shahidhk): need to populate this object with actual values
-fetchConfig :: ServerConfig
-fetchConfig = ServerConfig
-  V.currentVersion
-  True
-  True
-  True
-  True
-  (JWTInfo "ns" J.JCFJson)
+  return $ encJFromJValue $ ServerConfig
+    -- TODO(shahidhk): need to populate this object with actual values
+    V.currentVersion
+    True
+    True
+    True
+    True
+    (JWTInfo "ns" J.JCFJson)
