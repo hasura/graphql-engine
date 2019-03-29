@@ -17,7 +17,7 @@ import {
   addOrder,
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
-import '../TableCommon/ReactTableFix.css';
+import '../TableCommon/EventReactTableOverrides.css';
 
 const ViewRows = ({
   curTriggerName,
@@ -33,7 +33,7 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -101,7 +101,7 @@ const ViewRows = ({
           let conditionalClassname = styles.tableCellCenterAligned;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -205,7 +205,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -269,7 +269,7 @@ const ViewRows = ({
                 let conditionalClassname = styles.tableCellCenterAligned;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -304,6 +304,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;

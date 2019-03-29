@@ -1,0 +1,49 @@
+.graphiql-explorer-root {
+  font-size: 12px;
+  text-overflow: ellipsis;
+  overflow: unset;
+  white-space: nowrap;
+  margin: 0;
+  padding: 8px;
+  font-family: Consolas, Inconsolata, 'Droid Sans Mono', Monaco, monospace;
+}
+
+.graphiql-explorer-abstractfields-label {
+  color: #ca9800;
+  padding-left: 5px;
+}
+
+.graphiql-explorer-abstractargs-label {
+  color: #8b2bb9;
+  padding-left: 5px;
+}
+
+.graphiql-explorer-fieldname {
+  color: rgb(31, 97, 160);
+  padding-left: 5px;
+}
+
+.graphiql-explorer-node {
+  margin-top: 5px;
+}
+
+.graphiql-explorer-args-wrapper {
+  margin-top: 5px;
+}
+
+.explorerGraphiqlSeparator {
+  height: 100%;
+  right: -5px;
+  position: absolute;
+  top: 0;
+  width: 10px;
+  z-index: 10;
+}
+
+.explorerCursorResize {
+  cursor: col-resize;
+}
+
+.gqlexplorer {
+  position: relative;
+}

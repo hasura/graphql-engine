@@ -84,6 +84,9 @@ instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
 
+class ToTxt a where
+  toTxt :: a -> T.Text
+
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
@@ -96,6 +99,9 @@ instance DQuote TableName where
 
 instance ToSQL TableName where
   toSQL = toSQL . toIden
+
+instance ToTxt TableName where
+  toTxt = getTableTxt
 
 data TableType
   = TTBaseTable
@@ -135,9 +141,25 @@ instance IsIden ConstraintName where
 instance ToSQL ConstraintName where
   toSQL = toSQL . toIden
 
+newtype FunctionName
+  = FunctionName { getFunctionTxt :: T.Text }
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+
+instance IsIden FunctionName where
+  toIden (FunctionName t) = Iden t
+
+instance DQuote FunctionName where
+  dquoteTxt (FunctionName t) = t
+
+instance ToSQL FunctionName where
+  toSQL = toSQL . toIden
+
+instance ToTxt FunctionName where
+  toTxt = getFunctionTxt
+
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -148,50 +170,58 @@ instance IsIden SchemaName where
 instance ToSQL SchemaName where
   toSQL = toSQL . toIden
 
-data QualifiedTable
-  = QualifiedTable
-  { qtSchema :: !SchemaName
-  , qtTable  :: !TableName
-  } deriving (Show, Eq, Generic, Lift)
+data QualifiedObject a
+  = QualifiedObject
+  { qSchema :: !SchemaName
+  , qName   :: !a
+  } deriving (Show, Eq, Ord, Generic, Lift)
 
-instance FromJSON QualifiedTable where
+instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
-    QualifiedTable publicSchema <$> parseJSON v
+    QualifiedObject publicSchema <$> parseJSON v
   parseJSON (Object o) =
-    QualifiedTable <$>
+    QualifiedObject <$>
     o .:? "schema" .!= publicSchema <*>
     o .: "name"
   parseJSON _ =
-    fail "expecting a string/object for table"
+    fail "expecting a string/object for QualifiedObject"
 
-instance ToJSON QualifiedTable where
-  toJSON (QualifiedTable (SchemaName "public") tn) = toJSON tn
-  toJSON (QualifiedTable sn tn) =
+instance (ToJSON a) => ToJSON (QualifiedObject a) where
+  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
+  toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
-           , "name"  .= tn
+           , "name"  .= o
            ]
 
-instance ToJSONKey QualifiedTable where
-  toJSONKey = ToJSONKeyText qualTableToTxt (text . qualTableToTxt)
+instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
+  toJSONKey = ToJSONKeyText qualObjectToText (text . qualObjectToText)
 
-instance DQuote QualifiedTable where
-  dquoteTxt = qualTableToTxt
+instance (ToTxt a) => DQuote (QualifiedObject a) where
+  dquoteTxt = qualObjectToText
 
-instance Hashable QualifiedTable
+instance (Hashable a) => Hashable (QualifiedObject a)
 
-instance ToSQL QualifiedTable where
-  toSQL (QualifiedTable sn tn) =
-    toSQL sn <> "." <> toSQL tn
+instance (ToSQL a) => ToSQL (QualifiedObject a) where
+  toSQL (QualifiedObject sn o) =
+    toSQL sn <> "." <> toSQL o
 
-qualTableToTxt :: QualifiedTable -> T.Text
-qualTableToTxt (QualifiedTable (SchemaName "public") tn) =
-  getTableTxt tn
-qualTableToTxt (QualifiedTable sn tn) =
-  getSchemaTxt sn <> "." <> getTableTxt tn
+qualObjectToText :: ToTxt a => QualifiedObject a -> T.Text
+qualObjectToText (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
-snakeCaseTable :: QualifiedTable -> T.Text
-snakeCaseTable (QualifiedTable sn tn) =
+snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
+snakeCaseQualObject (QualifiedObject sn o)
+  | sn == publicSchema = toTxt o
+  | otherwise = getSchemaTxt sn <> "_" <> toTxt o
+
+type QualifiedTable = QualifiedObject TableName
+
+snakeCaseTable :: QualifiedObject TableName -> T.Text
+snakeCaseTable (QualifiedObject sn tn) =
   getSchemaTxt sn <> "_" <> getTableTxt tn
+
+type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
@@ -263,56 +293,61 @@ instance ToJSON PGColType where
 instance ToSQL PGColType where
   toSQL pct = fromString $ show pct
 
+
+txtToPgColTy :: Text -> PGColType
+txtToPgColTy t = case t of
+  "serial"                   -> PGSerial
+  "bigserial"                -> PGBigSerial
+
+  "smallint"                 -> PGSmallInt
+  "int2"                     -> PGSmallInt
+
+  "integer"                  -> PGInteger
+  "int4"                     -> PGInteger
+
+  "bigint"                   -> PGBigInt
+  "int8"                     -> PGBigInt
+
+  "real"                     -> PGFloat
+  "float4"                   -> PGFloat
+
+  "double precision"         -> PGDouble
+  "float8"                   -> PGDouble
+
+  "numeric"                  -> PGNumeric
+  "decimal"                  -> PGNumeric
+
+  "boolean"                  -> PGBoolean
+  "bool"                     -> PGBoolean
+
+  "character"                -> PGChar
+
+  "varchar"                  -> PGVarchar
+  "character varying"        -> PGVarchar
+
+  "text"                     -> PGText
+  "citext"                   -> PGText
+
+  "date"                     -> PGDate
+
+  "timestamptz"              -> PGTimeStampTZ
+  "timestamp with time zone" -> PGTimeStampTZ
+
+  "timetz"                   -> PGTimeTZ
+  "time with time zone"      -> PGTimeTZ
+
+  "json"                     -> PGJSON
+  "jsonb"                    -> PGJSONB
+
+  "geometry"                 -> PGGeometry
+  "geography"                -> PGGeography
+  _                          -> PGUnknown t
+
+
 instance FromJSON PGColType where
-  parseJSON (String "serial")      = return PGSerial
-  parseJSON (String "bigserial")   = return PGBigSerial
+  parseJSON (String t) = return $ txtToPgColTy t
+  parseJSON _          = fail "Expecting a string for PGColType"
 
-  parseJSON (String "smallint")    = return PGSmallInt
-  parseJSON (String "int2")    = return PGSmallInt
-
-  parseJSON (String "integer")     = return PGInteger
-  parseJSON (String "int4")        = return PGInteger
-
-  parseJSON (String "bigint")      = return PGBigInt
-  parseJSON (String "int8")      = return PGBigInt
-
-  parseJSON (String "real")        = return PGFloat
-  parseJSON (String "float4")      = return PGFloat
-
-  parseJSON (String "double precision")      = return PGDouble
-  parseJSON (String "float8")      = return PGDouble
-
-  parseJSON (String "numeric")     = return PGNumeric
-  parseJSON (String "decimal")     = return PGNumeric
-
-  parseJSON (String "boolean")     = return PGBoolean
-  parseJSON (String "bool")        = return PGBoolean
-
-  parseJSON (String "character")   = return PGChar
-
-  parseJSON (String "varchar")     = return PGVarchar
-  parseJSON (String "character varying")     = return PGVarchar
-
-  parseJSON (String "text")        = return PGText
-  parseJSON (String "citext")      = return PGText
-
-  parseJSON (String "date")        = return PGDate
-
-  parseJSON (String "timestamptz") = return PGTimeStampTZ
-  parseJSON (String "timestamp with time zone") = return PGTimeStampTZ
-
-  parseJSON (String "timetz")      = return PGTimeTZ
-  parseJSON (String "time with time zone") = return PGTimeTZ
-
-  parseJSON (String "json") = return PGJSON
-  parseJSON (String "jsonb") = return PGJSONB
-
-  parseJSON (String "geometry") = return PGGeometry
-  parseJSON (String "geography") = return PGGeography
-
-  parseJSON (String t)             = return $ PGUnknown t
-  parseJSON _                      =
-    fail "Expecting a string for PGColType"
 
 pgTypeOid :: PGColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
@@ -361,3 +396,17 @@ isComparableType PGGeography   = False
 isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
+
+isBigNum :: PGColType -> Bool
+isBigNum = \case
+  PGBigInt    -> True
+  PGBigSerial -> True
+  PGNumeric   -> True
+  PGDouble    -> True
+  _           -> False
+
+isGeoType :: PGColType -> Bool
+isGeoType = \case
+  PGGeometry  -> True
+  PGGeography -> True
+  _           -> False

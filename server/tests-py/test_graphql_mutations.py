@@ -128,6 +128,9 @@ class TestGraphqlInsertPermission(DefaultTestQueries):
     def test_resident_5_modifies_resident_6_upsert(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
 
+    def test_blog_on_conflict_update_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -226,6 +229,9 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_articles_author_upsert_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/articles_author_upsert_fail.yaml")
 
+    def test_articles_with_author_returning(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/nested"
@@ -254,6 +260,10 @@ class TestGraphqlUpdateBasic(DefaultTestQueries):
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
+
+    def test_empty_set_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_empty_set.yaml")
+        hge_ctx.may_skip_test_teardown = True
 
     def test_set_person_details(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/person_set_details.yaml")
@@ -311,6 +321,12 @@ class TestGraphqlUpdatePermissions(DefaultTestQueries):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
         hge_ctx.may_skip_test_teardown = True
 
+    def test_user_update_resident_preset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset.yaml')
+
+    def test_user_update_resident_preset_session_var(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_update_resident_preset_session_var.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
@@ -323,6 +339,9 @@ class TestGraphqlDeleteBasic(DefaultTestQueries):
 
     def test_article_delete_returning(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
+
+    def test_article_delete_returning_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml")
 
     @classmethod
     def dir(cls):

@@ -176,7 +176,7 @@ convToTxt :: PGColType
           -> Value
           -> AT.Parser S.SQLExp
 convToTxt ty val =
-  txtEncoder <$> parsePGValue ty val
+  toTxtValue ty <$> parsePGValue ty val
 
 readEitherTxt :: (Read a) => T.Text -> Either String a
 readEitherTxt = readEither . T.unpack
@@ -188,29 +188,27 @@ iresToEither (ISuccess a)   = return a
 pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
-applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
-applyGeomFromGeoJson v =
-  S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
+withGeoVal ty v =
+  bool v applyGeomFromGeoJson isGeoTy
+  where
+    applyGeomFromGeoJson =
+      S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 
-isGeoTy :: PGColType -> Bool
-isGeoTy = \case
-  PGGeometry  -> True
-  PGGeography -> True
-  _           -> False
+    isGeoTy = case ty of
+      PGGeometry  -> True
+      PGGeography -> True
+      _           -> False
 
 toPrepParam :: Int -> PGColType -> S.SQLExp
-toPrepParam i =
-  bool prepVal (applyGeomFromGeoJson prepVal) . isGeoTy
-  where
-    prepVal = S.SEPrep i
+toPrepParam i ty =
+  withGeoVal ty $ S.SEPrep i
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
   S.annotateExp txtVal ty
   where
-    txtVal = withGeoVal $ txtEncoder val
-    withGeoVal v =
-      bool v (applyGeomFromGeoJson v) $ isGeoTy ty
+    txtVal = withGeoVal ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

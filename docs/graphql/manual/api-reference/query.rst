@@ -1,7 +1,5 @@
-.. title:: API Reference - Query/Subscription
-
-API Reference - Query/Subscription
-==================================
+API Reference - Query / Subscription
+====================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -71,7 +69,11 @@ Syntax definitions
 Object
 ^^^^^^
 
-.. _simple_object:
+.. parsed-literal::
+
+   SimpleObject_ | AggregateObject_
+
+.. _SimpleObject:
 
 Simple Object
 *************
@@ -81,6 +83,7 @@ Simple Object
   object-name {
     field1
     field2
+    json_field[(path: String)]
     ..
     nested object1
     nested object2
@@ -88,16 +91,36 @@ Simple Object
     ..
   }
 
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - path
+     - false
+     - Value
+     - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`_. However, prefix symbol ``$.`` is optional.
+
 E.g.
 
 .. code-block:: graphql
 
    author {
-      id  # scalar field
-      name  # scalar field
+      id  # scalar integer field
+      
+      name  # scalar text field
+
+      address(path: "$.city") # scalar JSON field -> property
+      address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
+      contacts(path: "[0]") # scalar JSON field -> array_item
+      contacts(path: "[0].phone") # scalar JSON field -> array_item_property 
+      
       article {  # nested object
         title
       }
+      
       article_aggregate {  # aggregate nested object
         aggregate {
           count
@@ -108,7 +131,7 @@ E.g.
       }
    }
 
-.. _aggregate_object:
+.. _AggregateObject:
 
 Aggregate Object
 ****************
@@ -218,7 +241,7 @@ E.g.
          title
        }
 
-       article_aggregate{  # aggregate nested object
+       article_aggregate {  # aggregate nested object
          aggregate {
            count
          }
@@ -328,6 +351,19 @@ Operator
 - ``_gte``
 - ``_lte``
 
+**Text related operators:**
+
+- ``_like``
+- ``_nlike``
+- ``_ilike``
+- ``_nilike``
+- ``_similar``
+- ``_nsimilar``
+
+**Checking for NULL values:**
+
+- ``_is_null`` (takes true/false as values)
+
 **JSONB operators:**
 
 .. list-table::
@@ -347,19 +383,6 @@ Operator
      - ``?&``
 
 (For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
-
-**Text related operators :**
-
-- ``_like``
-- ``_nlike``
-- ``_ilike``
-- ``_nilike``
-- ``_similar``
-- ``_nsimilar``
-
-**Checking for NULL values:**
-
-- ``_is_null`` (takes true/false as values)
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -389,15 +412,14 @@ Operator
 
 .. note::
 
-   1. All operators take a ``json`` representation of ``geometry/geography`` values.
-   2. Input value for ``_st_d_within`` operator is an object:-
+   - All operators take a JSON representation of ``geometry/geography`` values as input value.
+   - Input value for ``_st_d_within`` operator is an object:
 
-   .. parsed-literal::
+     .. parsed-literal::
 
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
-
 
 .. _OrderByExp:
 
@@ -428,7 +450,7 @@ or
 
 
 TableOrderBy
-************
+""""""""""""
 
 For columns:
 
@@ -463,32 +485,8 @@ Order by type for "article" table:
      likes_aggregate: likes_aggregate_order_by
    }
 
-AggregateOrderBy               
-****************
-
-Count aggregate
-
-.. parsed-literal::
-   {count: OrderByEnum_}
-
-Operation aggregate
-
-.. parsed-literal::
-   {op_name: TableAggOpOrderBy_}
-
-Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
-``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
-
-TableAggOpOrderBy
-*****************
-
-.. parsed-literal::
-   {column: OrderByEnum_}
-
-
-
 OrderByEnum
-***********
+###########
 
 .. code-block:: graphql
 
@@ -508,6 +506,27 @@ OrderByEnum
      desc_nulls_last
    }
 
+AggregateOrderBy
+################
+
+Count aggregate
+
+.. parsed-literal::
+   {count: OrderByEnum_}
+
+Operation aggregate
+
+.. parsed-literal::
+   {op_name: TableAggOpOrderBy_}
+
+Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
+``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
+
+TableAggOpOrderBy
+&&&&&&&&&&&&&&&&&
+
+.. parsed-literal::
+   {column: OrderByEnum_}
 
 .. _PaginationExp:
 

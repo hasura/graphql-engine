@@ -511,7 +511,7 @@ body {
 .footerWrapper .footerLinkPadd {
   margin-left: 20px;
 }
-.footerWrapper .accessKey button {
+.footerWrapper .adminSecret button {
   background-color: #a5b9cc;
   border: 0;
   padding-right: 0;

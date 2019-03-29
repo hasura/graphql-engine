@@ -8,6 +8,9 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
+import Button from '../../../Common/Button/Button';
+import TopicDescription from '../../CommonLanding/TopicDescription';
+import TryItOut from '../../CommonLanding/TryItOut';
 
 const appPrefix = globals.urlPrefix + '/events';
 
@@ -20,10 +23,22 @@ class Schema extends Component {
   }
 
   render() {
-    const { migrationMode, dispatch } = this.props;
+    const { migrationMode, dispatch, listingTrigger } = this.props;
 
-    const styles = require('../PageContainer/PageContainer.scss');
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
+    const showFirstSection = listingTrigger.length ? false : true;
+    const queryDefinition = `mutation {
+  insert_user(objects: [{name: "testuser"}] ){
+    affected_rows
+  }
+}`;
+    const footerEvent = (
+      <span>
+        Head to the Events tab and see an event invoked under{' '}
+        <span className={styles.fontWeightBold}> test-trigger</span>.
+      </span>
+    );
     return (
       <div
         className={`${styles.padd_left_remove} container-fluid ${
@@ -32,25 +47,51 @@ class Schema extends Component {
       >
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
-          <div>
-            <h2 className={`${styles.heading_text} ${styles.inline_block}`}>
-              {' '}
+          <div className={styles.display_flex}>
+            <h2
+              className={`${styles.headerText} ${styles.addPaddRight} ${
+                styles.inline_block
+              }`}
+            >
               Event Triggers{' '}
             </h2>
             {migrationMode ? (
-              <button
+              <Button
                 data-test="data-create-trigger"
-                className={styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch(push(`${appPrefix}/manage/triggers/add`));
                 }}
               >
-                Create Trigger
-              </button>
+                Add
+              </Button>
             ) : null}
           </div>
           <hr />
+          {showFirstSection ? (
+            <div>
+              <TopicDescription
+                title="What are Event Triggers?"
+                imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+                imgAlt="Event Triggers"
+                description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+              />
+              <hr className={styles.clear_fix} />
+            </div>
+          ) : null}
+          <TryItOut
+            service="eventTrigger"
+            title="Steps to deploy an example Event Trigger to Glitch"
+            queryDefinition={queryDefinition}
+            footerDescription={footerEvent}
+            glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
+            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
+            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
+            awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
+            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+          />
         </div>
       </div>
     );
@@ -73,6 +114,7 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
+  listingTrigger: state.triggers.listingTrigger,
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

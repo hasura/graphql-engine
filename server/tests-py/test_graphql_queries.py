@@ -200,11 +200,32 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_cannot_access_remarks_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml')
 
+    def test_user_can_query_geometry_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter.yaml')
+
+    def test_user_can_query_geometry_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_geometry_values_filter_session_vars.yaml')
+
+    def test_user_can_query_jsonb_values_filter(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter.yaml')
+
+    def test_user_can_query_jsonb_values_filter_session_vars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_session_vars.yaml')
+
     def test_artist_select_query_Track_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track_fail.yaml')
 
     def test_artist_select_query_Track(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/artist_select_query_Track.yaml')
+
+    def test_artist_search_tracks(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks.yaml')
+
+    def test_artist_search_tracks_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/artist_search_tracks_aggregate.yaml')
+
+    def test_staff_passed_students(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml')
 
     @classmethod
     def dir(cls):
@@ -274,6 +295,9 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
     def test_query_using_polygon(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_using_polygon.yaml')
 
+    def test_query_geography_spatial_ops(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/postgis'
@@ -312,3 +336,21 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
+
+class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
+
+    def test_search_posts(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
+
+    def test_search_posts_aggregate(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
+
+    def test_alter_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
+
+    def test_overloading_function_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions'

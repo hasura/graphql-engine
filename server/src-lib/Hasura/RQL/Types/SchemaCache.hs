@@ -63,7 +63,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , InsSetCols
+       , PreSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -84,6 +84,17 @@ module Hasura.RQL.Types.SchemaCache
        , mkColDep
        , getDependentObjs
        , getDependentObjsWith
+
+       , FunctionType(..)
+       , FunctionArg(..)
+       , FunctionArgName(..)
+       , FunctionName(..)
+       , FunctionInfo(..)
+       , FunctionCache
+       , getFuncsOfTable
+       , addFunctionToCache
+       , askFunctionInfo
+       , delFunctionFromCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -95,7 +106,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.Subscribe
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -105,6 +116,7 @@ import           Data.Aeson.TH
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
+import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
@@ -140,8 +152,8 @@ onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
-getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
-  pgiName ci `elem` cols
+getColInfos cols allColInfos =
+  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -186,7 +198,7 @@ data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !InsSetCols
+  , ipiSet             :: !PreSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -209,6 +221,7 @@ data UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpSQL
+  , upiSet             :: !PreSetCols
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -241,8 +254,7 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId          :: !TriggerId
-   , etiName        :: !TriggerName
+   { etiName        :: !TriggerName
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
@@ -341,14 +353,55 @@ mkTableInfo
   -> [PGColInfo]
   -> [PGCol]
   -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
+mkTableInfo tn isSystemDefined uniqCons cols pCols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-  uniqCons pcols mVI (M.fromList [])
+    uniqCons pCols mVI (M.fromList [])
   where
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
 
+data FunctionType
+  = FTVOLATILE
+  | FTIMMUTABLE
+  | FTSTABLE
+  deriving (Eq)
+
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+
+funcTypToTxt :: FunctionType -> T.Text
+funcTypToTxt FTVOLATILE  = "VOLATILE"
+funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
+funcTypToTxt FTSTABLE    = "STABLE"
+
+instance Show FunctionType where
+  show = T.unpack . funcTypToTxt
+
+newtype FunctionArgName =
+  FunctionArgName { getFuncArgNameTxt :: T.Text}
+  deriving (Show, Eq, ToJSON)
+
+data FunctionArg
+  = FunctionArg
+  { faName :: !(Maybe FunctionArgName)
+  , faType :: !PGColType
+  } deriving(Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+
+data FunctionInfo
+  = FunctionInfo
+  { fiName          :: !QualifiedFunction
+  , fiSystemDefined :: !Bool
+  , fiType          :: !FunctionType
+  , fiInputArgs     :: !(Seq.Seq FunctionArg)
+  , fiReturnType    :: !QualifiedTable
+  , fiDeps          :: ![SchemaDependency]
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
+type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -370,6 +423,7 @@ removeFromDepMap =
 data SchemaCache
   = SchemaCache
   { scTables            :: !TableCache
+  , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
@@ -378,6 +432,11 @@ data SchemaCache
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+
+getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
+getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
+  where
+    allFuncs = M.elems fc
 
 modDepMapInCache :: (CacheRWM m) => (DepMap -> DepMap) -> m ()
 modDepMapInCache f = do
@@ -434,7 +493,7 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
+  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -599,6 +658,48 @@ delEventTriggerFromCache qt trn = do
       return $ ti { tiEventTriggerInfoMap = M.delete trn etim }
     schObjId = SOTableObj qt $ TOTrigger trn
 
+addFunctionToCache
+  :: (QErrM m, CacheRWM m)
+  => FunctionInfo -> m ()
+addFunctionToCache fi = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup fn functionCache of
+    Just _ -> throw500 $ "function already exists in cache " <>> fn
+    Nothing -> do
+      let newFunctionCache = M.insert fn fi functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (addToDepMap objId deps)
+  where
+    fn = fiName fi
+    objId = SOFunction $ fiName fi
+    deps = fiDeps fi
+
+askFunctionInfo
+  :: (CacheRM m, QErrM m)
+  => QualifiedFunction ->  m FunctionInfo
+askFunctionInfo qf = do
+  sc <- askSchemaCache
+  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  where
+    throwNoFn = throw400 NotExists $
+      "function not found in cache " <>> qf
+
+delFunctionFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedFunction -> m ()
+delFunctionFromCache qf = do
+  sc <- askSchemaCache
+  let functionCache = scFunctions sc
+  case M.lookup qf functionCache of
+    Nothing -> throw500 $ "function does not exist in cache " <>> qf
+    Just _ -> do
+      let newFunctionCache = M.delete qf functionCache
+      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  modDepMapInCache (removeFromDepMap objId)
+  where
+    objId = SOFunction qf
+
 addPermToCache
   :: (QErrM m, CacheRWM m)
   => QualifiedTable
@@ -670,7 +771,6 @@ getDependentObjsWith f sc objId =
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
-
     -- induces a b : is b dependent on a
     induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2

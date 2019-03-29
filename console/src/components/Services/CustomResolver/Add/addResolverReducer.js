@@ -8,7 +8,7 @@ import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
 import { fetchResolvers } from '../customActions';
 
-import { generateHeaderSyms } from '../../Layout/ReusableHeader/HeaderReducer';
+import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../customActions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';

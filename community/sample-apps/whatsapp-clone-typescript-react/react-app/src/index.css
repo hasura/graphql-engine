@@ -1,0 +1,26 @@
+:root {
+  --primary-bg: #2c6157;
+  --secondary-bg: #6fd056;
+  --primary-text: white;
+  --secondary-text: white;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+#root {
+  height: 100%;
+}
+
+.Screen {
+  position: relative;
+  height: 100%;
+}

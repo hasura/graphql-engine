@@ -128,9 +128,23 @@
               </div>
 
               <div class="footer-hasura-custom">
-                Want to contribute or report missing content? Check out the <a target="_blank" href="https://github.com/hasura/graphql-engine/tree/master/docs">github repo for docs</a>.<br>
-                Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
-                Copyright &copy; 2018 <a target="_blank" href="https://hasura.io">Hasura</a>.
+                <img class="responsive footer_logo" src="{{ pathto('_images/layout/Hasura.svg', 1) }}" />
+                <div class="footer_text">
+                  <div>Want to contribute or report missing content?</div>
+                  <div>
+                    <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">check this page on github</a>
+                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
+                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
+                  </div>
+                  <br/>
+                  <div>
+                    <a target="_blank" href="https://github.com/hasura/graphql-engine">Hasura GraphQL Engine</a> is open source. <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
+                  </div>
+                  <div>
+                    Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
+                    |  Copyright &copy; 2019 <a target="_blank" href="https://hasura.io">Hasura</a>.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -503,6 +517,16 @@
           .catch(function (err) {
             console.log(err);
           });
+      }
+    });
+  </script>
+
+  <!-- open external links in new tab -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const externalLinks = $('a.reference.external');
+      for (let i = 0; i < externalLinks.length; i++) {
+        externalLinks[i].setAttribute('target', '_blank');
       }
     });
   </script>

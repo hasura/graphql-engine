@@ -45,8 +45,8 @@ ravenApp :: L.LoggerCtx -> PGQ.PGPool -> IO Application
 ravenApp loggerCtx pool = do
   let corsCfg = CorsConfigG "*" False -- cors is enabled
   httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no access key and no webhook
-  (app, _)  <- mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager AMNoAuth corsCfg True -- no access key and no webhook
+  -- spockAsApp $ spockT id $ app Q.Serializable Nothing rlogger pool AMNoAuth corsCfg True -- no admin secret and no webhook
+  (app, _)  <- mkWaiApp Q.Serializable Nothing loggerCtx pool httpManager AMNoAuth corsCfg True -- no admin secret and no webhook
   return app
 
 

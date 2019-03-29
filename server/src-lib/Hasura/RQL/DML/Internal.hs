@@ -27,7 +27,7 @@ newtype DMLP1 a
            )
 
 liftDMLP1
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => DMLP1 a -> m (a, DS.Seq Q.PrepArg)
 liftDMLP1 =
   liftP1 . flip runStateT DS.empty . unDMLP1
@@ -37,6 +37,9 @@ instance CacheRM DMLP1 where
 
 instance UserInfoM DMLP1 where
   askUserInfo = DMLP1 $ lift askUserInfo
+
+instance HasSQLGenCtx DMLP1 where
+  askSQLGenCtx = DMLP1 $ lift askSQLGenCtx
 
 mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
@@ -50,7 +53,7 @@ mkAdminRolePermInfo ti =
     i = InsPermInfo tn annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
         Nothing True []
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue []
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
@@ -220,8 +223,8 @@ dmlTxErrorHandler p2Res =
     Just (code, msg) -> err400 code msg
   where err = simplifyError p2Res
 
-toJSONableExp :: PGColType -> S.SQLExp -> S.SQLExp
-toJSONableExp colTy expn
+toJSONableExp :: Bool -> PGColType -> S.SQLExp -> S.SQLExp
+toJSONableExp strfyNum colTy expn
   | colTy == PGGeometry || colTy == PGGeography =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
@@ -229,7 +232,7 @@ toJSONableExp colTy expn
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonType
-  | colTy == PGBigInt || colTy == PGBigSerial =
+  | isBigNum colTy && strfyNum =
       expn `S.SETyAnn` S.textType
   | otherwise = expn
 

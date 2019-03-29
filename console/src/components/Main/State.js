@@ -4,11 +4,12 @@ const defaultState = {
   migrationMode: true,
   migrationModeProgress: false,
   metadataExport: { error: false, info: null },
-  accessKeyInput: null,
+  adminSecretInput: null,
   loginInProgress: false,
   loginError: false,
   serverVersion: null,
   latestServerVersion: null,
+  telemetryEnabled: true,
 };
 
 export default defaultState;

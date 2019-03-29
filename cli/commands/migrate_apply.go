@@ -34,12 +34,16 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
 	f.StringVar(&opts.versionMigration, "version", "", "migrate the database to a specific version")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
+	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return migrateApplyCmd
 }
@@ -51,18 +55,20 @@ type migrateApplyOptions struct {
 	downMigration    string
 	versionMigration string
 	migrationType    string
+	skipExecution    bool
 }
 
 func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType)
+	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.skipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.Logger)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
 	if err != nil {
 		return err
 	}
+	migrateDrv.SkipExecution = o.skipExecution
 
 	err = ExecuteMigration(migrationType, migrateDrv, step)
 	if err != nil {
@@ -85,7 +91,7 @@ func (o *migrateApplyOptions) run() error {
 
 // Only one flag out of up, down and version can be set at a time. This function
 // checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string) (string, int64, error) {
+func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string, skipExecution bool) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
@@ -109,6 +115,10 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 
 	if flagCount > 1 {
 		return "", 0, errors.New("Only one migration type can be applied at a time (--up, --down or --goto)")
+	}
+
+	if migrationName != "version" && skipExecution {
+		return "", 0, errors.New("--skip-execution flag can be set only with --version flag")
 	}
 
 	if stepString == "all" && migrationName != "version" {

@@ -48,7 +48,7 @@ Deploy Hasura GraphQL Engine on Heroku:
 After deploying, add the following environment variables to configure JWT mode:
 
 ```
-HASURA_GRAPHQL_ACCESS_KEY : yoursecretaccesskey
+HASURA_GRAPHQL_ADMIN_SECRET : youradminsecretkey
 ```
 
 ```

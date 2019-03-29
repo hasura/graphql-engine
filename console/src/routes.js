@@ -5,9 +5,11 @@ import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound } from 'components';
 
-import { dataRouter } from './components/Services/Data';
+import { dataRouterUtils } from './components/Services/Data';
 
-import { eventRouter } from './components/Services/EventTrigger';
+import { eventRouterUtils } from './components/Services/EventTrigger';
+
+import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 import { loadMigrationStatus } from './components/Main/Actions';
 
@@ -23,8 +25,6 @@ import globals from './Globals';
 
 import validateLogin from './components/Common/validateLogin';
 
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
-
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
@@ -35,16 +35,19 @@ const routes = store => {
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.accessKey) {
+            if (globals.adminSecret) {
               alert('Hasura CLI: ' + r.message);
             } else {
               alert(
-                'Looks like CLI is not configured with the access key. Please configure and try again'
+                `Looks like CLI is not configured with the ${
+                  globals.adminSecretLabel
+                }. Please configure and try again`
               );
             }
           } else {
             alert(
-              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                'instance is running and the endpoint is configured correctly.'
             );
           }
         }
@@ -52,21 +55,27 @@ const routes = store => {
     } else {
       cb();
     }
+
     return;
   };
 
-  // loads schema
-  const dataRouterUtils = dataRouter(connect, store, composeOnEnterHooks);
-  const eventRouterUtils = eventRouter(connect, store, composeOnEnterHooks);
-  const requireSchema = dataRouterUtils.requireSchema;
-  const makeDataRouter = dataRouterUtils.makeDataRouter;
-  const makeEventRouter = eventRouterUtils.makeEventRouter;
+  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+  const requireSchema = _dataRouterUtils.requireSchema;
+  const dataRouter = _dataRouterUtils.makeDataRouter;
+
+  const _eventRouterUtils = eventRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks
+  );
+  const eventRouter = _eventRouterUtils.makeEventRouter;
 
   const customResolverRouter = getCustomResolverRouter(
     connect,
     store,
     composeOnEnterHooks
   );
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -82,8 +91,8 @@ const routes = store => {
             component={generatedApiExplorer(connect)}
           />
           <Route path="metadata" component={metadataConnector(connect)} />
-          {makeDataRouter}
-          {makeEventRouter}
+          {dataRouter}
+          {eventRouter}
           {customResolverRouter}
         </Route>
       </Route>

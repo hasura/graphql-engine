@@ -23,17 +23,17 @@ JSON payload
 
     {
       "event": {
+          "session_variables": <session-variables>,
           "op": "<op-name>",
           "data": {
-            "old": <column-values>,
-            "new": <column-values>
+              "old": <column-values>,
+              "new": <column-values>
           }
       },
       "created_at": "<timestamp>",
       "id": "<uuid>",
       "trigger": {
-          "name": "<name-of-trigger>",
-          "id": "<uuid>"
+          "name": "<name-of-trigger>"
       },
       "table":  {
           "schema": "<schema-name>",
@@ -48,6 +48,9 @@ JSON payload
    * - Key
      - Type
      - Description
+   * - session-variables
+     - Object_ or NULL
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
    * - op-name
      - OpName_
      - Name of the operation. Can only be "INSERT", "UPDATE" or "DELETE"
@@ -56,16 +59,16 @@ JSON payload
      - Key-value pairs of column name and their values of the table
    * - timestamp
      - String
-     - Timestamp value
+     - Timestamp at which event was created
    * - uuid
      - String
-     - A UUID value
+     - UUID identifier for the event
    * - name-of-trigger
      - String
      - Name of the trigger
    * - schema-name
      - String
-     - Name of the postgres schema where the table is
+     - Name of the schema for the table
    * - table-name
      - String
      - Name of the table
@@ -96,14 +99,18 @@ JSON payload
       "id": "85558393-c75d-4d2f-9c15-e80591b83894",
       "created_at": "2018-09-05T07:14:21.601701Z",
       "trigger": {
-          "name": "test_trigger",
-          "id": "37b7f91a-b3a5-4b85-be59-e5920d72f6aa"
+          "name": "test_trigger"
       },
       "table": {
           "schema": "public",
           "name": "users"
       },
       "event": {
+          "session_variables": {
+              "x-hasura-role": "admin",
+              "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
+              "x-hasura-user-id": "1"
+          },
           "op": "INSERT",
           "data": {
             "old": null,

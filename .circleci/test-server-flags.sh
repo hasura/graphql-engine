@@ -7,6 +7,36 @@ CIRCLECI_FOLDER="$PWD"
 
 SERVER_ROOT="$CIRCLECI_FOLDER/../server"
 
+i=1
+echoInfo() {
+  echo -e "\033[36m$i. $*\033[0m"
+  i=$[i+1]
+}
+
+fail_if_port_busy() {
+    local PORT=$1
+    if nc -z localhost $PORT ; then
+        echo "Port $PORT is busy. Exiting"
+        exit 1
+    fi
+}
+
+wait_for_port() {
+    local PORT=$1
+    echo "waiting for $PORT"
+    for _ in $(seq 1 30);
+    do
+      nc -z localhost $PORT && echo "port $PORT is ready" && return
+      echo -n .
+      sleep 0.2
+    done
+    echo "Failed waiting for $PORT" && exit 1
+}
+
+test_export_metadata_with_admin_secret() {
+  curl -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query -H "X-Hasura-Admin-Secret: $1" > /dev/null
+}
+
 cd $SERVER_ROOT
 
 if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
@@ -25,47 +55,86 @@ if ! [ -x "$GRAPHQL_ENGINE" ] ; then
 	exit 1
 fi
 
+HGE_PID=""
+
+run_hge_with_flags() {
+    fail_if_port_busy 8080
+    set -x
+    stdbuf -o0 "$GRAPHQL_ENGINE" serve $*  > "$OUTPUT_FOLDER/graphql-engine.log" & HGE_PID=$!
+    set +x
+    wait_for_port 8080
+}
+
+kill_hge() {
+  kill $HGE_PID || true
+  wait $HGE_PID || true
+}
+
+trap kill_hge ERR
+trap kill_hge INT
+
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-flags-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
 
-########## Test --use-prepared-statements
+########## Test --use-prepared-statements=false and flag --admin-secret
 
-"$GRAPHQL_ENGINE" serve --use-prepared-statements=false > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
+key="HGE$RANDOM$RANDOM"
 
-sleep 1
+run_hge_with_flags --use-prepared-statements=false --admin-secret="$key"
 
-kill $PID || true
+echoInfo "Test flag --admin-secret=XXXX"
+grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
+test_export_metadata_with_admin_secret "$key"
 
- grep --color -F '"use_prepared_statements":false' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
+echoInfo "Test flag --use-prepared-statements=false"
+grep -F '"use_prepared_statements":false' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
 
-"$GRAPHQL_ENGINE" serve --use-prepared-statements=true > "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
+kill_hge
 
-sleep 1
+###### Test --use-prepared-statements=true
+key="HGE$RANDOM$RANDOM"
 
-kill $PID || true
+run_hge_with_flags --use-prepared-statements=true
 
- grep --color -F '"use_prepared_statements":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
+echoInfo "Test --use-prepared-statements=true"
+grep -F '"use_prepared_statements":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
 
-######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS environmental variable
+kill_hge
+
+######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd
+
 
 export HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd
 
-"$GRAPHQL_ENGINE" serve  > "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+fail_if_port_busy 8080
+timeout 3 stdbuf -o0 "$GRAPHQL_ENGINE" serve  > "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
-sleep 1
+wait $PID || true
 
-kill $PID || true
+echoInfo "Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd"
+grep -F 'Not a valid boolean text'  "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
 
-grep --color -F 'Not a valid boolean text'  "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
 
+######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false and HASURA_GRAPHQL_ADMIN_SECRET=XXXX
+key="HGE$RANDOM$RANDOM"
 
 export HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false
 
-"$GRAPHQL_ENGINE" serve  > "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+export HASURA_GRAPHQL_ADMIN_SECRET="$key"
 
-sleep 1
+run_hge_with_flags
 
-kill $PID || true
+echoInfo "Test flag HASURA_GRAPHQL_ADMIN_SECRET=XXXX"
+grep -F '"admin_secret_set":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
+test_export_metadata_with_admin_secret "$key"
 
-grep --color -F '"use_prepared_statements":false'  "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null
+
+echoInfo "Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=false"
+grep -F '"use_prepared_statements":false' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
+
+kill_hge
+
+unset HASURA_GRAPHQL_ADMIN_SECRET
+
+unset HASURA_GRAPHQL_USE_PREPARED_STATEMENTS

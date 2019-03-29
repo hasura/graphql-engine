@@ -4,39 +4,12 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop view article_view
-
-- type: run_sql
-  args:
-    sql: |
-      drop table article
-
-- type: run_sql
-  args:
-    sql: |
-      drop view author_view
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop view hge_tests.address_view
-
-- type: run_sql
-  args:
-    sql: |
-      drop table hge_tests.address
-
-- type: run_sql
-  args:
-    sql: |
-      drop view hge_tests.resident_view
-
-- type: run_sql
-  args:
-    sql: |
-      drop table hge_tests.resident
+      DROP VIEW article_view;
+      DROP TABLE article;
+      DROP VIEW author_view;
+      DROP TABLE author;
+      DROP VIEW hge_tests.address_view;
+      DROP TABLE hge_tests.address;
+      DROP VIEW hge_tests.resident_view;
+      DROP TABLE hge_tests.resident;
+    cascade: true

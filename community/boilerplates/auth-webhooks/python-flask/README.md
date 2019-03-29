@@ -52,7 +52,7 @@ Webhook will be available at a url like `https://python-flask-lrnfqprjcc.now.sh`
 
 ## Configure Hasura
 
-Configure Hasura with the webhook url. You will need to set an access key to
+Configure Hasura with the webhook url. You will need to set an admin secret key to
 enable webhook.
 
 When running Hasura as a docker container, `localhost` will point to the
@@ -72,7 +72,7 @@ locally or as a container (not on a public url), you'll need to:
 Set the following environment variables for Hasura:
 
 ```
-HASURA_GRAPHQL_ACCESS_KEY=mysecretaccesskey
+HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey
 HASURA_GRAPHQL_AUTH_WEBHOOK=http://localhost:5000/auth-webhook
 ```
 

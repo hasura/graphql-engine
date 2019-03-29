@@ -27,7 +27,6 @@ class OnlineUsers extends React.Component {
 
   toggleMobileView = () => {
     this.setState({
-      ...this.state,
       showMobileView: !this.state.showMobileView
     });
   }

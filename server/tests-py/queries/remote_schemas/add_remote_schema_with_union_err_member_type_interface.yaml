@@ -1,0 +1,16 @@
+description: Add a remote schema with a union which has unknown object types 
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Union type 'CharacterSearchResult' can only include object types. It cannot include 'Character'
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-unknown-types
+    definition:
+      url: http://localhost:5000/union-graphql-err-subtype-iface
+      headers: []
+      forward_client_headers: true

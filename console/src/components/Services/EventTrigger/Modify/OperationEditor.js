@@ -31,12 +31,14 @@ class OperationEditor extends React.Component {
         <div>{toggleButton('Edit')}</div>
         <div className={styles.modifyOps}>
           <div className={styles.modifyOpsCollapsedContent}>
-            <div className={'col-md-12 ' + styles.noPadd}>Operations:</div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {queryTypes.map((qt, i) => (
                 <div
                   className={
-                    styles.opsCheckboxWrapper + ' col-md-4 ' + styles.noPadd
+                    styles.opsCheckboxWrapper +
+                    ' col-md-4 ' +
+                    styles.padd_remove
                   }
                   key={i}
                 >
@@ -52,15 +54,15 @@ class OperationEditor extends React.Component {
             </div>
           </div>
           <div className={styles.modifyOpsCollapsedContent}>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               Listen columns for update:&nbsp;
             </div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {definition.update ? (
                 allTableColumns.map((col, i) => (
                   <div
                     className={`${styles.opsCheckboxWrapper} col-md-4 ${
-                      styles.noPadd
+                      styles.padd_remove
                     }`}
                     key={i}
                   >
@@ -80,7 +82,7 @@ class OperationEditor extends React.Component {
                 <div
                   className={
                     'col-md-12 ' +
-                    styles.noPadd +
+                    styles.padd_remove +
                     ' ' +
                     styles.modifyOpsCollapsedtitle
                   }
@@ -99,19 +101,19 @@ class OperationEditor extends React.Component {
         <div>{toggleButton('Close')}</div>
         <div className={styles.modifyOpsPadLeft}>
           <div className={styles.modifyOpsCollapsedContent}>
-            <div className={'col-md-12 ' + styles.noPadd}>Operations:</div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {queryTypes.map((qt, i) => (
                 <div
                   className={`${styles.opsCheckboxWrapper} col-md-4 ${
-                    styles.noPadd
+                    styles.padd_remove
                   } ${styles.cursorPointer}`}
                   key={i}
                   onClick={() => {
                     dispatch(
                       toggleQueryType(
                         qt,
-                        allTableColumns,
+                        allTableColumns.map(c => c.name),
                         !modifyTrigger.definition[qt]
                       )
                     );
@@ -128,15 +130,15 @@ class OperationEditor extends React.Component {
             </div>
           </div>
           <div className={styles.modifyOpsCollapsedContent}>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               Listen columns for update:&nbsp;
             </div>
-            <div className={'col-md-12 ' + styles.noPadd}>
+            <div className={'col-md-12 ' + styles.padd_remove}>
               {modifyTrigger.definition.update ? (
                 allTableColumns.map((col, i) => (
                   <div
                     className={`${styles.opsCheckboxWrapper} col-md-4 ${
-                      styles.noPadd
+                      styles.padd_remove
                     } ${styles.cursorPointer}`}
                     key={i}
                     onClick={() => dispatch(toggleColumn('update', col.name))}
@@ -160,7 +162,7 @@ class OperationEditor extends React.Component {
                 <div
                   className={
                     'col-md-12 ' +
-                    styles.noPadd +
+                    styles.padd_remove +
                     ' ' +
                     styles.modifyOpsCollapsedtitle
                   }
