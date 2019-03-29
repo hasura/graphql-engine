@@ -117,11 +117,13 @@ Multiple roles per user
 
 Sometimes your data/user model requires that users be assigned multiple roles, and each role have access to different parts of your database schema. If you have the information about roles and how they map to your data in the same database as the one configured with GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
 
-To understand how this works, let's model the roles and corresponding permissions in the context of a blog app where:
+To understand how this works, let's model the roles and corresponding permissions in the context of a blog app wth the following roles:
 
-* Users can submit their own articles as an ``author`` and/or edit certain articles assigned to them as a ``reviewer``.
+* ``author``: Users with this role can submit **their own** articles. 
 
-* Some users are also designated as an ``editor``, allowing them to edit or delete any article.
+* ``reviewer``: Users with this role can review **articles assigned to them** and add a review comment to each article. A mapping of articles to reviewers is maintained in the ``reviewers`` table.  
+
+* ``editor``: Users with this role can edit and publish **any article**. They can also leave a private rating for each article. However, they cannot overwrite a reviewer's notes. A list of editors is maintained in the ``editors`` table.
 
 .. thumbnail:: ../../../img/graphql/manual/auth/multirole-setup.png
    :class: no-shadow
@@ -136,32 +138,37 @@ We'll create the following tables:
 
   -- user information from your auth system
 
-  user_info (
+  users (
     id INT PRIMARY KEY,
-    name TEXT
+    name TEXT,
+    profile JSONB, -- some profile information like display_name, etc.
+    registered_at timestampz -- the time when this user registered 
   )
   
-  -- information about articles and authors
+  -- information about articles
 
   articles (
-    id INT PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     title TEXT,
-    author_id INT REFERENCES user_info(id) -- Foreign key to user_info :: id
+    author_id INT REFERENCES users(id), -- Foreign key to users :: id
+    is_reviewed BOOLEAN DEFAULT FALSE,
+    review_comment TEXT,
+    is_published BOOLEAN DEFAULT FALSE,
+    editor_rating INTEGER
   )
 
-  -- mapping of reviewers to articles (many to many)
+  -- mapping of reviewers to articles
   
-  article_reviewer (
-    article_id INT REFERENCES articles(id), -- Foreign key to articles :: id
-    reviewer_id INT REFERENCES user_info(id), -- Foreign key to user_info :: id
-    PRIMARY KEY (article_id, reviewer_id)
+  reviewers (
+    id INTEGER PRIMARY KEY,
+    article_id INTEGER REFERENCES articles(id), -- Foreign key to articles :: id
+    reviewer_id INTEGER REFERENCES users(id) -- Foreign key to users :: id
   )
 
-  -- a simple list of editors for this blog
+  -- a  list of editors
 
   editors (
-    editor_id INT REFERENCES user_info(id), -- Foreign key to user_info :: id
-    PRIMARY KEY (editor_id)
+    editor_id INTEGER PRIMARY KEY REFERENCES users(id) -- Foreign key to users :: id
   )
 
 Relationships

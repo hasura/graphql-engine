@@ -3,7 +3,7 @@ Access control basics
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 In this section, we're going to set up a simple access control rule for restricting querying on a table.
@@ -42,9 +42,13 @@ accepted with **admin** permissions.
 
 .. thumbnail:: ../../../img/graphql/manual/auth/fetch-authors.png
 
+Access control use-cases
+------------------------
+The following are the different permutations in which you can configure a single permission rule to support different use-cases.
+
 
 Add a simple access control rule for a logged in user
------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's say that we want to restrict users to fetch only their own data.
 
@@ -106,15 +110,14 @@ You can notice above how the same query now only includes the right slice of dat
         ]
       }
 
-  This rule reads as: allow selecting an article if it was published after "31-12-2018" and its author is the current
-  user.
+  This rule reads as: allow selecting an article if it was published after "31-12-2018" and its author is the current user.
 
   **Note:** The operators ``_has_keys_all`` and ``_has_keys_any`` are currently not supported in permission rules
 
 .. _restrict_columns:
 
 Restrict access to certain columns
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We can restrict the columns of a table that a particular role has access to.
 
@@ -125,13 +128,71 @@ Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions
 .. _limit_rows:
 
 Limit number of rows returned in a single request
--------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We can set a hard limit on the maximum number of rows that will be returned in a single request for a table for a particular role.
 
 Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions for the role:
 
 .. thumbnail:: ../../../img/graphql/manual/auth/limit-results.png
+
+Using relationships or nested objects in permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can leverage relationships to define permission rules with fields from a nested object. Let's take the following example:
+
+* An author/articles schema where an article can have one or more reviewers i.e. users with the role ``reviewer`` can only edit those articles that have been assigned to them:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/schema-for-nested-object-based-permissions.png
+
+* The foreign key constraint from ``reviewers`` :: ``article_id``  →  ``articles`` :: ``id`` is used for an array relationship called  ``reviewers`` in the ``articles`` table:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/array-relationship-reviewers.png
+   :class: no-shadow
+
+We can use this relationship in a permission rule for the ``articles`` table  to limit access for users with the role ``reviewer`` to only assigned rows:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/nested-object-permissions-rule.gif
+
+Via the relationship, we are using the ``reviewer_id`` field of the nested object ``reviewers`` in the the above permission rule that reads as "Allow updating an article if the **reviewer_id of any of the reviewers assigned to this article** is the same as the requesting user's id (*which is sent in the resolved session variable* ``X-Hasura-User-ID``)".
+
+Let's say we have the following test data for the list of reviewers:
+
+.. list-table:: Data in the ``reviewers`` table
+   :header-rows: 1
+
+   * - id
+     - article_id
+     - reviewer_id
+   * - 1
+     - 1
+     - 5
+   * - 2
+     - 3
+     - 5
+   * - 3
+     - 5
+     - 5
+   * - 4
+     - 2
+     - 6
+   * - 5
+     - 4
+     - 6
+
+Applying the same permission rule for "select", let's query the  ``articles`` table to watch this permission rule in action:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-role-reviewer.png
+  :class: no-shadow
+
+As we've made this query with the role ``reviewer`` and user ID ``5`` (*highlighted in the request headers in the above image*), we can only query those articles for which this user is a reviewer. This will be the case for mutations too. As our user with id ``5`` does not have access to article with id ``2`` (*refer to the table above*), the following mutation will not update any rows of the ``articles`` table:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/unsuccessful-mutation-for-role-reviewer.png
+  :class: no-shadow
+   
+.. admonition:: Array and Object relationships work similarly
+  
+  The above example would have worked even if the relationship were an object relationship. In our example, the corresponding rule for an object relationship would have read "*if this article's reviewer's id is the same as the requesting user's id, allow access to it*".
+
 
 More about permissions
 ----------------------
