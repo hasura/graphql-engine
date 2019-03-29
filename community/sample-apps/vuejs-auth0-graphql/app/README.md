@@ -7,7 +7,7 @@ This sample Vue.js app demonstrates:
 - Accessing profile information that has been provided in the ID token
 - Gated content. The `/profile` route is not accessible without having first logged in
 
-# Integrating Vue App with Auth0 and JWT authorization with Hasura GraphQL Engine
+## Integrating Vue App with Auth0 and JWT authorization with Hasura GraphQL Engine
 
 In this example, we use Hasura GraphQL engine's JWT authorization mode. We use
 Auth0 as our authentication and JWT token provider.
@@ -108,7 +108,7 @@ function (user, context, callback) {
 
 ## Run the application
 
-`$ npm install && npm run serve`
+`npm install && npm run serve`
 
   > The app runs on port 3000 by default. You can change the port number, but you will also have to reconfigure the callback
 
