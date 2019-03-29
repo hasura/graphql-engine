@@ -14,7 +14,7 @@ import (
 
 func testMetadataReset(t *testing.T, metadataFile string, endpoint *url.URL) {
 	logger, _ := test.NewNullLogger()
-	opts := &metadataResetOptions{
+	opts := &metadataClearOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
@@ -25,7 +25,7 @@ func testMetadataReset(t *testing.T, metadataFile string, endpoint *url.URL) {
 				ParsedEndpoint: endpoint,
 			},
 		},
-		actionType: "reset",
+		actionType: "clear",
 	}
 
 	opts.EC.Version = version.New()
