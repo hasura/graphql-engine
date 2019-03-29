@@ -200,7 +200,7 @@ class TestSubscriptionLiveQueries(object):
         assert ev['type'] == 'connection_ack', ev
 
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.load(c)
+            conf = yaml.safe_load(c)
 
         query = """
         subscription {

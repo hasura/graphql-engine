@@ -24,7 +24,7 @@ class TestHorizantalScaleBasic():
     
     def test_horizontal_scale_basic(self, hge_ctx):
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.load(c)
+            conf = yaml.safe_load(c)
         
         assert isinstance(conf, list) == True, 'Not an list'
         for _, step in enumerate(conf):

@@ -59,7 +59,7 @@ class TestRemoteSchemaBasic:
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
+            query = yaml.safe_load(f)
         st_code, resp = check_query(hge_ctx, query)
         assert st_code == 200, resp
         assert check_introspection_result(resp, ['Hello'], ['hello'])
@@ -211,7 +211,7 @@ class TestAddRemoteSchemaTbls:
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
+            query = yaml.safe_load(f)
         st_code, resp = check_query(hge_ctx, query)
         assert st_code == 200, resp
         assert check_introspection_result(resp, ['User', 'hello'], ['user', 'hello'])
@@ -307,7 +307,7 @@ class TestAddRemoteSchemaCompareRootQueryFields:
 
     def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
+            query = yaml.safe_load(f)
         st_code, introspect_hasura = check_query(hge_ctx, query)
         assert st_code == 200, introspect_hasura
         resp = requests.post(

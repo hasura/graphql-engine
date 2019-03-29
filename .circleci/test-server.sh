@@ -165,7 +165,7 @@ run_pytest_parallel() {
 }
 
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
-rm graphql-engine.tix
+rm graphql-engine.tix || true
 
 start_gql_servers
 
