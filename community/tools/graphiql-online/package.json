@@ -13,6 +13,7 @@
     "start": "concurrently --kill-others \"npm run start-prod\"",
     "start-prod": "better-npm-run start-prod",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "now-build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "lint": "eslint -c .eslintrc src api",
     "start-dev": "better-npm-run start-dev",
@@ -20,7 +21,7 @@
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/test_complete.js' --config baseUrl=$CYPRESS_BASE_URL",
-    "deploy": "now --docker --public && now alias && now alias hasura-graphiql.now.sh graphiql-online.com"
+    "deploy": "now"
   },
   "betterScripts": {
     "start-prod": {
@@ -45,7 +46,7 @@
     "deep-equal": "^1.0.1",
     "graphiql": "^0.11.11",
     "graphiql-explorer-hasura": "0.0.7",
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.2",
     "hasura-console-graphiql": "0.0.10",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
