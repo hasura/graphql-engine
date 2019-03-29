@@ -9,6 +9,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
@@ -17,15 +18,14 @@ import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
-import           Hasura.RQL.Types
 import           Hasura.RQL.Misc.Config
+import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
@@ -222,7 +222,7 @@ queryNeedsReload qi = case qi of
 
   RQDumpInternalState _        -> False
 
-  RQGetConfig _               -> False
+  RQGetConfig _                -> False
 
   RQBulk qs                    -> any queryNeedsReload qs
 
@@ -282,7 +282,7 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQDumpInternalState q        -> runDumpInternalState q
 
-  RQGetConfig q               -> runGetConfig q
+  RQGetConfig q                -> runGetConfig q
 
   RQRunSql q                   -> runRunSQL q
 
