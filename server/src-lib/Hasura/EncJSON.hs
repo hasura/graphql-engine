@@ -21,6 +21,7 @@ import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.Text.Encoding      as TE
+import qualified Database.PG.Query       as Q
 
 -- encoded json
 -- TODO: can be improved with gadts capturing bytestring, lazybytestring
@@ -28,6 +29,9 @@ import qualified Data.Text.Encoding      as TE
 newtype EncJSON
   = EncJSON { unEncJSON :: BB.Builder }
   deriving (Semigroup, Monoid, IsString)
+
+instance Q.FromCol EncJSON where
+  fromCol = fmap encJFromBS . Q.fromCol
 
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON

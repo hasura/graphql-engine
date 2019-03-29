@@ -64,12 +64,10 @@ import qualified Hasura.GraphQL.Context        as GC
 
 import qualified Database.PG.Query             as Q
 
-import           Data.Aeson
+import           Data.Aeson.Extended
 
-import qualified Data.Aeson.Text               as AT
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
-import qualified Data.Text.Lazy                as LT
 import qualified Network.HTTP.Client           as HTTP
 
 getFieldInfoMap
@@ -193,10 +191,9 @@ setHeadersTx :: UserVars -> Q.TxE QErr ()
 setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
-    toStrictText = LT.toStrict . AT.encodeToLazyText
     setSess = Q.fromText $
       "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText uVars)
+      pgFmtLit (encodeToStrictText uVars)
 
 withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
