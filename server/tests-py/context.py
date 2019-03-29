@@ -33,18 +33,29 @@ class GQLWsClient:
         self.ws_url = urlparse(hge_ctx.hge_url)
         self.ws_url = self.ws_url._replace(scheme='ws')
         self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
+        self.create_conn()
+
+    def create_conn(self):
         self.ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message, on_close=self._on_close)
         self.wst = threading.Thread(target=self.ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
         self.remote_closed = False
+        self.connected = False
         self.init_done = False
         self.op_ids= set()
+
+    def recreate_conn(self):
+        self.teardown()
+        self.create_conn()
 
     def get_ws_event(self, timeout):
         return json.loads(self.ws_queue.get(timeout=timeout))
 
     def init(self):
+        if not self.connected:
+            self.recreate_conn()
+            time.sleep(1)
         payload = {'type': 'connection_init', 'payload': {}}
         if self.hge_ctx.hge_key:
             payload['payload']['headers'] = {
@@ -70,6 +81,9 @@ class GQLWsClient:
             return newId
 
     def send_query(self, query, _id=None):
+        if not self.connected:
+            self.recreate_conn()
+            time.sleep(1)
         if not self.init_done:
             self.init()
         if _id == None:
@@ -87,10 +101,16 @@ class GQLWsClient:
         self.ws.send(json.dumps(frame))
         return _id
 
+    def _on_open(self):
+        self.connected = True
+
     def _on_message(self, message):
         my_json = json.loads(message)
-        if my_json['type'] != 'ka':
+        if my_json['type'] == 'ka':
+            self.connected = True
+        else:
             self.ws_queue.put(message)
+
 
     def _on_close(self):
         self.remote_closed = True
@@ -190,8 +210,8 @@ class HGECtx:
 #            if st_code == 200:
 #                return True
 #        return False
-        
-  
+
+
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
                  hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
         #hge_url_list = [x.strip() for x in hge_urls.split(',')]

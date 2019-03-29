@@ -4,8 +4,21 @@ set -euo pipefail
 ### Functions
 
 stop_services() {
-   kill -INT $PID
-   kill $WH_PID
+   kill -INT $PID || true
+   kill $WH_PID || true
+   kill -INT $WHC_PID || true
+}
+
+time_elapsed(){
+	printf "(%02d:%02d)" $[SECONDS/60] $[SECONDS%60]
+}
+
+fail_if_port_busy() {
+    local PORT=$1
+    if nc -z localhost $PORT ; then
+        echo "Port $PORT is busy. Exiting"
+        exit 1
+    fi
 }
 
 wait_for_port() {
@@ -128,6 +141,11 @@ if ! [ -x "$GRAPHQL_ENGINE" ] ; then
 fi
 RUN_WEBHOOK_TESTS=true
 
+for port in 8080 8081 9876 5592
+do
+	fail_if_port_busy $port
+done
+
 echo -e "\nINFO: GraphQL Executable : $GRAPHQL_ENGINE"
 echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
@@ -146,6 +164,7 @@ export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 
 PID=""
 WH_PID=""
+WHC_PID=""
 HS_PID=""
 
 trap stop_services ERR
@@ -154,7 +173,7 @@ trap stop_services INT
 run_pytest_parallel() {
 	trap stop_services ERR
 	if [ -n ${HASURA_GRAPHQL_DATABASE_URL_2:-} ] ; then
-		set -x 
+		set -x
 		pytest -vv --hge-urls "$HGE_URL" "${HGE_URL_2:-}" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" "${HASURA_GRAPHQL_DATABASE_URL_2:-}" -n 2 --dist=loadfile "$@"
 		set +x
 	else
@@ -164,30 +183,32 @@ run_pytest_parallel() {
 	fi
 }
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 rm graphql-engine.tix || true
 
 start_gql_servers
 
-run_pytest_parallel
+run_pytest_parallel 
 
 kill -INT $PID
 sleep 4
 mv graphql-engine.tix graphql-engine-combined.tix || true
 
+
 ##########
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
 
 export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
 start_gql_servers
 
-run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"
+run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" 
 
 kill_hge_and_combine_hpc_reports
 
+
 ##########
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT #####################################>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT #####################################>\n"
 
 init_jwt
 
@@ -195,13 +216,13 @@ export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jw
 
 start_gql_servers
 
-run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET"
+run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" 
 
 kill_hge_and_combine_hpc_reports
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in stringified mode) #####################################>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in stringified mode) #####################################>\n"
 
 export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
 
@@ -215,7 +236,7 @@ unset HASURA_GRAPHQL_JWT_SECRET
 
 # test with CORS modes
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
 export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, https://*.foo.bar.com"
 
 "$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
@@ -230,7 +251,7 @@ unset HASURA_GRAPHQL_CORS_DOMAIN
 
 # test websocket transport with initial cookie header
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
 export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
@@ -242,13 +263,13 @@ wait_for_port 9876
 
 wait_for_port 8080
 
-echo "testcase 1: read cookie, cors enabled"
+echo "$(time_elapsed): testcase 1: read cookie, cors enabled"
 pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
 
 kill -INT $PID
 sleep 1
 
-echo "testcase 2: no read cookie, cors disabled"
+echo "$(time_elapsed): testcase 2: no read cookie, cors disabled"
 "$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
 wait_for_port 8080
@@ -258,7 +279,7 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 kill -INT $PID
 sleep 1
 
-echo "testcase 3: read cookie, cors disabled and ws-read-cookie"
+echo "$(time_elapsed): testcase 3: read cookie, cors disabled and ws-read-cookie"
 export HASURA_GRAPHQL_WS_READ_COOKIE="true"
 "$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
 
@@ -275,7 +296,7 @@ sleep 4
 combine_hpc_reports
 
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
 
 export HASURA_GRAPHQL_ENABLED_APIS="metadata"
 
@@ -297,7 +318,7 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 
 kill_hge_and_combine_hpc_reports
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH METADATA DISABLED ########>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH METADATA DISABLED ########>\n"
 
 export HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
@@ -328,7 +349,7 @@ fi
 
 if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	init_ssl
@@ -339,25 +360,23 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	wait_for_port 9090
 
-	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" 
 
 	kill_hge_and_combine_hpc_reports
 
-  echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
-  export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
-	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+	start_gql_servers
 
-	wait_for_port 8080
-
-	pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" 
 
 	rm /etc/ssl/certs/webhook.crt
 	update-ca-certificates
 
 	kill_hge_and_combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
   export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
@@ -368,7 +387,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	kill_hge_and_combine_hpc_reports
 
-	echo -e "\n<########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK (POST) ########>\n"
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK (POST) ########>\n"
   export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
@@ -388,20 +407,49 @@ unset HASURA_GRAPHQL_AUTH_HOOK
 unset HASURA_GRAPHQL_AUTH_HOOK_MODE
 unset HASURA_GRAPHQL_ADMIN_SECRET
 
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
 
 HASURA_HS_TEST_DB='postgres://postgres:postgres@localhost:6543/hs_hge_test'
-psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database hs_hge_test;"
+
+if ! psql "$HASURA_GRAPHQL_DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'hs_hge_test'" | grep -q -F '(1 row)'
+then
+	psql "$HASURA_GRAPHQL_DATABASE_URL" -c 'CREATE DATABASE hs_hge_test;'
+fi
+
+pgUserInfo=$( python3 -c '
+import os
+from urllib.parse import urlparse
+uri = urlparse( os.environ["HASURA_GRAPHQL_DATABASE_URL"] )
+if uri.password:
+    print("password="+uri.password+" user="+uri.username)
+else:
+    print("user="+uri.username)' )
+
+pgDbInfo=$(psql "$HASURA_GRAPHQL_DATABASE_URL" -c "SELECT concat(' host=',inet_server_addr(),' port=', inet_server_port(),' dbname=',current_database())" | sed -n '3 p')
 
 # create pgbouncer user
-useradd pgbouncer
+id pgbouncer || useradd pgbouncer
 cd $CIRCLECI_FOLDER
+mkdir -p pgbouncer
 chown -R pgbouncer:pgbouncer pgbouncer
+
+echo '[databases]
+hs_hge_test = '"$pgDbInfo" "$pgUserInfo"'
+
+[pgbouncer]
+listen_port = 6543
+listen_addr = 127.0.0.1
+logfile = pgbouncer/pgbouncer.log
+pidfile = pgbouncer/pgbouncer.pid
+auth_type = md5
+auth_file = pgbouncer/users.txt
+admin_users = postgres' > pgbouncer/pgbouncer.ini
 
 # start pgbouncer
 pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
 
 cd $PYTEST_ROOT
+sleep 2
 
 # start 1st server
 "$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
