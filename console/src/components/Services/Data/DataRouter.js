@@ -36,6 +36,8 @@ import {
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
 
+import { loadInconsistentObjects } from './Metadata/Actions';
+
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
 // import { validateLogin } from '../../Main/Actions';
 

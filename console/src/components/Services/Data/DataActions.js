@@ -10,6 +10,7 @@ import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
+import { loadInconsistentObjects } from './Metadata/Actions';
 import globals from '../../../Globals';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -32,6 +33,7 @@ const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
 const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
+const FILTER_SCHEMA = 'Data/FILTER_SCHEMA';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -203,6 +205,11 @@ const fetchTrackedFunctions = () => {
     );
   };
 };
+
+const setFilteredSchema = data => ({
+  type: FILTER_SCHEMA,
+  data,
+});
 
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
@@ -668,6 +675,8 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, currentTable: action.tableName };
     case FETCH_SCHEMA_LIST:
       return { ...state, schemaList: action.schemaList };
+    case FILTER_SCHEMA:
+      return { ...state, allSchemas: action.data, listingSchemas: action.data };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
     case ADMIN_SECRET_ERROR:
@@ -746,4 +755,5 @@ export {
   fetchTrackedFunctions,
   UPDATE_TRACKED_FUNCTIONS,
   initQueries,
+  setFilteredSchema,
 };

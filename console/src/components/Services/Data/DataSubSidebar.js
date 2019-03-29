@@ -23,12 +23,17 @@ const DataSubSidebar = ({
   location,
   currentFunction,
   serverVersion,
+  metadata,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
   const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
   const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
 
   const handleFunc = semverCheck('customFunctionSection', serverVersion);
+
+  if (metadata.ongoingRequest) {
+    return null;
+  }
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
@@ -72,6 +77,8 @@ const DataSubSidebar = ({
     listingSchema.map(t => {
       tables[t.table_name] = t;
     });
+
+    console.log(tables);
 
     const currentLocation = location.pathname;
 
@@ -216,6 +223,7 @@ const mapStateToProps = state => {
     listedFunctions: state.tables.listedFunctions,
     currentFunction: state.functions.functionName,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    metadata: state.metadata,
   };
 };
 

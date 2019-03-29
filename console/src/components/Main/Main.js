@@ -60,9 +60,11 @@ class Main extends React.Component {
         } catch (e) {
           console.error(e);
         }
-        dispatch(loadInconsistentObjects(this.props.serverVersion)).then(() => {
-          this.handleMetadataRedirect();
-        });
+        dispatch(loadInconsistentObjects(this.props.serverVersion, true)).then(
+          () => {
+            this.handleMetadataRedirect();
+          }
+        );
       });
       this.checkEventsTab().then(() => {
         this.checkSchemaStitch();
@@ -103,16 +105,17 @@ class Main extends React.Component {
   }
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
-      const hasRedirectedOnce = window.localStorage.getItem(
-        'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT'
-      );
-      if (!hasRedirectedOnce) {
-        window.localStorage.setItem(
-          'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT',
-          true
-        );
-        this.props.dispatch(push(globals.urlPrefix + '/metadata'));
-      }
+      this.props.dispatch(push(globals.urlPrefix + '/metadata'));
+      // const hasRedirectedOnce = window.localStorage.getItem(
+      //   'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT'
+      // );
+      // if (!hasRedirectedOnce) {
+      //   window.localStorage.setItem(
+      //     'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT',
+      //     true
+      //   );
+      //   this.props.dispatch(push(globals.urlPrefix + '/metadata'));
+      // }
     }
   }
   closeLoveIcon() {
