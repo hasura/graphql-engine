@@ -2,17 +2,10 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import {
-  analyzeFetcher,
-  graphQLFetcherFinal,
-  getRemoteQueries,
-} from './Actions';
+import { analyzeFetcher, graphQLFetcherFinal } from './Actions';
 import OneGraphExplorer from './OneGraphExplorer';
 import './GraphiQL.css';
 import semverCheck from '../../helpers/semver';
-
-const NO_TABLES_MESSAGE =
-  '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -22,16 +15,9 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
-      queries: null,
       supportAnalyze: false,
       analyzeApiChange: false,
     };
-    const queryFile = this.props.queryParams
-      ? this.props.queryParams.query_file
-      : null;
-    if (queryFile) {
-      getRemoteQueries(queryFile, queries => this.setState({ queries }));
-    }
   }
 
   componentDidMount() {
@@ -94,12 +80,7 @@ class GraphiQLWrapper extends Component {
 
   render() {
     const styles = require('../Common/Common.scss');
-    const {
-      supportAnalyze,
-      analyzeApiChange,
-      queries,
-      headerFocus,
-    } = this.state;
+    const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
     const { numberOfTables } = this.props;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
@@ -117,14 +98,12 @@ class GraphiQLWrapper extends Component {
       graphqlNetworkData.headers,
       analyzeApiChange
     );
-    const queryString = numberOfTables ? queries : NO_TABLES_MESSAGE;
     const renderGraphiql = graphiqlProps => {
       return (
         <GraphiQL
           fetcher={graphQLFetcher}
           analyzeFetcher={analyzeFetcherInstance}
           supportAnalyze={supportAnalyze}
-          query={queryString}
           {...graphiqlProps}
         />
       );
@@ -144,7 +123,8 @@ class GraphiQLWrapper extends Component {
             endpoint={graphqlNetworkData.url}
             headers={graphqlNetworkData.headers}
             headerFocus={headerFocus}
-            query={queryString}
+            queryParams={this.props.queryParams}
+            numberOfTables={numberOfTables}
           />
         </div>
       </ErrorBoundary>

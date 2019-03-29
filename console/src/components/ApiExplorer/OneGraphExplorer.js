@@ -10,6 +10,10 @@ import {
   getExplorerWidthFromLocalStorage,
   setExplorerWidthInLocalStorage,
 } from './onegraphUtils';
+import { getRemoteQueries } from './Actions';
+
+const NO_TABLES_MESSAGE =
+  '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
 
 class OneGraphExplorer extends React.Component {
   state = {
@@ -17,23 +21,52 @@ class OneGraphExplorer extends React.Component {
     explorerWidth: getExplorerWidthFromLocalStorage(),
     explorerClientX: null,
     schema: null,
-    query: this.props.query,
+    query: null,
     isResizing: false,
-    headers: []
+    headers: [],
   };
 
   componentDidMount() {
-    this.introspect();
+    this.setPersistedQuery();
   }
 
   componentDidUpdate() {
     if (this.shouldIntrospect(this.props.headers, this.state.headers)) {
-      this.introspect()
+      this.introspect();
+    }
+  }
+
+  onExplorerResize = e => {
+    const { explorerClientX, explorerWidth } = this.state;
+    if (explorerClientX === null) {
+      this.setState({ explorerClientX: e.clientX });
+    } else {
+      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
+      setExplorerWidthInLocalStorage(newExplorerWidth);
+      this.setState({
+        explorerWidth: newExplorerWidth,
+        explorerClientX: e.clientX,
+      });
+    }
+  };
+
+  setPersistedQuery() {
+    const queryFile = this.props.queryParams
+      ? this.props.queryParams.query_file
+      : null;
+    if (queryFile) {
+      getRemoteQueries(queryFile, query => this.setState({ query }));
+    } else {
+      if (this.props.numberOfTables === 0) {
+        this.setState({
+          query: NO_TABLES_MESSAGE,
+        });
+      }
     }
   }
 
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
-    if (this.props.headerFocus) {
+    if (this.props.headerFocus || !this.state.explorerOpen) {
       return false;
     }
     const oldHeaders = getHeadersAsJSON(oldHeadersArray);
@@ -41,7 +74,7 @@ class OneGraphExplorer extends React.Component {
     if (Object.keys(oldHeaders).length !== Object.keys(headers).length) {
       return true;
     }
-    for (var i = Object.keys(headers).length - 1; i >= 0; i--) {
+    for (let i = Object.keys(headers).length - 1; i >= 0; i--) {
       const key = Object.keys(headers)[i];
       const value = headers[key];
       if (oldHeaders[key] !== value) {
@@ -64,30 +97,17 @@ class OneGraphExplorer extends React.Component {
       .then(result => {
         this.setState({
           schema: buildClientSchema(result.data),
-          headers: JSON.parse(JSON.stringify(headers))
+          headers: JSON.parse(JSON.stringify(headers)),
         });
       })
       .catch(error => {
+        console.error(error);
         this.setState({
           schema: null,
-          headers: JSON.parse(JSON.stringify(headers))
+          headers: JSON.parse(JSON.stringify(headers)),
         });
-      })
-  }
-
-  onExplorerResize = e => {
-    const { explorerClientX, explorerWidth } = this.state;
-    if (explorerClientX === null) {
-      this.setState({ explorerClientX: e.clientX });
-    } else {
-      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
-      setExplorerWidthInLocalStorage(newExplorerWidth);
-      this.setState({
-        explorerWidth: newExplorerWidth,
-        explorerClientX: e.clientX,
       });
-    }
-  };
+  }
 
   editQuery = query => {
     this.setState({ query });
@@ -151,7 +171,7 @@ class OneGraphExplorer extends React.Component {
           />
         </div>
         {renderGraphiql({
-          query,
+          query: query || undefined,
           onEditQuery: this.editQuery,
           toggleExplorer: this.toggleExplorer,
         })}
