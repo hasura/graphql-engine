@@ -59,15 +59,18 @@ class TestSubscriptionCtrl(object):
 
 class TestSubscriptionBasic(object):
 
-    @pytest.fixture(scope='class', autouse=True)
-    def transact(self, request, hge_ctx, ws_client):
+    @pytest.fixture(scope='class')
+    def transact(self, request, hge_ctx):
         self.dir = 'queries/subscriptions/basic'
         st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
         assert st_code == 200, resp
-        init_ws_conn(hge_ctx, ws_client)
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp
+
+    @pytest.fixture(autouse=True)
+    def ws_conn_init(self, transact, hge_ctx, ws_client):
+        init_ws_conn(hge_ctx, ws_client)
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error

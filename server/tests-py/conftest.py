@@ -73,7 +73,12 @@ def pytest_configure(config):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list =  config.getoption('--pg-urls')
+        if config.getoption('-n', default=None):
+            xdist_threads = config.getoption('-n')
+            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified"
+            assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified"
 
+@pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
     node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
     node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
@@ -86,12 +91,12 @@ def hge_ctx(request):
     config = request.config
     print("create hge_ctx")
     if is_master(config):
-        hge_url = config.hge_url_list(0)
+        hge_url = config.hge_url_list[0]
     else:
         hge_url = config.slaveinput["hge-url"]
 
     if is_master(config):
-        pg_url = config.pg_url_list(0)
+        pg_url = config.pg_url_list[0]
     else:
         pg_url = config.slaveinput["pg-url"]
 
@@ -137,6 +142,7 @@ def evts_webhook(request):
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
     client = GQLWsClient(hge_ctx)
+    time.sleep(0.1)
     yield client
     client.teardown()
 
