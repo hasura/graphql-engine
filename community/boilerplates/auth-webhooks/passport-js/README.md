@@ -47,7 +47,7 @@ npm start
  git remote add heroku https://git.heroku.com/<app-name>.git
 
  # Push changes to heroku
- # Note: You need to run this command from the toplevel of the working tree (graphql-enginej)
+ # Note: You need to run this command from the toplevel of the working tree (graphql-engine)
  git subtree push --prefix community/boilerplates/auth-webhooks/passport-js heroku master
 
  # Apply migrations

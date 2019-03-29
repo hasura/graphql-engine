@@ -13,16 +13,15 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                                as J
-import qualified Data.Aeson.Casing                         as J
-import qualified Data.Aeson.TH                             as J
-import qualified Data.ByteString.Lazy                      as BL
-import qualified Data.HashMap.Strict                       as Map
-import qualified Data.Text.Lazy                            as TL
-import qualified Data.Text.Lazy.Encoding                   as TL
-import qualified Language.GraphQL.Draft.Parser             as G
-import qualified Language.GraphQL.Draft.Printer.ByteString as PP
-import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Data.Aeson                              as J
+import qualified Data.Aeson.Casing                       as J
+import qualified Data.Aeson.TH                           as J
+import qualified Data.ByteString.Lazy                    as BL
+import qualified Data.HashMap.Strict                     as Map
+import qualified Data.Text.Lazy                          as TL
+import qualified Language.GraphQL.Draft.Parser           as G
+import qualified Language.GraphQL.Draft.Printer.LazyText as PP
+import qualified Language.GraphQL.Draft.Syntax           as G
 
 newtype GraphQLQuery
   = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
@@ -36,7 +35,7 @@ instance J.FromJSON GraphQLQuery where
 
 instance J.ToJSON GraphQLQuery where
   -- TODO: use toEncoding and the builder directly
-  toJSON q = J.String $ TL.toStrict $ TL.decodeUtf8 $ PP.renderExecutableDoc $
+  toJSON q = J.String $ TL.toStrict $ PP.renderExecutableDoc $
              G.ExecutableDocument $ unGraphQLQuery q
 
 newtype OperationName

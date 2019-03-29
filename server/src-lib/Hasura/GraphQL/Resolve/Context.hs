@@ -24,6 +24,7 @@ module Hasura.GraphQL.Resolve.Context
   , PrepArgs
   , Convert
   , runConvert
+  , withPrepArgs
   , prepare
   , prepareColVal
   , txtConverter
@@ -138,12 +139,12 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 type PrepArgs = Seq.Seq Q.PrepArg
 
 type Convert =
-  StateT PrepArgs (ReaderT ( FieldMap
-                           , OrdByCtx
-                           , InsCtxMap
-                           , SQLGenCtx
-                           ) (Except QErr)
-                  )
+  (ReaderT ( FieldMap
+           , OrdByCtx
+           , InsCtxMap
+           , SQLGenCtx
+           ) (Except QErr)
+  )
 
 prepare
   :: (MonadState PrepArgs m) => PrepFn m
@@ -163,11 +164,14 @@ txtConverter :: Monad m => PrepFn m
 txtConverter (AnnPGVal _ _ a b) =
   return $ toTxtValue a b
 
+withPrepArgs :: StateT PrepArgs Convert a -> Convert (a, PrepArgs)
+withPrepArgs m = runStateT m Seq.empty
+
 runConvert
   :: (MonadError QErr m)
   => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
   -> Convert a
-  -> m (a, PrepArgs)
+  -> m a
 runConvert ctx m =
   either throwError return $
-  runExcept $ runReaderT (runStateT m Seq.empty) ctx
+  runExcept $ runReaderT m ctx

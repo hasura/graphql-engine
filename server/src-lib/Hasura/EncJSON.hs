@@ -3,8 +3,8 @@
 
 module Hasura.EncJSON
   ( EncJSON
-  , encJToLBS
   , encJFromBuilder
+  , encJToLBS
   , encJFromJValue
   , encJFromChar
   , encJFromText
