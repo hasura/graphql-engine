@@ -9,70 +9,70 @@ const (
 )
 
 type hasuraDBQuery struct {
-	QueryType string      `json:"type"`
-	Args      interface{} `json:"args"`
+	QueryType string      `json:"type" yaml:"type"`
+	Args      interface{} `json:"args" yaml:"args"`
 }
 
 type hasuraDBulkQuery struct {
-	QueryType string          `json:"type"`
-	Args      []hasuraDBQuery `json:"args"`
+	QueryType string          `json:"type" yaml:"type"`
+	Args      []hasuraDBQuery `json:"args" yaml:"argss"`
 }
 
 type sqlQuery struct {
-	SQL string `json:"sql"`
+	SQL string `json:"sql" yaml:"sql"`
 }
 
 type sqlRes struct {
-	ResultType string `json:"result_type"`
+	ResultType string `json:"result_type" yaml:"result_type"`
 
-	Result [][]string `json:"result"`
+	Result [][]string `json:"result" yaml:"result"`
 }
 
 type tableArg struct {
-	Schema string `json:"schema"`
-	Name   string `json:"name"`
+	Schema string `json:"schema" yaml:"schema"`
+	Name   string `json:"name" yaml:"name"`
 }
 
 type unTrackTableArg struct {
-	Table   tableArg `json:"table"`
-	Cascade bool     `json:"cascade,omitempty"`
+	Table   tableArg `json:"table" yaml:"table"`
+	Cascade bool     `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 }
 
 type objectRelArg struct {
-	Table tableArg    `json:"table"`
-	Name  string      `json:"name"`
-	Using objRelUsing `json:"using"`
+	Table tableArg    `json:"table" yaml:"table"`
+	Name  string      `json:"name" yaml:"name"`
+	Using objRelUsing `json:"using" yaml:"using"`
 }
 
 type arrayRelArg struct {
-	Table tableArg     `json:"table"`
-	Name  string       `json:"name"`
-	Using arraRelUsing `json:"using"`
+	Table tableArg     `json:"table" yaml:"table"`
+	Name  string       `json:"name" yaml:"name"`
+	Using arraRelUsing `json:"using" yaml:"using"`
 }
 
 type dropRelationShipArg struct {
-	Table        tableArg `json:"table"`
-	Relationship string   `json:"relationship"`
+	Table        tableArg `json:"table" yaml:"table"`
+	Relationship string   `json:"relationship" yaml:"relationship"`
 }
 
 type objRelUsing struct {
-	ForeignKeyConstraintOn string               `json:"foreign_key_constraint_on,omitempty"`
-	ManualConfiguration    *manualConfiguration `json:"manual_configuration,omitempty"`
+	ForeignKeyConstraintOn string               `json:"foreign_key_constraint_on,omitempty" yaml:"foreign_key_constraint_on,omitempty"`
+	ManualConfiguration    *manualConfiguration `json:"manual_configuration,omitempty" yaml:"manual_configuration,omitempty"`
 }
 
 type arraRelUsing struct {
-	ForeignKeyConstraintOn *arrayForeignKeyConstraintOn `json:"foreign_key_constraint_on,omitempty"`
-	ManualConfiguration    *manualConfiguration         `json:"manual_configuration,omitempty"`
+	ForeignKeyConstraintOn *arrayForeignKeyConstraintOn `json:"foreign_key_constraint_on,omitempty" yaml:"foreign_key_constraint_on,omitempty"`
+	ManualConfiguration    *manualConfiguration         `json:"manual_configuration,omitempty" yaml:"manual_configuration,omitempty"`
 }
 
 type arrayForeignKeyConstraintOn struct {
-	Table  tableArg `json:"table"`
-	Column string   `json:"column"`
+	Table  tableArg `json:"table" yaml:"table"`
+	Column string   `json:"column" yaml:"column"`
 }
 
 type manualConfiguration struct {
-	RemoteTable   tableArg          `json:"remote_table"`
-	ColumnMapping map[string]string `json:"column_mapping"`
+	RemoteTable   tableArg          `json:"remote_table" yaml:"remote_table"`
+	ColumnMapping map[string]string `json:"column_mapping" yaml:"column_mapping"`
 }
 
 func newBulkQuery() *hasuraDBulkQuery {

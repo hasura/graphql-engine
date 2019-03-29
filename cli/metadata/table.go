@@ -32,8 +32,9 @@ type relationship struct {
 
 func newTable(name, schemaName string) *tableConfig {
 	tableInfo := &tableConfig{
-		name:       name,
-		schemaName: schemaName,
+		name:          name,
+		schemaName:    schemaName,
+		relationShips: make([]relationship, 0),
 	}
 	return tableInfo
 }

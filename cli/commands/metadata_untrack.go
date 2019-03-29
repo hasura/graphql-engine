@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata"
+	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,6 +34,7 @@ func newMetadataUnTrackCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.allRelationships, "all-relationships", false, "untrack all relationships across the given tables")
 	f.StringSliceVar(&opts.schemas, "schema", []string{"public"}, "untrack tables from this schema")
 	f.StringSliceVar(&opts.tables, "table", []string{}, "untrack these tables in the given schema")
+	f.BoolVar(&opts.exportAsMigration, "export-as-migration", false, "export the changes as a migration file")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -50,10 +52,11 @@ func newMetadataUnTrackCmd(ec *cli.ExecutionContext) *cobra.Command {
 type metadataUnTrackOptions struct {
 	EC *cli.ExecutionContext
 
-	allTables        bool
-	allRelationships bool
-	schemas          []string
-	tables           []string
+	allTables         bool
+	allRelationships  bool
+	schemas           []string
+	tables            []string
+	exportAsMigration bool
 }
 
 func (o *metadataUnTrackOptions) run() error {
@@ -74,6 +77,11 @@ func (o *metadataUnTrackOptions) run() error {
 	}
 	config.AllTables = o.allTables
 	config.AllRelationShips = o.allRelationships
+	if o.exportAsMigration {
+		timestamp := getTime()
+		createOptions := mig.New(timestamp, "untrack", o.EC.MigrationDir)
+		config.ExportAsMigration = createOptions
+	}
 
 	err = config.Scan()
 	if err != nil {
@@ -84,6 +92,5 @@ func (o *metadataUnTrackOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "can't execute untrack query")
 	}
-	o.EC.Logger.Info("untrack command executed successfully")
 	return nil
 }

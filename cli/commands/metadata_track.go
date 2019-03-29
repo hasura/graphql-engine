@@ -7,6 +7,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata"
+	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 )
 
 func newMetadataTrackCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -34,6 +35,7 @@ func newMetadataTrackCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.allRelationships, "all-relationships", false, "track all relationships across the given tables")
 	f.StringSliceVar(&opts.schemas, "schema", []string{"public"}, "track tables from this schema")
 	f.StringSliceVar(&opts.tables, "table", []string{}, "track these tables in the given schema")
+	f.BoolVar(&opts.exportAsMigration, "export-as-migration", false, "export the changes as a migration file")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -51,10 +53,11 @@ func newMetadataTrackCmd(ec *cli.ExecutionContext) *cobra.Command {
 type metadataTrackOptions struct {
 	EC *cli.ExecutionContext
 
-	allTables        bool
-	allRelationships bool
-	schemas          []string
-	tables           []string
+	allTables         bool
+	allRelationships  bool
+	schemas           []string
+	tables            []string
+	exportAsMigration bool
 }
 
 func (o *metadataTrackOptions) run() error {
@@ -75,6 +78,13 @@ func (o *metadataTrackOptions) run() error {
 	}
 	config.AllTables = o.allTables
 	config.AllRelationShips = o.allRelationships
+	config.Logger = o.EC.Logger
+	if o.exportAsMigration {
+		timestamp := getTime()
+		// what to do with name?
+		createOptions := mig.New(timestamp, "track", o.EC.MigrationDir)
+		config.ExportAsMigration = createOptions
+	}
 
 	err = config.Scan()
 	if err != nil {
@@ -85,6 +95,5 @@ func (o *metadataTrackOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "can't execute track query")
 	}
-	o.EC.Logger.Info("track command executed successfully")
 	return nil
 }

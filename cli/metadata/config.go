@@ -5,7 +5,10 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/assets"
+	migratecmd "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -27,8 +30,14 @@ type Config struct {
 	// AllRelationShips tracks all the possible relationships
 	AllRelationShips bool
 
-	// ExportAsMigration generates Down query
-	ExportAsMigration bool
+	// ExportAsMigration
+	ExportAsMigration *migratecmd.CreateOptions
+
+	// MigrationName
+	MigrationName string
+
+	// Logger
+	Logger *logrus.Logger
 
 	// internal configs
 	hasuraDBConfig *hasuraDBConfig
@@ -60,6 +69,8 @@ func NewDefaultConfig(endpoint string, accessSecret string) (*Config, error) {
 		return nil, err
 	}
 	config.hasuraDBConfig = hasuraDBConfig
+	// Setup Logger
+	config.Logger = logrus.New()
 	return config, nil
 }
 
@@ -109,18 +120,60 @@ func (c *Config) Scan() error {
 		for _, tableItem := range data.Result[1:] {
 			tableName := tableItem[tableNameIndex]
 			tableIsTracked := tableItem[tableTrackedIndex]
+
+			if len(c.Tables) != 0 {
+				if ok := c.checkTableToBeTracked(tableName); !ok {
+					continue
+				}
+			}
+
 			table := newTable(tableName, schema)
 			if tableIsTracked == "t" {
 				table.SetIsTracked(true)
 			} else {
 				table.SetIsTracked(false)
 			}
-			err := json.Unmarshal([]byte(tableItem[relationshipsIndex]), &table.relationShips)
+			var relationships []relationship
+			err := json.Unmarshal([]byte(tableItem[relationshipsIndex]), &relationships)
 			if err != nil {
 				return err
 			}
 
+			if c.AllRelationShips {
+				for _, relItem := range relationships {
+					ok := c.checkSchemaToBeTracked(relItem.RefTableSchema)
+					if !ok {
+						continue
+					}
+
+					if len(c.Tables) != 0 {
+						ok = c.checkTableToBeTracked(relItem.RefTableName)
+						if !ok {
+							continue
+						}
+					}
+
+					table.relationShips = append(table.relationShips, relItem)
+				}
+			}
+
 			c.tablesInfo = append(c.tablesInfo, *table)
+		}
+	}
+	return nil
+}
+
+func (c *Config) validateScan() error {
+	for _, tableToBeTracked := range c.Tables {
+		var isExists bool
+		for _, table := range c.tablesInfo {
+			if table.name == tableToBeTracked {
+				isExists = true
+			}
+		}
+
+		if !isExists {
+			return errors.New("table %s doesn't exists")
 		}
 	}
 	return nil
@@ -142,37 +195,40 @@ func (c *Config) Track() error {
 
 			down := tableItem.UnTrack()
 			c.trackInfo.tableDown = append(c.trackInfo.tableDown, down)
+		} else {
+			c.Logger.Warnf("table %s is already tracked", tableItem.name)
 		}
 
 		if c.AllRelationShips {
-			for _, relationship := range tableItem.relationShips {
-				ok := c.checkSchemaToBeTracked(relationship.RefTableSchema)
-				if !ok {
-					return fmt.Errorf("can't track relationship: need to add --schema %s", relationship.RefTableSchema)
-				}
-			}
-
 			up, down := tableItem.TrackRelationShips()
 			c.trackInfo.relationshipUp = append(c.trackInfo.relationshipUp, up...)
 			c.trackInfo.relationshipDown = append(c.trackInfo.relationshipDown, down...)
 		}
 	}
 
-	if c.ExportAsMigration {
+	upQuery := newBulkQuery()
+	upQuery.Args = append(upQuery.Args, c.trackInfo.tableUp...)
+	upQuery.Args = append(upQuery.Args, c.trackInfo.relationshipUp...)
+	if len(upQuery.Args) == 0 {
+		c.Logger.Info("Nothing to track")
 		return nil
 	}
 
-	bulkQuery := newBulkQuery()
-	bulkQuery.Args = append(bulkQuery.Args, c.trackInfo.tableUp...)
-	bulkQuery.Args = append(bulkQuery.Args, c.trackInfo.relationshipUp...)
-	if len(bulkQuery.Args) == 0 {
+	if c.ExportAsMigration != nil {
+		downQuery := newBulkQuery()
+		downQuery.Args = append(downQuery.Args, c.trackInfo.relationshipDown...)
+		downQuery.Args = append(downQuery.Args, c.trackInfo.tableDown...)
+		c.createMigrationfiles(upQuery.Args, downQuery.Args)
+		c.Logger.Info("migration files created")
 		return nil
 	}
 
-	_, err := c.hasuraDBConfig.sendQuery(bulkQuery)
+	_, err := c.hasuraDBConfig.sendQuery(upQuery)
 	if err != nil {
 		return err
 	}
+
+	c.Logger.Info("tables/relationships tracked successfully")
 	return nil
 }
 
@@ -187,43 +243,44 @@ func (c *Config) UnTrack() error {
 		}
 
 		if tableItem.GetIsTracked() {
-			// Generate UnTrackQuery
 			up := tableItem.UnTrack()
 			c.trackInfo.tableUp = append(c.trackInfo.tableUp, up)
 
 			down := tableItem.Track()
 			c.trackInfo.tableDown = append(c.trackInfo.tableDown, down)
+		} else {
+			c.Logger.Warnf("table %s is not tracked", tableItem.name)
 		}
 
 		if c.AllRelationShips {
-			for _, relationship := range tableItem.relationShips {
-				ok := c.checkSchemaToBeTracked(relationship.RefTableSchema)
-				if !ok {
-					return fmt.Errorf("can't track relationship: need to add --schema %s", relationship.RefTableSchema)
-				}
-			}
-
 			up, down := tableItem.UnTrackRelationShips()
 			c.trackInfo.relationshipUp = append(c.trackInfo.relationshipUp, up...)
 			c.trackInfo.relationshipDown = append(c.trackInfo.relationshipDown, down...)
 		}
 	}
 
-	if c.ExportAsMigration {
+	upQuery := newBulkQuery()
+	upQuery.Args = append(upQuery.Args, c.trackInfo.relationshipUp...)
+	upQuery.Args = append(upQuery.Args, c.trackInfo.tableUp...)
+	if len(upQuery.Args) == 0 {
+		c.Logger.Info("Nothing to untrack")
 		return nil
 	}
 
-	bulkQuery := newBulkQuery()
-	bulkQuery.Args = append(bulkQuery.Args, c.trackInfo.relationshipUp...)
-	bulkQuery.Args = append(bulkQuery.Args, c.trackInfo.tableUp...)
-	if len(bulkQuery.Args) == 0 {
+	if c.ExportAsMigration != nil {
+		downQuery := newBulkQuery()
+		downQuery.Args = append(downQuery.Args, c.trackInfo.tableUp...)
+		downQuery.Args = append(downQuery.Args, c.trackInfo.relationshipUp...)
+		c.createMigrationfiles(upQuery.Args, downQuery.Args)
+		c.Logger.Info("migration files created")
 		return nil
 	}
 
-	_, err := c.hasuraDBConfig.sendQuery(bulkQuery)
+	_, err := c.hasuraDBConfig.sendQuery(upQuery)
 	if err != nil {
 		return err
 	}
+	c.Logger.Info("tables/relationships untracked successfully")
 	return nil
 }
 
@@ -263,4 +320,21 @@ func (c *Config) checkTableToBeTracked(tableName string) bool {
 		}
 	}
 	return false
+}
+
+func (c *Config) createMigrationfiles(up, down interface{}) (err error) {
+	c.ExportAsMigration.MetaUp, err = yaml.Marshal(up)
+	if err != nil {
+		return err
+	}
+	c.ExportAsMigration.MetaDown, err = yaml.Marshal(down)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			c.ExportAsMigration.Delete()
+		}
+	}()
+	return c.ExportAsMigration.Create()
 }
