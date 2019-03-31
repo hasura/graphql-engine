@@ -280,8 +280,8 @@ func (c *Config) UnTrack() error {
 
 	if c.ExportAsMigration != nil {
 		downQuery := newBulkQuery()
-		downQuery.Args = append(downQuery.Args, c.trackInfo.tableUp...)
-		downQuery.Args = append(downQuery.Args, c.trackInfo.relationshipUp...)
+		downQuery.Args = append(downQuery.Args, c.trackInfo.tableDown...)
+		downQuery.Args = append(downQuery.Args, c.trackInfo.relationshipDown...)
 		c.createMigrationfiles(upQuery.Args, downQuery.Args)
 		c.Logger.Info("migration files created")
 		return nil
