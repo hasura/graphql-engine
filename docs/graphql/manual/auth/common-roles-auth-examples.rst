@@ -6,7 +6,7 @@ Access control examples
   :depth: 1
   :local:
 
-This is a guide to help you set up a basic authorization architecture for your GraphQL fields.
+This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended that you first check out the different :ref:`access control use-cases <acl-use-cases>` that will be referenced throughout this guide.
 
 Here are some examples of common use-cases.
 
@@ -115,7 +115,12 @@ fields for data that they own.
 Multiple roles per user
 -----------------------
 
-Sometimes your data/user model requires that users be assigned multiple roles, and each role have access to different parts of your database schema. If you have the information about roles and how they map to your data in the same database as the one configured with GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
+Sometimes your data/user model requires that:
+
+* Users can have multiple roles.
+* Each role has access to different parts of your database schema. 
+
+If you have the information about roles and how they map to your data in the same database as the one configured with GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the operations each role is allowed to perform. 
 
 To understand how this works, let's model the roles and corresponding permissions in the context of a blog app wth the following roles:
 
@@ -125,14 +130,14 @@ To understand how this works, let's model the roles and corresponding permission
 
 * ``editor``: Users with this role can edit and publish **any article**. They can also leave a private rating for each article. However, they cannot overwrite a reviewer's notes. A list of editors is maintained in the ``editors`` table.
 
-.. thumbnail:: ../../../img/graphql/manual/auth/multirole-setup.png
-   :class: no-shadow
-
-
 Database Schema
 ^^^^^^^^^^^^^^^
 
-We'll create the following tables:
+The following is a reference database schema for our example:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-db-schema.png
+
+Based on this schema, we'll create the following tables:
 
 .. code-block:: sql
 
@@ -142,7 +147,7 @@ We'll create the following tables:
     id INT PRIMARY KEY,
     name TEXT,
     profile JSONB, -- some profile information like display_name, etc.
-    registered_at timestampz -- the time when this user registered 
+    registered_at TIMESTAMP -- the time when this user registered 
   )
   
   -- information about articles
@@ -174,57 +179,96 @@ We'll create the following tables:
 Relationships
 ^^^^^^^^^^^^^
 
-Create an array relationship ``reviewers`` based on the foreign key constraint ``article_reviewer`` :: ``article_id``  →  ``articles`` :: ``id``:
+Create an array relationship named ``reviewers`` based on the foreign key constraint ``reviewers`` :: ``article_id``  →  ``articles`` :: ``id``:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/reviewers-array-relationship.png
+.. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-reviewers-array-relationship.png
      :class: no-shadow
 
 Permissions
 ^^^^^^^^^^^
+The following is an example summary of the access control requirements for the ``articles`` table based on the above schema:
 
-We'll now create permission rules to restrict access to rows and columns of the ``articles`` table as per our requirements:
++----------------+-------------+--------+--------+--------+--------+--------+
++ Columns of     | author               | reviewer        | editor          |
++ the ``article``+-------------+--------+--------+--------+--------+--------+
+| table          | insert      | select | update | select | update | select |
++================+=============+========+========+========+========+========+
+| id             | ✔️          | ✔️     | ❌     | ✔️     | ❌     | ✔️     |
++----------------+-------------+--------+--------+--------+--------+--------+
+| title          | ✔️          | ✔️     | ✔️     | ✔️     | ✔️     | ✔️     |
++----------------+-------------+--------+--------+--------+--------+--------+
+| author_id      | ✔️ :sup:`*` | ✔️     | ❌     | ✔️     | ❌     | ✔️     | 
++----------------+-------------+--------+--------+--------+--------+--------+
+| is_reviewed    | ❌          | ✔️     | ✔️     | ✔️     | ✔️     | ✔️     | 
++----------------+-------------+--------+--------+--------+--------+--------+
+| review_comment | ❌          | ✔️     | ✔️     | ✔️     | ❌     | ✔️     | 
++----------------+-------------+--------+--------+--------+--------+--------+
+| is_published   | ❌          | ✔️     | ❌     | ✔️     | ✔️     | ✔️     |
++----------------+-------------+--------+--------+--------+--------+--------+
+|editor_rating   | ❌          | ❌     | ❌     | ❌     | ✔️     | ✔️     |
++----------------+-------------+--------+--------+--------+--------+--------+
 
-* **Allow users with the role** ``author`` **to insert/select/update/delete only their own articles**
+:sup:`*` *Additional restriction required to ensure that a user with the role* ``author`` *can submit only their own article i.e.* ``author_id`` *should be the same as the user's id*.
+
+
+We'll create permission rules for the roles and actions listed above (*you can easily extend them for the actions not documented here*) .
+
+Permissions for role ``author``
+"""""""""""""""""""""""""""""""
+
+* **Allow users with the role** ``author`` **to insert only their own articles**
   
-  For insert permission, we need to just configure a session-variable-based :doc:`column preset <../schema/default-values/column-presets>` for the ``author_id`` column as this will automatically accept only the user's ID i.e. the ``X-Hasura-User-Id`` header's value. It also helps us avoid explicitly passing the user's ID in the mutation.
+  For this permission rule, we'll make use of two features of the GraphQL Engine's permissions system:
 
-  .. thumbnail:: ../../../img/graphql/manual/auth/author-insert-preset.png
-     :class: no-shadow
-
-  For update, select and delete permissions, we need to configure the following rule:
-
-  .. thumbnail:: ../../../img/graphql/manual/auth/author-update-permissions.png
-     :class: no-shadow
+  a) **Column-level permissions**: Restrict access to certain columns only.
   
-  The update permission rule shown here translates to "*if the value in the* ``author_id`` *column of this row is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *header's value, allow access to it*". We'll also remove access to the ``author_id`` column in the column permissions so it cannot be modified.
+  b) **Column presets**: Session-variable-based :doc:`column preset <../schema/default-values/column-presets>` for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
+
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-author-insert.png
+
+  Notice how we don't need to have an explicit row-level permission (*a custom check*) as only authenticated users with the role ``author`` can perform this action. As we have a column preset for the ``author_id`` column that automatically takes the author's ID (*and the* ``id`` *column is an auto-increment integer field*), we only need to allow access to the ``title`` column.
+
+* **Allow users with the role** ``author`` **to select certain columns only**
+
+  Again, we'll  use **column-level** permissions to restrict access to certain columns. Additionally, we need to define row-level permissions (*a custom check*) to restrict access to only those articles authored by the current user:
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-author-select.png
+     
   
-  The same rule can be used for select and delete too, but the column permission shown above is not required for select (*and is not applicable to delete*).
+  The row-level permission rule shown here translates to "*if the value in the* ``author_id`` *column of this row is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *session-variable's value, allow access to it*". 
 
-  If we now query the ``articles`` table as an ``author`` i.e with the header ``X-Hasura-Role`` set to ``author`` and ``X-Hasura-User-ID`` set to a user's ID, we will only see articles written by this author in the response:
+Permissions for role ``reviewer``
+"""""""""""""""""""""""""""""""""
 
-  .. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-author-role.png
-     :class: no-shadow
-
-* **Allow users with the role** ``reviewer`` **to only view articles assigned to them for reviews and edit only the content of such articles**
-
-  .. thumbnail:: ../../../img/graphql/manual/auth/reviewer-select-permissions.png
-     :class: no-shadow
-
-  The array-relationship based permission rule in the above image reads as "*if the ID of any of reviewers assigned to this article is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *header's value, allow access to it*".
-
-  The same rule can be applied to both update and delete, and in the case of update, we'll use column permissions, as shown above in the update permission for the role ``author``, to restrict access to only the ``title`` column, so that only the content can be updated by a reviewer.
-
-  In the previous example query, if we modify the role from ``author`` to ``reviewer``, we will see only those articles that have been assigned to this user for a review :
+* **Allow users with the role** ``reviewer`` **to update articles assigned to them for reviews**
   
-  .. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-reviewer-role.png
-     :class: no-shadow
+  For this use-case, we'll define :ref:`row-level permissions using relationships/nested objects <using-relationships-in-permissions>` based on the array relationship ``revewiers`` to restrict access to assigned articles only.    
 
-* **Allow editors to select/update/delete any article**
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-reviewer-update.png
 
-  .. thumbnail:: ../../../img/graphql/manual/auth/editor-delete-permissions.png
-     :class: no-shadow
+  The array-relationship based permission rule in the above image reads as "*if the ID of any of reviewers assigned to this article is equal to the user's ID i.e. the* ``X-Hasura-User-Id`` *session-variable's value, allow access to it*". The columns' access is restricted using the column-level permissions highlighted above.
+
+* **Allow users with the role** ``reviewer`` **to select articles assigned to them for reviews**
+
+  This permission rule is pretty much the same as the one for update, the only difference being the  column-level permissions.  
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-reviewer-select.png
+
+Permissions for role ``editor``
+"""""""""""""""""""""""""""""""
+
+* **Allow editors to select any article's data**
+
+  This is a straightforward rule - there's no need for any row-level permissions since editors have access to all rows and they can *read* all columns.
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-editor-select.png
   
-  We can define straightforward permission rules for the ``editor`` role that allows access to any article without any checks. The rule shown in the above image will also work for select and update.
+* **Allow editors to update an article**
+
+  There's no need for row-level permissions in this case either but we need to restrict access to certain columns only:
+
+  .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-editor-update.png
 
 
 

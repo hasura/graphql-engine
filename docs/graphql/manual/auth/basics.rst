@@ -42,6 +42,8 @@ accepted with **admin** permissions.
 
 .. thumbnail:: ../../../img/graphql/manual/auth/fetch-authors.png
 
+.. _acl-use-cases:
+
 Access control use-cases
 ------------------------
 The following are the different permutations in which you can configure a single permission rule to support different use-cases.
@@ -136,6 +138,9 @@ Head to the ``Permissions`` tab of the table and edit the ``Select`` permissions
 
 .. thumbnail:: ../../../img/graphql/manual/auth/limit-results.png
 
+
+.. _using-relationships-in-permissions:
+
 Using relationships or nested objects in permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can leverage relationships to define permission rules with fields from a nested object. Let's take the following example:
@@ -179,12 +184,12 @@ Let's say we have the following test data for the list of reviewers:
      - 4
      - 6
 
-Applying the same permission rule for "select", let's query the  ``articles`` table to watch this permission rule in action:
+Applying the above permission rule for "update" to "select" operation also, let's query the  ``articles`` table to watch this permission rule in action:
 
 .. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-role-reviewer.png
   :class: no-shadow
 
-As we've made this query with the role ``reviewer`` and user ID ``5`` (*highlighted in the request headers in the above image*), we can only query those articles for which this user is a reviewer. This will be the case for mutations too. As our user with id ``5`` does not have access to article with id ``2`` (*refer to the table above*), the following mutation will not update any rows of the ``articles`` table:
+As we've made this query with the role ``reviewer`` and user ID ``5`` (*highlighted in the request headers in the above image*), we can only query those articles for which this user is a reviewer. This will be the case for update mutations too. As the user with id ``5`` does not have access to article with id ``2`` (*refer to the table above*), the following mutation will not update any rows of the ``articles`` table:
 
 .. thumbnail:: ../../../img/graphql/manual/auth/unsuccessful-mutation-for-role-reviewer.png
   :class: no-shadow
