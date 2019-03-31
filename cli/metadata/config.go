@@ -106,6 +106,7 @@ func (c *Config) Scan() error {
 		var tableNameIndex int
 		var tableTrackedIndex int
 		var relationshipsIndex int
+		var columnsIndex int
 		for index, column := range columns {
 			switch column {
 			case "table_name":
@@ -114,12 +115,16 @@ func (c *Config) Scan() error {
 				tableTrackedIndex = index
 			case "relationships":
 				relationshipsIndex = index
+			case "columns":
+				columnsIndex = index
 			}
 		}
 
 		for _, tableItem := range data.Result[1:] {
 			tableName := tableItem[tableNameIndex]
 			tableIsTracked := tableItem[tableTrackedIndex]
+			columnsStr := tableItem[columnsIndex]
+			relationshipsStr := tableItem[relationshipsIndex]
 
 			if len(c.Tables) != 0 {
 				if ok := c.checkTableToBeTracked(tableName); !ok {
@@ -127,14 +132,20 @@ func (c *Config) Scan() error {
 				}
 			}
 
-			table := newTable(tableName, schema)
+			var columns []string
+			err := json.Unmarshal([]byte(columnsStr), &columns)
+			if err != nil {
+				return err
+			}
+
+			table := newTable(tableName, schema, columns)
 			if tableIsTracked == "t" {
 				table.SetIsTracked(true)
 			} else {
 				table.SetIsTracked(false)
 			}
 			var relationships []relationship
-			err := json.Unmarshal([]byte(tableItem[relationshipsIndex]), &relationships)
+			err = json.Unmarshal([]byte(relationshipsStr), &relationships)
 			if err != nil {
 				return err
 			}

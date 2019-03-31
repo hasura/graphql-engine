@@ -1,41 +1,167 @@
-select ist.table_name,
-       hdbt.table_name IS NOT NULL as is_table_tracked,
-       CASE
-         WHEN count(hdb_rel.*)=0 THEN '[]'::json
-         ELSE json_agg(row_to_json(hdb_rel.*))
-       END as relationships
-       from information_schema.tables AS ist
-       LEFT OUTER JOIN hdb_catalog.hdb_table AS hdbt
-          ON hdbt.table_name=ist.table_name and hdbt.table_schema=ist.table_schema
-       LEFT OUTER JOIN (
-           select hdb_fkc.table_schema,
-                  hdb_fkc.table_name,
-                  hdb_fkc.column_mapping::jsonb,
-                  hdb_fkc.ref_table_table_schema,
-                  hdb_fkc.ref_table,
-                  hdb_rel.rel_name,
-                  'object'::text as rel_type
-                  from hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc
-                  LEFT OUTER JOIN hdb_catalog.hdb_relationship AS hdb_rel
-                     ON hdb_fkc.table_schema=hdb_rel.table_schema and hdb_fkc.table_name=hdb_rel.table_name and hdb_rel.rel_type='object' and (((select count(*) from json_object_keys(hdb_fkc.column_mapping))=1 and hdb_rel.rel_def=jsonb_build_object('foreign_key_constraint_on', (select json_object_keys from json_object_keys(hdb_fkc.column_mapping) LIMIT 1))) or ((select count(*) from json_object_keys(hdb_fkc.column_mapping))>1 and hdb_rel.rel_def#>>'{manual_configuration,remote_table}'=hdb_fkc.ref_table  and hdb_rel.rel_def#>'{manual_configuration, column_mapping}'=hdb_fkc.column_mapping::jsonb))
-                  GROUP BY hdb_fkc.table_schema, hdb_fkc.table_name, hdb_fkc.ref_table_table_schema, hdb_fkc.ref_table, hdb_fkc.column_mapping::jsonb, hdb_rel.rel_name
-           UNION
-           select hdb_fkc.ref_table_table_schema as table_schema,
-                  hdb_fkc.ref_table as table_name,
-                  CASE
-                    WHEN count(key)=1 THEN json_object_agg(key, value)::jsonb
-                    ELSE json_object_agg(value, key)::jsonb
-                  END AS column_mapping,
-                  hdb_fkc.table_schema as ref_table_table_schema,
-                  hdb_fkc.table_name as ref_table,
-                  hdb_rel.rel_name,
-                  'array'::text as rel_type
-                  from hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc
-                  LEFT OUTER JOIN hdb_catalog.hdb_relationship AS hdb_rel
-                     ON hdb_fkc.ref_table_table_schema=hdb_rel.table_schema and hdb_fkc.ref_table=hdb_rel.table_name and hdb_rel.rel_type='array' and (((select count(*) from json_object_keys(hdb_fkc.column_mapping))=1 and hdb_rel.rel_def=jsonb_build_object('foreign_key_constraint_on', jsonb_build_object('table', hdb_fkc.table_name, 'column', (select json_object_keys from json_object_keys(hdb_fkc.column_mapping) LIMIT 1)))) or ((select count(*) from json_object_keys(hdb_fkc.column_mapping))>1 and hdb_rel.rel_def#>>'{manual_configuration,remote_table}'=hdb_fkc.table_name) and hdb_rel.rel_def#>'{manual_configuration, column_mapping}'=(select json_object_agg(value, key)::jsonb from json_each_text(hdb_fkc.column_mapping)))
-                  , json_each_text(column_mapping)
-                  GROUP BY hdb_fkc.table_schema, hdb_fkc.table_name, hdb_fkc.ref_table_table_schema, hdb_fkc.ref_table, hdb_fkc.column_mapping::jsonb, hdb_rel.rel_name 
-       ) as hdb_rel
-         ON ist.table_name=hdb_rel.table_name and ist.table_schema=hdb_rel.table_schema
-       where ist.table_schema = '%s'
-       GROUP BY ist.table_name, hdbt.table_name;
+WITH table_rel AS 
+(
+   select
+      relationships.table_name,
+      relationships.table_schema,
+      json_agg(row_to_json(relationships.*))::jsonb as relationships,
+      array_agg(relationships.rel_name) as rel_names 
+   from
+      (
+         select
+            hdb_fkc.table_schema,
+            hdb_fkc.table_name,
+            hdb_fkc.column_mapping::jsonb,
+            hdb_fkc.ref_table_table_schema,
+            hdb_fkc.ref_table,
+            hdb_rel.rel_name,
+            'object'::text as rel_type 
+         from
+            hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
+            LEFT OUTER JOIN
+               hdb_catalog.hdb_relationship AS hdb_rel 
+               ON hdb_fkc.table_schema = hdb_rel.table_schema 
+               and hdb_fkc.table_name = hdb_rel.table_name 
+               and hdb_rel.rel_type = 'object' 
+               and 
+               (
+(( 
+                  select
+                     count(*) 
+                  from
+                     json_object_keys(hdb_fkc.column_mapping)) = 1 
+                     and hdb_rel.rel_def = jsonb_build_object('foreign_key_constraint_on', 
+                     (
+                        select
+                           json_object_keys 
+                        from
+                           json_object_keys(hdb_fkc.column_mapping) LIMIT 1 
+                     )
+)) 
+                     or 
+                     (
+( 
+                        select
+                           count(*) 
+                        from
+                           json_object_keys(hdb_fkc.column_mapping)) > 1 
+                           and hdb_rel.rel_def #>> '{manual_configuration,remote_table}' = hdb_fkc.ref_table 
+                           and hdb_rel.rel_def #> '{manual_configuration, column_mapping}' = hdb_fkc.column_mapping::jsonb 
+                     )
+               )
+         GROUP BY
+            hdb_fkc.table_schema,
+            hdb_fkc.table_name,
+            hdb_fkc.ref_table_table_schema,
+            hdb_fkc.ref_table,
+            hdb_fkc.column_mapping::jsonb,
+            hdb_rel.rel_name 
+         UNION
+         select
+            hdb_fkc.ref_table_table_schema as table_schema,
+            hdb_fkc.ref_table as table_name,
+            CASE
+               WHEN
+                  count(key) = 1 
+               THEN
+                  json_object_agg(key, value)::jsonb 
+               ELSE
+                  json_object_agg(value, key)::jsonb 
+            END
+            AS column_mapping, hdb_fkc.table_schema as ref_table_table_schema, hdb_fkc.table_name as ref_table, hdb_rel.rel_name, 'array'::text as rel_type 
+         from
+            hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
+            LEFT OUTER JOIN
+               hdb_catalog.hdb_relationship AS hdb_rel 
+               ON hdb_fkc.ref_table_table_schema = hdb_rel.table_schema 
+               and hdb_fkc.ref_table = hdb_rel.table_name 
+               and hdb_rel.rel_type = 'array' 
+               and 
+               (
+(( 
+                  select
+                     count(*) 
+                  from
+                     json_object_keys(hdb_fkc.column_mapping)) = 1 
+                     and hdb_rel.rel_def = jsonb_build_object('foreign_key_constraint_on', jsonb_build_object('table', hdb_fkc.table_name, 'column', 
+                     (
+                        select
+                           json_object_keys 
+                        from
+                           json_object_keys(hdb_fkc.column_mapping) LIMIT 1 
+                     )
+))) 
+                     or 
+                     (
+( 
+                        select
+                           count(*) 
+                        from
+                           json_object_keys(hdb_fkc.column_mapping)) > 1 
+                           and hdb_rel.rel_def #>> '{manual_configuration,remote_table}' = hdb_fkc.table_name 
+                     )
+                     and hdb_rel.rel_def #> '{manual_configuration, column_mapping}' = 
+                     (
+                        select
+                           json_object_agg(value, key)::jsonb 
+                        from
+                           json_each_text(hdb_fkc.column_mapping) 
+                     )
+               )
+,
+               json_each_text(column_mapping) 
+         GROUP BY
+            hdb_fkc.table_schema,
+            hdb_fkc.table_name,
+            hdb_fkc.ref_table_table_schema,
+            hdb_fkc.ref_table,
+            hdb_fkc.column_mapping::jsonb,
+            hdb_rel.rel_name 
+      )
+      as relationships 
+   GROUP BY
+      relationships.table_name,
+      relationships.table_schema 
+)
+,
+table_columns AS 
+(
+   select
+      table_schema,
+      table_name,
+      array_agg(column_name::text) as columns 
+   from
+      information_schema.columns 
+   GROUP BY
+      table_schema,
+      table_name 
+)
+select
+   ist.table_name,
+   hdbt.table_name IS NOT NULL as is_table_tracked,
+   CASE
+      WHEN
+         tr.relationships IS NULL 
+      THEN
+         '[]'::jsonb 
+      ELSE
+         tr.relationships 
+   END
+   as relationships, to_json(array_remove(array_cat(tc.columns, tr.rel_names), NULL)) as columns 
+from
+   information_schema.tables AS ist 
+   LEFT OUTER JOIN
+      hdb_catalog.hdb_table AS hdbt 
+      ON hdbt.table_name = ist.table_name 
+      and hdbt.table_schema = ist.table_schema 
+   LEFT OUTER JOIN
+      table_rel as tr 
+      ON tr.table_schema = ist.table_schema 
+      and tr.table_name = ist.table_name 
+   LEFT OUTER JOIN
+      table_columns as tc 
+      ON tc.table_schema = ist.table_schema 
+      and tc.table_name = ist.table_name 
+where
+   ist.table_schema = '%s' 
+GROUP BY
+   ist.table_name, hdbt.table_name, tr.relationships::jsonb, tc.columns, tr.rel_names;
