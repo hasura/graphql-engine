@@ -33,7 +33,7 @@ const emitOnlineEvent = gql`
 
 class Chat extends React.Component {
 
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       username: props.username,
@@ -69,7 +69,7 @@ class Chat extends React.Component {
     No data is bound to the subscription component
     As soon as an event occurs, the refetch() of the child component is called
   */
-  render () {
+  render() {
     const { refetch, username } = this.state;
     return (
       <div>
@@ -77,7 +77,7 @@ class Chat extends React.Component {
           subscription={subscribeToNewMessages}
         >
           {
-            ({data, error, loading}) => {
+            ({ data, error, loading }) => {
               if (error || (data && data.message === null)) {
                 console.error(error || `Unexpected response: ${data}`);
                 return "Error";
@@ -97,13 +97,13 @@ class Chat extends React.Component {
         />
         <footer className="App-footer">
           <div className="hasura-logo">
-            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")} alt="Powered by Hasura"/>
+            <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")} alt="Powered by Hasura" />
             &nbsp; | &nbsp;
             <a href="/console" target="_blank" rel="noopener noreferrer">
               Backend
             </a>
             &nbsp; | &nbsp;
-            <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-chat" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat" target="_blank" rel="noopener noreferrer">
               Source
             </a>
             &nbsp; | &nbsp;

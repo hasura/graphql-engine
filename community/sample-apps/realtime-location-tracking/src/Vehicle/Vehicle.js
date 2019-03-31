@@ -157,7 +157,7 @@ class Vehicle extends Component { constructor() {
                 Backend
               </a>
               &nbsp; | &nbsp;
-              <a href="https://github.com/hasura/graphql-engine/tree/master/community/examples/realtime-location-tracking" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking" target="_blank" rel="noopener noreferrer">
                 Source
               </a>
               <div className="footer-small-text">
