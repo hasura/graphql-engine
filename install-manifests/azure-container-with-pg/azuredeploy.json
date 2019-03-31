@@ -51,7 +51,7 @@
     },
     "postgresDiskSizeInMB": {
       "type": "int",
-      "minValue": 5210,
+      "minValue": 5120,
       "maxValue": 4096000,
       "defaultValue": 10240,
       "metadata": {
