@@ -148,18 +148,6 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-#    code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-#    print(headers)
-#    assert code == conf['status'], resp
-#    if 'response' in conf:
-#        assert json_ordered(resp) == json_ordered(conf['response']), yaml.dump({
-#            'response': resp,
-#            'expected': conf['response'],
-#            'diff': jsondiff.diff(conf['response'], resp)
-#        })
-    # Randomly choose between http and websocket if
-    # 1) It is a GraphQL query
-    # 2) 'response' is present in test conf
     assert transport in ['websocket','http'], "Unknown transport type " + transport
     if transport == 'websocket':
         assert 'response' in conf
@@ -190,16 +178,7 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
         ws_client.init({})
 
     query_resp = ws_client.send_query(query, headers=headers, timeout=15)
-    try:
-        resp = next(query_resp)
-    except:
-        if retry:
-            ws_client.recreate_conn()
-            time.sleep(3)
-            #Did not get any response. Retry once more
-            return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
-        else:
-            raise
+    resp = next(query_resp)
 
     if resp.get('type') == 'complete':
         if retry:

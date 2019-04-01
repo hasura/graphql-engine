@@ -61,15 +61,15 @@ class GQLWsClient:
     def get_ws_query_event(self, query_id, timeout):
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
-    def send(self, payload):
+    def send(self, frame):
         if not self.connected:
             self.recreate_conn()
             time.sleep(1)
-        self._ws.send(json.dumps(payload))
-        if payload.get('type') == 'stop':
-            self.ws_active_query_ids.discard( payload.get('id') )
-        if 'id' in payload:
-            self.ws_id_query_queues[payload['id']] = queue.Queue(maxsize=-1)
+        if frame.get('type') == 'stop':
+            self.ws_active_query_ids.discard( frame.get('id') )
+        elif frame.get('type') == 'start' and 'id' in frame:
+            self.ws_id_query_queues[frame['id']] = queue.Queue(maxsize=-1)
+        self._ws.send(json.dumps(frame))
 
     def init_as_admin(self):
         headers={}
@@ -299,6 +299,5 @@ class HGECtx:
             return self.v1q(yaml.safe_load(f))
 
     def teardown(self):
-#        self.v1q_f('queries/drop_type.yaml')
         self.http.close()
         self.engine.dispose()

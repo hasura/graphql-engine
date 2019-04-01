@@ -1,4 +1,0 @@
-type: run_sql
-args:
-  sql: |
-    create domain hge_test_check as text;
