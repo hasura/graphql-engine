@@ -50,8 +50,8 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Using Heroku <heroku/index>
    Using Docker <docker/index>
    Using Kubernetes <kubernetes/index>
+   Server configuration <graphql-engine-flags/index>
+   Server logs <logging>
    securing-graphql-endpoint
    postgres-permissions
-   GraphQL engine server configuration <graphql-engine-flags/index>
-   GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>

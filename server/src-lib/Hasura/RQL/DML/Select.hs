@@ -23,6 +23,7 @@ import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -140,7 +141,7 @@ convOrderByElem (flds, spi) = \case
           convOrderByElem (relFim, relSpi) rest
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
@@ -152,7 +153,7 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol colInfo)
+      return (fromPGCol pgCol, FCol colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
       return ( fromRel $ fromMaybe relName mAlias
@@ -178,9 +179,11 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
 
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
       tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
-  return $ AnnSelG annFlds tabFrom tabPerm $
-    TableArgs wClause annOrdByM mQueryLimit
-    (S.intToSQLExp <$> mQueryOffset) Nothing
+      tabArgs = TableArgs wClause annOrdByM mQueryLimit
+                (S.intToSQLExp <$> mQueryOffset) Nothing
+
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  return $ AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
 
   where
     mQueryOffset = sqOffset selQ
@@ -200,7 +203,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => FieldInfoMap
   -> RelName
   -> Maybe RelName
@@ -240,7 +243,7 @@ partAnnFlds
   -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
-  FCol c -> Just $ Left (pgiName c, pgiType c)
+  FCol c _ -> Just $ Left (pgiName c, pgiType c)
   FObj o -> Just $ Right $ Left o
   FArr a -> Just $ Right $ Right a
   FExp _ -> Nothing
@@ -248,7 +251,7 @@ partAnnFlds flds =
 getSelectDeps
   :: AnnSel
   -> [SchemaDependency]
-getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
+getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
   mkParentDep tn
   : fromMaybe [] whereDeps
   <> colDeps
@@ -276,7 +279,7 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs) =
     getAnnSel (ASAgg _)      = Nothing
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m AnnSel
@@ -289,43 +292,42 @@ convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
 
 funcQueryTx
   :: S.FromItem -> QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs
+  -> TablePerm -> TableArgs -> Bool
   -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr RespBody
-funcQueryTx frmItem fn tn tabPerm tabArgs (eSelFlds, p) =
-  runIdentity . Q.getRow
+  -> Q.TxE QErr EncJSON
+funcQueryTx frmItem fn tn tabPerm tabArgs strfyNum (eSelFlds, p) =
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
   where
     sqlBuilder = toSQL $
-      mkFuncSelectWith fn tn tabPerm tabArgs eSelFlds frmItem
+      mkFuncSelectWith fn tn tabPerm tabArgs strfyNum eSelFlds frmItem
 
-selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectAggP2 (sel, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkAggSelect sel
 
--- selectP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (SelectQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =
-  runIdentity . Q.getRow
+  encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
 phaseOne
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
 phaseOne =
   liftDMLP1 . convSelectQuery binRHSBuilder
 
-phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m RespBody
+phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 False
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => SelectQuery -> m RespBody
+  :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)
+  => SelectQuery -> m EncJSON
 runSelect q =
   phaseOne q >>= phaseTwo

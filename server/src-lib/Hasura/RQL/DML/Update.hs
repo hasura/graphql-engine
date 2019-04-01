@@ -13,8 +13,10 @@ import           Instances.TH.Lift        ()
 import qualified Data.HashMap.Strict      as M
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
@@ -29,13 +31,14 @@ data UpdateQueryP1
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, S.SQLExp)]
   , uqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , pqp1MutFlds :: !MutFlds
+  , uqp1MutFlds :: !MutFlds
+  , uqp1AllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
-mkSQLUpdate
-  :: UpdateQueryP1 -> S.SelectWith
-mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEUpdate update) mutFlds False
+mkUpdateCTE
+  :: UpdateQueryP1 -> S.CTE
+mkUpdateCTE (UpdateQueryP1 tn setExps (permFltr, wc) _ _) =
+  S.CTEUpdate update
   where
     update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -45,10 +48,11 @@ mkSQLUpdate (UpdateQueryP1 tn setExps (permFltr, wc) mutFlds) =
 getUpdateDeps
   :: UpdateQueryP1
   -> [SchemaDependency]
-getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds) =
-  mkParentDep tn : colDeps <> whereDeps <> retDeps
+getUpdateDeps (UpdateQueryP1 tn setExps (_, wc) mutFlds allCols) =
+  mkParentDep tn : colDeps <> allColDeps <> whereDeps <> retDeps
   where
     colDeps   = map (mkColDep "on_type" tn . fst) setExps
+    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
     whereDeps = getBoolExpDeps tn wc
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
@@ -138,6 +142,7 @@ validateUpdateQueryWith f uq = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
 
@@ -173,6 +178,7 @@ validateUpdateQueryWith f uq = do
     setExpItems
     (upiFilter updPerm, annSQLBoolExp)
     (mkDefaultMutFlds mAnnRetCols)
+    allCols
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
@@ -181,20 +187,22 @@ validateUpdateQueryWith f uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => UpdateQuery -> m (UpdateQueryP1, DS.Seq Q.PrepArg)
 validateUpdateQuery =
   liftDMLP1 . validateUpdateQueryWith binRHSBuilder
 
-updateQueryToTx :: (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
-updateQueryToTx (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder updateSQL) (toList p) True
+updateQueryToTx
+  :: Bool -> (UpdateQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+updateQueryToTx strfyNum (u, p) =
+  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
+                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
   where
-    updateSQL = toSQL $ mkSQLUpdate u
+    updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => UpdateQuery -> m RespBody
-runUpdate q =
-  validateUpdateQuery q >>= liftTx . updateQueryToTx
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  => UpdateQuery -> m EncJSON
+runUpdate q = do
+  strfyNum <- stringifyNum <$> askSQLGenCtx
+  validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum

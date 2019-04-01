@@ -209,6 +209,9 @@ incOp = SQLOp "+"
 mulOp :: SQLOp
 mulOp = SQLOp "*"
 
+jsonbPathOp :: SQLOp
+jsonbPathOp = SQLOp "#>"
+
 jsonbConcatOp :: SQLOp
 jsonbConcatOp = SQLOp "||"
 
@@ -250,6 +253,14 @@ instance ToSQL CountType where
   toSQL (CTDistinct cols) =
     "DISTINCT" <-> paren (", " <+> cols)
 
+newtype TupleExp
+  = TupleExp [SQLExp]
+  deriving (Show, Eq)
+
+instance ToSQL TupleExp where
+  toSQL (TupleExp exps) =
+    paren $ ", " <+> exps
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -267,6 +278,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !T.Text
   | SEArray ![SQLExp]
+  | SETuple !TupleExp
   | SECount !CountType
   deriving (Show, Eq)
 
@@ -323,6 +335,7 @@ instance ToSQL SQLExp where
                          <> toSQL (PGCol t)
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
 
 intToSQLExp :: Int -> SQLExp
@@ -391,6 +404,7 @@ data FromItem
   | FIIden !Iden
   | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
   | FISelect !Lateral !Select !Alias
+  | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
   deriving (Show, Eq)
 
@@ -399,6 +413,10 @@ mkSelFromItem = FISelect (Lateral False)
 
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
+
+toColTupExp :: [PGCol] -> SQLExp
+toColTupExp =
+  SETuple . TupleExp . map (SEIden . Iden . getPGColTxt)
 
 instance ToSQL FromItem where
   toSQL (FISimple qt mal) =
@@ -409,6 +427,9 @@ instance ToSQL FromItem where
     toSQL qf <> paren (", " <+> args) <-> toSQL mal
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
+  toSQL (FIValues valsExp al mCols) =
+    paren (toSQL valsExp) <-> toSQL al
+    <-> toSQL (toColTupExp <$> mCols)
   toSQL (FIJoin je) =
     toSQL je
 
@@ -688,25 +709,31 @@ instance ToSQL SQLConflict where
                                 <-> toSQL ct <-> "DO UPDATE"
                                 <-> toSQL set <-> toSQL whr
 
+newtype ValuesExp
+  = ValuesExp [TupleExp]
+  deriving (Show, Eq)
+
+instance ToSQL ValuesExp where
+  toSQL (ValuesExp tuples) =
+    "VALUES" <-> (", " <+> tuples)
+
 data SQLInsert = SQLInsert
     { siTable    :: !QualifiedTable
     , siCols     :: ![PGCol]
-    , siTuples   :: ![[SQLExp]]
+    , siValues   :: !ValuesExp
     , siConflict :: !(Maybe SQLConflict)
     , siRet      :: !(Maybe RetExp)
     } deriving (Show, Eq)
 
 instance ToSQL SQLInsert where
   toSQL si =
-    let insTuples   = flip map (siTuples si) $ \tupVals ->
-          "(" <-> (", " <+> tupVals) <-> ")"
-        insConflict = maybe "" toSQL
+    let insConflict = maybe "" toSQL
     in "INSERT INTO"
        <-> toSQL (siTable si)
        <-> "("
        <-> (", " <+> siCols si)
-       <-> ") VALUES"
-       <-> (", " <+> insTuples)
+       <-> ")"
+       <-> toSQL (siValues si)
        <-> insConflict (siConflict si)
        <-> toSQL (siRet si)
 

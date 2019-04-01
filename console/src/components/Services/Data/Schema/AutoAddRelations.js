@@ -15,9 +15,12 @@ class AutoAddRelations extends Component {
   trackAllRelations = untrackedData => {
     this.props.dispatch(autoTrackRelations(untrackedData));
   };
+
   render() {
+    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+
     const { untrackedRelations, dispatch } = this.props;
-    const styles = require('../PageContainer/PageContainer.scss');
+
     const handleAutoAddIndivRel = obj => {
       dispatch(autoAddRelName(obj));
     };
@@ -32,6 +35,7 @@ class AutoAddRelations extends Component {
         </div>
       );
     }
+
     const untrackData = untrackedRelations.map((obj, i) => {
       return (
         <div
@@ -61,6 +65,7 @@ class AutoAddRelations extends Component {
         </div>
       );
     });
+
     return (
       <div>
         {untrackedRelations.length === 0 ? (

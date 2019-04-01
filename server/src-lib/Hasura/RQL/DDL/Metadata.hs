@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -30,6 +31,7 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List                      as L
 import qualified Data.Text                      as T
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -41,9 +43,9 @@ import qualified Hasura.RQL.DDL.Relationship    as DR
 import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
 import qualified Hasura.RQL.DDL.Schema.Function as DF
 import qualified Hasura.RQL.DDL.Schema.Table    as DT
-import qualified Hasura.RQL.DDL.Subscribe       as DS
+import qualified Hasura.RQL.DDL.EventTrigger    as DS
 import qualified Hasura.RQL.Types.RemoteSchema  as TRS
-import qualified Hasura.RQL.Types.Subscribe     as DTS
+import qualified Hasura.RQL.Types.EventTrigger  as DTS
 
 data TableMeta
   = TableMeta
@@ -116,14 +118,15 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m)
-  => ClearMetadata -> m RespBody
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
@@ -198,9 +201,10 @@ applyQP2
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
+     , HasSQLGenCtx m
      )
   => ReplaceMetadata
-  -> m RespBody
+  -> m EncJSON
 applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   liftTx clearMetadata
@@ -265,8 +269,10 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
         DP.addPermP2 (tiName tabInfo) permDef permInfo
 
 runReplaceMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => ReplaceMetadata -> m RespBody
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
   applyQP1 q
   applyQP2 q
@@ -395,10 +401,10 @@ fetchMetadata = do
 
 runExportMetadata
   :: (QErrM m, UserInfoM m, MonadTx m)
-  => ExportMetadata -> m RespBody
+  => ExportMetadata -> m EncJSON
 runExportMetadata _ = do
   adminOnly
-  encode <$> liftTx fetchMetadata
+  encJFromJValue <$> liftTx fetchMetadata
 
 data ReloadMetadata
   = ReloadMetadata
@@ -411,8 +417,9 @@ $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m
-     , MonadTx m, MonadIO m, HasHttpManager m)
-  => ReloadMetadata -> m RespBody
+     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
   adminOnly
   DT.buildSchemaCache
@@ -429,7 +436,7 @@ $(deriveToJSON defaultOptions ''DumpInternalState)
 
 runDumpInternalState
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DumpInternalState -> m RespBody
+  => DumpInternalState -> m EncJSON
 runDumpInternalState _ = do
   adminOnly
-  encode <$> askSchemaCache
+  encJFromJValue <$> askSchemaCache

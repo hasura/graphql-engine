@@ -229,6 +229,9 @@ class TestGraphqlNestedInserts(DefaultTestQueries):
     def test_articles_author_upsert_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/articles_author_upsert_fail.yaml")
 
+    def test_articles_with_author_returning(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/nested"
@@ -336,6 +339,9 @@ class TestGraphqlDeleteBasic(DefaultTestQueries):
 
     def test_article_delete_returning(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
+
+    def test_article_delete_returning_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml")
 
     @classmethod
     def dir(cls):

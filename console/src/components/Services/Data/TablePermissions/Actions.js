@@ -418,9 +418,9 @@ const permRemoveMultipleRoles = tableSchema => {
     // Apply migration
     const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
 
-    const requestMsg = 'Removing roles...';
-    const successMsg = 'Roles removed';
-    const errorMsg = 'Removing roles failed';
+    const requestMsg = 'Removing permissions...';
+    const successMsg = 'Permissions removed';
+    const errorMsg = 'Removing permissions failed';
 
     const customOnSuccess = () => {
       // reset new role name

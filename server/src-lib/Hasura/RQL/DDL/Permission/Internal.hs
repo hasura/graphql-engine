@@ -16,6 +16,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Text.Extended         as T
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -113,6 +114,21 @@ savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
                (table_schema, table_name, role_name, perm_type, perm_def, comment)
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment) True
+
+updatePermDefInCatalog
+  :: (ToJSON a)
+  => PermType
+  -> QualifiedTable
+  -> RoleName
+  -> a
+  -> Q.TxE QErr ()
+updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.hdb_permission
+              SET perm_def = $1 :: jsonb
+             WHERE table_schema = $2 AND table_name = $3
+               AND role_name = $4 AND perm_type = $5
+           |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
 
 dropPermFromCatalog
   :: QualifiedTable
@@ -307,7 +323,7 @@ runCreatePerm
   :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
      )
-  => CreatePerm a -> m RespBody
+  => CreatePerm a -> m EncJSON
 runCreatePerm defn@(WithTable tn pd) = do
   permInfo <- createPermP1 defn
   addPermP2 tn pd permInfo
@@ -334,7 +350,7 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
 
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropPerm a -> m RespBody
+  => DropPerm a -> m EncJSON
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn
   dropPermP2 defn permInfo

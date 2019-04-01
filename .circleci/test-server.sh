@@ -124,9 +124,12 @@ mkdir -p "$OUTPUT_FOLDER"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export HGE_URL="http://localhost:8080"
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 
 PID=""
 WH_PID=""
+HS_PID=""
+
 trap stop_services ERR
 trap stop_services INT
 
@@ -197,6 +200,53 @@ kill_hge_and_combine_hpc_reports
 
 unset HASURA_GRAPHQL_CORS_DOMAIN
 
+# test websocket transport with initial cookie header
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
+export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+
+python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+
+wait_for_port 9876
+
+"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+echo "testcase 1: read cookie, cors enabled"
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+
+kill -INT $PID
+sleep 1
+
+echo "testcase 2: no read cookie, cors disabled"
+"$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=noread test_websocket_init_cookie.py
+
+kill -INT $PID
+sleep 1
+
+echo "testcase 3: read cookie, cors disabled and ws-read-cookie"
+export HASURA_GRAPHQL_WS_READ_COOKIE="true"
+"$GRAPHQL_ENGINE" serve --disable-cors >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+
+wait_for_port 8080
+
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
+
+kill -INT $PID
+kill -INT $WHC_PID
+unset HASURA_GRAPHQL_WS_READ_COOKIE
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+sleep 4
+combine_hpc_reports
+
+
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
 
 export HASURA_GRAPHQL_ENABLED_APIS="metadata"
@@ -239,6 +289,7 @@ wait_for_port 8080
 pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
 
 kill_hge_and_combine_hpc_reports
+
 
 # webhook tests
 
@@ -306,5 +357,67 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 
 fi
+
+# horizontal scale test
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+unset HASURA_GRAPHQL_ADMIN_SECRET
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
+
+HASURA_HS_TEST_DB='postgres://postgres:postgres@localhost:6543/hs_hge_test'
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database hs_hge_test;"
+
+# create pgbouncer user
+useradd pgbouncer
+cd $CIRCLECI_FOLDER
+chown -R pgbouncer:pgbouncer pgbouncer
+
+# start pgbouncer
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
+
+# start 1st server
+"$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
+wait_for_port 8080
+
+# start 2nd server
+"$GRAPHQL_ENGINE" --database-url "$HASURA_HS_TEST_DB" serve \
+                  --server-port 8081 \
+                  >> "$OUTPUT_FOLDER/hs-graphql-engine.log" 2>&1 & HS_PID=$!
+wait_for_port 8081
+
+# run test
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+
+# Shutdown pgbouncer
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
+
+cd $CIRCLECI_FOLDER
+
+# start pgbouncer again
+pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
+
+cd $PYTEST_ROOT
+
+# sleep for 30 seconds
+sleep 30
+
+# run test
+pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
+
+# Shutdown pgbouncer
+psql "postgres://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
+
+kill $PID
+kill $HS_PID
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database hs_hge_test;"
+sleep 4
+combine_hpc_reports
+unset HASURA_HS_TEST_DB
+
+
+# end horizontal scale test
 
 mv graphql-engine-combined.tix "$OUTPUT_FOLDER/graphql-engine.tix" || true

@@ -14,7 +14,7 @@ import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
-import ReusableTextAreaWithCopy from '../../../../Common/Layout/ReusableTextAreaWithCopy/ReusableTextAreaWithCopy';
+import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 
 import {
   fetchCustomFunction,
@@ -30,6 +30,7 @@ class ModifyCustomFunction extends React.Component {
     this.state = {};
     this.state.deleteConfirmationError = null;
   }
+
   componentDidMount() {
     const { functionName, schema } = this.props.params;
     if (!functionName || !schema) {
@@ -39,6 +40,7 @@ class ModifyCustomFunction extends React.Component {
       this.props.dispatch(fetchCustomFunction(functionName, schema)),
     ]);
   }
+
   componentWillReceiveProps(nextProps) {
     const { functionName, schema } = this.props.params;
     if (
@@ -55,6 +57,7 @@ class ModifyCustomFunction extends React.Component {
       ]);
     }
   }
+
   loadRunSQLAndLoadPage() {
     const { functionDefinition } = this.props.functions;
     Promise.all([
@@ -62,18 +65,23 @@ class ModifyCustomFunction extends React.Component {
       this.props.dispatch(_push('/sql')),
     ]);
   }
+
   updateDeleteConfirmationError(data) {
     this.setState({ deleteConfirmationError: data });
   }
+
   handleUntrackCustomFunction(e) {
     e.preventDefault();
     this.props.dispatch(unTrackCustomFunction());
   }
+
   handleDeleteCustomFunction(e) {
     e.preventDefault();
+
     const a = prompt(
       'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete function. Please type "DELETE" (in caps, without quotes) to confirm.\n'
     );
+
     try {
       if (a && typeof a === 'string' && a.trim() === 'DELETE') {
         this.updateDeleteConfirmationError(null);
@@ -87,6 +95,7 @@ class ModifyCustomFunction extends React.Component {
       console.error(err);
     }
   }
+
   render() {
     const styles = require('./ModifyCustomFunction.scss');
     const {
@@ -193,7 +202,7 @@ class ModifyCustomFunction extends React.Component {
         <h4>Function Definition:</h4>
         */}
         <div className={styles.sqlBlock}>
-          <ReusableTextAreaWithCopy
+          <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
           />

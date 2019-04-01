@@ -57,6 +57,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 - [Contributing](#contributing)
 - [Brand assets](#brand-assets)
 - [License](#license)
+- [Translations](#translations)
 
 <!-- markdown-toc end -->
 
@@ -77,6 +78,15 @@ The fastest way to try Hasura out is via Heroku.
 3. Make your first GraphQL query
 
    Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+
+### Other one-click deployment options
+
+Check out the instructions for the following one-click deployment options:
+
+| **Infra provider** | **One-click link** | **Additional information** |
+|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Other deployment methods
 
@@ -189,14 +199,15 @@ badge to your applications built using Hasura. ❤️
 
 ## License
 
-The core GraphQL Engine is available under the [GNU Affero General Public
-License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). We have
-written more about what you can and cannot do under AGPL
-[here](https://github.com/hasura/graphql-engine/wiki/License-Explained). 
-
-**Commercial licenses** are available on request, if you do not wish to use the Hasura GraphQL Engine under the AGPL license. Typically, they come bundled with support plans and SLAs. Please feel free to contact us at build@hasura.io or on our [website chat](https://hasura.io).
+The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0). 
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
+
+## Translations
+
+This readme is available in the following translations:
+
+- [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))

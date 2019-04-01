@@ -3,12 +3,14 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query            as Q
 
 import           Options.Applicative
-import           System.Exit                  (exitFailure)
 
 import qualified Data.Aeson                   as J
-import qualified Data.String                  as DataString
 import qualified Data.HashSet                 as Set
+import qualified Data.String                  as DataString
 import qualified Data.Text                    as T
+import qualified Data.UUID                    as UUID
+import qualified Data.UUID.V4                 as UUID
+import qualified Hasura.Logging               as L
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 
 import           Hasura.Prelude
@@ -19,11 +21,12 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Network.Wai.Handler.Warp
 
-import qualified Hasura.Logging               as L
+newtype InstanceId
+  = InstanceId {getInstanceId :: T.Text}
+    deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
-
-initErrExit :: (Show e) => e -> IO a
-initErrExit e = print e >> exitFailure
+mkInstanceId :: IO InstanceId
+mkInstanceId = (InstanceId . UUID.toText) <$> UUID.nextRandom
 
 data RawConnParams
   = RawConnParams
@@ -48,6 +51,8 @@ data RawServeOptions
   , rsoCorsConfig      :: !(Maybe CorsConfig)
   , rsoEnableConsole   :: !Bool
   , rsoEnableTelemetry :: !(Maybe Bool)
+  , rsoWsReadCookie    :: !Bool
+  , rsoStringifyNum    :: !Bool
   , rsoEnabledAPIs     :: !(Maybe [API])
   } deriving (Show, Eq)
 
@@ -64,6 +69,7 @@ data ServeOptions
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
   , soEnableTelemetry :: !Bool
+  , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
   } deriving (Show, Eq)
 
@@ -76,6 +82,7 @@ data RawConnInfo =
   , connUrl      :: !(Maybe String)
   , connDatabase :: !(Maybe String)
   , connOptions  :: !(Maybe String)
+  , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
 
 data HGECommandG a
@@ -183,7 +190,7 @@ considerEnv envVar = do
       "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
 considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
-considerEnvs envVars = fmap (foldl1 (<|>)) $ mapM considerEnv envVars
+considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
 withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
@@ -216,9 +223,13 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
   withEnvUrl <- withEnv rawDBUrl $ fst databaseUrlEnv
-  return $ rawConnInfo {connUrl = withEnvUrl}
+  withEnvRetries <- withEnv retries $ fst retriesNumEnv
+  return $ rawConnInfo { connUrl = withEnvUrl
+                       , connRetries = withEnvRetries
+                       }
   where
     rawDBUrl = connUrl rawConnInfo
+    retries = connRetries rawConnInfo
 
 mkServeOptions :: RawServeOptions -> WithEnv ServeOptions
 mkServeOptions rso = do
@@ -239,11 +250,11 @@ mkServeOptions rso = do
                    fst enableConsoleEnv
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
-
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry enabledAPIs
+                        unAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -263,8 +274,18 @@ mkServeOptions rso = do
     authHookTyEnv mType = fromMaybe AHTGet <$>
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
-    mkCorsConfig mCfg =
-      fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+    mkCorsConfig mCfg = do
+      corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+      readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
+      wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
+        (True, _)      -> return readCookVal
+        (False, True)  -> throwError $ fst wsReadCookieEnv
+                          <> " can only be used when CORS is disabled"
+        (False, False) -> return False
+      return $ case corsCfg of
+        CCDisabled _ -> CCDisabled wsReadCookie
+        _            -> corsCfg
+
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -296,7 +317,7 @@ mainCmdFooter =
         ]
       ]
 
-    envVarDoc = mkEnvVarDoc [databaseUrlEnv]
+    envVarDoc = mkEnvVarDoc [databaseUrlEnv, retriesNumEnv]
 
 databaseUrlEnv :: (String, String)
 databaseUrlEnv =
@@ -344,10 +365,12 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ servePortEnv, serveHostEnv, pgStripesEnv, pgConnsEnv, pgTimeoutEnv
-      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv, accessKeyEnv, authHookEnv, authHookModeEnv
+      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv,
+        pgStripesEnv, pgConnsEnv, pgTimeoutEnv
+      , pgUsePrepareEnv, txIsoEnv, adminSecretEnv
+      , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
-      , enableTelemetryEnv
+      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       ]
 
     eventEnvs =
@@ -358,6 +381,12 @@ serveCmdFooter =
         , "Postgres events polling interval"
         )
       ]
+
+retriesNumEnv :: (String, String)
+retriesNumEnv =
+  ( "HASURA_GRAPHQL_NO_OF_RETRIES"
+  , "No.of retries if Postgres connection error occurs (default: 1)"
+  )
 
 servePortEnv :: (String, String)
 servePortEnv =
@@ -457,7 +486,22 @@ enableTelemetryEnv =
   , "Enable anonymous telemetry (default: true)"
   )
 
-enabledAPIsEnv :: (String,String)
+wsReadCookieEnv :: (String, String)
+wsReadCookieEnv =
+  ( "HASURA_GRAPHQL_WS_READ_COOKIE"
+  , "Read cookie on WebSocket initial handshake, even when CORS is disabled."
+  ++ " This can be a potential security flaw! Please make sure you know "
+  ++ "what you're doing."
+  ++ "This configuration is only applicable when CORS is disabled."
+  )
+
+stringifyNumEnv :: (String, String)
+stringifyNumEnv =
+  ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
+  , "Stringify numeric types (default: false)"
+  )
+
+enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
   , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
@@ -467,6 +511,7 @@ parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
               <*> dbUrl <*> dbName <*> pure Nothing
+              <*> retries
   where
     host = optional $
       strOption ( long "host" <>
@@ -505,24 +550,31 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+    retries = optional $
+      option auto ( long "retries" <>
+                    metavar "NO OF RETRIES" <>
+                    help (snd retriesNumEnv)
+                  )
 
 connInfoErrModifier :: String -> String
 connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo ::RawConnInfo -> Either String Q.ConnInfo
-mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts) =
+mkConnInfo (RawConnInfo mHost mPort mUser pass mURL mDB opts mRetries) =
   case (mHost, mPort, mUser, mDB, mURL) of
 
     (Just host, Just port, Just user, Just db, Nothing) ->
-      return $ Q.ConnInfo host port user pass db opts
+      return $ Q.ConnInfo host port user pass db opts retries
 
     (_, _, _, _, Just dbURL) -> maybe (throwError invalidUrlMsg)
-                                return $ parseDatabaseUrl dbURL opts
+                                withRetries $ parseDatabaseUrl dbURL opts
     _ -> throwError $ "Invalid options. "
                     ++ "Expecting all database connection params "
                     ++ "(host, port, user, dbname, password) or "
                     ++ "database-url (HASURA_GRAPHQL_DATABASE_URL)"
   where
+    retries = fromMaybe 1 mRetries
+    withRetries ci = return $ ci{Q.connRetries = retries}
     invalidUrlMsg = "Invalid database-url (HASURA_GRAPHQL_DATABASE_URL). "
                     ++ "Example postgres://foo:bar@example.com:2345/database"
 
@@ -665,7 +717,7 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
              )
 
     mapCC isDisabled domains =
-      bool domains (Just CCDisabled) isDisabled
+      bool domains (Just $ CCDisabled False) isDisabled
 
 parseEnableConsole :: Parser Bool
 parseEnableConsole =
@@ -680,6 +732,18 @@ parseEnableTelemetry = optional $
            help (snd enableTelemetryEnv)
          )
 
+parseWsReadCookie :: Parser Bool
+parseWsReadCookie =
+  switch ( long "ws-read-cookie" <>
+           help (snd wsReadCookieEnv)
+         )
+
+parseStringifyNum :: Parser Bool
+parseStringifyNum =
+  switch ( long "stringify-numeric-types" <>
+           help (snd stringifyNumEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -689,13 +753,14 @@ parseEnabledAPIs = optional $
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
-connInfoToLog (Q.ConnInfo host port user _ db _) =
+connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
   StartupLog L.LevelInfo "postgres_connection" infoVal
   where
     infoVal = J.object [ "host" J..= host
                        , "port" J..= port
                        , "user" J..= user
                        , "database" J..= db
+                       , "retries" J..= retries
                        ]
 
 serveOptsToLog :: ServeOptions -> StartupLog
@@ -711,6 +776,7 @@ serveOptsToLog so =
                        , "enable_console" J..= soEnableConsole so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
+                       , "stringify_numeric_types" J..= soStringifyNum so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

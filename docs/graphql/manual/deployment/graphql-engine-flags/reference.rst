@@ -107,6 +107,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - N/A
      - Disable CORS. Do not send any CORS headers on any request.
 
+   * - ``--ws-read-cookie <true|false>``
+     - ``HASURA_GRAPHQL_WS_READ_COOKIE``
+     - Read cookie on WebSocket initial handshake even when CORS is disabled.
+       This can be a potential security flaw! Please make sure you know what
+       you're doing. This configuration is only applicable when CORS is disabled.
+       (default: false)
+
    * - ``--enable-telemetry <true|false>``
      - ``HASURA_GRAPHQL_ENABLE_TELEMETRY``
      - Enable anonymous telemetry (default: true)
@@ -139,9 +146,17 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
+   * - ``--stringify-numeric-types``
+     - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
+     - Stringify certain Postgres numeric types, specifically ``bigint``, ``numeric``, ``decimal`` and
+       ``double precision`` as they don't fit into the ``IEEE-754`` spec for JSON encoding-decoding.
+       (default: false)
+
    * - ``--enabled-apis <APIS>``
      - ``HASURA_GRAPHQL_ENABLED_APIS``
-     - Comma separated list of APIs (metadata & graphql) to be enabled. (default: ``metadata,graphql``)
+     - Comma separated list of APIs (options: ``metadata`` & ``graphql``) to be enabled.
+       (default: ``metadata,graphql``)
 
 .. note::
+
   When the equivalent flags for environment variables are used, the flags will take precedence.

@@ -18,7 +18,7 @@ Create an Auth0 Application
 - In the ``Create Application`` window, set a name for your application and select ``Single Page Web Applications``.
   (Assuming your application is React/Angular/Vue etc).
 
-.. image:: ../../../../img/graphql/manual/guides/create-client-popup.png
+.. thumbnail:: ../../../../img/graphql/manual/guides/create-client-popup.png
 
 Configure Auth0 Rules & Callback URLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,7 +29,6 @@ URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for product
 In the dashboard, navigate to ``Rules``. Add the following rules to add our custom JWT claims:
 
 .. code-block:: javascript
-
 
     function (user, context, callback) {
       const namespace = "https://hasura.io/jwt/claims";
@@ -42,6 +41,46 @@ In the dashboard, navigate to ``Rules``. Add the following rules to add our cust
         };
       callback(null, user, context);
     }
+
+
+.. _test-auth0:
+
+Test auth0 login and generate sample JWTs for testing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You don't need to integrate your UI with auth0 for testing. You call follow the steps below:
+
+1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/login?client=<client_id>&protocol=oauth2&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile``
+
+   - Replace ``<auth0-domain>`` with your auth0 app domain.
+   - Replace ``<client-id>`` with your auth0 app client id. Get your client id from app settings page on the auth0 dashboard.
+   - Replace ``callback_uri`` with ``https://localhost:3000/callback`` or the URL you entered above. Note that this URL doesn't really need to exist while you are testing.
+
+2. Once you head to this login page you should see the auth0 login page that you can login with.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-login-page.png
+   :class: no-shadow
+   :alt: Auth0 login page
+
+3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-localhost-callback-404.png
+   :class: no-shadow
+   :alt: Auth0 successful callback 404 page
+
+4. Extract the ``id_token`` value from this URL. This is the JWT.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/id_token-jwt-url.png
+   :class: no-shadow
+   :alt: JWT from id_token query param
+
+5. To test this JWT, and to see if all the Hasura claims are added as per the sections above, lets test this out with `jwt.io <https://jwt.io>`__!
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/jwt-io-debug.png
+   :class: no-shadow
+   :alt: JWT debug on jwt.io
+
+**Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
 
 Configure Hasura to use Auth0 Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,20 +133,31 @@ The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes care of
 escaping new lines.
 
-.. image:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
-   :scale: 50 %
+.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+   :width: 75%
 
 
 Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-With the above steps, Auth0 is configured and ready to be used in the application. But to further restrict querying on
-a table, you can setup access control rules.
+Auth0 is configured and ready to be used in the application. You can now setup access control rules that
+will automatically get applied whenever a client makes a graphql query with the Auth0 token.
 
 Refer :doc:`../../auth/basics` for more information.
 
-You can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role for unauthorized users. This will allow you to set permissions for the role you specify (ex: "public") to enable requests for users that are not logged in. 
+To test this out, add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
+Then make a GraphQL query or a mutation, with the Authorization token from the :ref:`previous step <test-auth0>`
+where we generated an Auth0 token.
+
+.. image:: https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png
+   :class: no-shadow
+   :alt: JWT token used as bearer token on hasura console
+
+You can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
+for **unauthorized users** (e.g. ``anonymous``). This will allow you to set permissions for users that are not
+logged in.
 
 The configured unauthorized role will be used whenever an access token is not present in a request to the GraphQL API. 
 
-This can be useful for data that you would like the public to be able to access and can be configured and restricted just like any other role using the Hasura console.
+This can be useful for data that you would like anyone to be able to access and can be configured and restricted
+just like any other role.

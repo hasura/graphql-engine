@@ -24,7 +24,7 @@ All resources mentioned in this guide can be deployed using the one-click button
 
   .. tab:: With a new Postgres Server
 
-     .. image:: http://azuredeploy.net/deploybutton.png
+     .. image:: https://azuredeploy.net/deploybutton.png
        :width: 200px
        :alt: azure_deploy_button_new_pg
        :class: no-shadow
@@ -35,7 +35,7 @@ All resources mentioned in this guide can be deployed using the one-click button
 
   .. tab:: With an existing Postgres Server
 
-     .. image:: http://azuredeploy.net/deploybutton.png
+     .. image:: https://azuredeploy.net/deploybutton.png
        :width: 200px
        :alt: azure_deploy_button_existing_pg
        :class: no-shadow

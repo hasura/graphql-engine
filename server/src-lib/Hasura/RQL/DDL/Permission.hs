@@ -38,6 +38,7 @@ module Hasura.RQL.DDL.Permission
     , addPermP1
     , addPermP2
 
+    , dropView
     , DropPerm
     , runDropPerm
 
@@ -45,6 +46,7 @@ module Hasura.RQL.DDL.Permission
     , runSetPermComment
     ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
@@ -399,14 +401,14 @@ setPermCommentP1 (SetPermComment qt rn pt _) = do
       PTUpdate -> assertPermDefined rn PAUpdate tabInfo
       PTDelete -> assertPermDefined rn PADelete tabInfo
 
-setPermCommentP2 :: (QErrM m, MonadTx m) => SetPermComment -> m RespBody
+setPermCommentP2 :: (QErrM m, MonadTx m) => SetPermComment -> m EncJSON
 setPermCommentP2 apc = do
   liftTx $ setPermCommentTx apc
   return successMsg
 
 runSetPermComment
   :: (QErrM m, CacheRM m, MonadTx m, UserInfoM m)
-  => SetPermComment -> m RespBody
+  => SetPermComment -> m EncJSON
 runSetPermComment defn =  do
   setPermCommentP1 defn
   setPermCommentP2 defn
