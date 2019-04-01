@@ -78,8 +78,6 @@ const DataSubSidebar = ({
       tables[t.table_name] = t;
     });
 
-    console.log(tables);
-
     const currentLocation = location.pathname;
 
     if (listingSchema && listingSchema.length) {

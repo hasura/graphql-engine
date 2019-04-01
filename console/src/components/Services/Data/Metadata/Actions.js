@@ -27,7 +27,7 @@ const reloadCacheAndGetInconsistentObjectsQuery = {
   ],
 };
 
-const filterInconsistentSchema = (allSchemas, inconsistentObjects) => {
+export const filterInconsistentSchema = (allSchemas, inconsistentObjects) => {
   let filteredSchema = JSON.parse(JSON.stringify(allSchemas));
   inconsistentObjects.forEach(object => {
     const partiallyFiltered = filterSchema(filteredSchema, object);
@@ -76,6 +76,7 @@ export const loadInconsistentObjects = (serverVersion, shouldReloadCache) => {
         }
       },
       error => {
+        console.error(error);
         dispatch({ type: LOAD_METADATA_ERROR });
       }
     );

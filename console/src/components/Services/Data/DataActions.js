@@ -10,7 +10,7 @@ import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { loadInconsistentObjects } from './Metadata/Actions';
+import { filterInconsistentSchema } from './Metadata/Actions';
 import globals from '../../../Globals';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -236,7 +236,12 @@ const fetchDataInit = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      dispatch({ type: LOAD_SCHEMA, allSchemas: data[1] });
+      let schemas = data[1];
+      const { inconsistentObjects } = getState().metadata;
+      if (inconsistentObjects.length > 0) {
+        schemas = filterInconsistentSchema(schemas, inconsistentObjects);
+      }
+      dispatch({ type: LOAD_SCHEMA, allSchemas: schemas });
       dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data[2] });
     },
     error => {
@@ -312,7 +317,12 @@ const loadSchema = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_SCHEMA, allSchemas: data });
+      let schemas = data;
+      const { inconsistentObjects } = getState().metadata;
+      if (inconsistentObjects.length > 0) {
+        schemas = filterInconsistentSchema(schemas, inconsistentObjects);
+      }
+      dispatch({ type: LOAD_SCHEMA, allSchemas: schemas });
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));

@@ -38,6 +38,9 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadInconsistentObjects(this.props.serverVersion)).then(() => {
+        this.handleMetadataRedirect();
+      });
       dispatch(loadConsoleOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
@@ -60,11 +63,6 @@ class Main extends React.Component {
         } catch (e) {
           console.error(e);
         }
-        dispatch(loadInconsistentObjects(this.props.serverVersion, true)).then(
-          () => {
-            this.handleMetadataRedirect();
-          }
-        );
       });
       this.checkEventsTab().then(() => {
         this.checkSchemaStitch();

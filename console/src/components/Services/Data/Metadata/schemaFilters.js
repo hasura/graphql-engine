@@ -1,5 +1,4 @@
 export const filterSchema = (schemas, inconsistentObject) => {
-  console.log(schemas);
   if (inconsistentObject.type === 'table') {
     return schemas.filter(s => s.table_name !== inconsistentObject.definition);
   }
