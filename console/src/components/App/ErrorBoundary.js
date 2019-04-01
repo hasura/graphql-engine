@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { loadInconsistentObjects } from '../Services/Data/Metadata/Actions';
+import Spinner from '../Common/Spinner/Spinner';
 import { push } from 'react-router-redux';
 import globals from '../../Globals';
 
@@ -24,7 +25,12 @@ class ErrorBoundary extends React.Component {
   render() {
     const { metadata } = this.props;
     if (this.state.hasError && metadata.ongoingRequest) {
-      return <div> Please wait </div>;
+      return (
+        <div>
+          {' '}
+          <Spinner />{' '}
+        </div>
+      );
     }
     if (this.state.hasError) {
       // You can render any custom fallback UI
