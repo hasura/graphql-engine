@@ -1,27 +1,29 @@
-.. _hasura_metadata_reset:
+.. _hasura_metadata_clear:
 
-Hasura CLI: hasura metadata reset
+Hasura CLI: hasura metadata clear
 ---------------------------------
 
-Reset or clean Hasura GraphQL Engine metadata on the database
+Clear Hasura GraphQL Engine metadata on the database
 
 Synopsis
 ~~~~~~~~
 
 
-Reset or clean Hasura GraphQL Engine metadata on the database
+Clear Hasura GraphQL Engine metadata on the database
 
 ::
 
-  hasura metadata reset [flags]
+  hasura metadata clear [flags]
+
+Alias: reset
 
 Examples
 ~~~~~~~~
 
 ::
 
-    # Clean all the metadata information from database:
-    hasura metadata reset
+    # Clear all the metadata information from database:
+    hasura metadata clear
 
 Options
 ~~~~~~~
@@ -30,7 +32,7 @@ Options
 
       --admin-secret string   admin secret for Hasura GraphQL Engine
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
-  -h, --help                  help for reset
+  -h, --help                  help for clear
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,45 +1,72 @@
 .. _migrations:
 
-Migrations
-==========
+Migrations & Metadata
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-By default, when you run the GraphQL engine you can use the Hasura console served by the GraphQL engine to make
-changes to your schema. However, if you have different environments or are adding GraphQL to an existing application
-or database, you'll need migrations to make sure that your iteration and CI/CD process is smooth.
-
-
-Using Hasura migrations
------------------------
-
-Hasura GraphQL engine comes with powerful Rails-inspired migration tooling to help you keep track of the changes
-you make to your schema. As you use the Hasura console, the Hasura CLI will spit out migration files for
-you that you can put in version control and even edit manually.
-
-Setup guides
+Introduction
 ------------
 
-Follow the guide that best fits your scenario:
+It is typical for developers to use some kind of "migration" tool to track
+changes to the Postgres schema. Usually the SQL statements used to create the
+tables, views etc. are stored as a single file or multiple files. Certain tools
+also let you add an "up" and a "down" step so that you can roll-back the
+changes.
 
-- :doc:`Migrations for a new project <new-project>`: If you haven't yet started setting up your schema.
-- :doc:`Migrations for an existing project <existing-project>`: In case you already have set up a schema
-  and want to start using migrations on it.
-- :doc:`Migrations with a database with an existing migration system <database-with-migrations>`: Use Hasura only
-  for GraphQL schema changes and not database migrations.
+When you connect Hasura to a Postgres database and use the console to "track" a
+table, a piece of information is added to the Hasura "metadata" (configuration)
+indicating this table in Postgres should be exposed via GraphQL. Similarly,
+most of the actions on the console update the Hasura metadata.
 
-Advanced
---------
+In the development phase, you'll be using the Hasura Console to create and track
+tables, create relationships, add permissions etc. When you need to move to a
+new environment, it will become quite hard to re-do all these operations using
+the console again on a fresh database. You might be looking for a way to export
+the Hasura metadata so that you can apply it on another instance from a CI/CD
+setup to reproduce the same setup. You might also be looking for a way to do a
+dev --> staging --> production environment promotion scenario.
 
-- :doc:`Auto-apply migrations or metadata when server starts <auto-apply-migrations>`
+Well, you've come to the right place to address all these scenarios. Hasura is
+bundled with a schema/metadata migration system which can be used to
+declaratively track and version control all the changes happening to the
+database.
+
+Simple use cases
+----------------
+
+We will split the use cases into two:
+
+1. :doc:`You're already using a migration tool for the Postgres schema
+   <manage-metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
+   migrations. In this case you only need to manage the Hasura metadata)
+2. :doc:`You're not using any migration tool for the Postgres schema
+   <manage-migrations>`. (Hasura will take care of the
+   Postgres schema also)
+
+Advanced use cases
+------------------
+
+
+- :doc:`auto-apply-migrations`
+- :doc:`advanced/writing-migrations-manually`
+- :doc:`advanced/rolling-back-migrations`
+
+Reference documentation
+-----------------------
+
+- :doc:`reference/how-it-works`
+- :doc:`reference/migration-file-format`
+- :doc:`reference/metadata-file-format`
 
 .. toctree::
-   :hidden:
+  :maxdepth: 1
+  :hidden:
 
-   For new project <new-project>
-   For existing project <existing-project>
-   With a database with an existing migration system <database-with-migrations>
-   Auto-apply migrations/metadata when server starts <auto-apply-migrations>
+  Manage Metadata <manage-metadata>
+  Manage Migrations (Metadata + Postgres Schema) <manage-migrations>
+  Advanced use cases <advanced/index>
+  Reference documentation <reference/index>
