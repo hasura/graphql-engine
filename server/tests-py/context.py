@@ -20,6 +20,7 @@ import websocket
 from sqlalchemy import create_engine
 from sqlalchemy.schema import MetaData
 import graphql_server
+import graphql
 
 
 class HGECtxError(Exception):
@@ -36,88 +37,116 @@ class GQLWsClient:
         self.create_conn()
 
     def create_conn(self):
-        self.ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message, on_close=self._on_close)
-        self.wst = threading.Thread(target=self.ws.run_forever)
+        self.ws_queue.queue.clear()
+        self.ws_id_query_queues = dict()
+        self.ws_active_query_ids = set()
+        self._ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message, on_close=self._on_close)
+        self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
         self.remote_closed = False
         self.connected = False
         self.init_done = False
-        self.op_ids= set()
 
     def recreate_conn(self):
         self.teardown()
         self.create_conn()
 
     def get_ws_event(self, timeout):
-        return json.loads(self.ws_queue.get(timeout=timeout))
+        return self.ws_queue.get(timeout=timeout)
 
-    def init(self):
+    def has_ws_query_events(self, query_id):
+        return not self.ws_id_query_queues[query_id].empty()
+
+    def get_ws_query_event(self, query_id, timeout):
+        return self.ws_id_query_queues[query_id].get(timeout=timeout)
+
+    def send(self, payload):
         if not self.connected:
             self.recreate_conn()
             time.sleep(1)
-        payload = {'type': 'connection_init', 'payload': {}}
+        self._ws.send(json.dumps(payload))
+        if payload.get('type') == 'stop': 
+            self.ws_active_query_ids.discard( payload.get('id') )
+        if 'id' in payload:
+            self.ws_id_query_queues[payload['id']] = queue.Queue(maxsize=-1)
+
+    def init_as_admin(self):
+        headers={}
         if self.hge_ctx.hge_key:
-            payload['payload']['headers'] = {
-                'x-hasura-admin-secret': self.hge_ctx.hge_key
-            }
-        self.ws.send(json.dumps(payload))
+            headers = {'x-hasura-admin-secret': self.hge_ctx.hge_key}
+        self.init(headers)
+    
+    def init(self, headers={}):
+        payload = {'type': 'connection_init', 'payload': {}}
+        
+        if headers and len(headers) > 0:
+            payload['payload']['headers'] = headers
+
+        self.send(payload)
         ev = self.get_ws_event(3)
         assert ev['type'] == 'connection_ack', ev
         self.init_done = True
 
-    def stop(self, _id):
-        data = {'id': _id, 'type': 'stop'}
-        self.ws.send(json.dumps(data))
-        ev = self.get_ws_event(3)
-        assert ev['type'] == 'complete', ev
-        self.op_ids.remove(_id)
+    def stop(self, query_id):
+        data = {'id': query_id, 'type': 'stop'}
+        self.send(data)
+        self.ws_active_query_ids.discard(query_id)
 
     def gen_id(self, size=6, chars=string.ascii_letters + string.digits):
         newId = ''.join(random.choice(chars) for _ in range(size))
-        if newId in self.op_ids:
+        if newId in self.ws_active_query_ids:
             return gen_id(self,size,chars)
         else:
             return newId
 
-    def send_query(self, query, _id=None):
-        if not self.connected:
-            self.recreate_conn()
-            time.sleep(1)
-        if not self.init_done:
+    def send_query(self, query, query_id=None, headers={}, timeout=60):
+        graphql.parse(query['query'])
+        if headers and len(headers) > 0:
+            #Do init If headers are provided
+            self.init(headers)
+        elif not self.init_done:
             self.init()
-        if _id == None:
-            _id = self.gen_id()
+        if query_id == None:
+            query_id = self.gen_id()
         frame = {
-            'id': _id,
+            'id': query_id,
             'type': 'start',
-            'payload': {'query': query},
+            'payload': query,
         }
-        self.op_ids.add(_id)
-        if self.hge_ctx.hge_key:
-            frame['payload']['headers'] = {
-                'x-hasura-admin-secret': self.hge_ctx.hge_key
-            }
-        self.ws.send(json.dumps(frame))
-        return _id
+        self.ws_active_query_ids.add(query_id)
+        self.send(frame)
+        while True:
+            yield self.get_ws_query_event(query_id, timeout)
 
     def _on_open(self):
         self.connected = True
 
     def _on_message(self, message):
-        my_json = json.loads(message)
-        if my_json['type'] == 'ka':
+        json_msg = json.loads(message)
+        if 'id' in json_msg:
+            query_id = json_msg['id']
+            if json_msg.get('type') == 'stop': 
+                #Remove from active queries list
+                self.ws_active_query_ids.discard( query_id )
+            if not query_id in self.ws_id_query_queues:
+                self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
+            #Put event in the correponding query_queue
+            self.ws_id_query_queues[query_id].put(json_msg)
+        elif json_msg['type'] == 'ka':
             self.connected = True
         else:
-            self.ws_queue.put(message)
-
+            #Put event in the main queue
+            self.ws_queue.put(json_msg)
 
     def _on_close(self):
         self.remote_closed = True
+        self.connected = False
+        self.init_done = False
 
     def teardown(self):
         if not self.remote_closed:
-            self.ws.close()
+            self._ws.close()
         self.wst.join()
 
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
@@ -200,22 +229,8 @@ class HGECtxGQLServer:
 
 class HGECtx:
 
-#    def choose_urls(self, hge_url_list, pg_url_list):
-#        self.hge_url = None
-#        self.pge_url = None
-#        for i, hge_url in enumerate(hge_url_list):
-#            self.hge_url = hge_url_list[i]
-#            self.pg_url  = pg_url_list[i]
-#            st_code, resp = self.v1q_f('queries/create_type.yaml')
-#            if st_code == 200:
-#                return True
-#        return False
-
-
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
                  hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
-        #hge_url_list = [x.strip() for x in hge_urls.split(',')]
-        #pg_url_list  = [x.strip() for x in pg_urls.split(',')]
 
         self.http = requests.Session()
         self.hge_key = hge_key
@@ -238,6 +253,8 @@ class HGECtx:
         self.ws_read_cookie = ws_read_cookie
 
         self.hge_scale_url = hge_scale_url
+
+        self.ws_client = GQLWsClient(self)
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         self.version = result.stdout.decode('utf-8').strip()

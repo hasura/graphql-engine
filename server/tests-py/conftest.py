@@ -2,6 +2,8 @@ import pytest
 import time
 from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient
 import threading
+import random
+from datetime import datetime
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -77,6 +79,7 @@ def pytest_configure(config):
             xdist_threads = config.getoption('-n')
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified"
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified"
+    random.seed(datetime.now())
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):

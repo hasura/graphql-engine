@@ -17,11 +17,11 @@ def init_ws_conn(hge_ctx, ws_client):
                 'X-Hasura-Admin-Secret': hge_ctx.hge_key
             }
         }
-    obj = {
+    init_msg = {
         'type': 'connection_init',
         'payload': payload,
     }
-    ws_client.ws.send(json.dumps(obj))
+    ws_client.send(init_msg)
     ev = ws_client.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
@@ -30,11 +30,11 @@ class TestSubscriptionCtrl(object):
     def test_init_without_payload(self, hge_ctx, ws_client):
         if hge_ctx.hge_key is not None:
             pytest.skip("Payload is needed when admin secret is set")
-        obj = {
+        init_msg = {
             'type': 'connection_init'
         }
-        ws_client.ws.send(json.dumps(obj))
-        ev = ws_client.get_ws_event(3)
+        ws_client.send(init_msg)
+        ev = ws_client.get_ws_event(15)
         assert ev['type'] == 'connection_ack', ev
     
     
@@ -53,7 +53,7 @@ class TestSubscriptionCtrl(object):
         obj = {
             'type': 'connection_terminate'
         }
-        ws_client.ws.send(json.dumps(obj))
+        ws_client.send(obj)
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
@@ -77,8 +77,8 @@ class TestSubscriptionBasic(object):
     '''
 
     def test_connection_error(self, ws_client):
-        ws_client.ws.send("test")
-        ev = ws_client.get_ws_event(3)
+        ws_client.send({'type': 'test'})
+        ev = ws_client.get_ws_event(15)
         assert ev['type'] == 'connection_error', ev
 
     '''
@@ -101,11 +101,11 @@ class TestSubscriptionBasic(object):
             },
             'type': 'start'
         }
-        ws_client.ws.send(json.dumps(obj))
+        ws_client.send(obj)
         '''
             Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_data
         '''
-        ev = ws_client.get_ws_event(3)
+        ev = ws_client.get_ws_query_event('1',15)
         assert ev['type'] == 'data' and ev['id'] == '1', ev
 
     '''
@@ -120,7 +120,7 @@ class TestSubscriptionBasic(object):
         obj = {
             'type': 'stop'
         }
-        ws_client.ws.send(json.dumps(obj))
+        ws_client.send(obj)
         ev = ws_client.get_ws_event(3)
         assert ev['type'] == 'connection_error', ev
 
@@ -133,7 +133,7 @@ class TestSubscriptionBasic(object):
             'type': 'stop',
             'id': '1'
         }
-        ws_client.ws.send(json.dumps(obj))
+        ws_client.send(obj)
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
@@ -161,11 +161,11 @@ class TestSubscriptionBasic(object):
             },
             'type': 'start'
         }
-        ws_client.ws.send(json.dumps(obj))
-        ev = ws_client.get_ws_event(3)
+        ws_client.send(obj)
+        ev = ws_client.get_ws_query_event('2',3)
         assert ev['type'] == 'data' and ev['id'] == '2', ev
         # Check for complete type
-        ev = ws_client.get_ws_event(3)
+        ev = ws_client.get_ws_query_event('2',3)
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
 
@@ -184,20 +184,7 @@ class TestSubscriptionLiveQueries(object):
         '''
             Create connection using connection_init
         '''
-        payload = {}
-        if hge_ctx.hge_key is not None:
-            payload = {
-                'headers' : {
-                    'X-Hasura-Admin-Secret': hge_ctx.hge_key
-                }
-            }
-        obj = {
-            'type': 'connection_init',
-            'payload' : payload
-        }
-        ws_client.ws.send(json.dumps(obj))
-        ev = ws_client.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
+        ws_client.init_as_admin()
 
         with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.safe_load(c)
@@ -210,41 +197,32 @@ class TestSubscriptionLiveQueries(object):
           }
         }
         """
-        obj = {
-            'id': 'live',
-            'payload': {
-                'query': query
-            },
-            'type': 'start'
-        }
-        ws_client.ws.send(json.dumps(obj))
-        ev = ws_client.get_ws_event(3)
-        assert ev['type'] == 'data' and ev['id'] == obj['id'], ev
+        headers={}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        subscrPayload = { 'query': query }
+        respLive = ws_client.send_query(subscrPayload, query_id='live', headers=headers, timeout=15)
+        ev = next(respLive)
+        assert ev['type'] == 'data' and ev['id'] == 'live', ev
         assert ev['payload']['data'] == {'hge_tests_test_t2': []}, ev['payload']['data']
 
         assert isinstance(conf, list) == True, 'Not an list'
         for index, step in enumerate(conf):
-            obj = {
-                'id': '{}'.format(index + 1),
-                'payload': {
-                    'query': step['query']
-                },
-                'type': 'start'
-            }
+            mutationPayload = { 'query': step['query'] }
             if 'variables' in step and step['variables']:
-                obj['payload']['variables'] = json.loads(step['variables'])
+                mutationPayload['variables'] = json.loads(step['variables'])
 
             expected_resp = json.loads(step['response'])
 
-            ws_client.ws.send(json.dumps(obj))
-            ev = ws_client.get_ws_event(3)
-            assert ev['type'] == 'data' and ev['id'] == obj['id'], ev
+            mutResp = ws_client.send_query(mutationPayload,'mutation_'+str(index),timeout=15)
+            ev = next(mutResp)
+            assert ev['type'] == 'data' and ev['id'] == 'mutation_'+str(index), ev
             assert ev['payload']['data'] == expected_resp, ev['payload']['data']
 
-            ev = ws_client.get_ws_event(3)
-            assert ev['type'] == 'complete' and ev['id'] == obj['id'], ev
+            ev = next(mutResp)
+            assert ev['type'] == 'complete' and ev['id'] == 'mutation_'+str(index), ev
 
-            ev = ws_client.get_ws_event(3)
+            ev = next(respLive)
             assert ev['type'] == 'data' and ev['id'] == 'live', ev
             assert ev['payload']['data'] == {
                 'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
@@ -256,7 +234,7 @@ class TestSubscriptionLiveQueries(object):
             'id': 'live',
             'type': 'stop'
         }
-        ws_client.ws.send(json.dumps(obj))
+        ws_client.send(obj)
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 

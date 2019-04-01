@@ -60,8 +60,7 @@ class TestRemoteSchemaBasic:
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
-        st_code, resp = check_query(hge_ctx, query)
-        assert st_code == 200, resp
+        resp = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['Hello'], ['hello'])
 #
 
@@ -212,8 +211,7 @@ class TestAddRemoteSchemaTbls:
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
-        st_code, resp = check_query(hge_ctx, query)
-        assert st_code == 200, resp
+        resp = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['User', 'hello'], ['user', 'hello'])
 
     def test_add_schema_duplicate_name(self, hge_ctx):
@@ -247,7 +245,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
     def transact(self, hge_ctx, ws_client):
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_setup.yaml')
         assert st_code == 200, resp
-        ws_client.init()
+        ws_client.init_as_admin()
         yield
         # teardown
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
@@ -264,13 +262,14 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = ws_client.send_query(query)
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
         try:
-            ev = ws_client.get_ws_event(3)
-            assert ev['type'] == 'data' and ev['id'] == _id, ev
+            ev = next(resp)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert ev['payload']['data']['data']['user']['username'] == 'john'
         finally:
-            ws_client.stop(_id)
+            ws_client.stop(query_id)
 
     def test_remote_mutation(self, ws_client):
         query = """
@@ -283,14 +282,15 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = ws_client.send_query(query)
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
         try:
-            ev = ws_client.get_ws_event(3)
-            assert ev['type'] == 'data' and ev['id'] == _id, ev
+            ev = next(resp)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
             assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
         finally:
-            ws_client.stop(_id)
+            ws_client.stop(query_id)
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:
@@ -308,8 +308,7 @@ class TestAddRemoteSchemaCompareRootQueryFields:
     def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
-        st_code, introspect_hasura = check_query(hge_ctx, query)
-        assert st_code == 200, introspect_hasura
+        introspect_hasura = check_query(hge_ctx, query)
         resp = requests.post(
             self.remote,
             json=query['query']

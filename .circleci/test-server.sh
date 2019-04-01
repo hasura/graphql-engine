@@ -475,7 +475,7 @@ pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
 cd $PYTEST_ROOT
 
 # sleep for 30 seconds
-sleep 30
+sleep 20
 
 # run test
 pytest -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-hge-scale-url="http://localhost:8081" test_horizontal_scale.py
