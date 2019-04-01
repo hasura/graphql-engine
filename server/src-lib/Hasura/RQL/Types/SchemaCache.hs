@@ -66,7 +66,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , PreSetCols
+       , PreSetColsPartial
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -200,8 +200,8 @@ isPGColInfo _            = False
 data InsPermInfo
   = InsPermInfo
   { ipiView            :: !QualifiedTable
-  , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !PreSetCols
+  , ipiCheck           :: !AnnBoolExpPartialSQL
+  , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -211,7 +211,7 @@ data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpSQL
+  , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
   , spiAllowAgg        :: !Bool
   , spiRequiredHeaders :: ![T.Text]
@@ -223,8 +223,8 @@ data UpdPermInfo
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
-  , upiFilter          :: !AnnBoolExpSQL
-  , upiSet             :: !PreSetCols
+  , upiFilter          :: !AnnBoolExpPartialSQL
+  , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -233,7 +233,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 data DelPermInfo
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !AnnBoolExpSQL
+  , dpiFilter          :: !AnnBoolExpPartialSQL
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 

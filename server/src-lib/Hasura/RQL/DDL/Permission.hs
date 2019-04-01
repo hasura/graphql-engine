@@ -106,7 +106,8 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe ColVals -> m (PreSetCols, [Text], [SchemaDependency])
+  => TableInfo -> Maybe ColVals
+  -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
@@ -128,21 +129,24 @@ buildInsPermInfo
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
+  withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
   let fltrHeaders = getDependentHeaders chk
   (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
+  defCols <- fmap PSESQLExp <$> nonInsColVals
   let reqHdrs = fltrHeaders `union` setHdrs
       deps = mkParentDep tn : beDeps ++ setColDeps
-  preSetCols <- HM.union setColsSQL <$> nonInsColVals
+      preSetCols = HM.union setColsSQL defCols
   return (InsPermInfo vn be preSetCols reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiName $ getCols fieldInfoMap
+
     nonInsCols = case mCols of
       Nothing   -> return []
       Just cols -> do
@@ -154,7 +158,9 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo vn be _ _) = do
-  trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
+  resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
+  trigFnQ <- buildInsTrigFn vn tn $
+    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False

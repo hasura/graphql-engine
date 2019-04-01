@@ -28,7 +28,7 @@ data SelOpCtx
   = SelOpCtx
   { _socTable   :: !QualifiedTable
   , _socHeaders :: ![T.Text]
-  , _socFilter  :: !AnnBoolExpSQL
+  , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
 
@@ -36,7 +36,7 @@ data SelPkOpCtx
   = SelPkOpCtx
   { _spocTable   :: !QualifiedTable
   , _spocHeaders :: ![T.Text]
-  , _spocFilter  :: !AnnBoolExpSQL
+  , _spocFilter  :: !AnnBoolExpPartialSQL
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
@@ -44,7 +44,7 @@ data FuncQOpCtx
   = FuncQOpCtx
   { _fqocTable    :: !QualifiedTable
   , _fqocHeaders  :: ![T.Text]
-  , _fqocFilter   :: !AnnBoolExpSQL
+  , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
   , _fqocFunction :: !QualifiedFunction
   , _fqocArgs     :: !FuncArgSeq
@@ -54,8 +54,8 @@ data UpdOpCtx
   = UpdOpCtx
   { _uocTable      :: !QualifiedTable
   , _uocHeaders    :: ![T.Text]
-  , _uocFilter     :: !AnnBoolExpSQL
-  , _uocPresetCols :: !PreSetCols
+  , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocPresetCols :: !PreSetColsPartial
   , _uocAllCols    :: ![PGColInfo]
   } deriving (Show, Eq)
 
@@ -63,7 +63,7 @@ data DelOpCtx
   = DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
-  , _docFilter  :: !AnnBoolExpSQL
+  , _docFilter  :: !AnnBoolExpPartialSQL
   , _docAllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
