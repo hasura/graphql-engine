@@ -57,7 +57,7 @@ const isList = obj => {
     if (obj[objkey] === null) {
       return false;
     }
-    if (obj[objkey].constructor.name !== 'boolean' || !obj[objkey]) {
+    if (obj[objkey].constructor.name !== 'Boolean' || !obj[objkey]) {
       return false;
     }
   }
