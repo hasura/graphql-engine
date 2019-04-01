@@ -1,3 +1,10 @@
+export const permissionTypes = [
+  'select_permission',
+  'update_permission',
+  'insert_permission',
+  'delete_permission',
+];
+
 export const filterSchema = (metadata, inconsistentObject, type) => {
   if (type === 'tables') {
     const schemas = metadata;
@@ -23,11 +30,7 @@ export const filterSchema = (metadata, inconsistentObject, type) => {
         return schema;
       });
     }
-    if (
-      inconsistentObject.type === 'select_permission' ||
-      inconsistentObject.type === 'update_permission' ||
-      inconsistentObject.type === 'delete_permission'
-    ) {
+    if (permissionTypes.includes(inconsistentObject.type)) {
       const { table } = inconsistentObject.definition;
       return schemas.map(schema => {
         if (schema.table_name === table) {

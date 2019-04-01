@@ -30,3 +30,34 @@
 
 .export_metadata_wrapper {
 }
+.metadataStatusTable
+{
+  margin-top: 20px;
+  thead, tbody
+  {
+    tr
+    {
+      th
+      {
+        padding: 8px;
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      th:last-child
+      {
+        border-right: 1px solid #ccc;
+      }
+      td
+      {
+        padding: 8px;
+        border-left: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+      }
+      td:last-child
+      {
+        border-right: 1px solid #ccc;
+      }
+    }
+  }
+}

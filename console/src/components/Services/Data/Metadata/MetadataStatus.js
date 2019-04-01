@@ -1,6 +1,11 @@
 import React from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects } from './Actions';
+import { dropInconsistentObjects, loadInconsistentObjects } from './Actions';
+import { permissionTypes } from './metadataFilters';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Notification';
 
 const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
   if (!support) {
@@ -9,18 +14,54 @@ const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
 
   const inconsistentObjectsTable = () => {
     return (
-      <table id="t01">
+      <table
+        className={`${metaDataStyles.metadataStatusTable} ${
+          metaDataStyles.wd750
+        }`}
+        id="t01"
+      >
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Definition</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr>
-            <th>Firstname</th>
-            <th>Lastname</th>
-            <th>Age</th>
-          </tr>
-          <tr>
-            <td>Eve</td>
-            <td>Jackson</td>
-            <td>94</td>
-          </tr>
+          {metadata.inconsistentObjects.map((ico, _i) => {
+            let name;
+            let definition;
+            if (
+              ico.type === 'object_relation' ||
+              ico.type === 'array_relation'
+            ) {
+              name = ico.definition.name;
+              definition = `relationship of table "${ico.definition.table}"`;
+            } else if (permissionTypes.includes(ico.type)) {
+              name = `${ico.definition.role}-permission`;
+              definition = `${ico.type} on table "${ico.definition.table}"`;
+            } else if (ico.type === 'table') {
+              name = ico.definition;
+              definition = ico.definition;
+            } else if (ico.type === 'function') {
+              name = ico.definition.name;
+              definition = ico.name;
+            } else if (ico.type === 'event_trigger') {
+              name = ico.definition.configuration.name;
+              definition = `event triggeer on table "${
+                ico.definition.configuration.table
+              }"`;
+            }
+            return (
+              <tr key={_i}>
+                <td>{name}</td>
+                <td>{ico.type}</td>
+                <td>{definition}</td>
+                <td>{ico.reason}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
@@ -33,6 +74,18 @@ const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
     if (isOk) {
       dispatch(dropInconsistentObjects());
     }
+  };
+
+  const reloadCacheAndLoadInconsistentObjects = () => {
+    dispatch(loadInconsistentObjects(null, true))
+      .then(() => {
+        dispatch(showSuccessNotification('Metadata reloaded'));
+      })
+      .catch(e => {
+        // todo error handling
+        console.error(e);
+        dispatch(showErrorNotification('Error reloading metadata'));
+      });
   };
 
   const content = () => {
@@ -49,14 +102,41 @@ const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
           GraphQL Engine metadata is inconsistent with Postgres
         </div>
         <div>{inconsistentObjectsTable()}</div>
-        <div>
+        <div
+          className={`${metaDataStyles.add_mar_top_small} ${
+            metaDataStyles.content_width
+          }`}
+        >
+          <ul>
+            <li>
+              To delete all the inconsistent objects, click the "Delete all"
+              button
+            </li>
+            <li>
+              If you want to manage these objects on your own, please do so and
+              click on the "Reload Metadata" button to check if the
+              inconsistencies have been resolved
+            </li>
+          </ul>
+        </div>
+        <div className={metaDataStyles.display_flex}>
+          <Button
+            color="yellow"
+            size="sm"
+            className={`${metaDataStyles.add_mar_top_small} ${
+              metaDataStyles.add_mar_right
+            }`}
+            onClick={reloadCacheAndLoadInconsistentObjects}
+          >
+            Reload metadata
+          </Button>
           <Button
             color="red"
             size="sm"
-            className={metaDataStyles.add_mar_top}
+            className={metaDataStyles.add_mar_top_small}
             onClick={verifyAndDropAll}
           >
-            Drop all inconsistent objects
+            Delete all
           </Button>
         </div>
       </div>
