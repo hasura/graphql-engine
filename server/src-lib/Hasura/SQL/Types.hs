@@ -404,3 +404,9 @@ isBigNum = \case
   PGNumeric   -> True
   PGDouble    -> True
   _           -> False
+
+isGeoType :: PGColType -> Bool
+isGeoType = \case
+  PGGeometry  -> True
+  PGGeography -> True
+  _           -> False

@@ -1,0 +1,8 @@
+- args:
+    sql: CREATE TABLE "public"."users"("auth0_id" text NOT NULL, "name" text NOT NULL,
+      "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("auth0_id") );
+  type: run_sql
+- args:
+    name: users
+    schema: public
+  type: add_existing_table_or_view
