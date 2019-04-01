@@ -1,4 +1,9 @@
 import defaultState from './AddState';
+
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import requestAction from '../../../../utils/requestAction';
+import dataHeaders from '../Common/Headers';
+
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
@@ -24,6 +29,10 @@ const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
+
+/*
+ * For any action dispatched, the ability to notify the renderer that something is happening
+ * */
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
@@ -70,6 +79,63 @@ const validationError = error => {
 };
 const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
+const fetchColumnTypes = () => {
+  return (dispatch, getState) => {
+    /*
+    const fetchQuery = `
+SELECT
+  string_agg(t.typname, ',') as "Type Name",
+  string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
+  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  t.typcategory
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+GROUP BY t.typcategory;`;
+*/
+    const fetchQuery = `
+SELECT 
+  string_agg(t.typname, ',') as "Type Name",
+  string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",                                                                            
+  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  t.typcategory
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))                                              
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)                                              
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+  AND t.typname not in ('int4', 'uuid', 'int8', 'boolean', 'text', 'numeric', 'date', 'json', 'jsonb', 'time', 'timestamptz')
+GROUP BY t.typcategory;`;
+    const url = Endpoints.getSchema;
+    const reqQuery = {
+      type: 'run_sql',
+      args: {
+        sql: fetchQuery,
+      },
+    };
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(reqQuery),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        return Promise.resolve(data);
+      },
+      error => {
+        console.error('Failed to load table comment');
+        console.error(error);
+      }
+    );
+  };
+};
 const createTableSql = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
@@ -394,5 +460,6 @@ export {
   removePk,
   setPk,
   createTableSql,
+  fetchColumnTypes,
 };
 export { resetValidation, validationError };

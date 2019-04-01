@@ -8,6 +8,16 @@
 /* */
 
 
+.add_table_column_selector__control {
+  min-height: 34px !important;
+  max-height: 34px;
+  cursor: pointer !important;
+}
+
+.react-selectable__single-value, .react-selectable__placeholder, .react-selectable__indicator.react-selectable__dropdown-indicator {
+  margin-top: -2px;
+}
+
 input[type="radio"], input[type="checkbox"] {
   margin: 0 5px 0px 0px;
 }

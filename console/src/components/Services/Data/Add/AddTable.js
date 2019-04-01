@@ -6,8 +6,11 @@ import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
 
-import dataTypes from '../Common/DataTypes';
+// import dataTypes from '../Common/DataTypes';
 import { showErrorNotification } from '../Notification';
+
+import TableName from './TableName';
+import TableColumns from './TableColumns';
 
 import {
   setTableName,
@@ -20,6 +23,7 @@ import {
   setColUnique,
   removeColDefault,
   addCol,
+  fetchColumnTypes,
 } from './AddActions';
 import {
   setDefaults,
@@ -52,9 +56,21 @@ const typeDescriptionDict = convertListToDictUsingKV(
   dataTypes
 );
 */
+
+/* AddTable is a wrapper which wraps
+ *  1) Table Name input
+ *  2) Columns inputs
+ *  3) Primary Key input
+ *  4) Comment Input
+ *  5) Add Table button
+ * */
+
 class AddTable extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      dataTypes: [],
+    };
     this.props.dispatch(setDefaults());
     const { columns, dispatch } = this.props;
     columns.map((column, i) => {
@@ -69,9 +85,51 @@ class AddTable extends Component {
     });
   }
 
+  componentDidMount() {
+    this.props.dispatch(fetchColumnTypes()).then(data => {
+      this.setState({
+        dataTypes: data.result.slice(1),
+      });
+    });
+  }
+
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
   }
+
+  onTableNameChange = e => {
+    const { dispatch } = this.props;
+    dispatch(setTableName(e.target.value));
+  };
+  onRemoveColumn = i => {
+    const { dispatch } = this.props;
+    dispatch(removeColumn(i));
+  };
+  onColumnNameChange = (i, isNullableChecked, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColName(e.target.value, i, isNullableChecked));
+  };
+  onColTypeChange = (i, isNullableChecked, value) => {
+    const { dispatch, columns } = this.props;
+    dispatch(setColType(value, i, isNullableChecked));
+    if (i + 1 === columns.length) {
+      dispatch(addCol());
+    }
+  };
+  onColNullableChange = (i, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColNullable(e.target.checked, i));
+  };
+
+  onColUniqueChange = (i, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColUnique(e.target.checked, i));
+  };
+  setColDefaultValue = (i, isNullableChecked, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColDefault(e.target.value, i, isNullableChecked));
+  };
+
   columnValidation() {
     if (this.props.columns.length <= 0) {
       // this.props.dispatch(validationError(ATLEAST_ONE_COLUMN_MSG));
@@ -242,6 +300,7 @@ class AddTable extends Component {
       internalError,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
+    /*
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
@@ -287,14 +346,7 @@ class AddTable extends Component {
             className={`${styles.select} ${styles.select200} form-control ${
               styles.add_pad_left
             }`}
-            onChange={e => {
-              dispatch(
-                setColType(e.target.value, i, this.refs[`nullable${i}`].checked)
-              );
-              if (i + 1 === columns.length) {
-                dispatch(addCol());
-              }
-            }}
+            onChange={}
             data-test={`col-type-${i}`}
           >
             {column.type === '' ? (
@@ -302,7 +354,6 @@ class AddTable extends Component {
                 -- type --
               </option>
             ) : null}
-            {/* The below makes a set of options based of the available datatype. Refer Common/Datatypes.js for more info. */}
             {dataTypes.map((datatype, index) => (
               <option
                 value={datatype.value}
@@ -328,7 +379,6 @@ class AddTable extends Component {
               &nbsp; &nbsp;
             </span>
           ) : null}
-          */}
           <input
             placeholder={defPlaceholder}
             type="text"
@@ -373,6 +423,7 @@ class AddTable extends Component {
         </div>
       );
     });
+    */
     const pks = primaryKeys.map((pk, i) => {
       let removeIcon;
       if (i + 1 === primaryKeys.length) {
@@ -438,19 +489,18 @@ class AddTable extends Component {
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
-            <h4 className={styles.subheading_text}>Table Name &nbsp; &nbsp;</h4>
-            <input
-              type="text"
-              data-test="tableName"
-              placeholder="table_name"
-              className={`${styles.tableNameInput} form-control`}
-              onChange={e => {
-                dispatch(setTableName(e.target.value));
-              }}
-            />
+            <TableName onChange={this.onTableNameChange.bind(this)} />
             <hr />
-            <h4 className={styles.subheading_text}>Columns</h4>
-            {cols}
+            <TableColumns
+              dataTypes={this.state.dataTypes}
+              columns={columns}
+              onRemoveColumn={this.onRemoveColumn}
+              onColumnChange={this.onColumnNameChange}
+              onColTypeChange={this.onColTypeChange}
+              onColNullableChange={this.onColNullableChange}
+              onColUniqueChange={this.onColUniqueChange}
+              setColDefaultValue={this.setColDefaultValue}
+            />
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;

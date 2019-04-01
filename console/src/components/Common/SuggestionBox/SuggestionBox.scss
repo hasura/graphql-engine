@@ -1,0 +1,35 @@
+.suggestion_box_wrapper {
+  position: relative;
+  .suggestion_wrapper {
+    position: absolute;
+    top: 34px;
+    width: 100%;
+    background: white;
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+  .suggestion_input {
+    width: 200px;
+  }
+  .suggestion_element_wrapper {
+    cursor: pointer;
+    color: #555;
+    .suggestion_element {
+      padding: 3px 0px;
+      padding-left: 15px;
+    }
+    &:hover {
+      background-color: #5897fb;
+      color: white;
+    }
+  }
+}
+
+.suggestion_generator {
+  display: block;
+  // border: 1px solid #eee;
+  color: black;
+}
