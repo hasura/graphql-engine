@@ -65,6 +65,10 @@ func (o *metadataTrackOptions) run() error {
 		return errors.New("can't set both --all-tables && --table flag")
 	}
 
+	if len(o.tables) != 0 && len(o.schemas) > 1 {
+		return errors.New("can't set more than one schema if --table flag is set")
+	}
+
 	config, err := metadata.NewDefaultConfig(o.EC.ServerConfig.Endpoint, o.EC.ServerConfig.AdminSecret)
 	if err != nil {
 		return errors.Wrap(err, "can't create new metadata config")
