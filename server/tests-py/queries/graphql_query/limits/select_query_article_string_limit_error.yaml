@@ -3,7 +3,7 @@ url: /v1alpha1/graphql
 status: 400
 response:
   errors:
-  - extensions: 
+  - extensions:
       code: validation-failed
       path: $.selectionSet.article.args.limit
     message: expecting Integer value for "limit"

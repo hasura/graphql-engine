@@ -3,7 +3,7 @@ args:
 
 - type: run_sql
   args:
-    sql: 
+    sql:
       delete from address;
       select setval('address_id_seq', 1, false);
 

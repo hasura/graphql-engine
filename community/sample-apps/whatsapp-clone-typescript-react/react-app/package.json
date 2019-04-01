@@ -46,7 +46,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "generate": "gql-gen",
+    "generate": "gql-gen --config codegen.js",
     "generate:watch": "nodemon --exec yarn generate -e graphql"
   },
   "eslintConfig": {

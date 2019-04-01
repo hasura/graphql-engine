@@ -6,8 +6,8 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
-          name text unique, 
+          id serial primary key,
+          name text unique,
           bio text,
           is_registered boolean not null default false
       );
@@ -302,7 +302,7 @@ args:
   args:
     name: blog
     schema: public
-    
+
 - type: create_select_permission
   args:
     table: blog

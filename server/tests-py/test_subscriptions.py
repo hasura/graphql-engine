@@ -36,8 +36,8 @@ class TestSubscriptionCtrl(object):
         ws_client.send(init_msg)
         ev = ws_client.get_ws_event(15)
         assert ev['type'] == 'connection_ack', ev
-    
-    
+
+
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
     '''

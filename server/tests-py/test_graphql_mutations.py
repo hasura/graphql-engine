@@ -323,10 +323,13 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
 class TestGraphqlDeleteBasic(DefaultTestMutations):
 
     def test_article_delete(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article.yaml", transport)
 
     def test_article_delete_returning(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_returning.yaml")
+        check_query_f(hge_ctx, self.dir() + "/article_returning.yaml", transport)
+
+    def test_article_delete_returning_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml", transport)
 
     @classmethod
     def dir(cls):

@@ -1,6 +1,6 @@
 type: bulk
 args:
-    
+
 - type: run_sql
   args:
     sql: |
@@ -9,4 +9,4 @@ args:
 
       delete from author;
       select setval('author_id_seq', 1, false);
-      
+

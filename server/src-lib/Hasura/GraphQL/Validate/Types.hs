@@ -11,6 +11,7 @@ module Hasura.GraphQL.Validate.Types
   , FragDef(..)
   , FragDefMap
   , AnnVarVals
+  , AnnInpVal(..)
   , EnumTyInfo(..)
   , EnumValInfo(..)
   , InpObjFldMap
@@ -29,7 +30,6 @@ module Hasura.GraphQL.Validate.Types
   , getUnionTyM
   , mkScalarTy
   , pgColTyToScalar
-  , pgColValToAnnGVal
   , getNamedTy
   , mkTyInfoMap
   , fromTyDef
@@ -43,7 +43,6 @@ module Hasura.GraphQL.Validate.Types
   , AnnGObject
   , hasNullVal
   , getAnnInpValKind
-  , getAnnInpValTy
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -51,6 +50,8 @@ import           Hasura.Prelude
 import           Instances.TH.Lift             ()
 
 import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
@@ -595,25 +596,33 @@ data FragDef
 type FragDefMap = Map.HashMap G.Name FragDef
 
 type AnnVarVals =
-  Map.HashMap G.Variable AnnGValue
+  Map.HashMap G.Variable AnnInpVal
 
-type AnnGObject = OMap.InsOrdHashMap G.Name AnnGValue
+data AnnInpVal
+  = AnnInpVal
+  { _aivType     :: !G.GType
+  , _aivVariable :: !(Maybe G.Variable)
+  , _aivValue    :: !AnnGValue
+  } deriving (Show, Eq)
+
+type AnnGObject = OMap.InsOrdHashMap G.Name AnnInpVal
 
 data AnnGValue
   = AGScalar !PGColType !(Maybe PGColValue)
   | AGEnum !G.NamedType !(Maybe G.EnumValue)
   | AGObject !G.NamedType !(Maybe AnnGObject)
-  | AGArray !G.ListType !(Maybe [AnnGValue])
+  | AGArray !G.ListType !(Maybe [AnnInpVal])
   deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+  ''AnnInpVal
+ )
 
 instance J.ToJSON AnnGValue where
   -- toJSON (AGScalar ty valM) =
   toJSON = const J.Null
     -- J.
     -- J.toJSON [J.toJSON ty, J.toJSON valM]
-
-pgColValToAnnGVal :: PGColType -> PGColValue -> AnnGValue
-pgColValToAnnGVal colTy colVal = AGScalar colTy $ Just colVal
 
 hasNullVal :: AnnGValue -> Bool
 hasNullVal = \case
@@ -629,10 +638,3 @@ getAnnInpValKind = \case
   AGEnum _ _   -> "enum"
   AGObject _ _ -> "object"
   AGArray _ _  -> "array"
-
-getAnnInpValTy :: AnnGValue -> G.GType
-getAnnInpValTy = \case
-  AGScalar pct _ -> G.TypeNamed (G.Nullability True) $ G.NamedType $ G.Name $ T.pack $ show pct
-  AGEnum nt _    -> G.TypeNamed (G.Nullability True) nt
-  AGObject nt _  -> G.TypeNamed (G.Nullability True) nt
-  AGArray nt _   -> G.TypeList  (G.Nullability True) nt

@@ -56,5 +56,5 @@ response:
         title: "Article 1 by Author 4"
         content: "Article content for Article 1 by Author 4"
         author:
-          id: 4 
+          id: 4
           name: Author 4

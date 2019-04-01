@@ -23,7 +23,7 @@ args:
     - content: Sample article content
       title: Article 3
       author_id: 2
-    
+
 
 #Create blog table
 - type: run_sql

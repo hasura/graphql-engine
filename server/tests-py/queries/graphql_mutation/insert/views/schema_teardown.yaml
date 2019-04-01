@@ -17,7 +17,7 @@ args:
       schema: public
       name: article
 
-#Drop views    
+#Drop views
 - type: run_sql
   args:
     sql: |

@@ -3,7 +3,7 @@ args:
 #Drop relationship first
 - type: drop_relationship
   args:
-    table: 
+    table:
       name: author
       schema: public
     relationship: articles

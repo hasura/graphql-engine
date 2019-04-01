@@ -188,7 +188,7 @@ rm graphql-engine.tix || true
 
 start_gql_servers
 
-run_pytest_parallel 
+run_pytest_parallel
 
 kill -INT $PID
 sleep 4
@@ -202,7 +202,7 @@ export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
 start_gql_servers
 
-run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" 
+run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"
 
 kill_hge_and_combine_hpc_reports
 
@@ -216,7 +216,7 @@ export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jw
 
 start_gql_servers
 
-run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" 
+run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET"
 
 kill_hge_and_combine_hpc_reports
 
@@ -360,7 +360,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	wait_for_port 9090
 
-	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" 
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
 	kill_hge_and_combine_hpc_reports
 
@@ -369,7 +369,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 	start_gql_servers
 
-	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" 
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
 
 	rm /etc/ssl/certs/webhook.crt
 	update-ca-certificates

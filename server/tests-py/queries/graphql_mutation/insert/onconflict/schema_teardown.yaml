@@ -7,7 +7,7 @@ args:
     table:
       schema: public
       name: author
-    
+
 - type: run_sql
   args:
     sql: |

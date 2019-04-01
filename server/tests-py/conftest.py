@@ -7,16 +7,16 @@ from datetime import datetime
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--hge-urls", 
-        metavar="HGE_URL", 
-        help="csv list of urls for graphql-engine", 
-        required=False, 
+        "--hge-urls",
+        metavar="HGE_URL",
+        help="csv list of urls for graphql-engine",
+        required=False,
         nargs='+'
     )
     parser.addoption(
-        "--pg-urls", metavar="PG_URL", 
-        help="csv list of urls for connecting to Postgres directly", 
-        required=False, 
+        "--pg-urls", metavar="PG_URL",
+        help="csv list of urls for connecting to Postgres directly",
+        required=False,
         nargs='+'
     )
     parser.addoption(
@@ -66,7 +66,7 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
-def pytest_configure(config):        
+def pytest_configure(config):
     if is_master(config):
         config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
@@ -86,9 +86,9 @@ def pytest_configure_node(node):
     node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
     node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
 
-def pytest_unconfigure(config):        
+def pytest_unconfigure(config):
         config.hge_ctx_gql_server.teardown()
-    
+
 @pytest.fixture(scope='module')
 def hge_ctx(request):
     config = request.config

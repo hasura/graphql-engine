@@ -6,7 +6,7 @@ response:
   - extensions:
       path: $.selectionSet.article_agg
       code: validation-failed
-    message: |- 
+    message: |-
       field "article_agg" not found in type: 'query_root'
 headers:
   X-Hasura-Role: user

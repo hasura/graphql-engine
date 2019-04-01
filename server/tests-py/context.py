@@ -66,7 +66,7 @@ class GQLWsClient:
             self.recreate_conn()
             time.sleep(1)
         self._ws.send(json.dumps(payload))
-        if payload.get('type') == 'stop': 
+        if payload.get('type') == 'stop':
             self.ws_active_query_ids.discard( payload.get('id') )
         if 'id' in payload:
             self.ws_id_query_queues[payload['id']] = queue.Queue(maxsize=-1)
@@ -76,10 +76,10 @@ class GQLWsClient:
         if self.hge_ctx.hge_key:
             headers = {'x-hasura-admin-secret': self.hge_ctx.hge_key}
         self.init(headers)
-    
+
     def init(self, headers={}):
         payload = {'type': 'connection_init', 'payload': {}}
-        
+
         if headers and len(headers) > 0:
             payload['payload']['headers'] = headers
 
@@ -126,7 +126,7 @@ class GQLWsClient:
         json_msg = json.loads(message)
         if 'id' in json_msg:
             query_id = json_msg['id']
-            if json_msg.get('type') == 'stop': 
+            if json_msg.get('type') == 'stop':
                 #Remove from active queries list
                 self.ws_active_query_ids.discard( query_id )
             if not query_id in self.ws_id_query_queues:

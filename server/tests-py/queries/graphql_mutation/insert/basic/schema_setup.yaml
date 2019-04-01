@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique
       );
 - type: track_table

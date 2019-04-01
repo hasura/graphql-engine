@@ -40,8 +40,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

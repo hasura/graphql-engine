@@ -22,7 +22,7 @@ def check_ev_payload_shape(ev_payload):
     event_keys = ["data", "op"]
     check_keys(event_keys, ev_payload['event'])
 
-    trigger_keys = ["id", "name"]
+    trigger_keys = ["name"]
     check_keys(trigger_keys, ev_payload['trigger'])
 
 
@@ -109,7 +109,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
         headers['X-Hasura-Role'] = 'admin'
 
     if add_auth:
-        #Use the hasura role specified in the test case, and create a JWT token 
+        #Use the hasura role specified in the test case, and create a JWT token
         if hge_ctx.hge_jwt_key is not None and len(headers) > 0 and 'X-Hasura-Role' in headers:
             hClaims = dict()
             hClaims['X-Hasura-Allowed-Roles'] = [headers['X-Hasura-Role']]
@@ -125,7 +125,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
-        #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook 
+        #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
         if hge_ctx.hge_webhook is not None and len(headers) > 0:
             if not hge_ctx.webhook_insecure:
             #Check whether the output is also forbidden when webhook returns forbidden
@@ -162,7 +162,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
     # 2) 'response' is present in test conf
     assert transport in ['websocket','http'], "Unknown transport type " + transport
     if transport == 'websocket':
-        assert 'response' in conf 
+        assert 'response' in conf
         assert conf['url'].endswith('/graphql')
         print('running on websocket')
         return validate_gql_ws_q (
@@ -174,15 +174,15 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
         )
     elif transport == 'http':
         print('running on http')
-        return validate_http_anyq ( 
+        return validate_http_anyq (
             hge_ctx,
             conf['url'],
-            conf['query'], 
+            conf['query'],
             headers,
             conf['status'],
-            conf.get('response') 
+            conf.get('response')
         )
-             
+
 
 def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
     ws_client = hge_ctx.ws_client
@@ -223,7 +223,7 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
             ws_err['error'] = err['message']
             exp_ws_response2['errors'].append(ws_err)
         exp_ws_response2['data'] = None
-       
+
         if resp['type'] == 'error':
             exp_ws_response = exp_ws_response1
         elif resp['type'] == 'data':
@@ -241,8 +241,8 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
     respDone = next(query_resp)
     assert respDone['type'] == 'complete'
     return resp['payload']
-    
-    
+
+
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp = hge_ctx.anyq(url, query, headers)

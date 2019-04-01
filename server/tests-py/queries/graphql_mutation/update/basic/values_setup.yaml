@@ -14,8 +14,8 @@ args:
   args:
     table: person
     objects:
-    - details: 
+    - details:
         name:
           first: foo
           last: bar
-        address: foobar   
+        address: foobar
