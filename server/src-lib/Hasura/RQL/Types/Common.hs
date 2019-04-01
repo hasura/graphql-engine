@@ -53,12 +53,14 @@ instance DQuote RelName where
   dquoteTxt (RelName r) = r
 
 relTypeToTxt :: RelType -> T.Text
-relTypeToTxt ObjRel = "object"
-relTypeToTxt ArrRel = "array"
+relTypeToTxt ObjRel    = "object"
+relTypeToTxt ArrRel    = "array"
+relTypeToTxt RemoteRel = "remote"
 
 data RelType
   = ObjRel
   | ArrRel
+  | RemoteRel
   deriving (Show, Eq)
 
 instance ToJSON RelType where
@@ -73,6 +75,7 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
+    "remote" -> Just RemoteRel
     _   -> Nothing
 
 data RelInfo

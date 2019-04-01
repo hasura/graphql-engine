@@ -11,6 +11,7 @@ module Hasura.RQL.DDL.Relationship
   , runCreateArrRel
   , runDropRel
   , runSetRelComment
+  , persistRel
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where

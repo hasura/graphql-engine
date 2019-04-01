@@ -9,15 +9,16 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Relationship.Remote
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -40,6 +41,7 @@ data RQLQuery
 
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
+  | RQCreateRemoteRelationship !CreateRemoteRel
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
@@ -177,6 +179,7 @@ queryNeedsReload qi = case qi of
 
   RQCreateObjectRelationship _ -> True
   RQCreateArrayRelationship  _ -> True
+  RQCreateRemoteRelationship _ -> True
   RQDropRelationship  _        -> True
   RQSetRelationshipComment  _  -> False
   RQRenameRelationship _       -> True
@@ -237,6 +240,7 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQCreateObjectRelationship q -> runCreateObjRel q
   RQCreateArrayRelationship  q -> runCreateArrRel q
+  RQCreateRemoteRelationship q -> runCreateRemoteRel q
   RQDropRelationship  q        -> runDropRel q
   RQSetRelationshipComment  q  -> runSetRelComment q
   RQRenameRelationship q       -> runRenameRel q
