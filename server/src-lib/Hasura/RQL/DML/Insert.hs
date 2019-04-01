@@ -106,11 +106,12 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause
   :: (UserInfoM m, QErrM m)
-  => TableInfo
+  => SessVarBldr m
+  -> TableInfo
   -> [PGCol]
   -> OnConflict
   -> m ConflictClauseP1
-buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
+buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
     (Just col, Nothing, CAIgnore)   -> do
@@ -123,14 +124,18 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
       validateCols col
-      (updFiltr, preSet) <- getUpdPerm
-      return $ CP1Update (Column $ getPGCols col) inpCols preSet $
-        toSQLBool updFiltr
+      (updFltr, preSet) <- getUpdPerm
+      resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
+      resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
+      return $ CP1Update (Column $ getPGCols col) inpCols resolvedPreSet $
+        toSQLBool resolvedUpdFltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
-      (updFiltr, preSet) <- getUpdPerm
-      return $ CP1Update (Constraint cons) inpCols preSet $
-        toSQLBool updFiltr
+      (updFltr, preSet) <- getUpdPerm
+      resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
+      resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
+      return $ CP1Update (Constraint cons) inpCols resolvedPreSet $
+        toSQLBool resolvedUpdFltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
@@ -162,10 +167,11 @@ buildConflictClause tableInfo inpCols (OnConflict mTCol mTCons act) =
 convInsertQuery
   :: (UserInfoM m, QErrM m, CacheRM m)
   => (Value -> m [InsObj])
+  -> SessVarBldr m
   -> (PGColType -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m InsertQueryP1
-convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
 
   insObjs <- objsParser val
 
@@ -201,8 +207,10 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       insCols    = HM.keys defInsVals
       insView    = ipiView insPerm
 
+  resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) setInsVals
+
   insTuples <- withPathK "objects" $ indexedForM insObjs $ \obj ->
-    convObj prepFn defInsVals setInsVals fieldInfoMap obj
+    convObj prepFn defInsVals resolvedPreSet fieldInfoMap obj
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
@@ -211,7 +219,7 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
-      buildConflictClause tableInfo inpCols c
+      buildConflictClause sessVarBldr tableInfo inpCols c
 
   return $ InsertQueryP1 tableName insView insCols sqlExps
            conflictClause mutFlds allCols
@@ -233,7 +241,9 @@ convInsQ
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
 convInsQ =
   liftDMLP1 .
-  convInsertQuery (withPathK "objects" . decodeInsObjs) binRHSBuilder
+  convInsertQuery (withPathK "objects" . decodeInsObjs)
+  sessVarFromCurrentSetting
+  binRHSBuilder
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =

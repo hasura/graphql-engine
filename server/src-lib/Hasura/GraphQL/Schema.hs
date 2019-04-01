@@ -64,7 +64,7 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
+type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -1402,9 +1402,9 @@ getRootFldsRole'
   -> FieldInfoMap
   -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
-  -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([PGCol], PreSetCols, AnnBoolExpSQL, [T.Text]) -- update filter
-  -> Maybe (AnnBoolExpSQL, [T.Text]) -- delete filter
+  -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
+  -> Maybe ([PGCol], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
+  -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
 getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
@@ -1661,7 +1661,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       (Just (validColNames, mempty, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
-noFilter :: AnnBoolExpSQL
+noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
 
 checkSchemaConflicts

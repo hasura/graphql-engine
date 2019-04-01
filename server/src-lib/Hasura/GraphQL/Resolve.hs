@@ -16,6 +16,7 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -42,28 +43,33 @@ queryFldToSQL
 queryFldToSQL fn fld = do
   opCtx <- getOpCtx $ _fName fld
   userInfo <- asks getter
-  case opCtx of
+  queryRootFldAST <- case opCtx of
     OCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertSelect fn ctx fld
+      RS.convertSelect ctx fld
     OCSelectPkey ctx -> do
       validateHdrs userInfo (_spocHeaders ctx)
-      RS.convertSelectByPKey fn ctx fld
+      RS.convertSelectByPKey ctx fld
     OCSelectAgg ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertAggSelect fn ctx fld
+      RS.convertAggSelect ctx fld
     OCFuncQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQuery fn ctx False fld
+      RS.convertFuncQuerySimple ctx fld
     OCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQuery fn ctx True fld
+      RS.convertFuncQueryAgg ctx fld
     OCInsert _ ->
       throw500 "unexpected OCInsert for query field context"
     OCUpdate _ ->
       throw500 "unexpected OCUpdate for query field context"
     OCDelete _ ->
       throw500 "unexpected OCDelete for query field context"
+  resolvedAST <- flip RS.traverseQueryRootFldAST queryRootFldAST $ \case
+    UVPG annPGVal -> fn annPGVal
+    UVSQL sqlExp  -> return sqlExp
+    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  return $ RS.toPGQuery resolvedAST
 
 mutFldToTx
   :: ( MonadError QErr m
