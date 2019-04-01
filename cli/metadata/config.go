@@ -184,7 +184,7 @@ func (c *Config) validateScan() error {
 		}
 
 		if !isExists {
-			return errors.New("table %s doesn't exists")
+			return fmt.Errorf("table %s doesn't exists", tableToBeTracked)
 		}
 	}
 	return nil
@@ -192,6 +192,11 @@ func (c *Config) validateScan() error {
 
 // Track sends out a bulk query to track the tables and relationship based on the configuration provided
 func (c *Config) Track() error {
+	err := c.validateScan()
+	if err != nil {
+		return err
+	}
+
 	for _, tableItem := range c.tablesInfo {
 		if len(c.Tables) != 0 {
 			ok := c.checkTableToBeTracked(tableItem.name)
@@ -234,7 +239,7 @@ func (c *Config) Track() error {
 		return nil
 	}
 
-	_, err := c.hasuraDBConfig.sendQuery(upQuery)
+	_, err = c.hasuraDBConfig.sendQuery(upQuery)
 	if err != nil {
 		return err
 	}
@@ -245,6 +250,11 @@ func (c *Config) Track() error {
 
 // UnTrack sends out a bulk query to untrack the tables and relationship based on the configuration provided
 func (c *Config) UnTrack() error {
+	err := c.validateScan()
+	if err != nil {
+		return err
+	}
+
 	for _, tableItem := range c.tablesInfo {
 		if len(c.Tables) != 0 {
 			ok := c.checkTableToBeTracked(tableItem.name)
@@ -287,7 +297,7 @@ func (c *Config) UnTrack() error {
 		return nil
 	}
 
-	_, err := c.hasuraDBConfig.sendQuery(upQuery)
+	_, err = c.hasuraDBConfig.sendQuery(upQuery)
 	if err != nil {
 		return err
 	}
