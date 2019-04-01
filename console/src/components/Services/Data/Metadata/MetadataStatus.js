@@ -1,6 +1,8 @@
 import React from 'react';
+import Button from '../../../Common/Button/Button';
+import { dropInconsistentObjects } from './Actions';
 
-const MetadataStatus = ({ metaDataStyles, support, metadata }) => {
+const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
   if (!support) {
     return null;
   }
@@ -24,6 +26,15 @@ const MetadataStatus = ({ metaDataStyles, support, metadata }) => {
     );
   };
 
+  const verifyAndDropAll = () => {
+    const isOk = window.confirm(
+      'Are you sure? This will drop all the inconsistent parts of your metadata. This action is irreversible.'
+    );
+    if (isOk) {
+      dispatch(dropInconsistentObjects());
+    }
+  };
+
   const content = () => {
     if (metadata.inconsistentObjects.length === 0) {
       return (
@@ -32,7 +43,24 @@ const MetadataStatus = ({ metaDataStyles, support, metadata }) => {
         </div>
       );
     }
-    return inconsistentObjectsTable();
+    return (
+      <div>
+        <div className={metaDataStyles.content_width}>
+          GraphQL Engine metadata is inconsistent with Postgres
+        </div>
+        <div>{inconsistentObjectsTable()}</div>
+        <div>
+          <Button
+            color="red"
+            size="sm"
+            className={metaDataStyles.add_mar_top}
+            onClick={verifyAndDropAll}
+          >
+            Drop all inconsistent objects
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (

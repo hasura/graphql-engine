@@ -10,6 +10,7 @@ import {
   loadProcessedEvents,
 } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
+import { filterInconsistentMetadata } from '../../Data/Metadata/Actions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
@@ -214,7 +215,16 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: UPDATE_TABLE_LIST, data: data });
+      let consistentSchemas;
+      const { inconsistentObjects } = getState().metadata;
+      if (inconsistentObjects.length > 0) {
+        consistentSchemas = filterInconsistentMetadata(
+          data,
+          inconsistentObjects,
+          'tables'
+        );
+      }
+      dispatch({ type: UPDATE_TABLE_LIST, data: consistentSchemas || data });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));

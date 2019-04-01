@@ -2,14 +2,22 @@ import requestAction from '../../../../utils/requestAction';
 import endpoints from '../../../../Endpoints';
 import defaultState from './State';
 import semverCheck from '../../../../helpers/semver';
-import { filterSchema } from './schemaFilters';
-import { setFilteredSchema } from '../DataActions';
+import { filterSchema } from './metadataFilters';
+import { setConsistentSchema, setConsistentFunctions } from '../DataActions';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Notification';
 
 const RELOAD_CACHE_AND_LOAD_INCONSISTENT_OBJECTS =
   'Metadata/RELOAD_CACHE_AND_LOAD_INCONSISTENT_OBJECTS';
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
 const LOAD_METADATA_ERROR = 'Metadata/LOAD_METADATA_ERROR';
+const DROP_INCONSISTENT_METADATA = 'Metadata/DROP_INCONSISTENT_METADATA';
+const DROPPED_INCONSISTENT_METADATA = 'Metadata/DROPPED_INCONSISTENT_METADATA';
+const DROPPING_INCONSISTENT_METADATA_FAILED =
+  'Metadata/DROPPING_INCONSISTENT_METADATA_FAILED';
 
 const getInconsistentObjectsQuery = {
   type: 'get_inconsistent_objects',
@@ -27,13 +35,22 @@ const reloadCacheAndGetInconsistentObjectsQuery = {
   ],
 };
 
-export const filterInconsistentSchema = (allSchemas, inconsistentObjects) => {
-  let filteredSchema = JSON.parse(JSON.stringify(allSchemas));
+const dropInconsistentObjectsQuery = {
+  type: 'drop_inconsistent_objects',
+  args: {},
+};
+
+export const filterInconsistentMetadata = (
+  metadata,
+  inconsistentObjects,
+  type
+) => {
+  let filtered = JSON.parse(JSON.stringify(metadata));
   inconsistentObjects.forEach(object => {
-    const partiallyFiltered = filterSchema(filteredSchema, object);
-    filteredSchema = partiallyFiltered;
+    const partiallyFiltered = filterSchema(filtered, object, type);
+    filtered = partiallyFiltered;
   });
-  return filteredSchema;
+  return filtered;
 };
 
 export const loadInconsistentObjects = (serverVersion, shouldReloadCache) => {
@@ -62,22 +79,57 @@ export const loadInconsistentObjects = (serverVersion, shouldReloadCache) => {
     ).then(
       data => {
         const allSchemas = getState().tables.allSchemas;
+        const functions = getState().tables.trackedFunctions;
         const inconsistentObjects = shouldReloadCache ? data[1] : data;
         dispatch({
           type: LOAD_INCONSISTENT_OBJECTS,
           data: inconsistentObjects,
         });
         if (inconsistentObjects.length > 0) {
-          const filteredSchema = filterInconsistentSchema(
+          const filteredSchema = filterInconsistentMetadata(
             allSchemas,
-            inconsistentObjects
+            inconsistentObjects,
+            'tables'
           );
-          dispatch(setFilteredSchema(filteredSchema));
+          const filteredFunctions = filterInconsistentMetadata(
+            functions,
+            inconsistentObjects,
+            'functions'
+          );
+          dispatch(setConsistentSchema(filteredSchema));
+          dispatch(setConsistentFunctions(filteredFunctions));
         }
       },
       error => {
         console.error(error);
         dispatch({ type: LOAD_METADATA_ERROR });
+      }
+    );
+  };
+};
+
+export const dropInconsistentObjects = () => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHEaders;
+    dispatch({ type: DROP_INCONSISTENT_METADATA });
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(dropInconsistentObjectsQuery),
+      })
+    ).then(
+      () => {
+        dispatch({ type: DROPPED_INCONSISTENT_METADATA });
+        dispatch(showSuccessNotification('Dropped inconsistent metadata'));
+        dispatch(loadInconsistentObjects(null, false));
+      },
+      error => {
+        console.error(error);
+        dispatch({ type: DROPPING_INCONSISTENT_METADATA_FAILED });
+        dispatch(
+          showErrorNotification('Dropping inconsistent metadata failed')
+        );
       }
     );
   };
@@ -107,6 +159,22 @@ export const metadataReducer = (state = defaultState, action) => {
       return {
         ...state,
         ongoingRequest: true,
+      };
+    case DROP_INCONSISTENT_METADATA:
+      return {
+        ...state,
+        ongoingRequest: true,
+      };
+    case DROPPED_INCONSISTENT_METADATA:
+      return {
+        ...state,
+        inconsistentObjects: [],
+        ongoingRequest: false,
+      };
+    case DROPPING_INCONSISTENT_METADATA_FAILED:
+      return {
+        ...state,
+        ongoingRequest: false,
       };
     default:
       return state;
