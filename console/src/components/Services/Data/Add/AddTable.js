@@ -20,7 +20,6 @@ import {
   setColNullable,
   setColDefault,
   setColUnique,
-  removeColDefault,
   addCol,
   fetchColumnTypes,
 } from './AddActions';
@@ -64,27 +63,16 @@ class AddTable extends Component {
       dataTypes: [],
     };
     this.props.dispatch(setDefaults());
-    const { columns, dispatch } = this.props;
-    columns.map((column, i) => {
-      //eslint-disable-line
-      let defValue = '';
-      if ('default' in column) {
-        defValue = column.default.value;
-      }
-      if (defValue === '') {
-        dispatch(removeColDefault(i));
-      }
-      this.onTableNameChange = this.onTableNameChange.bind(this);
-      this.onTableCommentChange = this.onTableCommentChange.bind(this);
-      this.onRemoveColumn = this.onRemoveColumn.bind(this);
-      this.onColumnChange = this.onColumnNameChange.bind(this);
-      this.onColTypeChange = this.onColTypeChange.bind(this);
-      this.onColNullableChange = this.onColNullableChange.bind(this);
-      this.onColUniqueChange = this.onColUniqueChange.bind(this);
-      this.setColDefaultValue = this.setColDefaultValue.bind(this);
-      this.onPrimaryKeyRemove = this.onPrimaryKeyRemove.bind(this);
-      this.onPrimaryKeyChange = this.onPrimaryKeyChange.bind(this);
-    });
+    this.onTableNameChange = this.onTableNameChange.bind(this);
+    this.onTableCommentChange = this.onTableCommentChange.bind(this);
+    this.onRemoveColumn = this.onRemoveColumn.bind(this);
+    this.onColumnChange = this.onColumnNameChange.bind(this);
+    this.onColTypeChange = this.onColTypeChange.bind(this);
+    this.onColNullableChange = this.onColNullableChange.bind(this);
+    this.onColUniqueChange = this.onColUniqueChange.bind(this);
+    this.setColDefaultValue = this.setColDefaultValue.bind(this);
+    this.onPrimaryKeyRemove = this.onPrimaryKeyRemove.bind(this);
+    this.onPrimaryKeyChange = this.onPrimaryKeyChange.bind(this);
   }
   componentDidMount() {
     this.props.dispatch(fetchColumnTypes()).then(data => {

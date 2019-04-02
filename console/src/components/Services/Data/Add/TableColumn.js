@@ -9,7 +9,6 @@ import { getDataOptions, getPlaceholder, getDefaultValue } from './utils';
 const customStyles = {
   container: provided => ({
     ...provided,
-    cursor: 'pointer',
   }),
   dropdownIndicator: provided => {
     return {

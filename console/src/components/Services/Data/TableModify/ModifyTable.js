@@ -387,7 +387,6 @@ class ModifyTable extends React.Component {
     const customStyles = {
       container: provided => ({
         ...provided,
-        cursor: 'pointer',
       }),
       dropdownIndicator: provided => {
         return {
