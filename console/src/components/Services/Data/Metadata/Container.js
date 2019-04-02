@@ -39,6 +39,7 @@ const Container = ({ location, serverVersion, children, metadata }) => {
       supportMetadata={supportMetadata}
       supportInconsistentMetadata={supportInconsistentMetadata}
       location={location}
+      metadata={metadata}
     />
   );
   const helmet = 'Metadata | Hasura';
@@ -66,4 +67,5 @@ const mapStateToProps = state => {
 };
 
 const connector = connect => connect(mapStateToProps)(Container);
+
 export default connector;

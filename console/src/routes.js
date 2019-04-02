@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, IndexRoute } from 'react-router';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -92,6 +92,7 @@ const routes = store => {
             component={generatedApiExplorer(connect)}
           />
           <Route path="metadata" component={metadataContainer(connect)}>
+            <IndexRedirect to="options" />
             <Route path="status" component={metadataStatusContainer(connect)} />
             <Route
               path="options"
