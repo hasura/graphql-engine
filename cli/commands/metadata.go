@@ -20,7 +20,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	metadataCmd.AddCommand(
 		newMetadataExportCmd(ec),
-		newMetadataResetCmd(ec),
+		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
 	)
@@ -54,10 +54,10 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 		if err != nil {
 			return errors.Wrap(err, "cannot save metadata")
 		}
-	case "reset":
+	case "clear":
 		err := t.ResetMetadata()
 		if err != nil {
-			return errors.Wrap(err, "cannot reset Metadata")
+			return errors.Wrap(err, "cannot clear Metadata")
 		}
 	case "reload":
 		err := t.ReloadMetadata()

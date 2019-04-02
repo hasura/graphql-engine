@@ -46,7 +46,7 @@ const vMakeRequest = () => {
     const originalTrigger = getState().triggers.currentTrigger;
     const triggerList = getState().triggers.triggerList;
     const triggerSchema = triggerList.filter(t => t.name === originalTrigger);
-    const triggerId = triggerSchema[0].id;
+    const triggerName = triggerSchema[0].name;
     const currentQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
     // count query
     const countQuery = JSON.parse(JSON.stringify(state.triggers.view.query));
@@ -76,7 +76,7 @@ const vMakeRequest = () => {
       currentQuery.where = { name: state.triggers.currentTrigger };
       countQuery.where = {
         $and: [
-          { trigger_id: triggerId },
+          { trigger_name: triggerName },
           { $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }] },
         ],
       };
