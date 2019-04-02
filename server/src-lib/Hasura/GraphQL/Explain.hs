@@ -132,6 +132,8 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
       return (gCtx, rootSelSet)
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
+    E.GExPMixed _ ->
+      throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet -> do
       let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)

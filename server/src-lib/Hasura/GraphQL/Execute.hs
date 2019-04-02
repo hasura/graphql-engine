@@ -1,11 +1,15 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs     #-}
+
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
   , getExecPlan
   , execRemoteGQ
+  , transformGQRequest
   ) where
 
 import           Control.Exception                      (try)
-import           Control.Lens
+import           Control.Lens                           hiding (op)
 
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
@@ -31,6 +35,10 @@ import qualified Hasura.GraphQL.Validate.Types          as VT
 data GQExecPlan
   = GExPHasura !GCtx !VQ.RootSelSet
   | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  | GExPMixed  ![GQExecPlan]
+
+
+type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
 
 getExecPlan
   :: (MonadError QErr m)
@@ -38,6 +46,7 @@ getExecPlan
   -> SchemaCache
   -> GraphQLRequest
   -> m GQExecPlan
+  -- -> m (GQSelSet a)
 getExecPlan userInfo sc req = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
@@ -47,17 +56,52 @@ getExecPlan userInfo sc req = do
       topLevelNodes = getTopLevelNodes opDef
       -- gather TypeLoc of topLevelNodes
       typeLocs = gatherTypeLocs gCtx topLevelNodes
+      typeLocWTypes = zip typeLocs topLevelNodes
+      queryMap = foldr upsertType mempty typeLocWTypes
+      queries = splitQuery opDef queryMap $ G._todSelectionSet opDef
 
-  -- see if they are all the same
-  typeLoc <- assertSameLocationNodes typeLocs
-
-  case typeLoc of
-    VT.HasuraType ->
-      GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
-    VT.RemoteType _ rsi ->
-      return $ GExPRemote rsi opDef
+  -- traceM "OPERATION DEF =============>>>>"
+  -- liftIO $ pPrint opDef
+  -- traceM "SPLITTED QUERY ===============>>>>>>"
+  -- liftIO $ pPrint queries
+  mkExecPlan gCtx queries
   where
+    mkExecPlan gCtx queries = case queries of
+      [(VT.HasuraType, opDef')] -> do
+        let newQ = transformGQRequest req opDef'
+        queryParts <- flip runReaderT gCtx $ VQ.getQueryParts newQ
+        GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
+      [(VT.RemoteType _ rsi, opDef')] ->
+        return $ GExPRemote rsi opDef'
+      xs -> GExPMixed <$> mapM (\x -> mkExecPlan gCtx [x]) xs
+
     gCtxRoleMap = scGCtxMap sc
+
+    upsertType :: (VT.TypeLoc, G.Name) -> QueryMap -> QueryMap
+    upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
+
+    splitQuery :: G.TypedOperationDefinition -> QueryMap
+               -> G.SelectionSet
+               -> [(VT.TypeLoc , G.TypedOperationDefinition)]
+    splitQuery opDef qMap selSet =
+      flip map (Map.toList qMap) $ \(tl, tyNames) ->
+        (tl, mkOpDef opDef $ filterFlds tyNames selSet)
+
+    filterFlds fldNames selSet =
+      let filterSel sel = case sel of
+            G.SelectionField fld -> G._fName fld `elem` fldNames
+            _                    -> False
+      in filter filterSel selSet
+
+    mkOpDef opDef selset = opDef { G._todSelectionSet = selset }
+
+transformGQRequest
+  :: GraphQLRequest -> G.TypedOperationDefinition -> GraphQLRequest
+transformGQRequest (GraphQLRequest opNameM _ varValsM) opDef =
+  let q = GraphQLQuery [G.ExecutableDefinitionOperation $
+                        G.OperationDefinitionTyped opDef]
+  in GraphQLRequest opNameM q varValsM
+
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)
@@ -95,8 +139,7 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
                   , "Cache-Control", "Connection", "DNT"
                   ]
 
-assertSameLocationNodes
-  :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
+assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
 assertSameLocationNodes typeLocs =
   case Set.toList (Set.fromList typeLocs) of
     -- this shouldn't happen

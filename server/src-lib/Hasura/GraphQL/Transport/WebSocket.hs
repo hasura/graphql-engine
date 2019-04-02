@@ -225,6 +225,10 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
       runHasuraGQ userInfo gCtx rootSelSet
     E.GExPRemote rsi opDef  ->
       runRemoteGQ userInfo reqHdrs opDef rsi
+    E.GExPMixed _ ->
+    -- FIXME: fix this
+      withComplete $ preExecErr $
+        err400 NotSupported  "mixed nodes over ws not supported yet"
   where
     runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
     runHasuraGQ userInfo gCtx rootSelSet =
