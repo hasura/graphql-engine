@@ -51,8 +51,8 @@
     },
     "postgresDiskSizeInMB": {
       "type": "int",
-      "minValue": 5210,
-      "maxValue": 4096000,
+      "minValue": 5120,
+      "maxValue": 4194304,
       "defaultValue": 10240,
       "metadata": {
         "description": "Azure database for PostgreSQL SKU storage size."

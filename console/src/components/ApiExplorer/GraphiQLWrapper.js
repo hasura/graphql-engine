@@ -40,6 +40,8 @@ class GraphiQLWrapper extends Component {
         this.checkNewAnalyzeVersion(this.props.data.serverVersion)
       );
     }
+
+    this.setQueryVariableSectionHeight();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -49,8 +51,16 @@ class GraphiQLWrapper extends Component {
       );
     }
   }
+
   shouldComponentUpdate(nextProps) {
     return !nextProps.headerFocus;
+  }
+
+  setQueryVariableSectionHeight() {
+    const variableEditor = document.querySelectorAll('.variable-editor');
+    if (variableEditor && variableEditor.length > 0) {
+      variableEditor[0].style.height = '120px';
+    }
   }
 
   checkSemVer(version) {
@@ -67,6 +77,7 @@ class GraphiQLWrapper extends Component {
     }
     return Promise.resolve();
   }
+
   checkNewAnalyzeVersion(version) {
     try {
       const analyzeApiChange = semverCheck('analyzeApiChange', version);
@@ -81,11 +92,13 @@ class GraphiQLWrapper extends Component {
     }
     return Promise.resolve();
   }
+
   updateAnalyzeState(supportAnalyze) {
     this.setState({
       supportAnalyze: supportAnalyze,
     });
   }
+
   updateAnalyzeApiState(analyzeApiChange) {
     this.setState({
       analyzeApiChange: analyzeApiChange,
