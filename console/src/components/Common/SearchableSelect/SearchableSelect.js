@@ -5,7 +5,10 @@ import PropTypes from 'prop-types';
 /* Custom option component for select to render option with title */
 const CustomOption = props => {
   return (
-    <div title={props.data.description || ''}>
+    <div
+      title={props.data.description || ''}
+      data-test={`data_test_column_type_value_${props.data.value}`}
+    >
       <components.Option {...props} />
     </div>
   );
