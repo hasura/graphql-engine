@@ -4,13 +4,11 @@ module Hasura.RQL.Types.Common
        , RelType(..)
        , relTypeToTxt
        , RelInfo(..)
-       , PGRelInfo(..)
        , RemoteRelInfo(..)
 
        , FieldName(..)
        , fromPGCol
        , fromRel
-       , riName
 
        , TQueryName(..)
        , TemplateParam(..)
@@ -86,16 +84,16 @@ instance Q.FromCol RelType where
     "remote" -> Just RemoteRel
     _   -> Nothing
 
-data PGRelInfo
-  = PGRelInfo
-  { pgriName     :: !RelName
-  , pgriType     :: !RelType
-  , pgriMapping  :: ![(PGCol, PGCol)]
-  , pgriRTable   :: !QualifiedTable
-  , pgriIsManual :: !Bool
+data RelInfo
+  = RelInfo
+  { riName     :: !RelName
+  , riType     :: !RelType
+  , riMapping  :: ![(PGCol, PGCol)]
+  , riRTable   :: !QualifiedTable
+  , riIsManual :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''PGRelInfo)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''RelInfo)
 
 data RemoteRelInfo
   = RemoteRelInfo
@@ -105,16 +103,6 @@ data RemoteRelInfo
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelInfo)
-
-data RelInfo = RelTypePG PGRelInfo | RelTypeRemote RemoteRelInfo
-  deriving (Show, Eq)
-
-$(deriveToJSON defaultOptions{sumEncoding = UntaggedValue} ''RelInfo)
-
-riName :: RelInfo -> RelName
-riName relInfo = case relInfo of
-  RelTypePG r     -> pgriName r
-  RelTypeRemote r -> rriName r
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }

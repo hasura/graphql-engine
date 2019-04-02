@@ -7,10 +7,10 @@ where
 
 import           Control.Arrow                      ((***))
 import           Hasura.Prelude
-import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
+import qualified Hasura.RQL.DDL.EventTrigger as DS
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -135,12 +135,10 @@ updateRelDefs
 updateRelDefs qt rn renameTable = do
   fim <- askFieldInfoMap qt
   ri <- askRelType fim rn ""
-  case ri of
-    RelTypePG relInfo -> case pgriType relInfo of
-      ObjRel    -> updateObjRelDef qt rn renameTable
-      ArrRel    -> updateArrRelDef qt rn renameTable
-      RemoteRel -> undefined
-    _ -> undefined
+  case riType ri of
+    ObjRel -> updateObjRelDef qt rn renameTable
+    ArrRel -> updateArrRelDef qt rn renameTable
+
 
 updateObjRelDef
   :: (MonadTx m)
@@ -294,12 +292,12 @@ updateColExp qt rf (ColExp fld val) =
       fi <- askFieldInfo fim fld
       case fi of
         FIColumn _ -> return val
-        FIRelationship (RelTypePG ri) -> do
-          let remTable = pgriRTable ri
+        FIRelationship ri -> do
+          let remTable = riRTable ri
           be <- decodeValue val
           ube <- updateBoolExp remTable rf be
           return $ toJSON ube
-        FIRelationship (RelTypeRemote _) -> undefined
+
     (oFld, nFld, opQT) = case rf of
       RFCol (RenameItem tn oCol nCol) -> (fromPGCol oCol, fromPGCol nCol, tn)
       RFRel (RenameItem tn oRel nRel) -> (fromRel oRel, fromRel nRel, tn)
@@ -311,18 +309,14 @@ updateColInRel
 updateColInRel fromQT rn rnCol = do
   fim <- askFieldInfoMap fromQT
   ri <- askRelType fim rn ""
-  case ri of
-    RelTypePG r -> do
-      let toQT = pgriRTable r
-      oldDefV <- liftTx $ getRelDef fromQT rn
-      newDefV <- case pgriType r of
-        ObjRel -> fmap toJSON $
-          updateColInObjRel fromQT toQT rnCol <$> decodeValue oldDefV
-        ArrRel -> fmap toJSON $
-          updateColInArrRel fromQT toQT rnCol <$> decodeValue oldDefV
-        RemoteRel -> undefined
-      liftTx $ updateRel fromQT rn newDefV
-    RelTypeRemote _ -> undefined
+  let toQT = riRTable ri
+  oldDefV <- liftTx $ getRelDef fromQT rn
+  newDefV <- case riType ri of
+    ObjRel -> fmap toJSON $
+      updateColInObjRel fromQT toQT rnCol <$> decodeValue oldDefV
+    ArrRel -> fmap toJSON $
+      updateColInArrRel fromQT toQT rnCol <$> decodeValue oldDefV
+  liftTx $ updateRel fromQT rn newDefV
 
 -- rename columns in relationship definitions
 updateColInEventTriggerDef

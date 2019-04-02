@@ -191,12 +191,11 @@ checkOnColExp spi annFld = case annFld of
   AVCol (PGColInfo cn _ _) _ -> do
     checkSelOnCol spi cn
     return annFld
-  AVRel ri@(RelTypePG relInfo) nesAnn -> do
-    relSPI <- snd <$> fetchRelDet (pgriName relInfo) (pgriRTable relInfo)
+  AVRel relInfo nesAnn -> do
+    relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
     modAnn <- checkSelPerm relSPI nesAnn
-    return $ AVRel ri $
+    return $ AVRel relInfo $
       andAnnBoolExps modAnn $ spiFilter relSPI
-  AVRel _ _ -> undefined
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
