@@ -1,5 +1,8 @@
 module Hasura.GraphQL.Resolve
   ( mutFldToTx
+  , queryFldToPGAST
+  , RS.traverseQueryRootFldAST
+  , RS.toPGQuery
   , queryFldToSQL
   , schemaR
   , typeR
@@ -32,18 +35,17 @@ validateHdrs userInfo hdrs = do
     unless (isJust $ getVarVal hdr receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
-queryFldToSQL
+queryFldToPGAST
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has OpCtxMap r
      )
-  => PrepFn m
-  -> Field
-  -> m Q.Query
-queryFldToSQL fn fld = do
+  => Field
+  -> m RS.QueryRootFldUnresolved
+queryFldToPGAST fld = do
   opCtx <- getOpCtx $ _fName fld
   userInfo <- asks getter
-  queryRootFldAST <- case opCtx of
+  case opCtx of
     OCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       RS.convertSelect ctx fld
@@ -65,7 +67,18 @@ queryFldToSQL fn fld = do
       throw500 "unexpected OCUpdate for query field context"
     OCDelete _ ->
       throw500 "unexpected OCDelete for query field context"
-  resolvedAST <- flip RS.traverseQueryRootFldAST queryRootFldAST $ \case
+
+queryFldToSQL
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has OpCtxMap r
+     )
+  => PrepFn m
+  -> Field
+  -> m Q.Query
+queryFldToSQL fn fld = do
+  pgAST <- queryFldToPGAST fld
+  resolvedAST <- flip RS.traverseQueryRootFldAST pgAST $ \case
     UVPG annPGVal -> fn annPGVal
     UVSQL sqlExp  -> return sqlExp
     UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar

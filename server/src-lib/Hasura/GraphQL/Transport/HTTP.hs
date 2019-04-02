@@ -4,7 +4,6 @@ module Hasura.GraphQL.Transport.HTTP
 
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -31,8 +30,8 @@ runGQ
 runGQ pool isoL userInfo sqlGenCtx planCache sc scVer manager reqHdrs req rawReq = do
   execPlan <- E.getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer req
   case execPlan of
-    E.GExPHasura (opTy, tx) ->
-      runHasuraGQ pool isoL userInfo (opTy, tx)
+    E.GExPHasura resolvedOp ->
+      runHasuraGQ pool isoL userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
@@ -41,12 +40,15 @@ runHasuraGQ
   => Q.PGPool
   -> Q.TxIsolation
   -> UserInfo
-  -> (G.OperationType, LazyRespTx)
+  -> E.ResolvedOp
   -> m EncJSON
-runHasuraGQ pool isoL userInfo (opTy, opTx) = do
-  when (opTy == G.OperationTypeSubscription) $
-    throw400 UnexpectedPayload
-    "subscriptions are not supported over HTTP, use websockets instead"
+runHasuraGQ pool isoL userInfo resolvedOp = do
+  opTx <- case resolvedOp of
+    E.ROQuery tx    -> return tx
+    E.ROMutation tx -> return tx
+    E.ROSubs _ ->
+      throw400 UnexpectedPayload
+      "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx opTx) >>= liftEither
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
   where

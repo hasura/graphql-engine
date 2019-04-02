@@ -1,29 +1,33 @@
 module Hasura.GraphQL.Execute.Context
   ( getMutTx
   , getQueryTx
-  , getSubsTx
+  , getSubsOp
   ) where
 
 import           Data.Has
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.IntMap                    as IntMap
-import qualified Database.PG.Query              as Q
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.HashSet                     as Set
+import qualified Data.IntMap                      as IntMap
+import qualified Data.Text                        as T
+import qualified Database.PG.Query                as Q
+import qualified Language.GraphQL.Draft.Syntax    as G
 
-import qualified Hasura.GraphQL.Execute.Plan    as Plan
-import qualified Hasura.GraphQL.Resolve         as R
-import qualified Hasura.GraphQL.Validate.Field  as V
-import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.GraphQL.Execute.Plan      as Plan
+import qualified Hasura.GraphQL.Resolve           as R
+import qualified Hasura.GraphQL.Validate.Field    as V
+import qualified Hasura.SQL.DML                   as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Select            (asSingleRowJsonResp)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Value
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 -- Monad for resolving a hasura query/mutation
 type E =
@@ -134,22 +138,6 @@ convertQuerySelSet fields =
         return $ Plan.RFPPostgres $ Plan.PGPlan q vars prepped
     return (V._fAlias fld, fldPlan)
 
-getQueryTx'
-  :: (MonadError QErr m)
-  => (V.SelSet -> E [(G.Alias, Plan.RootFieldPlan)])
-  -> Bool
-  -> GCtx
-  -> SQLGenCtx
-  -> UserInfo
-  -> V.SelSet
-  -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
-getQueryTx' fn isSubs gCtx sqlGenCtx userInfo fields varDefs = do
-  fldPlans <- runE gCtx sqlGenCtx userInfo $ fn fields
-  let queryPlan     = Plan.QueryPlan isSubs varDefs fldPlans
-      reusablePlanM = Plan.getReusablePlan queryPlan
-  return (liftTx $ Plan.mkCurPlanTx queryPlan, reusablePlanM)
-
 getQueryTx
   :: (MonadError QErr m)
   => GCtx
@@ -157,9 +145,12 @@ getQueryTx
   -> UserInfo
   -> V.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
-getQueryTx =
-  getQueryTx' convertQuerySelSet False
+  -> m (LazyRespTx, Maybe Plan.ReusableQueryPlan)
+getQueryTx gCtx sqlGenCtx userInfo fields varDefs = do
+  fldPlans <- runE gCtx sqlGenCtx userInfo $ convertQuerySelSet fields
+  let queryPlan     = Plan.QueryPlan varDefs fldPlans
+      reusablePlanM = Plan.getReusablePlan queryPlan
+  return (liftTx $ Plan.mkCurPlanTx queryPlan, reusablePlanM)
 
 resolveMutSelSet
   :: ( MonadError QErr m
@@ -204,7 +195,52 @@ getMutTx
 getMutTx ctx sqlGenCtx userInfo selSet =
   runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
 
-convertSubsFld
+collectNonNullableVars
+  :: (MonadState Plan.VariableTypes m)
+  => UnresolvedVal -> m UnresolvedVal
+collectNonNullableVars val = do
+  case val of
+    UVPG annPGVal -> do
+      let AnnPGVal varM isNullable colTy _ = annPGVal
+      case (varM, isNullable) of
+        (Just var, False) -> modify (Map.insert var colTy)
+        _                 -> return ()
+    _             -> return ()
+  return val
+
+toMultiplexedQueryVar
+  :: (MonadState TextEncodedVariables m)
+  => UnresolvedVal -> m S.SQLExp
+toMultiplexedQueryVar = \case
+  UVPG annPGVal ->
+    let AnnPGVal varM isNullable colTy colVal = annPGVal
+    in case (varM, isNullable) of
+      -- we don't check for nullability as
+      -- this is only used for reusable plans
+      -- the check has to be made before this
+      (Just var, _) -> do
+        modify $ Map.insert var (txtEncodedPGVal colVal)
+        return $ fromResVars colTy
+          [ "variables"
+          , G.unName $ G.unVariable var
+          ]
+      _             -> return $ toTxtValue colTy colVal
+  -- TODO: check the logic around colTy and session variable's type
+  UVSessVar colTy sessVar ->
+    return $ fromResVars colTy [ "user", T.toLower sessVar]
+  UVSQL sqlExp -> return sqlExp
+  where
+    fromResVars colTy jPath =
+      S.withTyAnn colTy $ S.SEOpApp (S.SQLOp "#>>")
+      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs")
+        (Iden "result_vars")
+      , S.SEArray $ map S.SELit jPath
+      ]
+
+type TextEncodedVariables
+  = Map.HashMap G.Variable TxtEncodedPGVal
+
+getSubsOpM
   :: ( MonadError QErr m
      , MonadReader r m
      , Has OpCtxMap r
@@ -213,26 +249,58 @@ convertSubsFld
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => V.Field
-  -> m (G.Alias, Plan.RootFieldPlan)
-convertSubsFld fld = do
-  fldPlan <- case V._fName fld of
-    "__typename" -> return $ Plan.RFPRaw $ encJFromJValue $
-                    mkRootTypeName G.OperationTypeSubscription
+  => [G.VariableDefinition]
+  -> V.Field
+  -> m (LQ.LiveQueryOp, Maybe Plan.SubsPlan)
+getSubsOpM varDefs fld = do
+  userInfo <- asks getter
+  case V._fName fld of
+    "__typename" -> do
+      let tx = liftTx $ return $ encJFromJValue $
+               mkRootTypeName G.OperationTypeSubscription
+      return (LQ.LQFallback $ withAlias tx, Nothing)
     _            -> do
-      (q, PlanningSt _ vars prepped) <-
-        flip runStateT initPlanningSt $ R.queryFldToSQL prepareWithPlan fld
-      return $ Plan.RFPPostgres $ Plan.PGPlan q vars prepped
-  return (V._fAlias fld, fldPlan)
+      astUnresolved <- R.queryFldToPGAST fld
+      (_, varTypes) <- flip runStateT mempty $ R.traverseQueryRootFldAST
+                       collectNonNullableVars astUnresolved
+      -- can the subscription be multiplexed?
+      if Set.fromList (Map.keys varTypes) == allVars
+        then multiplexedOp varTypes astUnresolved
+        else fallbackOp userInfo astUnresolved
+  where
+    allVars = Set.fromList $ map G._vdVariable varDefs
 
-getSubsTx
+    fldAls  = V._fAlias fld
+
+    -- multiplexed subscription
+    multiplexedOp varTypes astUnresolved = do
+      (astResolved, txtEncodedVars) <-
+        flip runStateT mempty $ R.traverseQueryRootFldAST
+        toMultiplexedQueryVar astUnresolved
+      let mxQuery = LQ.mkMxQuery $ R.toPGQuery astResolved
+          plan    = Plan.SubsPlan fldAls mxQuery varTypes
+      return (LQ.LQMultiplexed (fldAls, mxQuery, txtEncodedVars), Just plan)
+
+    -- fallback tx subscription
+    fallbackOp userInfo astUnresolved = do
+      (astResolved, prepArgs) <-
+        withPrepArgs $ R.traverseQueryRootFldAST
+        resolveValPrep astUnresolved
+      let tx = withUserInfo userInfo $ liftTx $
+               asSingleRowJsonResp (R.toPGQuery astResolved) $ toList prepArgs
+      return (LQ.LQFallback $ withAlias tx, Nothing)
+
+    fldAlsT = G.unName $ G.unAlias fldAls
+    withAlias tx =
+      encJFromAssocList . pure . (,) fldAlsT <$> tx
+
+getSubsOp
   :: (MonadError QErr m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
   -> V.Field
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
-getSubsTx gCtx sqlGenCtx userInfo fld =
-  getQueryTx' (mapM convertSubsFld . toList) True gCtx
-  sqlGenCtx userInfo $ pure fld
+  -> m (LQ.LiveQueryOp, Maybe Plan.SubsPlan)
+getSubsOp gCtx sqlGenCtx userInfo fld varDefs =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM varDefs fld
