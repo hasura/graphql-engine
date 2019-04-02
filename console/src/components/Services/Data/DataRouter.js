@@ -36,8 +36,6 @@ import {
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
 
-import { loadInconsistentObjects } from './Metadata/Actions';
-
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
 // import { validateLogin } from '../../Main/Actions';
 
@@ -142,10 +140,12 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     const {
       tables: { allSchemas },
     } = store.getState();
+
     if (allSchemas.length) {
       cb();
       return;
     }
+
     let currentSchema = nextState.params.schema;
     if (
       currentSchema === null ||
@@ -154,6 +154,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     ) {
       currentSchema = 'public';
     }
+
     Promise.all([
       store.dispatch({
         type: UPDATE_CURRENT_SCHEMA,
@@ -172,6 +173,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
@@ -180,6 +182,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState('/data/schema');
@@ -187,6 +190,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   return {
     makeDataRouter: makeDataRouter(
       connect,

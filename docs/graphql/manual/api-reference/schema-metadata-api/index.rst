@@ -1,3 +1,5 @@
+.. _metadata_apis:
+
 Schema / Metadata API Reference
 ===============================
 
@@ -160,20 +162,20 @@ The various types of queries are listed in the following table:
      - Remove all user defined metadata
 
    * - :ref:`export_metadata`
-     - :ref:`Empty Object`
-     - Export all user defined metadata objects
+     - ``{}``
+     - Export the current metadata
 
    * - :ref:`replace_metadata`
-     - `Metadata Objects`
-     - Replace metadata with given objects
+     - :ref:`replace_metadata_args <replace_metadata_syntax>`
+     - Import and replace existing metadata
 
-   * - :ref:`get_inconsistent_objects`
-     - :ref:`Empty Object`
-     - List all inconsistent metadata objects
-       
-   * - :ref:`drop_inconsistent_objects`
-     - :ref:`Empty Object`
-     - Drop all inconsistent metadata objects
+   * - :ref:`reload_metadata`
+     - ``{}``
+     - Reload changes to the underlying Postgres DB
+
+   * - :ref:`clear_metadata`
+     - ``{}``
+     - Clear/wipe-out the current metadata state form server
 
 **See:**
 
@@ -183,7 +185,7 @@ The various types of queries are listed in the following table:
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
-- :doc:`Metadata Management <metadata-management>`
+- :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
 ------------------
@@ -246,6 +248,6 @@ Error codes
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
+  Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
-  Metadata Management <metadata-management>
 
