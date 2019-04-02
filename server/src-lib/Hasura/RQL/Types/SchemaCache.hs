@@ -42,7 +42,6 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
-       , addRemoteRelToCache
 
        , delColFromCache
        , delRelFromCache
@@ -161,7 +160,6 @@ type WithDeps a = (a, [SchemaDependency])
 data FieldInfo
   = FIColumn !PGColInfo
   | FIRelationship !RelInfo
-  | FIRemote !RemoteRelInfo
   deriving (Show, Eq)
 
 $(deriveToJSON
@@ -566,16 +564,6 @@ addRelToCache rn ri deps tn = do
   modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
-
-addRemoteRelToCache
-  :: (QErrM m, CacheRWM m)
-  => RelName -> RemoteRelInfo -> [SchemaDependency]
-  -> QualifiedTable -> m ()
-addRemoteRelToCache rn rri deps qt = do
-  addFldToCache (fromRel rn) (FIRemote rri) qt
-  modDepMapInCache (addToDepMap schObjId deps)
-  where
-    schObjId = SOTableObj qt $ TORel rn
 
 addFldToCache
   :: (QErrM m, CacheRWM m)

@@ -241,7 +241,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
        , OBNNothing
        )
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
-  AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
+  AOCObj (RelTypePG (PGRelInfo rn _ colMapping relTab _)) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), ordByNode) =
           processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
@@ -261,7 +261,9 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
     in ( (nesAls, qualCol)
        , OBNObjNode rn relNode
        )
-  AOCAgg (RelInfo rn _ colMapping relTab _ ) relFltr annAggOb ->
+
+  AOCObj (RelTypeRemote _) _ _ -> undefined
+  AOCAgg (RelTypePG (PGRelInfo rn _ colMapping relTab _ )) relFltr annAggOb ->
     let (arrAls, arrPfx) =
           mkArrNodePfx pfx parAls arrRelCtx $ ANIAggOrdBy rn
         fldName = mkAggObFld annAggOb
@@ -277,6 +279,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
     in ( (S.Alias obAls, qOrdBy)
        , OBNArrNode arrAls aggNode
        )
+  AOCAgg (RelTypeRemote _) _ _ -> undefined
 
 processDistinctOnCol
   :: Iden

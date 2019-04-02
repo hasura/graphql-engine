@@ -147,13 +147,16 @@ computeMetrics sc =
   in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
+    riIsManual relInfo = case relInfo of
+      RelTypePG rel -> pgriIsManual rel
+      _             -> False
     usrTbls = Map.filter (not . tiSystemDefined) $ scTables sc
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
     relsOfTbl :: TableInfo -> [RelInfo]
-    relsOfTbl = rights . Map.elems . Map.map fieldInfoToEither . tiFieldInfoMap
+    relsOfTbl tabInfo = getRels $ tiFieldInfoMap tabInfo
 
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . tiRolePermInfoMap

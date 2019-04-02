@@ -276,7 +276,10 @@ annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
       AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
+      relFieldInfoMap <- case relInfo of
+          RelTypePG rel     -> askFieldInfoMap $ pgriRTable rel
+          RelTypeRemote rel -> undefined
+
       annRelBoolExp   <- annBoolExp valueParser relFieldInfoMap relBoolExp
       return $ AVRel relInfo annRelBoolExp
 
@@ -297,24 +300,25 @@ convColRhs tableQual = \case
     let bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
-  AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
+  AVRel (RelTypePG (PGRelInfo _ _  colMapping relTN _)) nesAnn -> do
     -- Convert the where clause on the relationship
-    curVarNum <- get
-    put $ curVarNum + 1
-    let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
-                   <> snakeCaseTable relTN
-        newIdenQ = S.QualIden newIden
-    annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
-    let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
-          flip map colMapping $ \(lCol, rCol) ->
-          S.BECompare S.SEQ
-          (mkQCol (S.QualIden newIden) rCol)
-          (mkQCol tableQual lCol)
-        innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
-    return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
+      curVarNum <- get
+      put $ curVarNum + 1
+      let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
+                     <> snakeCaseTable relTN
+          newIdenQ = S.QualIden newIden
+      annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
+      let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
+            flip map colMapping $ \(lCol, rCol) ->
+            S.BECompare S.SEQ
+            (mkQCol (S.QualIden newIden) rCol)
+            (mkQCol tableQual lCol)
+          innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
+      return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
+
+  AVRel (RelTypeRemote _) nesAnn -> undefined
   where
     mkQCol q = S.SEQIden . S.QIden q . toIden
-
 pgValParser
   :: (MonadError QErr m)
   => PGColType -> Value -> m PGColValue
@@ -390,11 +394,12 @@ getColExpDeps tn = \case
   AVCol colInfo _ ->
     let cn = pgiName colInfo
     in [SchemaDependency (SOTableObj tn (TOCol cn)) "on_type"]
-  AVRel relInfo relBoolExp ->
-    let rn = riName relInfo
-        relTN = riRTable relInfo
+  AVRel (RelTypePG relInfo) relBoolExp ->
+    let rn = pgriName relInfo
+        relTN = pgriRTable relInfo
         pd = SchemaDependency (SOTableObj tn (TORel rn)) "on_type"
     in pd : getBoolExpDeps relTN relBoolExp
+  AVRel (RelTypeRemote _ ) _ -> undefined
 
 getBoolExpDeps :: QualifiedTable -> AnnBoolExp a -> [SchemaDependency]
 getBoolExpDeps tn =

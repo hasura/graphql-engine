@@ -17,13 +17,13 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -40,10 +40,12 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _) = relInfo
-  (rfim, rspi) <- fetchRelDet rn relTab
-  resolvedSelQ <- resolveStar rfim rspi selQ
-  return [ECRel rn malias resolvedSelQ]
+  case relInfo of
+    RelTypePG (PGRelInfo _ _ _ relTab _) -> do
+      (rfim, rspi) <- fetchRelDet rn relTab
+      resolvedSelQ <- resolveStar rfim rspi selQ
+      return [ECRel rn malias resolvedSelQ]
+    _ -> undefined
 convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
@@ -63,17 +65,18 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
 
     simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
 
-    mkRelCol wc relInfo = do
-      let relName = riName relInfo
-          relTab  = riRTable relInfo
-      relTabInfo <- fetchRelTabInfo relTab
-      mRelSelPerm <- askPermInfo' PASelect relTabInfo
+    mkRelCol wc relInfo = case relInfo of
+      RelTypePG pgRelInfo -> do
+        let relName = pgriName pgRelInfo
+            relTab  = pgriRTable pgRelInfo
+        relTabInfo <- fetchRelTabInfo relTab
+        mRelSelPerm <- askPermInfo' PASelect relTabInfo
 
-      forM mRelSelPerm $ \rspi -> do
-        rExtCols <- convWildcard (tiFieldInfoMap relTabInfo) rspi wc
-        return $ ECRel relName Nothing $
-          SelectG rExtCols Nothing Nothing Nothing Nothing
-
+        forM mRelSelPerm $ \rspi -> do
+          rExtCols <- convWildcard (tiFieldInfoMap relTabInfo) rspi wc
+          return $ ECRel relName Nothing $
+            SelectG rExtCols Nothing Nothing Nothing Nothing
+      RelTypeRemote _ -> undefined
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
@@ -130,15 +133,16 @@ convOrderByElem (flds, spi) = \case
         [ fldName <<> " is a Postgres column"
         , " and cannot be chained further"
         ]
-      FIRelationship relInfo -> do
-        when (riType relInfo == ArrRel) $
+      FIRelationship ri@(RelTypePG relInfo) -> do
+        when (pgriType relInfo == ArrRel) $
           throw400 UnexpectedPayload $ mconcat
           [ fldName <<> " is an array relationship"
           ," and can't be used in 'order_by'"
           ]
-        (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        AOCObj relInfo (spiFilter relSpi) <$>
+        (relFim, relSpi) <- fetchRelDet (pgriName relInfo) (pgriRTable relInfo)
+        AOCObj ri (spiFilter relSpi) <$>
           convOrderByElem (relFim, relSpi) rest
+      FIRelationship (RelTypeRemote _) -> undefined
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
@@ -214,16 +218,19 @@ convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _) = relInfo
-  (relCIM, relSPI) <- fetchRelDet relName relTab
-  annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
-  case relTy of
-    ObjRel -> do
-      when misused $ throw400 UnexpectedPayload objRelMisuseMsg
-      return $ Left $ AnnRelG (fromMaybe relName mAlias) colMapping annSel
-    ArrRel ->
-      return $ Right $ ASSimple $ AnnRelG (fromMaybe relName mAlias)
-               colMapping annSel
+  case relInfo of
+    RelTypePG (PGRelInfo _ relTy colMapping relTab _) -> do
+      (relCIM, relSPI) <- fetchRelDet relName relTab
+      annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
+      case relTy of
+        ObjRel -> do
+          when misused $ throw400 UnexpectedPayload objRelMisuseMsg
+          return $ Left $ AnnRelG (fromMaybe relName mAlias) colMapping annSel
+        ArrRel ->
+          return $ Right $ ASSimple $ AnnRelG (fromMaybe relName mAlias)
+                   colMapping annSel
+        RemoteRel -> throw500 "expected only object or array"
+    RelTypeRemote _ -> undefined
   where
     pgWhenRelErr = "only relationships can be expanded"
     misused      =
