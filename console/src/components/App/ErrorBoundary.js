@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component {
     dispatch(loadInconsistentObjects(null, true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
         this.setState({ hasError: false, info: null });
-        this.props.dispatch(push(globals.urlPrefix + '/metadata'));
+        this.props.dispatch(push(globals.urlPrefix + '/metadata/status'));
       } else {
         console.error(error);
       }

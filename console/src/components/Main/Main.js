@@ -103,7 +103,7 @@ class Main extends React.Component {
   }
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
-      this.props.dispatch(push(globals.urlPrefix + '/metadata'));
+      this.props.dispatch(push(globals.urlPrefix + '/metadata/status'));
       // const hasRedirectedOnce = window.localStorage.getItem(
       //   'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT'
       // );
