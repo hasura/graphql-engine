@@ -39,7 +39,7 @@ CREATE TABLE hdb_catalog.hdb_relationship
     table_schema TEXT,
     table_name TEXT,
     rel_name   TEXT,
-    rel_type   TEXT CHECK (rel_type IN ('object', 'array')),
+    rel_type   TEXT CHECK (rel_type IN ('object', 'array', 'remote')),
     rel_def    JSONB NOT NULL,
     comment    TEXT NULL,
     is_system_defined boolean default false,

@@ -1,34 +1,18 @@
 module Hasura.RQL.DDL.Relationship.Remote where
 
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift)
 
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DDL.Relationship
 
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict           as Map
+import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
-
-data RemoteRelUsing
-  = RemoteRelUsing
-  { rruTable       :: !QualifiedTable
-  , rruColumn      :: !PGCol
-  , rruRemoteField :: !G.Name
-  , rruInputField  :: !T.Text
-  , rruInputPath   :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RemoteRelUsing)
-
-type RemoteRelDef = RelDef RemoteRelUsing
-
-type CreateRemoteRel = WithTable RemoteRelDef
 
 runCreateRemoteRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
@@ -36,7 +20,6 @@ runCreateRemoteRel
 runCreateRemoteRel defn = do
   createRemoteRelP1 defn
   createRemoteRelP2 defn
-
 
 createRemoteRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateRemoteRel -> m ()
 createRemoteRelP1 (WithTable qt rd) = do
@@ -46,7 +29,33 @@ createRemoteRelP1 (WithTable qt rd) = do
 validateRemoteRel
   :: (QErrM m, CacheRM m)
   => QualifiedTable -> RemoteRelDef -> m ()
-validateRemoteRel qt (RelDef rn ru _) = undefined
+validateRemoteRel qt (RelDef rn ru _) = do
+  sc <- askSchemaCache
+  tabInfo <- askTabInfo qt
+  checkForColConfilct tabInfo (fromRel rn)
+  let fim = tiFieldInfoMap tabInfo
+  assertPGCol fim "" (rruColumn ru)
+  let gctx = scDefaultRemoteGCtx sc
+  remoteFieldInfo <- getRemoteField gctx (rruRemoteField ru)
+  inputFieldInfo <- getInputField remoteFieldInfo (rruInputField ru)
+  assertInputPath inputFieldInfo (rruInputPath ru)
+  where
+    getRemoteField gctx' fieldName = do
+      let queryRoot = GS._gQueryRoot gctx'
+          fieldMap = _otiFields queryRoot
+          fieldM = Map.lookup fieldName fieldMap
+      field <- maybe (throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found")) return fieldM
+      let typeLoc = _fiLoc field
+      case typeLoc of
+        HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found in any remote schema")
+        RemoteType _ _ -> return field
+
+    getInputField remoteFieldInfo inputFieldName = do
+      let params = _fiParams remoteFieldInfo
+          inputParam = Map.lookup inputFieldName params
+      maybe (throw400 ValidationFailed ("input field: " <> G.unName inputFieldName <> "not found")) return inputParam
+
+    assertInputPath inputFieldInfo inputPath = return ()
 
 createRemoteRelP2
   :: (QErrM m, CacheRWM m, MonadTx m) => CreateRemoteRel -> m EncJSON
@@ -64,12 +73,25 @@ remoteRelP2 qt rd@(RelDef rn u comment) = do
 remoteRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> RemoteRelDef -> m ()
-remoteRelP2Setup qt (RelDef rn ru _) = undefined
+remoteRelP2Setup qt (RelDef rn ru _) = do
+  let tableDep = SchemaDependency (SOTable qt) "parent table"
+      col = rruColumn ru
+      colDep =  SchemaDependency (SOTableObj qt $ TOCol col) "join col"
+      deps = [tableDep, colDep]
+  remScName <- getRemoteSchemaNameFromField (rruRemoteField ru)
+  let relInfo = RemoteRelInfo rn "adfa" remScName
+  addRemoteRelToCache rn relInfo deps qt
 
-
-
-
-
-
-
-
+getRemoteSchemaNameFromField
+  :: (QErrM m, CacheRM m)
+  => G.Name -> m RemoteSchemaName
+getRemoteSchemaNameFromField fieldName = do
+  sc <- askSchemaCache
+  let gctx = scDefaultRemoteGCtx sc
+      queryRoot = GS._gQueryRoot gctx
+      fieldMap = _otiFields queryRoot
+      fieldM = Map.lookup fieldName fieldMap
+  field <- maybe (throw400 ValidationFailed ("field: " <> G.unName fieldName <> "not found")) return fieldM
+  case _fiLoc field of
+    HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> "not found in any remote schema")
+    RemoteType name _ -> return name

@@ -76,6 +76,7 @@ isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
+  FIRemote _ -> True
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -231,8 +232,9 @@ mkRelFld
   -> Bool
   -> [ObjFldInfo]
 mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
-  ObjRel -> [objRelFld]
+  ArrRel    -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
+  ObjRel    -> [objRelFld]
+  RemoteRel -> []
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
       (G.Name $ getRelTxt rn) Map.empty objRelTy
@@ -958,6 +960,7 @@ mkInsInp tn insCtx =
                       G.toGT $ mkObjInsInpTy remoteQT
             ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
                       G.toGT $ mkArrInsInpTy remoteQT
+            RemoteRel -> undefined
 
 {-
 
@@ -1342,8 +1345,9 @@ mkGCtxRole' tn insPermM selPermM updColsM
                         , Right (ri, True, perm, lim)
                         )
         in case riType ri of
-          ObjRel -> [relFld]
-          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+          ObjRel    -> [relFld]
+          ArrRel    -> bool [relFld] [relFld, aggRelFld] allowAgg
+          RemoteRel -> []
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
@@ -1512,6 +1516,7 @@ getSelPerm tableCache fields role selPermInfo = do
                              , spiLimit rmSelPermM
                              , isRelNullable fields relInfo
                              )
+    FIRemote _ -> return Nothing
   return (spiAllowAgg selPermInfo, selFlds)
   where
     allowedCols = spiCols selPermInfo
@@ -1653,6 +1658,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     selFlds = flip map (toValidFieldInfos fields) $ \case
       FIColumn pgColInfo     -> Left pgColInfo
       FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+      FIRemote _ -> undefined
     adminRootFlds =
       getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))

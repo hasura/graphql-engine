@@ -6,15 +6,16 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Relationship.Remote
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -317,7 +318,7 @@ buildSchemaCache = do
         let relDef = RelDef rn using Nothing
         validateArrRel qt relDef
         arrRelP2Setup qt relDef
-
+      RemoteRel -> return ()
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
@@ -363,6 +364,17 @@ buildSchemaCache = do
   writeRemoteSchemasToCache mergedGCtxMap rmScMap
   postMergeSc <- askSchemaCache
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
+
+-- add remote relationships
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+    let qt = QualifiedObject sn tn
+    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
+      RemoteRel -> do
+        using <- decodeValue rDef
+        let relDef = RelDef rn using Nothing
+        validateRemoteRel qt relDef
+        remoteRelP2Setup qt relDef
+      _ -> return ()
 
   where
     permHelper strfyNum sn tn rn pDef pa = do

@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Common
        , RelType(..)
        , relTypeToTxt
        , RelInfo(..)
+       , RemoteRelInfo(..)
 
        , FieldName(..)
        , fromPGCol
@@ -17,6 +18,8 @@ module Hasura.RQL.Types.Common
        , ColVals
        , PreSetCols
        , MutateResp(..)
+
+       , RemoteSchemaName
        ) where
 
 import           Hasura.Prelude
@@ -32,6 +35,8 @@ import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import qualified PostgreSQL.Binary.Decoding as PD
+
+type RemoteSchemaName = Text
 
 data PGColInfo
   = PGColInfo
@@ -69,6 +74,7 @@ instance ToJSON RelType where
 instance FromJSON RelType where
   parseJSON (String "object") = return ObjRel
   parseJSON (String "array") = return ArrRel
+  parseJSON (String "remote") = return RemoteRel
   parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
 
 instance Q.FromCol RelType where
@@ -87,7 +93,16 @@ data RelInfo
   , riIsManual :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''RelInfo)
+
+data RemoteRelInfo
+  = RemoteRelInfo
+  { rriName    :: !RelName
+  , rriMapping :: !T.Text
+  , rriRSchema :: !RemoteSchemaName
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }

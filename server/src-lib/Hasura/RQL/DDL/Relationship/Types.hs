@@ -7,11 +7,12 @@ import           Hasura.SQL.Types
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map.Strict            as M
-import qualified Data.Text                  as T
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Map.Strict               as M
+import qualified Data.Text                     as T
+import           Instances.TH.Lift             ()
+import qualified Language.GraphQL.Draft.Syntax as G
+import           Language.Haskell.TH.Syntax    (Lift)
 
 data RelDef a
   = RelDef
@@ -128,3 +129,20 @@ data RenameRel
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''RenameRel)
+
+data RemoteRelUsing
+  = RemoteRelUsing
+  { rruTable       :: !QualifiedTable
+  , rruColumn      :: !PGCol
+  , rruRemoteField :: !G.Name
+  , rruInputField  :: !G.Name
+  , rruInputPath   :: !(Maybe T.Text)
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RemoteRelUsing)
+
+type RemoteRelDef = RelDef RemoteRelUsing
+
+type CreateRemoteRel = WithTable RemoteRelDef
+
+

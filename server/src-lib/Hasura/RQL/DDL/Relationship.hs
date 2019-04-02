@@ -12,6 +12,7 @@ module Hasura.RQL.DDL.Relationship
   , runDropRel
   , runSetRelComment
   , persistRel
+  , checkForColConfilct
   , module Hasura.RQL.DDL.Relationship.Types
   )
 where

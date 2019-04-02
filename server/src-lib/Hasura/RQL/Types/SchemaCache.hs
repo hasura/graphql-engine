@@ -42,6 +42,7 @@ module Hasura.RQL.Types.SchemaCache
        -- , addFldToCache
        , addColToCache
        , addRelToCache
+       , addRemoteRelToCache
 
        , delColFromCache
        , delRelFromCache
@@ -103,10 +104,10 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -160,6 +161,7 @@ type WithDeps a = (a, [SchemaDependency])
 data FieldInfo
   = FIColumn !PGColInfo
   | FIRelationship !RelInfo
+  | FIRemote !RemoteRelInfo
   deriving (Show, Eq)
 
 $(deriveToJSON
@@ -564,6 +566,16 @@ addRelToCache rn ri deps tn = do
   modDepMapInCache (addToDepMap schObjId deps)
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
+
+addRemoteRelToCache
+  :: (QErrM m, CacheRWM m)
+  => RelName -> RemoteRelInfo -> [SchemaDependency]
+  -> QualifiedTable -> m ()
+addRemoteRelToCache rn rri deps qt = do
+  addFldToCache (fromRel rn) (FIRemote rri) qt
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    schObjId = SOTableObj qt $ TORel rn
 
 addFldToCache
   :: (QErrM m, CacheRWM m)

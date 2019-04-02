@@ -3,24 +3,24 @@ const gql = require('graphql-tag');
 const {getData, postData} = require('./helpers');
 
 const typeDefs = gql`
-  type User {
+  type user {
     id:       String!
     name:     String!
     balance:  Int!
   }
 
   type Query {
-    getUser(id: String!): User
-    users(name: String): [User]
+    getUser(id: String!): user
+    getAllUsers(name: String): [user]
   }
 
   type Mutation {
-    addUser(name: String!, balance: Int!): User
+    addUser(name: String!, balance: Int!): user
   }
 `;
 
 // replace with actual REST endpoint
-const restAPIEndpoint = 'https://rest-user-api.herokuapp.com';
+const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
 
 const resolvers = {
     Query: {
@@ -28,7 +28,7 @@ const resolvers = {
             return await getData(restAPIEndpoint + '/users/' + id);
         },
 
-        users: async (_, { name }) => {
+        getAllUsers: async (_, { name }) => {
             var nameParams = '';
             if (name) {
                 nameParams = '?name=' + name;
@@ -49,4 +49,3 @@ const schema = new ApolloServer({ typeDefs, resolvers });
 schema.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
     console.log(`schema ready at ${url}`);
 });
-
