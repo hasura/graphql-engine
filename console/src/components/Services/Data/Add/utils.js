@@ -4,7 +4,7 @@ const getDataTypeInfo = (row, categoryInfo, colId) => {
   const columnTypeValueMap = {};
   const typInfo = row[0].split(',');
   const typDisplayName = row[1].split(',');
-  const typDescription = row[2].split(',');
+  const typDescription = row[2].split(':');
   const currTypeObj = typInfo.map((t, i) => {
     const optObj = {
       value: t,
@@ -69,4 +69,21 @@ const getDataOptions = (dataTypes, restTypes, i) => {
   };
 };
 
-export { getDataOptions };
+const getPlaceholder = column => {
+  switch (column.type) {
+    case 'timestamptz':
+      return 'example: now()';
+    case 'date':
+      return '';
+    case 'uuid':
+      return 'example: gen_random_uuid()';
+    default:
+      return 'default_value';
+  }
+};
+
+const getDefaultValue = column => {
+  return ('default' in column && column.default.value) || '';
+};
+
+export { getDataOptions, getPlaceholder, getDefaultValue };

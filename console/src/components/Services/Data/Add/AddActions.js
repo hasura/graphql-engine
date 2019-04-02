@@ -50,11 +50,10 @@ const setColDefault = (colDefault, index, isNull) => ({
   index,
   isNull,
 });
-const setColType = (coltype, index, isNull) => ({
+const setColType = (coltype, index) => ({
   type: SET_COLTYPE,
   coltype,
   index,
-  isNull,
 });
 const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
 const setColNullable = (isNull, index) => ({
@@ -81,22 +80,6 @@ const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
 const fetchColumnTypes = () => {
   return (dispatch, getState) => {
-    /*
-    const fetchQuery = `
-SELECT
-  string_agg(t.typname, ',') as "Type Name",
-  string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
-  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
-  t.typcategory
-FROM pg_catalog.pg_type t
-     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
-  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
-  AND pg_catalog.pg_type_is_visible(t.oid)
-  AND t.typname != 'unknown'
-  AND t.typcategory != 'P'
-GROUP BY t.typcategory;`;
-*/
     const fetchQuery = `
 SELECT 
   string_agg(t.typname, ',') as "Type Name",
@@ -132,6 +115,7 @@ GROUP BY t.typcategory;`;
       error => {
         console.error('Failed to load table comment');
         console.error(error);
+        return Promise.reject(error);
       }
     );
   };
@@ -371,7 +355,6 @@ const addTableReducer = (state = defaultState, action) => {
           {
             ...state.columns[ij],
             type: action.coltype,
-            nullable: action.isNull,
           },
           ...state.columns.slice(ij + 1),
         ],

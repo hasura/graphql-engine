@@ -4,25 +4,25 @@ import PropTypes from 'prop-types';
 
 import TextInput from '../../../Common/TextInput/TextInput';
 
-const TableNameInput = ({ onChange }) => {
+const TableComment = ({ onChange }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
   return [
-    <h4 key="add_table_input_header" className={styles.subheading_text}>
-      Table Name &nbsp; &nbsp;
+    <h4 key="add_table_comment_header" className={styles.subheading_text}>
+      Comment &nbsp; &nbsp;
     </h4>,
     <TextInput
-      key="add_table_input_element"
+      key="add_table_comment_element"
       type="text"
-      placeholder="table_name"
-      data-test="tableName"
+      placeholder="comment"
+      data-test="tableComment"
       bsclass={`${styles.tableNameInput}`}
       onChange={onChange}
     />,
   ];
 };
 
-TableNameInput.propTypes = {
+TableComment.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-export default TableNameInput;
+export default TableComment;

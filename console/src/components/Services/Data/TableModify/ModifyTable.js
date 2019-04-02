@@ -1,6 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
+
+import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
+
+import { fetchColumnTypes } from '../Add/AddActions';
+
 import {
   activateCommentEdit,
   updateCommentInput,
@@ -18,7 +23,7 @@ import {
   deleteColumnSql,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
-import dataTypes from '../Common/DataTypes';
+// import dataTypes from '../Common/DataTypes';
 import { convertListToDict } from '../../../../utils/data';
 import {
   setTable,
@@ -31,15 +36,18 @@ import Button from '../../../Common/Button/Button';
 import ColumnEditor from './ColumnEditor';
 import semverCheck from '../../../../helpers/semver';
 
+/*
 const alterTypeOptions = dataTypes.map((datatype, index) => (
   <option value={datatype.value} key={index} title={datatype.description}>
     {datatype.name}
   </option>
 ));
+*/
 
 class ModifyTable extends React.Component {
   state = {
     supportTableColumnRename: false,
+    dataTypes: [],
   };
 
   componentDidMount() {
@@ -47,6 +55,15 @@ class ModifyTable extends React.Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));
+    dispatch(fetchColumnTypes())
+      .then(data => {
+        this.setState({
+          dataTypes: data.result.slice(1),
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
     if (serverVersion) {
       this.checkTableColumnRenameSupport(serverVersion);
     }
@@ -367,6 +384,19 @@ class ModifyTable extends React.Component {
       );
     }
 
+    const customStyles = {
+      container: provided => ({
+        ...provided,
+        cursor: 'pointer',
+      }),
+      dropdownIndicator: provided => {
+        return {
+          ...provided,
+          padding: '4px',
+        };
+      },
+    };
+
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
@@ -443,6 +473,18 @@ class ModifyTable extends React.Component {
                   ref={n => (colNameInput = n)}
                   data-test="column-name"
                 />
+                <span
+                  className={`${styles.select} ${styles.column_type_select}`}
+                >
+                  <SearchableSelect
+                    options={[]}
+                    column={colTypeInput}
+                    onChange={option => (colTypeInput = option.type)}
+                    bsClass="modify_select"
+                    customStyle={customStyles}
+                  />
+                </span>
+                {/*
                 <select
                   className={`${styles.select} input-sm form-control`}
                   defaultValue=""
@@ -454,6 +496,7 @@ class ModifyTable extends React.Component {
                   </option>
                   {alterTypeOptions}
                 </select>
+                */}
                 <input
                   type="checkbox"
                   defaultChecked

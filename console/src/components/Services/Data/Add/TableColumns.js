@@ -8,10 +8,10 @@ const TableColumns = props => {
   const cols = columns.map((column, i) => {
     return (
       <TableColumn
-        key={i}
+        key={`table_column_wrapper_${i}`}
         colIndex={i}
         column={column}
-        columns={columns}
+        colLength={columns.length}
         {...props}
       />
     );
