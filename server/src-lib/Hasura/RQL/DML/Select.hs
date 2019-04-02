@@ -12,18 +12,17 @@ where
 import           Data.Aeson.Types
 import           Instances.TH.Lift              ()
 
-import qualified Data.HashMap.Strict            as HM
 import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -58,8 +57,8 @@ convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
-    (pgCols, relColInfos) = partitionFieldInfosWith (pgiName, id) $
-                            HM.elems fieldInfoMap
+    (pgCols, relColInfos) = ( map pgiName $ getCols fieldInfoMap, getRels fieldInfoMap)
+
 
     simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
 
@@ -123,6 +122,9 @@ convOrderByElem (flds, spi) = \case
         [ fldName <<> " is a"
         , " relationship and should be expanded"
         ]
+      FIRemote _ -> throw400 UnexpectedPayload $ mconcat
+       [ fldName <<> " is a remote field" ]
+
   OCRel fldName rest -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
@@ -139,6 +141,8 @@ convOrderByElem (flds, spi) = \case
         (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
         AOCObj relInfo (spiFilter relSpi) <$>
           convOrderByElem (relFim, relSpi) rest
+      FIRemote _ -> throw400 UnexpectedPayload $ mconcat
+        [ fldName <<> " is a remote field" ]
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)

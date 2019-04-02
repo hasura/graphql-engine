@@ -318,7 +318,6 @@ buildSchemaCache = do
         let relDef = RelDef rn using Nothing
         validateArrRel qt relDef
         arrRelP2Setup qt relDef
-      RemoteRel -> return ()
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
@@ -366,15 +365,15 @@ buildSchemaCache = do
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
 -- add remote relationships
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+
+  remoteRelationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  forM_ remoteRelationships $ \(sn, tn, rn, Q.AltJ rDef) -> do
     let qt = QualifiedObject sn tn
-    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
-      RemoteRel -> do
+    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ do
         using <- decodeValue rDef
         let relDef = RelDef rn using Nothing
         validateRemoteRel qt relDef
         remoteRelP2Setup qt relDef
-      _ -> return ()
 
   where
     permHelper strfyNum sn tn rn pDef pa = do
@@ -398,6 +397,12 @@ buildSchemaCache = do
       Q.listQ [Q.sql|
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json
                   FROM hdb_catalog.hdb_relationship
+                    |] () False
+
+    fetchRemoteRelationships =
+      Q.listQ [Q.sql|
+                SELECT table_schema, table_name, rel_name, rel_def::json
+                  FROM hdb_catalog.hdb_remote_relationship
                     |] () False
 
     fetchPermissions =

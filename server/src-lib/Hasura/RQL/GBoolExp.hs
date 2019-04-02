@@ -279,6 +279,7 @@ annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
       relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
       annRelBoolExp   <- annBoolExp valueParser relFieldInfoMap relBoolExp
       return $ AVRel relInfo annRelBoolExp
+    FIRemote _ -> throwError (err400 UnexpectedPayload "remote field unsupported")
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp

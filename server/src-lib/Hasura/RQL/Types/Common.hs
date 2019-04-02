@@ -58,14 +58,12 @@ instance DQuote RelName where
   dquoteTxt (RelName r) = r
 
 relTypeToTxt :: RelType -> T.Text
-relTypeToTxt ObjRel    = "object"
-relTypeToTxt ArrRel    = "array"
-relTypeToTxt RemoteRel = "remote"
+relTypeToTxt ObjRel = "object"
+relTypeToTxt ArrRel = "array"
 
 data RelType
   = ObjRel
   | ArrRel
-  | RemoteRel
   deriving (Show, Eq)
 
 instance ToJSON RelType where
@@ -74,14 +72,12 @@ instance ToJSON RelType where
 instance FromJSON RelType where
   parseJSON (String "object") = return ObjRel
   parseJSON (String "array") = return ArrRel
-  parseJSON (String "remote") = return RemoteRel
   parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
 
 instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    "remote" -> Just RemoteRel
     _   -> Nothing
 
 data RelInfo

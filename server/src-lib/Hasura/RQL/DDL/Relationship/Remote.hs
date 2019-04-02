@@ -7,10 +7,13 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Instances.TH.Lift             ()
 
+
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DDL.Relationship
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -68,7 +71,20 @@ remoteRelP2
   => QualifiedTable -> RemoteRelDef -> m ()
 remoteRelP2 qt rd@(RelDef rn u comment) = do
   remoteRelP2Setup qt rd
-  liftTx $ persistRel qt rn RemoteRel (toJSON u) comment
+  liftTx $ persistRemoteRel qt rn (toJSON u) comment
+  where
+    persistRemoteRel :: QualifiedTable
+           -> RelName
+           -> Value
+           -> Maybe T.Text
+           -> Q.TxE QErr ()
+    persistRemoteRel (QualifiedObject sn tn) rn' relDef comment' =
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+               INSERT INTO
+                 hdb_catalog.hdb_remote_relationship
+                 (table_schema, table_name, rel_name, rel_type, rel_def, comment)
+               VALUES ($1, $2, $3, 'remote', $4 , $5)
+                 |] (sn, tn, rn', Q.AltJ relDef, comment') True
 
 remoteRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)

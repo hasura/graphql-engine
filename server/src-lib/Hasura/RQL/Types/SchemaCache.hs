@@ -29,9 +29,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , FieldInfoMap
        , FieldInfo(..)
-       , fieldInfoToEither
-       , partitionFieldInfos
-       , partitionFieldInfosWith
+       -- , partitionFieldInfos
+       -- , partitionFieldInfosWith
        , getCols
        , getRels
 
@@ -170,27 +169,33 @@ $(deriveToJSON
                  }
   ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
+-- fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
+-- fieldInfoToEither (FIColumn l)       = Left l
+-- fieldInfoToEither (FIRelationship r) = Right r
 
-partitionFieldInfos :: [FieldInfo] -> ([PGColInfo], [RelInfo])
-partitionFieldInfos = partitionFieldInfosWith (id, id)
+-- partitionFieldInfos :: [FieldInfo] -> ([PGColInfo], [RelInfo])
+-- partitionFieldInfos = partitionFieldInfosWith (id, id)
 
-partitionFieldInfosWith :: (PGColInfo -> a, RelInfo -> b)
-                        -> [FieldInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
+-- partitionFieldInfosWith :: (PGColInfo -> a, RelInfo -> b)
+--                         -> [FieldInfo] -> ([a], [b])
+-- partitionFieldInfosWith fns =
+--   partitionEithers . map (biMapEither fns . fieldInfoToEither)
+--   where
+--     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
 type FieldInfoMap = M.HashMap FieldName FieldInfo
 
 getCols :: FieldInfoMap -> [PGColInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
+getCols fim = concatMap onlyPGCol $ M.elems fim
+  where
+    onlyPGCol (FIColumn col) = [col]
+    onlyPGCol _              = []
 
 getRels :: FieldInfoMap -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
+getRels fim = concatMap onlyPGRel $ M.elems fim
+  where
+    onlyPGRel (FIRelationship rel) = [rel]
+    onlyPGRel _                    = []
 
 isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True

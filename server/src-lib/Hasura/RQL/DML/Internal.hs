@@ -45,9 +45,7 @@ mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName
-      . fst . partitionEithers
-      . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
+    pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
 
     tn = tiName ti
     i = InsPermInfo tn annBoolExpTrue M.empty []

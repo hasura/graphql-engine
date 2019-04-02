@@ -76,11 +76,12 @@ isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
-  FIRemote _ -> True
+  FIRemote (RemoteRelInfo rn _ _) -> isRemoteRelEligible rn
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
                           && isValidObjectName rt
+    isRemoteRelEligible rn = isValidName (G.Name $ getRelTxt rn)
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -89,14 +90,19 @@ upsertable uniqueOrPrimaryCons isUpsertAllowed view =
 toValidFieldInfos :: FieldInfoMap -> [FieldInfo]
 toValidFieldInfos = filter isValidField . Map.elems
 
-validPartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
-validPartitionFieldInfoMap = partitionFieldInfos . toValidFieldInfos
+-- validPartitionFieldInfoMap :: FieldInfoMap -> ([PGColInfo], [RelInfo])
+-- validPartitionFieldInfoMap = partitionFieldInfos . toValidFieldInfos
 
 getValidCols :: FieldInfoMap -> [PGColInfo]
-getValidCols = fst . validPartitionFieldInfoMap
+getValidCols fim = filter isColValid $ getCols fim
+  where
+    isColValid (PGColInfo col _ _)= isValidName . G.Name . getPGColTxt $ col
 
 getValidRels :: FieldInfoMap -> [RelInfo]
-getValidRels = snd . validPartitionFieldInfoMap
+getValidRels fim = filter isRelValid $ getRels fim
+  where
+    isRelValid (RelInfo rn _ _ rTab _) = isValidName (G.Name $ getRelTxt rn)
+                                         && isValidObjectName rTab
 
 mkValidConstraints :: [ConstraintName] -> [ConstraintName]
 mkValidConstraints =
@@ -232,9 +238,8 @@ mkRelFld
   -> Bool
   -> [ObjFldInfo]
 mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
-  ArrRel    -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
-  ObjRel    -> [objRelFld]
-  RemoteRel -> []
+  ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
+  ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
       (G.Name $ getRelTxt rn) Map.empty objRelTy
@@ -960,7 +965,6 @@ mkInsInp tn insCtx =
                       G.toGT $ mkObjInsInpTy remoteQT
             ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
                       G.toGT $ mkArrInsInpTy remoteQT
-            RemoteRel -> undefined
 
 {-
 
@@ -1345,9 +1349,8 @@ mkGCtxRole' tn insPermM selPermM updColsM
                         , Right (ri, True, perm, lim)
                         )
         in case riType ri of
-          ObjRel    -> [relFld]
-          ArrRel    -> bool [relFld] [relFld, aggRelFld] allowAgg
-          RemoteRel -> []
+          ObjRel -> [relFld]
+          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
@@ -1436,7 +1439,7 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
 
-    colInfos = fst $ validPartitionFieldInfoMap fields
+    colInfos = getValidCols fields
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM

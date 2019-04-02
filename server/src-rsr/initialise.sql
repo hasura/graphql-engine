@@ -39,7 +39,7 @@ CREATE TABLE hdb_catalog.hdb_relationship
     table_schema TEXT,
     table_name TEXT,
     rel_name   TEXT,
-    rel_type   TEXT CHECK (rel_type IN ('object', 'array', 'remote')),
+    rel_type   TEXT CHECK (rel_type IN ('object', 'array')),
     rel_def    JSONB NOT NULL,
     comment    TEXT NULL,
     is_system_defined boolean default false,
@@ -47,6 +47,20 @@ CREATE TABLE hdb_catalog.hdb_relationship
     PRIMARY KEY (table_schema, table_name, rel_name),
     FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
+
+CREATE TABLE hdb_catalog.hdb_remote_relationship
+  (
+    table_schema TEXT,
+    table_name TEXT,
+    rel_name   TEXT,
+    rel_type   TEXT CHECK (rel_type IN ('remote')),
+    rel_def    JSONB NOT NULL,
+    comment    TEXT NULL,
+    is_system_defined boolean default false,
+
+PRIMARY KEY (table_schema, table_name, rel_name),
+FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
+  );
 
 CREATE TABLE hdb_catalog.hdb_permission
 (
