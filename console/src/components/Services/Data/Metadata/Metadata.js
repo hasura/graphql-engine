@@ -7,6 +7,7 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
+import MetadataStatus from './MetadataStatus';
 import ClearAdminSecret from './ClearAdminSecret';
 
 import semverCheck from '../../../../helpers/semver';
@@ -17,6 +18,7 @@ class Metadata extends Component {
     super();
     this.state = {
       showMetadata: false,
+      supportInconsistentState: false,
     };
   }
   componentDidMount() {
@@ -29,16 +31,23 @@ class Metadata extends Component {
       this.checkSemVer(nextProps.serverVersion);
     }
   }
+  setSupportInconsistentState(supportInconsistentState) {
+    this.setState({
+      supportInconsistentState,
+    });
+  }
   checkSemVer(version) {
     try {
       const showMetadata = semverCheck('metadataReload', version);
-      if (showMetadata) {
-        this.updateMetadataState(true);
-      } else {
-        this.updateMetadataState(false);
-      }
+      const supportInconsistentState = semverCheck(
+        'inconsistentState',
+        version
+      );
+      this.updateMetadataState(Boolean(showMetadata));
+      this.setSupportInconsistentState(Boolean(supportInconsistentState));
     } catch (e) {
       this.updateMetadataState(false);
+      this.setSupportInconsistentState(false);
       console.error(e);
     }
   }
@@ -48,6 +57,8 @@ class Metadata extends Component {
     });
   }
   render() {
+    const { supportInconsistentState } = this.state;
+    const { dispatch, metadata } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
     const metaDataStyles = require('./Metadata.scss');
     return (
@@ -75,6 +86,12 @@ class Metadata extends Component {
             .
           </div>
         </div>
+        <MetadataStatus
+          metaDataStyles={metaDataStyles}
+          dispatch={dispatch}
+          support={supportInconsistentState}
+          metadata={metadata}
+        />
         <div className={metaDataStyles.intro_note}>
           <h4>Import/Export</h4>
           <div className={metaDataStyles.content_width}>
@@ -148,6 +165,7 @@ Metadata.propTypes = {
 const mapStateToProps = state => {
   return {
     ...state.main,
+    metadata: state.metadata,
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };
