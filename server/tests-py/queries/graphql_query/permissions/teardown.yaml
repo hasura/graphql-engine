@@ -14,7 +14,5 @@ args:
       DROP TABLE geom_table;
       DROP TABLE jsonb_table;
       DROP TABLE gpa cascade;
-      DROP FUNCTION full_name;
-      DROP FUNCTION full_name_prefix;
-      DROP TABLE person; 
+      DROP TABLE person cascade; 
     cascade: true
