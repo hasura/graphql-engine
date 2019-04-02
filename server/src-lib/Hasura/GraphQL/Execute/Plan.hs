@@ -4,7 +4,8 @@ module Hasura.GraphQL.Execute.Plan
   , PlanVariables
   , PrepArgMap
   , QueryPlan(..)
-  , isReusable
+  , ReusablePlan
+  , getReusablePlan
   , mkNewQueryTx
   , mkCurPlanTx
   , PlanCache
@@ -28,10 +29,8 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Resolve.InputValue
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -58,14 +57,14 @@ instance J.ToJSON PlanId where
 
 newtype PlanCache
   = PlanCache
-  { _unPlanCache :: Cache.UnboundedCache PlanId QueryPlan }
+  { _unPlanCache :: Cache.UnboundedCache PlanId ReusablePlan }
 
 initPlanCache :: IO PlanCache
 initPlanCache = PlanCache <$> Cache.initCache
 
 getPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> PlanCache -> IO (Maybe QueryPlan)
+  -> PlanCache -> IO (Maybe ReusablePlan)
 getPlan schemaVer rn opNameM q (PlanCache planCache) =
   Cache.lookup planCache planId
   where
@@ -73,7 +72,7 @@ getPlan schemaVer rn opNameM q (PlanCache planCache) =
 
 addPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> QueryPlan -> PlanCache -> IO ()
+  -> ReusablePlan -> PlanCache -> IO ()
 addPlan schemaVer rn opNameM q queryPlan (PlanCache planCache) =
   Cache.insert planCache planId queryPlan
   where
@@ -119,24 +118,34 @@ instance J.ToJSON PGPlan where
              , "prepared"  J..= fmap show prepared
              ]
 
+type VariableTypes = Map.HashMap G.Variable PGColType
+
 data QueryPlan
   = QueryPlan
   { _qpIsSubscription :: !Bool
   , _qpVariables      :: ![G.VariableDefinition]
   , _qpFldPlans       :: ![(G.Alias, RootFieldPlan)]
-  , _qpTypeMap        :: !TypeMap
   }
 
-instance J.ToJSON QueryPlan where
-  toJSON (QueryPlan isSubs varDefs fldPlans _) =
+data ReusablePlan
+  = ReusablePlan
+  { _rpIsSubscription :: !Bool
+  , _rpVariableTypes  :: !VariableTypes
+  , _rpFldPlans       :: ![(G.Alias, RootFieldPlan)]
+  }
+
+instance J.ToJSON ReusablePlan where
+  toJSON (ReusablePlan isSubs varTypes fldPlans) =
     J.object [ "is_subscription" J..= isSubs
-             , "variables"      J..= show varDefs
+             , "variables"      J..= show varTypes
              , "field_plans"     J..= fldPlans
              ]
 
-isReusable :: QueryPlan -> Bool
-isReusable (QueryPlan _ vars fldPlans _) =
-  all fldPlanReusable $ map snd fldPlans
+getReusablePlan :: QueryPlan -> Maybe ReusablePlan
+getReusablePlan (QueryPlan isSubs vars fldPlans) =
+  if all fldPlanReusable $ map snd fldPlans
+  then Just $ ReusablePlan isSubs varTypes fldPlans
+  else Nothing
   where
     allVars = Set.fromList $ map G._vdVariable vars
 
@@ -149,19 +158,23 @@ isReusable (QueryPlan _ vars fldPlans _) =
       RFPRaw _           -> True
       RFPPostgres pgPlan -> allUsed $ Map.keys $ _ppVariables pgPlan
 
+    varTypesOfPlan = \case
+      RFPRaw _           -> mempty
+      RFPPostgres pgPlan -> snd <$> _ppVariables pgPlan
+
+    varTypes = Map.unions $ map (varTypesOfPlan . snd) fldPlans
+
 withPlan
-  :: PGPlan -> AnnVarVals -> RespTx
+  :: PGPlan -> Map.HashMap G.Variable PGColValue -> RespTx
 withPlan (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = IntMap.elems prepMap'
   asSingleRowJsonResp q args
   where
-    -- TODO: improve by getting rid of typemap
-    getVar accum (var, (prepNo, colTy)) = do
+    getVar accum (var, (prepNo, _)) = do
       let varName = G.unName $ G.unVariable var
-      annVal <- onNothing (Map.lookup var annVars) $
+      colVal <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
-      colVal <- _apvValue <$> asPGColVal annVal
       let prepVal = binEncoder colVal
       return $ IntMap.insert prepNo prepVal accum
 
@@ -169,24 +182,41 @@ withPlan (PGPlan q reqVars prepMap) annVars = do
 mkNewQueryTx
   :: (MonadError QErr m)
   => Maybe GH.VariableValues
-  -> QueryPlan
+  -> ReusablePlan
   -> m (Bool, LazyRespTx)
-mkNewQueryTx varValsM (QueryPlan isSubs varDefs fldPlans typeMap) = do
-  annVars <- flip runReaderT typeMap $ GV.getAnnVarVals varDefs varVals
+mkNewQueryTx varValsM (ReusablePlan isSubs varTypes fldPlans) = do
+  validatedVars <- validateVars
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return resp
-          RFPPostgres pgPlan -> liftTx $ withPlan pgPlan annVars
+          RFPPostgres pgPlan -> liftTx $ withPlan pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
   return (isSubs, tx)
   where
     varVals = fromMaybe Map.empty varValsM
+    -- this is in similar spirit to the validation
+    -- logic of variable values in validate.hs however
+    -- here it is much simpler and can get rid of typemap requirement
+    validateVars =
+      flip Map.traverseWithKey varTypes $ \varName varType -> do
+        let unexpectedVars = filter
+              (not . (`Map.member` varTypes)) $ Map.keys varVals
+        unless (null unexpectedVars) $
+          throwVE $ "unexpected variables in variableValues: " <>
+          GV.showVars unexpectedVars
+        varVal <- onNothing (Map.lookup varName varVals) $
+          throwVE $ "expecting a value for non-nullable variable: " <>
+          GV.showVars [varName] <>
+          -- we don't have the graphql type
+          -- " of type: " <> T.pack (show varType) <>
+          " in variableValues"
+        runAesonParser (parsePGValue varType) varVal
 
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: QueryPlan
   -> Q.TxE QErr EncJSON
-mkCurPlanTx (QueryPlan _ _ fldPlans _) =
+mkCurPlanTx (QueryPlan _ _ fldPlans) =
   fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp        -> return resp
