@@ -312,21 +312,22 @@ const RawSQL = ({
             statements directly on the database.
           </li>
           <li>
-            If you are creating a Table/View
-            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, checking the{' '}
-            <b>Track this</b> checkbox will also expose it over the GraphQL API.
-          </li>
-          <li>
-            Multiple SQL statements can be separated by semicolons ( ; ),
-            however, only the result of the last SQL statement will be returned.
+            Multiple SQL statements can be separated by semicolons,{' '}
+            <code>;</code>, however, only the result of the last SQL statement
+            will be returned.
           </li>
           <li>
             Multiple SQL statements will be run as a transaction. i.e. if any
             statement fails, none of the statements will be applied.
           </li>
           <li>
-            If migrations are enabled, down migrations will not be generated
-            when you alter the schema using Raw SQL.
+            If you are creating a Table/View
+            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, checking the{' '}
+            <b>Track this</b> checkbox will also expose it over the GraphQL API.
+          </li>
+          <li>
+            If migrations are enabled, down migrations will not be generated for
+            statements run using Raw SQL.
           </li>
         </ul>
       </div>
