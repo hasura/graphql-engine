@@ -7,10 +7,10 @@ where
 
 import           Control.Arrow                      ((***))
 import           Hasura.Prelude
+import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
-import qualified Hasura.RQL.DDL.EventTrigger as DS
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -215,10 +215,10 @@ updateInsPermFlds qt rf rn (InsPerm chk preset cols) = do
 updateSelPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> RenameField -> RoleName -> SelPerm -> m ()
-updateSelPermFlds refQT rf rn (SelPerm cols fltr limit aggAllwd) = do
+updateSelPermFlds refQT rf rn (SelPerm cols fltr limit aggAllwd funcs) = do
   updBoolExp <- updateBoolExp refQT rf fltr
   liftTx $ updatePermDefInCatalog PTSelect refQT rn $
-      SelPerm updCols updBoolExp limit aggAllwd
+      SelPerm updCols updBoolExp limit aggAllwd funcs
   where
     updCols = updateCols refQT rf cols
 

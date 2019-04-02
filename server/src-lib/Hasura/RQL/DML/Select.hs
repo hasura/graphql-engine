@@ -17,13 +17,13 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -53,11 +53,12 @@ convWildcard
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
-convWildcard fieldInfoMap (SelPermInfo cols _ _ _ _ _) wildcard =
+convWildcard fieldInfoMap selPerm wildcard =
   case wildcard of
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
+    cols = spiCols selPerm
     (pgCols, relColInfos) = partitionFieldInfosWith (pgiName, id) $
                             HM.elems fieldInfoMap
 
@@ -243,10 +244,11 @@ partAnnFlds
   -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
 partAnnFlds flds =
   partitionEithers $ catMaybes $ flip map flds $ \case
-  FCol c _ -> Just $ Left (pgiName c, pgiType c)
-  FObj o -> Just $ Right $ Left o
-  FArr a -> Just $ Right $ Right a
-  FExp _ -> Nothing
+  FCol c _     -> Just $ Left (pgiName c, pgiType c)
+  FCompCol _ _ -> Nothing
+  FObj o       -> Just $ Right $ Left o
+  FArr a       -> Just $ Right $ Right a
+  FExp _       -> Nothing
 
 getSelectDeps
   :: AnnSel

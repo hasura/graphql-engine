@@ -6,7 +6,9 @@ import qualified Database.PG.Query.PTI      as PTI
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.TH
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -293,7 +295,6 @@ instance ToJSON PGColType where
 instance ToSQL PGColType where
   toSQL pct = fromString $ show pct
 
-
 txtToPgColTy :: Text -> PGColType
 txtToPgColTy t = case t of
   "serial"                   -> PGSerial
@@ -347,7 +348,6 @@ txtToPgColTy t = case t of
 instance FromJSON PGColType where
   parseJSON (String t) = return $ txtToPgColTy t
   parseJSON _          = fail "Expecting a string for PGColType"
-
 
 pgTypeOid :: PGColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
@@ -410,3 +410,54 @@ isGeoType = \case
   PGGeometry  -> True
   PGGeography -> True
   _           -> False
+
+data PGTypType
+  = PTBASE
+  | PTCOMPOSITE
+  | PTDOMAIN
+  | PTENUM
+  | PTRANGE
+  | PTPSUEDO
+  | PTUnknown !T.Text
+  deriving (Show, Eq)
+
+instance FromJSON PGTypType where
+  parseJSON = withText "postgresTypeType" $ \case
+    "b" -> return PTBASE
+    "c" -> return PTCOMPOSITE
+    "d" -> return PTDOMAIN
+    "e" -> return PTENUM
+    "r" -> return PTRANGE
+    "p" -> return PTPSUEDO
+    t   -> return $ PTUnknown t
+
+$(deriveToJSON
+  defaultOptions{constructorTagModifier = drop 2}
+  ''PGTypType
+ )
+
+data QualifiedPGType
+  = QualifiedPGType
+  { _qptSchema :: !SchemaName
+  , _qptName   :: !PGColType
+  , _qptType   :: !PGTypType
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+
+isPrimType :: QualifiedPGType -> Bool
+isPrimType (QualifiedPGType _ n ty) =
+  notUnknown && (ty == PTBASE)
+  where
+    notUnknown = case n of
+      PGUnknown _ -> False
+      _           -> True
+
+typeToTable :: QualifiedPGType -> QualifiedTable
+typeToTable (QualifiedPGType sch n _) =
+  QualifiedObject sch $ TableName $ T.pack $ show n
+
+asTableType :: QualifiedPGType -> Maybe QualifiedTable
+asTableType ty =
+  bool Nothing (Just $ typeToTable ty) isTableTy
+  where
+    isTableTy = not (isPrimType ty) && _qptType ty == PTCOMPOSITE

@@ -203,6 +203,7 @@ data SelPerm
   , spFilter            :: !BoolExp   -- Filter expression
   , spLimit             :: !(Maybe Int) -- Limit value
   , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
+  , spComputedColumns   :: !(Maybe [QualifiedFunction])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
@@ -222,19 +223,32 @@ buildSelPermInfo tabInfo sp = do
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep "untyped" tn) pgCols
+  -- get computed columns functions
+  compColFns <- withPathK "computed_columns" $ indexedForM cCols $
+                \f -> onNothing (HM.lookup f compColMap) $
+                  throw400 NotExists $ "computed column with function "
+                  <> f <<> " does not exist"
+
+  let deps = mkParentDep tn : beDeps
+             <> map (mkColDep "untyped" tn) pgCols
+             <> map mkCompColDep cCols
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
+      allowedCols = HS.fromList pgCols
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
+  return (SelPermInfo allowedCols compColFns tn be mLimit allowAgg depHeaders, deps)
 
   where
     tn = tiName tabInfo
     fieldInfoMap = tiFieldInfoMap tabInfo
+    compColMap = tiCompCols tabInfo
     allowAgg = or $ spAllowAggregations sp
+    cCols = fromMaybe [] $ spComputedColumns sp
     autoInferredErr = "permissions for relationships are automatically inferred"
+    mkCompColDep qf =
+      flip SchemaDependency "computed_column" $ SOFunction qf
 
 type SelPermDef = PermDef SelPerm
 type CreateSelPerm = CreatePerm SelPerm

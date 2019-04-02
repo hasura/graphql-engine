@@ -89,11 +89,13 @@ module Hasura.RQL.Types.SchemaCache
        , FunctionArg(..)
        , FunctionArgName(..)
        , FunctionName(..)
-       , FunctionInfo(..)
+       , FunctionInfoG(..)
+       , SQLFunction(..)
+       , QueryFunc
+       , CompColFunc
        , FunctionCache
-       , getFuncsOfTable
+       , getQFuncsOfTable
        , addFunctionToCache
-       , askFunctionInfo
        , delFunctionFromCache
        ) where
 
@@ -103,10 +105,10 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -116,7 +118,6 @@ import           Data.Aeson.TH
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
@@ -207,6 +208,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
+  , spiCompCols        :: ![CompColFunc]
   , spiTable           :: !QualifiedTable
   , spiFilter          :: !AnnBoolExpSQL
   , spiLimit           :: !(Maybe Int)
@@ -332,6 +334,8 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
+type CompColMap = M.HashMap QualifiedFunction CompColFunc
+
 data TableInfo
   = TableInfo
   { tiName                  :: !QualifiedTable
@@ -342,6 +346,7 @@ data TableInfo
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
+  , tiCompCols              :: !CompColMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -355,53 +360,14 @@ mkTableInfo
   -> Maybe ViewInfo -> TableInfo
 mkTableInfo tn isSystemDefined uniqCons cols pCols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-    uniqCons pCols mVI (M.fromList [])
+    uniqCons pCols mVI (M.fromList []) (M.fromList [])
   where
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
 
-data FunctionType
-  = FTVOLATILE
-  | FTIMMUTABLE
-  | FTSTABLE
-  deriving (Eq)
-
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
-
-funcTypToTxt :: FunctionType -> T.Text
-funcTypToTxt FTVOLATILE  = "VOLATILE"
-funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
-funcTypToTxt FTSTABLE    = "STABLE"
-
-instance Show FunctionType where
-  show = T.unpack . funcTypToTxt
-
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON)
-
-data FunctionArg
-  = FunctionArg
-  { faName :: !(Maybe FunctionArgName)
-  , faType :: !PGColType
-  } deriving(Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
-
-data FunctionInfo
-  = FunctionInfo
-  { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !Bool
-  , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
-
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
-type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
+
+type FunctionCache = M.HashMap QualifiedFunction SQLFunction -- info of all functions
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -433,8 +399,12 @@ data SchemaCache
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
-getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
-getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
+getQFuncsOfTable :: QualifiedTable -> FunctionCache -> [QueryFunc]
+getQFuncsOfTable qt fc =
+  flip mapMaybe allFuncs $ \f ->
+  case f of
+    SFQuery qf    -> bool Nothing (Just qf) $ qt == fiReturnType qf
+    SFCompCol _ _ -> Nothing
   where
     allFuncs = M.elems fc
 
@@ -604,6 +574,35 @@ delRelFromCache rn tn = do
   where
     schObjId = SOTableObj tn $ TORel rn
 
+addCompColToCache :: (QErrM m, CacheRWM m)
+                  => CompColFunc -> QualifiedTable -> m ()
+addCompColToCache ccf =
+  modTableInCache modCompCol
+  where
+    fn = fiName ccf
+    modCompCol ti = do
+      let compCols = tiCompCols ti
+      case M.lookup fn compCols of
+        Just _ ->
+          throw500 $ "computed column with function " <> fn
+          <<> " already exists"
+        Nothing -> return $
+          ti {tiCompCols = M.insert fn ccf compCols}
+
+delCompColFromCache :: (QErrM m, CacheRWM m)
+                    => QualifiedFunction -> QualifiedTable -> m ()
+delCompColFromCache fn =
+  modTableInCache modCompCol
+  where
+    modCompCol ti = do
+      let compCols = tiCompCols ti
+      case M.lookup fn compCols of
+        Nothing -> throw500 $ "computed column with function"
+                   <> fn <<> " does not exist"
+        Just _ -> return $
+          ti {tiCompCols = M.delete fn compCols}
+
+
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
   PASelect :: PermAccessor SelPermInfo
@@ -660,30 +659,32 @@ delEventTriggerFromCache qt trn = do
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)
-  => FunctionInfo -> m ()
-addFunctionToCache fi = do
-  sc <- askSchemaCache
-  let functionCache = scFunctions sc
-  case M.lookup fn functionCache of
-    Just _ -> throw500 $ "function already exists in cache " <>> fn
-    Nothing -> do
-      let newFunctionCache = M.insert fn fi functionCache
-      writeSchemaCache $ sc {scFunctions = newFunctionCache}
-  modDepMapInCache (addToDepMap objId deps)
+  => SQLFunction -> m ()
+addFunctionToCache fi =
+  case fi of
+    SFQuery qF -> do
+      let fn = fiName qF
+      insertFn fn
+      addDeps fn $ fiDeps qF
+    SFCompCol tn ccF -> do
+      let fn = fiName ccF
+      insertFn fn
+      addDeps fn $ fiDeps ccF
+      addCompColToCache ccF tn
   where
-    fn = fiName fi
-    objId = SOFunction $ fiName fi
-    deps = fiDeps fi
+    insertFn fn = do
+      sc <- askSchemaCache
+      let functionCache = scFunctions sc
+      case M.lookup fn functionCache of
+        Just _ ->
+          throw500 $ "function already exists in cache " <>> fn
+        Nothing -> do
+          let newFunctionCache = M.insert fn fi functionCache
+          writeSchemaCache $ sc {scFunctions = newFunctionCache}
 
-askFunctionInfo
-  :: (CacheRM m, QErrM m)
-  => QualifiedFunction ->  m FunctionInfo
-askFunctionInfo qf = do
-  sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
-  where
-    throwNoFn = throw400 NotExists $
-      "function not found in cache " <>> qf
+    addDeps fn deps = do
+      let objId = SOFunction fn
+      modDepMapInCache (addToDepMap objId deps)
 
 delFunctionFromCache
   :: (QErrM m, CacheRWM m)
@@ -691,11 +692,14 @@ delFunctionFromCache
 delFunctionFromCache qf = do
   sc <- askSchemaCache
   let functionCache = scFunctions sc
-  case M.lookup qf functionCache of
-    Nothing -> throw500 $ "function does not exist in cache " <>> qf
-    Just _ -> do
-      let newFunctionCache = M.delete qf functionCache
-      writeSchemaCache $ sc {scFunctions = newFunctionCache}
+  fi <- onNothing (M.lookup qf functionCache) $
+    throw400 NotExists $
+      "function not found in cache " <>> qf
+  case fi of
+    SFQuery _      -> return ()
+    SFCompCol tn _ -> delCompColFromCache qf tn
+
+  writeSchemaCache $ sc {scFunctions = M.delete qf functionCache}
   modDepMapInCache (removeFromDepMap objId)
   where
     objId = SOFunction qf

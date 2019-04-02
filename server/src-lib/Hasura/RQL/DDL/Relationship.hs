@@ -67,20 +67,6 @@ persistRel (QualifiedObject sn tn) rn relType relDef comment =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, relTypeToTxt relType, Q.AltJ relDef, comment) True
 
-checkForColConfilct
-  :: (MonadError QErr m)
-  => TableInfo
-  -> FieldName
-  -> m ()
-checkForColConfilct tabInfo f =
-  case HM.lookup f (tiFieldInfoMap tabInfo) of
-    Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> tiName tabInfo
-      , " already exists"
-      ]
-    Nothing -> return ()
-
 validateObjRel
   :: (QErrM m, CacheRM m)
   => QualifiedTable
@@ -88,7 +74,7 @@ validateObjRel
   -> m ()
 validateObjRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForColConfilct tabInfo (fromRel rn)
+  checkForFldConflict tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn cn                      -> assertPGCol fim "" cn
@@ -183,7 +169,7 @@ validateArrRel
   => QualifiedTable -> ArrRelDef -> m ()
 validateArrRel qt (RelDef rn ru _) = do
   tabInfo <- askTabInfo qt
-  checkForColConfilct tabInfo (fromRel rn)
+  checkForFldConflict tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
     RUFKeyOn (ArrRelUsingFKeyOn remoteQt rcn) -> do

@@ -1,0 +1,21 @@
+type: bulk
+args:
+- type: track_table
+  args:
+    name: hdb_computed_column
+    schema: hdb_catalog
+
+- type: create_array_relationship
+  args:
+    name: computed_columns
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_computed_column
+        column_mapping:
+          table_schema: table_schema
+          table_name: table_name

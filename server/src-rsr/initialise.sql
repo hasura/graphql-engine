@@ -324,6 +324,7 @@ CREATE TABLE hdb_catalog.hdb_function
     function_schema TEXT,
     function_name TEXT,
     is_system_defined boolean default false,
+    function_type TEXT NOT NULL DEFAULT 'QUERY',
 
     PRIMARY KEY (function_schema, function_name)
 );
@@ -356,27 +357,33 @@ SELECT
 
   rtn.nspname::text AS return_type_schema,
   rt.typname::text AS return_type_name,
+  rt.typtype::text AS return_type_type,
 
-  CASE
-    WHEN ((rt.typtype) :: text = ('b' :: character(1)) :: text) THEN 'BASE' :: text
-    WHEN ((rt.typtype) :: text = ('c' :: character(1)) :: text) THEN 'COMPOSITE' :: text
-    WHEN ((rt.typtype) :: text = ('d' :: character(1)) :: text) THEN 'DOMAIN' :: text
-    WHEN ((rt.typtype) :: text = ('e' :: character(1)) :: text) THEN 'ENUM' :: text
-    WHEN ((rt.typtype) :: text = ('r' :: character(1)) :: text) THEN 'RANGE' :: text
-    WHEN ((rt.typtype) :: text = ('p' :: character(1)) :: text) THEN 'PSUEDO' :: text
-    ELSE NULL :: text
-  END AS return_type_type,
   p.proretset AS returns_set,
-  ( SELECT
-      COALESCE(json_agg(pt.typname), '[]')
-    FROM
-      (
-        unnest(
-          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
-        ) WITH ORDINALITY pat(oid, ordinality)
-        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+  (
+    SELECT
+      COALESCE(
+        json_agg(
+          json_build_object('schema', q."schema", 'name', q."name", 'type', q."type")
+        ),
+        '[]' :: json
       )
-   ) AS input_arg_types,
+      FROM
+          (
+            SELECT
+              pt.typname AS "name",
+              pns.nspname AS "schema",
+              pt.typtype AS "type",
+              pat.ordinality
+              from
+                  unnest(COALESCE(p.proallargtypes, p.proargtypes)) WITH ORDINALITY pat(oid, ordinality)
+                  LEFT JOIN pg_catalog.pg_type pt on (pt.oid = pat.oid)
+                  LEFT JOIN pg_catalog.pg_namespace pns ON (pt.typnamespace = pns.oid)
+             ORDER BY
+          pat.ordinality ASC
+          ) q
+  ) AS input_arg_types,
+
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
 FROM
   pg_proc p
@@ -432,3 +439,16 @@ CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_
   FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
 
 
+CREATE TABLE hdb_catalog.hdb_computed_column
+(
+    function_schema TEXT,
+    function_name TEXT,
+    table_schema TEXT,
+    table_name TEXT,
+
+    PRIMARY KEY (function_schema, function_name),
+    FOREIGN KEY (function_schema, function_name) REFERENCES
+      hdb_catalog.hdb_function (function_schema, function_name) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (table_schema, table_name) REFERENCES
+      hdb_catalog.hdb_table (table_schema, table_name) ON UPDATE CASCADE ON DELETE CASCADE
+);

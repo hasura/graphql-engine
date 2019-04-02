@@ -142,7 +142,8 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col args  -> toSQLCol col args
+      FCol col args     -> toSQLCol col args
+      FCompCol ccs args -> toCompCol ccs args
       FExp e      -> S.SELit e
       FObj objSel ->
         let qual = mkObjRelTableAls pfx $ aarName objSel
@@ -154,11 +155,21 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
 
     toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
     toSQLCol col colOpM =
-      toJSONableExp strfyNum (pgiType col) $ case colOpM of
-        Nothing              -> colNameExp
-        Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
+      toJSONableExp strfyNum (pgiType col) $ withColOp colOpM $
+        S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+
+    toCompCol :: CompColSel -> Maybe ColOp -> S.SQLExp
+    toCompCol ccs colOpM =
+      toJSONableExp strfyNum ty $ withColOp colOpM $
+      S.SEFn $ S.FunctionExp fn $ S.SERowIden (mkBaseTableAls pfx) : args
       where
-        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+        CompColSel fn args ty = ccs
+
+    withColOp :: Maybe ColOp -> S.SQLExp -> S.SQLExp
+    withColOp colOpM sqlExp = case colOpM of
+      Nothing              -> sqlExp
+      Just (ColOp op cExp) -> S.mkSQLOpExp op sqlExp cExp
+
 
 -- uses row_to_json to build a json object
 withRowToJSON

@@ -78,7 +78,7 @@ data AnnPGVal
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+  -> m SelFieldCtx
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -91,9 +91,12 @@ getPGColInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> return pgColInfo
-    Right _        -> throw500 $
+    SFldPGCol pgColInfo -> return pgColInfo
+    SFldRel{}           -> throw500 $
       "found relinfo when expecting pgcolinfo for "
+      <> showNamedTy nt <> ":" <> showName n
+    SFldCompCol _ _       -> throw500 $
+      "found computed column when expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 
 getArg

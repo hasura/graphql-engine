@@ -122,7 +122,7 @@ mkSelFromExp isLateral sel tn =
 
 mkFuncFromItem :: QualifiedFunction -> [SQLExp] -> FromItem
 mkFuncFromItem qf args =
-  FIFunc qf args Nothing
+  FIFunc (FunctionExp qf args) Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
@@ -261,6 +261,16 @@ instance ToSQL TupleExp where
   toSQL (TupleExp exps) =
     paren $ ", " <+> exps
 
+data FunctionExp
+  = FunctionExp
+  { sfFunc :: !QualifiedFunction
+  , sfArgs :: ![SQLExp]
+  } deriving (Show, Eq)
+
+instance ToSQL FunctionExp where
+  toSQL (FunctionExp fn args) =
+    toSQL fn <> paren (", " <+> args)
+
 data SQLExp
   = SEPrep !Int
   | SELit !T.Text
@@ -273,6 +283,7 @@ data SQLExp
   | SEQIden !QIden
   | SEFnApp !T.Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
+  | SEFn !FunctionExp
   | SETyAnn !SQLExp !AnnType
   | SECond !BoolExp !SQLExp !SQLExp
   | SEBool !BoolExp
@@ -323,6 +334,8 @@ instance ToSQL SQLExp where
     TB.text name <> paren ((", " <+> args)  <-> toSQL mObe)
   toSQL (SEOpApp op args) =
      paren (sqlOpTxt op <+> args)
+  toSQL (SEFn fn) =
+    toSQL fn
   toSQL (SETyAnn e ty) =
      paren (toSQL e) <> "::" <> TB.text (unAnnType ty)
   toSQL (SECond cond te fe) =
@@ -402,7 +415,7 @@ instance ToSQL DistinctExpr where
 data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
-  | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
+  | FIFunc !FunctionExp !(Maybe Alias)
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
@@ -423,8 +436,8 @@ instance ToSQL FromItem where
     toSQL qt <-> toSQL mal
   toSQL (FIIden iden) =
     toSQL iden
-  toSQL (FIFunc qf args mal) =
-    toSQL qf <> paren (", " <+> args) <-> toSQL mal
+  toSQL (FIFunc fn mal) =
+    toSQL fn <-> toSQL mal
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIValues valsExp al mCols) =

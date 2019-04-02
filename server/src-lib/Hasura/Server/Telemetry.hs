@@ -142,7 +142,9 @@ computeMetrics sc =
       evtTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map tiEventTriggerInfoMap usrTbls
       rmSchemas   = Map.size $ scRemoteResolvers sc
-      funcs = Map.size $ Map.filter (not . fiSystemDefined) $ scFunctions sc
+      funcs = Map.size $ flip  Map.filter (scFunctions sc) $ not . \case
+                  SFQuery qF -> fiSystemDefined qF
+                  SFCompCol _ ccF -> fiSystemDefined ccF
 
   in Metrics nTables nViews relMetrics permMetrics evtTriggers rmSchemas funcs
 

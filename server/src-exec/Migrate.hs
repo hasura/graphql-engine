@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "12"
+curCatalogVer = "13"
 
 migrateMetadata
   :: ( MonadTx m
@@ -91,6 +91,20 @@ setAsSystemDefinedFor9 =
             SET is_system_defined = 'true'
             WHERE table_schema = 'hdb_catalog'
              AND  table_name = 'hdb_version';
+           |]
+
+setAsSystemDefinedFor12 :: (MonadTx m) => m ()
+setAsSystemDefinedFor12 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_relationship
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_table';
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_computed_column';
            |]
 
 getCatalogVersion
@@ -265,6 +279,26 @@ from11To12 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_11_to_12.sql")
   return ()
 
+from12To13
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
+  => m ()
+from12To13 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_12_to_13.sql")
+  -- Migrate metadata
+  migrateMetadata True migrateMetadataFrom12
+  setAsSystemDefinedFor12
+  where
+    migrateMetadataFrom12 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_12_to_13.yaml" :: Q (TExp RQLQuery)))
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -290,10 +324,13 @@ migrateCatalog migrationTime = do
      | preVer == "9"   -> from9ToCurrent
      | preVer == "10"   -> from10ToCurrent
      | preVer == "11"   -> from11ToCurrent
+     | preVer == "12"   -> from12ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from11ToCurrent = from11To12 >> postMigrate
+    from12ToCurrent = from12To13 >> postMigrate
+
+    from11ToCurrent = from11To12 >> from12ToCurrent
 
     from10ToCurrent = from10To11 >> from11ToCurrent
 

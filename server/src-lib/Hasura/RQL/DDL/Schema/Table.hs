@@ -6,6 +6,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.QueryTemplate
@@ -14,7 +15,6 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (matchRegex)
@@ -296,14 +296,22 @@ buildSchemaCache = do
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
   strfyNum <- stringifyNum <$> askSQLGenCtx
+
+  -- Tables
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
     trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
 
-  -- Fetch all the relationships
-  relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
+  -- Functions
+  functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
+  forM_ functions $ \(sn, fn) ->
+    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
+    trackFunctionP2Setup (QualifiedObject sn fn)
 
+
+  -- Relationships
+  relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
   forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
     let qt = QualifiedObject sn tn
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
@@ -318,9 +326,8 @@ buildSchemaCache = do
         validateArrRel qt relDef
         arrRelP2Setup qt relDef
 
-  -- Fetch all the permissions
+  -- Permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
-
   forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) ->
     modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
     PTInsert -> permHelper strfyNum sn tn rn pDef PAInsert
@@ -328,7 +335,7 @@ buildSchemaCache = do
     PTUpdate -> permHelper strfyNum sn tn rn pDef PAUpdate
     PTDelete -> permHelper strfyNum sn tn rn pDef PADelete
 
-  -- Fetch all the query templates
+  -- Query Templates
   qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
     qtDef <- decodeValue qtDefVal
@@ -337,21 +344,16 @@ buildSchemaCache = do
            CreateQueryTemplate qtn qtDef Nothing
     addQTemplateToCache qti deps
 
+  -- Event Triggers
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
     etc <- decodeValue configuration
-
     let qt = QualifiedObject sn tn
     subTableP2Setup qt etc
     allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
     liftTx $ mkTriggerQ trn qt allCols strfyNum (etcDefinition etc)
 
-  functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
-  forM_ functions $ \(sn, fn) ->
-    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-    trackFunctionP2Setup (QualifiedObject sn fn)
-
-  -- remote schemas
+  -- Remote Schemas
   res <- liftTx fetchRemoteSchemas
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)

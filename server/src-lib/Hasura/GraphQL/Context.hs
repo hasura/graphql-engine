@@ -375,7 +375,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
   where
     TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys    = Set.toList $ Set.fromList $ map pgiType $
-                  lefts $ Map.elems fldInfos
+                  getColsFromSelFields $ Map.elems fldInfos
     mkMutRoot =
       mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName

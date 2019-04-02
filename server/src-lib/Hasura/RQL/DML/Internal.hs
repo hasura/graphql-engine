@@ -50,8 +50,9 @@ mkAdminRolePermInfo ti =
       . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
 
     tn = tiName ti
+    compCols = M.elems $ tiCompCols ti
     i = InsPermInfo tn annBoolExpTrue M.empty []
-    s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) compCols tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     d = DelPermInfo tn annBoolExpTrue []

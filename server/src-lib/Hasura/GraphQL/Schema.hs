@@ -13,27 +13,27 @@ module Hasura.GraphQL.Schema
   , RemoteGCtx (..)
   , checkSchemaConflicts
   , checkConflictingNode
-  , emptyGCtx
-  , mergeMaybeMaps
+  , emptyGCtx , mergeMaybeMaps
   , ppGCtx
   ) where
 
 
 import           Data.Has
-import           Data.Maybe                     (maybeToList)
+import           Data.Maybe                          (maybeToList)
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashSet                   as Set
-import qualified Data.Sequence                  as Seq
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashSet                        as Set
+import qualified Data.Sequence                       as Seq
 
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal        (mkAdminRolePermInfo)
+import           Hasura.RQL.DML.Internal             (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -64,7 +64,7 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
+-- type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -164,6 +164,20 @@ mkTableColAggFldsTy op tn =
 mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
+funcArgsInpVal :: QualifiedFunction -> InpValInfo
+funcArgsInpVal qf =
+  InpValInfo (Just desc) "args" Nothing $
+  G.toGT $ G.toNT $ mkFuncArgsTy qf
+  where
+    desc = G.Description $ "input parameters for function " <>> qf
+
+jsonPathInpVal :: InpValInfo
+jsonPathInpVal =
+  InpValInfo (Just pathDesc) "path" Nothing $
+  G.toGT $ mkScalarTy PGText
+  where
+    pathDesc = "JSON select path"
+
 -- Support argument params for PG columns
 mkPGColParams :: PGColType -> ParamMap
 mkPGColParams = \case
@@ -171,10 +185,7 @@ mkPGColParams = \case
   PGJSON  -> jsonParams
   _       -> Map.empty
   where
-    pathDesc = "JSON select path"
-    jsonParams = Map.fromList
-      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText)
-      ]
+    jsonParams =  fromInpValL $ pure jsonPathInpVal
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
@@ -185,6 +196,34 @@ mkPGColFld (PGColInfo colName colTy isNullable) =
     scalarTy = mkScalarTy colTy
     notNullTy = G.toGT $ G.toNT scalarTy
     nullTy = G.toGT scalarTy
+
+{-
+  computed_col_function(args: computed_col_function_args!, path: String)
+-}
+
+mkCompColFld :: CompColFunc -> ObjFldInfo
+mkCompColFld ccf =
+  mkHsraObjFldInfo Nothing n paramMap ty
+  where
+    fn = fiName ccf
+    n = qualObjectToName fn
+    ty = G.toGT $ mkScalarTy $ fiReturnType ccf
+    funcArgs = fiInputArgs ccf
+    paramMap = colParams `Map.union` funcArgParams
+
+    colParams = mkPGColParams $ fiReturnType ccf
+
+    funcArgParams = bool funcArgParams' mempty $ null funcArgs
+    funcArgParams' = fromInpValL $ pure $ funcArgsInpVal fn
+
+mkObjFlds :: [SelField] -> [ObjFldInfo]
+mkObjFlds = concatMap mkFlds
+  where
+    mkFlds = \case
+      SFldPGCol ci      -> pure $ mkPGColFld ci
+      SFldCompCol _ ccf -> pure $ mkCompColFld ccf
+      SFldRel (RelSelFld ri _ _ alwAgg isNullable) ->
+        mkRelFld alwAgg ri isNullable
 
 -- where: table_bool_exp
 -- limit: Int
@@ -263,9 +302,7 @@ mkTableObj
 mkTableObj tn allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) HasuraType
   where
-    flds = concatMap (either (pure . mkPGColFld) mkRelFld') allowedFlds
-    mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
-      mkRelFld allowAgg relInfo isNullable
+    flds = mkObjFlds allowedFlds
     desc = G.Description $ "columns and relationships of " <>> tn
 
 {-
@@ -422,7 +459,7 @@ function(
 
 -}
 
-mkFuncArgs :: FunctionInfo -> ParamMap
+mkFuncArgs :: QueryFunc -> ParamMap
 mkFuncArgs funInfo =
   fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
@@ -430,13 +467,11 @@ mkFuncArgs funInfo =
     funcArgs = fiInputArgs funInfo
     retTable = fiReturnType funInfo
 
-    funcArgDesc = G.Description $ "input parameters for function " <>> funcName
-    funcInpArg = InpValInfo (Just funcArgDesc) "args" Nothing $ G.toGT $ G.toNT $
-                 mkFuncArgsTy funcName
     funcInpArgs = bool [funcInpArg] [] $ null funcArgs
+    funcInpArg = funcArgsInpVal funcName
 
 mkFuncQueryFld
-  :: FunctionInfo -> ObjFldInfo
+  :: QueryFunc -> ObjFldInfo
 mkFuncQueryFld funInfo =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
@@ -461,7 +496,7 @@ function_aggregate(
 -}
 
 mkFuncAggQueryFld
-  :: FunctionInfo -> ObjFldInfo
+  :: QueryFunc -> ObjFldInfo
 mkFuncAggQueryFld funInfo =
   mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
   where
@@ -527,7 +562,7 @@ mkBoolExpInp tn fields =
     boolExpTy = mkBoolExpTy tn
 
     -- all the fields of this input object
-    inpValues = combinators <> map mkFldExpInp fields
+    inpValues = combinators <> mapMaybe mkFldExpInp fields
 
     mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
 
@@ -540,10 +575,12 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
-        mk (mkColName colName) (mkCompExpTy colTy)
-      Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
-        mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+      SFldPGCol (PGColInfo colName colTy _) ->
+        Just $ mk (mkColName colName) (mkCompExpTy colTy)
+      SFldCompCol _ _ -> Nothing
+      SFldRel rsf ->
+        let (RelInfo relName _ _ remTab _) = _rsfInfo rsf
+        in Just $ mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
@@ -574,12 +611,17 @@ procFuncArgs argSeq f =
           let argT = "arg_" <> T.pack (show argNo)
           in (items <> pure (f ty argT), argNo + 1)
 
-mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
-mkFuncArgsInp funcInfo =
+funcArgsToArgItems :: Seq.Seq FunctionArg -> Seq.Seq FuncArgItem
+funcArgsToArgItems argSeq =
+  Seq.fromList $ procFuncArgs argSeq $ \_ t -> FuncArgItem $ G.Name t
+
+mkFuncArgsInp
+  :: QualifiedFunction
+  -> Seq.Seq FunctionArg
+  -> Maybe InpObjTyInfo
+mkFuncArgsInp funcName funcArgs =
   bool (Just inpObj) Nothing $ null funcArgs
   where
-    funcName = fiName funcInfo
-    funcArgs = fiInputArgs funcInfo
     funcArgsTy = mkFuncArgsTy funcName
 
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
@@ -1168,19 +1210,19 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgCols = lefts selFlds
-    relFltr ty = flip filter (rights selFlds) $ \(ri, _, _, _, _) ->
-      riType ri == ty
+    pgCols = getColsFromSelFields selFlds
+    relFltr ty = flip filter (getRelsFromSelFields selFlds) $
+                 \rsf -> riType (_rsfInfo rsf) == ty
     objRels = relFltr ObjRel
     arrRels = relFltr ArrRel
 
     mkColOrdBy ci = InpValInfo Nothing (mkColName $ pgiName ci) Nothing $
                     G.toGT ordByTy
-    mkObjRelOrdBy (ri, _, _, _, _) =
+    mkObjRelOrdBy (RelSelFld ri _ _ _ _) =
       InpValInfo Nothing (mkRelName $ riName ri) Nothing $
       G.toGT $ mkOrdByTy $ riRTable ri
 
-    mkArrRelAggOrdBy (ri, isAggAllowed, _, _, _) =
+    mkArrRelAggOrdBy (RelSelFld ri _ _ isAggAllowed _) =
       let ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
             G.toGT $ mkTabAggOrdByTy $ riRTable ri
       in bool Nothing (Just ivi) isAggAllowed
@@ -1191,11 +1233,11 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                                     ( mkColName $ pgiName ci
                                     , OBIPGCol ci
                                     )
-    relOrdBys = flip map objRels $ \(ri, _, fltr, _, _) ->
+    relOrdBys = flip map objRels $ \(RelSelFld ri fltr _ _ _) ->
                                      ( mkRelName $ riName ri
                                      , OBIRel ri fltr
                                      )
-    arrRelOrdBys = flip mapMaybe arrRels $ \(ri, isAggAllowed, fltr, _, _) ->
+    arrRelOrdBys = flip mapMaybe arrRels $ \(RelSelFld ri fltr _ isAggAllowed _) ->
                      let obItem = ( mkAggRelName $ riName ri
                                   , OBIAgg ri fltr
                                   )
@@ -1241,8 +1283,8 @@ mkGCtxRole'
   -- constraints
   -> [ConstraintName]
   -> Maybe ViewInfo
-  -- all functions
-  -> [FunctionInfo]
+  -- all query functions
+  -> [QueryFunc]
   -> TyAgg
 mkGCtxRole' tn insPermM selPermM updColsM
             delPermM pkeyCols constraints viM funcs =
@@ -1291,7 +1333,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
-      \c -> ((ty, mkColName $ pgiName c), Left c)
+      \c -> ((ty, mkColName $ pgiName c), SFldPGCol c)
 
     insCtxM = fst <$> insPermM
     insColsM = icColumns <$> insCtxM
@@ -1312,7 +1354,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
     selFldsM = snd <$> selPermM
-    selColsM = (map pgiName . lefts) <$> selFldsM
+    selColsM = (map pgiName . getColsFromSelFields) <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColsM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
@@ -1325,25 +1367,35 @@ mkGCtxRole' tn insPermM selPermM updColsM
         else Nothing
 
     -- funcargs input type
-    funcArgInpObjs = mapMaybe mkFuncArgsInp funcs
+    funcArgInpObjs = qFuncArgInpObjs <> ccFuncArgInpObjs
+    qFuncArgInpObjs = flip mapMaybe funcs $
+                      \f -> mkFuncArgsInp (fiName f) (fiInputArgs f)
+    ccFuncs = maybe [] getCCFuncsFromSelFields selFldsM
+    ccFuncArgInpObjs = flip mapMaybe ccFuncs $
+                      \f -> mkFuncArgsInp (fiName f) (fiInputArgs f)
     -- funcArgCtx = Map.unions funcArgCtxs
     funcArgScalarSet = Set.fromList $
                        concatMap (map faType . toList . fiInputArgs) funcs
 
     -- helper
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
-    mkFld ty = \case
-      Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
-      Right (ri, allowAgg, perm, lim, _) ->
+    mkFld ty fld = case fld of
+      SFldPGCol ci -> pure ( (ty, mkColName $ pgiName ci)
+                           , SFldPGCol ci
+                           )
+      SFldCompCol args ccs -> pure ( (ty, qualObjectToName $ fiName ccs)
+                                   , SFldCompCol args ccs
+                                   )
+      SFldRel (RelSelFld ri fltr lim alwAgg _) ->
         let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
-                     , Right (ri, False, perm, lim)
+                     , SFldRel $ RelSelCtx ri fltr lim False
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
-                        , Right (ri, True, perm, lim)
+                        , SFldRel $ RelSelCtx ri fltr lim True
                         )
         in case riType ri of
           ObjRel -> [relFld]
-          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+          ArrRel -> bool [relFld] [relFld, aggRelFld] alwAgg
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM
@@ -1373,8 +1425,8 @@ mkGCtxRole' tn insPermM selPermM updColsM
         in (objs, ordByInps)
       _ -> ([], [])
 
-    getNumCols = onlyNumCols . lefts
-    getCompCols = onlyComparableCols . lefts
+    getNumCols = onlyNumCols . getColsFromSelFields
+    getCompCols = onlyComparableCols . getColsFromSelFields
     onlyFloat = const $ mkScalarTy PGFloat
 
     mkTypeMaker "sum" = mkScalarTy
@@ -1403,7 +1455,7 @@ getRootFldsRole'
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
-  -> [FunctionInfo]
+  -> [QueryFunc]
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
   -> Maybe ([PGCol], PreSetCols, AnnBoolExpSQL, [T.Text]) -- update filter
@@ -1481,13 +1533,18 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       , Left $ g fi
       )
 
-    mkFuncArgItemSeq fi = Seq.fromList $
-      procFuncArgs (fiInputArgs fi) $ \_ t -> FuncArgItem $ G.Name t
+    mkFuncArgItemSeq = funcArgsToArgItems . fiInputArgs
 
 
 getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
 getSelPermission tabInfo role =
   Map.lookup role (tiRolePermInfoMap tabInfo) >>= _permSel
+
+ccFuncsToColFlds :: [CompColFunc] -> [SelField]
+ccFuncsToColFlds funcs =
+  flip map funcs $ \f ->
+    let argItemSeq = funcArgsToArgItems $ fiInputArgs f
+    in SFldCompCol argItemSeq f
 
 getSelPerm
   :: (MonadError QErr m)
@@ -1500,21 +1557,23 @@ getSelPerm
 getSelPerm tableCache fields role selPermInfo = do
   selFlds <- fmap catMaybes $ forM (toValidFieldInfos fields) $ \case
     FIColumn pgColInfo ->
-      return $ fmap Left $ bool Nothing (Just pgColInfo) $
+      return $ fmap SFldPGCol $ bool Nothing (Just pgColInfo) $
       Set.member (pgiName pgColInfo) allowedCols
     FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
       let remTableSelPermM = getSelPermission remTableInfo role
       return $ flip fmap remTableSelPermM $
-        \rmSelPermM -> Right ( relInfo
-                             , spiAllowAgg rmSelPermM
-                             , spiFilter rmSelPermM
-                             , spiLimit rmSelPermM
-                             , isRelNullable fields relInfo
-                             )
-  return (spiAllowAgg selPermInfo, selFlds)
+        \rmSelPermM -> SFldRel $
+                       RelSelFld relInfo
+                       (spiFilter rmSelPermM)
+                       (spiLimit rmSelPermM)
+                       (spiAllowAgg rmSelPermM)
+                       (isRelNullable fields relInfo)
+  return (spiAllowAgg selPermInfo, compColFlds <> selFlds)
   where
     allowedCols = spiCols selPermInfo
+    compColFlds = ccFuncsToColFlds $ spiCompCols selPermInfo
+
 
 mkInsCtx
   :: MonadError QErr m
@@ -1578,20 +1637,20 @@ mkGCtxRole
   -> FieldInfoMap
   -> [PGCol]
   -> [ConstraintName]
-  -> [FunctionInfo]
+  -> [QueryFunc]
   -> Maybe ViewInfo
   -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFlds, InsCtxMap)
-mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
+mkGCtxRole tableCache tn fields pCols constraints qFuncs viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
   tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
     tic <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
     return (tic, isJust $ _permUpd permInfo)
   let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn tabInsCtxM selPermM updColsM
-              (void $ _permDel permInfo) pColInfos constraints viM funcs
-      rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
+              (void $ _permDel permInfo) pColInfos constraints viM qFuncs
+      rootFlds = getRootFldsRole tn pCols constraints fields qFuncs viM permInfo
       insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
@@ -1606,7 +1665,7 @@ getRootFldsRole
   -> [PGCol]
   -> [ConstraintName]
   -> FieldInfoMap
-  -> [FunctionInfo]
+  -> [QueryFunc]
   -> Maybe ViewInfo
   -> RolePermInfo
   -> RootFlds
@@ -1635,26 +1694,29 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName (TyAgg, RootFlds, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
-       (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
+       (mkGCtxRole tableCache tn fields pkeyCols validConstraints qFuncs viewInfo) rolePerms
   adminInsCtx <- mkAdminInsCtx tn tableCache fields
   let adminCtx = mkGCtxRole' tn (Just (adminInsCtx, True))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
-                 pkeyColInfos validConstraints viewInfo tabFuncs
+                 pkeyColInfos validConstraints viewInfo qFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
+    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ ccFuncMap = tabInfo
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
-    tabFuncs = filter (isValidObjectName . fiName) $
-               getFuncsOfTable tn funcCache
-    selFlds = flip map (toValidFieldInfos fields) $ \case
-      FIColumn pgColInfo     -> Left pgColInfo
-      FIRelationship relInfo -> Right (relInfo, True, noFilter, Nothing, isRelNullable fields relInfo)
+    ccFuncs = filter (isValidObjectName . fiName) $ Map.elems ccFuncMap
+    qFuncs = filter (isValidObjectName . fiName) $
+             getQFuncsOfTable tn funcCache
+    selFlds = colFlds <> compColFlds
+    colFlds = flip map (toValidFieldInfos fields) $ \case
+      FIColumn pgColInfo     -> SFldPGCol pgColInfo
+      FIRelationship relInfo -> SFldRel $ RelSelFld relInfo noFilter Nothing True $ isRelNullable fields relInfo
+    compColFlds = ccFuncsToColFlds ccFuncs
     adminRootFlds =
-      getRootFldsRole' tn pkeyCols validConstraints fields tabFuncs
+      getRootFldsRole' tn pkeyCols validConstraints fields qFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (validColNames, mempty, noFilter, [])) (Just (noFilter, []))
       viewInfo

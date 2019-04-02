@@ -87,8 +87,8 @@ uFromItem fromItem = case fromItem of
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
-  S.FIFunc f args alM ->
-    S.FIFunc f args <$> mapM addAlias alM
+  S.FIFunc fExp alM ->
+    S.FIFunc <$> uFunctionExp fExp <*> mapM addAlias alM
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
     -- idens to empty based on correlation
@@ -139,6 +139,10 @@ uOrderBy (S.OrderByExp ordByItems) =
       <*> return ordTyM
       <*> return nullsOrdM
 
+uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
+uFunctionExp (S.FunctionExp f args) =
+  S.FunctionExp f <$> mapM uSqlExp args
+
 uSqlExp :: S.SQLExp -> Uniq S.SQLExp
 uSqlExp = restoringIdens . \case
   S.SEPrep i                    -> return $ S.SEPrep i
@@ -161,6 +165,8 @@ uSqlExp = restoringIdens . \case
   S.SEOpApp op args             ->
     S.SEOpApp op
     <$> mapM uSqlExp args
+  S.SEFn fExp                   ->
+    S.SEFn <$> uFunctionExp fExp
   S.SETyAnn e ty                ->
     S.SETyAnn
     <$> uSqlExp e

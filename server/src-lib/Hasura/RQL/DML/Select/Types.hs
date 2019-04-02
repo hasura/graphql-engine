@@ -78,12 +78,20 @@ type ArrSelFlds = Fields ArrSel
 
 data ColOp
   = ColOp
-  { _colOp  :: S.SQLOp
-  , _colExp :: S.SQLExp
+  { _colOp  :: !S.SQLOp
+  , _colExp :: !S.SQLExp
+  } deriving (Show, Eq)
+
+data CompColSel
+  = CompColSel
+  { _ccsFunc :: !QualifiedFunction
+  , _ccsArgs :: ![S.SQLExp]
+  , _ccsType :: !PGColType
   } deriving (Show, Eq)
 
 data AnnFld
   = FCol !PGColInfo !(Maybe ColOp)
+  | FCompCol !CompColSel !(Maybe ColOp)
   | FObj !ObjSel
   | FArr !ArrSel
   | FExp !T.Text
