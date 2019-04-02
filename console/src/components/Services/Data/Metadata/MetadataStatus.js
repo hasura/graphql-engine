@@ -6,9 +6,15 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../Notification';
+import metaDataStyles from './Metadata.scss';
+import styles from '../../../Common/TableCommon/Table.scss';
 
-const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
-  if (!support) {
+const MetadataStatus = ({
+  dispatch,
+  supportInconsistentMetadata,
+  metadata,
+}) => {
+  if (!supportInconsistentMetadata) {
     return null;
   }
 
@@ -144,11 +150,27 @@ const MetadataStatus = ({ dispatch, metaDataStyles, support, metadata }) => {
   };
 
   return (
-    <div className={metaDataStyles.intro_note}>
-      <h4>Metadata Status</h4>
+    <div
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${
+        metaDataStyles.metadata_wrapper
+      } container-fluid`}
+    >
+      <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+        Metadata Status
+      </h2>
       {content()}
     </div>
   );
 };
 
-export default MetadataStatus;
+const mapStateToProps = state => {
+  return {
+    ...state.main,
+    metadata: state.metadata,
+    dataHeaders: { ...state.tables.dataHeaders },
+  };
+};
+
+const connector = connect => connect(mapStateToProps)(MetadataStatus);
+
+export default connector;
