@@ -58,24 +58,26 @@ const getHeaderEvents = generateHeaderSyms('CUSTOM_RESOLVER');
 /* */
 
 const getReqHeader = headers => {
-  const headersObj = headers.filter(h => {
-    return h.name && h.name.length > 0;
-  });
-  const requestHeader =
-    headersObj.length > 0
-      ? headersObj.map(h => {
-        const reqHead = {
-          name: h.name,
-        };
-        if (h.type === 'static') {
-          reqHead.value = h.value;
-        } else {
-          reqHead.value_from_env = h.value;
-        }
-        return reqHead;
-      })
-      : [];
-  return requestHeader;
+  const requestHeaders = [];
+
+  const headersObj = headers.filter(h => h.name && h.name.length > 0);
+  if (headersObj.length > 0) {
+    headersObj.forEach(h => {
+      const reqHead = {
+        name: h.name,
+      };
+
+      if (h.type === 'static') {
+        reqHead.value = h.value;
+      } else {
+        reqHead.value_from_env = h.value;
+      }
+
+      requestHeaders.push(reqHead);
+    });
+  }
+
+  return requestHeaders;
 };
 
 const fetchResolver = resolver => {
