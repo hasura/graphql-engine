@@ -11,6 +11,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.Server.Query
+import           Hasura.Server.Auth          (AMNoAuth)
 
 import qualified Data.Aeson                  as A
 import qualified Data.Text                   as T
@@ -35,7 +36,7 @@ migrateMetadata buildSC rqlQuery = do
   -- metadata migration depends on metadata added in previous versions
   when buildSC $ buildSchemaCache
   -- run the RQL query to Migrate metadata
-  void $ runQueryM rqlQuery
+  void $ runQueryM AMNoAuth rqlQuery
 
 setAsSystemDefinedFor2 :: (MonadTx m) => m ()
 setAsSystemDefinedFor2 =
