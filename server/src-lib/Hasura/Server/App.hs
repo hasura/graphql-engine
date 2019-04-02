@@ -347,12 +347,13 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
 
-    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
-        corsPolicy = mkDefaultCorsPolicy corsCfg
+    let corsPolicy = mkDefaultCorsPolicy corsCfg
         sqlGenCtx = SQLGenCtx strfyNum
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
-                   sqlGenCtx cacheRef runTx corsPolicy planCache
+                   sqlGenCtx cacheRef
+                   (runExceptT . runLazyTx pool isoLevel)
+                   corsPolicy planCache
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp

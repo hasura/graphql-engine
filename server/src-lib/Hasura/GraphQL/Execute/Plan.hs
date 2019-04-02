@@ -2,12 +2,16 @@ module Hasura.GraphQL.Execute.Plan
   ( RootFieldPlan(..)
   , PGPlan(..)
   , PlanVariables
+  , VariableTypes
   , PrepArgMap
   , QueryPlan(..)
-  , ReusablePlan
+  , SubsPlan(..)
+  , ReusableQueryPlan
+  , ReusablePlan(..)
   , getReusablePlan
   , mkNewQueryTx
   , mkCurPlanTx
+  , mkSubsOp
   , PlanCache
   , getPlan
   , addPlan
@@ -28,6 +32,7 @@ import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import           Hasura.GraphQL.Resolve.Context
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -57,7 +62,17 @@ instance J.ToJSON PlanId where
 
 newtype PlanCache
   = PlanCache
-  { _unPlanCache :: Cache.UnboundedCache PlanId ReusablePlan }
+  { _unPlanCache :: Cache.UnboundedCache PlanId ReusablePlan
+  }
+
+data ReusablePlan
+  = RPQuery !ReusableQueryPlan
+  | RPSubs !SubsPlan
+
+instance J.ToJSON ReusablePlan where
+  toJSON = \case
+    RPQuery queryPlan -> J.toJSON queryPlan
+    RPSubs subsPlan -> J.toJSON subsPlan
 
 initPlanCache :: IO PlanCache
 initPlanCache = PlanCache <$> Cache.initCache
@@ -122,29 +137,40 @@ type VariableTypes = Map.HashMap G.Variable PGColType
 
 data QueryPlan
   = QueryPlan
-  { _qpIsSubscription :: !Bool
-  , _qpVariables      :: ![G.VariableDefinition]
-  , _qpFldPlans       :: ![(G.Alias, RootFieldPlan)]
+  { _qpVariables :: ![G.VariableDefinition]
+  , _qpFldPlans  :: ![(G.Alias, RootFieldPlan)]
   }
 
-data ReusablePlan
-  = ReusablePlan
-  { _rpIsSubscription :: !Bool
-  , _rpVariableTypes  :: !VariableTypes
-  , _rpFldPlans       :: ![(G.Alias, RootFieldPlan)]
+data SubsPlan
+  = SubsPlan
+  { _sfAlias         :: !G.Alias
+  , _sfQuery         :: !Q.Query
+  , _sfVariableTypes :: !VariableTypes
+  } deriving (Show, Eq)
+
+instance J.ToJSON SubsPlan where
+  toJSON (SubsPlan alias q variables) =
+    J.object [ "query"     J..= Q.getQueryText q
+             , "alias"     J..= alias
+             , "variables" J..= variables
+             ]
+
+data ReusableQueryPlan
+  = ReusableQueryPlan
+  { _rqpVariableTypes :: !VariableTypes
+  , _rqpFldPlans      :: ![(G.Alias, RootFieldPlan)]
   }
 
-instance J.ToJSON ReusablePlan where
-  toJSON (ReusablePlan isSubs varTypes fldPlans) =
-    J.object [ "is_subscription" J..= isSubs
-             , "variables"      J..= show varTypes
+instance J.ToJSON ReusableQueryPlan where
+  toJSON (ReusableQueryPlan varTypes fldPlans) =
+    J.object [ "variables"       J..= show varTypes
              , "field_plans"     J..= fldPlans
              ]
 
-getReusablePlan :: QueryPlan -> Maybe ReusablePlan
-getReusablePlan (QueryPlan isSubs vars fldPlans) =
+getReusablePlan :: QueryPlan -> Maybe ReusableQueryPlan
+getReusablePlan (QueryPlan vars fldPlans) =
   if all fldPlanReusable $ map snd fldPlans
-  then Just $ ReusablePlan isSubs varTypes fldPlans
+  then Just $ ReusableQueryPlan varTypes fldPlans
   else Nothing
   where
     allVars = Set.fromList $ map G._vdVariable vars
@@ -164,8 +190,35 @@ getReusablePlan (QueryPlan isSubs vars fldPlans) =
 
     varTypes = Map.unions $ map (varTypesOfPlan . snd) fldPlans
 
+type ValidatedVariables = Map.HashMap G.Variable PGColValue
+
+-- this is in similar spirit to the validation
+-- logic of variable values in validate.hs however
+-- here it is much simpler and can get rid of typemap requirement
+validateVars
+  :: (MonadError QErr m)
+  => VariableTypes
+  -> Maybe GH.VariableValues
+  -> m ValidatedVariables
+validateVars varTypes varValsM =
+  flip Map.traverseWithKey varTypes $ \varName varType -> do
+    let unexpectedVars = filter
+          (not . (`Map.member` varTypes)) $ Map.keys varVals
+    unless (null unexpectedVars) $
+      throwVE $ "unexpected variables in variableValues: " <>
+      GV.showVars unexpectedVars
+    varVal <- onNothing (Map.lookup varName varVals) $
+      throwVE $ "expecting a value for non-nullable variable: " <>
+      GV.showVars [varName] <>
+      -- TODO: we don't have the graphql type
+      -- " of type: " <> T.pack (show varType) <>
+      " in variableValues"
+    runAesonParser (parsePGValue varType) varVal
+  where
+    varVals = fromMaybe Map.empty varValsM
+
 withPlan
-  :: PGPlan -> Map.HashMap G.Variable PGColValue -> RespTx
+  :: PGPlan -> ValidatedVariables -> RespTx
 withPlan (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = IntMap.elems prepMap'
@@ -182,41 +235,22 @@ withPlan (PGPlan q reqVars prepMap) annVars = do
 mkNewQueryTx
   :: (MonadError QErr m)
   => Maybe GH.VariableValues
-  -> ReusablePlan
-  -> m (Bool, LazyRespTx)
-mkNewQueryTx varValsM (ReusablePlan isSubs varTypes fldPlans) = do
-  validatedVars <- validateVars
+  -> ReusableQueryPlan
+  -> m LazyRespTx
+mkNewQueryTx varValsM (ReusableQueryPlan varTypes fldPlans) = do
+  validatedVars <- validateVars varTypes varValsM
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return resp
           RFPPostgres pgPlan -> liftTx $ withPlan pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
-  return (isSubs, tx)
-  where
-    varVals = fromMaybe Map.empty varValsM
-    -- this is in similar spirit to the validation
-    -- logic of variable values in validate.hs however
-    -- here it is much simpler and can get rid of typemap requirement
-    validateVars =
-      flip Map.traverseWithKey varTypes $ \varName varType -> do
-        let unexpectedVars = filter
-              (not . (`Map.member` varTypes)) $ Map.keys varVals
-        unless (null unexpectedVars) $
-          throwVE $ "unexpected variables in variableValues: " <>
-          GV.showVars unexpectedVars
-        varVal <- onNothing (Map.lookup varName varVals) $
-          throwVE $ "expecting a value for non-nullable variable: " <>
-          GV.showVars [varName] <>
-          -- we don't have the graphql type
-          -- " of type: " <> T.pack (show varType) <>
-          " in variableValues"
-        runAesonParser (parsePGValue varType) varVal
+  return tx
 
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: QueryPlan
   -> Q.TxE QErr EncJSON
-mkCurPlanTx (QueryPlan _ _ fldPlans) =
+mkCurPlanTx (QueryPlan _ fldPlans) =
   fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp        -> return resp
@@ -225,3 +259,14 @@ mkCurPlanTx (QueryPlan _ _ fldPlans) =
   where
     planTx (PGPlan q _ prepMap) =
       asSingleRowJsonResp q $ IntMap.elems prepMap
+
+-- use the existing plan and new variables to create a pg query
+mkSubsOp
+  :: (MonadError QErr m)
+  => Maybe GH.VariableValues
+  -> SubsPlan
+  -> m LQ.LiveQueryOp
+mkSubsOp varValsM (SubsPlan alias query varTypes) = do
+  validatedVars <- validateVars varTypes varValsM
+  let txtEncodedVars = fmap txtEncodedPGVal validatedVars
+  return $ LQ.LQMultiplexed (alias, query, txtEncodedVars)

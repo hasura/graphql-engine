@@ -2,6 +2,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Fallback
   ( LiveQuery(..)
   , LiveQueryMap
   , newLiveQueryMap
+  , FallbackOp
   , addLiveQuery
   , TxRunner
   , removeLiveQuery
@@ -15,19 +16,10 @@ import qualified StmContainers.Map                      as STMMap
 import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.LiveQuery.Types
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-
-data LiveQuery
-  = LiveQuery
-  { _lqUser    :: !UserInfo
-  , _lqRequest :: !GQLReqUnparsed
-  } deriving (Show, Eq, Generic)
-
-instance Hashable LiveQuery
-
-type OnChange = GQResp -> IO ()
 
 data LQHandler k
   = LQHandler
@@ -43,7 +35,6 @@ data LQHandler k
   , _lqhNewOps  :: !(STMMap.Map k OnChange)
   }
 
-type ThreadTM       = STM.TMVar (A.Async ())
 type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
@@ -84,14 +75,16 @@ removeLiveQuery lqMap liveQ k = do
           Just <$> STM.takeTMVar threadRef
         else return Nothing
 
+-- the transaction associated with this query
+type FallbackOp = LazyRespTx
+
 addLiveQuery
   :: (Eq k, Hashable k)
   => TxRunner
   -> LiveQueryMap k
   -- the query
   -> LiveQuery
-  -- the transaction associated with this query
-  -> LazyRespTx
+  -> FallbackOp
   -- a unique operation id
   -> k
   -- the action to be executed when result changes

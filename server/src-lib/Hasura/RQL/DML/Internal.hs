@@ -224,11 +224,10 @@ sessVarFromCurrentSetting columnType sessVar =
 
 sessVarFromCurrentSetting' :: PGColType -> SessVar -> S.SQLExp
 sessVarFromCurrentSetting' columnType sessVar =
-  withAnnTy $ withGeoVal columnType $
+  S.withTyAnn columnType $ withGeoVal columnType $
     S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower sessVar]
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)

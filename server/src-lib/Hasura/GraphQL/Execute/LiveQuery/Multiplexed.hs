@@ -1,6 +1,10 @@
 module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
-  ( addLiveQuery
+  ( LiveQueryMap
+  , newLiveQueryMap
+  , MxOp
+  , addLiveQuery
   , removeLiveQuery
+  , mkMxQuery
   ) where
 
 import qualified Control.Concurrent.Async               as A
@@ -17,18 +21,15 @@ import qualified StmContainers.Map                      as STMMap
 import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.LiveQuery.Types
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import qualified Hasura.SQL.DML                         as S
-import qualified Hasura.SQL.Types                       as S
-import           Hasura.SQL.Value                       (textToPrepVal)
+import           Hasura.SQL.Value
 
-data LiveQuery
-  = LiveQuery
-  { _lqUser    :: !UserInfo
-  , _lqRequest :: !GQLReqUnparsed
-  } deriving (Show, Eq, Generic)
+-- remove these when array encoding is merged
+import qualified Database.PG.Query.PTI                  as PTI
+import qualified PostgreSQL.Binary.Encoding             as PE
 
 newtype RespId
   = RespId { unRespId :: UUID.UUID }
@@ -40,8 +41,11 @@ newtype RespIdList
 
 instance Q.ToPrepArg RespIdList where
   toPrepVal (RespIdList l) =
-    textToPrepVal $ S.toSQLTxt $
-    S.SEArray $ map (S.SELit . UUID.toText . unRespId) l
+    Q.toPrepValHelper PTI.unknown encoder $ map unRespId l
+    where
+      encoder =
+        PE.array 2950 . PE.dimensionArray foldl'
+        (PE.encodingArray . PE.uuid)
 
 newRespId :: IO RespId
 newRespId = RespId <$> UUID.nextRandom
@@ -56,16 +60,17 @@ data MLiveQueryId
 
 instance Hashable MLiveQueryId
 
-type ThreadTM       = STM.TMVar (A.Async ())
-type MLiveQueryMap k = STMMap.Map MLiveQueryId (MLQHandler k, ThreadTM)
+type LiveQueryMap k = STMMap.Map MLiveQueryId (MLQHandler k, ThreadTM)
 
-type OnChange = GQResp -> IO ()
+newLiveQueryMap :: STM.STM (LiveQueryMap k)
+newLiveQueryMap = STMMap.new
 
-type ValidatedVariables = Map.HashMap G.Variable Text
+type ValidatedVariables = Map.HashMap G.Variable TxtEncodedPGVal
 
 data MLQHandler k
   = MLQHandler
-  { _mhQuery      :: !Q.Query
+  { _mhAlias      :: !G.Alias
+  , _mhQuery      :: !Q.Query
   , _mhCandidates ::
       !(STMMap.Map
         (UserVars, Maybe VariableValues)
@@ -78,9 +83,6 @@ type RespRef = STM.TVar (Maybe GQResp)
 type MxQResp = [(RespId, EncJSON)]
 
 type TxRunner = LazyTx QErr MxQResp -> IO (Either QErr MxQResp)
--- 'k' uniquely identifies a sink
--- in case of websockets, it is (wsId, opId)
-type Sinks k = STMMap.Map k OnChange
 
 -- This type represents the state associated with
 -- the response of (role, gqlQueryText, userVars, variableValues)
@@ -89,7 +91,7 @@ data MLQHandlerCandidate k
   -- the laterally joined query responds with [(RespId, EncJSON)]
   -- so the resultid is used to determine the websockets
   -- where the data needs to be sent
-  { _mlqhcRespId    :: !RespId
+  { _mlqhcRespId        :: !RespId
 
   -- query variables which are validated and text encoded
   , _mlqhcValidatedVars :: !ValidatedVariables
@@ -106,22 +108,23 @@ data MLQHandlerCandidate k
   , _mlqhcNewOps        :: !(Sinks k)
   }
 
+-- the multiplexed query associated with the livequery
+-- and the validated, text encoded query variables
+type MxOp = (G.Alias, Q.Query, ValidatedVariables)
+
 addLiveQuery
   :: (Eq k, Hashable k)
   => TxRunner
-  -> MLiveQueryMap k
+  -> LiveQueryMap k
   -- the query
   -> LiveQuery
-  -- the multiplexed query associated with this query
-  -> Q.Query
-  -- the validated query variables
-  -> ValidatedVariables
+  -> MxOp
   -- a unique operation id
   -> k
   -- the action to be executed when result changes
   -> OnChange
   -> IO ()
-addLiveQuery txRunner lqMap liveQ mxQuery valQVars k onResultAction= do
+addLiveQuery txRunner lqMap liveQ (als, mxQuery, valQVars) k onResultAction = do
 
   -- generate a new result id
   responseId <- newRespId
@@ -170,7 +173,7 @@ addLiveQuery txRunner lqMap liveQ mxQuery valQVars k onResultAction= do
       STMMap.insert handlerC candidateId $ _mhCandidates handler
 
     newHandler responseId = do
-      handler <- MLQHandler mxQuery <$> STMMap.new
+      handler <- MLQHandler als mxQuery <$> STMMap.new
       handlerC <- newHandlerC responseId
       STMMap.insert handlerC candidateId $ _mhCandidates handler
       return handler
@@ -196,7 +199,7 @@ getHandlerId lq =
 
 removeLiveQuery
   :: (Eq k, Hashable k)
-  => MLiveQueryMap k
+  => LiveQueryMap k
   -- the query and the associated operation
   -> LiveQuery
   -> k
@@ -213,7 +216,7 @@ removeLiveQuery lqMap liveQ k = do
     getQueryDet = do
       handlerM <- STMMap.lookup handlerId lqMap
       fmap join $ forM handlerM $ \(handler, threadRef) -> do
-        let MLQHandler _ candidateMap = handler
+        let MLQHandler _ _ candidateMap = handler
         candidateM <- STMMap.lookup candidateId candidateMap
         return $ fmap (handler, threadRef,) candidateM
 
@@ -241,7 +244,7 @@ removeLiveQuery lqMap liveQ k = do
 
 data CandidateSnapshot
   = CandidateSnapshot
-  { _csRespVars :: !RespVars
+  { _csRespVars   :: !RespVars
   , _csPrevResRef :: !RespRef
   , _csCurSinks   :: ![OnChange]
   , _csNewSinks   :: ![OnChange]
@@ -267,21 +270,28 @@ newtype RespVarsList
 
 instance Q.ToPrepArg RespVarsList where
   toPrepVal (RespVarsList l) =
-    textToPrepVal $ S.toSQLTxt $
-    S.SEArray $ map (S.SELit . J.encodeToStrictText) l
+    Q.toPrepValHelper PTI.unknown encoder l
+    where
+      encoder =
+        PE.array 114 . PE.dimensionArray foldl'
+        (PE.encodingArray . PE.json_ast)
 
 getRespVars :: UserVars -> ValidatedVariables -> RespVars
 getRespVars usrVars valVars =
   J.object [ "user" J..= usrVars
-           , "variables" J..= valVars
+           , "variables" J..= fmap asJson valVars
            ]
+  where
+    asJson = \case
+      TENull  -> J.Null
+      TELit t -> J.String t
 
 pollQuery
   :: (Eq k, Hashable k)
   => TxRunner
   -> MLQHandler k
   -> IO ()
-pollQuery runTx (MLQHandler pgQuery candidateMap) = do
+pollQuery runTx (MLQHandler alias pgQuery candidateMap) = do
 
   -- get a snapshot of all the candidates
   candidateSnapshotMap <- STM.atomically $ do
@@ -325,5 +335,33 @@ pollQuery runTx (MLQHandler pgQuery candidateMap) = do
       Right responses ->
         flip mapMaybe responses $ \(respId, respEnc) ->
           -- TODO: change it to use bytestrings directly
-          let resp = GQSuccess $ encJToLBS respEnc
+
+          let fldAlsT = G.unName $ G.unAlias alias
+              resp = GQSuccess $ encJToLBS $
+                     encJFromAssocList $ pure $ (,) fldAlsT respEnc
           in (resp,) <$> Map.lookup respId candidateSnapshotMap
+
+
+mkMxQuery :: Q.Query -> Q.Query
+mkMxQuery baseQuery =
+  Q.fromText $ mconcat $ map Q.getQueryText $
+      [mxQueryPfx, baseQuery, mxQuerySfx]
+  where
+    mxQueryPfx :: Q.Query
+    mxQueryPfx =
+      [Q.sql|
+        select
+          _subs.result_id, _fld_resp.root as result
+          from
+            unnest(
+              $1::uuid[], $2::json[]
+            ) _subs (result_id, result_vars)
+          left outer join lateral
+            (
+        |]
+
+    mxQuerySfx :: Q.Query
+    mxQuerySfx =
+      [Q.sql|
+            ) _fld_resp ON ('true')
+        |]

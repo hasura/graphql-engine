@@ -214,6 +214,8 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Context
                      , Hasura.GraphQL.Execute.LiveQuery
+                     , Hasura.GraphQL.Execute.LiveQuery.Types
+                     , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
                      , Hasura.GraphQL.Execute.LiveQuery.Fallback
                      , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.BoolExp
