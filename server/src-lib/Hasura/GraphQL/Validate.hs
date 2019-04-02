@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , showVars
   , RootSelSet(..)
   , getTypedOp
   , QueryParts (..)
@@ -89,16 +90,19 @@ getAnnVarVals varDefsL inpVals = do
     annInpValM <- withPathK "variableValues" $
                   mapM (validateInputValue jsonParser ty) inpValM
     let varValM = annInpValM <|> annDefM
-    onNothing varValM $ throwVE $ "expecting a value for non-null type: "
-      <> G.showGT ty <> " in variableValues"
+    onNothing varValM $ throwVE $
+      "expecting a value for non-nullable variable: " <>
+      showVars [var] <>
+      " of type: " <> G.showGT ty <>
+      " in variableValues"
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
       <> "(enums, scalars, input objects), but "
       <> showNamedTy namedTy <> " is an object type"
 
-    showVars :: (Functor f, Foldable f) => f G.Variable -> Text
-    showVars = showNames . fmap G.unVariable
+showVars :: (Functor f, Foldable f) => f G.Variable -> Text
+showVars = showNames . fmap G.unVariable
 
 validateFrag
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)

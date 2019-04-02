@@ -143,15 +143,12 @@ getQueryTx'
   -> UserInfo
   -> V.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.QueryPlan)
+  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
 getQueryTx' fn isSubs gCtx sqlGenCtx userInfo fields varDefs = do
   fldPlans <- runE gCtx sqlGenCtx userInfo $ fn fields
-  let queryPlan     = Plan.QueryPlan isSubs varDefs fldPlans typeMap
-      reusablePlanM = bool Nothing (Just queryPlan) $
-                      Plan.isReusable queryPlan
+  let queryPlan     = Plan.QueryPlan isSubs varDefs fldPlans
+      reusablePlanM = Plan.getReusablePlan queryPlan
   return (liftTx $ Plan.mkCurPlanTx queryPlan, reusablePlanM)
-  where
-    typeMap = _gTypes gCtx
 
 getQueryTx
   :: (MonadError QErr m)
@@ -160,7 +157,7 @@ getQueryTx
   -> UserInfo
   -> V.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.QueryPlan)
+  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
 getQueryTx =
   getQueryTx' convertQuerySelSet False
 
@@ -235,7 +232,7 @@ getSubsTx
   -> UserInfo
   -> V.Field
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe Plan.QueryPlan)
+  -> m (LazyRespTx, Maybe Plan.ReusablePlan)
 getSubsTx gCtx sqlGenCtx userInfo fld =
   getQueryTx' (mapM convertSubsFld . toList) True gCtx
   sqlGenCtx userInfo $ pure fld
