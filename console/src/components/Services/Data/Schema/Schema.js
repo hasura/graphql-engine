@@ -316,6 +316,12 @@ class Schema extends Component {
             dispatch(autoAddRelName(rel));
           };
 
+          const relArrow = relData.isObjRel ? (
+            <span>&rarr;</span>
+          ) : (
+            <span>&rArr;</span>
+          );
+
           untrackedRelList.push(
             <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
               <div className={styles.inline_block}>
@@ -330,7 +336,7 @@ class Schema extends Component {
               </div>
               <div className={styles.inline_block}>
                 <span>
-                  <b>{relData.tableName}</b> &rarr; <b>{relData.rTable}</b>
+                  <b>{relData.tableName}</b> {relArrow} <b>{relData.rTable}</b>
                 </span>
                 &nbsp;&nbsp; - &nbsp;&nbsp;
                 <span>
