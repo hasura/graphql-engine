@@ -306,7 +306,7 @@ const RawSQL = ({
     return (
       <div>
         <b>Notes</b>
-        <ul className={styles.remove_ul_left}>
+        <ul className={styles.remove_ul_left + ' ' + styles.add_mar_top_small}>
           <li>
             You can create views, alter tables and just about run any SQL
             statements directly on the database.
