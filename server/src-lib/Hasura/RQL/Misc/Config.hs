@@ -66,11 +66,11 @@ isAuthHookSet = \case
 
 isJWTSet :: AuthMode -> Bool
 isJWTSet = \case
-  AMAdminSecretAndJWT -> True
-  _                   -> False
+  AMAdminSecretAndJWT _ _ _ -> True
+  _                         -> False
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
-getJWTInfo AMAdminSecretAndJWT _ jwtCtx _ =
+getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
   Just $ JWTInfo ns format
   where
     ns = jcxClaimNs jwtCtx
