@@ -43,20 +43,25 @@ user can only insert articles for themself*
            "permission" : {
                "check" : {
                    "author_id" : "X-HASURA-USER-ID"
-               }
+               },
+               "set":{
+                   "id":"X-HASURA-USER-ID"
+               },
+               "columns":["name","author_id"]
            }
        }
    }
 
-This reads as follows:
+This reads as follows - For the ``user`` role:
 
-"For the *user* role, for every row that is being inserted into the *article*
-table, *check* that the ``author_id`` column value is the same as the value in
-the request header ``X-HASURA-USER-ID``".
+* For every row that is being inserted into the *article* table, allow insert only if the ``check`` passes i.e. that the ``author_id`` column value is the same as the value in the request header ``X-HASURA-USER-ID``".
 
-The argument for ``check`` is a boolean expression which has the same syntax as
-the ``where`` clause in the ``select`` query, making it extremely expressive.
-For example, 
+* If the above ``check`` passes, then access for insert will be limited to columns ``name`` and ``author_id`` only.
+
+* When this insert happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
+
+
+The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. For example, 
 
 .. code-block:: http
 
@@ -135,6 +140,19 @@ InsertPermission
      - true
      - :ref:`BoolExp`
      - This expression has to hold true for every new row that is inserted
+   * - set
+     - false
+     - :ref:`ColumnPresetExp`
+     - Preset values for columns that can sourced from session variables or static values.
+   * - columns
+     - false
+     - :ref:`PGColumn` array (or) ``'*'``
+     - Can insert into only these columns (or all when ``'*'`` is specified)
+
+
+
+
+
 
 .. _drop_insert_permission:
 
@@ -193,16 +211,22 @@ authored by themself.
                        { "author_id" : "X-HASURA-USER-ID" },
                        { "is_published" : true }
                    ]
-               }
+                },
+                "limit": 10,
+                "allow_aggregations": true
            }
        }
    }
 
-This reads as follows:
+This reads as follows - For the ``user`` role:
 
-1. Allow all ``columns`` (because of ``*``).
-2. Allow rows where ``is_published`` is ``true`` or the ``author_id`` matches
-   the value of request header ``X-HASURA-USER-ID``.
+* Allow selecting rows where the ``check`` passes i.e. ``is_published`` is ``true`` or the ``author_id`` matches the value of the session variable ``X-HASURA-USER-ID``.
+
+* Allow selecting all columns (because the ``columns`` key is set to  ``*``).
+
+* ``limit`` the numbers of rows returned by this query to a maximum of 10.
+
+* Allow aggregate queries.
 
 .. _create_select_permission_syntax:
 
@@ -253,6 +277,14 @@ SelectPermission
      - true
      - :ref:`BoolExp`
      - Only the rows where this expression holds true are selectable
+   * - limit
+     - false
+     - ``Integer``
+     - The maximum number of rows that can be returned
+   * - allow_aggregations
+     - false
+     - ``Boolean``
+     - Toggle allowing aggregate queries
 
 .. _drop_select_permission:
 
@@ -308,16 +340,21 @@ An example:
                "columns" : ["title", "content", "category"],
                "filter" : {
                    "author_id" : "X-HASURA-USER-ID"
+               },
+               "set":{
+                   "id":"X-HASURA-USER-ID"
                }
            }
        }
    }
 
-This reads as follows:
+This reads as follows - For the ``user`` role:
 
-1. Allow only the ``columns`` : ``title``, ``content`` and ``category`` to be updated
-2. Allow rows where ``author_id`` matches the request header
-   ``X-HASURA-USER-ID`` value to be updated.
+* Allow updating only those rows where the ``check`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
+
+* If the above ``check`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*)
+
+* When this update happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
 
 .. note::
 
@@ -369,12 +406,17 @@ UpdatePermission
      - Description
    * - columns
      - true
-     - :ref:`PGColumn` array
-     - Only these columns are updatable
+     - :ref:`PGColumn` array (or) ``'*'``
+     - Only these columns are selectable (or all when ``'*'`` is specified)
    * - filter
      - true
      - :ref:`BoolExp`
      - Only the rows where this expression holds true are deletable
+   * - set
+     - false
+     - :ref:`ColumnPresetExp`
+     - Preset values for columns that can sourced from session variables or static values.
+  
 
 .. _drop_update_permission:
 
