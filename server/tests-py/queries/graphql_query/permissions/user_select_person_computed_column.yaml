@@ -1,0 +1,23 @@
+description: Fetch person with computed column as User
+url: /v1alpha1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-Person-Id: '2'
+response:
+  data:
+    person:
+    - id: 2
+      first_name: clarke
+      last_name: michael
+      full_name_prefix: Mr. michael clarke
+query:
+  query: |
+    query {
+      person{
+        id
+        first_name
+        last_name
+        full_name_prefix(args: {prefix: "Mr."})
+      }
+    }

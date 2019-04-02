@@ -41,6 +41,9 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_col_not_present_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml")
 
+    def test_select_query_person_computed_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/select_query_person_computed_column.yaml")
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -226,6 +229,9 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
 
     def test_staff_passed_students(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml')
+
+    def test_user_person_computed_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_select_person_computed_column.yaml')
 
     @classmethod
     def dir(cls):

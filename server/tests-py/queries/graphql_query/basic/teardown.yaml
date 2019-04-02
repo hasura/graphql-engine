@@ -17,24 +17,12 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table article
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table "user"
-
-- type: run_sql
-  args:
-    sql: |
-      drop type complex
-
-- type: run_sql
-  args:
-    sql: |
-      drop type inventory_item
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE "user";
+      DROP TYPE complex;
+      DROP TYPE inventory_item;
+      DROP FUNCTION full_name;
+      DROP FUNCTION full_name_prefix;
+      DROP TABLE person; 
+    cascade: true

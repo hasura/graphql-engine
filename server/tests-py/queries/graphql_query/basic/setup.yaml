@@ -276,3 +276,39 @@ args:
   args:
     sql: |
       SET TIME ZONE 'UTC';
+
+#Person table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id serial primary key,
+        first_name text not null,
+        last_name text not null
+      );
+
+      INSERT INTO person
+      (first_name, last_name) VALUES
+      ('taylor', 'chris'),
+      ('clarke', 'michael');
+
+      CREATE FUNCTION full_name(person person) RETURNS text AS $$
+       SELECT  person.last_name || ' ' || person.first_name
+      $$ LANGUAGE sql STABLE;
+
+      CREATE FUNCTION full_name_prefix(person, prefix text) RETURNS text AS $$
+       SELECT  prefix || ' ' || $1.last_name || ' ' || $1.first_name
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    name: person
+    schema: public
+- type: track_function
+  args:
+    name: full_name
+    schema: public
+- type: track_function
+  args:
+    name: full_name_prefix
+    schema: public

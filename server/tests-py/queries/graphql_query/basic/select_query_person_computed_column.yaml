@@ -1,0 +1,27 @@
+description: Select person with computed column
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    person:
+    - id: 1
+      first_name: taylor
+      last_name: chris
+      full_name: chris taylor
+      full_name_prefix: Mr. chris taylor
+    - id: 2
+      first_name: clarke
+      last_name: michael
+      full_name: michael clarke
+      full_name_prefix: Mr. michael clarke
+query:
+  query: |
+    query {
+      person{
+        id
+        first_name
+        last_name
+        full_name
+        full_name_prefix(args: {prefix: "Mr."})
+      }
+    }
