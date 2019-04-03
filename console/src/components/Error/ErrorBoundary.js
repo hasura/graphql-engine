@@ -33,7 +33,12 @@ class ErrorBoundary extends React.Component {
                 </div>
                 <br />
                 <div>
-                  You can report this issue on our <a href="https://github.com/hasura/graphql-engine/issues">Github</a> or chat with us on <a href="http://discord.gg/hasura">Discord</a>
+                  You can report this issue on our{' '}
+                  <a href="https://github.com/hasura/graphql-engine/issues">
+                    Github
+                  </a>{' '}
+                  or chat with us on{' '}
+                  <a href="http://discord.gg/hasura">Discord</a>
                 </div>
               </div>
               <div className="col-xs-4">
