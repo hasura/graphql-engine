@@ -1,0 +1,8 @@
+- args:
+    sql: CREATE TABLE "public"."article"("id" serial NOT NULL, "title" text NOT NULL,
+      "user_id" text NOT NULL, PRIMARY KEY ("id") );
+  type: run_sql
+- args:
+    name: article
+    schema: public
+  type: add_existing_table_or_view

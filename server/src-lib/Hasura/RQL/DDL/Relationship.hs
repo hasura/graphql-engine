@@ -1,6 +1,8 @@
 module Hasura.RQL.DDL.Relationship
-  ( objRelP2Setup
+  ( validateObjRel
+  , objRelP2Setup
   , objRelP2
+  , validateArrRel
   , arrRelP2Setup
   , arrRelP2
   , delRelFromCatalog
@@ -14,6 +16,8 @@ module Hasura.RQL.DDL.Relationship
 where
 
 import qualified Database.PG.Query                 as Q
+
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission         (purgePerm)
@@ -77,12 +81,13 @@ checkForColConfilct tabInfo f =
       ]
     Nothing -> return ()
 
-objRelP1
+validateObjRel
   :: (QErrM m, CacheRM m)
-  => TableInfo
+  => QualifiedTable
   -> ObjRelDef
   -> m ()
-objRelP1 tabInfo (RelDef rn ru _) = do
+validateObjRel qt (RelDef rn ru _) = do
+  tabInfo <- askTabInfo qt
   checkForColConfilct tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
@@ -95,8 +100,7 @@ createObjRelP1
   -> m ()
 createObjRelP1 (WithTable qt rd) = do
   adminOnly
-  tabInfo <- askTabInfo qt
-  objRelP1 tabInfo rd
+  validateObjRel qt rd
 
 objRelP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
@@ -110,6 +114,7 @@ objRelP2Setup qt (RelDef rn ru _) = do
                   <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) "rcol") rCols
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
+      -- TODO: validation should account for this too
       res  <- liftTx $ Q.catchE defaultTxErrorHandler $ fetchFKeyDetail cn
       case mapMaybe processRes res of
         [] -> throw400 ConstraintError
@@ -156,14 +161,14 @@ objRelP2 qt rd@(RelDef rn ru comment) = do
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
 createObjRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateObjRel -> m EncJSON
 createObjRelP2 (WithTable qt rd) = do
   objRelP2 qt rd
   return successMsg
 
 runCreateObjRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => CreateObjRel -> m RespBody
+  => CreateObjRel -> m EncJSON
 runCreateObjRel defn = do
   createObjRelP1 defn
   createObjRelP2 defn
@@ -171,13 +176,13 @@ runCreateObjRel defn = do
 createArrRelP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateArrRel -> m ()
 createArrRelP1 (WithTable qt rd) = do
   adminOnly
-  tabInfo    <- askTabInfo qt
-  arrRelP1 tabInfo rd
+  validateArrRel qt rd
 
-arrRelP1
+validateArrRel
   :: (QErrM m, CacheRM m)
-  => TableInfo -> ArrRelDef -> m ()
-arrRelP1 tabInfo (RelDef rn ru _) = do
+  => QualifiedTable -> ArrRelDef -> m ()
+validateArrRel qt (RelDef rn ru _) = do
+  tabInfo <- askTabInfo qt
   checkForColConfilct tabInfo (fromRel rn)
   let fim = tiFieldInfoMap tabInfo
   case ru of
@@ -202,6 +207,7 @@ arrRelP2Setup qt (RelDef rn ru _) = do
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       let QualifiedObject refSn refTn = refqt
+      -- TODO: validation should account for this too
       res <- liftTx $ Q.catchE defaultTxErrorHandler $
         fetchFKeyDetail refSn refTn refCol
       case mapMaybe processRes res of
@@ -243,14 +249,14 @@ arrRelP2 qt rd@(RelDef rn u comment) = do
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
 createArrRelP2
-  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m RespBody
+  :: (QErrM m, CacheRWM m, MonadTx m) => CreateArrRel -> m EncJSON
 createArrRelP2 (WithTable qt rd) = do
   arrRelP2 qt rd
   return successMsg
 
 runCreateArrRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => CreateArrRel -> m RespBody
+  => CreateArrRel -> m EncJSON
 runCreateArrRel defn = do
   createArrRelP1 defn
   createArrRelP2 defn
@@ -276,7 +282,7 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
 
 dropRelP2
   :: (QErrM m, CacheRWM m, MonadTx m)
-  => DropRel -> [SchemaObjId] -> m RespBody
+  => DropRel -> [SchemaObjId] -> m EncJSON
 dropRelP2 (DropRel qt rn _) depObjs = do
   mapM_ purgeRelDep depObjs
   delRelFromCache rn qt
@@ -285,7 +291,7 @@ dropRelP2 (DropRel qt rn _) depObjs = do
 
 runDropRel
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => DropRel -> m RespBody
+  => DropRel -> m EncJSON
 runDropRel defn = do
   depObjs <- dropRelP1 defn
   dropRelP2 defn depObjs
@@ -313,14 +319,14 @@ validateRelP1 qt rn = do
 
 setRelCommentP2
   :: (QErrM m, MonadTx m)
-  => SetRelComment -> m RespBody
+  => SetRelComment -> m EncJSON
 setRelCommentP2 arc = do
   liftTx $ setRelComment arc
   return successMsg
 
 runSetRelComment
   :: (QErrM m, CacheRWM m, MonadTx m , UserInfoM m)
-  => SetRelComment -> m RespBody
+  => SetRelComment -> m EncJSON
 runSetRelComment defn = do
   void $ validateRelP1 qt rn
   setRelCommentP2 defn

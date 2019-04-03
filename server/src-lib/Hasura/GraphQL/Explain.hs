@@ -8,26 +8,24 @@ import           Data.Has                               (getter)
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Text.Builder                           as TB
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Resolve.Select          as RS
-import qualified Hasura.GraphQL.Transport.HTTP          as TH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
-import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.RQL.DML.Select                  as RS
 
 data GQLExplain
@@ -126,31 +124,25 @@ explainGQLQuery
   -> SchemaCache
   -> SQLGenCtx
   -> GQLExplain
-  -> m BL.ByteString
+  -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxMap
-  queryParts <- runReaderT (GV.getQueryParts query) gCtx
-  let topLevelNodes = TH.getTopLevelNodes (GV.qpOpDef queryParts)
-
-  unless (allHasuraNodes gCtx topLevelNodes) $
-    throw400 InvalidParams "only hasura queries can be explained"
-
-  (opTy, selSet) <- runReaderT (GV.validateGQ queryParts) gCtx
-  unless (opTy == G.OperationTypeQuery) $
-    throw400 InvalidParams "only queries can be explained"
-  let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-  plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ J.encode plans
+  execPlan <- E.getExecPlan userInfo sc query
+  (gCtx, rootSelSet) <- case execPlan of
+    E.GExPHasura gCtx rootSelSet ->
+      return (gCtx, rootSelSet)
+    E.GExPRemote _ _  ->
+      throw400 InvalidParams "only hasura queries can be explained"
+  case rootSelSet of
+    GV.RQuery selSet -> do
+      let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+      plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
+      return $ encJFromJValue plans
+    GV.RMutation _ ->
+      throw400 InvalidParams "only queries can be explained"
+    GV.RSubscription _ ->
+      throw400 InvalidParams "only queries can be explained"
   where
-    gCtxMap = scGCtxMap sc
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
 
     runTx tx = runLazyTx pool iso $ withUserInfo userInfo tx
-
-    allHasuraNodes gCtx nodes =
-      let typeLocs = TH.gatherTypeLocs gCtx nodes
-          isHasuraNode = \case
-            VT.HasuraType     -> True
-            VT.RemoteType _ _ -> False
-      in all isHasuraNode typeLocs

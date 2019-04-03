@@ -8,8 +8,26 @@ own machine and how to contribute.
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 - A Postgres server (Recommended: Use docker to run a local postgres instance)
 - GNU Make (optional)
-- npm
+- [Node.js](https://nodejs.org/en/) (v8.9+)
 - libpq-dev
+- psql
+- python >= 3.7 with pip3
+
+## Upgrading npm
+
+If your npm is too old  (< 5.7),
+
+npm install -g npm@latest
+
+or
+
+sudo npm install -g npm@latest
+
+or update your nodejs
+
+## Getting pip3
+
+sudo apt install python3-pip
 
 ## Development workflow
 
@@ -35,6 +53,29 @@ own machine and how to contribute.
 - Make sure postgres is running (Postgres >= 9.5)
 - Create a database on postgres
 - Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+
+database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
+
+### Running Postgres
+
+The easiest way is to run docker in a container
+
+````
+docker run -p 5432:5432 -d postgres:11.1
+````
+
+Test if it's running by
+
+telnet localhost 5432
+
+### psql
+
+You will need psql or another client
+
+````
+sudo apt install postgresql-client
+````
+
 
 ### Work
 - Work on the feature/fix

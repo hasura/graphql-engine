@@ -285,7 +285,6 @@
 
   .closeHeader {
     cursor: pointer;
-    padding-top: 8px;
     font-size: 16px;
     float: right;
     display: inline-block;
@@ -293,14 +292,16 @@
 
   .showAdminSecret {
     cursor: pointer;
-    padding-top: 8px;
     padding-right: 8px;
     font-size: 16px;
     float: left;
     display: inline-block;
   }
-
   .apiRequestWrapper {
+    margin-top: 20px;
+    .headerWrapper {
+      margin-bottom: 20px;
+    }
     .file_upload_wrapper {
       width: 100%;
       text-align: left;
@@ -606,7 +607,7 @@
           // padding: 5px;
           padding: 0px 5px;
           min-width: 50px;
-
+          vertical-align: middle;
           .responseTableInput {
             background-color: transparent;
             border: 0;
@@ -729,7 +730,8 @@
 
 .common_checkbox_label {
   margin-bottom: 0px !important;
-  padding-top: 5px;
+  padding-top: 0px;
+  display: flex;
 }
 
 .common_checkbox + .common_checkbox_label:before {

@@ -23,9 +23,9 @@ Examples
     # Create a directory to store migrations
     hasura init
 
-    # Now, edit <my-directory>/config.yaml to add endpoint and admin secret key
+    # Now, edit <my-directory>/config.yaml to add endpoint and admin secret
 
-    # Create a directory with endpoint and admin secret key configured:
+    # Create a directory with endpoint and admin secret configured:
     hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
     # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details
@@ -35,7 +35,7 @@ Options
 
 ::
 
-      --admin-secret string   admin secret key for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL Engine
       --directory string      name of directory where files will be created
       --endpoint string       http(s) endpoint for Hasura GraphQL Engine
   -h, --help                  help for init
@@ -45,8 +45,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

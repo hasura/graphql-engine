@@ -139,6 +139,7 @@ class RelationshipsView extends Component {
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.objRel.rel_name}
+                      key={rel.objRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
                         tableSchema,
@@ -156,6 +157,7 @@ class RelationshipsView extends Component {
                       dispatch={dispatch}
                       tableName={tableName}
                       relName={rel.arrRel.rel_name}
+                      key={rel.arrRel.rel_name}
                       relConfig={findAllFromRel(
                         allSchemas,
                         tableSchema,

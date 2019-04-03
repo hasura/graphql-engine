@@ -1,3 +1,5 @@
+/* eslint react/no-danger: 0 */ // Disabling no-danger rule to use dangerouslySetInnerHTML
+
 import React from 'react';
 
 import PropTypes from 'prop-types';
@@ -5,16 +7,15 @@ import PropTypes from 'prop-types';
 class TextAreaWithCopy extends React.Component {
   copyToClip(id, e) {
     e.preventDefault();
+    const { copyText, textLanguage } = this.props;
     let text = '';
     if (this.props.copyText.length > 0) {
       text =
         window.sqlFormatter &&
-        this.props.textLanguage &&
-        this.props.textLanguage.toLowerCase() === 'sql'
-          ? window.sqlFormatter.format(this.props.copyText, {
-            language: this.props.textLanguage,
-          })
-          : this.props.copyText;
+        textLanguage &&
+        textLanguage.toLowerCase() === 'sql'
+          ? window.sqlFormatter.format(copyText, { language: textLanguage })
+          : copyText;
     }
     const { containerId } = this.props;
 
@@ -50,35 +51,38 @@ class TextAreaWithCopy extends React.Component {
 
   render() {
     const style = require('./TextAreaWithCopy.scss');
-
     const { copyText, toolTipClass, id, containerId } = this.props;
-
-    const renderText = () => {
-      const formattedText = window &&
-        window.sqlFormatter &&
-        window.hljs &&
-        this.props.textLanguage &&
-        this.props.textLanguage.toLowerCase() === 'sql' ? (
-          <pre>
-            <code
-              className={style.formattedCode}
-              dangerouslySetInnerHTML={{
-                __html: window.hljs.highlight(
-                  'sql',
-                  window.sqlFormatter.format(copyText, {
-                    language: this.props.textLanguage,
-                  })
-                ).value,
-              }}
-            />
-          </pre>
-        ) : (
-          <pre className={style.schemaPreWrapper}>
-            <code className={style.formattedCode}>{copyText}</code>
-          </pre>
-        );
-      return formattedText;
+    const renderSimpleValue = () => {
+      return (
+        <pre className={style.schemaPreWrapper}>
+          <code className={style.formattedCode}>{copyText}</code>
+        </pre>
+      );
     };
+
+    const renderSQLValue = () => {
+      return (
+        <pre>
+          <code
+            className={style.formattedCode}
+            dangerouslySetInnerHTML={{
+              __html: window.hljs.highlight(
+                'sql',
+                window.sqlFormatter.format(copyText, {
+                  language: this.props.textLanguage,
+                })
+              ).value,
+            }}
+          />
+        </pre>
+      );
+    };
+    const useSQLValue =
+      window &&
+      window.sqlFormatter &&
+      window.hljs &&
+      this.props.textLanguage &&
+      this.props.textLanguage.toLowerCase() === 'sql';
 
     return (
       <div className={`${style.codeBlockCustom}`} id={`${containerId}`}>
@@ -107,7 +111,7 @@ class TextAreaWithCopy extends React.Component {
             */}
           </div>
         </div>
-        { renderText() }
+        {useSQLValue ? renderSQLValue() : renderSimpleValue()}
       </div>
     );
   }
