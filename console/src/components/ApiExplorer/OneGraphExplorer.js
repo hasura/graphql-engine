@@ -53,7 +53,7 @@ class OneGraphExplorer extends React.Component {
   }
 
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
-    if (this.props.headerFocus || !this.state.explorerOpen) {
+    if (this.props.headerFocus) {
       return false;
     }
     const oldHeaders = getHeadersAsJSON(oldHeadersArray);
