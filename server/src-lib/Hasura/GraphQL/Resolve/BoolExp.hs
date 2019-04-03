@@ -6,16 +6,17 @@ module Hasura.GraphQL.Resolve.BoolExp
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.Context
+import           Hasura.GraphQL.Resolve.ContextTypes
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Value
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 type OpExp = OpExpG AnnPGVal
 
@@ -111,12 +112,13 @@ parseColExp
 parseColExp f nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> do
+    FldCol pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       AVCol pgColInfo <$> traverse (traverse f) opExps
-    Right (relInfo, _, permExp, _) -> do
+    FldRel (relInfo, _, permExp, _) -> do
       relBoolExp <- parseBoolExp f val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp permExp
+    FldRemote _ -> throw500 "cannot parse remote node"
 
 parseBoolExp
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)

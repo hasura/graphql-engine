@@ -364,8 +364,6 @@ buildSchemaCache = do
   postMergeSc <- askSchemaCache
   writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
 
--- add remote relationships
-
   remoteRelationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRemoteRelationships
   forM_ remoteRelationships $ \(sn, tn, rn, Q.AltJ rDef) -> do
     let qt = QualifiedObject sn tn
@@ -375,6 +373,9 @@ buildSchemaCache = do
         validateRemoteRel qt relDef
         remoteRelP2Setup qt relDef
 
+  _ <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
+  finalsc <- askSchemaCache
+  writeSchemaCache finalsc
   where
     permHelper strfyNum sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache

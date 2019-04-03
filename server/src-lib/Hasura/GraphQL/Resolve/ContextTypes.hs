@@ -10,10 +10,26 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
 
+data TypedField = FldCol PGColInfo | FldRel (RelInfo, Bool, AnnBoolExpSQL, Maybe Int) | FldRemote RemoteRelInfo
+  deriving (Show, Eq)
 
 type FieldMap
-  = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+  = Map.HashMap (G.NamedType, G.Name) TypedField
+
+getFldCols :: [TypedField] -> [PGColInfo]
+getFldCols selFlds = concatMap onlySelFldCol selFlds
+  where
+    onlySelFldCol field = case field of
+      FldCol c -> [c]
+      _        -> []
+
+getFldRels :: [TypedField] -> [(RelInfo, Bool, AnnBoolExpSQL, Maybe Int)]
+getFldRels selFlds = concatMap onlySelFldRel selFlds
+  where
+    onlySelFldRel field = case field of
+      FldRel r -> [r]
+      _        -> []
+
 
 -- order by context
 data OrdByItem
