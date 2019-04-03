@@ -44,21 +44,21 @@ export const Createtable = (name, dict) => {
 
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('comment', {
-    id: 'Integer',
-    user_id: 'Integer',
-    article_id: 'Integer',
-    comment: 'Text',
+    id: 'integer',
+    user_id: 'integer',
+    article_id: 'integer',
+    comment: 'text',
   });
 };
 
