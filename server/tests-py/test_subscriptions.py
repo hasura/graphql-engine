@@ -189,22 +189,28 @@ class TestSubscriptionLiveQueries(object):
         with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.safe_load(c)
 
-        query = """
+        queryTmplt = """
         subscription {
-          hge_tests_test_t2(order_by: {c1: desc}, limit: 1) {
+          hge_tests_live_query_{0}: hge_tests_test_t2(order_by: {c1: desc}, limit: 1) {
             c1,
             c2
           }
         }
         """
-        headers={}
-        if hge_ctx.hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        subscrPayload = { 'query': query }
-        respLive = ws_client.send_query(subscrPayload, query_id='live', headers=headers, timeout=15)
-        ev = next(respLive)
-        assert ev['type'] == 'data' and ev['id'] == 'live', ev
-        assert ev['payload']['data'] == {'hge_tests_test_t2': []}, ev['payload']['data']
+
+        liveQs = []
+        for i in [0,1,2]:
+            query = queryTmplt.replace('{0}',str(i))
+            headers={}
+            if hge_ctx.hge_key is not None:
+                headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+            subscrPayload = { 'query': query }
+            respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
+            liveQs.append(respLive)
+            ev = next(respLive)
+            assert ev['type'] == 'data', ev
+            assert ev['id'] == 'live_' + str(i), ev
+            assert ev['payload']['data'] == {'hge_tests_live_query_'+str(i): []}, ev['payload']['data']
 
         assert isinstance(conf, list) == True, 'Not an list'
         for index, step in enumerate(conf):
@@ -222,19 +228,23 @@ class TestSubscriptionLiveQueries(object):
             ev = next(mutResp)
             assert ev['type'] == 'complete' and ev['id'] == 'mutation_'+str(index), ev
 
-            ev = next(respLive)
-            assert ev['type'] == 'data' and ev['id'] == 'live', ev
-            assert ev['payload']['data'] == {
-                'hge_tests_test_t2': expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
-                    step['name']] else []
-            }, ev['payload']['data']
+            for i, respLive in enumerate(liveQs):
+                ev = next(respLive)
+                assert ev['type'] == 'data', ev
+                assert ev['id'] == 'live_' + str(i), ev
+                assert ev['payload']['data'] == {
+                    'hge_tests_live_query_'+str(i): expected_resp[step['name']]['returning'] if 'returning' in expected_resp[
+                        step['name']] else []
+                }, ev['payload']['data']
 
-        # stop live operation
-        obj = {
-            'id': 'live',
-            'type': 'stop'
-        }
-        ws_client.send(obj)
+        for i in [0,1,2]:
+            # stop live operation
+            frame = {
+                'id': 'live_'+str(i),
+                'type': 'stop'
+            }
+            ws_client.send(frame)
+
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
