@@ -571,10 +571,6 @@ code {
   padding-bottom: 20px;
 }
 
-.add_pad_top {
-  padding-top: 10px;
-}
-
 .add_padd_bottom {
   padding-bottom: 25px;
 }
@@ -877,7 +873,6 @@ code {
 .inline_block {
   display: inline-block;
   padding-right: 20px;
-  padding-bottom: 0 !important;
 
   .header_path_btn {
     margin-right: 0 !important;
@@ -1249,7 +1244,7 @@ code {
 }
 
 .graphQLHeight {
-  height: 100vh;
+  height: 72vh;
   margin-bottom: 50px;
 }
 

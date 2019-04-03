@@ -89,7 +89,7 @@ getUrlFromEnv urlFromEnv = do
   where
     invalidUri uri = "not a valid URI: " <> T.pack uri
     envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"
+      "environment variable '" <> e <> "' not set"
 
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
