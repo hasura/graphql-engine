@@ -12,7 +12,7 @@ const Sidebar = ({
   location,
   supportMetadata,
   supportInconsistentMetadata,
-  metadata
+  metadata,
 }) => {
   const currentLocation = location.pathname;
   const sections = [];
@@ -29,7 +29,7 @@ const Sidebar = ({
           to={sectionPrefix + '/options'}
           data-test="metadata-options-link"
         >
-          Options
+          Metadata Options
         </Link>
       </li>
     );
@@ -52,7 +52,7 @@ const Sidebar = ({
           data-test="metadata-status-link"
         >
           <div className={styles.display_flex}>
-            Status
+            Metadata Status
             {consistentIcon}
           </div>
         </Link>
