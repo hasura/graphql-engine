@@ -27,8 +27,9 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Logger.Info("Fetching migration status...")
+			opts.EC.Spin("Fetching migration status...")
 			status, err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}

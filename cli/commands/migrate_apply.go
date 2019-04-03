@@ -25,8 +25,9 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Logger.Info("Applying migrations...")
+			opts.EC.Spin("Applying migrations...")
 			err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}

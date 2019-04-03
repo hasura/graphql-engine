@@ -33,8 +33,9 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
-			opts.EC.Logger.Info("Creating migration files...")
+			opts.EC.Spin("Creating migration files...")
 			version, err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
