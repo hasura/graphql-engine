@@ -64,7 +64,7 @@ class ModifyTable extends React.Component {
       tableCommentEdit,
       columnEdit,
       pkModify,
-      fkModify
+      fkModify,
     } = this.props;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
@@ -129,7 +129,7 @@ class ModifyTable extends React.Component {
               tableName={tableName}
             />
             <hr />
-            <h4 className={styles.subheading_text}>Primary keys</h4>
+            <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={tableSchema}
               pkModify={pkModify}
