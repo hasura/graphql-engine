@@ -65,7 +65,6 @@ class Modify extends React.Component {
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
             schemaName={currentTrigger.schema_name}
-            triggerId={currentTrigger.id}
             styles={styles}
           />
           <WebhookEditor
