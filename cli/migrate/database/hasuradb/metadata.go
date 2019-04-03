@@ -133,11 +133,11 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 			}
 			lookup, err := jsonpath.JsonPathLookup(metadataQuery, horror.Path)
 			if err == nil {
-				queryData, err := json.MarshalIndent(lookup, "", "    ")
+				queryData, err := json.MarshalIndent(lookup, "", "  ")
 				if err != nil {
 					return err
 				}
-				horror.migrationQuery = string(queryData)
+				horror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
 			}
 		}
 		return horror.Error(h.config.isCMD)
