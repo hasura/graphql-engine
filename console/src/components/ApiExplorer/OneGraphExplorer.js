@@ -12,22 +12,19 @@ import {
 } from './onegraphUtils';
 import { getRemoteQueries } from './Actions';
 
-const NO_TABLES_MESSAGE =
-  '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
-
 class OneGraphExplorer extends React.Component {
   state = {
     explorerOpen: false,
     explorerWidth: getExplorerWidthFromLocalStorage(),
     explorerClientX: null,
     schema: null,
-    query: null,
+    query: this.props.query,
     isResizing: false,
     headers: [],
   };
 
   componentDidMount() {
-    this.setPersistedQuery();
+    this.introspect();
   }
 
   componentDidUpdate() {
@@ -36,27 +33,17 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  onExplorerResize = e => {
-    const { explorerClientX, explorerWidth } = this.state;
-    if (explorerClientX === null) {
-      this.setState({ explorerClientX: e.clientX });
-    } else {
-      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
-      setExplorerWidthInLocalStorage(newExplorerWidth);
-      this.setState({
-        explorerWidth: newExplorerWidth,
-        explorerClientX: e.clientX,
-      });
-    }
-  };
-
   setPersistedQuery() {
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
       : null;
+
     if (queryFile) {
       getRemoteQueries(queryFile, query => this.setState({ query }));
     } else {
+      const NO_TABLES_MESSAGE =
+        '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+
       if (this.props.numberOfTables === 0) {
         this.setState({
           query: NO_TABLES_MESSAGE,
@@ -100,14 +87,27 @@ class OneGraphExplorer extends React.Component {
           headers: JSON.parse(JSON.stringify(headers)),
         });
       })
-      .catch(error => {
-        console.error(error);
+      .catch(() => {
         this.setState({
           schema: null,
           headers: JSON.parse(JSON.stringify(headers)),
         });
       });
   }
+
+  onExplorerResize = e => {
+    const { explorerClientX, explorerWidth } = this.state;
+    if (explorerClientX === null) {
+      this.setState({ explorerClientX: e.clientX });
+    } else {
+      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
+      setExplorerWidthInLocalStorage(newExplorerWidth);
+      this.setState({
+        explorerWidth: newExplorerWidth,
+        explorerClientX: e.clientX,
+      });
+    }
+  };
 
   editQuery = query => {
     this.setState({ query });
