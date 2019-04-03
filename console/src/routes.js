@@ -92,10 +92,10 @@ const routes = store => {
             component={generatedApiExplorer(connect)}
           />
           <Route path="metadata" component={metadataContainer(connect)}>
-            <IndexRedirect to="options" />
+            <IndexRedirect to="actions" />
             <Route path="status" component={metadataStatusContainer(connect)} />
             <Route
-              path="options"
+              path="actions"
               component={metadataOptionsContainer(connect)}
             />
           </Route>

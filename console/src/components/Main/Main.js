@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import globals from '../../Globals';
@@ -11,7 +10,10 @@ import { loadServerVersion, checkServerUpdates } from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
-import { loadInconsistentObjects } from '../Services/Data/Metadata/Actions';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Data/Metadata/Actions';
 
 const semver = require('semver');
 
@@ -103,19 +105,7 @@ class Main extends React.Component {
   }
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
-      this.props.dispatch(
-        push(globals.urlPrefix + '/metadata/status?redirected_from=something')
-      );
-      // const hasRedirectedOnce = window.localStorage.getItem(
-      //   'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT'
-      // );
-      // if (!hasRedirectedOnce) {
-      //   window.localStorage.setItem(
-      //     'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT',
-      //     true
-      //   );
-      //   this.props.dispatch(push(globals.urlPrefix + '/metadata'));
-      // }
+      this.props.dispatch(redirectToMetadataStatus());
     }
   }
   closeLoveIcon() {
@@ -225,7 +215,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return adminSecretHtml;
     };
 
@@ -276,7 +265,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return bannerNotificationHtml;
     };
 

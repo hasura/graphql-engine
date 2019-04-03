@@ -21,15 +21,15 @@ const Sidebar = ({
       <li
         role="presentation"
         className={
-          currentLocation.includes('metadata/options') ? styles.active : ''
+          currentLocation.includes('metadata/actions') ? styles.active : ''
         }
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/options'}
-          data-test="metadata-options-link"
+          to={sectionPrefix + '/actions'}
+          data-test="metadata-actions-link"
         >
-          Metadata Options
+          Actions
         </Link>
       </li>
     );
@@ -52,7 +52,7 @@ const Sidebar = ({
           data-test="metadata-status-link"
         >
           <div className={styles.display_flex}>
-            Metadata Status
+            Status
             {consistentIcon}
           </div>
         </Link>

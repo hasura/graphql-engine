@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { loadInconsistentObjects } from '../Services/Data/Metadata/Actions';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Data/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
-import { push } from 'react-router-redux';
-import globals from '../../Globals';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -17,9 +18,7 @@ class ErrorBoundary extends React.Component {
     dispatch(loadInconsistentObjects(null, true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
         this.setState({ hasError: false, info: null });
-        this.props.dispatch(
-          push(globals.urlPrefix + '/metadata/status?redirected_from=something')
-        );
+        this.props.dispatch(redirectToMetadataStatus());
       } else {
         console.error(error);
       }

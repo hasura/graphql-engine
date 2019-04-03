@@ -1,4 +1,6 @@
 import requestAction from '../../../../utils/requestAction';
+import { push } from 'react-router-redux';
+import globals from '../../../../Globals';
 import endpoints from '../../../../Endpoints';
 import defaultState from './State';
 import semverCheck from '../../../../helpers/semver';
@@ -131,6 +133,14 @@ export const dropInconsistentObjects = () => {
           showErrorNotification('Dropping inconsistent metadata failed')
         );
       }
+    );
+  };
+};
+
+export const redirectToMetadataStatus = () => {
+  return dispatch => {
+    return dispatch(
+      push(globals.urlPrefix + '/metadata/status?is_redirected=true')
     );
   };
 };

@@ -35,7 +35,7 @@ const MetadataStatus = ({
           <tr>
             <th>Name</th>
             <th>Type</th>
-            <th>Definition</th>
+            <th>Description</th>
             <th>Reason</th>
           </tr>
         </thead>
@@ -103,24 +103,44 @@ const MetadataStatus = ({
     if (metadata.inconsistentObjects.length === 0) {
       return (
         <div className={metaDataStyles.content_width}>
-          <CheckIcon className={metaDataStyles.add_mar_right_small} />
-          GraphQL Engine metadata is consistent with Postgres
+          <div className={styles.display_flex}>
+            <CheckIcon className={metaDataStyles.add_mar_right_small} />
+            <h4>GraphQL Engine metadata is consistent with Postgres</h4>
+          </div>
         </div>
       );
     }
     return (
-      <div>
+      <div className={styles.add_mar_top}>
         <div className={metaDataStyles.content_width}>
-          <CrossIcon className={metaDataStyles.add_mar_right_small} />
-          GraphQL Engine metadata is inconsistent with Postgres
+          <div className={styles.display_flex}>
+            <CrossIcon className={metaDataStyles.add_mar_right_small} />
+            <h4> GraphQL Engine metadata is inconsistent with Postgres </h4>
+          </div>
+          <div className={styles.add_mar_top}>
+            <div className={styles.add_mar_top_small}>
+              The following objects in your metadata are inconsistent because
+              they reference Postgres or Remote-Schema entities which do not
+              seem to exist
+            </div>
+            <div className={styles.add_mar_top_small}>
+              The GraphQL API has been generated using only the consistent parts
+              of the metadata
+            </div>
+            <div className={styles.add_mar_top_small}>
+              The console will also not be able to display these inconsistent
+              objects
+            </div>
+          </div>
         </div>
-        <div>{inconsistentObjectsTable()}</div>
+        <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
-          className={`${metaDataStyles.add_mar_top_small} ${
-            metaDataStyles.content_width
+          className={`${metaDataStyles.wd50percent} ${
+            metaDataStyles.add_mar_top
           }`}
         >
-          <ul>
+          To resolve these inconsistencies, you can do one of the following:
+          <ul className={styles.add_mar_top_small}>
             <li>
               To delete all the inconsistent objects, click the "Delete all"
               button
@@ -164,7 +184,7 @@ const MetadataStatus = ({
       return null;
     }
     const urlSearchParams = new URLSearchParams(window.location.search);
-    if (!urlSearchParams.has('redirected_from')) {
+    if (urlSearchParams.get('is_redirected') !== 'true') {
       return null;
     }
     return (
