@@ -58,7 +58,7 @@ getExecPlan userInfo sc req = do
       typeLocs = gatherTypeLocs gCtx topLevelNodes
       typeLocWTypes = zip typeLocs topLevelNodes
       queryMap = foldr upsertType mempty typeLocWTypes
-      queries = splitQuery opDef queryMap $ G._todSelectionSet opDef
+      queries = splitQuery opDef queryMap
 
   -- traceM "OPERATION DEF =============>>>>"
   -- liftIO $ pPrint opDef
@@ -80,27 +80,58 @@ getExecPlan userInfo sc req = do
     upsertType :: (VT.TypeLoc, G.Name) -> QueryMap -> QueryMap
     upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
 
-    splitQuery :: G.TypedOperationDefinition -> QueryMap
-               -> G.SelectionSet
-               -> [(VT.TypeLoc , G.TypedOperationDefinition)]
-    splitQuery opDef qMap selSet =
+    splitQuery
+      :: G.TypedOperationDefinition -> QueryMap
+      -> [(VT.TypeLoc , G.TypedOperationDefinition)]
+    splitQuery opDef qMap =
       flip map (Map.toList qMap) $ \(tl, tyNames) ->
-        (tl, mkOpDef opDef $ filterFlds tyNames selSet)
+        let (flds, vars) = pickFields opDef tyNames $ G._todSelectionSet opDef
+        in (tl, mkNewOpDef opDef flds vars)
 
-    filterFlds fldNames selSet =
-      let filterSel sel = case sel of
-            G.SelectionField fld -> G._fName fld `elem` fldNames
-            _                    -> False
-      in filter filterSel selSet
+    pickFields opDef fldNames selSet =
+      let flds = filter filterSel selSet
+          vars = filterVars flds $ G._todVariableDefinitions opDef
+      in (flds, vars)
+      where
+        filterSel sel = case sel of
+          G.SelectionField fld -> G._fName fld `elem` fldNames
+          _                    -> False
 
-    mkOpDef opDef selset = opDef { G._todSelectionSet = selset }
+
+    filterVars selSet vars =
+      let args = join $ map getArgs selSet
+          filterVar var = G._vdVariable var `elem` join (map getVars args)
+      in filter filterVar vars
+
+    getArgs :: G.Selection -> [G.Argument]
+    getArgs sel = case sel of
+      G.SelectionField fld -> G._fArguments fld
+      _                    -> []
+
+    getVars :: G.Argument -> [G.Variable]
+    getVars arg = getVarFromVal $ G._aValue arg
+
+    getVarFromVal :: G.Value -> [G.Variable]
+    getVarFromVal val = case val of
+      G.VVariable v -> [v]
+      G.VObject o   ->
+        let xs = map G._ofValue $ G.unObjectValue o
+        in join $ map getVarFromVal xs
+      _ -> []
+
+    mkNewOpDef opDef selset varDefs =
+      opDef { G._todSelectionSet = selset
+            , G._todVariableDefinitions = varDefs
+            }
 
 transformGQRequest
   :: GraphQLRequest -> G.TypedOperationDefinition -> GraphQLRequest
 transformGQRequest (GraphQLRequest opNameM _ varValsM) opDef =
   let q = GraphQLQuery [G.ExecutableDefinitionOperation $
                         G.OperationDefinitionTyped opDef]
-  in GraphQLRequest opNameM q varValsM
+      vars = map G._vdVariable $ G._todVariableDefinitions opDef
+      varValsFltrd = Map.filterWithKey (\k _ -> k `elem` vars) <$> varValsM
+  in GraphQLRequest opNameM q varValsFltrd
 
 
 execRemoteGQ
