@@ -267,7 +267,7 @@ variables:
 .. _Geography:
 
 Geography
---------
+---------
 
 GraphQL custom scalar type ``geography`` is generated for a ``GEOGRAPHY`` column
 on a PostGIS enabled Postgres instance. Value should be given as GeoJSON.
