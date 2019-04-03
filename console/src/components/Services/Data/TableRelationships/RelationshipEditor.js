@@ -100,7 +100,7 @@ class RelationshipEditor extends React.Component {
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(isObjRel, lcol, rcol, rtable)}
+          {getRelDef(isObjRel, lcol, rcol, tableName, rtable)}
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ class RelationshipEditor extends React.Component {
           </Button>
         </div>
         <div className={tableStyles.relationshipTopPadding}>
-          <div>{getRelDef(isObjRel, lcol, rcol, rtable)}</div>
+          <div>{getRelDef(isObjRel, lcol, rcol, tableName, rtable)}</div>
           <input
             onChange={this.handleTextChange}
             className={`form-control ${styles.add_mar_top_small}`}

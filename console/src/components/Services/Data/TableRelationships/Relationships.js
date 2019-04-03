@@ -111,7 +111,14 @@ const addRelationshipCellView = (
           </Button>
         )}
         &nbsp;
-        {getRelDef(rel.isObjRel, rel.lcol, rel.rcol, rel.rTable)} &nbsp;
+        {getRelDef(
+          rel.isObjRel,
+          rel.lcol,
+          rel.rcol,
+          tableSchema.table_name,
+          rel.rTable
+        )}{' '}
+        &nbsp;
       </div>
       {selectedRelationship === rel ? (
         <form className="form-inline" onSubmit={onSave}>
