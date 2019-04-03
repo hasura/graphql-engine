@@ -1,6 +1,10 @@
 /* eslint import/prefer-default-export: 0 */
 
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import {
+  getElementFromAlias,
+  baseUrl,
+  getElementFromClassName,
+} from '../../../helpers/dataHelpers';
 import { validateCT } from '../../validators/validators';
 import { makeDataAPIOptions } from '../../../helpers/dataHelpers';
 import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
@@ -29,11 +33,19 @@ export const createTestTable = () => {
   cy.get(getElementFromAlias('column-0'))
     .clear()
     .type('id');
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  cy.get(
+    getElementFromClassName('col-type-0.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
+  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type('name');
-  cy.get(getElementFromAlias('col-type-1')).select('text');
+  cy.get(
+    getElementFromClassName('col-type-1.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  // cy.get(getElementFromAlias('col-type-1')).select('text');
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create

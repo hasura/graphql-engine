@@ -4,6 +4,7 @@ import {
   getTableName,
   dataTypes,
   getElementFromAlias,
+  getElementFromClassName,
   typeDefaults,
 } from '../../../helpers/dataHelpers';
 
@@ -24,7 +25,15 @@ const setColumns = () => {
     // Type column name
     cy.get(getElementFromAlias(`column-${i}`)).type(getColName(i));
     // Select column type
-    cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
+    cy.get(
+      getElementFromClassName(
+        `col-type-${i}.add_table_column_selector__control`
+      )
+    ).click();
+    cy.get(
+      getElementFromAlias(`data_test_column_type_value_${dataTypes[i]}`)
+    ).click();
+    // cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
 
     if (i === dataTypes.indexOf('text')) {
       cy.get(getElementFromAlias(`unique-${i}`)).check();
@@ -109,7 +118,11 @@ export const passSearchTables = () => {
   // Type column name
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   // Select column type
-  cy.get(getElementFromAlias('col-type-0')).select('integer');
+  // cy.get(getElementFromAlias('col-type-0')).select('integer');
+  cy.get(
+    getElementFromClassName('col-type-0.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create
@@ -423,9 +436,16 @@ export const checkViewRelationship = () => {
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  cy.get(
+    getElementFromClassName('col-type-0.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   cy.get(getElementFromAlias('column-1')).type('someID');
-  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  cy.get(
+    getElementFromClassName('col-type-1.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create

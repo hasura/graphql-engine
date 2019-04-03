@@ -2,6 +2,7 @@ import {
   baseUrl,
   getTableName,
   getElementFromAlias,
+  getElementFromClassName,
   getColName,
   queryTypes,
 } from '../../../helpers/dataHelpers';
@@ -21,13 +22,26 @@ export const passPTCreateTable = () => {
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  cy.get(
+    getElementFromClassName('col-type-0.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
+  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  cy.get(
+    getElementFromClassName('col-type-1.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+
+  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set third column
   cy.get(getElementFromAlias('column-2')).type(getColName(2));
-  cy.get(getElementFromAlias('col-type-2')).select('text');
+  cy.get(
+    getElementFromClassName('col-type-2.add_table_column_selector__control')
+  ).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  // cy.get(getElementFromAlias('col-type-2')).select('text');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Create
