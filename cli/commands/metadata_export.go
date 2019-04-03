@@ -31,8 +31,9 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Logger.Info("Exporting metadata...")
+			opts.EC.Spin("Exporting metadata...")
 			err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to export metadata")
 			}

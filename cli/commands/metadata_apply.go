@@ -25,8 +25,9 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Logger.Info("Applying metadata...")
+			opts.EC.Spin("Applying metadata...")
 			err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to apply metadata")
 			}
