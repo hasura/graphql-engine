@@ -8,7 +8,7 @@ import           Hasura.SQL.Types
 import           Instances.TH.Lift             ()
 
 
-import           Hasura.GraphQL.Validate.Types
+import           Hasura.GraphQL.Validate.Types as VT
 import           Hasura.RQL.DDL.Relationship
 
 import qualified Data.HashMap.Strict           as Map
@@ -95,8 +95,25 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
       colDep =  SchemaDependency (SOTableObj qt $ TOCol col) "join col"
       deps = [tableDep, colDep]
   remScName <- getRemoteSchemaNameFromField (rruRemoteField ru)
-  let relInfo = RemoteRelInfo rn "adfa" remScName
+  sc <- askSchemaCache
+  let gctx = scDefaultRemoteGCtx sc
+      remoteFldName = rruRemoteField ru
+  remoteObjFieldInfo <- getRemoteField gctx remoteFldName
+  let remoteFldInfo = RemoteFldInfo remoteFldName (_fiTy remoteObjFieldInfo)
+  let relInfo = RemoteRelInfo rn remScName qt (rruColumn ru) remoteFldInfo (rruInputField ru) (rruInputPath ru)
   addRemoteRelToCache rn relInfo deps qt
+  where
+    getRemoteField gctx' fieldName = do
+      let queryRoot = GS._gQueryRoot gctx'
+          fieldMap = _otiFields queryRoot
+          fieldM = Map.lookup fieldName fieldMap
+      field <- maybe (throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found")) return fieldM
+      let typeLoc = _fiLoc field
+      case typeLoc of
+        HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found in any remote schema")
+        RemoteType _ _ -> return field
+
+
 
 getRemoteSchemaNameFromField
   :: (QErrM m, CacheRM m)

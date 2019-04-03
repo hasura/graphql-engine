@@ -11,10 +11,10 @@ import qualified Data.Text                  as T
 import qualified Network.URI.Extended       as N
 
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
-import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 
 type UrlFromEnv = Text
+type RemoteSchemaName = Text
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo

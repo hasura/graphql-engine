@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
        , RemoteRelInfo(..)
+       , RemoteFldInfo(..)
 
        , FieldName(..)
        , fromPGCol
@@ -19,24 +20,22 @@ module Hasura.RQL.Types.Common
        , PreSetCols
        , MutateResp(..)
 
-       , RemoteSchemaName
        ) where
 
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.SQL.DML                as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-import qualified PostgreSQL.Binary.Decoding as PD
-
-type RemoteSchemaName = Text
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import           Instances.TH.Lift             ()
+import qualified Language.GraphQL.Draft.Syntax as G
+import           Language.Haskell.TH.Syntax    (Lift)
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 data PGColInfo
   = PGColInfo
@@ -91,11 +90,23 @@ data RelInfo
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''RelInfo)
 
+data RemoteFldInfo
+  = RemoteFldInfo
+  { rfiName :: !G.Name
+  , rfiTy   :: !G.GType
+  } deriving (Show, Eq, Lift)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteFldInfo)
+
 data RemoteRelInfo
   = RemoteRelInfo
-  { rriName    :: !RelName
-  , rriMapping :: !T.Text
-  , rriRSchema :: !RemoteSchemaName
+  { rriName        :: !RelName
+  , rriRSchema     :: !T.Text
+  , rriTable       :: !QualifiedTable
+  , rriColumn      :: !PGCol
+  , rriRemoteField :: !RemoteFldInfo
+  , rriInputField  :: !G.Name
+  , rriInputPath   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelInfo)

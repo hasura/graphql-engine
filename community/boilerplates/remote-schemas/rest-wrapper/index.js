@@ -3,19 +3,19 @@ const gql = require('graphql-tag');
 const {getData, postData} = require('./helpers');
 
 const typeDefs = gql`
-  type user {
-    id:       String!
+  type RemoteUser {
+    userId:   String!
     name:     String!
     balance:  Int!
   }
 
   type Query {
-    getUser(id: String!): user
-    getAllUsers(name: String): [user]
+    getUser(userId: String!): RemoteUser
+    getAllUsers(name: String): [RemoteUser]
   }
 
   type Mutation {
-    addUser(name: String!, balance: Int!): user
+    addUser(name: String!, balance: Int!): RemoteUser
   }
 `;
 
@@ -24,7 +24,7 @@ const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
 
 const resolvers = {
     Query: {
-        getUser: async (_, { id }) => {
+        getUser: async (_, { userId }) => {
             return await getData(restAPIEndpoint + '/users/' + id);
         },
 

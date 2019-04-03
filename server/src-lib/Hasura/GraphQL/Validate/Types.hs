@@ -62,8 +62,8 @@ import qualified Language.Haskell.TH.Syntax    as TH
 
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo,
+                                                RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -106,6 +106,14 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
+-- | location of the type: a hasura type or a remote type
+data TypeLoc
+  = HasuraType
+  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  deriving (Show, Eq, TH.Lift, Generic)
+
+instance Hashable TypeLoc
+
 data InpValInfo
   = InpValInfo
   { _iviDesc   :: !(Maybe G.Description)
@@ -113,6 +121,8 @@ data InpValInfo
   , _iviDefVal :: !(Maybe G.ValueConst)
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift)
+
+-- $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''InpValInfo)
 
 instance EquatableGType InpValInfo where
   type EqProps InpValInfo = (G.Name, G.GType)
@@ -124,14 +134,6 @@ fromInpValDef (G.InputValueDefinition descM n ty defM) =
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
--- | location of the type: a hasura type or a remote type
-data TypeLoc
-  = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo
-  deriving (Show, Eq, TH.Lift, Generic)
-
-instance Hashable TypeLoc
-
 data ObjFldInfo
   = ObjFldInfo
   { _fiDesc   :: !(Maybe G.Description)
@@ -140,6 +142,8 @@ data ObjFldInfo
   , _fiTy     :: !G.GType
   , _fiLoc    :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
+
+-- $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfo)
 
 instance EquatableGType ObjFldInfo where
   type EqProps ObjFldInfo = (G.Name, G.GType, ParamMap)

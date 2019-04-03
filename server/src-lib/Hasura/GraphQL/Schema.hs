@@ -80,7 +80,7 @@ isValidField :: FieldInfo -> Bool
 isValidField = \case
   FIColumn (PGColInfo col _ _) -> isColEligible col
   FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
-  FIRemote (RemoteRelInfo rn _ _) -> isRemoteRelEligible rn
+  FIRemote rri -> isRemoteRelEligible (rriName rri)
   where
     isColEligible = isValidName . G.Name . getPGColTxt
     isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
@@ -284,10 +284,12 @@ mkTableObj tn allowedFlds =
       SelFldRemote remote -> pure $ mkRemoteFld remote
 
 mkRemoteFld :: RemoteRelInfo -> ObjFldInfo
-mkRemoteFld (RemoteRelInfo relName _ _)  =
-  mkHsraObjFldInfo (Just "Remote node")(G.Name $ getRelTxt relName) Map.empty gType
+mkRemoteFld rri  =
+  mkHsraObjFldInfo (Just "Remote relationship")(G.Name $ getRelTxt relName) Map.empty namedTy
   where
-    gType = G.toGT $ G.NamedType "remote"
+    relName = rriName rri
+    relFldInfo = rriRemoteField rri
+    namedTy = rfiTy relFldInfo
 
 {-
 type table_aggregate {
@@ -565,7 +567,7 @@ mkBoolExpInp tn fields =
         Just $ mk (mkColName colName) (mkCompExpTy colTy)
       SelFldRel (RelInfo relName _ _ remTab _, _, _, _, _) ->
         Just $ mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
-      SelFldRemote (RemoteRelInfo relName _ _) -> Nothing
+      SelFldRemote _ -> Nothing
 
 
 mkPGColInp :: PGColInfo -> InpValInfo
