@@ -55,6 +55,7 @@ based on a typical author/article schema for reference.
   query-filters
   sorting
   distinct-queries
+  soft-deletes
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
