@@ -1256,6 +1256,16 @@ code {
   width: 750px;
 }
 
+.iconCheck {
+  color: green;
+  font-size: 20px;
+}
+
+.iconCross {
+  color: #d9534f;
+  font-size: 20px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 

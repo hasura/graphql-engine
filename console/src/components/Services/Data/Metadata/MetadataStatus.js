@@ -8,6 +8,8 @@ import {
 } from '../Notification';
 import metaDataStyles from './Metadata.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
+import CheckIcon from '../../../Common/Icons/Check';
+import CrossIcon from '../../../Common/Icons/Cross';
 
 const MetadataStatus = ({
   dispatch,
@@ -98,6 +100,7 @@ const MetadataStatus = ({
     if (metadata.inconsistentObjects.length === 0) {
       return (
         <div className={metaDataStyles.content_width}>
+          <CheckIcon className={metaDataStyles.add_mar_right_small} />
           GraphQL Engine metadata is consistent with Postgres
         </div>
       );
@@ -105,6 +108,7 @@ const MetadataStatus = ({
     return (
       <div>
         <div className={metaDataStyles.content_width}>
+          <CrossIcon className={metaDataStyles.add_mar_right_small} />
           GraphQL Engine metadata is inconsistent with Postgres
         </div>
         <div>{inconsistentObjectsTable()}</div>

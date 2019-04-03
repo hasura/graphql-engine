@@ -3,6 +3,8 @@ import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
 import { Link } from 'react-router';
 import globals from '../../../../Globals';
 import styles from '../../../Common/TableCommon/Table.scss';
+import CheckIcon from '../../../Common/Icons/Check';
+import CrossIcon from '../../../Common/Icons/Cross';
 
 const sectionPrefix = globals.urlPrefix + '/metadata';
 
@@ -10,6 +12,7 @@ const Sidebar = ({
   location,
   supportMetadata,
   supportInconsistentMetadata,
+  metadata
 }) => {
   const currentLocation = location.pathname;
   const sections = [];
@@ -32,6 +35,10 @@ const Sidebar = ({
     );
   }
   if (supportInconsistentMetadata) {
+    let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
+    if (metadata.inconsistentObjects.length > 0) {
+      consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
+    }
     sections.push(
       <li
         role="presentation"
@@ -44,7 +51,10 @@ const Sidebar = ({
           to={sectionPrefix + '/status'}
           data-test="metadata-status-link"
         >
-          Status
+          <div className={styles.display_flex}>
+            Status
+            {consistentIcon}
+          </div>
         </Link>
       </li>
     );
