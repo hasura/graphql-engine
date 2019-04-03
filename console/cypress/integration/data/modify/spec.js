@@ -3,7 +3,6 @@ import {
   getTableName,
   getColName,
   getElementFromAlias,
-  getElementFromClassName,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -19,9 +18,7 @@ export const passMTCreateTable = () => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(
-    getElementFromClassName('col-type-0.add_table_column_selector__control')
-  ).click();
+  cy.get(getElementFromAlias('col-type-0')).click();
   cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   // cy.get(getElementFromAlias('col-type-0')).select('Integer');
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');

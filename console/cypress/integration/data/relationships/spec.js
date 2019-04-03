@@ -1,8 +1,4 @@
-import {
-  baseUrl,
-  getElementFromAlias,
-  getElementFromClassName,
-} from '../../../helpers/dataHelpers';
+import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -32,11 +28,7 @@ export const Createtable = (name, fields) => {
   for (const key in fields) {
     if (fields.hasOwnProperty(key)) {
       cy.get(getElementFromAlias(`column-${i}`)).type(key);
-      cy.get(
-        getElementFromClassName(
-          `col-type-${i}.add_table_column_selector__control`
-        )
-      ).click();
+      cy.get(getElementFromAlias(`col-type-${i}`)).click();
       cy.get(
         getElementFromAlias(`data_test_column_type_value_${fields[key]}`)
       ).click();

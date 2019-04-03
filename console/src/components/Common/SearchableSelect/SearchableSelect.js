@@ -23,6 +23,7 @@ const CustomOption = props => {
  *  5) customStyle: Custom style
  * */
 const SearchableSelectBox = ({
+  menuIsOpen,
   options,
   onChange,
   value,
@@ -33,6 +34,7 @@ const SearchableSelectBox = ({
 
   return [
     <Select
+      menuIsOpen={menuIsOpen}
       isSearchable
       components={{ Option: CustomOption }}
       classNamePrefix={`${bsClass}`}
@@ -51,6 +53,7 @@ SearchableSelectBox.propTypes = {
   options: PropTypes.array.isRequired,
   bsClass: PropTypes.string,
   customStyle: PropTypes.object,
+  menuIsOpen: PropTypes.bool,
 };
 
 export default SearchableSelectBox;
