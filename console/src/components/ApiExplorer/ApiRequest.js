@@ -89,6 +89,12 @@ class ApiRequest extends Component {
     }
   }
 
+  onAnalyzeBearerClose() {
+    this.setState({
+      isAnalyzingBearer: false,
+    });
+  }
+
   /*
   onUrlChanged = e => {
     this.props.dispatch(changeRequestUrl(e.target.value));
@@ -139,12 +145,6 @@ class ApiRequest extends Component {
         addRequestHeader(this.state.newHeader.key, this.state.newHeader.value)
       );
     }
-  }
-
-  onAnalyzeBearerClose() {
-    this.setState({
-      isAnalyzingBearer: false,
-    });
   }
 
   setLocalStorageHeader = headers => {
