@@ -318,33 +318,13 @@ class TestAddRemoteSchemaCompareRootQueryFields:
         remote_root_ty_info = get_query_root_info(introspect_remote)
         hasura_root_ty_info = get_query_root_info(introspect_hasura)
         has_fld = dict()
-        for fr in remote_root_ty_info['fields']:
-            has_fld[fr['name']] = False
-            for fh in filter(lambda f: f['name'] == fr['name'], hasura_root_ty_info['fields']):
-                has_fld[fr['name']] = True
-                assert fr['type'] == fh['type'], yaml.dump({
-                    'error' : 'Types do not match for fld ' + fr['name'],
-                    'remote_type' : fr['type'],
-                    'hasura_type' : fh['type']
-                })
-                has_arg = dict()
-                for ar in fr['args']:
-                    arg_path = fr['name'] + '(' + ar['name'] + ':)'
-                    has_arg[arg_path] = False
-                    for ah in filter(lambda a: a['name'] == ar['name'], fh['args']):
-                        has_arg[arg_path] = True
-                        assert ar['type'] == ah['type'], yaml.dump({
-                            'error' : 'Types do not match for arg ' + arg_path,
-                            'remote_type' : ar['type'],
-                            'hasura_type' : ah['type']
-                        })
-                        assert ar['defaultValue'] == ah['defaultValue'], yaml.dump({
-                            'error' : 'Default values do not match for arg ' + arg_path,
-                            'remote_default_value' : ar['defaultValue'],
-                            'hasura_default_value' : ah['defaultValue']
-                        })
-                    assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
-            assert has_fld[fr['name']], 'Field ' + fr['name'] + ' in the remote shema root query type not found in Hasura schema'
+
+        for fldR in remote_root_ty_info['fields']:
+            has_fld[fldR['name']] = False
+            for fldH in get_fld_by_name(hasura_root_ty_info, fldR['name']):
+                has_fld[fldR['name']] = True
+                compare_flds(fldH, fldR)
+            assert has_fld[fldR['name']], 'Field ' + fldR['name'] + ' in the remote shema root query type not found in Hasura schema'
 
 
 #    def test_remote_query_variables(self, hge_ctx):
@@ -389,3 +369,35 @@ def check_introspection_result(res, types, node_names):
 
     return satisfy_node and satisfy_ty
 
+def get_fld_by_name(ty, fldName):
+    return _filter(lambda f: f['name'] == fldName, ty['fields'])
+
+def get_arg_by_name(fld, argName):
+    return _filter(lambda a: a['name'] == argName, fld['args'])
+
+def compare_args(argH, argR):
+    assert argR['type'] == argH['type'], yaml.dump({
+        'error' : 'Types do not match for arg ' + arg_path,
+        'remote_type' : argR['type'],
+        'hasura_type' : argH['type']
+    })
+    assert argR['defaultValue'] == argH['defaultValue'], yaml.dump({
+        'error' : 'Default values do not match for arg ' + arg_path,
+        'remote_default_value' : argR['defaultValue'],
+        'hasura_default_value' : argH['defaultValue']
+    })
+
+def compare_flds(fldH, fldR):
+    assert fldH['type'] == fldR['type'], yaml.dump({
+        'error' : 'Types do not match for fld ' + fldH['name'],
+        'remote_type' : fldR['type'],
+        'hasura_type' : fldH['type']
+    })
+    has_arg = dict()
+    for argR in fldR['args']:
+        arg_path = fldR['name'] + '(' + argR['name'] + ':)'
+        has_arg[arg_path] = False
+        for argH in get_arg_by_name(fldH, argR['name']):
+            has_arg[arg_path] = True
+            compare_args(argH, argR)
+        assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'

@@ -4,17 +4,19 @@ from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQL
 import threading
 import random
 from datetime import datetime
+import sys
+import os
 
 def pytest_addoption(parser):
     parser.addoption(
         "--hge-urls",
-        metavar="HGE_URL",
+        metavar="HGE_URLS",
         help="csv list of urls for graphql-engine",
         required=False,
         nargs='+'
     )
     parser.addoption(
-        "--pg-urls", metavar="PG_URL",
+        "--pg-urls", metavar="PG_URLS",
         help="csv list of urls for connecting to Postgres directly",
         required=False,
         nargs='+'
@@ -66,6 +68,16 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
+#By default,
+#1) Set default parallelism to one
+#2) Set test grouping to by filename (--dist=loadfile)
+def pytest_cmdline_preparse(config, args):
+    worker = os.environ.get('PYTEST_XDIST_WORKER')
+    if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
+        num = 1
+        args[:] = ["-n" + str(num),"--dist=loadfile"] + args
+
+
 def pytest_configure(config):
     if is_master(config):
         config.hge_ctx_gql_server = HGECtxGQLServer()
@@ -77,8 +89,9 @@ def pytest_configure(config):
         config.pg_url_list =  config.getoption('--pg-urls')
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
-            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified"
-            assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified"
+            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
+            assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
+
     random.seed(datetime.now())
 
 @pytest.hookimpl(optionalhook=True)
