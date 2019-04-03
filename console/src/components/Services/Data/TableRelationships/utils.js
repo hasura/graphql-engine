@@ -6,13 +6,13 @@ export const getRelDef = (isObjRel, lcol, rcol, lTable, _rTable) => {
 
   return isObjRel ? (
     <span>
-      {lTable} ( {lcol.join(', ')} ) &nbsp;&rarr;&nbsp;
-      {_rTable} ( {rcol.join(', ')} )
+      {lTable} . {lcol.join(', ')} &nbsp;&rarr;&nbsp;
+      {_rTable} . {rcol.join(', ')}
     </span>
   ) : (
     <span>
-      {rTable} ( {rcol.join(', ')} ) &nbsp;&rarr;&nbsp;
-      {lTable} ( {lcol.join(', ')} )
+      {rTable} . {rcol.join(', ')} &nbsp;&rarr;&nbsp;
+      {lTable} . {lcol.join(', ')}
     </span>
   );
 };
