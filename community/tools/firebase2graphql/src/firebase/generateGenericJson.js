@@ -37,9 +37,9 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
     } else {
       for (var objectKey in object) {
         const value = object[objectKey];
-        if (value === null || (value.constructor.name !== 'Object' && value.constructor.name !== 'Array')) {
+        if (value === null || !['Object', 'Array'].includes(value.constructor.name)) {
           row[objectKey] = value;
-        } else if (value.constructor.name === 'Object' || value.constructor.name === 'Array') {
+        } else if (['Object', 'Array'].includes(value.constructor.name)) {
           const pkeyMap = getParentPrimaryKeyMap(row);
           if (isList(value)) {
             const firebaseList = makeFirebaseListFromArr(value);
