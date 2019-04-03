@@ -19,7 +19,7 @@ class OneGraphExplorer extends React.Component {
     schema: null,
     query: this.props.query,
     isResizing: false,
-    headers: []
+    headers: [],
   };
 
   componentDidMount() {
@@ -28,10 +28,11 @@ class OneGraphExplorer extends React.Component {
 
   componentDidUpdate() {
     if (this.shouldIntrospect(this.props.headers, this.state.headers)) {
-      this.introspect()
+      this.introspect();
     }
   }
 
+  // eslint-disable-next-line react/sort-comp
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
     if (this.props.headerFocus) {
       return false;
@@ -41,7 +42,7 @@ class OneGraphExplorer extends React.Component {
     if (Object.keys(oldHeaders).length !== Object.keys(headers).length) {
       return true;
     }
-    for (var i = Object.keys(headers).length - 1; i >= 0; i--) {
+    for (let i = Object.keys(headers).length - 1; i >= 0; i--) {
       const key = Object.keys(headers)[i];
       const value = headers[key];
       if (oldHeaders[key] !== value) {
@@ -64,15 +65,15 @@ class OneGraphExplorer extends React.Component {
       .then(result => {
         this.setState({
           schema: buildClientSchema(result.data),
-          headers: JSON.parse(JSON.stringify(headers))
+          headers: JSON.parse(JSON.stringify(headers)),
         });
       })
-      .catch(error => {
+      .catch(() => {
         this.setState({
           schema: null,
-          headers: JSON.parse(JSON.stringify(headers))
+          headers: JSON.parse(JSON.stringify(headers)),
         });
-      })
+      });
   }
 
   onExplorerResize = e => {
