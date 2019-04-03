@@ -16,54 +16,40 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    const lostImage = require('./500-logo.png');
+    const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
-    const cc = this.state.info ? this.state.info.componentStack.split(' in ') : [];
-    const carray = [];
-    let i;
-    if (cc) {
-      for (i = 0; i < cc.length; i++) {
-        const linestyle = { marginLeft: 8 * i };
-        const acomponent = cc[i].trim();
-        if (acomponent.length > 0) {
-          carray.push(
-            <li className="component" style={linestyle}>{acomponent}</li>
-          );
-        }
-      }
-    }
+
     if (this.state.hasError) {
       return (
-        <div className={styles.viewcontainer}>
-          <Helmet title="500 - System Error | Hasura" />
+        <div className={styles.viewContainer}>
+          <Helmet title="Error | Hasura" />
           <div className={'container ' + styles.centerContent}>
             <div className={'row ' + styles.message}>
               <div className="col-xs-8">
-                <h1>Oh Fudge</h1>
-                            Something broke. Head back <Link to="/">Home</Link>.
+                <h1>Error</h1>
+                <br />
+                <div>
+                  Something went wrong. Head back <Link to="/">Home</Link>.
+                </div>
+                <br />
+                <div>
+                  You can report this issue on our <a href="https://github.com/hasura/graphql-engine/issues">Github</a> or chat with us on <a href="http://discord.gg/hasura">Discord</a>
+                </div>
               </div>
               <div className="col-xs-4">
                 <img
-                  src={lostImage}
+                  src={errorImage}
                   className="img-responsive"
                   name="hasura"
-                  title="Sorry, we broke that!"
+                  title="Something went wrong!"
                 />
-              </div>
-              <div className="col-xs-12">
-                {this.state.error && this.state.error.toString()}
-              </div>
-              <div className="col-xs-12">
-                <h2>Component Stack:</h2>
-                <ul>
-                  {carray}
-                </ul>
               </div>
             </div>
           </div>
         </div>
       );
     }
+
     return this.props.children;
   }
 }
