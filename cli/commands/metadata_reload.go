@@ -25,7 +25,14 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			opts.EC.Spin("Reloading metadata...")
+			err := opts.run()
+			opts.EC.Spinner.Stop()
+			if err != nil {
+				return errors.Wrap(err, "failed to reload metadata")
+			}
+			opts.EC.Logger.Info("Metadata reloaded")
+			return nil
 		},
 	}
 
