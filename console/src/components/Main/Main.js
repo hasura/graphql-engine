@@ -103,7 +103,9 @@ class Main extends React.Component {
   }
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
-      this.props.dispatch(push(globals.urlPrefix + '/metadata/status'));
+      this.props.dispatch(
+        push(globals.urlPrefix + '/metadata/status?redirected_from=something')
+      );
       // const hasRedirectedOnce = window.localStorage.getItem(
       //   'HASURA_CONSOLE_INCONSISTENT_METADATA_REDIRECT'
       // );
@@ -142,6 +144,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       latestServerVersion,
+      metadata,
     } = this.props;
 
     const styles = require('./Main.scss');
@@ -171,7 +174,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return mainContent;
     };
 
@@ -183,6 +185,22 @@ class Main extends React.Component {
       }
 
       return metadataSelectedMarker;
+    };
+
+    const getMetadataIcon = () => {
+      if (metadata.inconsistentObjects.length === 0) {
+        return <i className={styles.question + ' fa fa-cog'} />;
+      }
+      return (
+        <div className={styles.question}>
+          <i className={'fa fa-cog'} />
+          <i
+            className={`${
+              styles.overlappingExclamation
+            } fa fa-exclamation-circle`}
+          />
+        </div>
+      );
     };
 
     const getAdminSecretSection = () => {
@@ -529,7 +547,7 @@ class Main extends React.Component {
 
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  <i className={styles.question + ' fa fa-cog'} />
+                  {getMetadataIcon()}
                   {getMetadataSelectedMarker()}
                 </div>
               </Link>

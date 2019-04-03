@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
 import { dropInconsistentObjects, loadInconsistentObjects } from './Actions';
 import { permissionTypes } from './metadataFilters';
@@ -16,10 +16,13 @@ const MetadataStatus = ({
   supportInconsistentMetadata,
   metadata,
 }) => {
+  const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
+  const dismissErrorBanner = () => {
+    toggleErrorBanner(false);
+  };
   if (!supportInconsistentMetadata) {
     return null;
   }
-
   const inconsistentObjectsTable = () => {
     return (
       <table
@@ -153,16 +156,53 @@ const MetadataStatus = ({
     );
   };
 
+  const banner = () => {
+    if (metadata.inconsistentObjects.length === 0) {
+      return null;
+    }
+    if (!shouldShowErrorBanner) {
+      return null;
+    }
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    if (!urlSearchParams.has('redirected_from')) {
+      return null;
+    }
+    return (
+      <div className={`${styles.alertDanger} alert alert-danger`}>
+        <i
+          className={`${styles.add_mar_right_small} ${
+            styles.fontStyleNormal
+          } fa-exclamation-circle`}
+          aria-hidden="true"
+        />
+        <strong>
+          You have been redirected because your GraphQL Engine metadata is in an
+          inconsistent state
+        </strong>
+        <i
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${
+            styles.cursorPointer
+          } fa-times`}
+          aria-hidden="true"
+          onClick={dismissErrorBanner}
+        />
+      </div>
+    );
+  };
+
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${
-        metaDataStyles.metadata_wrapper
-      } container-fluid`}
-    >
-      <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-        Metadata Status
-      </h2>
-      {content()}
+    <div>
+      {banner()}
+      <div
+        className={`${styles.clear_fix} ${styles.padd_left} ${
+          styles.padd_top
+        } ${metaDataStyles.metadata_wrapper} container-fluid`}
+      >
+        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+          Metadata Status
+        </h2>
+        {content()}
+      </div>
     </div>
   );
 };

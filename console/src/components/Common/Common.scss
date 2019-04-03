@@ -1266,6 +1266,36 @@ code {
   font-size: 20px;
 }
 
+.alertDanger {
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.errorBanner {
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #d9534f;
+  color: #DEDEDE;
+}
+
+.fontStyleNormal {
+  font-style: normal;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
