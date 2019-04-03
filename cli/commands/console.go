@@ -112,11 +112,17 @@ func (o *consoleOptions) run() error {
 		o.enableProxy = true
 	}
 
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	if err != nil {
+		return err
+	}
+
 	// Console Router
 	router := &cRouter{
-		engine:      r,
-		enableProxy: o.enableProxy,
-		ec:          o.EC,
+		engine:       r,
+		enableProxy:  o.enableProxy,
+		ec:           o.EC,
+		metadataFile: metadataPath,
 	}
 
 	if o.EC.Version == nil {
@@ -197,8 +203,9 @@ func (o *consoleOptions) run() error {
 type cRouter struct {
 	engine *gin.Engine
 
-	enableProxy bool
-	ec          *cli.ExecutionContext
+	enableProxy  bool
+	ec           *cli.ExecutionContext
+	metadataFile string
 }
 
 func (router *cRouter) setRoutes() {
@@ -219,7 +226,7 @@ func (router *cRouter) setRoutes() {
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setMetadataFile(router.ec.MetadataFile))
+			metadataAPIs.Use(setMetadataFile(router.metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 		// Server Proxy

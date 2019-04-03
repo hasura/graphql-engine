@@ -20,7 +20,7 @@ Examples
 
 ::
 
-    # Bash
+  # Bash
       # Linux
         # Add Bash completion file using:
         $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
@@ -37,7 +37,7 @@ Examples
         # open git bash
         $ mkdir -p ~/.bash_completion.d
         # Add the completion file:
-        $ cd ~ && hasura completion bash --file=bash_completion.d/hasura
+        $ cd ~ && hasura completion bash --file=.bash_completion.d/hasura
         # Add the following to ~/.bash_profile
           if [ -f ~/.bash_completion.d/hasura ]; then
             . ~/.bash_completion.d/hasura
@@ -63,8 +63,9 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

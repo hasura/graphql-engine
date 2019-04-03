@@ -22,6 +22,7 @@ func TestConsoleCmd(t *testing.T) {
 		Endpoint:    "http://localhost:8080",
 		AdminSecret: "",
 	}
+	ec.MetadataFile = []string{"metadata.yaml"}
 
 	ec.Version = version.New()
 	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)

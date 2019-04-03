@@ -1,0 +1,14 @@
+description: Query data from geog_table using st_intersects in permission
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: postgis_user1
+response:
+- name: Linestring
+- name: Point
+query:
+  type: select
+  args:
+    table: geog_table
+    columns:
+    - name

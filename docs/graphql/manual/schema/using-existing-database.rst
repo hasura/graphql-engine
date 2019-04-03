@@ -21,13 +21,13 @@ To track a table or a view:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Head to the ``Data -> Schema`` section of the console.
-#. Under the heading ``Untracked Tables/Views``, click on the ``Add`` button next to the table/view name.
+#. Under the heading ``Untracked Tables/Views``, click on the ``Track`` button next to the table/view name.
 
 To track all tables and views present in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Head to the ``Data -> Schema`` section of the console.
-#. Under the heading ``Untracked Tables/Views``, click the ``Add all`` button.
+#. Under the heading ``Untracked Tables/Views``, click the ``Track All`` button.
 
 Step 2: Track foreign-keys
 --------------------------
@@ -50,7 +50,7 @@ To track all the foreign-keys of all tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Head to the ``Data -> Schema`` section of the console.
-#. Under the heading ``Untracked foreign-key relations``, click on the ``Track All Relations`` to automatically
+#. Under the heading ``Untracked foreign-key relations``, click the ``Track All`` button to automatically
    create relationships based on the foreign-keys.
 
 .. admonition:: Relationship nomenclature
@@ -61,11 +61,14 @@ To track all the foreign-keys of all tables in the database:
 
   The name is generated in the following format:
 
-  - For object relationships: ``Camel case of (foreignTableName + By + columnName)``
-  - For array relationships: ``Camel case of (foreignTableName + s + By + columnNameInForeignTable)``
+  - For object relationships: ``singular of foreignTableName``
+  - For array relationships: ``plural of foreignTableName``
 
-  For example, for the foreign-key ``article::author_id -> author::id``, the relationship names will be
-  ``authorByAuthorId`` for ``article`` table and ``articlesByAuthorId`` for ``author`` table.
+  For example, for the foreign-key ``article.author_id -> author.id``, the relationship names will be
+  ``author`` for ``article`` table and ``articles`` for ``author`` table.
+
+  In case a field with the generated name already exists, a new name will be generated of the form:
+  ``camel case of (singular/plural of foreignTableName + _by_ + foreignKeyColumnName)``
 
   Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure generation of unique
   relationship names. You can choose to rename your relationships to anything you wish. You can **change the

@@ -10,12 +10,13 @@ import {
   resetRelationshipForm,
   relManualAddClicked,
   formRelName,
+  getExistingFieldsMap,
 } from './Actions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { getRelationshipLine } from './utils';
+import { getRelDef } from './utils';
 
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -50,13 +51,17 @@ const addRelationshipCellView = (
   rel,
   selectedRelationship,
   selectedRelationshipName,
-  tableStyles,
-  relMetaData
+  relMetaData,
+  tableSchema
 ) => {
+  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
-    dispatch(relNameChanged(formRelName(rel)));
+    dispatch(
+      relNameChanged(formRelName(rel, getExistingFieldsMap(tableSchema)))
+    );
   };
 
   const onRelationshipNameChanged = e => {
@@ -105,7 +110,14 @@ const addRelationshipCellView = (
             Add
           </Button>
         )}
-        {getRelationshipLine(rel.isObjRel, rel.lcol, rel.rcol, rel.rTable)}{' '}
+        &nbsp;
+        {getRelDef(
+          rel.isObjRel,
+          rel.lcol,
+          rel.rcol,
+          tableSchema.table_name,
+          rel.rTable
+        )}{' '}
         &nbsp;
       </div>
       {selectedRelationship === rel ? (
@@ -144,14 +156,17 @@ const AddRelationship = ({
   allSchemas,
   cachedRelationshipData,
   dispatch,
-  tableStyles,
 }) => {
-  // eslint-disable-line no-unused-vars
+  const styles = require('../TableModify/ModifyTable.scss');
+  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
+  const cTable = allSchemas.find(t => t.table_name === tableName);
+
   const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
     allSchemas
   );
-  const styles = require('../TableModify/ModifyTable.scss');
+
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&
     suggestedRelationshipsData.arrayRel.length < 1
@@ -214,8 +229,10 @@ const AddRelationship = ({
   const relName = cachedRelationshipData.name
     ? cachedRelationshipData.name
     : '';
+
   const column1 = [];
   const column2 = [];
+
   suggestedRelationshipsData.objectRel.map((rel, i) => {
     column1.push(
       rel.isObjRel ? (
@@ -224,14 +241,15 @@ const AddRelationship = ({
           rel,
           selectedRelationship,
           relName,
-          tableStyles,
-          ['object', i]
+          ['object', i],
+          cTable
         )
       ) : (
         <td />
       )
     );
   });
+
   suggestedRelationshipsData.arrayRel.map((rel, i) => {
     column2.push(
       rel.isObjRel ? (
@@ -242,14 +260,16 @@ const AddRelationship = ({
           rel,
           selectedRelationship,
           relName,
-          tableStyles,
-          ['array', i]
+          ['array', i],
+          cTable
         )
       )
     );
   });
+
   const length =
     column1.length > column2.length ? column1.length : column2.length;
+
   const combinedRels = [];
   for (let i = 0; i < length; i++) {
     const objRel = column1[i] ? column1[i] : <td />;
@@ -259,6 +279,7 @@ const AddRelationship = ({
       arrRel,
     });
   }
+
   return (
     <div>
       <div>
@@ -403,7 +424,7 @@ class Relationships extends Component {
             </thead>
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
-                (rel, i) => {
+                rel => {
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
                       dispatch={dispatch}
@@ -416,7 +437,6 @@ class Relationships extends Component {
                         rel.objRel
                       )}
                       isObjRel
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (
@@ -434,7 +454,6 @@ class Relationships extends Component {
                         rel.arrRel
                       )}
                       isObjRel={false}
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (
@@ -475,7 +494,6 @@ class Relationships extends Component {
                   tableName={tableName}
                   allSchemas={allSchemas}
                   cachedRelationshipData={relAdd}
-                  tableStyles={tableStyles}
                   dispatch={dispatch}
                 />
               </div>
@@ -568,4 +586,4 @@ const relationshipsConnector = connect =>
 
 export default relationshipsConnector;
 
-export { getRelationshipLine };
+export { getRelDef };

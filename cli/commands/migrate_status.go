@@ -27,11 +27,13 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.EC.Spin("Fetching migration status...")
 			status, err := opts.run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
-			buf := PrintStatus(status)
+			buf := printStatus(status)
 			fmt.Println(buf.String())
 			return nil
 		},
@@ -67,7 +69,7 @@ func (o *migrateStatusOptions) run() (*migrate.Status, error) {
 	return status, nil
 }
 
-func PrintStatus(status *migrate.Status) *bytes.Buffer {
+func printStatus(status *migrate.Status) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
