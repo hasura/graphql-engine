@@ -192,7 +192,7 @@ const addResolver = () => {
 
     const requestMsg = 'Adding remote schema...';
     const successMsg = 'Remote schema added successfully';
-    const errorMsg = 'Adding schema failed';
+    const errorMsg = 'Adding remote schema failed';
 
     const customOnSuccess = data => {
       Promise.all([
