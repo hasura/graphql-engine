@@ -184,11 +184,12 @@ class Main extends React.Component {
       return (
         <div className={styles.question}>
           <i className={'fa fa-cog'} />
-          <i
-            className={`${
-              styles.overlappingExclamation
-            } fa fa-exclamation-circle`}
-          />
+          <div className={styles.overlappingExclamation}>
+            <div className={styles.iconWhiteBackground} />
+            <div>
+              <i className={'fa fa-exclamation-circle'} />
+            </div>
+          </div>
         </div>
       );
     };

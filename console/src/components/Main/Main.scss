@@ -1191,11 +1191,12 @@
   color: #d9534f;
 }
 
-.whiteBackground {
+.iconWhiteBackground {
   width: 5px;
-  height: 8px;
-  background-color: white;
-  position: relative;
-  left: 5px;
-  bottom: 5px;
+  background-color: #DEDEDE;
+  height: 6px;
+  position: absolute;
+  top: 6px;
+  left: 2.5px;
+  z-index: -1;
 }

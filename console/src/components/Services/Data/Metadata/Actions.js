@@ -11,8 +11,6 @@ import {
   showErrorNotification,
 } from '../Notification';
 
-const RELOAD_CACHE_AND_LOAD_INCONSISTENT_OBJECTS =
-  'Metadata/RELOAD_CACHE_AND_LOAD_INCONSISTENT_OBJECTS';
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
 const LOAD_METADATA_ERROR = 'Metadata/LOAD_METADATA_ERROR';
@@ -147,12 +145,6 @@ export const redirectToMetadataStatus = () => {
 
 export const metadataReducer = (state = defaultState, action) => {
   switch (action.type) {
-    case RELOAD_CACHE_AND_LOAD_INCONSISTENT_OBJECTS:
-      return {
-        ...state,
-        inconsistentObjects: action.data[1],
-        ongoingRequest: false,
-      };
     case LOAD_INCONSISTENT_OBJECTS:
       return {
         ...state,
