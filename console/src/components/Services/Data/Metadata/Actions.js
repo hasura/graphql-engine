@@ -20,7 +20,7 @@ const DROPPING_INCONSISTENT_METADATA_FAILED =
   'Metadata/DROPPING_INCONSISTENT_METADATA_FAILED';
 
 const getInconsistentObjectsQuery = {
-  type: 'get_inconsistent_objects',
+  type: 'get_inconsistent_metadata',
   args: {},
 };
 
@@ -36,7 +36,7 @@ const reloadCacheAndGetInconsistentObjectsQuery = {
 };
 
 const dropInconsistentObjectsQuery = {
-  type: 'drop_inconsistent_objects',
+  type: 'drop_inconsistent_metadata',
   args: {},
 };
 
