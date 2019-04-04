@@ -351,6 +351,17 @@ A JSONObject_
 
 .. _JSONObject: https://tools.ietf.org/html/rfc7159
 
+.. _Empty Object:
+
+Empty Object
+^^^^^^^^^^^^
+
+An empty JSONObject_
+
+.. code-block:: json
+
+   {}
+
 .. _ColumnPresetExp:
 
 ColumnPresetsExp
