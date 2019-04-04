@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
+  , updateSCWithGCtx
   , GCtxMap
   , getGCtx
   , GCtx(..)
@@ -1775,6 +1776,12 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
+updateSCWithGCtx
+  :: (MonadError QErr m)
+  => SchemaCache -> m SchemaCache
+updateSCWithGCtx sc = do
+  gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
+  return $ sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do

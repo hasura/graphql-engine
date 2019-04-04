@@ -133,6 +133,10 @@ purgeDep purgeInCache schemaObjId = case schemaObjId of
     liftTx $ delEventTriggerFromCatalog trn
     withCache $ delEventTriggerFromCache qt trn
 
+  (SORemoteSchema rsn) -> do
+    removeRemoteSchemaFromCache rsn
+    liftTx $ removeRemoteSchemaFromCatalog rsn
+
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
   where
@@ -376,6 +380,16 @@ mkInconsistentFunction fn rsn =
   where
     def = toJSON $ TrackFunction fn
 
+mkInconsistentRemoteSchema
+  :: AddRemoteSchemaQuery
+  -> T.Text
+  -> InconsistentSchemaObj
+mkInconsistentRemoteSchema q reason =
+  InconsistentSchemaObj (SORemoteSchema rsn) "remote_schema" def reason
+  where
+    rsn = _arsqName q
+    def = toJSON q
+
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
@@ -456,18 +470,13 @@ buildSchemaCache = do
       handleInconsistentObj mkInconsObj $
       trackFunctionP2Setup qf
 
-  -- remote schemas
-  res <- liftTx fetchRemoteSchemas
-  sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
+  -- build GraphQL context
+  postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx
+  writeSchemaCache postGCtxSc
 
-  remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
-    (,) n <$> validateRemoteSchemaDef def
-  let rmScMap = M.fromList remoteScConf
-  (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
-  writeRemoteSchemasToCache mergedGCtxMap rmScMap
-  postMergeSc <- askSchemaCache
-  writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
+  -- remote schemas
+  remoteSchemas <- liftTx fetchRemoteSchemas
+  forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
 
   where
     permHelper sqlGenCtx sn tn rn pDef pa = do
@@ -480,6 +489,22 @@ buildSchemaCache = do
       addPermP2Setup qt permDef permInfo
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
+
+    resolveSingleRemoteSchema hMgr rs = do
+      let AddRemoteSchemaQuery name def _ = rs
+          mkInconsObj = mkInconsistentRemoteSchema rs
+      handleInconsistentObj mkInconsObj $ do
+        rsi <- validateRemoteSchemaDef def
+        addRemoteSchemaToCache name rsi
+        sc <- askSchemaCache
+        let gCtxMap = scGCtxMap sc
+            defGCtx = scDefaultRemoteGCtx sc
+        rGCtx <- convRemoteGCtx <$> fetchRemoteSchema hMgr name rsi
+        mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
+        mergedDefGCtx <- mergeGCtx defGCtx rGCtx
+        writeSchemaCache sc { scGCtxMap = mergedGCtxMap
+                            , scDefaultRemoteGCtx = mergedDefGCtx
+                            }
 
     fetchTables =
       Q.listQ [Q.sql|

@@ -11,6 +11,7 @@ import qualified Data.Text                     as T
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
 data TableObjId
@@ -28,6 +29,7 @@ data SchemaObjId
   | SOQTemplate !TQueryName
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
+  | SORemoteSchema !RemoteSchemaName
    deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -35,6 +37,8 @@ instance Hashable SchemaObjId
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
+reportSchemaObj (SORemoteSchema rsn) =
+  "remote-schema " <> unRemoteSchemaName rsn
 reportSchemaObj (SOQTemplate qtn) =
   "query-template " <> getTQueryName qtn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =

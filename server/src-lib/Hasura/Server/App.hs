@@ -39,8 +39,8 @@ import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
@@ -250,11 +250,7 @@ v1QueryHandler query = do
       (resp, newSc) <- dbAction
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
-      (mergedGCtxMap, defGCtx) <-
-        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
-      let newSc' =
-            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
+      newSc' <- flip resolveRemoteSchemas httpMgr =<< GS.updateSCWithGCtx newSc
       return (resp, newSc')
 
 v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler EncJSON
