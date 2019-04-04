@@ -17,28 +17,6 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
     })
     .filter(rc => Boolean(rc));
 
-  // get PK config text
-  const pkConfig = primaryKeys
-    .filter(pk => pk !== '')
-    .map(pk => columns[pk].name)
-    .join(', ');
-
-  // get PK configuration content
-  const configuration = () => {
-    return (
-      <div>
-        <div className={'container-fluid'}>
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              Key: <i>{`( ${pkConfig} )`}</i>
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // map over the primary keys
   const pkEditors = () => {
     return primaryKeys.map((pk, i) => {
@@ -107,12 +85,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       );
     });
   };
-  return (
-    <div>
-      {pkConfig && configuration()}
-      {pkEditors()}
-    </div>
-  );
+  return <div>{pkEditors()}</div>;
 };
 
 export default PrimaryKeySelector;

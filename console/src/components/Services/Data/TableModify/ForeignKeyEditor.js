@@ -58,7 +58,7 @@ const ForeignKeyEditor = ({
 
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabelText =
-      isLast && numFks === 1 ? 'No foreign keys' : <i>{fkConfig}</i>;
+      isLast && numFks === 1 ? 'No foreign keys' : <b>{fkConfig}</b>;
     const collapsedLabel = () => (
       <div>
         <div className="container-fluid">
