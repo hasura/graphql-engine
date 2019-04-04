@@ -13,7 +13,6 @@ import           Control.Lens                           hiding (op)
 
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -32,13 +31,15 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
+
 data GQExecPlan
   = GExPHasura !GCtx !VQ.RootSelSet
-  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
+  | GExPRemote !RemoteSchemaInfo !SplitQueryParts
   | GExPMixed  ![GQExecPlan]
-
+  deriving (Show)
 
 type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
+type SplitQueryParts = (G.TypedOperationDefinition, [G.FragmentDefinition])
 
 getExecPlan
   :: (MonadError QErr m)
@@ -46,34 +47,37 @@ getExecPlan
   -> SchemaCache
   -> GraphQLRequest
   -> m GQExecPlan
-  -- -> m (GQSelSet a)
 getExecPlan userInfo sc req = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
+      fragDefs = VQ.qpFragDefsL queryParts
       topLevelNodes = getTopLevelNodes opDef
-      -- gather TypeLoc of topLevelNodes
       typeLocs = gatherTypeLocs gCtx topLevelNodes
       typeLocWTypes = zip typeLocs topLevelNodes
       queryMap = foldr upsertType mempty typeLocWTypes
-      queries = splitQuery opDef queryMap
-
-  -- traceM "OPERATION DEF =============>>>>"
-  -- liftIO $ pPrint opDef
-  -- traceM "SPLITTED QUERY ===============>>>>>>"
-  -- liftIO $ pPrint queries
+      queries = splitQuery opDef fragDefs queryMap
   mkExecPlan gCtx queries
   where
     mkExecPlan gCtx queries = case queries of
-      [(VT.HasuraType, opDef')] -> do
-        let newQ = transformGQRequest req opDef'
-        queryParts <- flip runReaderT gCtx $ VQ.getQueryParts newQ
+      [(VT.HasuraType, _)] -> do
+        queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
         GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
-      [(VT.RemoteType _ rsi, opDef')] ->
-        return $ GExPRemote rsi opDef'
-      xs -> GExPMixed <$> mapM (\x -> mkExecPlan gCtx [x]) xs
+      [(VT.RemoteType _ rsi, qParts)] ->
+        return $ GExPRemote rsi qParts
+      xs ->
+        GExPMixed <$> mapM splitPlan xs
+      where
+        splitPlan qm = case qm of
+          (VT.HasuraType, (opDef', fragDefs)) -> do
+            let newQ = transformGQRequest req opDef' fragDefs
+            queryParts <- flip runReaderT gCtx $ VQ.getQueryParts newQ
+            GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
+          (VT.RemoteType _ rsi, qParts) ->
+            return $ GExPRemote rsi qParts
+
 
     gCtxRoleMap = scGCtxMap sc
 
@@ -81,12 +85,25 @@ getExecPlan userInfo sc req = do
     upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
 
     splitQuery
-      :: G.TypedOperationDefinition -> QueryMap
-      -> [(VT.TypeLoc , G.TypedOperationDefinition)]
-    splitQuery opDef qMap =
+      :: G.TypedOperationDefinition -> [G.FragmentDefinition] -> QueryMap
+      -> [(VT.TypeLoc, SplitQueryParts)]
+    splitQuery opDef fragDefs qMap =
       flip map (Map.toList qMap) $ \(tl, tyNames) ->
-        let (flds, vars) = pickFields opDef tyNames $ G._todSelectionSet opDef
-        in (tl, mkNewOpDef opDef flds vars)
+        let selSet = G._todSelectionSet opDef
+            (flds, vars) = pickFields opDef tyNames selSet
+            frags = pickFrags flds fragDefs
+        in (tl, (mkNewOpDef opDef flds vars, frags))
+
+    pickFrags selSet fragDefs =
+      let perSel sel = case sel of
+            G.SelectionField fld ->
+              join $ map perSel $ G._fSelectionSet fld
+            G.SelectionFragmentSpread fs  -> [G._fsName fs]
+            G.SelectionInlineFragment ilf ->
+              join $ map perSel $ G._ifSelectionSet ilf
+
+          fragNames = join $ map perSel selSet
+      in filter (\fd -> G._fdName fd `elem` fragNames) fragDefs
 
     pickFields opDef fldNames selSet =
       let flds = filter filterSel selSet
@@ -97,7 +114,6 @@ getExecPlan userInfo sc req = do
           G.SelectionField fld -> G._fName fld `elem` fldNames
           _                    -> False
 
-
     filterVars selSet vars =
       let args = join $ map getArgs selSet
           filterVar var = G._vdVariable var `elem` join (map getVars args)
@@ -105,7 +121,8 @@ getExecPlan userInfo sc req = do
 
     getArgs :: G.Selection -> [G.Argument]
     getArgs sel = case sel of
-      G.SelectionField fld -> G._fArguments fld
+      G.SelectionField fld -> G._fArguments fld ++
+                              join (map getArgs $ G._fSelectionSet fld)
       _                    -> []
 
     getVars :: G.Argument -> [G.Variable]
@@ -125,10 +142,15 @@ getExecPlan userInfo sc req = do
             }
 
 transformGQRequest
-  :: GraphQLRequest -> G.TypedOperationDefinition -> GraphQLRequest
-transformGQRequest (GraphQLRequest opNameM _ varValsM) opDef =
-  let q = GraphQLQuery [G.ExecutableDefinitionOperation $
-                        G.OperationDefinitionTyped opDef]
+  :: GraphQLRequest
+  -> G.TypedOperationDefinition
+  -> [G.FragmentDefinition]
+  -> GraphQLRequest
+transformGQRequest (GraphQLRequest opNameM _ varValsM) opDef fragDefs =
+  let op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped opDef
+      frags = map G.ExecutableDefinitionFragment fragDefs
+      exDefs = op:frags
+      q = GraphQLQuery exDefs
       vars = map G._vdVariable $ G._todVariableDefinitions opDef
       varValsFltrd = Map.filterWithKey (\k _ -> k `elem` vars) <$> varValsM
   in GraphQLRequest opNameM q varValsFltrd
@@ -170,15 +192,15 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
                   , "Cache-Control", "Connection", "DNT"
                   ]
 
-assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
-assertSameLocationNodes typeLocs =
-  case Set.toList (Set.fromList typeLocs) of
-    -- this shouldn't happen
-    []    -> return VT.HasuraType
-    [loc] -> return loc
-    _     -> throw400 NotSupported msg
-  where
-    msg = "cannot mix top level fields from two different graphql servers"
+-- assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
+-- assertSameLocationNodes typeLocs =
+--   case Set.toList (Set.fromList typeLocs) of
+--     -- this shouldn't happen
+--     []    -> return VT.HasuraType
+--     [loc] -> return loc
+--     _     -> throw400 NotSupported msg
+--   where
+--     msg = "cannot mix top level fields from two different graphql servers"
 
 -- TODO: we should fix this function asap
 -- as this will fail when there is a fragment at the top level

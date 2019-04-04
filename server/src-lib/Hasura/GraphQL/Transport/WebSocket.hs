@@ -223,7 +223,7 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ userInfo gCtx rootSelSet
-    E.GExPRemote rsi opDef  ->
+    E.GExPRemote rsi (opDef, _) ->
       runRemoteGQ userInfo reqHdrs opDef rsi
     E.GExPMixed _ ->
     -- FIXME: fix this

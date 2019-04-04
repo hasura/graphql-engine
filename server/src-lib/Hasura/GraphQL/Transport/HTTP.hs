@@ -34,7 +34,7 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi opDef ->
+    E.GExPRemote rsi (opDef, _) ->
       E.execRemoteGQ manager userInfo reqHdrs req rsi opDef
     E.GExPMixed plans ->
       runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans
@@ -55,14 +55,13 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans = do
   resSet <- forM plans $ \case
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi opDef ->
-      let newQ = E.transformGQRequest req opDef
+    E.GExPRemote rsi (opDef, fragDefs) ->
+      let newQ = E.transformGQRequest req opDef fragDefs
       in E.execRemoteGQ manager userInfo reqHdrs newQ rsi opDef
     E.GExPMixed _ ->
       throw500 "internal-unexpected: mixed plan is nested in mixed plan"
 
   let interimResBS = map encJToLBS resSet
-  liftIO $ print interimResBS
   interimRes <- forM interimResBS $ \res -> do
     let x = J.decode res :: (Maybe J.Object)
     onNothing x $ throw500 "could not parse response as JSON"
