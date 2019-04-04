@@ -150,7 +150,7 @@ getQueryTx gCtx sqlGenCtx userInfo fields varDefs = do
   fldPlans <- runE gCtx sqlGenCtx userInfo $ convertQuerySelSet fields
   let queryPlan     = Plan.QueryPlan varDefs fldPlans
       reusablePlanM = Plan.getReusablePlan queryPlan
-  return (liftTx $ Plan.mkCurPlanTx queryPlan, reusablePlanM)
+  return (Plan.mkCurPlanTx queryPlan, reusablePlanM)
 
 resolveMutSelSet
   :: ( MonadError QErr m
@@ -256,7 +256,7 @@ getSubsOpM varDefs fld = do
   userInfo <- asks getter
   case V._fName fld of
     "__typename" -> do
-      let tx = liftTx $ return $ encJFromJValue $
+      let tx = return $ encJFromJValue $
                mkRootTypeName G.OperationTypeSubscription
       return (LQ.LQFallback $ withAlias tx, Nothing)
     _            -> do
