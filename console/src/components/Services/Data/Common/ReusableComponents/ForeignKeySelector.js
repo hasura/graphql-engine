@@ -49,7 +49,7 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div className={`${refTableName ? styles.add_mar_bottom : ''}`}>
+      <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
           <b>Reference Table:</b>
         </div>
@@ -62,17 +62,17 @@ const ForeignKeySelector = ({
           onChange={dispatchSetRefTable}
         >
           {// default unselected option
-            refTableName === '' && (
-              <option value={''} disabled>
-                {'-- reference table --'}
-              </option>
-            )}
+          refTableName === '' && (
+            <option value={''} disabled>
+              {'-- reference table --'}
+            </option>
+          )}
           {// all reference table options
-            Object.keys(refTables).map((rt, j) => (
-              <option key={j} value={rt}>
-                {rt}
-              </option>
-            ))}
+          Object.keys(refTables).map((rt, j) => (
+            <option key={j} value={rt}>
+              {rt}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -81,10 +81,6 @@ const ForeignKeySelector = ({
   // html for column mapping dropdowns
   const columnSelect = () => {
     // Do not allow selecting columns if ref table hasn't been selected
-    if (!refTableName) {
-      return null;
-    }
-
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
@@ -158,7 +154,9 @@ const ForeignKeySelector = ({
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={'form-control'}
+                  className={`form-control ${styles.select} ${
+                    styles.wd100Percent
+                  }`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`foreign-key-${index}-lcol-${_i}`}
@@ -180,7 +178,9 @@ const ForeignKeySelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={'form-control'}
+                  className={`form-control ${styles.select} ${
+                    styles.wd100Percent
+                  }`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}
@@ -211,9 +211,7 @@ const ForeignKeySelector = ({
 
   const onViolation = () => {
     // Do not allow selecting on violation conditions if no column mapping is selected
-    if (numColMappings <= 1) {
-      return null;
-    }
+    const disabled = numColMappings <= 1;
 
     // Generate radios for violation actions
     const radios = action => {
@@ -237,6 +235,7 @@ const ForeignKeySelector = ({
                   onChange={onCheck}
                   data-test={`foreign-key-${index}-${action}-${va}`}
                   className={styles.add_mar_right_small}
+                  disabled={disabled}
                 />
                 <div>{va.toLowerCase()}</div>
               </div>
