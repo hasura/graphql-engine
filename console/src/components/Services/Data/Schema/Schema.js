@@ -35,6 +35,7 @@ import {
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
+import CollapsibleToggleHoc from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -258,23 +259,26 @@ class Schema extends Component {
         return untrackedTablesList;
       };
 
+      const heading = (
+        <div>
+          <h4 className={`${styles.subheading_text} ${styles.heading_tooltip}`}>
+            Untracked tables or views
+          </h4>
+          <OverlayTrigger placement="right" overlay={untrackedTip}>
+            <i className="fa fa-info-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          {getTrackAllBtn()}
+        </div>
+      );
+
       return (
         <div className={styles.add_mar_top}>
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
-            >
-              Untracked tables or views
-            </h4>
-            <OverlayTrigger placement="right" overlay={untrackedTip}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-            {getTrackAllBtn()}
-          </div>
-          <div className={`${styles.padd_left_remove} col-xs-12`}>
-            {getUntrackedTablesList()}
-          </div>
-          <div className={styles.clear_fix} />
+          <CollapsibleToggleHoc title={heading} isOpen>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {getUntrackedTablesList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggleHoc>
         </div>
       );
     };
@@ -364,23 +368,26 @@ class Schema extends Component {
         return untrackedRelList;
       };
 
+      const heading = (
+        <div>
+          <h4 className={`${styles.subheading_text} ${styles.heading_tooltip}`}>
+            Untracked foreign-key relations
+          </h4>
+          <OverlayTrigger placement="right" overlay={untrackedRelTip}>
+            <i className="fa fa-info-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          {getTrackAllBtn()}
+        </div>
+      );
+
       return (
         <div className={styles.add_mar_top}>
-          <div>
-            <h4
-              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
-            >
-              Untracked foreign-key relations
-            </h4>
-            <OverlayTrigger placement="right" overlay={untrackedRelTip}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
-            </OverlayTrigger>
-            {getTrackAllBtn()}
-          </div>
-          <div className={`${styles.padd_left_remove} col-xs-12`}>
-            {getUntrackedRelList()}
-          </div>
-          <div className={styles.clear_fix} />
+          <CollapsibleToggleHoc title={heading} isOpen>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {getUntrackedRelList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggleHoc>
         </div>
       );
     };
@@ -389,51 +396,56 @@ class Schema extends Component {
       let trackableFunctionList = null;
 
       if (trackableFuncs.length > 0) {
+        const heading = (
+          <div>
+            <h4
+              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
+            >
+              Untracked custom functions
+            </h4>
+            <OverlayTrigger placement="right" overlay={trackableFunctions}>
+              <i className="fa fa-info-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </div>
+        );
+
         trackableFunctionList = (
           <div className={styles.add_mar_top} key={'custom-functions-content'}>
-            <div>
-              <h4
-                className={`${styles.subheading_text} ${
-                  styles.heading_tooltip
-                }`}
-              >
-                Untracked custom functions
-              </h4>
-              <OverlayTrigger placement="right" overlay={trackableFunctions}>
-                <i className="fa fa-info-circle" aria-hidden="true" />
-              </OverlayTrigger>
-            </div>
-            <div className={`${styles.padd_left_remove} col-xs-12`}>
-              {trackableFuncs.map((p, i) => (
-                <div
-                  className={styles.padd_bottom}
-                  key={`${i}untracked-function`}
-                >
+            <CollapsibleToggleHoc title={heading} isOpen>
+              <div className={`${styles.padd_left_remove} col-xs-12`}>
+                {trackableFuncs.map((p, i) => (
                   <div
-                    className={`${styles.display_inline} ${styles.padd_right}`}
+                    className={styles.padd_bottom}
+                    key={`${i}untracked-function`}
                   >
-                    <Button
-                      data-test={`add-track-function-${p.function_name}`}
-                      className={`${
-                        styles.display_inline
-                      } btn btn-xs btn-default`}
-                      onClick={e => {
-                        e.preventDefault();
-                        dispatch(addExistingFunction(p.function_name));
-                      }}
+                    <div
+                      className={`${styles.display_inline} ${
+                        styles.padd_right
+                      }`}
                     >
-                      Track
-                    </Button>
+                      <Button
+                        data-test={`add-track-function-${p.function_name}`}
+                        className={`${
+                          styles.display_inline
+                        } btn btn-xs btn-default`}
+                        onClick={e => {
+                          e.preventDefault();
+                          dispatch(addExistingFunction(p.function_name));
+                        }}
+                      >
+                        Track
+                      </Button>
+                    </div>
+                    <div
+                      className={`${styles.padd_right} ${styles.inline_block}`}
+                    >
+                      {p.function_name}
+                    </div>
                   </div>
-                  <div
-                    className={`${styles.padd_right} ${styles.inline_block}`}
-                  >
-                    {p.function_name}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className={styles.clear_fix} />
+                ))}
+              </div>
+              <div className={styles.clear_fix} />
+            </CollapsibleToggleHoc>
           </div>
         );
       }
