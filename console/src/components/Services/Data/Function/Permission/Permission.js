@@ -83,7 +83,13 @@ class Permission extends React.Component {
           <br />
           <br />
           See <b>{setOffTable}</b> permissions{' '}
-          <Link to={permissionTableUrl}>here</Link>.
+          <Link
+            to={permissionTableUrl}
+            data-test="custom-function-permission-link"
+          >
+            here
+          </Link>
+          .
         </p>
       </div>
     );
