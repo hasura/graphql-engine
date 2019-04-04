@@ -34,7 +34,7 @@ import {
   getAllUnTrackedRelations,
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
-import { getRelDef } from '../TableRelationships/Relationships';
+import { getRelDef } from '../TableRelationships/utils';
 
 const appPrefix = globals.urlPrefix + '/data';
 
