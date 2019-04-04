@@ -1,12 +1,9 @@
 import React from 'react';
 import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
 import { Link } from 'react-router';
-import globals from '../../../../Globals';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
-
-const sectionPrefix = globals.urlPrefix + '/metadata';
 
 const Sidebar = ({
   location,
@@ -26,7 +23,7 @@ const Sidebar = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/actions'}
+          to={'/metadata/actions'}
           data-test="metadata-actions-link"
         >
           Actions
@@ -48,7 +45,7 @@ const Sidebar = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/status'}
+          to={'/metadata/status'}
           data-test="metadata-status-link"
         >
           <div className={styles.display_flex}>
