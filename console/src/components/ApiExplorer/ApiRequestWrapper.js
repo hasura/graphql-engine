@@ -54,6 +54,7 @@ class ApiRequestWrapper extends Component {
         {getAPIRequestDetailsSection()}
 
         <ApiRequest
+          serverConfig={this.props.serverConfig}
           bodyType={
             this.props.request.bodyType ? this.props.request.bodyType : ''
           }

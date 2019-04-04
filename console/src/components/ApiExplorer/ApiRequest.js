@@ -8,6 +8,8 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import ModalWrapper from '../Common/ModalWrapper';
 
+import { parseJWTHeader } from './utils';
+
 import {
   // generateApiCodeClicked,
   // changeRequestMethod,
@@ -21,6 +23,7 @@ import {
   focusHeaderTextbox,
   unfocusTypingHeader,
   setInitialHeaderState,
+  verifyJWTToken,
 } from './Actions';
 
 import globals from '../../Globals';
@@ -31,7 +34,13 @@ import CollapsibleToggle from '../Common/CollapsibleToggle/CollapsibleToggle';
 
 const styles = require('./ApiExplorer.scss');
 
-const inspectJWTTooltip = <Tooltip id="tooltip-cascade">Decode JWT</Tooltip>;
+const inspectJWTTooltip = (
+  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
+);
+
+const jwtValidityStatus = message => (
+  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
+);
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -44,10 +53,13 @@ class ApiRequest extends Component {
       header: {},
       payload: {},
       error: null,
+      serverResp: {},
     };
     this.state = {
       isAnalyzingBearer: false,
-      tokenInfo: { ...this.defaultTokenVal },
+      tokenInfo: {
+        ...this.defaultTokenVal,
+      },
       deletedHeader: false,
       adminSecretVisible: false,
       bodyAllowedMethods: ['POST'],
@@ -147,13 +159,6 @@ class ApiRequest extends Component {
     }
   }
 
-  setLocalStorageHeader = headers => {
-    localStorage.setItem(
-      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-      JSON.stringify(headers)
-    );
-  };
-
   getHTTPMethods = () => {
     const httpMethods = ['POST'];
     const scopedThis = this;
@@ -198,6 +203,7 @@ class ApiRequest extends Component {
   }
   */
 
+  /*
   onHeaderValueChanged(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
@@ -209,11 +215,34 @@ class ApiRequest extends Component {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     this.setState({ deletedHeader: true });
     this.props.dispatch(removeRequestHeader(index));
+  } */
+
+  onHeaderValueChanged(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    const key = e.target.getAttribute('data-element-name');
+    const newValue = e.target.value;
+    this.props
+      .dispatch(changeRequestHeader(index, key, newValue, false))
+      .then(r => this.setLocalStorageHeader(r));
+  }
+
+  onDeleteHeaderClicked(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    this.props
+      .dispatch(removeRequestHeader(index))
+      .then(r => this.setLocalStorageHeader(r));
   }
 
   onShowAdminSecretClicked() {
     this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
   }
+
+  setLocalStorageHeader = headers => {
+    localStorage.setItem(
+      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+      JSON.stringify(headers)
+    );
+  };
 
   getUrlBar() {
     return (
@@ -272,77 +301,69 @@ class ApiRequest extends Component {
      *      * isActive determines whether that header key is active and ok to be sent in the request header.
      *      * isDisabled determines whether changes for that header key, val is allowed or not
      * */
-    const rows = this.props.headers.map((header, i) => {
+    const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
+
+    return this.props.headers.map((header, i) => {
       /*
-       * - Adding inspector
-       *  - Check whether key is Authorization and value starts with Bearer
+       * - Check whether key is Authorization and value starts with Bearer
        * */
+      const { isJWTHeader: showInspector, matches } = parseJWTHeader(header);
 
-      let showInspector = false;
-      let matches = [];
-      const parseBearer = /^(bearer) (.*)/gim;
-      if (header.key.toLowerCase() === 'authorization') {
-        matches = parseBearer.exec(header.value);
-        if (matches && matches[1] === 'Bearer') {
-          showInspector = true;
-        }
-      }
-
-      const inspectorIcon = showInspector ? (
-        <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
-          <i
-            className={styles.showAdminSecret + ' fa fa-plus-square-o'}
-            token={matches[2]}
-            onClick={this.analyzeBearerToken}
-          />
-        </OverlayTrigger>
-      ) : null;
-
-      const getHeaderAdminVal = () => {
-        let headerAdminVal = null;
-        if (
-          header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`
-        ) {
-          headerAdminVal = (
+      const inspectorIcon = () => {
+        const getAnalyzeIcon = () => {
+          const { isAnalyzingBearer } = this.state;
+          return isAnalyzingBearer ? (
             <i
-              className={styles.showAdminSecret + ' fa fa-eye'}
-              data-header-id={i}
-              aria-hidden="true"
-              onClick={this.onShowAdminSecretClicked.bind(this)}
+              className={styles.showInspectorLoading + ' fa fa-spinner fa-spin'}
+            />
+          ) : (
+            <i
+              className={styles.showInspector + ' fa fa-plus-square-o'}
+              token={matches[2]}
+              onClick={this.analyzeBearerToken}
             />
           );
-        }
+        };
+        return showInspector && isJWTSet ? (
+          <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+            {getAnalyzeIcon()}
+          </OverlayTrigger>
+        ) : null;
+      };
 
-        return headerAdminVal;
+      const getHeaderAdminVal = () => {
+        const adminHeader = `x-hasura-${globals.adminSecretLabel}`;
+        return header.key.toLowerCase() === adminHeader ? (
+          <i
+            className={styles.showAdminSecret + ' fa fa-eye'}
+            data-header-id={i}
+            aria-hidden="true"
+            onClick={this.onShowAdminSecretClicked.bind(this)}
+          />
+        ) : null;
       };
 
       const getHeaderActiveCheckBox = () => {
-        let headerActiveCheckbox = null;
-
-        if (!header.isNewHeader) {
-          headerActiveCheckbox = (
-            <td>
-              <input
-                type="checkbox"
-                name="sponsored"
-                className={styles.common_checkbox + ' common_checkbox'}
-                id={i + 1}
-                checked={header.isActive}
-                data-header-id={i}
-                onChange={this.onHeaderValueChanged.bind(this)}
-                data-element-name="isActive"
-              />
-              <label
-                htmlFor={i + 1}
-                className={
-                  styles.common_checkbox_label + ' common_checkbox_label'
-                }
-              />
-            </td>
-          );
-        }
-
-        return headerActiveCheckbox;
+        return !header.isNewHeader ? (
+          <td>
+            <input
+              type="checkbox"
+              name="sponsored"
+              className={styles.common_checkbox + ' common_checkbox'}
+              id={i + 1}
+              checked={header.isActive}
+              data-header-id={i}
+              onChange={this.onHeaderValueChanged.bind(this)}
+              data-element-name="isActive"
+            />
+            <label
+              htmlFor={i + 1}
+              className={
+                styles.common_checkbox_label + ' common_checkbox_label'
+              }
+            />
+          </td>
+        ) : null;
       };
 
       const getHeaderRemoveBtn = () => {
@@ -438,7 +459,7 @@ class ApiRequest extends Component {
           headerActions = (
             <td>
               {getHeaderAdminVal()}
-              {inspectorIcon}
+              {inspectorIcon()}
               {getHeaderRemoveBtn()}
             </td>
           );
@@ -455,7 +476,6 @@ class ApiRequest extends Component {
         </tr>
       );
     });
-    return rows;
   }
 
   getHeaderTableView() {
@@ -506,19 +526,26 @@ class ApiRequest extends Component {
   }
 
   analyzeBearerToken(e) {
+    const { dispatch } = this.props;
     const token = e.target.getAttribute('token');
     this.setState({
       isAnalyzingBearer: true,
+      tokenInfo: {
+        ...this.state.tokenInfo,
+        serverResp: {},
+        error: null,
+      },
     });
-
-    if (token) {
+    const decodeAndSetState = serverResp => {
       const decoded = jwt.decode(token, { complete: true });
       if (decoded) {
         this.setState({
           tokenInfo: {
+            ...this.state.tokenInfo,
             header: decoded.header,
             payload: decoded.payload,
             error: null,
+            serverResp: serverResp,
           },
         });
       } else {
@@ -526,10 +553,21 @@ class ApiRequest extends Component {
           'This JWT seems to be invalid. Please check the token value and try again!';
         this.setState({
           tokenInfo: {
+            ...this.state.tokenInfo,
             error: message,
+            serverResp: serverResp,
           },
         });
       }
+    };
+    if (token) {
+      dispatch(verifyJWTToken(token))
+        .then(data => {
+          decodeAndSetState(data);
+        })
+        .catch(err => {
+          decodeAndSetState(err);
+        });
     }
   }
 
@@ -543,42 +581,130 @@ class ApiRequest extends Component {
 
   render() {
     const { isAnalyzingBearer, tokenInfo } = this.state;
-    const { error } = tokenInfo;
-    const analyzeBearerBody = error ? (
-      <span>{error}</span>
-    ) : (
-      <div>
-        <span className={styles.analyzerLabel}>
-          Header:
-          <span>Algorithm & Token Type</span>
-        </span>
-        <TextAreaWithCopy
-          copyText={JSON.stringify(tokenInfo.header, null, 2)}
-          textLanguage={'json'}
-          id="headerCopy"
-          containerId="headerCopyBlock"
-        />
-        <br />
-        <span className={styles.analyzerLabel}>
-          Payload:
-          <span>Data</span>
-        </span>
-        <TextAreaWithCopy
-          copyText={JSON.stringify(tokenInfo.payload, null, 2)}
-          textLanguage={'json'}
-          id="payloadCopy"
-          containerId="payloadCopyBlock"
-        />
-      </div>
-    );
+    const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
+    const { error, serverResp } = tokenInfo;
+    const getAnalyzeBearerBody = () => {
+      const {
+        claimNameSpace = 'https://hasura.io/jwt/claims',
+        claimFormat = 'json',
+      } = this.props.serverConfig;
+
+      let tokenVerified = false;
+      let JWTError = '';
+      if (serverResp && 'errors' in serverResp) {
+        try {
+          JWTError =
+            serverResp.errors.length > 0 ? serverResp.errors[0].message : null;
+        } catch (e) {
+          JWTError = e.toString();
+        }
+      } else {
+        tokenVerified = true;
+      }
+
+      const generateJWTVerificationStatus = () => {
+        switch (true) {
+          case tokenVerified:
+            return (
+              <OverlayTrigger
+                placement="top"
+                overlay={jwtValidityStatus('Valid JWT token')}
+              >
+                <span className={styles.valid_jwt_token}>
+                  <i className="fa fa-check" />
+                </span>
+              </OverlayTrigger>
+            );
+          case !tokenVerified && JWTError.length > 0:
+            return (
+              <OverlayTrigger
+                placement="top"
+                overlay={jwtValidityStatus(JWTError)}
+              >
+                <span className={styles.invalid_jwt_icon}>
+                  <i className="fa fa-times" />
+                </span>
+              </OverlayTrigger>
+            );
+          default:
+            return null;
+        }
+      };
+
+      const getHasuraClaims = () => {
+        return claimNameSpace &&
+          claimFormat === 'json' &&
+          tokenInfo.payload &&
+          Object.keys(tokenInfo.payload).length > 0
+          ? [
+            <br key="hasura_claim_element_break" />,
+            <span key="hasura_claim_label" className={styles.analyzerLabel}>
+                Hasura Claims:
+              <span>hasura headers</span>
+            </span>,
+            <TextAreaWithCopy
+              key="hasura_claim_value"
+              copyText={JSON.stringify(
+                tokenInfo.payload[claimNameSpace],
+                null,
+                2
+              )}
+              textLanguage={'json'}
+              id="claimNameSpaceCopy"
+              containerId="claimNameSpaceCopyBlock"
+            />,
+          ]
+          : null;
+      };
+
+      const analyzeBearerBody = error ? (
+        <span>{error}</span>
+      ) : (
+        <div>
+          <span className={styles.analyzerLabel}>
+            Token Validity:
+            <span className={styles.token_validity}>
+              {generateJWTVerificationStatus()}
+            </span>
+          </span>
+          <br />
+          <span className={styles.analyzerLabel}>
+            Header:
+            <span>Algorithm & Token Type</span>
+          </span>
+          <TextAreaWithCopy
+            copyText={JSON.stringify(tokenInfo.header, null, 2)}
+            textLanguage={'json'}
+            id="headerCopy"
+            containerId="headerCopyBlock"
+          />
+          {getHasuraClaims()}
+          <br />
+          <span className={styles.analyzerLabel}>
+            Full Payload:
+            <span>Data</span>
+          </span>
+          <TextAreaWithCopy
+            copyText={JSON.stringify(tokenInfo.payload, null, 2)}
+            textLanguage={'json'}
+            id="payloadCopy"
+            containerId="payloadCopyBlock"
+          />
+        </div>
+      );
+      return analyzeBearerBody;
+    };
+
     const analyzeBearerHtml = (
       <ModalWrapper
-        show={isAnalyzingBearer}
+        show={
+          isAnalyzingBearer && serverResp && Object.keys(serverResp).length > 0
+        }
         onHide={this.onAnalyzeBearerClose.bind(this)}
         dialogClassName={styles.analyzerBearerModal}
         title={error ? 'Error decoding JWT' : 'Decoded JWT'}
       >
-        {analyzeBearerBody}
+        {getAnalyzeBearerBody()}
       </ModalWrapper>
     );
     return (
@@ -599,7 +725,7 @@ class ApiRequest extends Component {
           </CollapsibleToggle>
         </div>
         {this.getValidBody()}
-        {analyzeBearerHtml}
+        {isJWTSet && analyzeBearerHtml}
       </div>
     );
   }
@@ -618,6 +744,7 @@ ApiRequest.propTypes = {
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   queryParams: PropTypes.object.isRequired,
+  serverConfig: PropTypes.object,
 };
 
 export default ApiRequest;

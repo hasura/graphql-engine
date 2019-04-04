@@ -1,4 +1,7 @@
 import defaultState from './state';
+import requestAction from '../../utils/requestAction.js';
+
+import Endpoints from '../../Endpoints';
 // import fetch from 'isomorphic-fetch';
 
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -44,6 +47,22 @@ const clearHistory = () => {
   return {
     type: CLEAR_HISTORY,
   };
+};
+
+const verifyJWTToken = token => dispatch => {
+  const url = Endpoints.graphQLUrl;
+  const body = {
+    query: '{ __type(name: "dummy") {name}}',
+    variables: null,
+  };
+  const options = {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options));
 };
 
 const updateFileObject = fileObj => {
@@ -205,6 +224,9 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
         isDisabled: isDisabled,
       },
     });
+    // TODO:
+    // May go out of sync
+    //  dispatch -> Event -> State gets updated -> getState() below gets called. Too many events and very less time.
     const { headers } = getState().apiexplorer.displayedApi.request;
     return Promise.resolve(headers);
   };
@@ -623,4 +645,5 @@ export {
   getRemoteQueries,
   analyzeFetcher,
   setInitialHeaderState,
+  verifyJWTToken,
 };

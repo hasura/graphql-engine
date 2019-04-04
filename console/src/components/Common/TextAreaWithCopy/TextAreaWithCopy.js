@@ -77,12 +77,31 @@ class TextAreaWithCopy extends React.Component {
         </pre>
       );
     };
-    const useSQLValue =
+    const renderJSONValue = () => {
+      return (
+        <pre>
+          <code
+            className={style.formattedCode}
+            dangerouslySetInnerHTML={{
+              __html: window.hljs.highlight(
+                'json',
+                JSON.stringify(JSON.parse(copyText), null, 4)
+              ).value,
+            }}
+          />
+        </pre>
+      );
+    };
+    const typeRenderer = {
+      sql: renderSQLValue,
+      json: renderJSONValue,
+    };
+    const useFormattedValue =
       window &&
       window.sqlFormatter &&
       window.hljs &&
       this.props.textLanguage &&
-      this.props.textLanguage.toLowerCase() === 'sql';
+      ['sql', 'json'].indexOf(this.props.textLanguage.toLowerCase() !== -1); //=== 'sql';
 
     return (
       <div className={`${style.codeBlockCustom}`} id={`${containerId}`}>
@@ -111,7 +130,9 @@ class TextAreaWithCopy extends React.Component {
             */}
           </div>
         </div>
-        {useSQLValue ? renderSQLValue() : renderSimpleValue()}
+        {useFormattedValue
+          ? typeRenderer[this.props.textLanguage.toLowerCase()]()
+          : renderSimpleValue()}
       </div>
     );
   }
