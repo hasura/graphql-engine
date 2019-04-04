@@ -63,6 +63,14 @@ const MetadataStatus = ({
               definition = `event triggeer on table "${
                 ico.definition.configuration.table
               }"`;
+            } else if (ico.type === 'remote_schema') {
+              name = ico.definition.name;
+              let url = `"${ico.definition.definition.url ||
+                ico.definition.definition.url_from_env}"`;
+              if (ico.definition.definition.url_from_env) {
+                url = `the url from the value of env var ${url}`;
+              }
+              definition = `remote schema named "${name}" at ${url}`;
             }
             return (
               <tr key={_i}>
