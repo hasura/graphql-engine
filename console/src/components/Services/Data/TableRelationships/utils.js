@@ -19,3 +19,26 @@ export const getRelDef = (isObjRel, _lCol, _rCol, lTable, _rTable) => {
     </span>
   );
 };
+
+/* Gets the complete list of relationships and converts it to a list of object, which looks like so :
+[ { objRel: {objectRelationship}, arrRel: {arrayRelationship} } ] */
+export const getObjArrRelList = relationships => {
+  const objRels = relationships.filter(r => r.rel_type === 'object');
+  const arrRels = relationships.filter(r => r.rel_type !== 'object');
+
+  const requiredList = [];
+  const length =
+    objRels.length > arrRels.length ? objRels.length : arrRels.length;
+
+  for (let i = 0; i < length; i++) {
+    const objRel = objRels[i] ? objRels[i] : null;
+    const arrRel = arrRels[i] ? arrRels[i] : null;
+
+    requiredList.push({
+      objRel,
+      arrRel,
+    });
+  }
+
+  return requiredList;
+};

@@ -9,7 +9,6 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -79,16 +78,19 @@ class Permission extends React.Component {
         />
         <br />
         <p>
-          Note: Permission defined for the setof table, {`${setOffTable}`}, are
-          applicable to the data returned by this function
-        </p>
-        <div className={styles.commonBtn}>
-          <Link to={permissionTableUrl}>
-            <Button color="yellow" data-test={'custom-function-permission-btn'}>
-              {`${setOffTable} Permissions`}
-            </Button>
+          Permissions defined for the SETOF table, <b>{setOffTable}</b>, are
+          applicable to the data returned by this function.
+          <br />
+          <br />
+          See <b>{setOffTable}</b> permissions{' '}
+          <Link
+            to={permissionTableUrl}
+            data-test="custom-function-permission-link"
+          >
+            here
           </Link>
-        </div>
+          .
+        </p>
       </div>
     );
   }

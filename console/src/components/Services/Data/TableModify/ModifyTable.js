@@ -86,6 +86,23 @@ class ModifyTable extends React.Component {
       </Button>
     );
 
+    const deleteBtn = (
+      <Button
+        type="submit"
+        color="red"
+        size="sm"
+        onClick={() => {
+          const isOk = confirm('Are you sure?');
+          if (isOk) {
+            dispatch(deleteTableSql(tableName, tableSchema));
+          }
+        }}
+        data-test="delete-table"
+      >
+        Delete table
+      </Button>
+    );
+
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -149,20 +166,7 @@ class ModifyTable extends React.Component {
             />
             <hr />
             {untrackBtn}
-            <Button
-              type="submit"
-              color="red"
-              size="sm"
-              onClick={() => {
-                const isOk = confirm('Are you sure?');
-                if (isOk) {
-                  dispatch(deleteTableSql(tableName, tableSchema));
-                }
-              }}
-              data-test="delete-table"
-            >
-              Delete table
-            </Button>
+            {deleteBtn}
             <br />
             <br />
           </div>
