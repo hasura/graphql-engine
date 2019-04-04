@@ -32,10 +32,10 @@ const SearchableSelectBox = ({
 }) => {
   /* Select element style customization */
 
-  return [
+  return (
     <Select
-      menuIsOpen={menuIsOpen}
       isSearchable
+      menuIsOpen={menuIsOpen}
       components={{ Option: CustomOption }}
       classNamePrefix={`${bsClass}`}
       placeholder="column_type"
@@ -43,13 +43,13 @@ const SearchableSelectBox = ({
       onChange={onChange}
       value={value}
       styles={customStyle}
-    />,
-  ];
+    />
+  );
 };
 
 SearchableSelectBox.propTypes = {
   value: PropTypes.string.isRequired,
-  onChange: PropTypes.function.isRequired,
+  onChange: PropTypes.func.isRequired,
   options: PropTypes.array.isRequired,
   bsClass: PropTypes.string,
   customStyle: PropTypes.object,
