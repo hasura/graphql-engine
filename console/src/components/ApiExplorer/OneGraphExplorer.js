@@ -32,20 +32,7 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  onExplorerResize = e => {
-    const { explorerClientX, explorerWidth } = this.state;
-    if (explorerClientX === null) {
-      this.setState({ explorerClientX: e.clientX });
-    } else {
-      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
-      setExplorerWidthInLocalStorage(newExplorerWidth);
-      this.setState({
-        explorerWidth: newExplorerWidth,
-        explorerClientX: e.clientX,
-      });
-    }
-  };
-
+  // eslint-disable-next-line react/sort-comp
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
     if (this.props.headerFocus) {
       return false;
@@ -81,14 +68,27 @@ class OneGraphExplorer extends React.Component {
           headers: JSON.parse(JSON.stringify(headers)),
         });
       })
-      .catch(error => {
-        console.error(error);
+      .catch(() => {
         this.setState({
           schema: null,
           headers: JSON.parse(JSON.stringify(headers)),
         });
       });
   }
+
+  onExplorerResize = e => {
+    const { explorerClientX, explorerWidth } = this.state;
+    if (explorerClientX === null) {
+      this.setState({ explorerClientX: e.clientX });
+    } else {
+      const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
+      setExplorerWidthInLocalStorage(newExplorerWidth);
+      this.setState({
+        explorerWidth: newExplorerWidth,
+        explorerClientX: e.clientX,
+      });
+    }
+  };
 
   editQuery = query => {
     this.setState({ query });

@@ -1,18 +1,21 @@
 import React from 'react';
 
-/* This function sets the styling to the way the relationship looks, for eg: id -> user::user_id */
-export const getRelationshipLine = (isObjRel, lcol, rcol, rTable) => {
-  const finalRTable = rTable.name ? rTable.name : rTable;
+/* This function sets the styling to the way the relationship looks, for eg: article.id -> user.user_id */
+export const getRelDef = (isObjRel, _lCol, _rCol, lTable, _rTable) => {
+  const rTable = _rTable.name ? _rTable.name : _rTable;
+
+  const lCol = _lCol.length > 1 ? '( ' + _lCol.join(', ') + ' )' : _lCol[0];
+  const rCol = _rCol.length > 1 ? '( ' + _rCol.join(', ') + ' )' : _rCol[0];
+
   return isObjRel ? (
     <span>
-      &nbsp; ( {lcol.join(', ')} ) &nbsp;&nbsp;&rarr;&nbsp;&nbsp;
-      {rTable} :: ( {rcol.join(', ')} )
+      {lTable} . {lCol} &nbsp;&rarr;&nbsp;
+      {rTable} . {rCol}
     </span>
   ) : (
     <span>
-      &nbsp;
-      {finalRTable} :: ( {rcol.join(', ')} ) &nbsp;&nbsp;&rarr;&nbsp;&nbsp; ({' '}
-      {lcol.join(', ')} )
+      {rTable} . {rCol} &nbsp;&rarr;&nbsp;
+      {lTable} . {lCol}
     </span>
   );
 };

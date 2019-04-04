@@ -571,10 +571,6 @@ code {
   padding-bottom: 20px;
 }
 
-.add_pad_top {
-  padding-top: 10px;
-}
-
 .add_padd_bottom {
   padding-bottom: 25px;
 }
@@ -877,22 +873,15 @@ code {
 .inline_block {
   display: inline-block;
   padding-right: 20px;
-  padding-bottom: 0 !important;
 
   .header_path_btn {
     margin-right: 0 !important;
   }
 }
 
-/*Newly added for remote schema page*/
 .headerText {
   font-size: 24px;
   font-weight: bold;
-  padding-bottom: 20px;
-}
-
-.addPaddRight {
-  padding-right: 30px;
 }
 
 .subHeaderText {
@@ -916,13 +905,6 @@ code {
 .fontWeightBold {
   font-weight: 600;
 }
-
-.noPadd {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-/*Newly added for remote schema page*/
 
 .heading_text {
   font-size: 18px;
@@ -1249,7 +1231,7 @@ code {
 }
 
 .graphQLHeight {
-  height: 100vh;
+  height: 72vh;
   margin-bottom: 50px;
 }
 

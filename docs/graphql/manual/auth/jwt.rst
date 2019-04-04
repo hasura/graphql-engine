@@ -26,9 +26,9 @@ is used for the permissions system.
 .. note::
    Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
 
-   - The authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
+   - JWT authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
-   - The authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
+   - JWT authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
      found** in the request.
 
 ..   :doc:`Read more<config>`.

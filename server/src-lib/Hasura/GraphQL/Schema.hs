@@ -164,9 +164,21 @@ mkTableColAggFldsTy op tn =
 mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
+-- Support argument params for PG columns
+mkPGColParams :: PGColType -> ParamMap
+mkPGColParams = \case
+  PGJSONB -> jsonParams
+  PGJSON  -> jsonParams
+  _       -> Map.empty
+  where
+    pathDesc = "JSON select path"
+    jsonParams = Map.fromList
+      [ (G.Name "path", InpValInfo (Just pathDesc) "path" Nothing $ G.toGT $ mkScalarTy PGText)
+      ]
+
 mkPGColFld :: PGColInfo -> ObjFldInfo
 mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n Map.empty ty
+  mkHsraObjFldInfo Nothing n (mkPGColParams colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
@@ -1705,10 +1717,10 @@ checkSchemaConflicts gCtx remoteCtx = do
 
     hQRName = G.NamedType "query_root"
     hMRName = G.NamedType "mutation_root"
-    tyMsg ty = "types: [" <> namesToTxt ty <>
-               "] already exist in current graphql schema"
-    nodesMsg n = "nodes : [" <> namesToTxt n <>
-                 "] already exist in current graphql schema"
+    tyMsg ty = "types: [ " <> namesToTxt ty <>
+               " ] have mismatch with current graphql schema. HINT: Types must be same."
+    nodesMsg n = "top-level nodes: [ " <> namesToTxt n <>
+                 " ] already exist in current graphql schema. HINT: Top-level nodes can't be same."
     namesToTxt = T.intercalate ", " . map G.unName
     builtinNodes = ["__type", "__schema", "__typename"]
     builtinTy = [ "__Directive"

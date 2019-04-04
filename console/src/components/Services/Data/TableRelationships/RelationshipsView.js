@@ -146,7 +146,6 @@ class RelationshipsView extends Component {
                         rel.objRel
                       )}
                       isObjRel
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (
@@ -164,7 +163,6 @@ class RelationshipsView extends Component {
                         rel.arrRel
                       )}
                       isObjRel={false}
-                      tableStyles={tableStyles}
                       allowRename={this.state.supportRename}
                     />
                   ) : (

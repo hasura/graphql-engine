@@ -10,9 +10,9 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   if (!refTableName || Object.keys(filteredColMap).length === 0) {
     return '';
   }
-  return `( ${Object.keys(filteredColMap).join(
+  return `${Object.keys(filteredColMap).join(
     ', '
-  )} ) → ${refTableName} ( ${Object.values(filteredColMap).join(', ')} )`;
+  )} → ${refTableName} . ${Object.values(filteredColMap).join(', ')}`;
 };
 
 export const pgConfTypes = {
