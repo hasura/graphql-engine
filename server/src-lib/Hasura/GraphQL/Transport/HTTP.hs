@@ -40,13 +40,13 @@ runHasuraGQ
   => Q.PGPool
   -> Q.TxIsolation
   -> UserInfo
-  -> E.ResolvedOp
+  -> E.ExecOp
   -> m EncJSON
 runHasuraGQ pool isoL userInfo resolvedOp = do
   opTx <- case resolvedOp of
-    E.ROQuery tx    -> return tx
-    E.ROMutation tx -> return tx
-    E.ROSubs _ ->
+    E.ExOpQuery tx    -> return tx
+    E.ExOpMutation tx -> return tx
+    E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx opTx) >>= liftEither

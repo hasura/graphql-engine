@@ -83,7 +83,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
-  execPlan <- E.getExecPlan userInfo sc query
+  execPlan <- E.getExecPlanPartial userInfo sc query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet, _) ->
       return (gCtx, rootSelSet)

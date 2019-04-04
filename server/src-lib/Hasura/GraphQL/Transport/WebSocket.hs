@@ -225,13 +225,13 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     E.GExPRemote rsi opDef  ->
       runRemoteGQ userInfo reqHdrs opDef rsi
   where
-    runHasuraGQ :: UserInfo -> E.ResolvedOp -> ExceptT () IO ()
+    runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case
-      E.ROQuery opTx ->
+      E.ExOpQuery opTx ->
         execQueryOrMut $ withUserInfo userInfo opTx
-      E.ROMutation opTx ->
+      E.ExOpMutation opTx ->
         execQueryOrMut $ withUserInfo userInfo opTx
-      E.ROSubs lqOp -> do
+      E.ExOpSubs lqOp -> do
         let lq = LQ.LiveQuery userInfo q
         liftIO $ STM.atomically $ STMMap.insert lq opId opMap
         liftIO $ LQ.addLiveQuery lqMap lq lqOp (wsId, opId) liveQOnChange
