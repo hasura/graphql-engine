@@ -34,8 +34,8 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi (opDef, _) ->
-      E.execRemoteGQ manager userInfo reqHdrs req rsi opDef
+    E.GExPRemote rsi q rs ->
+      E.execRemoteGQ manager userInfo reqHdrs req rsi rs
     E.GExPMixed plans ->
       runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans
 
@@ -55,9 +55,8 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans = do
   resSet <- forM plans $ \case
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi (opDef, fragDefs) ->
-      let newQ = E.transformGQRequest req opDef fragDefs
-      in E.execRemoteGQ manager userInfo reqHdrs newQ rsi opDef
+    E.GExPRemote rsi newq rs ->
+      E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
     E.GExPMixed _ ->
       throw500 "internal-unexpected: mixed plan is nested in mixed plan"
 

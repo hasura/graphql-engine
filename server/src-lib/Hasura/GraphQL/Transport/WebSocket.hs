@@ -220,16 +220,18 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
   sc <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getExecPlan userInfo sc query
   execPlan <- either (withComplete . preExecErr) return execPlanE
-  case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ userInfo gCtx rootSelSet
-    E.GExPRemote rsi (opDef, _) ->
-      runRemoteGQ userInfo reqHdrs opDef rsi
-    E.GExPMixed _ ->
-    -- FIXME: fix this
-      withComplete $ preExecErr $
-        err400 NotSupported  "mixed nodes over ws not supported yet"
+  execute userInfo reqHdrs execPlan
   where
+    execute userInfo reqHdrs plan =
+      case plan of
+        E.GExPHasura gCtx rootSelSet ->
+          runHasuraGQ userInfo gCtx rootSelSet
+        E.GExPRemote rsi newq rootSelSet ->
+          runRemoteGQ userInfo reqHdrs rsi rootSelSet
+        E.GExPMixed plans ->
+          -- FIXME: is this correct?
+          mapM_ (execute userInfo reqHdrs) plans
+
     runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
     runHasuraGQ userInfo gCtx rootSelSet =
       case rootSelSet of
@@ -255,19 +257,20 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
       sendCompleted
 
     runRemoteGQ :: UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> RemoteSchemaInfo
+                -> V.RootSelSet
                 -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs opDef rsi = do
-      when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr $
-        err400 NotSupported "subscription to remote server is not supported"
-
-      -- if it's not a subscription, use HTTP to execute the query on the remote
-      -- server
-      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs query
-              rsi opDef
-      either postExecErr sendSuccResp resp
-      sendCompleted
+    runRemoteGQ userInfo reqHdrs rsi rootSelSet = case rootSelSet of
+        V.RSubscription _ ->
+          withComplete $ preExecErr $
+          err400 NotSupported "subscription to remote server is not supported"
+        _ -> do
+          -- if it's not a subscription, use HTTP to execute the query on the
+          -- remote server
+          resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs query
+                  rsi rootSelSet
+          either postExecErr sendSuccResp resp
+          sendCompleted
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 

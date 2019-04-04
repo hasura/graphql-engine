@@ -10,6 +10,7 @@ module Hasura.GraphQL.Execute
 
 import           Control.Exception                      (try)
 import           Control.Lens                           hiding (op)
+import           Data.List                              (nub)
 
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
@@ -34,7 +35,7 @@ import qualified Hasura.GraphQL.Validate.Types          as VT
 
 data GQExecPlan
   = GExPHasura !GCtx !VQ.RootSelSet
-  | GExPRemote !RemoteSchemaInfo !SplitQueryParts
+  | GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   | GExPMixed  ![GQExecPlan]
   deriving (Show)
 
@@ -51,6 +52,7 @@ getExecPlan userInfo sc req = do
 
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
+  rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
 
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
@@ -58,27 +60,35 @@ getExecPlan userInfo sc req = do
       typeLocs = gatherTypeLocs gCtx topLevelNodes
       typeLocWTypes = zip typeLocs topLevelNodes
       queryMap = foldr upsertType mempty typeLocWTypes
-      queries = splitQuery opDef fragDefs queryMap
-  mkExecPlan gCtx queries
+      querySplits = splitQuery opDef fragDefs queryMap
+      newQs = map (\(tl, qp) -> (,) tl $ uncurry (transformGQRequest req) qp)
+              querySplits
+
+  newRootSels <- forM newQs $ \(tl, q) ->
+    flip runReaderT gCtx $ do
+      p <- VQ.getQueryParts q
+      (,) tl <$> VQ.validateGQ p
+
+  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) newQs newRootSels
+
+  case newReqs of
+    -- this shouldn't happen
+    [] ->
+      return $ GExPHasura gCtx rootSelSet
+    [(VT.HasuraType, _)] ->
+      return $ GExPHasura gCtx rootSelSet
+    [(VT.RemoteType _ rsi, _)] ->
+      return $ GExPRemote rsi req rootSelSet
+    (x:xs) -> do
+      r <- case x of
+        (VT.HasuraType, (newq, _)) -> do
+          qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
+          GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx
+        (VT.RemoteType _ rsi, (newq, rs)) ->
+          return $ GExPRemote rsi newq rs
+      rs <- mapM (getExecPlan userInfo sc . fst . snd) xs
+      return $ GExPMixed (r:rs)
   where
-    mkExecPlan gCtx queries = case queries of
-      [(VT.HasuraType, _)] -> do
-        queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-        GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
-      [(VT.RemoteType _ rsi, qParts)] ->
-        return $ GExPRemote rsi qParts
-      xs ->
-        GExPMixed <$> mapM splitPlan xs
-      where
-        splitPlan qm = case qm of
-          (VT.HasuraType, (opDef', fragDefs)) -> do
-            let newQ = transformGQRequest req opDef' fragDefs
-            queryParts <- flip runReaderT gCtx $ VQ.getQueryParts newQ
-            GExPHasura gCtx <$> runReaderT (VQ.validateGQ queryParts) gCtx
-          (VT.RemoteType _ rsi, qParts) ->
-            return $ GExPRemote rsi qParts
-
-
     gCtxRoleMap = scGCtxMap sc
 
     upsertType :: (VT.TypeLoc, G.Name) -> QueryMap -> QueryMap
@@ -93,17 +103,6 @@ getExecPlan userInfo sc req = do
             (flds, vars) = pickFields opDef tyNames selSet
             frags = pickFrags flds fragDefs
         in (tl, (mkNewOpDef opDef flds vars, frags))
-
-    pickFrags selSet fragDefs =
-      let perSel sel = case sel of
-            G.SelectionField fld ->
-              join $ map perSel $ G._fSelectionSet fld
-            G.SelectionFragmentSpread fs  -> [G._fsName fs]
-            G.SelectionInlineFragment ilf ->
-              join $ map perSel $ G._ifSelectionSet ilf
-
-          fragNames = join $ map perSel selSet
-      in filter (\fd -> G._fdName fd `elem` fragNames) fragDefs
 
     pickFields opDef fldNames selSet =
       let flds = filter filterSel selSet
@@ -131,10 +130,30 @@ getExecPlan userInfo sc req = do
     getVarFromVal :: G.Value -> [G.Variable]
     getVarFromVal val = case val of
       G.VVariable v -> [v]
+      G.VList l -> case G.unListValue l of
+        [] -> []
+        xs -> join $ map getVarFromVal xs
       G.VObject o   ->
         let xs = map G._ofValue $ G.unObjectValue o
         in join $ map getVarFromVal xs
       _ -> []
+
+    pickFrags selSet fragDefs =
+      let perSel sel = case sel of
+            G.SelectionField fld ->
+              join $ map perSel $ G._fSelectionSet fld
+            G.SelectionFragmentSpread fs  -> [G._fsName fs]
+            G.SelectionInlineFragment ilf ->
+              join $ map perSel $ G._ifSelectionSet ilf
+
+          fragNames = join $ map perSel selSet
+          curFrags = filter (\fd -> G._fdName fd `elem` fragNames) fragDefs
+
+          otherFragNames = join . join $ map (map perSel . G._fdSelectionSet)
+                           curFrags
+          otherFrags = filter (\fd -> G._fdName fd `elem` otherFragNames) fragDefs
+
+      in nub $ curFrags ++ otherFrags
 
     mkNewOpDef opDef selset varDefs =
       opDef { G._todSelectionSet = selset
@@ -163,20 +182,21 @@ execRemoteGQ
   -> [N.Header]
   -> GraphQLRequest
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition
+  -> VQ.RootSelSet
   -> m EncJSON
-execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
-  let opTy = G._todType opDef
-  when (opTy == G.OperationTypeSubscription) $
+execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
+  VQ.RSubscription _ ->
     throw400 NotSupported "subscription to remote server is not supported"
-  hdrs <- getHeadersFromConf hdrConf
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      clientHdrs = bool [] filteredHeaders fwdClientHdrs
-      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
+  _ -> do
+    hdrs <- getHeadersFromConf hdrConf
+    let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+        clientHdrs = bool [] filteredHeaders fwdClientHdrs
+        options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++
+                                          confHdrs)
 
-  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
-  resp <- either httpThrow return res
-  return $ encJFromLBS $ resp ^. Wreq.responseBody
+    res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
+    resp <- either httpThrow return res
+    return $ encJFromLBS $ resp ^. Wreq.responseBody
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
@@ -191,16 +211,6 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
                   , "Accept-Language", "Accept-Datetime"
                   , "Cache-Control", "Connection", "DNT"
                   ]
-
--- assertSameLocationNodes :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
--- assertSameLocationNodes typeLocs =
---   case Set.toList (Set.fromList typeLocs) of
---     -- this shouldn't happen
---     []    -> return VT.HasuraType
---     [loc] -> return loc
---     _     -> throw400 NotSupported msg
---   where
---     msg = "cannot mix top level fields from two different graphql servers"
 
 -- TODO: we should fix this function asap
 -- as this will fail when there is a fragment at the top level
