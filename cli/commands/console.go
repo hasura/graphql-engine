@@ -305,7 +305,11 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
-	config.AllowHeaders = []string{"*"}
+	config.AddAllowHeaders("X-Hasura-User-Id")
+	config.AddAllowHeaders(XHasuraAccessKey)
+	config.AddAllowHeaders(XHasuraAdminSecret)
+	config.AddAllowHeaders("X-Hasura-Role")
+	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AllowOrigins = []string{"*"}
 	return cors.New(config)
 }
