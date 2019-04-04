@@ -43,19 +43,18 @@ const RawSQL = ({
 
   const cascadeTip = (
     <Tooltip id="tooltip-cascade">
-      Cascade all the dependent metadata references like relationships and
-      permissions.
+      Cascade actions on all dependent metadata references, like relationships
+      and permissions
     </Tooltip>
   );
   const migrationTip = (
     <Tooltip id="tooltip-migration">
-      Modifications to the underlying postgres schema should be tracked as
-      migrations
+      Modifications to the database schema should be tracked as migrations
     </Tooltip>
   );
   const migrationNameTip = (
     <Tooltip id="tooltip-migration">
-      Use this to change the name of the generated migration files. Defaults to
+      Change the name of the generated migration file. Default:
       'run_sql_migration'
     </Tooltip>
   );
@@ -63,42 +62,9 @@ const RawSQL = ({
     <Tooltip id="tooltip-tracktable">
       {`If you are creating a table/view${
         _hasFunctionSupport ? '/function' : ''
-      }, you can track them to query them
-      with GraphQL`}
+      }, checking this will also expose them
+      over the GraphQL API`}
     </Tooltip>
-  );
-
-  let alert = null;
-
-  if (ongoingRequest) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-warning" role="alert">
-          Running...
-        </div>
-      </div>
-    );
-  } else if (lastError) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      </div>
-    );
-  } else if (lastSuccess) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-success" role="alert">
-          Executed Query
-        </div>
-      </div>
-    );
-  }
-
-  const hasFunctionSupport = semverCheck(
-    'customFunctionSection',
-    serverVersion
   );
 
   const isSchemaModification = _sql => {
@@ -140,6 +106,39 @@ const RawSQL = ({
       dispatch(executeSQL(false, ''));
     }
   };
+
+  let alert = null;
+
+  if (ongoingRequest) {
+    alert = (
+      <div className={`${styles.padd_left_remove} col-xs-12`}>
+        <div className="hidden alert alert-warning" role="alert">
+          Running...
+        </div>
+      </div>
+    );
+  } else if (lastError) {
+    alert = (
+      <div className={`${styles.padd_left_remove} col-xs-12`}>
+        <div className="hidden alert alert-danger" role="alert">
+          Error: {JSON.stringify(lastError)}
+        </div>
+      </div>
+    );
+  } else if (lastSuccess) {
+    alert = (
+      <div className={`${styles.padd_left_remove} col-xs-12`}>
+        <div className="hidden alert alert-success" role="alert">
+          Executed Query
+        </div>
+      </div>
+    );
+  }
+
+  const hasFunctionSupport = semverCheck(
+    'customFunctionSection',
+    serverVersion
+  );
 
   const getMigrationModal = () => {
     const onModalClose = () => {
@@ -228,7 +227,7 @@ const RawSQL = ({
     };
 
     return (
-      <div>
+      <div className={styles.add_mar_top}>
         <h4>SQL:</h4>
         <AceEditor
           data-test="sql-test-editor"
@@ -284,9 +283,9 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`${
+              className={`table table-bordered table-striped table-hover ${
                 styles.table
-              } table table-bordered table-striped table-hover`}
+              } `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -307,20 +306,28 @@ const RawSQL = ({
     return (
       <div>
         <b>Notes</b>
-        <ul className={styles.remove_ul_left}>
+        <ul className={styles.remove_ul_left + ' ' + styles.add_mar_top_small}>
           <li>
-            You can create views, alter tables or just use any SQL syntax to
-            communicate with the database.
+            You can create views, alter tables and just about run any SQL
+            statements directly on the database.
           </li>
           <li>
-            If you plan to create a Table/View
-            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, remember to
-            expose it over the GraphQL API by checking the{' '}
-            <code>Track this</code> checkbox below.
+            Multiple SQL statements can be separated by semicolons,{' '}
+            <code>;</code>, however, only the result of the last SQL statement
+            will be returned.
           </li>
           <li>
-            Please note that if migrations are enabled, <b>down</b> migrations
-            will not be generated when you change the schema using Raw SQL.
+            Multiple SQL statements will be run as a transaction. i.e. if any
+            statement fails, none of the statements will be applied.
+          </li>
+          <li>
+            If you are creating a Table/View
+            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, checking the{' '}
+            <b>Track this</b> checkbox will also expose it over the GraphQL API.
+          </li>
+          <li>
+            If migrations are enabled, down migrations will not be generated for
+            statements run using Raw SQL.
           </li>
         </ul>
       </div>
@@ -329,7 +336,7 @@ const RawSQL = ({
 
   const getMetadataCascadeSection = () => {
     return (
-      <div>
+      <div className={styles.add_mar_top_small}>
         <input
           checked={isCascadeChecked}
           className={styles.add_mar_right_small}
@@ -354,22 +361,26 @@ const RawSQL = ({
   };
 
   const getTrackThisSection = () => {
+    const dispatchTrackThis = () => {
+      dispatch({
+        type: SET_TRACK_TABLE_CHECKED,
+        data: !isTableTrackChecked,
+      });
+    };
+
     return (
       <div className={styles.add_mar_top}>
-        <input
-          checked={isTableTrackChecked}
-          className={styles.add_mar_right_small}
-          id="track-checkbox"
-          type="checkbox"
-          onChange={() => {
-            dispatch({
-              type: SET_TRACK_TABLE_CHECKED,
-              data: !isTableTrackChecked,
-            });
-          }}
-          data-test="raw-sql-track-check"
-        />
-        Track this
+        <label>
+          <input
+            checked={isTableTrackChecked}
+            className={styles.add_mar_right_small}
+            id="track-checkbox"
+            type="checkbox"
+            onChange={dispatchTrackThis}
+            data-test="raw-sql-track-check"
+          />
+          Track this
+        </label>
         <OverlayTrigger
           placement="right"
           overlay={trackTableTip(hasFunctionSupport)}
@@ -387,6 +398,13 @@ const RawSQL = ({
     let migrationSection = null;
 
     const getIsMigrationSection = () => {
+      const dispatchIsMigration = () => {
+        dispatch({
+          type: SET_MIGRATION_CHECKED,
+          data: !isMigrationChecked,
+        });
+      };
+
       return (
         <div>
           <input
@@ -394,12 +412,7 @@ const RawSQL = ({
             className={styles.add_mar_right_small}
             id="migration-checkbox"
             type="checkbox"
-            onChange={() => {
-              dispatch({
-                type: SET_MIGRATION_CHECKED,
-                data: !isMigrationChecked,
-              });
-            }}
+            onChange={dispatchIsMigration}
             data-test="raw-sql-migration-check"
           />
           This is a migration
@@ -418,9 +431,23 @@ const RawSQL = ({
 
       if (isMigrationChecked) {
         migrationNameSection = (
-          <div className={styles.add_mar_top + ' ' + styles.add_mar_left}>
+          <div className={styles.add_mar_top_small + ' ' + styles.add_mar_left}>
             <div>
-              Migration Name:
+              <label className={styles.add_mar_right}>Migration name:</label>
+              <input
+                className={
+                  styles.inline_block +
+                  ' ' +
+                  styles.tableNameInput +
+                  ' ' +
+                  styles.add_mar_right_small +
+                  ' ' +
+                  ' form-control'
+                }
+                placeholder={'run_sql_migration'}
+                id="migration-name"
+                type="text"
+              />
               <OverlayTrigger placement="right" overlay={migrationNameTip}>
                 <i
                   className={`${styles.add_mar_left_small} fa fa-info-circle`}
@@ -428,19 +455,6 @@ const RawSQL = ({
                 />
               </OverlayTrigger>
             </div>
-            <input
-              className={
-                styles.add_mar_right_small +
-                ' ' +
-                styles.tableNameInput +
-                ' ' +
-                styles.add_mar_top_small +
-                ' form-control'
-              }
-              placeholder={'Name of the generated migration file'}
-              id="migration-name"
-              type="text"
-            />
           </div>
         );
       }
@@ -450,7 +464,7 @@ const RawSQL = ({
 
     if (migrationMode && globals.consoleMode === 'cli') {
       migrationSection = (
-        <div className={styles.add_mar_top}>
+        <div className={styles.add_mar_top_small}>
           {getIsMigrationSection()}
           {getMigrationNameSection()}
         </div>
@@ -458,6 +472,21 @@ const RawSQL = ({
     }
 
     return migrationSection;
+  };
+
+  const getRunButton = () => {
+    return (
+      <Button
+        type="submit"
+        className={styles.add_mar_top}
+        onClick={submitSQL}
+        color="yellow"
+        size="sm"
+        data-test="run-sql"
+      >
+        Run!
+      </Button>
+    );
   };
 
   return (
@@ -471,38 +500,24 @@ const RawSQL = ({
         </h2>
         <div className="clearfix" />
       </div>
-      <hr />
-      <div>
+      <div className={styles.add_mar_top}>
         <div className={`${styles.addCol} col-xs-8 ${styles.padd_left_remove}`}>
           {getNotesSection()}
-          <hr />
 
           {getSQLSection()}
-          <hr />
 
-          {getMetadataCascadeSection()}
           {getTrackThisSection()}
+          {getMetadataCascadeSection()}
           {getMigrationSection()}
-          <hr />
 
-          <Button
-            type="submit"
-            onClick={submitSQL}
-            color="yellow"
-            size="sm"
-            data-test="run-sql"
-          >
-            Run!
-          </Button>
+          {getRunButton()}
         </div>
         <div className="hidden col-xs-4">{alert}</div>
       </div>
 
       {getMigrationModal()}
 
-      <div className={`${styles.padd_left_remove} container-fluid`}>
-        {getResultTable()}
-      </div>
+      <div className={styles.add_mar_top}>{getResultTable()}</div>
     </div>
   );
 };

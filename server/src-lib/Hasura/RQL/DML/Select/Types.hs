@@ -12,9 +12,8 @@ import qualified Data.Text                  as T
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
 import qualified Hasura.SQL.DML             as S
+import           Hasura.SQL.Types
 
 type SelectQExt = SelectG ExtCol BoolExp Int
 -- Columns in RQL
@@ -77,8 +76,14 @@ data ArrSel
 
 type ArrSelFlds = Fields ArrSel
 
+data ColOp
+  = ColOp
+  { _colOp  :: S.SQLOp
+  , _colExp :: S.SQLExp
+  } deriving (Show, Eq)
+
 data AnnFld
-  = FCol !PGColInfo
+  = FCol !PGColInfo !(Maybe ColOp)
   | FObj !ObjSel
   | FArr !ArrSel
   | FExp !T.Text

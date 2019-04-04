@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -24,7 +25,14 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			opts.EC.Spin("Applying metadata...")
+			err := opts.run()
+			opts.EC.Spinner.Stop()
+			if err != nil {
+				return errors.Wrap(err, "failed to apply metadata")
+			}
+			opts.EC.Logger.Info("Metadata applied")
+			return nil
 		},
 	}
 

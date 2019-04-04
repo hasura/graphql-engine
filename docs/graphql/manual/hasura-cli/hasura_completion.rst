@@ -37,7 +37,7 @@ Examples
         # open git bash
         $ mkdir -p ~/.bash_completion.d
         # Add the completion file:
-        $ cd ~ && hasura completion bash --file=bash_completion.d/hasura
+        $ cd ~ && hasura completion bash --file=.bash_completion.d/hasura
         # Add the following to ~/.bash_profile
           if [ -f ~/.bash_completion.d/hasura ]; then
             . ~/.bash_completion.d/hasura

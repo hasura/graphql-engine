@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
-import { getRelationshipLine } from './utils';
+import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../Notification';
@@ -66,11 +66,14 @@ class RelationshipEditor extends React.Component {
       relName,
       relConfig,
       isObjRel,
-      tableStyles,
       allowRename,
     } = this.props;
+
     const { text, isEditting } = this.state;
     const { lcol, rtable, rcol } = relConfig;
+
+    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
     const onDelete = e => {
       e.preventDefault();
       const isOk = confirm('Are you sure?');
@@ -97,7 +100,7 @@ class RelationshipEditor extends React.Component {
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
-          {getRelationshipLine(isObjRel, lcol, rcol, rtable)}
+          {getRelDef(isObjRel, lcol, rcol, tableName, rtable)}
         </div>
       </div>
     );
@@ -115,7 +118,7 @@ class RelationshipEditor extends React.Component {
           </Button>
         </div>
         <div className={tableStyles.relationshipTopPadding}>
-          <div>{getRelationshipLine(isObjRel, lcol, rcol, rtable)}</div>
+          <div>{getRelDef(isObjRel, lcol, rcol, tableName, rtable)}</div>
           <input
             onChange={this.handleTextChange}
             className={`form-control ${styles.add_mar_top_small}`}
