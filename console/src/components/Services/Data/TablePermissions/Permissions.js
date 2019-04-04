@@ -798,6 +798,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip(rowSectionTitle, rowPermissionTooltip)}
             defaultTitle
+            isOpen
           >
             <div className={styles.editPermissionsSection}>
               <div>
@@ -928,6 +929,7 @@ class Permissions extends Component {
             <CollapsibleToggle
               title={addTooltip(colSectionTitle, colPermissionTooltip)}
               defaultTitle
+              isOpen
             >
               <div className={styles.editPermissionsSection}>
                 <div>
@@ -974,6 +976,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip('Upsert queries permissions', upsertToolTip)}
             defaultTitle
+            isOpen
           >
             <div className="radio">
               <label>
@@ -1316,6 +1319,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip('Column presets', presetTooltip)}
             defaultTitle
+            isOpen
           >
             <div className={styles.editPermissionsSection}>
               <form className={styles.form_permission_insert_set_wrapper}>
@@ -1355,6 +1359,7 @@ class Permissions extends Component {
               aggregationToolTip
             )}
             defaultTitle
+            isOpen
           >
             <div className={styles.mar_small_neg_left_1}>
               <div className="radio">
@@ -1542,6 +1547,7 @@ class Permissions extends Component {
               <CollapsibleToggle
                 title={addTooltip('Clone permissions', cloneToolTip)}
                 defaultTitle
+                isOpen
               >
                 <div className={styles.editPermissionsSection}>
                   <div>Apply same permissions for:</div>
@@ -1549,8 +1555,8 @@ class Permissions extends Component {
                     {applyToListHtml}
                   </div>
                   <div className={styles.add_mar_top}>
-                    <b>Note:</b> While applying cross table permissions, the
-                    column permissions and presets will be ignored
+                    <b>Note:</b> While applying permissions for other tables,
+                    the column permissions and presets will be ignored
                   </div>
                   <Button
                     onClick={applySameBulk}
@@ -1559,7 +1565,7 @@ class Permissions extends Component {
                     size="sm"
                     disabled={!permissionsState.applySamePermissions.length}
                   >
-                    Save permissions
+                    Save Permissions
                   </Button>
                 </div>
               </CollapsibleToggle>
@@ -1611,7 +1617,7 @@ class Permissions extends Component {
         const disableRemoveAccess = !currQueryPermissions;
 
         const saveButton = getButton(
-          'Save permissions',
+          'Save Permissions',
           'yellow',
           dispatchSavePermissions,
           disableSave,
@@ -1619,7 +1625,7 @@ class Permissions extends Component {
         );
 
         const removeAccessButton = getButton(
-          'Delete permissions',
+          'Delete Permissions',
           'red',
           dispatchRemoveAccess,
           disableRemoveAccess,
@@ -1627,7 +1633,7 @@ class Permissions extends Component {
         );
 
         return (
-          <div className={styles.add_mar_top}>
+          <div className={styles.add_mar_top + ' ' + styles.add_pad_left}>
             {saveButton}
             {removeAccessButton}
           </div>
