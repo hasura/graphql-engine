@@ -3,6 +3,10 @@ module Hasura.GraphQL.Resolve
   , queryFldToPGAST
   , RS.traverseQueryRootFldAST
   , RS.toPGQuery
+  , UnresolvedVal(..)
+  , AnnPGVal(..)
+  , RS.QueryRootFldUnresolved
+  , resolveValPrep
   , queryFldToSQL
   , schemaR
   , typeR

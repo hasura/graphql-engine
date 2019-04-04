@@ -212,7 +212,7 @@ library
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Context
+                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Execute.LiveQuery.Types
                      , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
