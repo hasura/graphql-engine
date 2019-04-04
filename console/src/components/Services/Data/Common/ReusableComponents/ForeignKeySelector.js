@@ -62,17 +62,17 @@ const ForeignKeySelector = ({
           onChange={dispatchSetRefTable}
         >
           {// default unselected option
-          refTableName === '' && (
-            <option value={''} disabled>
-              {'-- reference table --'}
-            </option>
-          )}
+            refTableName === '' && (
+              <option value={''} disabled>
+                {'-- reference table --'}
+              </option>
+            )}
           {// all reference table options
-          Object.keys(refTables).map((rt, j) => (
-            <option key={j} value={rt}>
-              {rt}
-            </option>
-          ))}
+            Object.keys(refTables).map((rt, j) => (
+              <option key={j} value={rt}>
+                {rt}
+              </option>
+            ))}
         </select>
       </div>
     );
@@ -81,6 +81,7 @@ const ForeignKeySelector = ({
   // html for column mapping dropdowns
   const columnSelect = () => {
     // Do not allow selecting columns if ref table hasn't been selected
+    const selectTitle = !refTableName ? 'Please select the reference table' : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
@@ -161,6 +162,7 @@ const ForeignKeySelector = ({
                   onChange={dispatchSetLcol}
                   data-test={`foreign-key-${index}-lcol-${_i}`}
                   disabled={!refTableName}
+                  title={selectTitle}
                 >
                   {lc === '' && (
                     <option value="" disabled>
@@ -184,6 +186,7 @@ const ForeignKeySelector = ({
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}
+                  title={selectTitle}
                   data-test={`foreign-key-${index}-rcol-${_i}`}
                 >
                   {rc === '' && (
@@ -212,7 +215,7 @@ const ForeignKeySelector = ({
   const onViolation = () => {
     // Do not allow selecting on violation conditions if no column mapping is selected
     const disabled = numColMappings <= 1;
-
+    const inputTitle = disabled ? 'Please select the reference table and the column configuration' : undefined;
     // Generate radios for violation actions
     const radios = action => {
       const selected = foreignKey[action];
@@ -235,6 +238,7 @@ const ForeignKeySelector = ({
                   onChange={onCheck}
                   data-test={`foreign-key-${index}-${action}-${va}`}
                   className={styles.add_mar_right_small}
+                  title={inputTitle}
                   disabled={disabled}
                 />
                 <div>{va.toLowerCase()}</div>
