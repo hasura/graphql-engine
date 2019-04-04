@@ -43,13 +43,13 @@ runHasuraGQ
   -> E.ExecOp
   -> m EncJSON
 runHasuraGQ pool isoL userInfo resolvedOp = do
-  opTx <- case resolvedOp of
-    E.ExOpQuery tx    -> return tx
-    E.ExOpMutation tx -> return tx
+  respE <- liftIO $ runExceptT $ case resolvedOp of
+    E.ExOpQuery tx    ->
+      runLazyTx' pool tx
+    E.ExOpMutation tx ->
+      runLazyTx pool isoL $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
-  resp <- liftIO (runExceptT $ runTx opTx) >>= liftEither
+  resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
-  where
-    runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx

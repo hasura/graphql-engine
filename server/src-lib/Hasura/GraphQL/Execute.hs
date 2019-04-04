@@ -149,11 +149,12 @@ getResolvedExecPlan
 getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
+  let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> GExPHasura <$> case plan of
       EP.RPQuery queryPlan ->
-        ExOpQuery <$> EQ.queryOpFromPlan queryVars queryPlan
+        ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.subsOpFromPlan queryVars subsPlan
     Nothing -> noExistingPlan
