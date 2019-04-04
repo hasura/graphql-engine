@@ -202,16 +202,20 @@ class Schema extends Component {
       const getTrackAllBtn = () => {
         let trackAllBtn = null;
 
+        const trackAllTables = e => {
+          e.stopPropagation();
+          e.preventDefault();
+
+          dispatch(addAllUntrackedTablesSql(allUntrackedTables));
+        };
+
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
               className={`${styles.display_inline} ${styles.addAllBtn}`}
               color="white"
               size="xs"
-              onClick={e => {
-                e.preventDefault();
-                dispatch(addAllUntrackedTablesSql(allUntrackedTables));
-              }}
+              onClick={trackAllTables}
             >
               Track All
             </Button>
@@ -287,7 +291,10 @@ class Schema extends Component {
       const getTrackAllBtn = () => {
         let trackAllBtn = null;
 
-        const trackAllRelations = () => {
+        const trackAllRelations = e => {
+          e.stopPropagation();
+          e.preventDefault();
+
           this.props.dispatch(autoTrackRelations(untrackedRelations));
         };
 
