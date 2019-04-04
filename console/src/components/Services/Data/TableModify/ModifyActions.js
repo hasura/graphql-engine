@@ -157,8 +157,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-  ', '
-)} );
+            ', '
+          )} );
           `,
         },
       });
@@ -183,8 +183,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-  ', '
-)} );
+          ', '
+        )} );
         `,
       });
     }
@@ -1110,24 +1110,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
@@ -1291,7 +1291,7 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     }
 
     /* column nullable up/down migration */
-    if (nullable === 'true') {
+    if (nullable) {
       // ALTER TABLE <table> ALTER COLUMN <column> DROP NOT NULL;
       const nullableUpQuery =
         'ALTER TABLE ' +
@@ -1384,7 +1384,7 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     }
 
     /* column unique up/down migration */
-    if (unique === 'true') {
+    if (unique) {
       const uniqueUpQuery =
         'ALTER TABLE ' +
         '"' +

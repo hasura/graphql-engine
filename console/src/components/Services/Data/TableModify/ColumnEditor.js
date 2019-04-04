@@ -24,12 +24,10 @@ const ColumnEditor = ({
   editColumn,
 }) => {
   const colName = columnProperties.name;
-  useEffect(
-    () => {
-      dispatch(editColumn(colName, 'comment', columnComment));
-    },
-    [columnComment]
-  );
+  useEffect(() => {
+    dispatch(editColumn(colName, 'comment', columnComment));
+  }, [columnComment]);
+  console.log(columnComment);
   const c = column;
   if (!selectedProperties[colName]) {
     return null;

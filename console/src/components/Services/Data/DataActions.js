@@ -664,8 +664,8 @@ const dataReducer = (state = defaultState, action) => {
       const loadedComment = action.data ? action.data.result[1] || '' : '';
       return {
         ...state,
-        columnComment: {
-          ...state.columnComment,
+        columnComments: {
+          ...state.columnComments,
           [action.column]: loadedComment,
         },
       };
