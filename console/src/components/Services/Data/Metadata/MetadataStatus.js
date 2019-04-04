@@ -219,7 +219,7 @@ const MetadataStatus = ({
         } ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Metadata Status
+          Hasura Metadata Status
         </h2>
         {content()}
       </div>
