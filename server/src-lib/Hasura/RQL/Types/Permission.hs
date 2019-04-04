@@ -67,9 +67,9 @@ roleFromVars :: UserVars -> Maybe RoleName
 roleFromVars =
   fmap RoleName . getVarVal userRoleHeader
 
-getVarVal :: Text -> UserVars -> Maybe Text
+getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =
-  Map.lookup k . unUserVars
+  Map.lookup (T.toLower k) . unUserVars
 
 getVarNames :: UserVars -> [T.Text]
 getVarNames =

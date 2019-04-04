@@ -11,10 +11,10 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
 import qualified Data.TByteString                       as TBS
+import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
--- import qualified Hasura.GraphQL.Execute.Plan      as Plan
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -101,10 +101,10 @@ getReusablePlan (QueryPlan vars fldPlans) =
     varTypes = Map.unions $ map (varTypesOfPlan . snd) fldPlans
 
 withPlan
-  :: PGPlan -> GV.AnnPGVarVals -> RespTx
-withPlan (PGPlan q reqVars prepMap) annVars = do
+  :: UserVars -> PGPlan -> GV.AnnPGVarVals -> RespTx
+withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = IntMap.elems prepMap'
+  let args = withUserVars usrVars $ IntMap.elems prepMap'
   asSingleRowJsonResp q args
   where
     getVar accum (var, (prepNo, _)) = do
@@ -116,9 +116,10 @@ withPlan (PGPlan q reqVars prepMap) annVars = do
 
 -- turn the current plan into a transaction
 mkCurPlanTx
-  :: QueryPlan
+  :: UserVars
+  -> QueryPlan
   -> LazyRespTx
-mkCurPlanTx (QueryPlan _ fldPlans) =
+mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
   fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp        -> return resp
@@ -126,7 +127,11 @@ mkCurPlanTx (QueryPlan _ fldPlans) =
     return (G.unName $ G.unAlias alias, fldResp)
   where
     planTx (PGPlan q _ prepMap) =
-      asSingleRowJsonResp q $ IntMap.elems prepMap
+      asSingleRowJsonResp q $ withUserVars usrVars $ IntMap.elems prepMap
+
+withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
+withUserVars usrVars l =
+  Q.toPrepVal (Q.AltJ usrVars):l
 
 data PlanningSt
   = PlanningSt
@@ -136,7 +141,8 @@ data PlanningSt
   }
 
 initPlanningSt :: PlanningSt
-initPlanningSt = PlanningSt 1 Map.empty IntMap.empty
+initPlanningSt =
+  PlanningSt 2 Map.empty IntMap.empty
 
 getVarArgNum
   :: (MonadState PlanningSt m)
@@ -165,17 +171,34 @@ getNextArgNum = do
   put $ PlanningSt (curArgNum + 1) vars prepped
   return curArgNum
 
+getSessVarVal
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has UserInfo r
+     )
+  => SessVar -> m SessVarVal
+getSessVarVal sessVar = do
+  usrVars <- userVars <$> asks getter
+  onNothing (getVarVal sessVar usrVars) $
+    throw500WithDetail "internal authorization error" $ J.String $
+    "missing session variable: " <> sessVar
+
 prepareWithPlan
   :: (MonadState PlanningSt m)
-  => AnnPGVal -> m S.SQLExp
-prepareWithPlan annPGVal  = do
-  argNum <- case (varM, isNullable) of
-    (Just var, False) -> getVarArgNum var colTy
-    _                 -> getNextArgNum
-  addPrepArg argNum $ binEncoder colVal
-  return $ toPrepParam argNum colTy
-  where
-    AnnPGVal varM isNullable colTy colVal = annPGVal
+  => UnresolvedVal -> m S.SQLExp
+prepareWithPlan = \case
+  R.UVPG annPGVal -> do
+    let AnnPGVal varM isNullable colTy colVal = annPGVal
+    argNum <- case (varM, isNullable) of
+      (Just var, False) -> getVarArgNum var colTy
+      _                 -> getNextArgNum
+    addPrepArg argNum $ binEncoder colVal
+    return $ toPrepParam argNum colTy
+  R.UVSessVar colTy sessVar ->
+    return $ S.withTyAnn colTy $ withGeoVal colTy $
+      S.SEOpApp (S.SQLOp "->>")
+      [S.SEPrep 1, S.SELit $ T.toLower sessVar]
+  R.UVSQL sqlExp -> return sqlExp
 
 queryRootName :: Text
 queryRootName = "query_root"
@@ -194,31 +217,35 @@ convertQuerySelSet
   -> V.SelSet
   -> m (LazyRespTx, Maybe ReusableQueryPlan)
 convertQuerySelSet varDefs fields = do
+  usrVars <- asks (userVars . getter)
   fldPlans <- forM (toList fields) $ \fld -> do
     fldPlan <- case V._fName fld of
       "__type"     -> RFPRaw . encJFromJValue <$> R.typeR fld
       "__schema"   -> RFPRaw . encJFromJValue <$> R.schemaR fld
       "__typename" -> return $ RFPRaw $ encJFromJValue queryRootName
       _            -> do
+        unresolvedAst <- R.queryFldToPGAST fld
         (q, PlanningSt _ vars prepped) <-
-          flip runStateT initPlanningSt $ R.queryFldToSQL prepareWithPlan fld
-        return $ RFPPostgres $ PGPlan q vars prepped
+          flip runStateT initPlanningSt $ R.traverseQueryRootFldAST
+          prepareWithPlan unresolvedAst
+        return $ RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
     return (V._fAlias fld, fldPlan)
   let queryPlan     = QueryPlan varDefs fldPlans
       reusablePlanM = getReusablePlan queryPlan
-  return (mkCurPlanTx queryPlan, reusablePlanM)
+  return (mkCurPlanTx usrVars queryPlan, reusablePlanM)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
   :: (MonadError QErr m)
-  => Maybe GH.VariableValues
+  => UserVars
+  -> Maybe GH.VariableValues
   -> ReusableQueryPlan
   -> m LazyRespTx
-queryOpFromPlan varValsM (ReusableQueryPlan varTypes fldPlans) = do
+queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return resp
-          RFPPostgres pgPlan -> liftTx $ withPlan pgPlan validatedVars
+          RFPPostgres pgPlan -> liftTx $ withPlan usrVars pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
   return tx

@@ -8,6 +8,7 @@ module Hasura.RQL.Types
 
        , LazyTx
        , runLazyTx
+       , runLazyTx'
        , withUserInfo
 
        , RespTx
@@ -183,6 +184,13 @@ runLazyTx pgPool txIso = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
+
+runLazyTx'
+  :: Q.PGPool -> LazyTx QErr a -> ExceptT QErr IO a
+runLazyTx' pgPool = \case
+  LTErr e  -> throwError e
+  LTNoTx a -> return a
+  LTTx tx  -> Q.runTx' pgPool tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
