@@ -93,6 +93,17 @@ const ForeignKeyEditor = ({
       expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
     }
 
+    // label next to the button when the editor is expanded
+    const expandedLabel = () => {
+      if (isLast) return null;
+      const existingFkConfig = getForeignKeyConfig(existingForeignKeys[i], orderedColumns);
+      return (
+        <h5 className={styles.padd_bottom}>
+          <b>{existingFkConfig}</b>
+        </h5>
+      );
+    };
+
     // If the user made some changes and collapses the editor, the changes are lost
     const resetFk = () => {
       const newFks = [...fkModify];
@@ -123,9 +134,10 @@ const ForeignKeyEditor = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`fk_${fk.constraintName || 'new'}`}>
+      <div key={`fk_${fk.constraintName || i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
+          expandedLabel={expandedLabel}
           property={`fk-${i}`}
           service="modify-table"
           removeFunc={removeFk}
