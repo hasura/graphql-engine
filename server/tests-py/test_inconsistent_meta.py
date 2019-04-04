@@ -6,16 +6,16 @@ from validate import json_ordered
 
 class TestInconsistentObjects():
 
-    get_inconsistent_objects = {
-        "type": "get_inconsistent_objects",
+    get_inconsistent_metadata = {
+        "type": "get_inconsistent_metadata",
         "args": {}
     }
     reload_metadata = {
         "type": "reload_metadata",
         "args": {}
     }
-    drop_inconsistent_objects = {
-        "type": "drop_inconsistent_objects",
+    drop_inconsistent_metadata = {
+        "type": "drop_inconsistent_metadata",
         "args": {}
     }
     export_metadata = {
@@ -39,7 +39,7 @@ class TestInconsistentObjects():
         assert st_code == 200, resp
 
         # fetch inconsistent objects
-        st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_objects)
+        st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
         assert st_code == 200, resp
         incons_objs_test = test['inconsistent_objects']
 
@@ -63,7 +63,7 @@ class TestInconsistentObjects():
         assert st_code == 400, resp
 
         # drop inconsistent objects
-        st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_objects)
+        st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_metadata)
         assert st_code == 200, resp
 
         # teardown

@@ -181,12 +181,12 @@ replace_metadata
      }
    }
 
-.. _get_inconsistent_objects:
+.. _get_inconsistent_metadata:
 
-get_inconsistent_objects
+get_inconsistent_metadata
 ------------------------
 
-``get_inconsistent_objects`` can be used to fetch all inconsistent metadata objects.
+``get_inconsistent_metadata`` can be used to fetch all inconsistent metadata objects.
 
 .. code-block:: http
 
@@ -195,7 +195,7 @@ get_inconsistent_objects
    X-Hasura-Role: admin
 
    {
-       "type": "get_inconsistent_objects",
+       "type": "get_inconsistent_metadata",
        "args": {}
    }
 
@@ -238,12 +238,12 @@ Response:-
        }
    ]
 
-.. _drop_inconsistent_objects:
+.. _drop_inconsistent_metadata:
 
-drop_inconsistent_objects
+drop_inconsistent_metadata
 -------------------------
 
-``drop_inconsistent_objects`` can be used to purge all inconsistent objects from metadata.
+``drop_inconsistent_metadata`` can be used to purge all inconsistent objects from metadata.
 
 .. code-block:: http
 
@@ -252,6 +252,6 @@ drop_inconsistent_objects
    X-Hasura-Role: admin
 
    {
-       "type": "drop_inconsistent_objects",
+       "type": "drop_inconsistent_metadata",
        "args": {}
    }

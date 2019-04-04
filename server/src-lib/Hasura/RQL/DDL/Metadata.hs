@@ -19,11 +19,11 @@ module Hasura.RQL.DDL.Metadata
   , DumpInternalState(..)
   , runDumpInternalState
 
-  , GetInconsistentObjects
-  , runGetInconsistentObjects
+  , GetInconsistentMetadata
+  , runGetInconsistentMetadata
 
-  , DropInconsistentObjects
-  , runDropInconsistentObjects
+  , DropInconsistentMetadata
+  , runDropInconsistentMetadata
   ) where
 
 import           Control.Lens
@@ -458,35 +458,35 @@ runDumpInternalState _ = do
   encJFromJValue <$> askSchemaCache
 
 
-data GetInconsistentObjects
-  = GetInconsistentObjects
+data GetInconsistentMetadata
+  = GetInconsistentMetadata
   deriving (Show, Eq, Lift)
 
-instance FromJSON GetInconsistentObjects where
-  parseJSON _ = return GetInconsistentObjects
+instance FromJSON GetInconsistentMetadata where
+  parseJSON _ = return GetInconsistentMetadata
 
-$(deriveToJSON defaultOptions ''GetInconsistentObjects)
+$(deriveToJSON defaultOptions ''GetInconsistentMetadata)
 
-runGetInconsistentObjects
+runGetInconsistentMetadata
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => GetInconsistentObjects -> m EncJSON
-runGetInconsistentObjects _ = do
+  => GetInconsistentMetadata -> m EncJSON
+runGetInconsistentMetadata _ = do
   adminOnly
   (encJFromJValue . scInconsistentObjs) <$> askSchemaCache
 
-data DropInconsistentObjects
- = DropInconsistentObjects
+data DropInconsistentMetadata
+ = DropInconsistentMetadata
  deriving(Show, Eq, Lift)
 
-instance FromJSON DropInconsistentObjects where
-  parseJSON _ = return DropInconsistentObjects
+instance FromJSON DropInconsistentMetadata where
+  parseJSON _ = return DropInconsistentMetadata
 
-$(deriveToJSON defaultOptions ''DropInconsistentObjects)
+$(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
-runDropInconsistentObjects
+runDropInconsistentMetadata
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropInconsistentObjects -> m EncJSON
-runDropInconsistentObjects _ = do
+  => DropInconsistentMetadata -> m EncJSON
+runDropInconsistentMetadata _ = do
   adminOnly
   sc <- askSchemaCache
   let inconsSchObjs = map _soId $ scInconsistentObjs sc

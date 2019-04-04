@@ -169,11 +169,11 @@ The various types of queries are listed in the following table:
      - `Metadata Objects`
      - Replace metadata with given objects
 
-   * - :ref:`get_inconsistent_objects`
+   * - :ref:`get_inconsistent_metadata`
      - :ref:`Empty Object`
      - List all inconsistent metadata objects
        
-   * - :ref:`drop_inconsistent_objects`
+   * - :ref:`drop_inconsistent_metadata`
      - :ref:`Empty Object`
      - Drop all inconsistent metadata objects
 

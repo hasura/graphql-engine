@@ -55,8 +55,8 @@ data RQLQuery
   | RQDropDeletePermission !DropDelPerm
   | RQSetPermissionComment !SetPermComment
 
-  | RQGetInconsistentObjects !GetInconsistentObjects
-  | RQDropInconsistentObjects !DropInconsistentObjects
+  | RQGetInconsistentMetadata !GetInconsistentMetadata
+  | RQDropInconsistentMetadata !DropInconsistentMetadata
 
   | RQInsert !InsertQuery
   | RQSelect !SelectQuery
@@ -193,8 +193,8 @@ queryNeedsReload qi = case qi of
   RQDropDeletePermission _     -> True
   RQSetPermissionComment _     -> False
 
-  RQGetInconsistentObjects _   -> False
-  RQDropInconsistentObjects _  -> True
+  RQGetInconsistentMetadata _  -> False
+  RQDropInconsistentMetadata _ -> True
 
   RQInsert _                   -> False
   RQSelect _                   -> False
@@ -256,8 +256,8 @@ runQueryM rq = withPathK "args" $ case rq of
   RQDropDeletePermission q     -> runDropPerm q
   RQSetPermissionComment q     -> runSetPermComment q
 
-  RQGetInconsistentObjects q   -> runGetInconsistentObjects q
-  RQDropInconsistentObjects q  -> runDropInconsistentObjects q
+  RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
+  RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
   RQInsert q                   -> runInsert q
   RQSelect q                   -> runSelect q
