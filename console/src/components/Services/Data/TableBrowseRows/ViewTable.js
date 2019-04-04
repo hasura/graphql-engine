@@ -176,7 +176,7 @@ class ViewTable extends Component {
         dispatch={dispatch}
         tableName={tableName}
         tableComment={tableComment}
-        tabName="view"
+        tabName="browse"
         migrationMode={migrationMode}
         currentSchema={currentSchema}
       />
@@ -186,7 +186,7 @@ class ViewTable extends Component {
         <ViewHeader
           dispatch={dispatch}
           tableName={tableName}
-          tabName="view"
+          tabName="browse"
           tableComment={tableComment}
           migrationMode={migrationMode}
           currentSchema={currentSchema}
