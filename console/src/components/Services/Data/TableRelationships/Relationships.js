@@ -465,7 +465,7 @@ class Relationships extends Component {
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
@@ -491,10 +491,6 @@ class Relationships extends Component {
               </Button>
             )}
             <hr />
-          </div>
-        </div>
-        <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             {relAdd.isManualExpanded ? (
               <div className={styles.activeEdit}>
                 <AddManualRelationship

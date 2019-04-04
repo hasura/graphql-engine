@@ -8,7 +8,7 @@ import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
 import Button from '../../../Common/Button/Button';
-import AddRelationship from './AddManualRelationship';
+import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import semverCheck from '../../../../helpers/semver';
 
@@ -174,13 +174,13 @@ class RelationshipsView extends Component {
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
             {relAdd.isActive ? (
               <div className={styles.activeEdit}>
-                <AddRelationship
+                <AddManualRelationship
                   tableName={tableName}
                   isObjRel={relAdd.isObjRel}
                   rTable={relAdd.rTable}
