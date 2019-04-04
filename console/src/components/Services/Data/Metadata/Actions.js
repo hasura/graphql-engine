@@ -53,7 +53,12 @@ export const filterInconsistentMetadata = (
   return filtered;
 };
 
-export const loadInconsistentObjects = (serverVersion, shouldReloadCache) => {
+export const loadInconsistentObjects = (
+  serverVersion,
+  shouldReloadCache,
+  successCb,
+  failureCb
+) => {
   return (dispatch, getState) => {
     if (!semverCheck('inconsistentState', serverVersion)) {
       return;
@@ -99,10 +104,16 @@ export const loadInconsistentObjects = (serverVersion, shouldReloadCache) => {
           dispatch(setConsistentSchema(filteredSchema));
           dispatch(setConsistentFunctions(filteredFunctions));
         }
+        if (successCb) {
+          successCb();
+        }
       },
       error => {
         console.error(error);
         dispatch({ type: LOAD_METADATA_ERROR });
+        if (failureCb) {
+          failureCb(error);
+        }
       }
     );
   };

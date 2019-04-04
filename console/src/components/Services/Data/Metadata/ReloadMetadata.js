@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import Button from '../../../Common/Button/Button';
+import { loadInconsistentObjects } from './Actions';
 
 import {
   showSuccessNotification,
@@ -15,67 +15,36 @@ class ReloadMetadata extends Component {
     this.state.isReloading = false;
   }
   render() {
+    const { dispatch } = this.props;
+    const { isReloading } = this.state;
     const metaDataStyles = require('./Metadata.scss');
+    const reloadMetadataAndLoadInconsistentMetadata = () => {
+      this.setState({ isReloading: true });
+      dispatch(
+        loadInconsistentObjects(
+          null,
+          true,
+          () => {
+            dispatch(showSuccessNotification('Metadata reloaded'));
+            this.setState({ isReloading: false });
+          },
+          () => {
+            dispatch(showErrorNotification('Error reloading metadata'));
+            this.setState({ isReloading: false });
+          }
+        )
+      );
+    };
+    const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
       <div className={metaDataStyles.display_inline}>
         <Button
           data-test="data-reload-metadata"
           color="white"
           size="sm"
-          onClick={e => {
-            e.preventDefault();
-            this.setState({ isReloading: true });
-            const url = Endpoints.query;
-            const requestBody = {
-              type: 'reload_metadata',
-              args: {},
-            };
-            const options = {
-              method: 'POST',
-              credentials: globalCookiePolicy,
-              headers: {
-                ...this.props.dataHeaders,
-              },
-              body: JSON.stringify(requestBody),
-            };
-            fetch(url, options)
-              .then(response => {
-                response.json().then(data => {
-                  if (response.ok) {
-                    this.setState({ isReloading: false });
-                    this.props.dispatch(
-                      showSuccessNotification('Metadata reloaded successfully!')
-                    );
-                  } else {
-                    const parsedErrorMsg = data;
-                    this.props.dispatch(
-                      showErrorNotification(
-                        'Metadata reload failed',
-                        'Something is wrong.',
-                        requestBody,
-                        parsedErrorMsg
-                      )
-                    );
-                    console.error('Error with response', parsedErrorMsg);
-                    this.setState({ isReloading: false });
-                  }
-                });
-              })
-              .catch(error => {
-                console.error(error);
-                this.props.dispatch(
-                  showErrorNotification(
-                    'Metadata reload failed',
-                    'Cannot connect to server'
-                  )
-                );
-                this.setState({ isReloading: false });
-              });
-          }}
+          onClick={reloadMetadataAndLoadInconsistentMetadata}
         >
-          {this.state.isReloading
-            ? this.props.btnTextChanging || 'Reloading...'
-            : this.props.btnText || 'Reload'}
+          {buttonText}
         </Button>
       </div>
     );
