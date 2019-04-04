@@ -249,12 +249,12 @@ mkNewQueryTx varValsM (ReusableQueryPlan varTypes fldPlans) = do
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: QueryPlan
-  -> Q.TxE QErr EncJSON
+  -> LazyRespTx
 mkCurPlanTx (QueryPlan _ fldPlans) =
   fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp        -> return resp
-      RFPPostgres pgPlan -> planTx pgPlan
+      RFPPostgres pgPlan -> liftTx $ planTx pgPlan
     return (G.unName $ G.unAlias alias, fldResp)
   where
     planTx (PGPlan q _ prepMap) =
