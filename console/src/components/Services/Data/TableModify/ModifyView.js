@@ -105,17 +105,16 @@ class ModifyView extends Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      const btnText = '-';
       const bg = '';
       return (
         <div key={i} className={bg}>
           <div className="container-fluid">
             <div className="row">
               <h5 className={styles.padd_bottom}>
-                <Button disabled="disabled" size="xs" color="yellow">
-                  {btnText}
+                <Button disabled="disabled" size="xs">
+                  -
                 </Button>{' '}
-                &nbsp; {c.column_name}
+                &nbsp; <b>{c.column_name}</b>
               </h5>
             </div>
           </div>
