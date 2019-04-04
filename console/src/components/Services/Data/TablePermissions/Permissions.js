@@ -26,7 +26,8 @@ import {
   // permRemoveRole,
   permSetBulkSelect,
   permRemoveMultipleRoles,
-  permSetSameSelect,
+  permSetApplySamePerm,
+  permDelApplySamePerm,
   applySamePermissionsBulk,
   SET_PRESET_VALUE,
   CREATE_NEW_PRESET,
@@ -1379,12 +1380,12 @@ class Permissions extends Component {
         );
       };
 
-      const getClonePermSection = () => {
-        const applySameSelected = e => {
-          const isChecked = e.target.checked;
-          const selectedRole = e.target.getAttribute('data-role');
-          dispatch(permSetSameSelect(isChecked, selectedRole));
-        };
+      const getClonePermsSection = () => {
+        // const applySameSelected = e => {
+        //   const isChecked = e.target.checked;
+        //   const selectedRole = e.target.getAttribute('data-role');
+        //   dispatch(permSetSameSelect(isChecked, selectedRole));
+        // };
 
         const applySameBulk = () => {
           if (window.confirm('Are you sure?')) {
@@ -1392,40 +1393,146 @@ class Permissions extends Component {
           }
         };
 
-        const roleListHtml = [];
-        roleList.forEach(role => {
-          if (role !== permissionsState.role) {
-            roleListHtml.push(
-              <div
-                key={role}
-                className={
-                  styles.display_inline + ' checkbox ' + styles.add_mar_right
-                }
-              >
-                <label>
-                  <input
-                    data-role={role}
-                    onChange={applySameSelected}
-                    className={
-                      'form-control ' +
-                      styles.samePermissionRole +
-                      ' ' +
-                      styles.add_mar_small
-                    }
-                    type="checkbox"
-                  />
+        const applyToList = permissionsState.applySamePermissions;
+
+        const allTableNames = allSchemas.map(schema => schema.table_name);
+
+        const getApplyToList = () => {
+          const _applyToListHtml = [];
+
+          const getApplyToRow = (applyTo, index) => {
+            const getTableSelect = () => {
+              const setApplyToTable = e => {
+                dispatch(permSetApplySamePerm(index, 'table', e.target.value));
+              };
+
+              const tableOptions = allTableNames.map((tName, i) => (
+                <option key={i} value={tName}>
+                  {tName}
+                </option>
+              ));
+
+              return (
+                <select
+                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
+                    styles.add_mar_right
+                  } input-sm form-control`}
+                  value={applyTo.table || ''}
+                  onChange={setApplyToTable}
+                >
+                  <option disabled value="">
+                    Select table
+                  </option>
+                  {tableOptions}
+                </select>
+              );
+            };
+
+            const getRoleSelect = () => {
+              const setApplyToRole = e => {
+                dispatch(permSetApplySamePerm(index, 'role', e.target.value));
+              };
+
+              const roleOptions = roleList.map((role, i) => (
+                <option key={i} value={role}>
                   {role}
-                </label>
+                </option>
+              ));
+
+              return (
+                <select
+                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
+                    styles.add_mar_right
+                  } input-sm form-control`}
+                  value={applyTo.role || ''}
+                  onChange={setApplyToRole}
+                >
+                  <option disabled value="">
+                    Select role
+                  </option>
+                  {roleOptions}
+                </select>
+              );
+            };
+
+            const getActionSelect = () => {
+              const setApplyToAction = e => {
+                dispatch(permSetApplySamePerm(index, 'action', e.target.value));
+              };
+
+              const actionOptions = [
+                'insert',
+                'select',
+                'update',
+                'delete',
+              ].map((action, i) => (
+                <option key={i} value={action}>
+                  {action}
+                </option>
+              ));
+
+              return (
+                <select
+                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
+                    styles.add_mar_right
+                  } input-sm form-control`}
+                  value={applyTo.action || ''}
+                  onChange={setApplyToAction}
+                >
+                  <option disabled value="">
+                    Select action
+                  </option>
+                  {actionOptions}
+                </select>
+              );
+            };
+
+            const getRemoveIcon = () => {
+              let _removeIcon = null;
+
+              const removeApplyTo = () => {
+                dispatch(permDelApplySamePerm(index));
+              };
+
+              if (applyTo.table || applyTo.role || applyTo.action) {
+                _removeIcon = (
+                  <i
+                    className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+                    onClick={removeApplyTo}
+                  />
+                );
+              }
+
+              return _removeIcon;
+            };
+
+            return (
+              <div key={index} className={styles.add_mar_bottom_mid}>
+                {getTableSelect()}
+                {getRoleSelect()}
+                {getActionSelect()}
+                {getRemoveIcon()}
               </div>
             );
-          }
-        });
+          };
+
+          applyToList.forEach((applyTo, i) => {
+            _applyToListHtml.push(getApplyToRow(applyTo, i));
+          });
+
+          // add empty row
+          _applyToListHtml.push(getApplyToRow({}, applyToList.length));
+
+          return _applyToListHtml;
+        };
+
+        const applyToListHtml = getApplyToList();
 
         let applyBulkPermissions = null;
-        if (roleListHtml.length) {
+        if (applyToListHtml.length) {
           const cloneToolTip = (
             <Tooltip id="tooltip-clone">
-              Apply same permissions to other roles
+              Apply same permissions to other tables/roles/actions
             </Tooltip>
           );
 
@@ -1437,10 +1544,14 @@ class Permissions extends Component {
                 defaultTitle
               >
                 <div className={styles.editPermissionsSection}>
-                  <div>
-                    Apply same {permissionsState.query} permissions for roles:
+                  <div>Apply same permissions for:</div>
+                  <div className={styles.add_mar_top_small}>
+                    {applyToListHtml}
                   </div>
-                  <div className={styles.add_mar_top_small}>{roleListHtml}</div>
+                  <div className={styles.add_mar_top}>
+                    <b>Note:</b> While applying cross table permissions, the
+                    column permissions and presets will be ignored
+                  </div>
                   <Button
                     onClick={applySameBulk}
                     className={styles.add_mar_top}
@@ -1548,7 +1659,7 @@ class Permissions extends Component {
             {showInsertPresets && getPresetsSection('insert')}
             {showUpdatePresets && getPresetsSection('update')}
             {getButtonsSection()}
-            {getClonePermSection()}
+            {getClonePermsSection()}
           </div>
         </div>
       );

@@ -59,9 +59,9 @@ import {
   PERM_SELECT_BULK,
   PERM_DESELECT_BULK,
   PERM_RESET_BULK_SELECT,
-  PERM_RESET_BULK_SAME_SELECT,
-  PERM_SAME_APPLY_BULK,
-  PERM_DESELECT_SAME_APPLY_BULK,
+  PERM_RESET_APPLY_SAME,
+  PERM_SET_APPLY_SAME_PERM,
+  PERM_DEL_APPLY_SAME_PERM,
   toggleColumn,
   toggleAllColumns,
   getFilterKey,
@@ -69,7 +69,7 @@ import {
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
-  updateBulkSameSelect,
+  updateApplySamePerms,
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
@@ -458,27 +458,26 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-    case PERM_SAME_APPLY_BULK:
+    case PERM_SET_APPLY_SAME_PERM:
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          applySamePermissions: updateBulkSameSelect(
+          applySamePermissions: updateApplySamePerms(
             modifyState.permissionsState,
-            action.data,
-            true
+            action.data
           ),
         },
       };
-    case PERM_DESELECT_SAME_APPLY_BULK:
+    case PERM_DEL_APPLY_SAME_PERM:
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          applySamePermissions: updateBulkSameSelect(
+          applySamePermissions: updateApplySamePerms(
             modifyState.permissionsState,
             action.data,
-            false
+            true
           ),
         },
       };
@@ -564,7 +563,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
 
-    case PERM_RESET_BULK_SAME_SELECT:
+    case PERM_RESET_APPLY_SAME:
       return {
         ...modifyState,
         permissionsState: {
