@@ -361,7 +361,7 @@ const getStateAfterClearingHistory = state => {
 const getRemoteQueries = (queryUrl, cb) => {
   fetch(queryUrl)
     .then(resp => resp.text().then(cb))
-    .catch(e => console.log('Invalid query URL: ', e));
+    .catch(e => console.log('Invalid query file URL: ', e));
 };
 
 const apiExplorerReducer = (state = defaultState, action) => {
