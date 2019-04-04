@@ -1,5 +1,7 @@
 import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
+import { fkViolationOnUpdate, fkViolationOnDelete } from './Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 const violiationActions = [
   'restrict',
@@ -81,7 +83,9 @@ const ForeignKeySelector = ({
   // html for column mapping dropdowns
   const columnSelect = () => {
     // Do not allow selecting columns if ref table hasn't been selected
-    const selectTitle = !refTableName ? 'Please select the reference table' : undefined;
+    const selectTitle = !refTableName
+      ? 'Please select the reference table'
+      : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
@@ -215,7 +219,9 @@ const ForeignKeySelector = ({
   const onViolation = () => {
     // Do not allow selecting on violation conditions if no column mapping is selected
     const disabled = numColMappings <= 1;
-    const inputTitle = disabled ? 'Please select the reference table and the column configuration' : undefined;
+    const inputTitle = disabled
+      ? 'Please select the reference table and the column configuration'
+      : undefined;
     // Generate radios for violation actions
     const radios = action => {
       const selected = foreignKey[action];
@@ -253,13 +259,27 @@ const ForeignKeySelector = ({
       <div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Update Violation:</b>
+            <b>On Update Violation:</b>&nbsp; &nbsp;
+            <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
+              <i
+                className={`fa fa-question-circle ${styles.iClickable}`}
+                aria-hidden="true"
+              />
+            </OverlayTrigger>{' '}
+            &nbsp; &nbsp;
           </div>
           {radios('onUpdate')}
         </div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Delete Violation:</b>
+            <b>On Delete Violation:</b>&nbsp; &nbsp;
+            <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
+              <i
+                className={`fa fa-question-circle ${styles.iClickable}`}
+                aria-hidden="true"
+              />
+            </OverlayTrigger>{' '}
+            &nbsp; &nbsp;
           </div>
           {radios('onDelete')}
         </div>
