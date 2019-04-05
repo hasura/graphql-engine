@@ -1,6 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import jwt from 'jsonwebtoken';
+
+import TextAreaWithCopy from '../Common/TextAreaWithCopy/TextAreaWithCopy';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+import ModalWrapper from '../Common/ModalWrapper';
+
+import { parseJWTHeader } from './utils';
+
 import {
   // generateApiCodeClicked,
   // changeRequestMethod,
@@ -13,6 +22,8 @@ import {
   removeRequestHeader,
   focusHeaderTextbox,
   unfocusTypingHeader,
+  setInitialHeaderState,
+  verifyJWTToken,
 } from './Actions';
 
 import globals from '../../Globals';
@@ -23,11 +34,32 @@ import CollapsibleToggle from '../Common/CollapsibleToggle/CollapsibleToggle';
 
 const styles = require('./ApiExplorer.scss');
 
+const inspectJWTTooltip = (
+  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
+);
+
+const jwtValidityStatus = message => (
+  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
+);
+
+/* When the page is loaded for the first time, hydrate the header state from the localStorage
+ * Keep syncing the localStorage state when user modifies.
+ * */
+
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
-
+    this.defaultTokenVal = {
+      header: {},
+      payload: {},
+      error: null,
+      serverResp: {},
+    };
     this.state = {
+      isAnalyzingBearer: false,
+      tokenInfo: {
+        ...this.defaultTokenVal,
+      },
       deletedHeader: false,
       adminSecretVisible: false,
       bodyAllowedMethods: ['POST'],
@@ -41,12 +73,73 @@ class ApiRequest extends Component {
         window.localStorage.removeItem('graphiql:query');
       }
     }
+    this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
+  }
+
+  componentDidMount() {
+    const { headers } = this.props;
+    const HEADER_FROM_LS = localStorage.getItem(
+      'HASURA_CONSOLE_GRAPHIQL_HEADERS'
+    );
+    if (HEADER_FROM_LS) {
+      try {
+        const initialHeader = JSON.parse(HEADER_FROM_LS);
+        this.props.dispatch(setInitialHeaderState(initialHeader));
+      } catch (e) {
+        console.error(e);
+        localStorage.setItem(
+          'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+          JSON.stringify(headers)
+        );
+        // Ignore
+      }
+    } else {
+      localStorage.setItem(
+        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+        JSON.stringify(headers)
+      );
+    }
+  }
+
+  onAnalyzeBearerClose() {
+    this.setState({
+      isAnalyzingBearer: false,
+    });
   }
 
   /*
   onUrlChanged = e => {
     this.props.dispatch(changeRequestUrl(e.target.value));
   };
+
+  onRequestParamsChanged = newValue => {
+    this.props.dispatch(changeRequestParams(newValue));
+  };
+
+  onEditJsonButtonClick = () => {
+    this.props.dispatch(editGeneratedJson());
+  };
+
+  onHeaderValueChanged(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    const key = e.target.getAttribute('data-element-name');
+    const newValue = e.target.value;
+    this.props
+      .dispatch(changeRequestHeader(index, key, newValue, false))
+      .then(r => this.setLocalStorageHeader(r));
+  }
+
+  onDeleteHeaderClicked(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    // this.setState({ deletedHeader: true });
+    this.props
+      .dispatch(removeRequestHeader(index))
+      .then(r => this.setLocalStorageHeader(r));
+  }
+
+  onShowAdminSecretClicked() {
+    this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
+  }
 
   onNewHeaderKeyChanged(e) {
     this.handleTypingTimeouts();
@@ -110,6 +203,7 @@ class ApiRequest extends Component {
   }
   */
 
+  /*
   onHeaderValueChanged(e) {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     const key = e.target.getAttribute('data-element-name');
@@ -121,11 +215,34 @@ class ApiRequest extends Component {
     const index = parseInt(e.target.getAttribute('data-header-id'), 10);
     this.setState({ deletedHeader: true });
     this.props.dispatch(removeRequestHeader(index));
+  } */
+
+  onHeaderValueChanged(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    const key = e.target.getAttribute('data-element-name');
+    const newValue = e.target.value;
+    this.props
+      .dispatch(changeRequestHeader(index, key, newValue, false))
+      .then(r => this.setLocalStorageHeader(r));
+  }
+
+  onDeleteHeaderClicked(e) {
+    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+    this.props
+      .dispatch(removeRequestHeader(index))
+      .then(r => this.setLocalStorageHeader(r));
   }
 
   onShowAdminSecretClicked() {
     this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
   }
+
+  setLocalStorageHeader = headers => {
+    localStorage.setItem(
+      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+      JSON.stringify(headers)
+    );
+  };
 
   getUrlBar() {
     return (
@@ -176,100 +293,77 @@ class ApiRequest extends Component {
   }
 
   getHeaderRows() {
-    const headers_map = new Map();
+    /*
+     *  - Implementation notes
+     *    - header object is an array of the object of the form
+     *      - {"key":"content-type","value":"application/json","isActive":true,"isNewHeader":false,"isDisabled":true}
+     *      * isNewHeader determines whether a row is an unfilled row so that when user enters, a next new row can be created.
+     *      * isActive determines whether that header key is active and ok to be sent in the request header.
+     *      * isDisabled determines whether changes for that header key, val is allowed or not
+     * */
+    const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
 
-    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
-      const stored_headers = JSON.parse(
-        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
-      );
+    return this.props.headers.map((header, i) => {
+      /*
+       * - Check whether key is Authorization and value starts with Bearer
+       * */
+      const { isJWTHeader: showInspector, matches } = parseJWTHeader(header);
 
-      for (const s_h of this.props.headers) {
-        if (!headers_map.has(s_h.key)) {
-          headers_map.set(s_h.key, 1);
-        }
-      }
-
-      // Case when user loads again.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === false
-      ) {
-        const initHeaderCount = this.props.headers.length - 1;
-        const input_row = this.props.headers.pop();
-        for (
-          let i = initHeaderCount;
-          i <= stored_headers.length - initHeaderCount;
-          i++
-        ) {
-          if (!headers_map.has(stored_headers[i].key)) {
-            this.props.headers.push(stored_headers[i]);
-          }
-        }
-        this.props.headers.push(input_row);
-      }
-
-      // Case when user deletes a header from console.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === true
-      ) {
-        this.setState({ deletedHeader: false });
-      }
-    }
-
-    const headers = this.props.headers;
-    localStorage.setItem(
-      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-      JSON.stringify(headers)
-    );
-
-    return headers.map((header, i) => {
-      const getHeaderAdminVal = () => {
-        let headerAdminVal = null;
-
-        if (
-          header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`
-        ) {
-          headerAdminVal = (
+      const inspectorIcon = () => {
+        const getAnalyzeIcon = () => {
+          const { isAnalyzingBearer } = this.state;
+          return isAnalyzingBearer ? (
             <i
-              className={styles.showAdminSecret + ' fa fa-eye'}
-              data-header-id={i}
-              aria-hidden="true"
-              onClick={this.onShowAdminSecretClicked.bind(this)}
+              className={styles.showInspectorLoading + ' fa fa-spinner fa-spin'}
+            />
+          ) : (
+            <i
+              className={styles.showInspector + ' fa fa-plus-square-o'}
+              token={matches[2]}
+              onClick={this.analyzeBearerToken}
             />
           );
-        }
+        };
+        return showInspector && isJWTSet ? (
+          <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+            {getAnalyzeIcon()}
+          </OverlayTrigger>
+        ) : null;
+      };
 
-        return headerAdminVal;
+      const getHeaderAdminVal = () => {
+        const adminHeader = `x-hasura-${globals.adminSecretLabel}`;
+        return header.key.toLowerCase() === adminHeader ? (
+          <i
+            className={styles.showAdminSecret + ' fa fa-eye'}
+            data-header-id={i}
+            aria-hidden="true"
+            onClick={this.onShowAdminSecretClicked.bind(this)}
+          />
+        ) : null;
       };
 
       const getHeaderActiveCheckBox = () => {
-        let headerActiveCheckbox = null;
-
-        if (!header.isNewHeader) {
-          headerActiveCheckbox = (
-            <td>
-              <input
-                type="checkbox"
-                name="sponsored"
-                className={styles.common_checkbox + ' common_checkbox'}
-                id={i + 1}
-                checked={header.isActive}
-                data-header-id={i}
-                onChange={this.onHeaderValueChanged.bind(this)}
-                data-element-name="isActive"
-              />
-              <label
-                htmlFor={i + 1}
-                className={
-                  styles.common_checkbox_label + ' common_checkbox_label'
-                }
-              />
-            </td>
-          );
-        }
-
-        return headerActiveCheckbox;
+        return !header.isNewHeader ? (
+          <td>
+            <input
+              type="checkbox"
+              name="sponsored"
+              className={styles.common_checkbox + ' common_checkbox'}
+              id={i + 1}
+              checked={header.isActive}
+              data-header-id={i}
+              onChange={this.onHeaderValueChanged.bind(this)}
+              data-element-name="isActive"
+            />
+            <label
+              htmlFor={i + 1}
+              className={
+                styles.common_checkbox_label + ' common_checkbox_label'
+              }
+            />
+          </td>
+        ) : null;
       };
 
       const getHeaderRemoveBtn = () => {
@@ -361,16 +455,15 @@ class ApiRequest extends Component {
 
       const getHeaderActions = () => {
         let headerActions = null;
-
         if (!header.isNewHeader) {
           headerActions = (
             <td>
               {getHeaderAdminVal()}
+              {inspectorIcon()}
               {getHeaderRemoveBtn()}
             </td>
           );
         }
-
         return headerActions;
       };
 
@@ -432,6 +525,52 @@ class ApiRequest extends Component {
     }
   }
 
+  analyzeBearerToken(e) {
+    const { dispatch } = this.props;
+    const token = e.target.getAttribute('token');
+    this.setState({
+      isAnalyzingBearer: true,
+      tokenInfo: {
+        ...this.state.tokenInfo,
+        serverResp: {},
+        error: null,
+      },
+    });
+    const decodeAndSetState = serverResp => {
+      const decoded = jwt.decode(token, { complete: true });
+      if (decoded) {
+        this.setState({
+          tokenInfo: {
+            ...this.state.tokenInfo,
+            header: decoded.header,
+            payload: decoded.payload,
+            error: null,
+            serverResp: serverResp,
+          },
+        });
+      } else {
+        const message =
+          'This JWT seems to be invalid. Please check the token value and try again!';
+        this.setState({
+          tokenInfo: {
+            ...this.state.tokenInfo,
+            error: message,
+            serverResp: serverResp,
+          },
+        });
+      }
+    };
+    if (token) {
+      dispatch(verifyJWTToken(token))
+        .then(data => {
+          decodeAndSetState(data);
+        })
+        .catch(err => {
+          decodeAndSetState(err);
+        });
+    }
+  }
+
   handleFocus = () => {
     this.props.dispatch(focusHeaderTextbox());
   };
@@ -441,6 +580,133 @@ class ApiRequest extends Component {
   };
 
   render() {
+    const { isAnalyzingBearer, tokenInfo } = this.state;
+    const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
+    const { error, serverResp } = tokenInfo;
+    const getAnalyzeBearerBody = () => {
+      const {
+        claimNameSpace = 'https://hasura.io/jwt/claims',
+        claimFormat = 'json',
+      } = this.props.serverConfig;
+
+      let tokenVerified = false;
+      let JWTError = '';
+      if (serverResp && 'errors' in serverResp) {
+        try {
+          JWTError =
+            serverResp.errors.length > 0 ? serverResp.errors[0].message : null;
+        } catch (e) {
+          JWTError = e.toString();
+        }
+      } else {
+        tokenVerified = true;
+      }
+
+      const generateJWTVerificationStatus = () => {
+        switch (true) {
+          case tokenVerified:
+            return (
+              <OverlayTrigger
+                placement="top"
+                overlay={jwtValidityStatus('Valid JWT token')}
+              >
+                <span className={styles.valid_jwt_token}>
+                  <i className="fa fa-check" />
+                </span>
+              </OverlayTrigger>
+            );
+          case !tokenVerified && JWTError.length > 0:
+            return (
+              <OverlayTrigger
+                placement="top"
+                overlay={jwtValidityStatus(JWTError)}
+              >
+                <span className={styles.invalid_jwt_icon}>
+                  <i className="fa fa-times" />
+                </span>
+              </OverlayTrigger>
+            );
+          default:
+            return null;
+        }
+      };
+
+      const getHasuraClaims = () => {
+        return claimNameSpace &&
+          claimFormat === 'json' &&
+          tokenInfo.payload &&
+          Object.keys(tokenInfo.payload).length > 0
+          ? [
+            <br key="hasura_claim_element_break" />,
+            <span key="hasura_claim_label" className={styles.analyzerLabel}>
+                Hasura Claims:
+              <span>hasura headers</span>
+            </span>,
+            <TextAreaWithCopy
+              key="hasura_claim_value"
+              copyText={JSON.stringify(
+                tokenInfo.payload[claimNameSpace],
+                null,
+                2
+              )}
+              textLanguage={'json'}
+              id="claimNameSpaceCopy"
+              containerId="claimNameSpaceCopyBlock"
+            />,
+          ]
+          : null;
+      };
+
+      const analyzeBearerBody = error ? (
+        <span>{error}</span>
+      ) : (
+        <div>
+          <span className={styles.analyzerLabel}>
+            Token Validity:
+            <span className={styles.token_validity}>
+              {generateJWTVerificationStatus()}
+            </span>
+          </span>
+          <br />
+          <span className={styles.analyzerLabel}>
+            Header:
+            <span>Algorithm & Token Type</span>
+          </span>
+          <TextAreaWithCopy
+            copyText={JSON.stringify(tokenInfo.header, null, 2)}
+            textLanguage={'json'}
+            id="headerCopy"
+            containerId="headerCopyBlock"
+          />
+          {getHasuraClaims()}
+          <br />
+          <span className={styles.analyzerLabel}>
+            Full Payload:
+            <span>Data</span>
+          </span>
+          <TextAreaWithCopy
+            copyText={JSON.stringify(tokenInfo.payload, null, 2)}
+            textLanguage={'json'}
+            id="payloadCopy"
+            containerId="payloadCopyBlock"
+          />
+        </div>
+      );
+      return analyzeBearerBody;
+    };
+
+    const analyzeBearerHtml = (
+      <ModalWrapper
+        show={
+          isAnalyzingBearer && serverResp && Object.keys(serverResp).length > 0
+        }
+        onHide={this.onAnalyzeBearerClose.bind(this)}
+        dialogClassName={styles.analyzerBearerModal}
+        title={error ? 'Error decoding JWT' : 'Decoded JWT'}
+      >
+        {getAnalyzeBearerBody()}
+      </ModalWrapper>
+    );
     return (
       <div className={styles.apiRequestWrapper}>
         <CollapsibleToggle
@@ -459,6 +725,7 @@ class ApiRequest extends Component {
           </CollapsibleToggle>
         </div>
         {this.getValidBody()}
+        {isJWTSet && analyzeBearerHtml}
       </div>
     );
   }
@@ -477,6 +744,7 @@ ApiRequest.propTypes = {
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   queryParams: PropTypes.object.isRequired,
+  serverConfig: PropTypes.object,
 };
 
 export default ApiRequest;

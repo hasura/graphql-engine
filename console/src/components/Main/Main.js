@@ -6,7 +6,11 @@ import globals from '../../Globals';
 import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
-import { loadServerVersion, checkServerUpdates } from './Actions';
+import {
+  loadServerVersion,
+  checkServerUpdates,
+  fetchServerConfig,
+} from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
@@ -62,7 +66,15 @@ class Main extends React.Component {
       this.checkEventsTab().then(() => {
         this.checkSchemaStitch();
       });
+      if (semverCheck('JWTAnalyzer', this.props.serverVersion)) {
+        this.fetchServerConfig();
+      }
     });
+  }
+
+  fetchServerConfig() {
+    const { dispatch } = this.props;
+    dispatch(fetchServerConfig());
   }
 
   checkSchemaStitch() {

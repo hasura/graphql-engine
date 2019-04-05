@@ -169,7 +169,7 @@ class RelationshipsView extends Component {
                     <td />
                   );
                   return (
-                    <tr>
+                    <tr key={i}>
                       {column1}
                       {column2}
                     </tr>
