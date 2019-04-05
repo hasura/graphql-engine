@@ -110,7 +110,9 @@ const MetadataStatus = ({
   const content = () => {
     if (metadata.inconsistentObjects.length === 0) {
       return (
-        <div className={metaDataStyles.content_width}>
+        <div
+          className={`${metaDataStyles.content_width} ${styles.add_mar_top}`}
+        >
           <div className={styles.display_flex}>
             <CheckIcon className={metaDataStyles.add_mar_right_small} />
             <h4>GraphQL Engine metadata is consistent with Postgres</h4>
@@ -196,7 +198,7 @@ const MetadataStatus = ({
       return null;
     }
     return (
-      <div className={`${styles.alertDanger} alert alert-danger`}>
+      <div className={`${styles.errorBanner} alert alert-danger`}>
         <i
           className={`${styles.add_mar_right_small} ${
             styles.fontStyleNormal
@@ -219,7 +221,7 @@ const MetadataStatus = ({
   };
 
   return (
-    <div>
+    <div className={styles.add_mar_bottom}>
       {banner()}
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${
