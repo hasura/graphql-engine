@@ -135,7 +135,7 @@ const ColumnEditor = ({
       <form className="form-horizontal" onSubmit={onSubmit}>
         {allowRename && (
           <div className={`${styles.display_flex} form-group`}>
-            <label className="col-xs-3 text-right">Name</label>
+            <label className="col-xs-2">Name</label>
             <div className="col-xs-6">
               <input
                 className="input-sm form-control"
@@ -148,7 +148,7 @@ const ColumnEditor = ({
           </div>
         )}
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Type</label>
+          <label className="col-xs-2">Type</label>
           <div className="col-xs-6">
             <select
               value={selectedProperties[colName].type}
@@ -162,7 +162,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Nullable</label>
+          <label className="col-xs-2">Nullable</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -177,7 +177,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Unique</label>
+          <label className="col-xs-2">Unique</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -192,7 +192,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Default</label>
+          <label className="col-xs-2">Default</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
@@ -205,7 +205,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Comment</label>
+          <label className="col-xs-2">Comment</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
