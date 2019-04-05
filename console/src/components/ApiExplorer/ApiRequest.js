@@ -617,43 +617,50 @@ class ApiRequest extends Component {
             );
           case !tokenVerified && JWTError.length > 0:
             return (
-              <OverlayTrigger
-                placement="top"
-                overlay={jwtValidityStatus(JWTError)}
-              >
-                <span className={styles.invalid_jwt_icon}>
-                  <i className="fa fa-times" />
-                </span>
-              </OverlayTrigger>
+              <span className={styles.invalid_jwt_icon}>
+                <i className="fa fa-times" />
+              </span>
             );
           default:
             return null;
         }
       };
 
+      const getJWTFailMessage = () => {
+        if (!tokenVerified && JWTError.length > 0) {
+          return (
+            <div className={styles.jwt_verification_fail_message}>
+              {JWTError}
+            </div>
+          );
+        }
+        return null;
+      };
+
       const getHasuraClaims = () => {
         return claimNameSpace &&
           claimFormat === 'json' &&
           tokenInfo.payload &&
-          Object.keys(tokenInfo.payload).length > 0
+          Object.keys(tokenInfo.payload).length > 0 &&
+          claimNameSpace in tokenInfo.payload
           ? [
-            <br key="hasura_claim_element_break" />,
-            <span key="hasura_claim_label" className={styles.analyzerLabel}>
+              <br key="hasura_claim_element_break" />,
+              <span key="hasura_claim_label" className={styles.analyzerLabel}>
                 Hasura Claims:
-              <span>hasura headers</span>
-            </span>,
-            <TextAreaWithCopy
-              key="hasura_claim_value"
-              copyText={JSON.stringify(
-                tokenInfo.payload[claimNameSpace],
-                null,
-                2
-              )}
-              textLanguage={'json'}
-              id="claimNameSpaceCopy"
-              containerId="claimNameSpaceCopyBlock"
-            />,
-          ]
+                <span>hasura headers</span>
+              </span>,
+              <TextAreaWithCopy
+                key="hasura_claim_value"
+                copyText={JSON.stringify(
+                  tokenInfo.payload[claimNameSpace],
+                  null,
+                  2
+                )}
+                textLanguage={'json'}
+                id="claimNameSpaceCopy"
+                containerId="claimNameSpaceCopyBlock"
+              />,
+            ]
           : null;
       };
 
@@ -667,7 +674,8 @@ class ApiRequest extends Component {
               {generateJWTVerificationStatus()}
             </span>
           </span>
-          <br />
+          {getJWTFailMessage()}
+          {getHasuraClaims()}
           <span className={styles.analyzerLabel}>
             Header:
             <span>Algorithm & Token Type</span>
@@ -678,7 +686,6 @@ class ApiRequest extends Component {
             id="headerCopy"
             containerId="headerCopyBlock"
           />
-          {getHasuraClaims()}
           <br />
           <span className={styles.analyzerLabel}>
             Full Payload:
