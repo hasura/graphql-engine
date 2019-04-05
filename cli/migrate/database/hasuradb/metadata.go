@@ -3,6 +3,8 @@ package hasuradb
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/oliveagle/jsonpath"
 )
 
 func (h *HasuraDB) ExportMetadata() (interface{}, error) {
@@ -117,6 +119,26 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 		if err != nil {
 			h.logger.Debug(err)
 			return err
+		}
+
+		if horror.Path != "" {
+			jsonData, err := json.Marshal(query)
+			if err != nil {
+				return err
+			}
+			var metadataQuery interface{}
+			err = json.Unmarshal(jsonData, &metadataQuery)
+			if err != nil {
+				return err
+			}
+			lookup, err := jsonpath.JsonPathLookup(metadataQuery, horror.Path)
+			if err == nil {
+				queryData, err := json.MarshalIndent(lookup, "", "  ")
+				if err != nil {
+					return err
+				}
+				horror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+			}
 		}
 		return horror.Error(h.config.isCMD)
 	}
