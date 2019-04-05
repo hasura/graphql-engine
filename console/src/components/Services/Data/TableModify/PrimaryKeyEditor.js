@@ -65,7 +65,7 @@ const PrimaryKeyEditor = ({
   // expanded editor content
   const pkEditorExpanded = () => (
     <div>
-      <div className={`${styles.pkEditorExpanded}`}>
+      <div className={`${styles.add_mar_top_small} ${styles.add_mar_bottom}`}>
         <PrimaryKeySelector
           dispatch={dispatch}
           setPk={setPrimaryKeys}
