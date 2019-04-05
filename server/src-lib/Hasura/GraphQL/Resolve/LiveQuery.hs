@@ -3,6 +3,7 @@ module Hasura.GraphQL.Resolve.LiveQuery
   , LiveQueryMap
   , newLiveQueryMap
   , addLiveQuery
+  , TxRunner
   , removeLiveQuery
   ) where
 

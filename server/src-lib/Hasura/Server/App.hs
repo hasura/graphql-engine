@@ -12,6 +12,7 @@ import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
+import           System.Exit                            (exitFailure)
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
@@ -305,6 +306,12 @@ legacyQueryHandler tn queryType =
   where
     qt = QualifiedObject publicSchema tn
 
+initErrExit :: QErr -> IO a
+initErrExit e = do
+  putStrLn $
+    "failed to build schema-cache because of inconsistent metadata: "
+    <> T.unpack (qeError e)
+  exitFailure
 
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> Bool

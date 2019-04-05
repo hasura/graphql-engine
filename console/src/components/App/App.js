@@ -9,7 +9,7 @@ import './progress-bar.scss';
 import { NOTIF_EXPANDED } from './Actions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
-import ErrorBoundary from './ErrorBoundary';
+import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 

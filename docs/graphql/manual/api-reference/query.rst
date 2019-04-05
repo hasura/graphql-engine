@@ -83,6 +83,7 @@ Simple Object
   object-name {
     field1
     field2
+    json_field[(path: String)]
     ..
     nested object1
     nested object2
@@ -90,16 +91,36 @@ Simple Object
     ..
   }
 
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - path
+     - false
+     - Value
+     - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`_. However, prefix symbol ``$.`` is optional.
+
 E.g.
 
 .. code-block:: graphql
 
    author {
-      id  # scalar field
-      name  # scalar field
+      id  # scalar integer field
+      
+      name  # scalar text field
+
+      address(path: "$.city") # scalar JSON field -> property
+      address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
+      contacts(path: "[0]") # scalar JSON field -> array_item
+      contacts(path: "[0].phone") # scalar JSON field -> array_item_property 
+      
       article {  # nested object
         title
       }
+      
       article_aggregate {  # aggregate nested object
         aggregate {
           count
@@ -400,7 +421,6 @@ Operator
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
 
-
 .. _OrderByExp:
 
 OrderByExp
@@ -486,7 +506,7 @@ OrderByEnum
      desc_nulls_last
    }
 
-AggregateOrderBy               
+AggregateOrderBy
 ################
 
 Count aggregate
