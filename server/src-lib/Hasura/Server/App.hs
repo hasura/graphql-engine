@@ -50,6 +50,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
+import qualified Hasura.Server.PGDump as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -277,6 +278,10 @@ gqlExplainHandler query = do
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
 
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
+v1Alpha1PGDumpHandler _ = undefined
+
+
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
 
@@ -377,6 +382,14 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
         mkSpockAction encodeQErr serverCtx $
         legacyQueryHandler (TableName tableName) queryType
+
+      post "v1alpha1/pg_dump" $ do
+        reqBody <- jsonBody
+        case reqBody of
+          Just b -> v1Alpha1PGDumpHandler b
+          Nothing -> do
+            let qErr = err400 InvalidParams "invalid request body"
+            raiseGenericApiError qErr
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
