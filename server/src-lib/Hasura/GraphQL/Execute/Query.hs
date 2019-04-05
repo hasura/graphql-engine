@@ -171,18 +171,6 @@ getNextArgNum = do
   put $ PlanningSt (curArgNum + 1) vars prepped
   return curArgNum
 
-getSessVarVal
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has UserInfo r
-     )
-  => SessVar -> m SessVarVal
-getSessVarVal sessVar = do
-  usrVars <- userVars <$> asks getter
-  onNothing (getVarVal sessVar usrVars) $
-    throw500WithDetail "internal authorization error" $ J.String $
-    "missing session variable: " <> sessVar
-
 prepareWithPlan
   :: (MonadState PlanningSt m)
   => UnresolvedVal -> m S.SQLExp

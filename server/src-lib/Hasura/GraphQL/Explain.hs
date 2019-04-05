@@ -17,11 +17,14 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
@@ -51,6 +54,30 @@ runExplain
 runExplain ctx m =
   either throwError return $ runExcept $ runReaderT m ctx
 
+resolveVal
+  :: (MonadError QErr m)
+  => UserInfo -> UnresolvedVal -> m S.SQLExp
+resolveVal userInfo = \case
+  RS.UVPG annPGVal ->
+    txtConverter annPGVal
+  RS.UVSessVar colTy sessVar -> do
+    sessVarVal <- getSessVarVal userInfo sessVar
+    return $ S.withTyAnn colTy $ withGeoVal colTy $
+      S.SELit sessVarVal
+  RS.UVSQL sqlExp -> return sqlExp
+
+getSessVarVal
+  :: (MonadError QErr m)
+  => UserInfo -> SessVar -> m SessVarVal
+getSessVarVal userInfo sessVar =
+  onNothing (getVarVal sessVar usrVars) $
+    throw400 UnexpectedPayload $
+    "missing required session variable for role " <> rn <<>
+    " : " <> sessVar
+  where
+    rn = userRole userInfo
+    usrVars = userVars userInfo
+
 explainField
   :: (MonadTx m)
   => UserInfo -> GCtx -> SQLGenCtx -> Field -> m FieldPlan
@@ -60,9 +87,12 @@ explainField userInfo gCtx sqlGenCtx fld =
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
-      sqlQuery <- runExplain (opCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        RS.queryFldToSQL txtConverter fld
-      let txtSQL = Q.getQueryText sqlQuery
+      unresolvedAST <-
+        runExplain (opCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
+        RS.queryFldToPGAST fld
+      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
+                     unresolvedAST
+      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
@@ -102,4 +132,4 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
 
-    runTx tx = runLazyTx pool iso $ withUserInfo userInfo tx
+    runTx = runLazyTx pool iso
