@@ -26,10 +26,8 @@ export const passMTCreateTable = () => {
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-
   validateCT(getTableName(0, testName), 'success');
 };
-
 export const passMTCheckRoute = () => {
   // Click on the create table button
   cy.get(getElementFromAlias('table-modify')).click();
@@ -63,14 +61,14 @@ export const passMTRenameColumn = () => {
     .clear()
     .type(getColName(3));
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
-  cy.wait(2500);
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), [getColName(3)], 'success');
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
     .type('id');
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
-  cy.wait(2500);
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), ['id'], 'success');
 };
 

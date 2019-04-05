@@ -9,9 +9,11 @@ class Editor extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.toggled !== this.state.isEditing) {
-      this.setState({
-        isEditing: nextProps.toggled,
-      });
+      if (nextProps.toggled !== undefined) {
+        this.setState({
+          isEditing: nextProps.toggled,
+        });
+      }
     }
   }
 
