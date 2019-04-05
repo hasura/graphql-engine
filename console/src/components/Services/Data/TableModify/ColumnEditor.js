@@ -27,20 +27,11 @@ const ColumnEditor = ({
   useEffect(() => {
     dispatch(editColumn(colName, 'comment', columnComment));
   }, [columnComment]);
-  console.log(columnComment);
   const c = column;
   if (!selectedProperties[colName]) {
     return null;
   }
   const styles = require('./ModifyTable.scss');
-  const [iname, inullable, iunique, idefault, icomment, itype] = [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-  ];
   // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
@@ -141,21 +132,7 @@ const ColumnEditor = ({
 
   return (
     <div className={`${styles.colEditor} container-fluid`}>
-      <form
-        className="form-horizontal"
-        onSubmit={e => {
-          e.preventDefault();
-          onSubmit(
-            itype.value,
-            inullable.value,
-            iunique.value,
-            idefault.value,
-            icomment.value,
-            column,
-            allowRename ? iname.value : null
-          );
-        }}
-      >
+      <form className="form-horizontal" onSubmit={onSubmit}>
         {allowRename && (
           <div className={`${styles.display_flex} form-group`}>
             <label className="col-xs-3 text-right">Name</label>
