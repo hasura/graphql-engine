@@ -587,7 +587,7 @@ class ApiRequest extends Component {
       const {
         claims_namespace: claimNameSpace = 'https://hasura.io/jwt/claims',
         claims_format: claimFormat = 'json',
-      } = this.props.serverConfig.jwt;
+      } = 'jwt' in this.props.serverConfig ? this.props.serverConfig.jwt : {};
 
       let tokenVerified = false;
       let JWTError = '';
@@ -638,31 +638,54 @@ class ApiRequest extends Component {
       };
 
       const getHasuraClaims = () => {
-        return claimNameSpace &&
-          claimFormat === 'json' &&
-          tokenInfo.payload &&
-          Object.keys(tokenInfo.payload).length > 0 &&
-          claimNameSpace in tokenInfo.payload
-          ? [
-              <br key="hasura_claim_element_break" />,
-              <span key="hasura_claim_label" className={styles.analyzerLabel}>
-                Hasura Claims:
-                <span>hasura headers</span>
-              </span>,
-              <TextAreaWithCopy
-                key="hasura_claim_value"
-                copyText={JSON.stringify(
-                  tokenInfo.payload[claimNameSpace],
-                  null,
-                  2
-                )}
-                textLanguage={'json'}
-                id="claimNameSpaceCopy"
-                containerId="claimNameSpaceCopyBlock"
-              />,
-              <br key="hasura_claim_element_break_after" />,
-            ]
-          : null;
+        const payload = tokenInfo.payload;
+        if (!payload) {
+          return null;
+        }
+        const isValidPayload = Object.keys(payload).length;
+        const payloadHasValidNamespace = claimNameSpace in payload;
+        const isSupportedFormat =
+          ['json', 'stringified_json'].indexOf(claimFormat) !== -1;
+
+        if (
+          !isValidPayload ||
+          !payloadHasValidNamespace ||
+          !isSupportedFormat
+        ) {
+          return null;
+        }
+
+        let claimData = '';
+
+        const generateValidNameSpaceData = claimD => {
+          return JSON.stringify(claimD, null, 2);
+        };
+
+        try {
+          claimData =
+            claimFormat === 'stringified_json'
+              ? generateValidNameSpaceData(JSON.parse(payload[claimNameSpace]))
+              : generateValidNameSpaceData(payload[claimNameSpace]);
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+
+        return [
+          <br key="hasura_claim_element_break" />,
+          <span key="hasura_claim_label" className={styles.analyzerLabel}>
+            Hasura Claims:
+            <span>hasura headers</span>
+          </span>,
+          <TextAreaWithCopy
+            key="hasura_claim_value"
+            copyText={claimData}
+            textLanguage={'json'}
+            id="claimNameSpaceCopy"
+            containerId="claimNameSpaceCopyBlock"
+          />,
+          <br key="hasura_claim_element_break_after" />,
+        ];
       };
 
       const analyzeBearerBody = error ? (
