@@ -168,22 +168,24 @@ export const passBIInsert20Rows = () => {
         'filter-text'
       );
       cy.get(getElementFromAlias('insert-save-button')).click();
-      continue; // eslint-disable-line
-    }
-    cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
-      '{selectall}{del}'
-    );
-    cy.get(getElementFromAlias(`typed-input-${textIndex}`))
-      .type('{selectall}{del}')
-      .type(
-        Math.random()
-          .toString(36)
-          .substring(7)
+    } else {
+      cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+        '{selectall}{del}'
       );
-    cy.get(getElementFromAlias(`typed-input-default-${textIndex + 1}`)).check();
-    cy.get(getElementFromAlias('insert-save-button')).click();
-    cy.wait(300);
-    validateInsert(getTableName(0, testName), i + 1);
+      cy.get(getElementFromAlias(`typed-input-${textIndex}`))
+        .type('{selectall}{del}')
+        .type(
+          Math.random()
+            .toString(36)
+            .substring(7)
+        );
+      cy.get(
+        getElementFromAlias(`typed-input-default-${textIndex + 1}`)
+      ).check();
+      cy.get(getElementFromAlias('insert-save-button')).click();
+      cy.wait(300);
+      validateInsert(getTableName(0, testName), i + 1);
+    }
   }
   // Wait for insert notifications to disappear
   cy.wait(7000);

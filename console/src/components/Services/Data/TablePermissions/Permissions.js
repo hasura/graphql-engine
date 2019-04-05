@@ -798,7 +798,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip(rowSectionTitle, rowPermissionTooltip)}
             defaultTitle
-            isOpen
+            testId={'toggle-row-permission'}
           >
             <div className={styles.editPermissionsSection}>
               <div>
@@ -892,8 +892,9 @@ class Permissions extends Component {
               onClick={dispatchToggleAllColumns}
               disabled={noPermissions}
               title={noPermissions ? noPermissionsMsg : ''}
+              data-test={'toggle-all-col-btn'}
             >
-              Toggle all
+              Toggle All
             </Button>
           );
         };
@@ -929,7 +930,7 @@ class Permissions extends Component {
             <CollapsibleToggle
               title={addTooltip(colSectionTitle, colPermissionTooltip)}
               defaultTitle
-              isOpen
+              testId={'toggle-col-permission'}
             >
               <div className={styles.editPermissionsSection}>
                 <div>
@@ -976,7 +977,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip('Upsert queries permissions', upsertToolTip)}
             defaultTitle
-            isOpen
+            testId={'toggle-upsert-permission'}
           >
             <div className="radio">
               <label>
@@ -1319,7 +1320,7 @@ class Permissions extends Component {
           <CollapsibleToggle
             title={addTooltip('Column presets', presetTooltip)}
             defaultTitle
-            isOpen
+            testId={'toggle-presets-permission'}
           >
             <div className={styles.editPermissionsSection}>
               <form className={styles.form_permission_insert_set_wrapper}>
@@ -1359,7 +1360,7 @@ class Permissions extends Component {
               aggregationToolTip
             )}
             defaultTitle
-            isOpen
+            testId={'toggle-agg-permission'}
           >
             <div className={styles.mar_small_neg_left_1}>
               <div className="radio">
@@ -1533,7 +1534,7 @@ class Permissions extends Component {
 
         const applyToListHtml = getApplyToList();
 
-        let applyBulkPermissions = null;
+        let clonePermissionsHtml = null;
         if (applyToListHtml.length) {
           const cloneToolTip = (
             <Tooltip id="tooltip-clone">
@@ -1541,13 +1542,13 @@ class Permissions extends Component {
             </Tooltip>
           );
 
-          applyBulkPermissions = (
+          clonePermissionsHtml = (
             <div>
               <hr />
               <CollapsibleToggle
                 title={addTooltip('Clone permissions', cloneToolTip)}
                 defaultTitle
-                isOpen
+                testId={'toggle-clone-permission'}
               >
                 <div className={styles.editPermissionsSection}>
                   <div>Apply same permissions for:</div>
@@ -1573,7 +1574,7 @@ class Permissions extends Component {
           );
         }
 
-        return applyBulkPermissions;
+        return clonePermissionsHtml;
       };
 
       const getButtonsSection = () => {
@@ -1588,7 +1589,13 @@ class Permissions extends Component {
           }
         };
 
-        const getButton = (value, color, onClickFn, disabled, title) => (
+        const getPermActionButton = (
+          value,
+          color,
+          onClickFn,
+          disabled,
+          title
+        ) => (
           <Button
             className={styles.add_mar_right}
             color={color}
@@ -1616,7 +1623,7 @@ class Permissions extends Component {
             JSON.stringify(currQueryPermissions);
         const disableRemoveAccess = !currQueryPermissions;
 
-        const saveButton = getButton(
+        const saveButton = getPermActionButton(
           'Save Permissions',
           'yellow',
           dispatchSavePermissions,
@@ -1624,7 +1631,7 @@ class Permissions extends Component {
           disableSave ? 'No changes made' : ''
         );
 
-        const removeAccessButton = getButton(
+        const removeAccessButton = getPermActionButton(
           'Delete Permissions',
           'red',
           dispatchRemoveAccess,
