@@ -35,7 +35,7 @@ Contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBU
 
 There is no specific contributing guide for community content. Anything that can
 help GraphQL Engine community/users can go into the section. We have identified
-[boilerplates](community/boilerplates), [examples](community/sample-appspps) and
+[boilerplates](community/boilerplates), [examples](community/sample-apps) and
 [tools](community/tools) as primary candidates. Feel free to submit a pull
 request if you have something to add (not necessarily belonging to the
 aforementioned sections).

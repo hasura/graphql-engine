@@ -42,22 +42,27 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Quickstart:](#quickstart)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Features](#features)
+  - [Table of contents](#table-of-contents)
+  - [Quickstart:](#quickstart)
     - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
+    - [Other one-click deployment options](#other-one-click-deployment-options)
     - [Other deployment methods](#other-deployment-methods)
-- [Architecture](#architecture)
-- [Client-side tooling](#client-side-tooling)
-- [Add business logic](#add-business-logic)
+  - [Architecture](#architecture)
+  - [Client-side tooling](#client-side-tooling)
+  - [Add business logic](#add-business-logic)
     - [Remote schemas](#remote-schemas)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
-- [Demos](#demos)
+    - [Derived data or data transformations](#derived-data-or-data-transformations)
+  - [Demos](#demos)
     - [Realtime applications](#realtime-applications)
     - [Videos](#videos)
-- [Support & Troubleshooting](#support--troubleshooting)
-- [Contributing](#contributing)
-- [Brand assets](#brand-assets)
-- [License](#license)
-- [Translations](#translations)
+  - [Support & Troubleshooting](#support--troubleshooting)
+  - [Contributing](#contributing)
+  - [Brand assets](#brand-assets)
+  - [License](#license)
+  - [Translations](#translations)
 
 <!-- markdown-toc end -->
 
@@ -127,25 +132,25 @@ Transform data in Postgres or run business logic on it to derive another dataset
 ## Demos
 
 Check out all the example applications in the
-[community/sample-appsppcommunity/sample-appse-apps) directory.
+[community/sample-apps](community/sample-apps-apps) directory.
 
 ### Realtime applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
   - [Try it out](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-appspps/realtime-chat)
+  - [Tutorial](community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
   coordinates moving on a map. 
   - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-appspps/realtime-location-tracking)
+  - [Tutorial](community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - A realtime dashboard for data aggregations on continuously changing data.
   - [Try it out](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-appspps/realtime-poll)
+  - [Tutorial](community/sample-apps/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
