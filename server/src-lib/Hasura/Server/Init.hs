@@ -784,8 +784,8 @@ mkGenericStrLog :: T.Text -> String -> StartupLog
 mkGenericStrLog k msg =
   StartupLog L.LevelInfo k $ J.toJSON msg
 
-inconsistentObjsLog :: SchemaCache -> StartupLog
-inconsistentObjsLog sc =
-  StartupLog L.LevelInfo "inconsistent_objects" infoVal
+inconsistentMetadataLog :: SchemaCache -> StartupLog
+inconsistentMetadataLog sc =
+  StartupLog L.LevelInfo "inconsistent_metadata" infoVal
   where
     infoVal = J.object ["objects" J..= scInconsistentObjs sc]

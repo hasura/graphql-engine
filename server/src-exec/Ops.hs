@@ -140,7 +140,7 @@ execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  buildSchemaCache
+  buildSchemaCacheStrict
   encJToLBS <$> runQueryM query
 
 -- error messages

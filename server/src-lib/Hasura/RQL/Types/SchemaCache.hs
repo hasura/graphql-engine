@@ -96,7 +96,6 @@ module Hasura.RQL.Types.SchemaCache
        , askFunctionInfo
        , delFunctionFromCache
 
-       , InconsistentSchemaObj(..)
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -106,6 +105,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
@@ -431,7 +431,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentSchemaObj]
+  , scInconsistentObjs  :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)

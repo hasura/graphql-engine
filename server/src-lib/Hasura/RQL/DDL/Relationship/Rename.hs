@@ -7,7 +7,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
-import           Hasura.RQL.DDL.Schema.Table       (buildSchemaCache)
+import           Hasura.RQL.DDL.Schema.Table       (buildSchemaCacheStrict)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -34,7 +34,7 @@ renameRelP2 qt newRN relInfo = do
   -- update catalog
   renameRelInCatalog qt oldRN newRN
   -- update schema cache
-  buildSchemaCache
+  buildSchemaCacheStrict
   where
     oldRN = riName relInfo
 

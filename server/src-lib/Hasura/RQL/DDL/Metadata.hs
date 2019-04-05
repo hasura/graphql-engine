@@ -30,29 +30,30 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.List                      as L
-import qualified Data.Text                      as T
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
+import qualified Data.List                          as L
+import qualified Data.Text                          as T
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query              as Q
-import qualified Hasura.GraphQL.Schema          as GS
-import qualified Hasura.RQL.DDL.EventTrigger    as DS
-import qualified Hasura.RQL.DDL.Permission      as DP
-import qualified Hasura.RQL.DDL.QueryTemplate   as DQ
-import qualified Hasura.RQL.DDL.Relationship    as DR
-import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
-import qualified Hasura.RQL.DDL.Schema.Function as DF
-import qualified Hasura.RQL.DDL.Schema.Table    as DT
-import qualified Hasura.RQL.Types.EventTrigger  as DTS
-import qualified Hasura.RQL.Types.RemoteSchema  as TRS
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.RQL.DDL.EventTrigger        as DE
+import qualified Hasura.RQL.DDL.Permission          as DP
+import qualified Hasura.RQL.DDL.Permission.Internal as DP
+import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
+import qualified Hasura.RQL.DDL.Relationship        as DR
+import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
+import qualified Hasura.RQL.DDL.Schema.Function     as DF
+import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.Types.EventTrigger      as DTS
+import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
@@ -137,7 +138,7 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DT.buildSchemaCache
+  DT.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
@@ -215,7 +216,7 @@ applyQP2
 applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   liftTx clearMetadata
-  DT.buildSchemaCache
+  DT.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
@@ -248,7 +249,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        DS.subTableP2 (table ^. tmTable) False etc
+        DE.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
@@ -489,7 +490,19 @@ runDropInconsistentMetadata
 runDropInconsistentMetadata _ = do
   adminOnly
   sc <- askSchemaCache
-  let inconsSchObjs = map _soId $ scInconsistentObjs sc
-  forM_ inconsSchObjs $ DT.purgeDep False
+  let inconsSchObjs = map _moId $ scInconsistentObjs sc
+  mapM_ purgeMetadataObj inconsSchObjs
   writeSchemaCache sc{scInconsistentObjs = []}
   return successMsg
+
+purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
+purgeMetadataObj = liftTx . \case
+  (MOTable qt) ->
+    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
+  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
+  (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
+  (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
+  (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
+  (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
+

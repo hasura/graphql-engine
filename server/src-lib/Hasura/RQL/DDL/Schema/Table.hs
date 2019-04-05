@@ -107,40 +107,34 @@ runTrackTableQ q = do
   trackExistingTableOrViewP2 (tName q) False
 
 purgeDep :: (CacheRWM m, MonadTx m)
-         => Bool -> SchemaObjId -> m ()
-purgeDep purgeInCache schemaObjId = case schemaObjId of
+         => SchemaObjId -> m ()
+purgeDep schemaObjId = case schemaObjId of
   (SOTable tn) -> do
     liftTx $ Q.catchE defaultTxErrorHandler $ delTableFromCatalog tn
-    withCache $ delTableFromCache tn
+    delTableFromCache tn
 
   (SOTableObj tn (TOPerm rn pt)) -> do
     liftTx $ dropPermFromCatalog tn rn pt
-    withCache $ withPermType pt delPermFromCache rn tn
+    withPermType pt delPermFromCache rn tn
 
   (SOTableObj qt (TORel rn))     -> do
     liftTx $ delRelFromCatalog qt rn
-    withCache $ delRelFromCache rn qt
+    delRelFromCache rn qt
 
   (SOQTemplate qtn)              -> do
     liftTx $ delQTemplateFromCatalog qtn
-    withCache $ delQTemplateFromCache qtn
+    delQTemplateFromCache qtn
 
   (SOFunction qf) -> do
     liftTx $ delFunctionFromCatalog qf
-    withCache $ delFunctionFromCache qf
+    delFunctionFromCache qf
 
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
-    withCache $ delEventTriggerFromCache qt trn
-
-  (SORemoteSchema rsn) -> do
-    removeRemoteSchemaFromCache rsn
-    liftTx $ removeRemoteSchemaFromCatalog rsn
+    delEventTriggerFromCache qt trn
 
   _                              -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
-  where
-    withCache = when purgeInCache
 
 processTableChanges :: (MonadTx m, CacheRWM m)
                     => TableInfo -> TableDiff -> m Bool
@@ -273,7 +267,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
 
   -- Purge all the dependants from state
-  mapM_ (purgeDep True) indirectDeps
+  mapM_ purgeDep indirectDeps
 
   -- delete the table and its direct dependencies
   delTableAndDirectDeps qtn
@@ -298,7 +292,7 @@ runUntrackTableQ q = do
 
 handleInconsistentObj
   :: (QErrM m, CacheRWM m)
-  => (T.Text -> InconsistentSchemaObj)
+  => (T.Text -> InconsistentMetadataObj)
   -> m ()
   -> m ()
 handleInconsistentObj f action =
@@ -308,87 +302,15 @@ handleInconsistentObj f action =
         allInconsObjs = inconsObj:scInconsistentObjs sc
     writeSchemaCache $ sc{scInconsistentObjs = allInconsObjs}
 
-mkInconsistentTable
-  :: QualifiedTable
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentTable tn rsn =
-  InconsistentSchemaObj (SOTable tn) "table" def rsn
-  where
-    def = toJSON $ TrackTable tn
-
-mkInconsistentRel
-  :: QualifiedTable
-  -> RelName
-  -> RelType
-  -> Value
-  -> Maybe T.Text
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentRel tn rn rt rDef cmnt rsn =
-  InconsistentSchemaObj objId ty def rsn
-  where
-    objId = SOTableObj tn $ TORel rn
-    def = toJSON $ WithTable tn $ RelDef rn rDef cmnt
-    ty = case rt of
-      ObjRel -> "object_relation"
-      ArrRel -> "array_relation"
-
-mkInconsistentPerm
-  :: QualifiedTable
-  -> RoleName
-  -> PermType
-  -> Value
-  -> Maybe T.Text
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentPerm tn rn pt pDef cmnt rsn =
-  InconsistentSchemaObj objId ty def rsn
-  where
-    objId = SOTableObj tn $ TOPerm rn pt
-    ty = T.pack $ show pt <> "_permission"
-    def = toJSON $ WithTable tn $ PermDef rn pDef cmnt
-
-mkInconsistentQTemplate
-  :: TQueryName
-  -> Value
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentQTemplate qtName qtDef rsn =
-  InconsistentSchemaObj (SOQTemplate qtName) "query_template" def rsn
-  where
-    def = object ["name" .= qtName, "template" .= qtDef]
-
-mkInconsistentTrigger
-  :: QualifiedTable
-  -> TriggerName
-  -> Value
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentTrigger tn trn config rsn =
-  InconsistentSchemaObj objId "event_trigger" def rsn
-  where
-    objId = SOTableObj tn $ TOTrigger trn
-    def = object ["table" .= tn, "configuration" .= config]
-
-mkInconsistentFunction
-  :: QualifiedFunction
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentFunction fn rsn =
-  InconsistentSchemaObj (SOFunction fn) "function" def rsn
-  where
-    def = toJSON $ TrackFunction fn
-
-mkInconsistentRemoteSchema
-  :: AddRemoteSchemaQuery
-  -> T.Text
-  -> InconsistentSchemaObj
-mkInconsistentRemoteSchema q reason =
-  InconsistentSchemaObj (SORemoteSchema rsn) "remote_schema" def reason
-  where
-    rsn = _arsqName q
-    def = toJSON q
+buildSchemaCacheStrict
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => m ()
+buildSchemaCacheStrict = do
+  buildSchemaCache
+  sc <- askSchemaCache
+  let inconsObjs = scInconsistentObjs sc
+  unless (null inconsObjs) $
+    throw400 Unexpected "metadata is inconsistent"
 
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
@@ -403,7 +325,8 @@ buildSchemaCache = do
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) -> do
     let qt = QualifiedObject sn tn
-        mkInconsObj = mkInconsistentTable qt
+        mkInconsObj = InconsistentMetadataObj (MOTable qt)
+                      MOTTable $ toJSON $ TrackTable qt
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       trackExistingTableOrViewP2Setup qt isSystemDefined
@@ -413,7 +336,9 @@ buildSchemaCache = do
 
   forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef, cmnt) -> do
     let qt = QualifiedObject sn tn
-        mkInconsObj = mkInconsistentRel qt rn rt rDef cmnt
+        objId = MOTableObj qt $ MTORel rn rt
+        def = toJSON $ WithTable qt $ RelDef rn rDef cmnt
+        mkInconsObj = InconsistentMetadataObj objId (MOTRel rt) def
     modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       case rt of
@@ -432,7 +357,10 @@ buildSchemaCache = do
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
   forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef, cmnt) -> do
-    let mkInconsObj = mkInconsistentPerm (QualifiedObject sn tn) rn pt pDef cmnt
+    let qt = QualifiedObject sn tn
+        objId = MOTableObj qt $ MTOPerm rn pt
+        def = toJSON $ WithTable qt $ PermDef rn pDef cmnt
+        mkInconsObj = InconsistentMetadataObj objId (MOTPerm pt) def
     modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       case pt of
@@ -444,7 +372,9 @@ buildSchemaCache = do
   -- Fetch all the query templates
   qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
-    let mkInconsObj = mkInconsistentQTemplate qtn qtDefVal
+    let def = object ["name" .= qtn, "template" .= qtDefVal]
+        mkInconsObj =
+          InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
     handleInconsistentObj mkInconsObj $ do
       qtDef <- decodeValue qtDefVal
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
@@ -455,7 +385,9 @@ buildSchemaCache = do
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
     let qt = QualifiedObject sn tn
-        mkInconsObj = mkInconsistentTrigger qt trn configuration
+        objId = MOTableObj qt $ MTOTrigger trn
+        def = object ["table" .= qt, "configuration" .= configuration]
+        mkInconsObj = InconsistentMetadataObj objId MOTEventTrigger def
     handleInconsistentObj mkInconsObj $ do
       etc <- decodeValue configuration
       subTableP2Setup qt etc
@@ -465,7 +397,9 @@ buildSchemaCache = do
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) -> do
     let qf = QualifiedObject sn fn
-        mkInconsObj = mkInconsistentFunction qf
+        def = toJSON $ TrackFunction qf
+        mkInconsObj =
+          InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> fn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       trackFunctionP2Setup qf
@@ -492,7 +426,8 @@ buildSchemaCache = do
 
     resolveSingleRemoteSchema hMgr rs = do
       let AddRemoteSchemaQuery name def _ = rs
-          mkInconsObj = mkInconsistentRemoteSchema rs
+          mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
+                        MOTRemoteSchema (toJSON rs)
       handleInconsistentObj mkInconsObj $ do
         rsi <- validateRemoteSchemaDef def
         addRemoteSchemaToCache name rsi
@@ -612,7 +547,7 @@ execWithMDCheck (RunSQL t cascade _) = do
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
 
   -- Purge all the indirect dependents from state
-  mapM_ (purgeDep True) indirectDeps
+  mapM_ purgeDep indirectDeps
 
   -- Purge all dropped functions
   let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
@@ -633,7 +568,7 @@ execWithMDCheck (RunSQL t cascade _) = do
   -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff
 
-  let withReload = buildSchemaCache
+  let withReload = buildSchemaCacheStrict -- in case of any rename
       withoutReload = do
         postSc <- askSchemaCache
         -- recreate the insert permission infra

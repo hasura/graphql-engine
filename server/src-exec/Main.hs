@@ -145,7 +145,7 @@ main =  do
 
       sc <- getSCFromRef cacheRef
       -- log inconsistent schema objects
-      unLogger logger $ inconsistentObjsLog sc
+      unLogger logger $ inconsistentMetadataLog sc
 
       -- start a background thread for schema sync
       startSchemaSync sqlGenCtx pool logger httpManager

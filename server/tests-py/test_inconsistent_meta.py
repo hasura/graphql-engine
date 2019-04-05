@@ -66,6 +66,16 @@ class TestInconsistentObjects():
         st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_metadata)
         assert st_code == 200, resp
 
+        # reload metadata
+        st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
+        assert st_code == 200, resp
+
+        # fetch inconsistent objects
+        st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
+        assert st_code == 200, resp
+
+        assert len(resp) == 0, resp
+
         # teardown
         st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
         assert st_code == 200, resp
