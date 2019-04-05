@@ -76,15 +76,15 @@ class Editor extends React.Component {
     );
   };
 
-  // actionButtons = () => {
-  //   const { saveFunc, removeFunc } = this.props;
-  //   return (
-  //     <div className={styles.editorActionButtons}>
-  //       {saveFunc && this.saveButton(saveFunc)}
-  //       {removeFunc && this.removeButton(removeFunc)}
-  //     </div>
-  //   );
-  // };
+  actionButtons = () => {
+    const { saveFunc, removeFunc } = this.props;
+    return (
+      <div>
+        {saveFunc && this.saveButton(saveFunc)}
+        {removeFunc && this.removeButton(removeFunc)}
+      </div>
+    );
+  };
 
   render() {
     const { isEditing } = this.state;
@@ -98,10 +98,12 @@ class Editor extends React.Component {
     let editorClass;
     let editorLabel;
     let editorContent;
+    let actionButtons;
 
     if (isEditing) {
       editorClass = styles.editorExpanded;
       editorLabel = expandedLabel && expandedLabel();
+      actionButtons = this.actionButtons();
 
       if (editorExpanded) {
         editorContent = (
@@ -126,6 +128,7 @@ class Editor extends React.Component {
           {editorLabel}
         </div>
         {editorContent}
+        {actionButtons}
       </div>
     );
   }
