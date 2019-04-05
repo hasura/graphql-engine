@@ -478,7 +478,7 @@ execWithMDCheck (RunSQL t cascade _) = do
     throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
     <> reportFuncs overloadedFuncs
 
-  indirectDeps <- getSchemaChangeDeps schemaDiff
+  indirectDeps <- getSchemaChangeDeps droppedFuncs schemaDiff
 
   -- Report back with an error if cascade is not set
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []

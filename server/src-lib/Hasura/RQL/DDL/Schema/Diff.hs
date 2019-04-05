@@ -208,11 +208,14 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRWM m)
-  => SchemaDiff -> m [SchemaObjId]
-getSchemaChangeDeps schemaDiff = do
+  => [QualifiedFunction] -> SchemaDiff -> m [SchemaObjId]
+getSchemaChangeDeps droppedFuncs schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
   let tableIds = map SOTable droppedTables
+  -- Get the dependent of the dropped functions
+  let funcDropDeps = flip concatMap droppedFuncs $
+                     getDependentObjs sc . SOFunction
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
   tableModDeps <- fmap concat $ forM alteredTables $ \(oldQtn, tableDiff) -> do
@@ -221,7 +224,7 @@ getSchemaChangeDeps schemaDiff = do
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
     getTableChangeDeps ti tableDiff
   return $ filter (not . isDirectDep) $
-    HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
+    HS.toList $ HS.fromList $ funcDropDeps <> tableDropDeps <> tableModDeps
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
