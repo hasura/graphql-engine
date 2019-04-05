@@ -10,7 +10,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    getUser(userId: String!): RemoteUser
+    getUser(userId: String!, isRand: Boolean): RemoteUser
     getAllUsers(name: String): [RemoteUser]
   }
 
@@ -24,7 +24,7 @@ const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
 
 const resolvers = {
     Query: {
-        getUser: async (_, { userId }) => {
+        getUser: async (_, { userId, isRand }) => {
             return await getData(restAPIEndpoint + '/users/' + id);
         },
 

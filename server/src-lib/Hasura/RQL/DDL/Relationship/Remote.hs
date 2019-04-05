@@ -99,7 +99,8 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
   let gctx = scDefaultRemoteGCtx sc
       remoteFldName = rruRemoteField ru
   remoteObjFieldInfo <- getRemoteField gctx remoteFldName
-  let remoteFldInfo = RemoteFldInfo remoteFldName (_fiTy remoteObjFieldInfo)
+  let remoteInpParams = Map.map reduceInpVal (_fiParams remoteObjFieldInfo)
+      remoteFldInfo = RemoteFldInfo remoteFldName (_fiTy remoteObjFieldInfo) remoteInpParams
   let relInfo = RemoteRelInfo rn remScName qt (rruColumn ru) remoteFldInfo (rruInputField ru) (rruInputPath ru)
   addRemoteRelToCache rn relInfo deps qt
   where
@@ -113,7 +114,11 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
         HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found in any remote schema")
         RemoteType _ _ -> return field
 
-
+    reduceInpVal ivi = InpValInfo'
+                       { __iviDesc = _iviDesc ivi
+                       , __iviName = _iviName ivi
+                       , __iviType = _iviType ivi
+                       }
 
 getRemoteSchemaNameFromField
   :: (QErrM m, CacheRM m)

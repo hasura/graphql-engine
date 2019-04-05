@@ -6,6 +6,7 @@ module Hasura.RQL.Types.Common
        , RelInfo(..)
        , RemoteRelInfo(..)
        , RemoteFldInfo(..)
+       , InpValInfo'(..)
 
        , FieldName(..)
        , fromPGCol
@@ -23,6 +24,7 @@ module Hasura.RQL.Types.Common
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Instances          ()
 import qualified Hasura.SQL.DML                as S
 import           Hasura.SQL.Types
 
@@ -90,10 +92,24 @@ data RelInfo
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''RelInfo)
 
+
+type InpParamMap = HM.HashMap G.Name InpValInfo'
+
+data InpValInfo'
+  = InpValInfo'
+  { __iviDesc :: !(Maybe G.Description)
+  , __iviName :: !G.Name
+  -- , _iviDefVal :: !(Maybe G.ValueConst)
+  , __iviType :: !G.GType
+  } deriving (Show, Eq, Lift)
+
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''InpValInfo')
+
 data RemoteFldInfo
   = RemoteFldInfo
-  { rfiName :: !G.Name
-  , rfiTy   :: !G.GType
+  { rfiName     :: !G.Name
+  , rfiTy       :: !G.GType
+  , rfiParamMap :: !InpParamMap
   } deriving (Show, Eq, Lift)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteFldInfo)

@@ -285,12 +285,20 @@ mkTableObj tn allowedFlds =
 
 mkRemoteFld :: RemoteRelInfo -> ObjFldInfo
 mkRemoteFld rri  =
-  mkHsraObjFldInfo (Just "Remote relationship")(G.Name $ getRelTxt relName) Map.empty namedTy
+  mkHsraObjFldInfo (Just "Remote field")(G.Name $ getRelTxt relName) filteredInpParams namedTy
   where
+    inpParams = Map.map transformInpVal (rfiParamMap relFldInfo)
+    filteredInpParams = Map.delete (rriInputField rri) inpParams
+    -- filteredInpParams = inpParams
     relName = rriName rri
     relFldInfo = rriRemoteField rri
     namedTy = rfiTy relFldInfo
-
+    transformInpVal ivi = InpValInfo
+                       { _iviDesc = __iviDesc ivi
+                       , _iviName = __iviName ivi
+                       , _iviDefVal = Nothing
+                       , _iviType = __iviType ivi
+                       }
 {-
 type table_aggregate {
   agg: table_aggregate_fields
