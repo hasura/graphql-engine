@@ -585,8 +585,8 @@ class ApiRequest extends Component {
     const { error, serverResp } = tokenInfo;
     const getAnalyzeBearerBody = () => {
       const {
-        claimNameSpace = 'https://hasura.io/jwt/claims',
-        claimFormat = 'json',
+        claims_namespace: claimNameSpace = 'https://hasura.io/jwt/claims',
+        claims_format: claimFormat = 'json',
       } = this.props.serverConfig;
 
       let tokenVerified = false;
