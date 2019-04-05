@@ -27,7 +27,7 @@ $(deriveToJSON defaultOptions ''GetConfig)
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimNamespace :: !(Maybe Text)
+  { jwtiClaimsNamespace :: !Text
   , jwtiClaimsFormat   :: !JWTClaimsFormat
   } deriving (Show, Eq)
 
@@ -66,13 +66,13 @@ isAuthHookSet = \case
 
 isJWTSet :: AuthMode -> Bool
 isJWTSet = \case
-  AMAdminSecretAndJWT _ _ _ -> True
-  _                         -> False
+  AMAdminSecretAndJWT{} -> True
+  _                     -> False
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
 getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
   Just $ JWTInfo ns format
   where
-    ns = jcxClaimNs jwtCtx
+    ns = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
     format = jcxClaimsFormat jwtCtx
 getJWTInfo _ = Nothing
