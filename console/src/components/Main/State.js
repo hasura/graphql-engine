@@ -17,7 +17,7 @@ const defaultState = {
       is_auth_hook_set: false,
       is_jwt_set: false,
       jwt: {
-        claims_namespace: null,
+        claims_namespace: '',
         claims_format: '',
       },
     },

@@ -587,7 +587,8 @@ class ApiRequest extends Component {
       const {
         claims_namespace: claimNameSpace = 'https://hasura.io/jwt/claims',
         claims_format: claimFormat = 'json',
-      } = 'jwt' in this.props.serverConfig ? this.props.serverConfig.jwt : {};
+      } =
+        ('jwt' in this.props.serverConfig && this.props.serverConfig.jwt) || {};
 
       let tokenVerified = false;
       let JWTError = '';
