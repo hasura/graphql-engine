@@ -5,12 +5,9 @@ import {
   saveTableCommentSql,
 } from './ModifyActions';
 
-const TableCommentEditor = ({
-  tableComment,
-  styles,
-  tableCommentEdit,
-  dispatch,
-}) => {
+import styles from './ModifyTable.scss';
+
+const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
   const editCommentClicked = () => {
     let commentText =
       tableComment && tableComment.result[1] && tableComment.result[1][0]
@@ -19,19 +16,24 @@ const TableCommentEditor = ({
     commentText = commentText !== 'NULL' ? commentText : null;
     dispatch(activateCommentEdit(true, commentText));
   };
+
   const commentEdited = e => {
     dispatch(updateCommentInput(e.target.value));
   };
+
   const commentEditSave = () => {
     dispatch(saveTableCommentSql(true));
   };
+
   const commentEditCancel = () => {
     dispatch(activateCommentEdit(false, ''));
   };
+
   let commentText =
     tableComment && tableComment.result[1] && tableComment.result[1][0]
       ? tableComment.result[1][0]
       : null;
+
   commentText = commentText !== 'NULL' ? commentText : null;
   let commentHtml = (
     <div className={styles.add_pad_bottom}>
@@ -41,6 +43,7 @@ const TableCommentEditor = ({
       </div>
     </div>
   );
+
   if (commentText && !tableCommentEdit.enabled) {
     commentHtml = (
       <div className={styles.mar_bottom}>
@@ -89,6 +92,7 @@ const TableCommentEditor = ({
       </div>
     );
   }
+
   return commentHtml;
 };
 

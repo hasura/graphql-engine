@@ -96,7 +96,10 @@ const ForeignKeyEditor = ({
     // label next to the button when the editor is expanded
     const expandedLabel = () => {
       if (isLast) return null;
-      const existingFkConfig = getForeignKeyConfig(existingForeignKeys[i], orderedColumns);
+      const existingFkConfig = getForeignKeyConfig(
+        existingForeignKeys[i],
+        orderedColumns
+      );
       return (
         <h5 className={styles.padd_bottom}>
           <b>{existingFkConfig}</b>

@@ -125,7 +125,6 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
-              styles={styles}
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
@@ -140,17 +139,12 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
-            <ColumnCreator
-              styles={styles}
-              dispatch={dispatch}
-              tableName={tableName}
-            />
+            <ColumnCreator dispatch={dispatch} tableName={tableName} />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={tableSchema}
               pkModify={pkModify}
-              styles={styles}
               dispatch={dispatch}
               currentSchema={currentSchema}
             />

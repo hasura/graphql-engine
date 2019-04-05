@@ -10,7 +10,7 @@ const ForeignKeyWrapper = ({
   columns,
   dispatch,
   styles,
-  fkToggled
+  fkToggled,
 }) => {
   // columns in the right order with their indices
   const orderedColumns = columns
@@ -66,7 +66,11 @@ const ForeignKeyWrapper = ({
     // Label to show next to the 'Edit' button (the FK configuration)
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
     const collapsedLabelText =
-      isLast && numFks === 1 ? '(You can add foreign keys later as well)' : <b>{fkConfig}</b>;
+      isLast && numFks === 1 ? (
+        <i>(You can add foreign keys later as well)</i>
+      ) : (
+        <b>{fkConfig}</b>
+      );
     const collapsedLabel = () => (
       <div>
         <div className="container-fluid">

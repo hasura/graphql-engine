@@ -10,18 +10,16 @@ export const databaseNamingScheme = (
 
 export const primaryKeyDescription = (
   <Tooltip id="tooltip-primary-key-description">
-    The 'Primary Key' is a unique, non-null constraint which is used to uniquely
-    identifies a record/row on a table. A primary key can be a single column or
-    compose of multiple columns.
+    A primary-key is a column (or set of columns) that uniquely identifies a row
+    of a table
   </Tooltip>
 );
 
 export const foreignKeyDescription = (
   <Tooltip id="tooltip-foreign-key-description">
-    A foreign key is a column or group of columns in a table that provides a
-    link between data in two tables. It acts as a cross-reference between tables
-    because it references a unique key of another table, thereby establishing a
-    link between them.
+    A foreign-key is a column (or set of columns) in one table that uniquely
+    identifies a row of another table (can be the same table). They are used to
+    establish a link between the data in the two tables.
   </Tooltip>
 );
 

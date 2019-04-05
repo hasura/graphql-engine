@@ -8,10 +8,11 @@ import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector'
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../Notification';
 
+import styles from './ModifyTable.scss';
+
 const PrimaryKeyEditor = ({
   tableSchema,
   pkModify,
-  styles,
   dispatch,
   currentSchema,
 }) => {

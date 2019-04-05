@@ -24,8 +24,10 @@ const ColumnEditorList = ({
   const tablePrimaryKeyColumns = tableSchema.primary_key
     ? tableSchema.primary_key.columns
     : [];
+
   const tableName = tableSchema.table_name;
   const columns = tableSchema.columns.sort(ordinalColSort);
+
   return columns.map((c, i) => {
     const colName = c.column_name;
     const columnProperties = {
@@ -38,6 +40,7 @@ const ColumnEditorList = ({
       isUnique: false,
       default: c.column_default || '',
     };
+
     for (let uci = tableSchema.unique_constraints.length - 1; uci >= 0; uci--) {
       const constraint = tableSchema.unique_constraints[uci];
       if (
@@ -47,15 +50,18 @@ const ColumnEditorList = ({
         columnProperties.isUnique = true;
       }
     }
+
     const onSubmit = () => {
       dispatch(saveColumnChangesSql(colName, c, allowRename));
     };
+
     const onDelete = () => {
       const isOk = confirm('Are you sure you want to delete?');
       if (isOk) {
         dispatch(deleteColumnSql(tableName, colName, c));
       }
     };
+
     const safeOnDelete = () => {
       let confirmMessage = 'Are you sure you want to delete?';
       if (columnProperties.isPrimaryKey) {
@@ -66,6 +72,7 @@ const ColumnEditorList = ({
         dispatch(deleteColumnSql(tableName, colName, c));
       }
     };
+
     const keyProperties = () => {
       const propertiesList = [];
       if (columnProperties.isPrimaryKey) propertiesList.push('primary key');
@@ -74,6 +81,7 @@ const ColumnEditorList = ({
       const keyPropertiesString = propertiesList.join(', ');
       return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
     };
+
     const collapsedLabel = () => {
       return (
         <div key={colName}>
@@ -88,6 +96,7 @@ const ColumnEditorList = ({
         </div>
       );
     };
+
     const expandedLabel = () => {
       return (
         <div key={colName}>
@@ -102,6 +111,7 @@ const ColumnEditorList = ({
         </div>
       );
     };
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
@@ -119,13 +129,16 @@ const ColumnEditorList = ({
         />
       );
     };
+
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
       dispatch(fetchColumnComment(tableName, colName));
     };
+
     const editorCollapseCallback = () => {
       dispatch(resetColumnEdit(colName));
     };
+
     return (
       <div key={colName}>
         <ExpandableEditor

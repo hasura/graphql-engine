@@ -5,6 +5,8 @@ import dataTypes from '../Common/DataTypes';
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
+import styles from './ModifyTable.scss';
+
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
     colName: '',
@@ -13,10 +15,13 @@ const useColumnEditor = (dispatch, tableName) => {
     colUnique: false,
     colDefault: '',
   };
-  const [state, setState] = useState(initialState);
-  const { colName, colType, colNull, colUnique, colDefault } = state;
+
+  const [columnState, setColumnState] = useState(initialState);
+  const { colName, colType, colNull, colUnique, colDefault } = columnState;
+
   const onSubmit = e => {
     e.preventDefault();
+
     // validate before sending
     if (!gqlPattern.test(colName)) {
       dispatch(
@@ -47,40 +52,41 @@ const useColumnEditor = (dispatch, tableName) => {
           colNull,
           colUnique,
           colDefault,
-          () => setState(initialState)
+          () => setColumnState(initialState)
         )
       );
     }
   };
+
   return {
     colName: {
       value: colName,
       onChange: e => {
-        setState({ ...state, colName: e.target.value });
+        setColumnState({ ...columnState, colName: e.target.value });
       },
     },
     colType: {
       value: colType,
       onChange: e => {
-        setState({ ...state, colType: e.target.value });
+        setColumnState({ ...columnState, colType: e.target.value });
       },
     },
     colNull: {
       checked: colNull,
       onChange: e => {
-        setState({ ...state, colNull: e.target.checked });
+        setColumnState({ ...columnState, colNull: e.target.checked });
       },
     },
     colUnique: {
       checked: colUnique,
       onChange: e => {
-        setState({ ...state, colUnique: e.target.checked });
+        setColumnState({ ...columnState, colUnique: e.target.checked });
       },
     },
     colDefault: {
       value: colDefault,
       onChange: e => {
-        setState({ ...state, colDefault: e.target.value });
+        setColumnState({ ...columnState, colDefault: e.target.value });
       },
     },
     onSubmit,
@@ -93,7 +99,7 @@ const alterTypeOptions = dataTypes.map((datatype, index) => (
   </option>
 ));
 
-const ColumnCreator = ({ styles, dispatch, tableName }) => {
+const ColumnCreator = ({ dispatch, tableName }) => {
   const {
     colName,
     colType,
@@ -102,6 +108,7 @@ const ColumnCreator = ({ styles, dispatch, tableName }) => {
     colDefault,
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
+
   return (
     <div className={styles.activeEdit}>
       <form
@@ -125,6 +132,7 @@ const ColumnCreator = ({ styles, dispatch, tableName }) => {
           </option>
           {alterTypeOptions}
         </select>
+
         <input
           type="checkbox"
           className={`${styles.input} ${styles.nullable} input-sm form-control`}
@@ -132,6 +140,7 @@ const ColumnCreator = ({ styles, dispatch, tableName }) => {
           {...colNull}
         />
         <label className={styles.nullLabel}>Nullable</label>
+
         <input
           type="checkbox"
           className={`${styles.input} ${styles.nullable} input-sm form-control`}
@@ -139,6 +148,7 @@ const ColumnCreator = ({ styles, dispatch, tableName }) => {
           data-test="unique-checkbox"
         />
         <label className={styles.nullLabel}>Unique</label>
+
         <input
           placeholder="default value"
           type="text"
@@ -148,6 +158,7 @@ const ColumnCreator = ({ styles, dispatch, tableName }) => {
           {...colDefault}
           data-test="default-value"
         />
+
         <Button
           type="submit"
           color="yellow"
