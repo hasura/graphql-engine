@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../../Button/Button';
-import styles from '../../Common.scss';
+import styles from './Editor.scss';
 
 class Editor extends React.Component {
   state = {
@@ -87,7 +87,7 @@ class Editor extends React.Component {
   actionButtons = () => {
     const { saveFunc, removeFunc } = this.props;
     return (
-      <div className={styles.editorActionButtons}>
+      <div>
         {saveFunc && this.saveButton(saveFunc)}
         {removeFunc && this.removeButton(removeFunc)}
       </div>
@@ -102,25 +102,41 @@ class Editor extends React.Component {
       collapsedLabel,
       expandedLabel,
     } = this.props;
+
+    let editorClass;
+    let editorLabel;
+    let editorContent;
+    let actionButtons;
+
     if (isEditing) {
-      return (
-        <div className={styles.editorExpanded}>
-          <div className={styles.display_flex}>
-            {this.toggleButton()}
-            {expandedLabel && expandedLabel()}
-          </div>
-          {editorExpanded && editorExpanded()}
-          {this.actionButtons()}
-        </div>
-      );
+      editorClass = styles.editorExpanded;
+      editorLabel = expandedLabel && expandedLabel();
+      actionButtons = this.actionButtons();
+
+      if (editorExpanded) {
+        editorContent = (
+          <div className={styles.editorContent}>{editorExpanded()}</div>
+        );
+      }
+    } else {
+      editorClass = styles.editorCollapsed;
+      editorLabel = collapsedLabel && collapsedLabel();
+
+      if (editorCollapsed) {
+        editorContent = (
+          <div className={styles.editorContent}>{editorCollapsed()}</div>
+        );
+      }
     }
+
     return (
-      <div className={`${styles.editorCollapsed}`}>
+      <div className={editorClass}>
         <div className={styles.display_flex}>
           {this.toggleButton()}
-          {collapsedLabel && collapsedLabel()}
+          {editorLabel}
         </div>
-        {editorCollapsed && editorCollapsed()}
+        {editorContent}
+        {actionButtons}
       </div>
     );
   }
