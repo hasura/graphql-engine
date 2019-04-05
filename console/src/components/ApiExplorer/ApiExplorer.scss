@@ -19,11 +19,11 @@
   .token_validity {
     font-size: 14px;
     .invalid_jwt_icon {
-      cursor: pointer;
+      // cursor: pointer;
       color: #dc3545;
     }
     .valid_jwt_token {
-      cursor: pointer;
+      // cursor: pointer;
       color: #28a745;
     }
   }
@@ -32,6 +32,12 @@
     margin-left: 5px;
     display: inline-block;
   }
+}
+.jwt_verification_fail_message {
+  background-color: #e53935;
+  padding: 10px 10px;
+  color: #ffffff;
+  border-radius: 5px;
 }
 .width_80 {
   width: 80%;
