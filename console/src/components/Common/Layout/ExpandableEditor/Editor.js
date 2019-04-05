@@ -7,6 +7,14 @@ class Editor extends React.Component {
     isEditing: this.props.toggled || false,
   };
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.toggled !== this.state.isEditing) {
+      this.setState({
+        isEditing: nextProps.toggled,
+      });
+    }
+  }
+
   toggleEditor = () => {
     if (this.props.expandCallback && !this.state.isEditing) {
       this.props.expandCallback();

@@ -16,6 +16,7 @@ const defaultState = {
       onDelete: 'restrict',
     },
   ],
+  fkToggled: null,
   ongoingRequest: false,
   lastError: null,
   internalError: null,

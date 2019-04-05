@@ -215,6 +215,7 @@ class AddTable extends Component {
       primaryKeys,
       allSchemas,
       foreignKeys,
+      fkToggled,
       tableName,
       currentSchema,
       dispatch,
@@ -444,6 +445,7 @@ class AddTable extends Component {
               dispatch={dispatch}
               styles={styles}
               setForeignKeys={setForeignKeys}
+              fkToggled={fkToggled}
             />
             <hr />
             <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>

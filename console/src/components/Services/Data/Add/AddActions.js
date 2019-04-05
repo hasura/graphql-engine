@@ -21,6 +21,8 @@ const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
 const SET_PK = 'AddTable/SET_PK';
 const SET_FKS = 'AddTable/SET_FKS';
+const TOGGLE_FK = 'AddTable/TOGGLE_FK';
+const CLEAR_FK_TOGGLE = 'AddTable/CLEAR_FK_TOGGLE';
 const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
@@ -66,6 +68,9 @@ const setForeignKeys = fks => ({
   type: SET_FKS,
   fks,
 });
+const toggleFk = i => ({ type: TOGGLE_FK, data: i });
+const clearFkToggle = () => ({ type: CLEAR_FK_TOGGLE });
+
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -411,6 +416,16 @@ const addTableReducer = (state = defaultState, action) => {
         ...state,
         foreignKeys: action.fks,
       };
+    case TOGGLE_FK:
+      return {
+        ...state,
+        fkToggled: action.data,
+      };
+    case CLEAR_FK_TOGGLE:
+      return {
+        ...state,
+        fkToggled: null,
+      };
     default:
       return state;
   }
@@ -432,5 +447,7 @@ export {
   setPk,
   setForeignKeys,
   createTableSql,
+  toggleFk,
+  clearFkToggle,
 };
 export { resetValidation, validationError };

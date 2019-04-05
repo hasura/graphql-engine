@@ -1,7 +1,8 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
-import { setForeignKeys } from './AddActions';
+import { getForeignKeyConfig } from '../Common/ReusableComponents/utils';
+import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 
 const ForeignKeyWrapper = ({
   foreignKeys,
@@ -9,6 +10,7 @@ const ForeignKeyWrapper = ({
   columns,
   dispatch,
   styles,
+  fkToggled
 }) => {
   // columns in the right order with their indices
   const orderedColumns = columns
@@ -45,12 +47,12 @@ const ForeignKeyWrapper = ({
         setForeignKeys={setForeignKeys}
       />
     );
-
     // TODO handle ongoing request
 
     // Function to remove FK (is undefined for the last FK)
     let removeFk;
-    const isLast = i + 1 === foreignKeys.length;
+    const numFks = foreignKeys.length;
+    const isLast = i + 1 === numFks;
     if (!isLast) {
       removeFk = () => {
         const newFks = [
@@ -58,24 +60,52 @@ const ForeignKeyWrapper = ({
           ...foreignKeys.slice(i + 1),
         ];
         dispatch(setForeignKeys(newFks));
+        dispatch(clearFkToggle());
       };
     }
+    // Label to show next to the 'Edit' button (the FK configuration)
+    const fkConfig = getForeignKeyConfig(fk, orderedColumns);
+    const collapsedLabelText =
+      isLast && numFks === 1 ? '(You can add foreign keys later as well)' : <b>{fkConfig}</b>;
+    const collapsedLabel = () => (
+      <div>
+        <div className="container-fluid">
+          <div className="row">
+            <h5 className={styles.padd_bottom}>
+              {collapsedLabelText}
+              &nbsp;
+            </h5>
+          </div>
+        </div>
+      </div>
+    );
 
     // The collapse button text when the editor is collapsed
-    const expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
+    let expandButtonText = isLast ? 'Add a new foreign key' : 'Edit';
+    if (numFks === 1) expandButtonText = 'Add a foreign key';
+
+    const collapseCallback = () => {
+      dispatch(clearFkToggle());
+    };
+
+    const expandCallback = () => {
+      dispatch(toggleFk(i));
+    };
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}_${isLast}`}>
+      <div key={`${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
+          collapsedLabel={collapsedLabel}
           property={`fk-${i}`}
           service="add-table"
-          removeButtonColor="white"
           removeFunc={removeFk}
           expandButtonText={expandButtonText}
-          isCollapsable={false}
-          toggled={!isLast}
+          isCollapsable
+          expandCallback={expandCallback}
+          collapseCallback={collapseCallback}
+          toggled={fkToggled === i}
         />
       </div>
     );
