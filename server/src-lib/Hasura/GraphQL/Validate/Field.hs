@@ -227,6 +227,8 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       throwVE $ "internal error: unexpected input type for field: "
       <> showName name
 
+    (TIUnion _, _) -> return Seq.empty
+    (TIIFace _, _) -> return Seq.empty
     -- when scalar/enum and no empty set
     (_, _) ->
       throwVE $ "field " <> showName name <> " must not have a "

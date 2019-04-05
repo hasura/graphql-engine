@@ -357,7 +357,7 @@ buildSchemaCache = do
   gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
 
   remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
-    (,) n <$> validateRemoteSchemaDef def
+    (,) n <$> validateRemoteSchema n def
   let rmScMap = M.fromList remoteScConf
   (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
   writeRemoteSchemasToCache mergedGCtxMap rmScMap

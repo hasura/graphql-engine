@@ -5,6 +5,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , refreshGCtxMapInSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP2
+  , validateRemoteSchema
   ) where
 
 import           Hasura.EncJSON
@@ -39,7 +40,7 @@ addRemoteSchemaP2
   => AddRemoteSchemaQuery
   -> m EncJSON
 addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
-  rsi <- validateRemoteSchemaDef def
+  rsi <- validateRemoteSchema name def
   manager <- askHttpManager
   sc <- askSchemaCache
   let defRemoteGCtx = scDefaultRemoteGCtx sc
@@ -50,6 +51,30 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   liftTx $ addRemoteSchemaToCatalog q
   addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
   return successMsg
+
+validateRemoteSchema
+  :: (MonadError QErr m, MonadIO m, MonadTx m)
+  => RemoteSchemaName -> RemoteSchemaDef
+  -> m RemoteSchemaInfo
+validateRemoteSchema name (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs) = do
+  when (name == "") $ throw400 InvalidParams "remote schema name can't be empty"
+  -- should we do this validation here?
+  -- mSchema <- liftTx $ fetchRemoteSchemaDef name
+  -- onJust mSchema $
+  --   const $ throw400 AlreadyExists $ name <> " remote schema already exists"
+
+  case (mUrl, mUrlEnv) of
+    (Just url, Nothing)    ->
+      return $ RemoteSchemaInfo url hdrs fwdHdrs
+    (Nothing, Just urlEnv) -> do
+      url <- getUrlFromEnv urlEnv
+      return $ RemoteSchemaInfo url hdrs fwdHdrs
+    (Nothing, Nothing)     ->
+        throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
+    (Just _, Just _)       ->
+        throw400 InvalidParams "both `url` and `url_from_env` can't be present"
+  where hdrs = fromMaybe [] hdrC
+
 
 addRemoteSchemaToCache
   :: CacheRWM m
@@ -90,13 +115,9 @@ refreshGCtxMapInSchema = do
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => RemoveRemoteSchemaQuery -> m EncJSON
-runRemoveRemoteSchema q =
-  removeRemoteSchemaP1 q >>= removeRemoteSchemaP2
-
-removeRemoteSchemaP1
-  :: (UserInfoM m, QErrM m)
-  => RemoveRemoteSchemaQuery -> m RemoveRemoteSchemaQuery
-removeRemoteSchemaP1 q = adminOnly >> return q
+runRemoveRemoteSchema q = do
+  adminOnly
+  removeRemoteSchemaP2 q
 
 removeRemoteSchemaP2
   :: ( QErrM m
@@ -109,8 +130,7 @@ removeRemoteSchemaP2
   -> m EncJSON
 removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   mSchema <- liftTx $ fetchRemoteSchemaDef name
-  _ <- liftMaybe (err400 NotExists "no such remote schema") mSchema
-  --url <- either return getUrlFromEnv eUrlVal
+  void $ liftMaybe (err400 NotExists "no such remote schema") mSchema
 
   hMgr <- askHttpManager
   sc <- askSchemaCache
