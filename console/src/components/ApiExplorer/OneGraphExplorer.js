@@ -10,6 +10,7 @@ import {
   getExplorerWidthFromLocalStorage,
   setExplorerWidthInLocalStorage,
 } from './onegraphUtils';
+import { getRemoteQueries } from './Actions';
 
 class OneGraphExplorer extends React.Component {
   state = {
@@ -32,7 +33,25 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  // eslint-disable-next-line react/sort-comp
+  setPersistedQuery() {
+    const queryFile = this.props.queryParams
+      ? this.props.queryParams.query_file
+      : null;
+
+    if (queryFile) {
+      getRemoteQueries(queryFile, query => this.setState({ query }));
+    } else {
+      const NO_TABLES_MESSAGE =
+        '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+
+      if (this.props.numberOfTables === 0) {
+        this.setState({
+          query: NO_TABLES_MESSAGE,
+        });
+      }
+    }
+  }
+
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
     if (this.props.headerFocus) {
       return false;
@@ -152,7 +171,7 @@ class OneGraphExplorer extends React.Component {
           />
         </div>
         {renderGraphiql({
-          query,
+          query: query || undefined,
           onEditQuery: this.editQuery,
           toggleExplorer: this.toggleExplorer,
         })}
