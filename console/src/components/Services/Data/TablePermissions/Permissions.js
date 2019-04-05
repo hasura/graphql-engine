@@ -1401,20 +1401,21 @@ class Permissions extends Component {
 
         const applyToList = permissionsState.applySamePermissions;
 
-        const allTableNames = allSchemas.map(schema => schema.table_name);
-
         const getApplyToList = () => {
           const _applyToListHtml = [];
 
+          const tableOptions = allSchemas.map(schema => schema.table_name);
+          const actionsList = ['insert', 'select', 'update', 'delete'];
+
           const getApplyToRow = (applyTo, index) => {
-            const getTableSelect = () => {
-              const setApplyToTable = e => {
-                dispatch(permSetApplySamePerm(index, 'table', e.target.value));
+            const getSelect = (type, options) => {
+              const setApplyTo = e => {
+                dispatch(permSetApplySamePerm(index, type, e.target.value));
               };
 
-              const tableOptions = allTableNames.map((tName, i) => (
-                <option key={i} value={tName}>
-                  {tName}
+              const optionsList = options.map((option, i) => (
+                <option key={i} value={option}>
+                  {option}
                 </option>
               ));
 
@@ -1423,72 +1424,15 @@ class Permissions extends Component {
                   className={`${styles.fkSelect} ${styles.fkInEdit} ${
                     styles.add_mar_right
                   } input-sm form-control`}
-                  value={applyTo.table || ''}
-                  onChange={setApplyToTable}
+                  value={applyTo[type] || ''}
+                  onChange={setApplyTo}
+                  disabled={noPermissions}
+                  title={noPermissions ? 'No permissions are set' : ''}
                 >
                   <option disabled value="">
-                    Select table
+                    Select {type}
                   </option>
-                  {tableOptions}
-                </select>
-              );
-            };
-
-            const getRoleSelect = () => {
-              const setApplyToRole = e => {
-                dispatch(permSetApplySamePerm(index, 'role', e.target.value));
-              };
-
-              const roleOptions = roleList.map((role, i) => (
-                <option key={i} value={role}>
-                  {role}
-                </option>
-              ));
-
-              return (
-                <select
-                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
-                    styles.add_mar_right
-                  } input-sm form-control`}
-                  value={applyTo.role || ''}
-                  onChange={setApplyToRole}
-                >
-                  <option disabled value="">
-                    Select role
-                  </option>
-                  {roleOptions}
-                </select>
-              );
-            };
-
-            const getActionSelect = () => {
-              const setApplyToAction = e => {
-                dispatch(permSetApplySamePerm(index, 'action', e.target.value));
-              };
-
-              const actionOptions = [
-                'insert',
-                'select',
-                'update',
-                'delete',
-              ].map((action, i) => (
-                <option key={i} value={action}>
-                  {action}
-                </option>
-              ));
-
-              return (
-                <select
-                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
-                    styles.add_mar_right
-                  } input-sm form-control`}
-                  value={applyTo.action || ''}
-                  onChange={setApplyToAction}
-                >
-                  <option disabled value="">
-                    Select action
-                  </option>
-                  {actionOptions}
+                  {optionsList}
                 </select>
               );
             };
@@ -1514,9 +1458,9 @@ class Permissions extends Component {
 
             return (
               <div key={index} className={styles.add_mar_bottom_mid}>
-                {getTableSelect()}
-                {getRoleSelect()}
-                {getActionSelect()}
+                {getSelect('table', tableOptions)}
+                {getSelect('role', roleList)}
+                {getSelect('action', actionsList)}
                 {getRemoveIcon()}
               </div>
             );
