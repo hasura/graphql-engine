@@ -87,6 +87,7 @@ data AnnFld
   | FObj !ObjSel
   | FArr !ArrSel
   | FExp !T.Text
+  | FRemote
   deriving (Show, Eq)
 
 data TableArgs

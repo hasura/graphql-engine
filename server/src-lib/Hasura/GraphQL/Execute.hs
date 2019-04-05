@@ -32,12 +32,14 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
+data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet
+  deriving (Show, Eq)
 
-data GQExecPlan
-  = GExPHasura !GCtx !VQ.RootSelSet
-  | GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
-  | GExPMixed  ![GQExecPlan]
-  deriving (Show)
+data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet !VT.HasParent
+  deriving (Show, Eq)
+
+data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+  deriving (Show, Eq)
 
 type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
 type SplitQueryParts = (G.TypedOperationDefinition, [G.FragmentDefinition])
@@ -49,11 +51,10 @@ getExecPlan
   -> GraphQLRequest
   -> m GQExecPlan
 getExecPlan userInfo sc req = do
-
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
+  traceM (show queryParts)
   rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
       topLevelNodes = getTopLevelNodes opDef
@@ -74,21 +75,30 @@ getExecPlan userInfo sc req = do
   case newReqs of
     -- this shouldn't happen
     [] ->
-      return $ GExPHasura gCtx rootSelSet
-    [(VT.HasuraType, _)] ->
-      return $ GExPHasura gCtx rootSelSet
-    [(VT.RemoteType _ rsi, _)] ->
-      return $ GExPRemote rsi req rootSelSet
-    (x:xs) -> do
-      r <- case x of
-        (VT.HasuraType, (newq, _)) -> do
-          qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
-          GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx
-        (VT.RemoteType _ rsi, (newq, rs)) ->
-          return $ GExPRemote rsi newq rs
-      rs <- mapM (getExecPlan userInfo sc . fst . snd) xs
-      return $ GExPMixed (r:rs)
+      return $ GQExecPlan Nothing []
+    (x: []) -> case x of
+      (VT.HasuraType, rootSelSet) -> do
+        let remotePlans = getRemotePlans rootSelSet
+            hasuraSelSet = removeRemoteFields rootSelSet
+        return $ GQExecPlan (Just $ GExPHasura gCtx hasuraSelSet) remotePlans
+      (VT.RemoteType _ rsi dep, _) -> return $ GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
+    (x:y:[]) -> case (x,y) of
+      ( (VT.HasuraType, (newq, rootSelSet)), (VT.RemoteType _ rsi dep, (newq, rs)) ) -> do
+        let remotePlans = getRemotePlans rootSelSet
+            hasuraSelSet = removeRemoteFields rootSelSet
+            otherRemotePlans = GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
+        qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
+        return $ GQExecPlan (Just $ GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx)
+      _ -> throw500 "unexpected plan"
   where
+    combPlan :: GQExecPlan -> Either GExPRemote GExPHasura -> GQExecPlan
+    combPlan (GQExecPlan initHasuraPlan initRemPlans )(Left hasuraPlan) = case initHasuraPlan of
+      Nothing -> GQExecPlan hasuraPlan initRemPlans
+      Just plan  -> if plan == hasuraPlan
+        then GQExecPlan hasuraPlan (initRemPlans <> remPlans)
+        else throw500 "cannot combine multiple hasura plans"
+    combPlan (GQExecPlan initHasuraPlan initRemPlans )(Right remPlans) = GQExecPlan initHasuraPlan (initRemPlans <> remPlans)
+
     gCtxRoleMap = scGCtxMap sc
 
     upsertType :: (VT.TypeLoc, G.Name) -> QueryMap -> QueryMap
@@ -159,6 +169,10 @@ getExecPlan userInfo sc req = do
       opDef { G._todSelectionSet = selset
             , G._todVariableDefinitions = varDefs
             }
+
+
+getRemotePlans = undefined
+removeRemoteFields = undefined
 
 transformGQRequest
   :: GraphQLRequest

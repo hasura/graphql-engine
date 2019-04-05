@@ -91,7 +91,7 @@ fromSelSet f fldTy flds =
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
-          FldRemote _ -> throw500 "cannot resolve sel set for remote"
+          FldRemote _ -> return RS.FRemote
 
 fromAggSelSet
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
