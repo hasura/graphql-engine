@@ -67,8 +67,7 @@
     width: 300px;
     max-width: 300px;
     white-space: pre;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: auto;
   }
 }
 
@@ -120,20 +119,6 @@ a.expanded {
   border-radius: 2px;
   box-shadow: 1px 1px 1px #eee;
   padding: 8px;
-}
-
-.relationshipTable {
-  width: auto;
-
-  thead {
-    background: #333;
-    color: #ddd;
-  }
-
-  th {
-    min-width: 100px;
-    font-weight: 300;
-  }
 }
 
 .relationshipTopPadding {

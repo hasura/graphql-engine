@@ -1239,9 +1239,29 @@ code {
   margin-right: 20px;
 }
 
+.pkEditorWrapper {
+  width: 325px;
+  text-align: left;
+}
+
+.pkEditorExpandedTextWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;  
+}
+
+.pkEditorExpandedText {
+  width: 325px;
+}
+
+.wd100Percent {
+  width: 100% !important;
+}
 
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;
+
