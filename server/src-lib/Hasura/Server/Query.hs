@@ -26,9 +26,9 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Misc.Config
 import           Hasura.RQL.Types
+import           Hasura.Server.Auth                 (AuthMode)
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
-import Hasura.Server.Auth (AuthMode)
 
 import qualified Database.PG.Query                  as Q
 

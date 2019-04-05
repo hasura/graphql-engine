@@ -8,12 +8,12 @@ import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 import           Migrate                      (curCatalogVer)
 
-import           Hasura.Prelude
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
+import           Hasura.Server.Auth           (AuthMode (AMNoAuth))
 import           Hasura.Server.Query
-import           Hasura.Server.Auth           (AuthMode(AMNoAuth))
 import           Hasura.SQL.Types
 
 import qualified Data.Aeson                   as A

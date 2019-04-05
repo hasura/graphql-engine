@@ -10,8 +10,8 @@ import           Language.Haskell.TH.Syntax  (Q, TExp, unTypeQ)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Query
 import           Hasura.Server.Auth          (AuthMode (AMNoAuth))
+import           Hasura.Server.Query
 
 import qualified Data.Aeson                  as A
 import qualified Data.Text                   as T
