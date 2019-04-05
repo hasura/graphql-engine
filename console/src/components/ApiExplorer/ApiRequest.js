@@ -587,7 +587,7 @@ class ApiRequest extends Component {
       const {
         claims_namespace: claimNameSpace = 'https://hasura.io/jwt/claims',
         claims_format: claimFormat = 'json',
-      } = this.props.serverConfig;
+      } = this.props.serverConfig.jwt;
 
       let tokenVerified = false;
       let JWTError = '';
@@ -660,6 +660,7 @@ class ApiRequest extends Component {
                 id="claimNameSpaceCopy"
                 containerId="claimNameSpaceCopyBlock"
               />,
+              <br key="hasura_claim_element_break_after" />,
             ]
           : null;
       };
@@ -674,8 +675,8 @@ class ApiRequest extends Component {
               {generateJWTVerificationStatus()}
             </span>
           </span>
-          {getJWTFailMessage()}
-          {getHasuraClaims()}
+          {getJWTFailMessage() || <br />}
+          {getHasuraClaims() || <br />}
           <span className={styles.analyzerLabel}>
             Header:
             <span>Algorithm & Token Type</span>
