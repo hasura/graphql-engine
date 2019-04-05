@@ -133,7 +133,7 @@ class RelationshipsView extends Component {
             </thead>
             <tbody>
               {getObjArrayRelationshipList(tableSchema.relationships).map(
-                (rel, i) => {
+                rel => {
                   const column1 = rel.objRel ? (
                     <RelationshipEditor
                       dispatch={dispatch}
@@ -171,7 +171,7 @@ class RelationshipsView extends Component {
                     <td />
                   );
                   return (
-                    <tr key={i}>
+                    <tr>
                       {column1}
                       {column2}
                     </tr>
