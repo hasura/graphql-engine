@@ -6,6 +6,7 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
+import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
@@ -279,8 +280,11 @@ gqlExplainHandler query = do
   GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
-v1Alpha1PGDumpHandler _ = undefined
-
+v1Alpha1PGDumpHandler b = do
+  output <- liftIO $ PGD.executePGDump b
+  case output of
+    Right filename -> lazyBytes $ C.pack filename
+    Left e -> lazyBytes $ C.pack $ "error: " <> e
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
