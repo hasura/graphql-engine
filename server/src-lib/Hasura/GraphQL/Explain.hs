@@ -127,13 +127,12 @@ explainGQLQuery
   -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   execPlan <- E.getExecPlan userInfo sc query
-  (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
+  let (E.GQExecPlan hasuraPlan _) = execPlan
+
+  (gCtx, rootSelSet) <- case hasuraPlan of
+    Just (E.GExPHasura gCtx rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote {}  ->
-      throw400 InvalidParams "only hasura queries can be explained"
-    E.GExPMixed _ ->
-      throw400 InvalidParams "only hasura queries can be explained"
+    _ -> throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet -> do
       let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
