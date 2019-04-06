@@ -35,8 +35,8 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   let (E.GQExecPlan hasuraPlan remotePlans) = execPlan
   case (hasuraPlan, remotePlans) of
      (Nothing, []) -> throw500 "no exec plan found"
-     (Just (E.GExPHasura gCtx rootSelSet _), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-     (_, _) -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
+     (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs
+     _ -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
 
 
 runMixedGQ
@@ -50,12 +50,12 @@ runMixedGQ
   -> GraphQLRequest
   -> E.GQExecPlan
   -> m EncJSON
-runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
+runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs _ plan = do
   let (E.GQExecPlan hasuraPlan remotePlans) = plan
   hasuraRes <- case hasuraPlan of
     Nothing -> return []
-    Just (E.GExPHasura gCtx rootSelSet _) -> do
-      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+    Just (E.GExPHasura gCtx rootSelSet remRelPlans) -> do
+      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs
       return [res]
 
   remoteRes <- forM remotePlans $ \case
@@ -71,7 +71,7 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
       errs  = mapMaybe (Map.lookup "errors") interimRes
 
   return $ encJFromJValue $ J.object [ "data" J..= Map.unions datas
-                                     , "errors" J..= errs
+                                     , "errors" J..= toMaybeArr errs
                                      ]
 
   where
@@ -82,6 +82,10 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
             _          -> Nothing
       in mapMaybe fn jVals
 
+    toMaybeArr [] = Nothing
+    toMaybeArr x  = Just x
+
+
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool
@@ -90,17 +94,35 @@ runHasuraGQ
   -> SQLGenCtx
   -> GCtx
   -> V.RootSelSet
+  -> [E.GExPDepRemote]
+  -> HTTP.Manager
+  -> [N.Header]
   -> m EncJSON
-runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet = do
+runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = do
   tx <- case rootSelSet of
     V.RQuery selSet ->
       return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
-    V.RMutation selSet ->
+    V.RMutation selSet -> do
+      assertNoRemRelPlans rrps
       return $ R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
     V.RSubscription _  ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  return $ encodeGQResp $ GQSuccess $ encJToLBS resp
+
+  -- merge with remotes
+  remotesRespTup <- forM rrps $ \rr -> do
+    let E.GExPDepRemote (E.GExPRemote rsi q rs) rri = rr
+        newq = mkRemoteQuery q resp rri
+    remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
+    return (rri, remResp)
+
+  mergedResp <- mergeFields resp remotesRespTup
+
+  return $ encodeGQResp $ GQSuccess $ encJToLBS mergedResp
   where
     runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
+    assertNoRemRelPlans [] = return ()
+    assertNoRemRelPlans _ = throw400 UnexpectedPayload "remote fields are not supported in mutations"
+    mergeFields = undefined
+    mkRemoteQuery = undefined

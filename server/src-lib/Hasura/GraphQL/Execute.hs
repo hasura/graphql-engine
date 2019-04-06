@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
   , GExPHasura(..)
   , GExPRemote(..)
+  , GExPDepRemote(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
@@ -36,7 +37,10 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
-data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet (Maybe [GExPRemote])
+data GExPDepRemote = GExPDepRemote GExPRemote RemoteRelInfo
+  deriving (Show, Eq)
+
+data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
   deriving (Show, Eq)
 
 data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
@@ -57,7 +61,6 @@ getExecPlan
 getExecPlan userInfo sc req = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-  rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
       topLevelNodes = getTopLevelNodes opDef
@@ -67,7 +70,6 @@ getExecPlan userInfo sc req = do
       querySplits = splitQuery opDef fragDefs queryMap
       newQs = map (\(tl, qp) -> (,) tl $ uncurry (transformGQRequest req) qp)
               querySplits
-      typelocstemp = traceShow (map fst newQs)
 
   newRootSels <- forM newQs $ \(tl, q) ->
     flip runReaderT gCtx $ do
@@ -78,35 +80,30 @@ getExecPlan userInfo sc req = do
 
   case newReqs of
     -- this shouldn't happen
-    [] ->
-      return $ GQExecPlan Nothing []
-    (x: []) -> case x of
-      (VT.HasuraType, (reqh, rootSelSeth)) -> do
-        -- let remotePlans = getRemotePlans rootSelSet
-        --     hasuraSelSet = removeRemoteFields rootSelSet
-        let remotePlans = []
-            hasuraSelSet = rootSelSeth
-        return $ GQExecPlan (Just $ GExPHasura gCtx hasuraSelSet (toMaybe remotePlans) ) []
-      (VT.RemoteType _ rsi, _) -> return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
-    -- (x:y:[]) -> case (x,y) of
-    --   ( (VT.HasuraType, (newq, rootSelSet)), (VT.RemoteType _ rsi dep, (newq, rs)) ) -> do
-    --     let remotePlans = getRemotePlans rootSelSet
-    --         hasuraSelSet = removeRemoteFields rootSelSet
-    --         otherRemotePlans = GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
-    --     qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
-    --     return $ GQExecPlan (Just $ GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx)
-      _ -> throw500 "unexpected plan"
-  where
-    toMaybe [] = Nothing
-    toMaybe x  =  Just x
+    [] -> throw500 "unexpected plan"
 
-    -- combPlan :: GQExecPlan -> Either GExPHasura GExPRemote -> m GQExecPlan
-    -- combPlan (GQExecPlan initHasuraPlan initRemPlans )(Left hasuraPlan) = case initHasuraPlan of
-    --   Nothing -> return $ GQExecPlan (Just hasuraPlan) initRemPlans
-    --   Just plan  -> if plan == hasuraPlan
-    --     then return $ GQExecPlan (Just hasuraPlan) initRemPlans
-    --     else throw500 "cannot combine multiple hasura plans"
-    -- combPlan (GQExecPlan initHasuraPlan initRemPlans )(Right remPlan) = return $ GQExecPlan initHasuraPlan (initRemPlans ++ [remPlan])
+    [(VT.HasuraType, (_, rootSelSet'))] -> do
+      let (hsRootSelSet, remotePlans) = partitionHasuraAndRemotePlans rootSelSet'
+      return $ GQExecPlan (Just $ GExPHasura gCtx hsRootSelSet remotePlans) []
+    [(VT.RemoteType _ rsi, (req'' , rootSelSet''))] -> return $ GQExecPlan Nothing [GExPRemote rsi req'' rootSelSet'']
+    x -> do
+      plans <- mapM (toExecPlan gCtx) x
+      rs <- foldM combPlan (GQExecPlan Nothing []) plans
+      return rs
+  where
+    toExecPlan gCtx' r = case r of
+      (VT.HasuraType, (newq, _)) -> do
+        qParts <- flip runReaderT gCtx' $ VQ.getQueryParts newq
+        selSet <- runReaderT (VQ.validateGQ qParts) gCtx'
+        return $ GQExecPlan (Just $ GExPHasura gCtx' selSet []) []
+      (VT.RemoteType _ rsi, (newq, rs)) ->
+        return $ GQExecPlan Nothing [GExPRemote rsi newq rs]
+
+    combPlan (GQExecPlan initHasuraPlan initRemPlans )(GQExecPlan hasuraPlan remotePlans) = case initHasuraPlan of
+      Nothing -> return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
+      Just plan  -> if isNothing hasuraPlan
+        then return $ GQExecPlan (Just plan) (initRemPlans <> remotePlans)
+        else throw500 "cannot combine multiple hasura plans"
 
     gCtxRoleMap = scGCtxMap sc
 
@@ -180,8 +177,7 @@ getExecPlan userInfo sc req = do
             }
 
 
-getRemotePlans = undefined
-removeRemoteFields = undefined
+partitionHasuraAndRemotePlans = undefined
 
 transformGQRequest
   :: GraphQLRequest
