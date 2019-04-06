@@ -57,6 +57,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
 
+import Debug.Trace
+
 consoleTmplt :: M.Template
 consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
 
@@ -281,9 +283,13 @@ gqlExplainHandler query = do
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
 v1Alpha1PGDumpHandler b = do
+  traceM "in the handler"
   output <- liftIO $ PGD.executePGDump b
+  traceM "got the output"
   case output of
-    Right filename -> lazyBytes $ C.pack filename
+    Right (_, contents) -> do
+      setHeader "content-type" "application/json"
+      lazyBytes $ C.pack contents
     Left e -> lazyBytes $ C.pack $ "error: " <> e
 
 newtype QueryParser
