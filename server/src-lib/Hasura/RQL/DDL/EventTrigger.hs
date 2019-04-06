@@ -167,6 +167,7 @@ updateEventTriggerToCatalog
   -> EventTriggerConf
   -> Q.TxE QErr ()
 updateEventTriggerToCatalog qt allCols strfyNum etc = do
+  updateEventTriggerDef name etc
   delTriggerQ name
   mkTriggerQ name qt allCols strfyNum opsdef
   where
@@ -368,5 +369,4 @@ updateEventTriggerDef trigName trigConf =
       SET
       configuration = $1
       WHERE name = $2
-      RETURNING id
     |] (Q.AltJ $ toJSON trigConf, trigName) True
