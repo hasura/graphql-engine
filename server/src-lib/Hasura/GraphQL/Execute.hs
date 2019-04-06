@@ -3,10 +3,14 @@
 
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
+  , GExPHasura(..)
+  , GExPRemote(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
   ) where
+
+import           Debug.Trace
 
 import           Control.Exception                      (try)
 import           Control.Lens                           hiding (op)
@@ -32,10 +36,10 @@ import           Hasura.RQL.Types
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
-data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet
+data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet (Maybe [GExPRemote])
   deriving (Show, Eq)
 
-data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet !VT.HasParent
+data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
 data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
@@ -53,7 +57,6 @@ getExecPlan
 getExecPlan userInfo sc req = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-  traceM (show queryParts)
   rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
@@ -64,6 +67,7 @@ getExecPlan userInfo sc req = do
       querySplits = splitQuery opDef fragDefs queryMap
       newQs = map (\(tl, qp) -> (,) tl $ uncurry (transformGQRequest req) qp)
               querySplits
+      typelocstemp = traceShow (map fst newQs)
 
   newRootSels <- forM newQs $ \(tl, q) ->
     flip runReaderT gCtx $ do
@@ -77,27 +81,32 @@ getExecPlan userInfo sc req = do
     [] ->
       return $ GQExecPlan Nothing []
     (x: []) -> case x of
-      (VT.HasuraType, rootSelSet) -> do
-        let remotePlans = getRemotePlans rootSelSet
-            hasuraSelSet = removeRemoteFields rootSelSet
-        return $ GQExecPlan (Just $ GExPHasura gCtx hasuraSelSet) remotePlans
-      (VT.RemoteType _ rsi dep, _) -> return $ GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
-    (x:y:[]) -> case (x,y) of
-      ( (VT.HasuraType, (newq, rootSelSet)), (VT.RemoteType _ rsi dep, (newq, rs)) ) -> do
-        let remotePlans = getRemotePlans rootSelSet
-            hasuraSelSet = removeRemoteFields rootSelSet
-            otherRemotePlans = GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
-        qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
-        return $ GQExecPlan (Just $ GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx)
+      (VT.HasuraType, (reqh, rootSelSeth)) -> do
+        -- let remotePlans = getRemotePlans rootSelSet
+        --     hasuraSelSet = removeRemoteFields rootSelSet
+        let remotePlans = []
+            hasuraSelSet = rootSelSeth
+        return $ GQExecPlan (Just $ GExPHasura gCtx hasuraSelSet (toMaybe remotePlans) ) []
+      (VT.RemoteType _ rsi, _) -> return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
+    -- (x:y:[]) -> case (x,y) of
+    --   ( (VT.HasuraType, (newq, rootSelSet)), (VT.RemoteType _ rsi dep, (newq, rs)) ) -> do
+    --     let remotePlans = getRemotePlans rootSelSet
+    --         hasuraSelSet = removeRemoteFields rootSelSet
+    --         otherRemotePlans = GQExecPlan Nothing [(GExPRemote rsi req rootSelSet dep)]
+    --     qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
+    --     return $ GQExecPlan (Just $ GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx)
       _ -> throw500 "unexpected plan"
   where
-    combPlan :: GQExecPlan -> Either GExPRemote GExPHasura -> GQExecPlan
-    combPlan (GQExecPlan initHasuraPlan initRemPlans )(Left hasuraPlan) = case initHasuraPlan of
-      Nothing -> GQExecPlan hasuraPlan initRemPlans
-      Just plan  -> if plan == hasuraPlan
-        then GQExecPlan hasuraPlan (initRemPlans <> remPlans)
-        else throw500 "cannot combine multiple hasura plans"
-    combPlan (GQExecPlan initHasuraPlan initRemPlans )(Right remPlans) = GQExecPlan initHasuraPlan (initRemPlans <> remPlans)
+    toMaybe [] = Nothing
+    toMaybe x  =  Just x
+
+    -- combPlan :: GQExecPlan -> Either GExPHasura GExPRemote -> m GQExecPlan
+    -- combPlan (GQExecPlan initHasuraPlan initRemPlans )(Left hasuraPlan) = case initHasuraPlan of
+    --   Nothing -> return $ GQExecPlan (Just hasuraPlan) initRemPlans
+    --   Just plan  -> if plan == hasuraPlan
+    --     then return $ GQExecPlan (Just hasuraPlan) initRemPlans
+    --     else throw500 "cannot combine multiple hasura plans"
+    -- combPlan (GQExecPlan initHasuraPlan initRemPlans )(Right remPlan) = return $ GQExecPlan initHasuraPlan (initRemPlans ++ [remPlan])
 
     gCtxRoleMap = scGCtxMap sc
 

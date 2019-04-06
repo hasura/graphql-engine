@@ -2,6 +2,7 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
+
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -31,13 +32,11 @@ runGQ
   -> m EncJSON
 runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   execPlan <- E.getExecPlan userInfo sc req
-  case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi q rs ->
-      E.execRemoteGQ manager userInfo reqHdrs req rsi rs
-    E.GExPMixed plans ->
-      runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans
+  let (E.GQExecPlan hasuraPlan remotePlans) = execPlan
+  case (hasuraPlan, remotePlans) of
+     (Nothing, []) -> throw500 "no exec plan found"
+     (Just (E.GExPHasura gCtx rootSelSet _), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+     (_, _) -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
 
 
 runMixedGQ
@@ -49,28 +48,39 @@ runMixedGQ
   -> HTTP.Manager
   -> [N.Header]
   -> GraphQLRequest
-  -> [E.GQExecPlan]
+  -> E.GQExecPlan
   -> m EncJSON
-runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans = do
-  resSet <- forM plans $ \case
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
+  let (E.GQExecPlan hasuraPlan remotePlans) = plan
+  hasuraRes <- case hasuraPlan of
+    Nothing -> return []
+    Just (E.GExPHasura gCtx rootSelSet _) -> do
+      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+      return [res]
+
+  remoteRes <- forM remotePlans $ \case
     E.GExPRemote rsi newq rs ->
       E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-    E.GExPMixed _ ->
-      throw500 "internal-unexpected: mixed plan is nested in mixed plan"
 
-  let interimResBS = map encJToLBS resSet
+  let resSet = hasuraRes ++ remoteRes
+      interimResBS = map encJToLBS resSet
   interimRes <- forM interimResBS $ \res -> do
     let x = J.decode res :: (Maybe J.Object)
     onNothing x $ throw500 "could not parse response as JSON"
-
-  let datas = mapMaybe (Map.lookup "data") interimRes
+  let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
       errs  = mapMaybe (Map.lookup "errors") interimRes
 
-  return $ encJFromJValue $ J.object [ "data" J..= datas
+  return $ encJFromJValue $ J.object [ "data" J..= Map.unions datas
                                      , "errors" J..= errs
                                      ]
+
+  where
+    -- TODO: should validate response and throw error?
+    onlyObjs jVals =
+      let fn jVal = case jVal of
+            J.Object o -> Just o
+            _          -> Nothing
+      in mapMaybe fn jVals
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)

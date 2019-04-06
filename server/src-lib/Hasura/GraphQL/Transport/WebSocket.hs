@@ -222,15 +222,14 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
   execPlan <- either (withComplete . preExecErr) return execPlanE
   execute userInfo reqHdrs execPlan
   where
-    execute userInfo reqHdrs plan =
-      case plan of
-        E.GExPHasura gCtx rootSelSet ->
-          runHasuraGQ userInfo gCtx rootSelSet
-        E.GExPRemote rsi newq rootSelSet ->
-          runRemoteGQ userInfo reqHdrs rsi rootSelSet
-        E.GExPMixed plans ->
-          -- FIXME: is this correct?
-          mapM_ (execute userInfo reqHdrs) plans
+    execute userInfo reqHdrs plan = undefined
+        -- E.GExPHasura gCtx rootSelSet ->
+        --   runHasuraGQ userInfo gCtx rootSelSet
+        -- E.GExPRemote rsi newq rootSelSet ->
+        --   runRemoteGQ userInfo reqHdrs rsi rootSelSet
+        -- E.GExPMixed plans ->
+        --   -- FIXME: is this correct?
+        --   mapM_ (execute userInfo reqHdrs) plans
 
     runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
     runHasuraGQ userInfo gCtx rootSelSet =

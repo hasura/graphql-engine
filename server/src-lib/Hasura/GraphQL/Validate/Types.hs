@@ -38,7 +38,6 @@ module Hasura.GraphQL.Validate.Types
   , fromSchemaDocQ
   , TypeMap
   , TypeLoc (..)
-  , HasParent
   , typeEq
   , AnnGValue(..)
   , AnnGObject
@@ -107,13 +106,9 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
     enumVals = Map.fromList
       [(G._evdName valDef, fromEnumValDef valDef) | valDef <- valDefs]
 
--- | location of the type: a hasura type or a remote type
-
-type HasParent = Bool
-
 data TypeLoc
   = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo HasParent
+  | RemoteType RemoteSchemaName RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc
