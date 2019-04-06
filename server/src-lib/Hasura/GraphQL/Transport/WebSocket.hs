@@ -15,7 +15,6 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -226,7 +225,7 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
       case plan of
         E.GExPHasura gCtx rootSelSet ->
           runHasuraGQ userInfo gCtx rootSelSet
-        E.GExPRemote rsi newq rootSelSet ->
+        E.GExPRemote rsi _ rootSelSet ->
           runRemoteGQ userInfo reqHdrs rsi rootSelSet
         E.GExPMixed plans ->
           -- FIXME: is this correct?

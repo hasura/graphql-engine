@@ -34,10 +34,10 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   case execPlan of
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi q rs ->
+    E.GExPRemote rsi _ rs ->
       E.execRemoteGQ manager userInfo reqHdrs req rsi rs
     E.GExPMixed plans ->
-      runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans
+      runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plans
 
 
 runMixedGQ
@@ -48,10 +48,9 @@ runMixedGQ
   -> SQLGenCtx
   -> HTTP.Manager
   -> [N.Header]
-  -> GraphQLRequest
   -> [E.GQExecPlan]
   -> m EncJSON
-runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans = do
+runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plans = do
   resSet <- forM plans $ \case
     E.GExPHasura gCtx rootSelSet ->
       runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
@@ -65,12 +64,20 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plans = do
     let x = J.decode res :: (Maybe J.Object)
     onNothing x $ throw500 "could not parse response as JSON"
 
-  let datas = mapMaybe (Map.lookup "data") interimRes
+  let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
       errs  = mapMaybe (Map.lookup "errors") interimRes
 
-  return $ encJFromJValue $ J.object [ "data" J..= datas
+  return $ encJFromJValue $ J.object [ "data" J..= Map.unions datas
                                      , "errors" J..= errs
                                      ]
+
+  where
+    -- TODO: should validate response and throw error?
+    onlyObjs jVals =
+      let fn jVal = case jVal of
+            J.Object o -> Just o
+            _          -> Nothing
+      in mapMaybe fn jVals
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
