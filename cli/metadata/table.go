@@ -7,7 +7,9 @@ type tableConfig struct {
 
 	isTracked bool
 
-	relationShips []relationship
+	relationShipSuggestions []relationshipSuggestion
+
+	relationships []relationship
 
 	columns []string
 
@@ -16,11 +18,12 @@ type tableConfig struct {
 
 func newTable(name, schemaName string, columns []string) *tableConfig {
 	tableInfo := &tableConfig{
-		name:           name,
-		schemaName:     schemaName,
-		relationShips:  make([]relationship, 0),
-		columns:        columns,
-		uniqueRelNames: columns,
+		name:                    name,
+		schemaName:              schemaName,
+		relationShipSuggestions: make([]relationshipSuggestion, 0),
+		relationships:           make([]relationship, 0),
+		columns:                 columns,
+		uniqueRelNames:          columns,
 	}
 	return tableInfo
 }
@@ -55,19 +58,14 @@ func (t *tableConfig) UnTrack() hasuraDBQuery {
 	}
 }
 
-func (t *tableConfig) TrackRelationShips() ([]hasuraDBQuery, []hasuraDBQuery) {
+func (t *tableConfig) TrackRelationShipSuggestions() ([]hasuraDBQuery, []hasuraDBQuery) {
 	up := make([]hasuraDBQuery, 0)
 	down := make([]hasuraDBQuery, 0)
-	for _, relationship := range t.relationShips {
-		if relationship.RelName != nil {
-			continue
-		}
-		relName := relationship.generateName(t.columns)
-		relationship.RelName = &relName
-
+	for _, relationship := range t.relationShipSuggestions {
+		relationship.RelName = relationship.generateName(t.columns)
 		up = append(up, relationship.Track(t.name, t.schemaName))
 		down = append(down, relationship.UnTrack(t.name, t.schemaName))
-		t.columns = append(t.columns, relName)
+		t.columns = append(t.columns, relationship.RelName)
 	}
 	return up, down
 }
@@ -75,10 +73,7 @@ func (t *tableConfig) TrackRelationShips() ([]hasuraDBQuery, []hasuraDBQuery) {
 func (t *tableConfig) UnTrackRelationShips() ([]hasuraDBQuery, []hasuraDBQuery) {
 	up := make([]hasuraDBQuery, 0)
 	down := make([]hasuraDBQuery, 0)
-	for _, relationship := range t.relationShips {
-		if relationship.RelName == nil {
-			continue
-		}
+	for _, relationship := range t.relationships {
 		up = append(up, relationship.UnTrack(t.name, t.schemaName))
 		down = append(down, relationship.Track(t.name, t.schemaName))
 	}

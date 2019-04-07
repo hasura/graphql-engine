@@ -41,13 +41,13 @@ type unTrackTableArg struct {
 type objectRelArg struct {
 	Table tableArg    `json:"table" yaml:"table"`
 	Name  string      `json:"name" yaml:"name"`
-	Using objRelUsing `json:"using" yaml:"using"`
+	Using interface{} `json:"using" yaml:"using"`
 }
 
 type arrayRelArg struct {
-	Table tableArg     `json:"table" yaml:"table"`
-	Name  string       `json:"name" yaml:"name"`
-	Using arraRelUsing `json:"using" yaml:"using"`
+	Table tableArg    `json:"table" yaml:"table"`
+	Name  string      `json:"name" yaml:"name"`
+	Using interface{} `json:"using" yaml:"using"`
 }
 
 type dropRelationShipArg struct {
@@ -60,18 +60,18 @@ type objRelUsing struct {
 	ManualConfiguration    *manualConfiguration `json:"manual_configuration,omitempty" yaml:"manual_configuration,omitempty"`
 }
 
-type arraRelUsing struct {
+type arrayRelUsing struct {
 	ForeignKeyConstraintOn *arrayForeignKeyConstraintOn `json:"foreign_key_constraint_on,omitempty" yaml:"foreign_key_constraint_on,omitempty"`
 	ManualConfiguration    *manualConfiguration         `json:"manual_configuration,omitempty" yaml:"manual_configuration,omitempty"`
 }
 
 type arrayForeignKeyConstraintOn struct {
-	Table  tableArg `json:"table" yaml:"table"`
-	Column string   `json:"column" yaml:"column"`
+	Table  interface{} `json:"table" yaml:"table"`
+	Column string      `json:"column" yaml:"column"`
 }
 
 type manualConfiguration struct {
-	RemoteTable   tableArg          `json:"remote_table" yaml:"remote_table"`
+	RemoteTable   interface{}       `json:"remote_table" yaml:"remote_table"`
 	ColumnMapping map[string]string `json:"column_mapping" yaml:"column_mapping"`
 }
 

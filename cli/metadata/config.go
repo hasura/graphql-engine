@@ -105,6 +105,7 @@ func (c *Config) Scan() error {
 		columns := data.Result[0]
 		var tableNameIndex int
 		var tableTrackedIndex int
+		var relationShipSuggestionsIndex int
 		var relationshipsIndex int
 		var columnsIndex int
 		for index, column := range columns {
@@ -113,6 +114,8 @@ func (c *Config) Scan() error {
 				tableNameIndex = index
 			case "is_table_tracked":
 				tableTrackedIndex = index
+			case "relationship_suggestions":
+				relationShipSuggestionsIndex = index
 			case "relationships":
 				relationshipsIndex = index
 			case "columns":
@@ -124,6 +127,7 @@ func (c *Config) Scan() error {
 			tableName := tableItem[tableNameIndex]
 			tableIsTracked := tableItem[tableTrackedIndex]
 			columnsStr := tableItem[columnsIndex]
+			relationshipSuggestionsStr := tableItem[relationShipSuggestionsIndex]
 			relationshipsStr := tableItem[relationshipsIndex]
 
 			if len(c.Tables) != 0 {
@@ -144,6 +148,12 @@ func (c *Config) Scan() error {
 			} else {
 				table.SetIsTracked(false)
 			}
+			var relationshipSuggestions []relationshipSuggestion
+			err = json.Unmarshal([]byte(relationshipSuggestionsStr), &relationshipSuggestions)
+			if err != nil {
+				return err
+			}
+
 			var relationships []relationship
 			err = json.Unmarshal([]byte(relationshipsStr), &relationships)
 			if err != nil {
@@ -151,21 +161,16 @@ func (c *Config) Scan() error {
 			}
 
 			if c.AllRelationShips {
-				for _, relItem := range relationships {
-					ok := c.checkSchemaToBeTracked(relItem.RefTableSchema)
+				for _, relItem := range relationshipSuggestions {
+					ok := c.checkSchemaAndTableToBeTracked(relItem.RefTableSchema, relItem.RefTableName)
 					if !ok {
 						continue
 					}
-
-					if len(c.Tables) != 0 {
-						ok = c.checkTableToBeTracked(relItem.RefTableName)
-						if !ok {
-							continue
-						}
-					}
-
-					table.relationShips = append(table.relationShips, relItem)
+					table.relationShipSuggestions = append(table.relationShipSuggestions, relItem)
 				}
+
+				// TODO: Need to validate RelTableName and RelTableSchema
+				table.relationships = append(table.relationships, relationships...)
 			}
 
 			c.tablesInfo = append(c.tablesInfo, *table)
@@ -216,7 +221,7 @@ func (c *Config) Track() error {
 		}
 
 		if c.AllRelationShips {
-			up, down := tableItem.TrackRelationShips()
+			up, down := tableItem.TrackRelationShipSuggestions()
 			c.trackInfo.relationshipUp = append(c.trackInfo.relationshipUp, up...)
 			c.trackInfo.relationshipDown = append(c.trackInfo.relationshipDown, down...)
 		}
@@ -323,6 +328,17 @@ func (c *Config) fetchSchemaMetadata(schemaName string) (*sqlRes, error) {
 	}
 
 	return &schemaData, nil
+}
+
+func (c *Config) checkSchemaAndTableToBeTracked(schemaName string, tableName string) bool {
+	ok := c.checkSchemaToBeTracked(schemaName)
+	if !ok {
+		return false
+	}
+	if len(c.Tables) != 0 {
+		return c.checkSchemaToBeTracked(tableName)
+	}
+	return true
 }
 
 func (c *Config) checkSchemaToBeTracked(schemaName string) bool {

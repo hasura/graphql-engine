@@ -1,11 +1,10 @@
-WITH table_rel AS (
+WITH table_rel_suggestions AS (
   select 
     relationships.table_name, 
     relationships.table_schema, 
-    json_agg(
-      row_to_json(relationships.*)
-    ):: jsonb as relationships, 
-    array_agg(relationships.rel_name) as rel_names 
+    jsonb_agg(
+      row_to_json(relationships.*):: jsonb - 'table_schema' - 'table_name'
+    ) as relationships 
   from 
     (
       select 
@@ -14,7 +13,6 @@ WITH table_rel AS (
         hdb_fkc.column_mapping :: jsonb, 
         hdb_fkc.ref_table_table_schema, 
         hdb_fkc.ref_table, 
-        hdb_rel.rel_name, 
         'object' :: text as rel_type 
       from 
         hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
@@ -51,13 +49,14 @@ WITH table_rel AS (
             and hdb_rel.rel_def #> '{manual_configuration, column_mapping}' = hdb_fkc.column_mapping::jsonb 
             )
         ) 
+      WHERE 
+        hdb_rel.rel_name IS NULL 
       GROUP BY 
         hdb_fkc.table_schema, 
         hdb_fkc.table_name, 
         hdb_fkc.ref_table_table_schema, 
         hdb_fkc.ref_table, 
-        hdb_fkc.column_mapping :: jsonb, 
-        hdb_rel.rel_name 
+        hdb_fkc.column_mapping :: jsonb 
       UNION 
       select 
         hdb_fkc.ref_table_table_schema as table_schema, 
@@ -65,7 +64,6 @@ WITH table_rel AS (
         CASE WHEN count(key) = 1 THEN json_object_agg(key, value):: jsonb ELSE json_object_agg(value, key):: jsonb END AS column_mapping, 
         hdb_fkc.table_schema as ref_table_table_schema, 
         hdb_fkc.table_name as ref_table, 
-        hdb_rel.rel_name, 
         'array' :: text as rel_type 
       from 
         hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
@@ -109,52 +107,82 @@ WITH table_rel AS (
             )
           ), 
           json_each_text(column_mapping) 
+          WHERE 
+            hdb_rel.rel_name IS NULL 
           GROUP BY 
             hdb_fkc.table_schema, 
             hdb_fkc.table_name, 
             hdb_fkc.ref_table_table_schema, 
             hdb_fkc.ref_table, 
-            hdb_fkc.column_mapping :: jsonb, 
-            hdb_rel.rel_name
+            hdb_fkc.column_mapping :: jsonb
         ) as relationships 
       GROUP BY 
         relationships.table_name, 
         relationships.table_schema
     ), 
-    table_columns AS (
+    table_rel AS (
       select 
         table_schema, 
         table_name, 
-        array_agg(column_name :: text) as columns 
+        jsonb_agg(
+          row_to_json(q):: jsonb - 'table_schema' - 'table_name' #> '{rel_def}'
+          ) as relationships, 
+        array_agg(
+          rel_def #>>'{rel_name}') as rel_names
+          from 
+            (
+              select 
+                table_schema, 
+                table_name, 
+                json_build_object(
+                  'rel_name', rel_name, 'rel_type', 
+                  rel_type, 'rel_def', rel_def
+                ) as rel_def 
+              from 
+                hdb_catalog.hdb_relationship
+            ) as q 
+          GROUP BY 
+            table_schema, 
+            table_name
+        ), 
+        table_columns AS (
+          select 
+            table_schema, 
+            table_name, 
+            array_agg(column_name :: text) as columns 
+          from 
+            information_schema.columns 
+          GROUP BY 
+            table_schema, 
+            table_name
+        ) 
+      select 
+        ist.table_name, 
+        hdbt.table_name IS NOT NULL as is_table_tracked, 
+        CASE WHEN trs.relationships IS NULL THEN '[]' :: jsonb ELSE trs.relationships END as relationship_suggestions, 
+        CASE WHEN tr.relationships IS NULL THEN '[]' :: jsonb ELSE tr.relationships END as relationships, 
+        to_json(
+          array_remove(
+            array_cat(tc.columns, tr.rel_names), 
+            NULL
+          )
+        ) as columns 
       from 
-        information_schema.columns 
+        information_schema.tables AS ist 
+        LEFT OUTER JOIN hdb_catalog.hdb_table AS hdbt ON hdbt.table_name = ist.table_name 
+        and hdbt.table_schema = ist.table_schema 
+        LEFT OUTER JOIN table_rel_suggestions as trs ON trs.table_schema = ist.table_schema 
+        and trs.table_name = ist.table_name 
+        LEFT OUTER JOIN table_columns as tc ON tc.table_schema = ist.table_schema 
+        and tc.table_name = ist.table_name 
+        LEFT OUTER JOIN table_rel AS tr ON tr.table_schema = ist.table_schema 
+        and tr.table_name = ist.table_name 
+      where 
+        ist.table_schema = '%s' 
       GROUP BY 
-        table_schema, 
-        table_name
-    ) 
-  select 
-    ist.table_name, 
-    hdbt.table_name IS NOT NULL as is_table_tracked, 
-    CASE WHEN tr.relationships IS NULL THEN '[]' :: jsonb ELSE tr.relationships END as relationships, 
-    to_json(
-      array_remove(
-        array_cat(tc.columns, tr.rel_names), 
-        NULL
-      )
-    ) as columns 
-  from 
-    information_schema.tables AS ist 
-    LEFT OUTER JOIN hdb_catalog.hdb_table AS hdbt ON hdbt.table_name = ist.table_name 
-    and hdbt.table_schema = ist.table_schema 
-    LEFT OUTER JOIN table_rel as tr ON tr.table_schema = ist.table_schema 
-    and tr.table_name = ist.table_name 
-    LEFT OUTER JOIN table_columns as tc ON tc.table_schema = ist.table_schema 
-    and tc.table_name = ist.table_name 
-  where 
-    ist.table_schema = '%s' 
-  GROUP BY 
-    ist.table_name, 
-    hdbt.table_name, 
-    tr.relationships :: jsonb, 
-    tc.columns, 
-    tr.rel_names;
+        ist.table_name, 
+        hdbt.table_name, 
+        trs.relationships, 
+        tr.relationships, 
+        tc.columns, 
+        tr.rel_names
