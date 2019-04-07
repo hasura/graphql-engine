@@ -1,5 +1,14 @@
 import ReactDOM from "react-dom";
-import { makeMainRoutes } from "./routes";
+import React from "react";
+import { Route, Router } from "react-router-dom";
 
-const routes = makeMainRoutes();
-ReactDOM.render(routes, document.getElementById("root"));
+import Auth0Wrapper from "./components/Auth/Auth0Wrapper";
+import history from "./utils/history";
+
+const mainRoutes = (
+  <Router history={history}>
+    <Route path="/" render={props => (<Auth0Wrapper {...props} />)} />
+  </Router>
+);
+
+ReactDOM.render(mainRoutes, document.getElementById("root"));
