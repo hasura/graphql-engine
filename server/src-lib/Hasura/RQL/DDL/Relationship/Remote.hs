@@ -51,7 +51,7 @@ validateRemoteRel qt (RelDef rn ru _) = do
       let typeLoc = _fiLoc field
       case typeLoc of
         HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found in any remote schema")
-        RemoteType _ _ -> return field
+        RemoteType _ -> return field
 
     getInputField remoteFieldInfo inputFieldName = do
       let params = _fiParams remoteFieldInfo
@@ -94,10 +94,10 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
       col = rruColumn ru
       colDep =  SchemaDependency (SOTableObj qt $ TOCol col) "join col"
       deps = [tableDep, colDep]
-  remScName <- getRemoteSchemaNameFromField (rruRemoteField ru)
   sc <- askSchemaCache
   let gctx = scDefaultRemoteGCtx sc
       remoteFldName = rruRemoteField ru
+  remScName <- rsName <$> getRemoteSchemaInfoFromField gctx (rruRemoteField ru)
   remoteObjFieldInfo <- getRemoteField gctx remoteFldName
   let remoteInpParams = Map.map reduceInpVal (_fiParams remoteObjFieldInfo)
       remoteFldInfo = RemoteFldInfo remoteFldName (_fiTy remoteObjFieldInfo) remoteInpParams
@@ -112,7 +112,7 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
       let typeLoc = _fiLoc field
       case typeLoc of
         HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> " not found in any remote schema")
-        RemoteType _ _ -> return field
+        RemoteType _ -> return field
 
     reduceInpVal ivi = InpValInfo'
                        { __iviDesc = _iviDesc ivi
@@ -120,16 +120,14 @@ remoteRelP2Setup qt (RelDef rn ru _) = do
                        , __iviType = _iviType ivi
                        }
 
-getRemoteSchemaNameFromField
-  :: (QErrM m, CacheRM m)
-  => G.Name -> m RemoteSchemaName
-getRemoteSchemaNameFromField fieldName = do
-  sc <- askSchemaCache
-  let gctx = scDefaultRemoteGCtx sc
-      queryRoot = GS._gQueryRoot gctx
+getRemoteSchemaInfoFromField
+  :: (QErrM m)
+  => GS.GCtx -> G.Name -> m RemoteSchemaInfo
+getRemoteSchemaInfoFromField gCtx fieldName = do
+  let queryRoot = GS._gQueryRoot gCtx
       fieldMap = _otiFields queryRoot
       fieldM = Map.lookup fieldName fieldMap
   field <- maybe (throw400 ValidationFailed ("field: " <> G.unName fieldName <> "not found")) return fieldM
   case _fiLoc field of
     HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> "not found in any remote schema")
-    RemoteType name _ -> return name
+    RemoteType rsi -> return rsi

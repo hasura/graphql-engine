@@ -14,8 +14,8 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
-import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.Parser as G
+import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
@@ -34,10 +34,9 @@ introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 fetchRemoteSchema
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
-  -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GS.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
+fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
       options = wreqOptions manager hdrs
@@ -53,7 +52,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.RemoteType name def
+     VT.RemoteType def
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
       mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
@@ -82,7 +81,7 @@ mergeSchemas
   -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
 mergeSchemas rmSchemaMap gCtxMap httpManager = do
   remoteSchemas <- forM (Map.toList rmSchemaMap) $ \(name, def) ->
-    fetchRemoteSchema httpManager name def
+    fetchRemoteSchema httpManager def
   def <- mkDefaultRemoteGCtx remoteSchemas
   merged <- mergeRemoteSchema gCtxMap def
   return (merged, def)

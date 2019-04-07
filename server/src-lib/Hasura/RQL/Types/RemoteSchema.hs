@@ -18,7 +18,8 @@ type RemoteSchemaName = Text
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
-  { rsUrl              :: !N.URI
+  { rsName             :: !RemoteSchemaName
+  , rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   } deriving (Show, Eq, Lift, Generic)

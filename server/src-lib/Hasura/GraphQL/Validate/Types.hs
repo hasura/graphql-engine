@@ -108,7 +108,7 @@ fromEnumTyDef (G.EnumTypeDefinition descM n _ valDefs) loc =
 
 data TypeLoc
   = HasuraType
-  | RemoteType RemoteSchemaName RemoteSchemaInfo
+  | RemoteType RemoteSchemaInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 instance Hashable TypeLoc

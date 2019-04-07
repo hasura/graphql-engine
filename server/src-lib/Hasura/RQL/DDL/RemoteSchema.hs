@@ -44,7 +44,7 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   manager <- askHttpManager
   sc <- askSchemaCache
   let defRemoteGCtx = scDefaultRemoteGCtx sc
-  remoteGCtx <- fetchRemoteSchema manager name rsi
+  remoteGCtx <- fetchRemoteSchema manager rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
   newHsraGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   newGCtxMap <- mergeRemoteSchema newHsraGCtxMap newDefGCtx
@@ -65,10 +65,10 @@ validateRemoteSchema name (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs) = do
 
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
+      return $ RemoteSchemaInfo name url hdrs fwdHdrs
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs
+      return $ RemoteSchemaInfo name url hdrs fwdHdrs
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

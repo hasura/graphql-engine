@@ -18,6 +18,7 @@ import qualified Data.HashMap.Lazy                      as Map
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as V
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 
 runGQ
@@ -112,10 +113,10 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
 
   -- merge with remotes
   remotesRespTup <- forM rrps $ \rr -> do
-    let E.GExPDepRemote (E.GExPRemote rsi q rs) rri = rr
-        newq = mkRemoteQuery q resp rri
+    let E.GExPDepRemote rsi qProm rs ji = rr
+        newq = qProm (getJoinValues resp (E.jiParentKey ji))
     remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-    return (rri, remResp)
+    return (ji, remResp)
 
   mergedResp <- mergeFields resp remotesRespTup
 
@@ -125,4 +126,5 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
     assertNoRemRelPlans [] = return ()
     assertNoRemRelPlans _ = throw400 UnexpectedPayload "remote fields are not supported in mutations"
     mergeFields = undefined
-    mkRemoteQuery = undefined
+    getJoinValues :: EncJSON -> G.Alias -> [J.Value]
+    getJoinValues = undefined

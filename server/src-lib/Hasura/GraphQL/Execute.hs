@@ -6,21 +6,24 @@ module Hasura.GraphQL.Execute
   , GExPHasura(..)
   , GExPRemote(..)
   , GExPDepRemote(..)
+  , JoinInfo(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
   ) where
 
-import           Debug.Trace
-
 import           Control.Exception                      (try)
 import           Control.Lens                           hiding (op)
 import           Data.List                              (nub)
 
+import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
+import qualified Hasura.GraphQL.Context                 as GC
+import qualified Hasura.GraphQL.Resolve.ContextTypes    as CT
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -32,22 +35,29 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.Relationship.Remote
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.GraphQL.Validate.Field          as VF
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
-data GExPDepRemote = GExPDepRemote GExPRemote RemoteRelInfo
-  deriving (Show, Eq)
+data JoinInfo
+  = JoinInfo
+  { jiParentKey :: !G.Alias
+  , jiChildKey  :: !G.Alias
+  }
+
+type GraphQLRequestPromise = [J.Value] -> GraphQLRequest
+
+data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise !VQ.RootSelSet JoinInfo
 
 data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
-  deriving (Show, Eq)
 
 data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
 data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
-  deriving (Show, Eq)
 
 type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
 type SplitQueryParts = (G.TypedOperationDefinition, [G.FragmentDefinition])
@@ -83,20 +93,19 @@ getExecPlan userInfo sc req = do
     [] -> throw500 "unexpected plan"
 
     [(VT.HasuraType, (_, rootSelSet'))] -> do
-      let (hsRootSelSet, remotePlans) = partitionHasuraAndRemotePlans rootSelSet'
-      return $ GQExecPlan (Just $ GExPHasura gCtx hsRootSelSet remotePlans) []
-    [(VT.RemoteType _ rsi, (req'' , rootSelSet''))] -> return $ GQExecPlan Nothing [GExPRemote rsi req'' rootSelSet'']
+      remotePlans <- getRemoteRelPlans gCtx req rootSelSet'
+      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet' remotePlans) []
+    [(VT.RemoteType rsi, (req'' , rootSelSet''))] -> return $ GQExecPlan Nothing [GExPRemote rsi req'' rootSelSet'']
     x -> do
       plans <- mapM (toExecPlan gCtx) x
-      rs <- foldM combPlan (GQExecPlan Nothing []) plans
-      return rs
+      foldM combPlan (GQExecPlan Nothing []) plans
   where
     toExecPlan gCtx' r = case r of
       (VT.HasuraType, (newq, _)) -> do
         qParts <- flip runReaderT gCtx' $ VQ.getQueryParts newq
-        selSet <- runReaderT (VQ.validateGQ qParts) gCtx'
-        return $ GQExecPlan (Just $ GExPHasura gCtx' selSet []) []
-      (VT.RemoteType _ rsi, (newq, rs)) ->
+        rSelSet <- runReaderT (VQ.validateGQ qParts) gCtx'
+        return $ GQExecPlan (Just $ GExPHasura gCtx' rSelSet []) []
+      (VT.RemoteType rsi, (newq, rs)) ->
         return $ GQExecPlan Nothing [GExPRemote rsi newq rs]
 
     combPlan (GQExecPlan initHasuraPlan initRemPlans )(GQExecPlan hasuraPlan remotePlans) = case initHasuraPlan of
@@ -176,8 +185,65 @@ getExecPlan userInfo sc req = do
             , G._todVariableDefinitions = varDefs
             }
 
+batchQueryWithVals :: GraphQLQuery -> [J.Value] -> GraphQLRequest
+batchQueryWithVals = undefined
 
-partitionHasuraAndRemotePlans = undefined
+getRemoteRelPlans :: (MonadError QErr m) => GCtx -> GraphQLRequest -> VQ.RootSelSet -> m [GExPDepRemote]
+getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
+  case rss of
+    VQ.RQuery ss -> do
+      let hasuraTopFields = gatherHasuraFields (toList ss)
+          remoteFields = getRemoteFields hasuraTopFields
+      concat <$> forM remoteFields (mkDepRemotePlan gCtx)
+    _            -> return []
+    where
+      mkDepRemotePlan gCtx' (hFld, remFldsM) =
+        case remFldsM of
+          Nothing    -> return []
+          Just rFlds -> forM rFlds $ \rf -> do
+            rsi <- getRemoteSchemaInfoFromField gCtx' (VF._fName rf)
+            rri <- getRemoteRelInfoFromField gCtx' (VF._fType rf, VF._fName rf)
+            let typedOp = G.TypedOperationDefinition
+                  { G._todType = G.OperationTypeQuery
+                  , G._todName = Nothing
+                  , G._todVariableDefinitions = []
+                  , G._todDirectives = []
+                  , G._todSelectionSet = []
+                  }
+                op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped typedOp
+                q = GraphQLQuery [op]
+                joinInfo = JoinInfo
+                  { jiParentKey = VF._fAlias hFld
+                  , jiChildKey = VF._fAlias rf
+                  }
+            return $ GExPDepRemote rsi (batchQueryWithVals q) (VQ.RQuery (Seq.singleton rf)) joinInfo
+
+      onlyHasura fldInfo = case VT._fiLoc fldInfo of
+        VT.HasuraType -> True
+        _             -> False
+
+      getRemoteRelInfoFromField gctx nameTup = do
+        let typedFieldM = Map.lookup nameTup (GC._gFields gctx)
+        fld <- onNothing typedFieldM (throw500 "cannot find field")
+        case fld of
+          CT.FldRemote rri -> return rri
+          _                -> throw500 "not a remote field"
+
+
+
+      onlyRemote = not.onlyHasura
+
+      gatherHasuraFields fields =
+        catMaybes $ flip map fields $ \fld ->
+        Map.lookup (VF._fName fld) hasuraNodes >> Just fld
+
+      hasuraNodes = Map.filter onlyHasura $ VT._otiFields $ _gQueryRoot gCtx
+      remoteNodes = Map.filter onlyRemote $ VT._otiFields $ _gQueryRoot gCtx
+      getRemoteFields fields = flip map fields $ \fld ->
+        let fldSelSet = VF._fSelSet fld
+            remoteFlds = map getRemoteFieldsFromField (toList fldSelSet)
+        in (fld, sequence remoteFlds)
+      getRemoteFieldsFromField fld = Map.lookup (VF._fName fld) remoteNodes >> Just fld
 
 transformGQRequest
   :: GraphQLRequest
@@ -218,7 +284,7 @@ execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
     return $ encJFromLBS $ resp ^. Wreq.responseBody
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+    RemoteSchemaInfo _ url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 
