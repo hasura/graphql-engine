@@ -141,6 +141,7 @@ library
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
+                     , Hasura.Db
                      , Hasura.Cache
 
                      , Hasura.Server.App

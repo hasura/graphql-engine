@@ -25,6 +25,7 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N

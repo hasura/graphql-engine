@@ -6,14 +6,6 @@ module Hasura.RQL.Types
        , liftP1WithQCtx
        , MonadTx(..)
 
-       , LazyTx
-       , runLazyTx
-       , runLazyTx'
-       , withUserInfo
-
-       , RespTx
-       , LazyRespTx
-
        , UserInfoM(..)
        , successMsg
 
@@ -40,7 +32,6 @@ module Hasura.RQL.Types
        , askQTemplateInfo
 
        , adminOnly
-       , defaultTxErrorHandler
 
        , HeaderObj
 
@@ -48,6 +39,7 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.Db                     as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
@@ -62,10 +54,6 @@ import           Hasura.RQL.Types.SchemaCache  as R
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC
-
-import qualified Database.PG.Query             as Q
-
-import           Data.Aeson.Extended
 
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
@@ -156,95 +144,6 @@ newtype SQLGenCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
-
-class (MonadError QErr m) => MonadTx m where
-  liftTx :: Q.TxE QErr a -> m a
-
-instance (MonadTx m) => MonadTx (StateT s m) where
-  liftTx = lift . liftTx
-
-instance (MonadTx m) => MonadTx (ReaderT s m) where
-  liftTx = lift . liftTx
-
-data LazyTx e a
-  = LTErr !e
-  | LTNoTx !a
-  | LTTx !(Q.TxE e a)
-
-lazyTxToQTx :: LazyTx e a -> Q.TxE e a
-lazyTxToQTx = \case
-  LTErr e  -> throwError e
-  LTNoTx r -> return r
-  LTTx tx  -> tx
-
-runLazyTx
-  :: Q.PGPool -> Q.TxIsolation
-  -> LazyTx QErr a -> ExceptT QErr IO a
-runLazyTx pgPool txIso = \case
-  LTErr e  -> throwError e
-  LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
-
-runLazyTx'
-  :: Q.PGPool -> LazyTx QErr a -> ExceptT QErr IO a
-runLazyTx' pgPool = \case
-  LTErr e  -> throwError e
-  LTNoTx a -> return a
-  LTTx tx  -> Q.runTx' pgPool tx
-
-type RespTx = Q.TxE QErr EncJSON
-type LazyRespTx = LazyTx QErr EncJSON
-
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
-  Q.unitQE defaultTxErrorHandler setSess () False
-  where
-    setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (encodeToStrictText uVars)
-
-withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
-withUserInfo uInfo = \case
-  LTErr e  -> LTErr e
-  LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
-
-instance Functor (LazyTx e) where
-  fmap f = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
-
-instance Applicative (LazyTx e) where
-  pure = LTNoTx
-
-  LTErr e   <*> _         = LTErr e
-  LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
-
-instance Monad (LazyTx e) where
-  LTErr e >>= _  = LTErr e
-  LTNoTx a >>= f = f a
-  LTTx txa >>= f =
-    LTTx $ txa >>= lazyTxToQTx . f
-
-instance MonadError e (LazyTx e) where
-  throwError = LTErr
-  LTErr e  `catchError` f = f e
-  LTNoTx a `catchError` _ = LTNoTx a
-  LTTx txe `catchError` f =
-    LTTx $ txe `catchError` (lazyTxToQTx . f)
-
-instance MonadTx (LazyTx QErr) where
-  liftTx = LTTx
-
-instance MonadTx (Q.TxE QErr) where
-  liftTx = id
-
-instance MonadIO (LazyTx QErr) where
-  liftIO = LTTx . liftIO
 
 type ER e r = ExceptT e (Reader r)
 type P1 = ER QErr QCtx
@@ -357,11 +256,6 @@ adminOnly = do
   unless (curRole == adminRole) $ throw400 AccessDenied errMsg
   where
     errMsg = "restricted access : admin only"
-
-defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler txe =
-  let e = err500 PostgresError "postgres query error"
-  in e {qeInternal = Just $ toJSON txe}
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
