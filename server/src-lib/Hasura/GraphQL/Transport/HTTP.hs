@@ -31,14 +31,11 @@ runGQ
   -> m EncJSON
 runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   execPlan <- E.getExecPlan userInfo sc req
-  case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
-    E.GExPRemote rsi _ rs ->
-      E.execRemoteGQ manager userInfo reqHdrs req rsi rs
-    E.GExPMixed plans ->
-      runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plans
-
+  let (E.GQExecPlan hasuraPlan remotePlans) = execPlan
+  case (hasuraPlan, remotePlans) of
+     (Nothing, []) -> throw500 "no exec plan found"
+     (Just (E.GExPHasura gCtx rootSelSet), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+     (_, _) -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs execPlan
 
 runMixedGQ
   :: (MonadIO m, MonadError QErr m)
@@ -48,22 +45,25 @@ runMixedGQ
   -> SQLGenCtx
   -> HTTP.Manager
   -> [N.Header]
-  -> [E.GQExecPlan]
+  -> E.GQExecPlan
   -> m EncJSON
-runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plans = do
-  resSet <- forM plans $ \case
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plan = do
+  let (E.GQExecPlan hasuraPlan remotePlans) = plan
+  hasuraRes <- case hasuraPlan of
+    Nothing -> return []
+    Just (E.GExPHasura gCtx rootSelSet) -> do
+      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+      return [res]
+
+  remoteRes <- forM remotePlans $ \case
     E.GExPRemote rsi newq rs ->
       E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-    E.GExPMixed _ ->
-      throw500 "internal-unexpected: mixed plan is nested in mixed plan"
 
-  let interimResBS = map encJToLBS resSet
+  let resSet = hasuraRes ++ remoteRes
+      interimResBS = map encJToLBS resSet
   interimRes <- forM interimResBS $ \res -> do
     let x = J.decode res :: (Maybe J.Object)
     onNothing x $ throw500 "could not parse response as JSON"
-
   let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
       errs  = mapMaybe (Map.lookup "errors") interimRes
 
