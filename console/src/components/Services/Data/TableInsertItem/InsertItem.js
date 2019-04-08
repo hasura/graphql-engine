@@ -152,6 +152,7 @@ class InsertItem extends Component {
               e.target.focus();
             }}
           >
+            <option value="" disabled>-- bool --</option>
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
