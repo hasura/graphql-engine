@@ -1,0 +1,22 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      delete from person;
+      SELECT setval('person_id_seq', 1, FALSE);
+
+      delete from orders;
+      SELECT setval('orders_id_seq', 1, FALSE);
+
+      delete from article;
+      SELECT setval('article_id_seq', 1, FALSE);
+
+      delete from author;
+      SELECT setval('author_id_seq', 1, FALSE);
+
+      delete from test_types;
+      SELECT setval('test_types_c10_bigserial_seq', 1, FALSE);
+      SELECT setval('test_types_c9_serial_seq', 1, FALSE);
+      SELECT setval('test_types_c8_smallserial_seq', 1, FALSE);

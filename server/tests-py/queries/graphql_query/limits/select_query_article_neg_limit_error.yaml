@@ -1,6 +1,12 @@
 description: Nested select on article with limit expecting error
 url: /v1alpha1/graphql
 status: 400
+response:
+  errors:
+  - extensions:
+      code: not-supported
+      path: $.selectionSet.article.args.limit
+    message: unexpected negative value
 query:
   query: |
     query {
