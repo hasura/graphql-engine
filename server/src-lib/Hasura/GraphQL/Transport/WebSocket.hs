@@ -228,8 +228,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case
       E.ExOpQuery opTx ->
-        execQueryOrMut $ runLazyTx' pgExecCtx $
-        withUserInfo userInfo opTx
+        execQueryOrMut $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
         execQueryOrMut $ runLazyTx pgExecCtx $
         withUserInfo userInfo opTx
