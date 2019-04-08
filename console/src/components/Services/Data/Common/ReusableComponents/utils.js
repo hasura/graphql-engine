@@ -1,18 +1,24 @@
 export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   const { refTableName, colMappings } = foreignKey;
   const filteredColMap = {};
+
   colMappings
     .filter(colMap => colMap.column !== '' && colMap.refColumn !== '')
     .forEach(colMap => {
       if (!orderedColumns[colMap.column]) return;
       filteredColMap[orderedColumns[colMap.column].name] = colMap.refColumn;
     });
+
   if (!refTableName || Object.keys(filteredColMap).length === 0) {
     return '';
   }
-  return `${Object.keys(filteredColMap).join(
-    ', '
-  )} → ${refTableName} . ${Object.values(filteredColMap).join(', ')}`;
+
+  const _lCol = Object.keys(filteredColMap);
+  const _rCol = Object.values(filteredColMap);
+  const lCol = _lCol.length > 1 ? '( ' + _lCol.join(', ') + ' )' : _lCol[0];
+  const rCol = _rCol.length > 1 ? '( ' + _rCol.join(', ') + ' )' : _rCol[0];
+
+  return `${lCol} → ${refTableName} . ${rCol}`;
 };
 
 export const pgConfTypes = {
