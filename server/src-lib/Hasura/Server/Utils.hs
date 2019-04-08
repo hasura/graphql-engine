@@ -6,11 +6,14 @@ import           Data.Aeson
 import           Data.List.Split
 import           Network.URI
 import           System.Environment
+import           System.Exit
+import           System.Process
 
 import qualified Data.ByteString              as B
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
+import qualified Data.Text.IO                 as TI
 import qualified Language.Haskell.TH.Syntax   as TH
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
@@ -75,12 +78,24 @@ uriAuthParameters uriAuth = port . host . auth
                  _      -> id
 
 -- Get an env var during compile time
-getValFromEnv :: String -> TH.Q TH.Exp
-getValFromEnv n = do
+getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
+getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
     Just val -> TH.lift val
-    Nothing -> fail $ "env var " ++ n ++ " is not set"
+    Nothing  -> runScript s
+
+-- Run a shell script during compile time
+runScript :: FilePath -> TH.Q TH.Exp
+runScript fp = do
+  TH.addDependentFile fp
+  fileContent <- TH.runIO $ TI.readFile fp
+  (exitCode, stdOut, stdErr) <- TH.runIO $
+    readProcessWithExitCode "/bin/sh" [] $ T.unpack fileContent
+  when (exitCode /= ExitSuccess) $ fail $
+    "Running shell script " ++ fp ++ " failed with exit code : "
+    ++ show exitCode ++ " and with error : " ++ stdErr
+  TH.lift stdOut
 
 -- Ginger Templating
 type GingerTmplt = TG.Template TG.SourcePos

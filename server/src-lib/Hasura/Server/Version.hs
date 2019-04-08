@@ -11,12 +11,10 @@ import qualified Data.SemVer         as V
 import qualified Data.Text           as T
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils (getValFromEnv)
+import           Hasura.Server.Utils (getValFromEnvOrScript)
 
 version :: T.Text
-version = $(getValFromEnv "VERSION")
-
-
+version = T.dropWhileEnd (== '\n') $(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
 
 consoleVersion :: T.Text
 consoleVersion = case V.fromText $ T.dropWhile (== 'v') version of
