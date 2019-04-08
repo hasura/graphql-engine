@@ -109,10 +109,6 @@ runTrackTableQ q = do
 purgeDep :: (CacheRWM m, MonadTx m)
          => SchemaObjId -> m ()
 purgeDep schemaObjId = case schemaObjId of
-  (SOTable tn) -> do
-    liftTx $ Q.catchE defaultTxErrorHandler $ delTableFromCatalog tn
-    delTableFromCache tn
-
   (SOTableObj tn (TOPerm rn pt)) -> do
     liftTx $ dropPermFromCatalog tn rn pt
     withPermType pt delPermFromCache rn tn
