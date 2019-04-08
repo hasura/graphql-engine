@@ -98,15 +98,4 @@
             content
           }
         }
-      } 
-- description: Delete the inserted articles
-  url: /v1/query
-  status: 200
-  query:
-    type: run_sql
-    args:
-      sql: |
-        delete from article;
-        delete from author;
-        SELECT setval('article_id_seq', 1, FALSE);
-        SELECT setval('author_id_seq', 1, FALSE);
+      }

@@ -1,0 +1,15 @@
+type: bulk
+args:
+#Drop relationship first
+
+- type: run_sql
+  args:
+    sql: |
+      delete from article;
+      SELECT setval('article_id_seq', 1, FALSE);
+
+      delete from author;
+      SELECT setval('author_id_seq', 1, FALSE);
+
+      delete from person;
+      SELECT setval('person_id_seq', 1, FALSE);
