@@ -15,6 +15,7 @@ import           Hasura.RQL.Types
 
 import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Lazy                      as Map
+import qualified Data.Vector                            as V
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as V
@@ -113,8 +114,10 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
 
   -- merge with remotes
   remotesRespTup <- forM rrps $ \rr -> do
-    let E.GExPDepRemote rsi qProm rs ji = rr
-        newq = qProm (getJoinValues resp (E.jiParentKey ji))
+    let E.GExPDepRemote rsi queryProm ji rs = rr
+    -- TODO: use decodedResp instead of EncJSON
+    joinVals <- getJoinValues resp (E.jiParentAlias ji) (E.jiParentJoinKey ji)
+    let newq = queryProm joinVals
     remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
     return (ji, remResp)
 
@@ -125,6 +128,90 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
     runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx
     assertNoRemRelPlans [] = return ()
     assertNoRemRelPlans _ = throw400 UnexpectedPayload "remote fields are not supported in mutations"
-    mergeFields = undefined
-    getJoinValues :: EncJSON -> G.Alias -> [J.Value]
-    getJoinValues = undefined
+
+    mergeFields :: (MonadError QErr m) => EncJSON -> [(E.JoinInfo, EncJSON)] -> m EncJSON
+    mergeFields initResp remRespTups = do
+      let init = encJToLBS initResp
+          initObjM = J.decode init :: (Maybe J.Object)
+      initObj <- onNothing initObjM $ throw500 "could not parse as json"
+      mergedObj <- foldM mergeField initObj remRespTups
+      return $ encJFromJValue mergedObj
+      where
+        mergeField initObj (ji, resp) = do
+          let encResp = encJToLBS resp
+              respObjM = J.decode encResp :: (Maybe J.Object)
+              childKey = G.unName.G.unAlias $ E.jiChildAlias ji
+              childPath = ["data", G.unName.G.unAlias $ E.jiChildAlias ji]
+              childJoinKey = G.unName $ E.jiChildJoinKey ji
+              parentKey = G.unName.G.unAlias $ E.jiParentAlias ji
+              parentPath = ["data", parentKey]
+              parentJoinKey = G.unName $ E.jiParentJoinKey ji
+
+          respObj <- onNothing respObjM $ throw500 "could not parse as json"
+          respVal <- getValueAtPath respObj childPath
+          respArr <- assertArray respVal
+          initVal <- getValueAtPath initObj parentPath
+          initArr <- assertArray initVal
+
+          newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey (toList respArr) childJoinKey childKey)
+          let newJArr = J.Array (V.fromList newArr)
+
+          setValueAtPath initObj ["data"] (parentKey, newJArr)
+
+
+    findAndMerge :: (MonadError QErr m) => J.Value -> Text -> [J.Value] -> Text -> Text -> m J.Value
+    findAndMerge parentVal parentKey values key mergeKey = do
+      parentObj <- assertObject parentVal
+      val <- getValueAtPath parentObj [parentKey]
+      objects <- forM values assertObject
+      let matchedObj = find (\obj -> Just val == Map.lookup key obj) objects
+          insertObj = maybe "null" J.Object matchedObj
+
+      newObj <- setValueAtPath parentObj [] (mergeKey, insertObj)
+      return $ J.Object newObj
+
+    getJoinValues :: (MonadError QErr m) => EncJSON -> G.Alias -> G.Name ->  m [J.Value]
+    getJoinValues res name key = do
+      let bs = encJToLBS res
+          decodedResM = J.decode bs :: (Maybe J.Object)
+      decodedRes <- onNothing decodedResM $ throw500 "could not parse response as JSON"
+      let dataValM = Map.lookup "data" decodedRes
+      dataVal <- onNothing dataValM $ throw500 "could not parse as json"
+      dataObj <- assertObject dataVal
+      let datas = Map.lookup (G.unName $ G.unAlias name) dataObj
+      joinVals <- case datas of
+        Nothing -> throw500 "could not find parent field"
+        Just vs -> do
+          vals <- assertArray vs
+          forM (toList vals) (`extractJoinKey` G.unName key)
+      return $ catMaybes joinVals
+
+    extractJoinKey val key = do
+      obj <- assertObject val
+      return $ Map.lookup key obj
+
+getValueAtPath :: (MonadError QErr m) => J.Object -> [Text] -> m J.Value
+getValueAtPath obj [] = return (J.Object obj)
+getValueAtPath obj (x:xs) = do
+  val <- getValueAtPath obj [x]
+  valObj <- assertObject val
+  getValueAtPath valObj xs
+
+setValueAtPath :: (MonadError QErr m) => J.Object -> [Text] -> (Text, J.Value) -> m J.Object
+setValueAtPath obj [] (k, newVal) = return $ Map.insert k newVal obj
+setValueAtPath obj (x:xs) (k, newVal) = do
+  val <- getValueAtPath obj [x]
+  valObj <- assertObject val
+  finalObj <- setValueAtPath valObj xs (k, newVal)
+  setValueAtPath obj [] (x, J.Object finalObj)
+
+assertObject :: (MonadError QErr m) => J.Value -> m J.Object
+assertObject val = case val of
+  J.Object obj -> return obj
+  _            -> throw500 "could not parse as object"
+
+assertArray :: (MonadError QErr m) => J.Value -> m J.Array
+assertArray val = case val of
+  J.Array arr -> return arr
+  _           -> throw500 "could not parse as array"
+

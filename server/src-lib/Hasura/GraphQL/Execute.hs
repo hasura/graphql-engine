@@ -37,6 +37,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Relationship.Remote
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Field          as VF
@@ -44,13 +45,15 @@ import qualified Hasura.GraphQL.Validate.Types          as VT
 
 data JoinInfo
   = JoinInfo
-  { jiParentKey :: !G.Alias
-  , jiChildKey  :: !G.Alias
+  { jiParentAlias   :: !G.Alias
+  , jiParentJoinKey :: !G.Name -- change to alias
+  , jiChildJoinKey  :: !G.Name
+  , jiChildAlias    :: !G.Alias
   }
 
 type GraphQLRequestPromise = [J.Value] -> GraphQLRequest
 
-data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise !VQ.RootSelSet JoinInfo
+data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise JoinInfo !VQ.RootSelSet
 
 data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
 
@@ -197,7 +200,7 @@ getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
       concat <$> forM remoteFields (mkDepRemotePlan gCtx)
     _            -> return []
     where
-      mkDepRemotePlan gCtx' (hFld, remFldsM) =
+      mkDepRemotePlan gCtx' (hf, remFldsM) =
         case remFldsM of
           Nothing    -> return []
           Just rFlds -> forM rFlds $ \rf -> do
@@ -213,10 +216,12 @@ getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
                 op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped typedOp
                 q = GraphQLQuery [op]
                 joinInfo = JoinInfo
-                  { jiParentKey = VF._fAlias hFld
-                  , jiChildKey = VF._fAlias rf
+                  { jiParentAlias = VF._fAlias hf
+                  , jiParentJoinKey = mkColName $ rriColumn rri  -- how to find alias
+                  , jiChildJoinKey = VF._fName rf
+                  , jiChildAlias = VF._fAlias rf
                   }
-            return $ GExPDepRemote rsi (batchQueryWithVals q) (VQ.RQuery (Seq.singleton rf)) joinInfo
+            return $ GExPDepRemote rsi (batchQueryWithVals q) joinInfo (VQ.RQuery (Seq.singleton rf))
 
       onlyHasura fldInfo = case VT._fiLoc fldInfo of
         VT.HasuraType -> True
@@ -229,7 +234,7 @@ getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
           CT.FldRemote rri -> return rri
           _                -> throw500 "not a remote field"
 
-
+      mkColName (PGCol n) = G.Name n
 
       onlyRemote = not.onlyHasura
 

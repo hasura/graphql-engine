@@ -62,8 +62,7 @@ import qualified Language.Haskell.TH.Syntax    as TH
 
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo,
-                                                RemoteSchemaName)
+import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
