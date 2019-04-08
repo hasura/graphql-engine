@@ -109,7 +109,7 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   where
     getVar accum (var, (prepNo, _)) = do
       let varName = G.unName $ G.unVariable var
-      colVal <- onNothing (Map.lookup var annVars) $
+      (_, colVal) <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
       let prepVal = binEncoder colVal
       return $ IntMap.insert prepNo prepVal accum

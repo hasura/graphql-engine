@@ -118,7 +118,7 @@ data WSServerEnv
   = WSServerEnv
   { _wseLogger     :: !L.Logger
   , _wseServer     :: !WSServer
-  , _wseRunTx      :: !LQ.TxRunner
+  , _wseRunTx      :: !PGExecCtx
   , _wseLiveQMap   :: !LiveQueriesState
   , _wseGCtxMap    :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
   , _wseHManager   :: !H.Manager
@@ -216,7 +216,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       withComplete $ sendConnErr connErr
 
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
-  execPlanE <- runExceptT $ E.getResolvedExecPlan
+  execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx sc scVer q
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
@@ -228,18 +228,20 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ userInfo = \case
       E.ExOpQuery opTx ->
-        execQueryOrMut $ withUserInfo userInfo opTx
+        execQueryOrMut $ runLazyTx' pgExecCtx $
+        withUserInfo userInfo opTx
       E.ExOpMutation opTx ->
-        execQueryOrMut $ withUserInfo userInfo opTx
+        execQueryOrMut $ runLazyTx pgExecCtx $
+        withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         let lq = LQ.LiveQuery userInfo q
         liftIO $ STM.atomically $ STMMap.insert lq opId opMap
         liftIO $ LQ.addLiveQuery lqMap lq lqOp (wsId, opId) liveQOnChange
         logOpEv ODStarted
 
-    execQueryOrMut tx = do
+    execQueryOrMut action = do
       logOpEv ODStarted
-      resp <- liftIO $ runTx tx
+      resp <- liftIO $ runExceptT action
       either postExecErr sendSuccResp resp
       sendCompleted
 
@@ -264,7 +266,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
-    WSServerEnv logger _ (LQ.TxRunner runTx) lqMap gCtxMapRef httpMgr  _
+    WSServerEnv logger _ pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache = serverEnv
 
     wsId = WS.getWSId wsConn
@@ -410,16 +412,16 @@ createWSServerEnv
   :: L.Logger
   -> H.Manager -> SQLGenCtx
   -> IORef.IORef (SchemaCache, SchemaCacheVer)
-  -> (forall a. LazyTx QErr a -> IO (Either QErr a))
+  -> PGExecCtx
   -> CorsPolicy
   -> E.PlanCache
   -> IO WSServerEnv
 createWSServerEnv logger httpManager sqlGenCtx cacheRef
-  runTx corsPolicy planCache = do
+  pgExecCtx corsPolicy planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
-  lqState <- LQ.initLiveQueriesState runTx
+  lqState <- LQ.initLiveQueriesState pgExecCtx
   return $ WSServerEnv logger wsServer
-    (LQ.TxRunner runTx) lqState cacheRef
+    pgExecCtx lqState cacheRef
     httpManager corsPolicy sqlGenCtx planCache
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp

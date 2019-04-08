@@ -11,8 +11,6 @@ module Hasura.GraphQL.Execute.LiveQuery
   , addLiveQuery
   , removeLiveQuery
 
-  , TxRunner(..)
-
   , SubsPlan
   , subsOpFromPlan
   , subsOpFromPGAST
@@ -26,6 +24,7 @@ import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashSet                                 as Set
 import qualified Data.Text                                    as T
 import qualified Database.PG.Query                            as Q
+import qualified Database.PG.Query.Connection                 as Q
 import qualified Language.GraphQL.Draft.Syntax                as G
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Fallback    as LQF
@@ -35,6 +34,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol       as GH
 import qualified Hasura.GraphQL.Validate                      as GV
 import qualified Hasura.SQL.DML                               as S
 
+import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Types
 import           Hasura.Prelude
@@ -44,24 +44,20 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
--- this has to be in another module
-newtype TxRunner
-  = TxRunner { unTxRunner :: forall a. LazyTx QErr a -> IO (Either QErr a) }
-
 data LiveQueriesState k
   = LiveQueriesState
-  { _lqsMultiplexed :: LQM.LiveQueryMap k
-  , _lqsFallback    :: LQF.LiveQueryMap k
-  , _lqsTxRunner    :: TxRunner
+  { _lqsMultiplexed :: !(LQM.LiveQueryMap k)
+  , _lqsFallback    :: !(LQF.LiveQueryMap k)
+  , _lqsPGExecTx    :: !PGExecCtx
   }
 
 initLiveQueriesState
-  :: (forall a. LazyTx QErr a -> IO (Either QErr a))
+  :: PGExecCtx
   -> IO (LiveQueriesState k)
 initLiveQueriesState txRunner = do
   (mxMap, fallbackMap) <- STM.atomically $
     (,) <$> LQM.newLiveQueryMap <*> LQF.newLiveQueryMap
-  return $ LiveQueriesState mxMap fallbackMap $ TxRunner txRunner
+  return $ LiveQueriesState mxMap fallbackMap txRunner
 
 data LiveQueryOp
   = LQMultiplexed !LQM.MxOp
@@ -82,12 +78,12 @@ addLiveQuery lqState liveQ liveQOp k onResultAction =
   case liveQOp of
     LQMultiplexed mxOp ->
       LQM.addLiveQuery
-      (unTxRunner txRunner) mxMap liveQ mxOp k onResultAction
+      pgExecCtx mxMap liveQ mxOp k onResultAction
     LQFallback fallbackOp ->
       LQF.addLiveQuery
-      (unTxRunner txRunner) fallbackMap liveQ fallbackOp k onResultAction
+      pgExecCtx fallbackMap liveQ fallbackOp k onResultAction
   where
-    LiveQueriesState mxMap fallbackMap txRunner = lqState
+    LiveQueriesState mxMap fallbackMap pgExecCtx = lqState
 
 removeLiveQuery
   :: (Eq k, Hashable k)
@@ -133,7 +129,7 @@ type TextEncodedVariables
   = Map.HashMap G.Variable TxtEncodedPGVal
 
 toMultiplexedQueryVar
-  :: (MonadState TextEncodedVariables m)
+  :: (MonadState GV.AnnPGVarVals m)
   => GR.UnresolvedVal -> m S.SQLExp
 toMultiplexedQueryVar = \case
   GR.UVPG annPGVal ->
@@ -143,7 +139,7 @@ toMultiplexedQueryVar = \case
       -- this is only used for reusable plans
       -- the check has to be made before this
       (Just var, _) -> do
-        modify $ Map.insert var (txtEncodedPGVal colVal)
+        modify $ Map.insert var (colTy, colVal)
         return $ fromResVars colTy
           [ "variables"
           , G.unName $ G.unVariable var
@@ -165,11 +161,13 @@ subsOpFromPGAST
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
+     , MonadIO m
      )
-  => [G.VariableDefinition]
+  => PGExecCtx
+  -> [G.VariableDefinition]
   -> (G.Alias, GR.QueryRootFldUnresolved)
   -> m (LiveQueryOp, Maybe SubsPlan)
-subsOpFromPGAST varDefs (fldAls, astUnresolved) = do
+subsOpFromPGAST pgExecCtx varDefs (fldAls, astUnresolved) = do
   userInfo <- asks getter
   (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
                    collectNonNullableVars astUnresolved
@@ -182,11 +180,12 @@ subsOpFromPGAST varDefs (fldAls, astUnresolved) = do
 
     -- multiplexed subscription
     multiplexedOp varTypes = do
-      (astResolved, txtEncodedVars) <-
+      (astResolved, annVarVals) <-
         flip runStateT mempty $ GR.traverseQueryRootFldAST
         toMultiplexedQueryVar astUnresolved
       let mxQuery = LQM.mkMxQuery $ GR.toPGQuery astResolved
           plan    = SubsPlan fldAls mxQuery varTypes
+      txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
       return (LQMultiplexed (fldAls, mxQuery, txtEncodedVars), Just plan)
 
     -- fallback tx subscription
@@ -202,13 +201,57 @@ subsOpFromPGAST varDefs (fldAls, astUnresolved) = do
     withAlias tx =
       encJFromAssocList . pure . (,) fldAlsT <$> tx
 
+validateAnnVarValsOnPg
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => PGExecCtx
+  -> GV.AnnPGVarVals
+  -> m TextEncodedVariables
+validateAnnVarValsOnPg pgExecCtx annVarVals = do
+  let valSel = mkValidationSel $ Map.elems annVarVals
+
+  Q.Discard _ <- runTx' $ liftTx $
+    Q.rawQE valPgErrHandler (Q.fromBuilder $ toSQL valSel) [] False
+  return $ fmap (txtEncodedPGVal . snd) annVarVals
+
+  where
+    mkExtrs = map (flip S.Extractor Nothing . uncurry toTxtValue)
+    mkValidationSel vars =
+      S.mkSelect { S.selExtr = mkExtrs vars }
+    runTx' tx = do
+      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
+      liftEither res
+
+valPgErrHandler :: Q.PGTxErr -> QErr
+valPgErrHandler txErr =
+  fromMaybe (defaultTxErrorHandler txErr) $ do
+  stmtErr <- Q.getPGStmtErr txErr
+  codeMsg <- getPGCodeMsg stmtErr
+  (qErrCode, qErrMsg) <- extractError codeMsg
+  return $ err400 qErrCode qErrMsg
+  where
+    getPGCodeMsg pged =
+      (,) <$> Q.edStatusCode pged <*> Q.edMessage pged
+    extractError = \case
+      -- invalid text representation
+      ("22P02", msg) -> return (DataException, msg)
+      -- invalid parameter value
+      ("22023", msg) -> return (DataException, msg)
+      -- invalid input values
+      ("22007", msg) -> return (DataException, msg)
+      _              -> Nothing
+
 -- use the existing plan and new variables to create a pg query
 subsOpFromPlan
-  :: (MonadError QErr m)
-  => Maybe GH.VariableValues
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => PGExecCtx
+  -> Maybe GH.VariableValues
   -> SubsPlan
   -> m LiveQueryOp
-subsOpFromPlan varValsM (SubsPlan alias query varTypes) = do
-  validatedVars <- GV.getAnnPGVarVals varTypes varValsM
-  let txtEncodedVars = fmap txtEncodedPGVal validatedVars
+subsOpFromPlan pgExecCtx varValsM (SubsPlan alias query varTypes) = do
+  annVarVals <- GV.getAnnPGVarVals varTypes varValsM
+  txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
   return $ LQMultiplexed (alias, query, txtEncodedVars)

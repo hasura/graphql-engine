@@ -80,7 +80,7 @@ type FallbackOp = LazyRespTx
 
 addLiveQuery
   :: (Eq k, Hashable k)
-  => TxRunner
+  => PGExecCtx
   -> LiveQueryMap k
   -- the query
   -> LiveQuery
@@ -90,7 +90,7 @@ addLiveQuery
   -- the action to be executed when result changes
   -> OnChange
   -> IO ()
-addLiveQuery txRunner lqMap liveQ respTx k onResultAction= do
+addLiveQuery pgExecCtx lqMap liveQ respTx k onResultAction= do
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
@@ -101,7 +101,7 @@ addLiveQuery txRunner lqMap liveQ respTx k onResultAction= do
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \(handler, pollerThreadTM) -> do
     threadRef <- A.async $ forever $ do
-      pollQuery txRunner handler
+      pollQuery pgExecCtx handler
       threadDelay $ 1 * 1000 * 1000
     STM.atomically $ STM.putTMVar pollerThreadTM threadRef
 
@@ -124,12 +124,12 @@ addLiveQuery txRunner lqMap liveQ respTx k onResultAction= do
 
 pollQuery
   :: (Eq k, Hashable k)
-  => TxRunner
+  => PGExecCtx
   -> LQHandler k
   -> IO ()
-pollQuery runTx (LQHandler respTx respTV curOpsTV newOpsTV) = do
+pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
-  res <- runTx respTx
+  res <- runExceptT $ runLazyTx pgExecCtx respTx
 
   let resp = case res of
         Left e   -> GQExecError [encodeGQErr False e]
