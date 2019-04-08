@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine est un serveur GraphQL ultra-rapide qui vous permet de créer **instantanément, des APIs GraphQL basées sur Postgres**, avec des [**déclencheurs de webhoook**](event-triggers.md) pour la logique métier.
+Hasura GraphQL Engine est un serveur GraphQL ultra-rapide qui vous permet de créer **instantanément, des APIs GraphQL basées sur Postgres**, avec des [**déclencheurs de webhoook**](event-triggers.french.md) pour la logique métier.
 
 Hasura vous aide à construire des applications GraphQL basées sur Posgres ou à adopter graduellement GraphQL pour des applications existantes utilisant Postgres.
 
@@ -29,8 +29,8 @@ Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation
 
 * **Réalisez des requêtes avancées**: filtrage intégré, pagination, recherche par patterns, mutations d'insertions en masse, mises-à-jour et suppression.
 * **Temps réel**: Convertissez n'importe quelle requête GraphQL en requête temps-réel en uttilisant les `subscriptions`.
-* **Fusionnez des schémas distants**: Accédez à vos propres schémas GraphQL pour votre logique métier, via un point d'accès GraphQL unique. [**Plus d'informations**](remote-schemas.md).
-* **Déclenchez des webhooks ou des fonctions serverless**: En réactions aux évènements Postgres insert/update/delete ([Plus d'informations](event-triggers.md))
+* **Fusionnez des schémas distants**: Accédez à vos propres schémas GraphQL pour votre logique métier, via un point d'accès GraphQL unique. [**Plus d'informations**](remote-schemas.french.md).
+* **Déclenchez des webhooks ou des fonctions serverless**: En réactions aux évènements Postgres insert/update/delete ([Plus d'informations](event-triggers.french.md))
 * **Fonctionne avec les bases de données existantes**: Pointez GraphQL Engine vers une base de données Postgres existante afin d'obtenir instantanément une API GraphQL prête à l'emploi.
 * **Contrôle d'accès détaillé**: Contrôle d'accès dynamique qui s'intègre avec votre système d'authentification (ex: auth0, firebase-auth)
 * **Haute performance & faible impact**: Image Docker de ~15MB; ~50MB RAM @ 1000 req/s; prise en compte du multi-core
@@ -101,13 +101,13 @@ GraphQL Engine fournit plusieurs méthodes claires, évolutives et performantes 
 
 ### Schémas distants
 
-Ajoutez vos propres resolvers dans un schéma distant en plus du schéma dérivé de Postgres d'Hasura. Idéal pour des cas d'utilisation tels que l'implémentation d'une API de paiement, ou le requêtage de donnée ne se trouvant pas dans votre base de données - [plus d'informations](remote-schemas.md).
+Ajoutez vos propres resolvers dans un schéma distant en plus du schéma dérivé de Postgres d'Hasura. Idéal pour des cas d'utilisation tels que l'implémentation d'une API de paiement, ou le requêtage de donnée ne se trouvant pas dans votre base de données - [plus d'informations](remote-schemas.french.md).
 
 ### Déclenchez des webhooks sur des évènements de base de données
 
 Ajoutez de la logique métier asynchrone, déclenchée par des évènements de base de données.
 Idéal pour les notifications, les pipelines de données de Postgres ou les
-traitements asynchrones - [plus d'informations](event-triggers.md).
+traitements asynchrones - [plus d'informations](event-triggers.french.md).
 
 ### Données dérivée ou transformations de données
 
@@ -156,11 +156,11 @@ La documentation et la communauté vous aideront à résoudre la plupart des pro
 Nous nous impliquons dans le développement d'un environnement ouvert et accueillant dans la communauté. Veuillez consulter le [Code de Conduite](code-of-conduct-fr.md).
 
 
-Si vous souhaitez rapporter un problème de sécurité, veuillez [lire ceci](SECURITY-fr.md).
+Si vous souhaitez rapporter un problème de sécurité, veuillez [lire ceci](SECURITY.french.md).
 
 ## Contribuer
 
-Consultez notre [guide de contribution](CONTRIBUTING-fr.md) pour plus de détails.
+Consultez notre [guide de contribution](CONTRIBUTING.french.md) pour plus de détails.
 
 ## Elements de marque
 
