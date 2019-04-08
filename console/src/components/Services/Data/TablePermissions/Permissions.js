@@ -1643,7 +1643,7 @@ class Permissions extends Component {
       };
 
       return (
-        <div className={styles.activeEdit}>
+        <div key={`${permissionsState.role}-${permissionsState.query}`} className={styles.activeEdit}>
           <div className={styles.editPermissionsHeading}>
             <span className={styles.add_mar_right}>
               <Button
