@@ -26,8 +26,10 @@ runGQ
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pgExecCtx userInfo sqlGenCtx planCache sc scVer manager reqHdrs req rawReq = do
-  execPlan <- E.getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer req
+runGQ pgExecCtx userInfo sqlGenCtx planCache sc scVer
+  manager reqHdrs req rawReq = do
+  execPlan <- E.getResolvedExecPlan pgExecCtx planCache
+              userInfo sqlGenCtx sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ pgExecCtx userInfo resolvedOp

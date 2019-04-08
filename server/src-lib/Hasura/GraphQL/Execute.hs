@@ -25,7 +25,6 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -140,14 +139,16 @@ type ExecPlanResolved
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
-  => EP.PlanCache
+  => PGExecCtx
+  -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m ExecPlanResolved
-getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer reqUnparsed = do
+getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
+  sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -157,7 +158,7 @@ getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer reqUnparsed = do
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.subsOpFromPlan queryVars subsPlan
+        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx queryVars subsPlan
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -177,13 +178,13 @@ getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer reqUnparsed = do
             mapM_ (addPlanToCache . EP.RPQuery) planM
             return $ ExOpQuery queryTx
           VQ.RSubscription fld -> do
-            (lqOp, planM) <- getSubsOp gCtx sqlGenCtx
+            (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
                              userInfo fld varDefs
             mapM_ (addPlanToCache . EP.RPSubs) planM
             return $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
-type E =
+type E m =
   ReaderT ( UserInfo
           , OpCtxMap
           , TypeMap
@@ -191,19 +192,19 @@ type E =
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
-          ) (Except QErr)
+          ) (ExceptT QErr m)
 
 runE
   :: (MonadError QErr m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> E a
+  -> E m a
   -> m a
-runE ctx sqlGenCtx userInfo action =
-  either throwError return $
-  runExcept $ runReaderT action
-  (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+runE ctx sqlGenCtx userInfo action = do
+  res <- runExceptT $ runReaderT action
+    (userInfo, opCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+  either throwError return res
   where
     opCtxMap = _gOpCtxMap ctx
     typeMap = _gTypes ctx
@@ -274,28 +275,33 @@ getSubsOpM
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has UserInfo r
+     , MonadIO m
      )
-  => [G.VariableDefinition]
+  => PGExecCtx
+  -> [G.VariableDefinition]
   -> VQ.Field
   -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOpM varDefs fld =
+getSubsOpM pgExecCtx varDefs fld =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
       astUnresolved <- GR.queryFldToPGAST fld
-      EL.subsOpFromPGAST varDefs (VQ._fAlias fld, astUnresolved)
+      EL.subsOpFromPGAST pgExecCtx varDefs (VQ._fAlias fld, astUnresolved)
 
 getSubsOp
-  :: (MonadError QErr m)
-  => GCtx
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => PGExecCtx
+  -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> VQ.Field
   -> [G.VariableDefinition]
   -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOp gCtx sqlGenCtx userInfo fld varDefs =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM varDefs fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld varDefs =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx varDefs fld
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)

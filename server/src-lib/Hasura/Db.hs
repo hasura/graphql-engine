@@ -77,7 +77,7 @@ setHeadersTx uVars =
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler txe =
-  let e = err500 PostgresError "postgres query error"
+  let e = internalError "postgres query error"
   in e {qeInternal = Just $ J.toJSON txe}
 
 withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a

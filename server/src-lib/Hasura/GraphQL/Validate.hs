@@ -114,7 +114,7 @@ showVars :: (Functor f, Foldable f) => f G.Variable -> Text
 showVars = showNames . fmap G.unVariable
 
 type VarPGTypes = Map.HashMap G.Variable PGColType
-type AnnPGVarVals = Map.HashMap G.Variable PGColValue
+type AnnPGVarVals = Map.HashMap G.Variable (PGColType, PGColValue)
 
 -- this is in similar spirit to getAnnVarVals, however
 -- here it is much simpler and can get rid of typemap requirement
@@ -137,7 +137,7 @@ getAnnPGVarVals varTypes varValsM =
       -- TODO: we don't have the graphql type
       -- " of type: " <> T.pack (show varType) <>
       " in variableValues"
-    runAesonParser (parsePGValue varType) varVal
+    (varType,) <$> runAesonParser (parsePGValue varType) varVal
   where
     varVals = fromMaybe Map.empty varValsM
 

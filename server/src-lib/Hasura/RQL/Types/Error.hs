@@ -10,6 +10,7 @@ module Hasura.RQL.Types.Error
        , err404
        , err401
        , err500
+       , internalError
 
        , QErrM
        , throw400
@@ -215,7 +216,10 @@ throw401 :: (QErrM m) => T.Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
 throw500 :: (QErrM m) => T.Text -> m a
-throw500 t = throwError $ err500 Unexpected t
+throw500 t = throwError $ internalError t
+
+internalError :: Text -> QErr
+internalError = err500 Unexpected
 
 throw500WithDetail :: (QErrM m) => T.Text -> Value -> m a
 throw500WithDetail t detail =
