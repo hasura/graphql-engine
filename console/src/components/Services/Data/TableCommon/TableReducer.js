@@ -9,18 +9,16 @@ import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
 // TABLE MODIFY
 
 import {
-  TOGGLE_ACTIVE_COLUMN,
-  RESET,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
-  FK_SET_REF_TABLE,
-  FK_SET_L_COL,
-  FK_SET_R_COL,
-  FK_ADD_FORM_ERROR,
-  FK_RESET,
-  TOGGLE_FK_CHECKBOX,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
+  SET_COLUMN_EDIT,
+  RESET_COLUMN_EDIT,
+  EDIT_COLUMN,
+  SET_PRIMARY_KEYS,
+  SET_FOREIGN_KEYS,
+  RESET,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -201,60 +199,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           manualColumns: action.data,
         },
       };
-
-    case FK_RESET:
-      return {
-        ...modifyState,
-        fkAdd: {
-          ...modifyState.fkAdd,
-          pairs: [],
-          lcol: '',
-          rcol: '',
-          refTable: '',
-          fkCheckBox: false,
-        },
-      };
-    case FK_SET_REF_TABLE:
-      return {
-        ...modifyState,
-        fkAdd: {
-          ...modifyState.fkAdd,
-          refTable: action.refTable,
-          rcol: '',
-        },
-      };
-    case FK_SET_L_COL:
-      return {
-        ...modifyState,
-        fkAdd: {
-          ...modifyState.fkAdd,
-          lcol: action.lcol,
-        },
-      };
-    case FK_SET_R_COL:
-      return {
-        ...modifyState,
-        fkAdd: {
-          ...modifyState.fkAdd,
-          rcol: action.rcol,
-        },
-      };
-    case FK_ADD_FORM_ERROR:
-      return {
-        ...modifyState,
-        ongoingRequest: false,
-        lastError: null,
-        lastFormError: action.errorMessage,
-        lastSuccess: false,
-      };
-    case TOGGLE_FK_CHECKBOX:
-      return {
-        ...modifyState,
-        fkAdd: {
-          ...modifyState.fkAdd,
-          fkCheckBox: action.checked,
-        },
-      };
     case TABLE_COMMENT_EDIT:
       return {
         ...modifyState,
@@ -272,7 +216,34 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           editedValue: action.value,
         },
       };
-
+    case SET_COLUMN_EDIT:
+      return {
+        ...modifyState,
+        columnEdit: {
+          ...modifyState.columnEdit,
+          [action.column]: { ...action.data },
+        },
+      };
+    case RESET_COLUMN_EDIT:
+      const updatedColumnEdit = {
+        ...modifyState.columnEdit,
+      };
+      delete updatedColumnEdit[action.column];
+      return {
+        ...modifyState,
+        columnEdit: updatedColumnEdit,
+      };
+    case EDIT_COLUMN:
+      return {
+        ...modifyState,
+        columnEdit: {
+          ...modifyState.columnEdit,
+          [action.column]: {
+            ...modifyState.columnEdit[action.column],
+            [action.key]: action.value,
+          },
+        },
+      };
     case PERM_OPEN_EDIT:
       const permState = getBasePermissionsState(
         action.tableSchema,
@@ -587,7 +558,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           bulkSelect: [],
         },
       };
-
     case PERM_RESET_BULK_SAME_SELECT:
       return {
         ...modifyState,
@@ -596,15 +566,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           applySamePermissions: [],
         },
       };
-
-    case TOGGLE_ACTIVE_COLUMN:
-      const newCol =
-        modifyState.activeEdit.column === action.column ? '' : action.column;
+    case SET_PRIMARY_KEYS:
       return {
         ...modifyState,
-        activeEdit: { ...modifyState.activeEdit, column: newCol },
+        pkModify: action.pks,
       };
-
+    case SET_FOREIGN_KEYS:
+      return {
+        ...modifyState,
+        fkModify: action.fks,
+      };
     default:
       return modifyState;
   }
