@@ -598,6 +598,23 @@ class Permissions extends Component {
       const noPermissions = !permissionsState[query];
       const noPermissionsMsg = `Set row ${query} permissions first`;
 
+      const getSectionHeader = (title, toolTip, sectionStatus) => {
+        let sectionStatusHtml;
+        if (sectionStatus) {
+          sectionStatusHtml = (
+            <span className={styles.add_mar_left}>
+              - <i className={styles.sectionStatus}>{sectionStatus}</i>
+            </span>
+          );
+        }
+
+        return (
+          <div>
+            {addTooltip(title, toolTip)} {sectionStatusHtml}
+          </div>
+        );
+      };
+
       const getRowSection = () => {
         const filterKey = query === 'insert' ? 'check' : 'filter';
 
@@ -605,6 +622,9 @@ class Permissions extends Component {
         if (permissionsState[query]) {
           filterString = JSON.stringify(permissionsState[query][filterKey]);
         }
+
+        const noAccess = filterString === '';
+        const noChecks = filterString === '{}';
 
         // replace legacy operator values
         allOperators.forEach(operator => {
@@ -659,7 +679,7 @@ class Permissions extends Component {
 
           const addNoChecksOption = () => {
             const isSelected =
-              !permissionsState.custom_checked && filterString === '{}';
+              !permissionsState.custom_checked && noChecks;
 
             const allowAllLabel = (
               <span data-test="without-checks">Without any checks</span>
@@ -794,11 +814,21 @@ class Permissions extends Component {
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
 
+        let rowSectionStatus;
+        if (noAccess) {
+          rowSectionStatus = 'no access';
+        } else if (noChecks) {
+          rowSectionStatus = 'without any checks';
+        } else {
+          rowSectionStatus = 'with custom check';
+        }
+
         return (
           <CollapsibleToggle
-            title={addTooltip(rowSectionTitle, rowPermissionTooltip)}
+            title={getSectionHeader(rowSectionTitle, rowPermissionTooltip, rowSectionStatus)}
             defaultTitle
             testId={'toggle-row-permission'}
+            isOpen={noAccess}
           >
             <div className={styles.editPermissionsSection}>
               <div>
@@ -926,9 +956,18 @@ class Permissions extends Component {
 
           const colSectionTitle = 'Column ' + query + ' permissions';
 
+          let colSectionStatus;
+          if (!permissionsState[query] || !permissionsState[query].columns.length) {
+            colSectionStatus = 'no columns';
+          } else if (permissionsState[query].columns.length === tableSchema.columns.length) {
+            colSectionStatus = 'all columns';
+          } else {
+            colSectionStatus = 'partial columns';
+          }
+
           _columnSection = (
             <CollapsibleToggle
-              title={addTooltip(colSectionTitle, colPermissionTooltip)}
+              title={getSectionHeader(colSectionTitle, colPermissionTooltip, colSectionStatus)}
               defaultTitle
               testId={'toggle-col-permission'}
             >
@@ -973,9 +1012,11 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
+
         return (
           <CollapsibleToggle
-            title={addTooltip('Upsert queries permissions', upsertToolTip)}
+            title={getSectionHeader('Upsert queries permissions', upsertToolTip, upsertStatus)}
             defaultTitle
             testId={'toggle-upsert-permission'}
           >
@@ -1010,11 +1051,11 @@ class Permissions extends Component {
         const { columns } = tableSchema;
         const queryState = permissionsState[query];
 
-        const getPresetValues = () => {
-          const presets = (queryState && queryState.localPresets) || [
-            defaultPresetsState[query],
-          ];
+        const presets = (queryState && queryState.localPresets) || [
+          defaultPresetsState[query],
+        ];
 
+        const getPresetValues = () => {
           const setPresetValue = e => {
             // Get the index of the changed value and if both key and value are set create one more object in set
             const inputNode = e.target;
@@ -1316,9 +1357,16 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        let presetStatus = '';
+        if (presets.length > 1) {
+          presetStatus = presets.map(p => p.key).filter(p => p !== '').join(', ');
+        } else {
+          presetStatus = 'no presets';
+        }
+
         return (
           <CollapsibleToggle
-            title={addTooltip('Column presets', presetTooltip)}
+            title={getSectionHeader('Column presets', presetTooltip, presetStatus)}
             defaultTitle
             testId={'toggle-presets-permission'}
           >
@@ -1353,11 +1401,14 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        const aggregationStatus = aggregationAllowed ? 'enabled' : 'disabled';
+
         return (
           <CollapsibleToggle
-            title={addTooltip(
+            title={getSectionHeader(
               'Aggregation queries permissions',
-              aggregationToolTip
+              aggregationToolTip,
+              aggregationStatus
             )}
             defaultTitle
             testId={'toggle-agg-permission'}
@@ -1490,7 +1541,7 @@ class Permissions extends Component {
             <div>
               <hr />
               <CollapsibleToggle
-                title={addTooltip('Clone permissions', cloneToolTip)}
+                title={getSectionHeader('Clone permissions', cloneToolTip)}
                 defaultTitle
                 testId={'toggle-clone-permission'}
               >
