@@ -3,6 +3,8 @@
 
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
+  , GExPHasura(..)
+  , GExPRemote(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
@@ -33,11 +35,14 @@ import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
 
-data GQExecPlan
-  = GExPHasura !GCtx !VQ.RootSelSet
-  | GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
-  | GExPMixed  ![GQExecPlan]
-  deriving (Show)
+data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet
+  deriving (Show, Eq)
+
+data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
+  deriving (Show, Eq)
+
+data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+  deriving (Show, Eq)
 
 data QueryParts
   = QueryParts
@@ -80,24 +85,30 @@ getExecPlan userInfo sc req = do
 
   case newReqs of
     -- this shouldn't happen
-    [] ->
-      return $ GExPHasura gCtx rootSelSet
-    [(VT.HasuraType, _)] ->
-      return $ GExPHasura gCtx rootSelSet
-    [(VT.RemoteType _ rsi, _)] ->
-      return $ GExPRemote rsi req rootSelSet
-    (x:xs) -> do
-      r <- case x of
-        (VT.HasuraType, (newq, _)) -> do
-          qParts <- flip runReaderT gCtx $ VQ.getQueryParts newq
-          GExPHasura gCtx <$> runReaderT (VQ.validateGQ qParts) gCtx
-        (VT.RemoteType _ rsi, (newq, rs)) ->
-          return $ GExPRemote rsi newq rs
-      rs <- mapM (getExecPlan userInfo sc . fst . snd) xs
-      return $ GExPMixed (r:rs)
-  where
+    [] -> throw500 "unexpected plan"
 
+    [(VT.HasuraType, _)] -> return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet ) []
+    [(VT.RemoteType _ rsi, _)] -> return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
+    x -> do
+      plans <- mapM (toExecPlan gCtx) x
+      rs <- foldM combPlan (GQExecPlan Nothing []) plans
+      return rs
+  where
     gCtxRoleMap = scGCtxMap sc
+
+    toExecPlan gCtx' r = case r of
+      (VT.HasuraType, (newq, _)) -> do
+        qParts <- flip runReaderT gCtx' $ VQ.getQueryParts newq
+        selSet <- runReaderT (VQ.validateGQ qParts) gCtx'
+        return $ GQExecPlan (Just $ GExPHasura gCtx' selSet) []
+      (VT.RemoteType _ rsi, (newq, rs)) ->
+        return $ GQExecPlan Nothing [GExPRemote rsi newq rs]
+
+    combPlan (GQExecPlan initHasuraPlan initRemPlans )(GQExecPlan hasuraPlan remotePlans) = case initHasuraPlan of
+      Nothing -> return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
+      Just plan  -> if Just plan == hasuraPlan
+        then return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
+        else throw500 "cannot combine multiple hasura plans"
 
 
 splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
