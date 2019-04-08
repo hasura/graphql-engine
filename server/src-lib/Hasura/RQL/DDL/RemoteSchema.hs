@@ -7,10 +7,10 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP2
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 
 import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Lazy        as BL
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
 
@@ -24,7 +24,7 @@ runAddRemoteSchema
      , MonadIO m
      , HasHttpManager m
      )
-  => AddRemoteSchemaQuery -> m RespBody
+  => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
   adminOnly
   addRemoteSchemaP2 q
@@ -37,7 +37,7 @@ addRemoteSchemaP2
      , HasHttpManager m
      )
   => AddRemoteSchemaQuery
-  -> m BL.ByteString
+  -> m EncJSON
 addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   rsi <- validateRemoteSchemaDef def
   manager <- askHttpManager
@@ -45,7 +45,7 @@ addRemoteSchemaP2 q@(AddRemoteSchemaQuery name def _) = do
   let defRemoteGCtx = scDefaultRemoteGCtx sc
   remoteGCtx <- fetchRemoteSchema manager name rsi
   newDefGCtx <- mergeGCtx defRemoteGCtx $ convRemoteGCtx remoteGCtx
-  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newHsraGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   newGCtxMap <- mergeRemoteSchema newHsraGCtxMap newDefGCtx
   liftTx $ addRemoteSchemaToCatalog q
   addRemoteSchemaToCache newGCtxMap newDefGCtx name rsi
@@ -80,7 +80,7 @@ refreshGCtxMapInSchema
   => m ()
 refreshGCtxMapInSchema = do
   sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc)
+  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   httpMgr <- askHttpManager
   (mergedGCtxMap, defGCtx) <-
     mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
@@ -89,7 +89,7 @@ refreshGCtxMapInSchema = do
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
-  => RemoveRemoteSchemaQuery -> m RespBody
+  => RemoveRemoteSchemaQuery -> m EncJSON
 runRemoveRemoteSchema q =
   removeRemoteSchemaP1 q >>= removeRemoteSchemaP2
 
@@ -106,7 +106,7 @@ removeRemoteSchemaP2
      , HasHttpManager m
      )
   => RemoveRemoteSchemaQuery
-  -> m BL.ByteString
+  -> m EncJSON
 removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   mSchema <- liftTx $ fetchRemoteSchemaDef name
   _ <- liftMaybe (err400 NotExists "no such remote schema") mSchema
@@ -117,7 +117,7 @@ removeRemoteSchemaP2 (RemoveRemoteSchemaQuery name) = do
   let resolvers = scRemoteResolvers sc
       newResolvers = Map.filterWithKey (\n _ -> n /= name) resolvers
 
-  newGCtxMap <- GS.mkGCtxMap (scTables sc)
+  newGCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
   (mergedGCtxMap, defGCtx) <- mergeSchemas newResolvers newGCtxMap hMgr
   removeRemoteSchemaFromCache newResolvers mergedGCtxMap defGCtx
   liftTx $ removeRemoteSchemaFromCatalog name

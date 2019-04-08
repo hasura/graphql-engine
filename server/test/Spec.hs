@@ -50,9 +50,13 @@ querySpecFiles =
   , "upsert_role_user_error.yaml"
   ]
 
+gqlIntrospection :: FilePath
+gqlIntrospection = "introspection.yaml"
+
 gqlSpecFiles :: [FilePath]
 gqlSpecFiles =
-  [ "introspection.yaml"
+  [ "insert_mutation/author.yaml"
+  , "introspection.yaml"
   , "introspection_user_role.yaml"
   , "insert_mutation/author.yaml"
   , "insert_mutation/author_articles_nested.yaml"
@@ -98,6 +102,9 @@ gqlSpecFiles =
   , "delete_mutation/author_foreign_key_violation.yaml"
   ]
 
+alterTable :: FilePath
+alterTable = "alter_table.yaml"
+
 readTestCase :: FilePath -> IO TestCase
 readTestCase fpath = do
   res <- Y.decodeFileEither ("test/testcases/" ++ fpath)
@@ -129,6 +136,8 @@ mkSpecs :: IO (SpecWith Application)
 mkSpecs = do
   ddlTc <- mapM readTestCase querySpecFiles
   gqlTc <- mapM readTestCase gqlSpecFiles
+  gqlIntrospectionTc <- readTestCase gqlIntrospection
+  alterTabTc <- readTestCase alterTable
   return $ do
     describe "version API" $
       it "responds with version" $
@@ -146,4 +155,11 @@ mkSpecs = do
 
     describe "Query API" $ mapM_ mkSpec ddlTc
 
+    describe "GraphQL Introspection" $ mkSpec gqlIntrospectionTc
+
     describe "GraphQL API" $ mapM_ mkSpec gqlTc
+
+    describe "Alter Table" $ mkSpec alterTabTc
+
+    describe "GraphQL Introspection after altering a table"
+      $ mkSpec gqlIntrospectionTc

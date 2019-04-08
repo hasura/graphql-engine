@@ -1,7 +1,7 @@
 import {
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultInsertSetState,
+  defaultSetState,
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall } from '../DataActions';
@@ -43,20 +43,19 @@ export const X_HASURA_CONST = 'x-hasura-';
 export const UPDATE_PERM_SET_KEY_VALUE =
   'ModifyTable/UPDATE_PERM_SET_KEY_VALUE';
 
-export const CREATE_NEW_INSERT_SET_VAL =
-  'ModifyTable/CREATE_NEW_INSERT_SET_VAL';
+export const CREATE_NEW_SET_VAL = 'ModifyTable/CREATE_NEW_SET_VAL';
 
-export const DELETE_INSERT_SET_VAL = 'ModifyTable/DELETE_INSERT_SET_VAL';
+export const DELETE_SET_VAL = 'ModifyTable/DELETE_SET_VAL';
 
-export const TOGGLE_PERM_INSERT_SET_OPERATION_CHECK =
-  'ModifyTable/TOGGLE_PERM_INSERT_SET_OPERATION_CHECK';
+export const TOGGLE_PERM_SET_OPERATION_CHECK =
+  'ModifyTable/TOGGLE_PERM_SET_OPERATION_CHECK';
 export const SET_TYPE_CONFIG = 'ModifyTable/SET_TYPE_CONFIG';
 
 /* */
 
-const getQueriesWithPermColumns = insert => {
+const getQueriesWithPermColumns = allowInsert => {
   const queries = ['select', 'update'];
-  if (insert) {
+  if (allowInsert) {
     queries.push('insert');
   }
   return queries;
@@ -160,7 +159,7 @@ const getBasePermissionsState = (
       let set = [];
       _permissions[q] = rolePermissions.permissions[q];
       // If the query is insert, transform set object if exists to an array
-      if (q === 'insert') {
+      if (q === 'insert' || q === 'update') {
         // If set is an object
         if (insertPermColumnRestriction) {
           if (!_permissions[q].columns) {
@@ -180,7 +179,7 @@ const getBasePermissionsState = (
                 value: _permissions[q].set[s],
               });
             });
-            set.push(defaultInsertSetState);
+            set.push(defaultSetState[q]);
             _permissions[q].isSetConfigChecked = true;
           } else if (
             'localSet' in _permissions[q] &&
@@ -189,13 +188,13 @@ const getBasePermissionsState = (
             set = [..._permissions[q].localSet];
             _permissions[q].isSetConfigChecked = true;
           } else {
-            set.push(defaultInsertSetState);
+            set.push(defaultSetState[q]);
           }
           _permissions[q].localSet = [...set];
         } else {
           // Just to support version changes
           // If user goes from current to previous version and back
-          _permissions[q].localSet = [defaultInsertSetState];
+          _permissions[q].localSet = [defaultSetState[q]];
           _permissions[q].set = {};
         }
       }
@@ -419,9 +418,9 @@ const permRemoveMultipleRoles = tableSchema => {
     // Apply migration
     const migrationName = 'remove_roles_' + currentSchema + '_table_' + table;
 
-    const requestMsg = 'Removing roles...';
-    const successMsg = 'Roles removed';
-    const errorMsg = 'Removing roles failed';
+    const requestMsg = 'Removing permissions...';
+    const successMsg = 'Permissions removed';
+    const errorMsg = 'Removing permissions failed';
 
     const customOnSuccess = () => {
       // reset new role name
@@ -456,7 +455,9 @@ const applySamePermissionsBulk = tableSchema => {
     const table = tableSchema.table_name;
     const currentQueryType = permissionsState.query;
     const toBeAppliedPermission = permissionsState[currentQueryType];
-    const selectedRoles = permissionsState.applySamePermissions;
+    const selectedRoles = permissionsState.applySamePermissions.concat([
+      permissionsState.role,
+    ]);
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -466,10 +467,14 @@ const applySamePermissionsBulk = tableSchema => {
       // find out if selected role has an existing permission of the same query type.
       // if so add a drop permission and then create the new permission.
 
-      const currentRolePermission = currentPermissions.filter(el => {
+      const currentRolePermission = currentPermissions.find(el => {
         return el.role_name === role;
       });
-      if (currentRolePermission[0].permissions[currentQueryType]) {
+
+      if (
+        currentRolePermission &&
+        currentRolePermission.permissions[currentQueryType]
+      ) {
         // existing permission is there. so drop and recreate.
         const deleteQuery = {
           type: 'drop_' + currentQueryType + '_permission',
@@ -483,7 +488,7 @@ const applySamePermissionsBulk = tableSchema => {
           args: {
             table: { name: table, schema: currentSchema },
             role: role,
-            permission: currentRolePermission[0].permissions[currentQueryType],
+            permission: currentRolePermission.permissions[currentQueryType],
           },
         };
         permissionsUpQueries.push(deleteQuery);
@@ -599,7 +604,10 @@ const permChangePermissions = changeType => {
         },
       };
 
-      if (query === 'insert' && 'localSet' in permissionsState[query]) {
+      if (
+        (query === 'insert' || query === 'update') &&
+        'localSet' in permissionsState[query]
+      ) {
         // Convert insert set array to Object
         if (permissionsState[query].isSetConfigChecked) {
           const newSet = {};

@@ -1,13 +1,15 @@
-Distinct queries
-================
+Distinct query results
+======================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-You can fetch distinct columns using ``distinct_on`` argument. Initial ``order_by`` columns must
-match ``distinct_on`` columns. Learn more about ``order_by`` :doc:`here <sorting>`.
+You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
+
+This requires the data to be first sorted by the column i.e. the ``distinct_on`` column should also be the first
+``order_by`` column. See :doc:`sort queries <sorting>` for more info on using ``order_by``.
 
 .. code-block:: graphql
 
@@ -16,7 +18,7 @@ match ``distinct_on`` columns. Learn more about ``order_by`` :doc:`here <sorting
      order_by: [employee_order_by]
    ): [employee]!
 
-   #select column enum type for "employee" table
+   # select column enum type for "employee" table
    enum employee_select_column {
      id
      name
@@ -24,16 +26,24 @@ match ``distinct_on`` columns. Learn more about ``order_by`` :doc:`here <sorting
      salary
    }
 
-For example, fetch highest salaried employee from each department:
+You can see the complete specification of the ``distinct_on`` argument in the :ref:`API reference <DistinctOnExp>`.
+
+Fetch results with distinct values of a particular field
+--------------------------------------------------------
+
+**For example**, fetch highest salaried employee from each department:
 
 .. graphiql::
    :view_only:
    :query:
       query {
-        employee(
+        employee (
           distinct_on: [department]
-          order_by: [{department: asc}, {salary: desc}]
-        ){
+          order_by: [
+            {department: asc},
+            {salary: desc}
+          ]
+        ) {
           id
           name
           department

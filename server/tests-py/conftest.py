@@ -11,7 +11,7 @@ def pytest_addoption(parser):
         "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
     )
     parser.addoption(
-        "--hge-key", metavar="HGE_KEY", help="access key for graphql-engine", required=False
+        "--hge-key", metavar="HGE_KEY", help="admin secret key for graphql-engine", required=False
     )
     parser.addoption(
         "--hge-webhook", metavar="HGE_WEBHOOK", help="url for graphql-engine's access control webhook", required=False
@@ -22,6 +22,39 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
+    )
+    parser.addoption(
+        "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
+    )
+
+    parser.addoption(
+        "--test-cors", action="store_true",
+        required=False,
+        help="Run testcases for CORS configuration"
+    )
+
+    parser.addoption(
+        "--test-ws-init-cookie",
+        metavar="read|noread",
+        required=False,
+        help="Run testcases for testing cookie sending over websockets"
+    )
+
+    parser.addoption(
+        "--test-metadata-disabled", action="store_true",
+        help="Run Test cases with metadata queries being disabled"
+    )
+
+    parser.addoption(
+        "--test-graphql-disabled", action="store_true",
+        help="Run Test cases with GraphQL queries being disabled"
+    )
+
+    parser.addoption(
+        "--test-hge-scale-url",
+        metavar="<url>",
+        required=False,
+        help="Run testcases for horizontal scaling"
     )
 
 
@@ -34,10 +67,26 @@ def hge_ctx(request):
     hge_webhook = request.config.getoption('--hge-webhook')
     webhook_insecure = request.config.getoption('--test-webhook-insecure')
     hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
+    hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
+    ws_read_cookie = request.config.getoption('--test-ws-init-cookie')
+    metadata_disabled = request.config.getoption('--test-metadata-disabled')
+    hge_scale_url = request.config.getoption('--test-hge-scale-url')
     try:
-        hge_ctx = HGECtx(hge_url=hge_url, pg_url=pg_url, hge_key=hge_key, hge_webhook=hge_webhook, hge_jwt_key_file=hge_jwt_key_file, webhook_insecure = webhook_insecure )
+        hge_ctx = HGECtx(
+            hge_url=hge_url,
+            pg_url=pg_url,
+            hge_key=hge_key,
+            hge_webhook=hge_webhook,
+            webhook_insecure=webhook_insecure,
+            hge_jwt_key_file=hge_jwt_key_file,
+            hge_jwt_conf=hge_jwt_conf,
+            ws_read_cookie=ws_read_cookie,
+            metadata_disabled=metadata_disabled,
+            hge_scale_url=hge_scale_url
+        )
     except HGECtxError as e:
         pytest.exit(str(e))
+
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()

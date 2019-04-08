@@ -1,17 +1,23 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/png" href="https://storage.googleapis.com/hasura-graphql-engine/console/assets/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="https://graphql-engine-cdn.hasura.io/img/hasura_icon_green.svg" />
     <script>
-     window.__env = {
-       apiHost: {{.apiHost}},
-       apiPort: "{{.apiPort}}",
-       cliVersion: {{.cliVersion}},
-       dataApiUrl: {{.dataApiUrl}},
-       dataApiVersion: {{.dataApiVersion}},
-       accessKey: {{.accessKey}},
-       urlPrefix: "/",
-       consoleMode: "cli"
-     };
+      window.__env = {
+        apiHost: {{.apiHost}},
+        apiPort: "{{.apiPort}}",
+        cliVersion: {{.cliVersion}},
+        dataApiUrl: {{.dataApiUrl}},
+        dataApiVersion: {{.dataApiVersion}},
+        {{- if .hasAccessKey }}
+        accessKey: {{.adminSecret}},
+        {{ else }}
+        adminSecret: {{.adminSecret}},
+        {{ end -}}
+        urlPrefix: "/",
+        consoleMode: "cli",
+        cliUUID: {{.cliUUID}},
+        enableTelemetry: {{.enableTelemetry}}
+      };
     </script>
   </head>
   <body>

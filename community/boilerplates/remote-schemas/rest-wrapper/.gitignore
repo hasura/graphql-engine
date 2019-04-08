@@ -1,0 +1,4 @@
+node_modules/
+*.zip
+package-lock.json
+my-rest-api/.git

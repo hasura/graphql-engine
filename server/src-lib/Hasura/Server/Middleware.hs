@@ -3,41 +3,39 @@ module Hasura.Server.Middleware where
 import           Data.Maybe            (fromMaybe)
 import           Network.Wai
 
+import           Control.Applicative
 import           Hasura.Prelude
+import           Hasura.Server.Cors
 import           Hasura.Server.Logging (getRequestHeader)
+import           Hasura.Server.Utils
 
 import qualified Data.ByteString       as B
 import qualified Data.CaseInsensitive  as CI
-import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Types    as H
 
-data CorsPolicy
-  = CorsPolicy
-  { cpDomain  :: !T.Text
-  , cpMethods :: ![T.Text]
-  , cpMaxAge  :: !Int
-  } deriving (Show, Eq)
-
-mkDefaultCorsPolicy :: T.Text -> CorsPolicy
-mkDefaultCorsPolicy domain =
-  CorsPolicy
-  { cpDomain = domain
-  , cpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-  , cpMaxAge = 1728000
-  }
 
 corsMiddleware :: CorsPolicy -> Middleware
 corsMiddleware policy app req sendResp =
   maybe (app req sendResp) handleCors $ getRequestHeader "Origin" req
 
   where
-    handleCors origin
-      | cpDomain policy /= "*" && origin /= TE.encodeUtf8 (cpDomain policy) = app req sendResp
-      | otherwise =
-        case requestMethod req of
-          "OPTIONS" -> sendResp $ respondPreFlight origin
-          _         -> app req $ sendResp . injectCorsHeaders origin
+    handleCors origin = case cpConfig policy of
+      CCDisabled _ -> app req sendResp
+      CCAllowAll   -> sendCors origin
+      CCAllowedOrigins ds
+        -- if the origin is in our cors domains, send cors headers
+        | bsToTxt origin `elem` dmFqdns ds   -> sendCors origin
+        -- if current origin is part of wildcard domain list, send cors
+        | inWildcardList ds (bsToTxt origin) -> sendCors origin
+        -- otherwise don't send cors headers
+        | otherwise                          -> app req sendResp
+
+    sendCors :: B.ByteString -> IO ResponseReceived
+    sendCors origin =
+      case requestMethod req of
+        "OPTIONS" -> sendResp $ respondPreFlight origin
+        _         -> app req $ sendResp . injectCorsHeaders origin
 
     respondPreFlight :: B.ByteString -> Response
     respondPreFlight origin =

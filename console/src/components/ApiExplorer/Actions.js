@@ -6,6 +6,9 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
 import { execute } from 'apollo-link';
 
+import { getHeadersAsJSON } from './utils';
+import { saveAppState, clearState } from '../AppState.js';
+
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
 const EXPAND_AUTH_API = 'ApiExplorer/EXPAND_AUTH_API';
@@ -36,17 +39,6 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
-import requestAction from '../Common/makeRequest';
-import Endpoints from 'Endpoints';
-import { getHeadersAsJSON } from './utils';
-
-import {
-  ONBOARDING_QUERY_PROGRESSED,
-  ONBOARDING_SEND_PROGRESSED,
-} from '../Main/Actions.js';
-
-import { saveAppState, clearState } from '../AppState.js';
-
 const clearHistory = () => {
   return {
     type: CLEAR_HISTORY,
@@ -55,58 +47,6 @@ const clearHistory = () => {
 
 const updateFileObject = fileObj => {
   return { type: UPDATE_FILE_OBJECT, data: fileObj };
-};
-
-const sendExplorerReq = requestType => {
-  return (dispatch, getState) => {
-    const onBoardingCurrentStep = getState().main.exploreOnBoardingSidebar
-      .currentStep;
-    if (onBoardingCurrentStep === 4) {
-      dispatch({ type: ONBOARDING_SEND_PROGRESSED, data: 'sendProgress' });
-    }
-    const explorerData = getState().apiexplorer.explorerData;
-    const currState = getState().apiexplorer.displayedApi.request;
-    const bodyAllowedMethods = ['PUT', 'POST', 'DELETE'];
-
-    dispatch({ type: MAKING_API_REQUEST });
-    const options = {
-      method: currState.method,
-      headers: getHeadersAsJSON(currState.headers),
-    };
-
-    if (bodyAllowedMethods.indexOf(currState.method) !== -1) {
-      options.body = currState.params;
-    }
-    if (requestType === 'file') {
-      options.body = explorerData.fileObj ? explorerData.fileObj : '';
-      if (!options.body) {
-        alert('Unable to read a file object, please select file and proceed');
-        return Promise.all([
-          dispatch({ type: RESET_MAKING_REQUEST }),
-          Promise.reject(),
-        ]);
-      }
-    }
-    const responseBlock = document.getElementById('apiResponseBlock');
-    const apiRequestBlock = document.getElementById('apiRequestBlock');
-    apiRequestBlock.scrollTop = responseBlock.offsetTop;
-    return dispatch(
-      requestAction(
-        currState.url,
-        options,
-        API_REQUEST_SUCCESS,
-        API_REQUEST_FAILURE
-      )
-    ).catch(obj => {
-      if (obj.statusCode === 200 && currState.url === Endpoints.userLogout) {
-        const adminToken = getState().loginState.credentials.auth_token;
-        const headerString = JSON.stringify(options.headers);
-        if (headerString.indexOf(adminToken) !== -1) {
-          // dispatch(refreshAdminToken());
-        }
-      }
-    });
-  };
 };
 
 const focusHeaderTextbox = () => ({ type: FOCUS_ROLE_HEADER });
@@ -141,30 +81,7 @@ const changeRequestUrl = newUrl => {
 };
 
 const changeRequestParams = newParams => {
-  return (dispatch, getState) => {
-    const onBoardingCurrentStep = getState().main.exploreOnBoardingSidebar
-      .currentStep;
-    if (onBoardingCurrentStep === 3) {
-      // wait for changes. check if newParams has table author, and columns id, name
-      const parsedParams = JSON.parse(newParams);
-      if (
-        parsedParams.type === 'select' &&
-        parsedParams.args.table === 'author'
-      ) {
-        // now check columns
-        const selectedColumns = parsedParams.args.columns;
-        if (
-          selectedColumns.includes('id') &&
-          selectedColumns.includes('name')
-        ) {
-          // conditions matched, enable next
-          dispatch({
-            type: ONBOARDING_QUERY_PROGRESSED,
-            data: 'queryProgress',
-          });
-        }
-      }
-    }
+  return dispatch => {
     dispatch({ type: REQUEST_PARAMS_CHANGED, data: newParams });
   };
 };
@@ -242,6 +159,22 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
         'x-hasura-role': 'admin',
       };
     }
+
+    // Check if x-hasura-role is available in some form in the headers
+    const totalHeaders = Object.keys(reqHeaders);
+    totalHeaders.forEach(t => {
+      // If header has x-hasura-*
+      const lHead = t.toLowerCase();
+      if (
+        lHead.slice(0, 'x-hasura-'.length) === 'x-hasura-' &&
+        lHead !== 'x-hasura-access-key' &&
+        lHead !== 'x-hasura-admin-secret'
+      ) {
+        user[lHead] = reqHeaders[t];
+        delete reqHeaders[t];
+      }
+    });
+
     editedQuery.user = user;
     return fetch(`${url}/explain`, {
       method: 'post',
@@ -428,7 +361,7 @@ const getStateAfterClearingHistory = state => {
 const getRemoteQueries = (queryUrl, cb) => {
   fetch(queryUrl)
     .then(resp => resp.text().then(cb))
-    .catch(e => console.log('Invalid query URL: ', e));
+    .catch(e => console.log('Invalid query file URL: ', e));
 };
 
 const apiExplorerReducer = (state = defaultState, action) => {
@@ -650,7 +583,6 @@ export {
   changeRequestHeader,
   addRequestHeader,
   removeRequestHeader,
-  sendExplorerReq,
   clearHistory,
   updateFileObject,
   editGeneratedJson,

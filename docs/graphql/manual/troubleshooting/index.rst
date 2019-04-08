@@ -61,7 +61,7 @@ which is used while fetching nested objects using GraphQL.
 
 Let's say we have tables called ``article`` and ``author`` as follows:
 
-.. image:: ../../../img/graphql/manual/troubleshooting/author_article.jpg
+.. thumbnail:: ../../../img/graphql/manual/troubleshooting/author_article.jpg
   :alt: article author schema 
 
 Using the console if you have created a relationship with name as ``author`` from ``article`` table to

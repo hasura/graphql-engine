@@ -2,14 +2,9 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import {
-  analyzeFetcher,
-  graphQLFetcherFinal,
-  getRemoteQueries,
-} from './Actions';
-
+import { analyzeFetcher, graphQLFetcherFinal } from './Actions';
+import OneGraphExplorer from './OneGraphExplorer';
 import './GraphiQL.css';
-
 import semverCheck from '../../helpers/semver';
 
 class GraphiQLWrapper extends Component {
@@ -20,18 +15,9 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
-      queries: null,
       supportAnalyze: false,
       analyzeApiChange: false,
     };
-    const queryFile = this.props.queryParams
-      ? this.props.queryParams.query_file
-      : null;
-    if (queryFile) {
-      getRemoteQueries(queryFile, queries =>
-        this.setState({ ...this.state, queries })
-      );
-    }
   }
 
   componentDidMount() {
@@ -40,6 +26,8 @@ class GraphiQLWrapper extends Component {
         this.checkNewAnalyzeVersion(this.props.data.serverVersion)
       );
     }
+
+    this.setQueryVariableSectionHeight();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -49,8 +37,16 @@ class GraphiQLWrapper extends Component {
       );
     }
   }
+
   shouldComponentUpdate(nextProps) {
     return !nextProps.headerFocus;
+  }
+
+  setQueryVariableSectionHeight() {
+    const variableEditor = document.querySelectorAll('.variable-editor');
+    if (variableEditor && variableEditor.length > 0) {
+      variableEditor[0].style.height = '120px';
+    }
   }
 
   checkSemVer(version) {
@@ -67,6 +63,7 @@ class GraphiQLWrapper extends Component {
     }
     return Promise.resolve();
   }
+
   checkNewAnalyzeVersion(version) {
     try {
       const analyzeApiChange = semverCheck('analyzeApiChange', version);
@@ -81,80 +78,49 @@ class GraphiQLWrapper extends Component {
     }
     return Promise.resolve();
   }
+
   updateAnalyzeState(supportAnalyze) {
     this.setState({
-      ...this.state,
       supportAnalyze: supportAnalyze,
     });
   }
+
   updateAnalyzeApiState(analyzeApiChange) {
     this.setState({
-      ...this.state,
       analyzeApiChange: analyzeApiChange,
     });
   }
 
   render() {
     const styles = require('../Common/Common.scss');
-    const { supportAnalyze, analyzeApiChange } = this.state;
+    const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
+    const { numberOfTables } = this.props;
+    const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
-      if (this.state.headerFocus) {
+      if (headerFocus) {
         return null;
       }
       return graphQLFetcherFinal(
         graphQLParams,
-        this.props.data.url,
-        this.props.data.headers
+        graphqlNetworkData.url,
+        graphqlNetworkData.headers
       );
     };
-
     const analyzeFetcherInstance = analyzeFetcher(
-      this.props.data.url,
-      this.props.data.headers,
+      graphqlNetworkData.url,
+      graphqlNetworkData.headers,
       analyzeApiChange
     );
-
-    // let content = "fetching schema";
-    let content = (
-      <i className={'fa fa-spinner fa-spin ' + styles.graphSpinner} />
-    );
-
-    if (!this.state.error && this.props.numberOfTables !== 0) {
-      if (this.state.queries) {
-        content = (
-          <GraphiQL
-            fetcher={graphQLFetcher}
-            analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze={supportAnalyze}
-            query={this.state.queries}
-          />
-        );
-      } else {
-        content = (
-          <GraphiQL
-            fetcher={graphQLFetcher}
-            analyzeFetcher={analyzeFetcherInstance}
-            supportAnalyze={supportAnalyze}
-          />
-        );
-      }
-    } else if (this.props.numberOfTables === 0) {
-      content = (
+    const renderGraphiql = graphiqlProps => {
+      return (
         <GraphiQL
           fetcher={graphQLFetcher}
-          supportAnalyze={supportAnalyze}
           analyzeFetcher={analyzeFetcherInstance}
-          query={
-            '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n'
-          }
-          schema={undefined}
+          supportAnalyze={supportAnalyze}
+          {...graphiqlProps}
         />
       );
-    } else if (this.state.error) {
-      // there is an error parsing graphql schema
-      content = <div> Error parsing GraphQL Schema </div>;
-    }
-
+    };
     return (
       <ErrorBoundary>
         <div
@@ -165,7 +131,14 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          {content}
+          <OneGraphExplorer
+            renderGraphiql={renderGraphiql}
+            endpoint={graphqlNetworkData.url}
+            headers={graphqlNetworkData.headers}
+            headerFocus={headerFocus}
+            queryParams={this.props.queryParams}
+            numberOfTables={numberOfTables}
+          />
         </div>
       </ErrorBoundary>
     );

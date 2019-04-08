@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import AceEditor from 'react-ace';
-import matchSorter from 'match-sorter';
+// import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
@@ -28,6 +28,7 @@ import {
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
+import Button from '../../../Common/Button/Button';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -63,13 +64,13 @@ class StreamingLogs extends Component {
     try {
       showRedeliver = semverCheck('eventRedeliver', version);
       if (showRedeliver) {
-        this.setState({ ...this.state, showRedeliver: true });
+        this.setState({ showRedeliver: true });
       } else {
-        this.setState({ ...this.state, showRedeliver: false });
+        this.setState({ showRedeliver: false });
       }
     } catch (e) {
       console.error(e);
-      this.setState({ ...this.state, showRedeliver: false });
+      this.setState({ showRedeliver: false });
     }
   }
   handleNewerEvents() {
@@ -138,7 +139,8 @@ class StreamingLogs extends Component {
       dispatch,
     } = this.props;
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../TableCommon/EventTable.scss');
+
     const invocationColumns = [
       'redeliver',
       'status',
@@ -148,6 +150,7 @@ class StreamingLogs extends Component {
       'primary_key',
       'created_at',
     ];
+
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
       if (!(column === 'redeliver' && !this.state.showRedeliver)) {
@@ -157,44 +160,13 @@ class StreamingLogs extends Component {
         });
       }
     });
-    invocationGridHeadings.push({
-      // NOTE - this is a "filter all" DUMMY column
-      // you can't HIDE it because then it wont FILTER
-      // but it has a size of ZERO with no RESIZE and the
-      // FILTER component is NULL (it adds a little to the front)
-      // You culd possibly move it to the end
-      Header: 'All',
-      id: 'all',
-      width: 0,
-      resizable: false,
-      sortable: false,
-      Filter: () => {},
-      getProps: () => {
-        return {
-          // style: { padding: "0px"}
-        };
-      },
-      filterMethod: (filter, rows) => {
-        // using match-sorter
-        // it will take the content entered into the "filter"
-        // and search for it in EITHER the invocation_id or event_id
-        const result = matchSorter(rows, filter.value, {
-          keys: [
-            'invocation_id.props.children',
-            'event_id.props.children',
-            'operation.props.children',
-          ],
-          threshold: matchSorter.rankings.WORD_STARTS_WITH,
-        });
-        return result;
-      },
-      filterAll: true,
-    });
+
     const invocationRowsData = [];
     const requestData = [];
     const responseData = [];
     log.rows.map((r, i) => {
       const newRow = {};
+
       const status =
         r.status === 200 ? (
           <i className={styles.invocationSuccess + ' fa fa-check'} />
@@ -204,77 +176,197 @@ class StreamingLogs extends Component {
 
       requestData.push(parseRowData(r, 'request'));
       responseData.push(parseRowData(r, 'response'));
+
+      const getCellContent = col => {
+        const conditionalClassname = styles.tableCellCenterAligned;
+        if (r[col] === null) {
+          return (
+            <div className={conditionalClassname}>
+              <i>NULL</i>
+            </div>
+          );
+        }
+        if (col === 'status') {
+          return <div className={conditionalClassname}>{status}</div>;
+        }
+        if (col === 'invocation_id') {
+          return <div className={conditionalClassname}>{r.id}</div>;
+        }
+        if (col === 'created_at') {
+          const formattedDate = convertDateTimeToLocale(r.created_at);
+          return <div className={conditionalClassname}>{formattedDate}</div>;
+        }
+        if (col === 'operation') {
+          return (
+            <div className={conditionalClassname}>
+              {requestData[i].data.event.op.toLowerCase()}
+            </div>
+          );
+        }
+        if (col === 'primary_key') {
+          const tableName = requestData[i].data.table.name;
+          const tableSchema = requestData[i].data.table.schema;
+          const tableData = tableSchemas.filter(
+            row =>
+              row.table_name === tableName && row.table_schema === tableSchema
+          );
+          const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+          const pkHtml = [];
+          primaryKey.map(pk => {
+            const newPrimaryKeyData = requestData[i].data.event.data.new
+              ? requestData[i].data.event.data.new[pk]
+              : '';
+            pkHtml.push(
+              <div>
+                {pk} : {newPrimaryKeyData}
+              </div>
+            );
+          });
+          return (
+            <div className={conditionalClassname}>
+              {/* (old) - {oldPrimaryKeyData} | (new) pk - {newPrimaryKeyData} */}
+              {pkHtml}
+            </div>
+          );
+        }
+        if (col === 'redeliver' && this.state.showRedeliver) {
+          return (
+            <div className={conditionalClassname}>
+              <i
+                onClick={this.toggleModal.bind(this, r.event_id)}
+                className={styles.retryEvent + ' fa fa-repeat'}
+              />
+            </div>
+          );
+        }
+        const content = r[col] === undefined ? 'NULL' : r[col].toString();
+        return <div className={conditionalClassname}>{content}</div>;
+      };
+
       // Insert cells corresponding to all rows
       invocationColumns.forEach(col => {
-        const getCellContent = () => {
-          const conditionalClassname = styles.tableCellCenterAligned;
-          if (r[col] === null) {
-            return (
-              <div className={conditionalClassname}>
-                <i>NULL</i>
-              </div>
-            );
-          }
-          if (col === 'status') {
-            return <div className={conditionalClassname}>{status}</div>;
-          }
-          if (col === 'invocation_id') {
-            return <div className={conditionalClassname}>{r.id}</div>;
-          }
-          if (col === 'created_at') {
-            const formattedDate = convertDateTimeToLocale(r.created_at);
-            return <div className={conditionalClassname}>{formattedDate}</div>;
-          }
-          if (col === 'operation') {
-            return (
-              <div className={conditionalClassname}>
-                {requestData[i].data.event.op.toLowerCase()}
-              </div>
-            );
-          }
-          if (col === 'primary_key') {
-            const tableName = requestData[i].data.table.name;
-            const tableSchema = requestData[i].data.table.schema;
-            const tableData = tableSchemas.filter(
-              row =>
-                row.table_name === tableName && row.table_schema === tableSchema
-            );
-            const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
-            const pkHtml = [];
-            primaryKey.map(pk => {
-              const newPrimaryKeyData = requestData[i].data.event.data.new
-                ? requestData[i].data.event.data.new[pk]
-                : '';
-              pkHtml.push(
-                <div>
-                  {pk} : {newPrimaryKeyData}
-                </div>
-              );
-            });
-            return (
-              <div className={conditionalClassname}>
-                {/* (old) - {oldPrimaryKeyData} | (new) pk - {newPrimaryKeyData} */}
-                {pkHtml}
-              </div>
-            );
-          }
-          if (col === 'redeliver' && this.state.showRedeliver) {
-            return (
-              <div className={conditionalClassname}>
-                <i
-                  onClick={this.toggleModal.bind(this, r.event_id)}
-                  className={styles.retryEvent + ' fa fa-repeat'}
-                />
-              </div>
-            );
-          }
-          const content = r[col] === undefined ? 'NULL' : r[col].toString();
-          return <div className={conditionalClassname}>{content}</div>;
-        };
-        newRow[col] = getCellContent();
+        newRow[col] = getCellContent(col);
       });
+
       invocationRowsData.push(newRow);
     });
+
+    const subComponent = logRow => {
+      const finalIndex = logRow.index;
+      const finalRequest = requestData[finalIndex];
+      const finalResponse = responseData[finalIndex];
+      return (
+        <div style={{ padding: '20px' }}>
+          <Tabs animation={false} defaultActiveKey={1} id="requestResponseTab">
+            <Tab eventKey={1} title="Request">
+              {finalRequest.headers ? (
+                <div className={styles.add_mar_top}>
+                  <div className={styles.subheading_text}>Headers</div>
+                  <AceEditor
+                    mode="json"
+                    theme="github"
+                    name="headers"
+                    value={JSON.stringify(finalRequest.headers, null, 4)}
+                    minLines={4}
+                    maxLines={20}
+                    width="100%"
+                    showPrintMargin={false}
+                    showGutter={false}
+                  />
+                </div>
+              ) : null}
+              <div className={styles.add_mar_top}>
+                <div className={styles.subheading_text}>Payload</div>
+                <AceEditor
+                  mode="json"
+                  theme="github"
+                  name="payload"
+                  value={JSON.stringify(finalRequest.data, null, 4)}
+                  minLines={4}
+                  maxLines={100}
+                  width="100%"
+                  showPrintMargin={false}
+                  showGutter={false}
+                />
+              </div>
+            </Tab>
+            <Tab eventKey={2} title="Response">
+              {finalResponse.headers ? (
+                <div className={styles.add_mar_top}>
+                  <div className={styles.subheading_text}>Headers</div>
+                  <AceEditor
+                    mode="json"
+                    theme="github"
+                    name="response"
+                    value={JSON.stringify(finalResponse.headers, null, 4)}
+                    minLines={4}
+                    maxLines={20}
+                    width="100%"
+                    showPrintMargin={false}
+                    showGutter={false}
+                  />
+                </div>
+              ) : null}
+              <div className={styles.add_mar_top}>
+                <div
+                  className={
+                    styles.subheading_text + ' col-md-6 ' + styles.padd_remove
+                  }
+                >
+                  {finalResponse.status_code ? 'Payload' : 'Error'}
+                </div>
+                <div
+                  className={
+                    styles.status_code_right + ' col-md-6 ' + styles.padd_remove
+                  }
+                >
+                  {finalResponse.status_code
+                    ? [
+                      'Status Code: ',
+                      finalResponse.status_code === 200 ? (
+                        <i
+                          className={
+                            styles.invocationSuccess + ' fa fa-check'
+                          }
+                        />
+                      ) : (
+                        <i
+                          className={
+                            styles.invocationFailure + ' fa fa-times'
+                          }
+                        />
+                      ),
+                      finalResponse.status_code,
+                      ' ',
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={tooltip.statusCodeDescription}
+                      >
+                        <i
+                          className="fa fa-question-circle"
+                          aria-hidden="true"
+                        />
+                      </OverlayTrigger>,
+                    ]
+                    : null}
+                </div>
+                <AceEditor
+                  mode="json"
+                  theme="github"
+                  name="response"
+                  value={JSON.stringify(finalResponse.data, null, 4)}
+                  minLines={4}
+                  maxLines={100}
+                  width="100%"
+                  showPrintMargin={false}
+                  showGutter={false}
+                />
+              </div>
+            </Tab>
+          </Tabs>
+        </div>
+      );
+    };
 
     return (
       <div className={styles.container + ' container-fluid'}>
@@ -287,9 +379,11 @@ class StreamingLogs extends Component {
         />
         <br />
         <div className={'hide'}>
-          <button
+          <Button
             onClick={this.watchChanges.bind(this)}
-            className={styles.watchBtn + ' btn btn-default'}
+            className={styles.watchBtn}
+            color="white"
+            size="sm"
             data-test="run-query"
           >
             {this.state.isWatching ? (
@@ -302,7 +396,7 @@ class StreamingLogs extends Component {
                 Stream Logs <i className={'fa fa-play'} />
               </span>
             )}
-          </button>
+          </Button>
         </div>
         {invocationRowsData.length ? (
           <div className={styles.streamingLogs + ' streamingLogs'}>
@@ -315,9 +409,11 @@ class StreamingLogs extends Component {
                   onChange={this.filterAll.bind(this)}
                 />
               </div>
-              <button
+              <Button
                 onClick={this.handleNewerEvents.bind(this)}
-                className={styles.newBtn + ' btn btn-default'}
+                className={styles.add_mar_right}
+                color="white"
+                size="sm"
               >
                 {log.isLoadingNewer ? (
                   <span>
@@ -326,7 +422,7 @@ class StreamingLogs extends Component {
                 ) : (
                   <span>Load newer logs</span>
                 )}
-              </button>
+              </Button>
               {!log.isNewAvailable ? (
                 <span> No new logs available at this time </span>
               ) : null}
@@ -334,6 +430,7 @@ class StreamingLogs extends Component {
             <ReactTable
               data={invocationRowsData}
               columns={invocationGridHeadings}
+              minRows={0}
               showPagination={false}
               filtered={this.state.filtered}
               pageSize={
@@ -341,150 +438,14 @@ class StreamingLogs extends Component {
                   ? this.state.filtered.length
                   : invocationRowsData.length
               }
-              SubComponent={logRow => {
-                const finalIndex = logRow.index;
-                const finalRequest = requestData[finalIndex];
-                const finalResponse = responseData[finalIndex];
-                return (
-                  <div style={{ padding: '20px' }}>
-                    <Tabs
-                      animation={false}
-                      defaultActiveKey={1}
-                      id="requestResponseTab"
-                    >
-                      <Tab eventKey={1} title="Request">
-                        {finalRequest.headers ? (
-                          <div className={styles.add_mar_top}>
-                            <div className={styles.subheading_text}>
-                              Headers
-                            </div>
-                            <AceEditor
-                              mode="json"
-                              theme="github"
-                              name="headers"
-                              value={JSON.stringify(
-                                finalRequest.headers,
-                                null,
-                                4
-                              )}
-                              minLines={4}
-                              maxLines={20}
-                              width="100%"
-                              showPrintMargin={false}
-                              showGutter={false}
-                            />
-                          </div>
-                        ) : null}
-                        <div className={styles.add_mar_top}>
-                          <div className={styles.subheading_text}>Payload</div>
-                          <AceEditor
-                            mode="json"
-                            theme="github"
-                            name="payload"
-                            value={JSON.stringify(finalRequest.data, null, 4)}
-                            minLines={4}
-                            maxLines={100}
-                            width="100%"
-                            showPrintMargin={false}
-                            showGutter={false}
-                          />
-                        </div>
-                      </Tab>
-                      <Tab eventKey={2} title="Response">
-                        {finalResponse.headers ? (
-                          <div className={styles.add_mar_top}>
-                            <div className={styles.subheading_text}>
-                              Headers
-                            </div>
-                            <AceEditor
-                              mode="json"
-                              theme="github"
-                              name="response"
-                              value={JSON.stringify(
-                                finalResponse.headers,
-                                null,
-                                4
-                              )}
-                              minLines={4}
-                              maxLines={20}
-                              width="100%"
-                              showPrintMargin={false}
-                              showGutter={false}
-                            />
-                          </div>
-                        ) : null}
-                        <div className={styles.add_mar_top}>
-                          <div
-                            className={
-                              styles.subheading_text +
-                              ' col-md-6 ' +
-                              styles.padd_remove
-                            }
-                          >
-                            {finalResponse.status_code ? 'Payload' : 'Error'}
-                          </div>
-                          <div
-                            className={
-                              styles.status_code_right +
-                              ' col-md-6 ' +
-                              styles.padd_remove
-                            }
-                          >
-                            {finalResponse.status_code
-                              ? [
-                                  'Status Code: ',
-                                  finalResponse.status_code === 200 ? (
-                                    <i
-                                      className={
-                                        styles.invocationSuccess +
-                                        ' fa fa-check'
-                                      }
-                                    />
-                                  ) : (
-                                    <i
-                                      className={
-                                        styles.invocationFailure +
-                                        ' fa fa-times'
-                                      }
-                                    />
-                                  ),
-                                  finalResponse.status_code,
-                                  ' ',
-                                  <OverlayTrigger
-                                    placement="top"
-                                    overlay={tooltip.statusCodeDescription}
-                                  >
-                                    <i
-                                      className="fa fa-question-circle"
-                                      aria-hidden="true"
-                                    />
-                                  </OverlayTrigger>,
-                                ]
-                              : null}
-                          </div>
-                          <AceEditor
-                            mode="json"
-                            theme="github"
-                            name="response"
-                            value={JSON.stringify(finalResponse.data, null, 4)}
-                            minLines={4}
-                            maxLines={100}
-                            width="100%"
-                            showPrintMargin={false}
-                            showGutter={false}
-                          />
-                        </div>
-                      </Tab>
-                    </Tabs>
-                  </div>
-                );
-              }}
+              SubComponent={subComponent}
             />
             <div className={styles.loadOlder}>
               {log.isOldAvailable ? (
-                <button
+                <Button
                   onClick={this.handleOlderEvents.bind(this)}
-                  className={styles.oldBtn + ' btn btn-default'}
+                  color="white"
+                  size="sm"
                 >
                   {log.isLoadingOlder ? (
                     <span>
@@ -493,7 +454,7 @@ class StreamingLogs extends Component {
                   ) : (
                     <span>Load older logs</span>
                   )}
-                </button>
+                </Button>
               ) : (
                 <div> No more logs available </div>
               )}

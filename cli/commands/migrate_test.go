@@ -28,7 +28,8 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadata = map[string][]byte{
-	"metadata": []byte(`query_templates: []
+	"metadata": []byte(`functions: []
+query_templates: []
 remote_schemas: []
 tables:
 - array_relationships: []
@@ -40,7 +41,8 @@ tables:
   table: test
   update_permissions: []
 `),
-	"empty-metadata": []byte(`query_templates: []
+	"empty-metadata": []byte(`functions: []
+query_templates: []
 remote_schemas: []
 tables: []
 `),
@@ -228,5 +230,5 @@ func compareMetadata(t testing.TB, metadataFile string, actualData []byte) {
 	if err != nil {
 		t.Fatalf("error reading metadata %s", err)
 	}
-	assert.Equal(t, actualData, data)
+	assert.Equal(t, string(actualData), string(data))
 }

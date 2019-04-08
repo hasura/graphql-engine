@@ -20,7 +20,6 @@ module Hasura.RQL.Types.Error
          -- Aeson helpers
        , runAesonParser
        , decodeValue
-       , decodeFromBS
 
          -- Modify error messages
        , modifyErr
@@ -33,6 +32,7 @@ module Hasura.RQL.Types.Error
        , indexedForM
        , indexedMapM
        , indexedForM_
+       , indexedMapM_
        ) where
 
 import           Data.Aeson
@@ -42,7 +42,6 @@ import qualified Database.PG.Query    as Q
 import           Hasura.Prelude
 import           Text.Show            (Show (..))
 
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text            as T
 import qualified Network.HTTP.Types   as N
 
@@ -276,6 +275,10 @@ indexedForM_ l f =
   forM_ (zip [0..] l) $ \(i, a) ->
     withPathE (Index i) (f a)
 
+indexedMapM_ :: (QErrM m)
+            => (a -> m ()) -> [a] -> m ()
+indexedMapM_ = flip indexedForM_
+
 liftIResult :: (QErrM m) => IResult a -> m a
 liftIResult (IError path msg) =
   throwError $ QErr path N.status400 (T.pack $ formatMsg msg) ParseFailed Nothing
@@ -297,6 +300,3 @@ runAesonParser p =
 
 decodeValue :: (FromJSON a, QErrM m) => Value -> m a
 decodeValue = liftIResult . ifromJSON
-
-decodeFromBS :: (FromJSON a, QErrM m) => BL.ByteString -> m a
-decodeFromBS = either (throw500 . T.pack) decodeValue . eitherDecode

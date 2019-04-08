@@ -50,6 +50,15 @@ Postgres Auditing
 
 - :doc:`Auditing tables <auditing-tables>`
 
+Telemetry
+---------
+
+- :doc:`Guide on telemetry and instructions to opt-out <telemetry>`
+
+Code Editor Integrations
+------------------------
+
+- :doc:`Guides for configuring code editors with Hasura GraphQL Engine schema <code-editor-integrations/index>`
 
 .. toctree::
    :maxdepth: 1
@@ -61,3 +70,5 @@ Postgres Auditing
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>
    Auditing tables <auditing-tables>
+   Telemetry <telemetry>
+   Code Editor Integrations <code-editor-integrations/index>

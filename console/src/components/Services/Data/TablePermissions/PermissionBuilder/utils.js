@@ -1,10 +1,36 @@
-export const boolOperators = {
-  and: '_and',
-  not: '_not',
-  or: '_or',
+/* Constants */
+
+export const PGTypes = {
+  boolean: ['boolean'],
+  uuid: ['uuid'],
+  numeric: [
+    'smallint',
+    'integer',
+    'bigint',
+    'decimal',
+    'numeric',
+    'real',
+    'double precision',
+  ],
+  character: ['character', 'character varying', 'text'],
+  dateTime: [
+    'timestamp',
+    'timestamp with time zone',
+    'date',
+    'time',
+    'time with time zone',
+    'interval',
+  ],
+  json: ['json', 'jsonb'],
+  geometry: ['geometry'],
+  geography: ['geography'],
 };
 
-export const columnOperators = [
+export const notBoolOperators = ['_not'];
+
+export const andOrBoolOperators = ['_and', '_or'];
+
+export const genericSimpleColumnOperators = [
   '_eq',
   '_ne',
   '_in',
@@ -13,54 +39,85 @@ export const columnOperators = [
   '_lt',
   '_gte',
   '_lte',
-  '_like',
-  '_nlike',
-  '_similar',
-  '_nsimilar',
-  '_is_null',
 ];
 
-export const arrayColumnOperators = ['_in', '_nin'];
+export const genericArrayColumnOperators = ['_in', '_nin'];
 
-export const boolColumnOperators = ['_is_null'];
+export const genericBoolColumnOperators = ['_is_null'];
 
-export const legacyOperatorsMap = {
-  $and: '_and',
-  $or: '_or',
-  $not: '_not',
-  $eq: '_eq',
-  $ne: '_ne',
-  $in: '_in',
-  $nin: '_nin',
-  $gt: '_gt',
-  $lt: '_lt',
-  $gte: '_gte',
-  $lte: '_lte',
-  $like: '_like',
-  $nlike: '_nlike',
-  $similar: '_similar',
-  $nsimilar: '_nsimilar',
-  $is_null: '_is_null',
-};
+export const textOnlyColumnOperators = [
+  '_like',
+  '_nlike',
+  '_ilike',
+  '_nilike',
+  '_similar',
+  '_nsimilar',
+];
+
+export const jsonColumnOperators = ['_contains', '_contained_in'];
+
+export const geometryOnlyColumnOperators = [
+  '_st_contains',
+  '_st_crosses',
+  '_st_equals',
+  '_st_overlaps',
+  '_st_touches',
+  '_st_within',
+];
+
+export const geographyColumnOperators = ['_st_d_within', '_st_intersects'];
+
+export const boolOperators = notBoolOperators.concat(andOrBoolOperators);
+
+export const geometryColumnOperators = geographyColumnOperators.concat(
+  geometryOnlyColumnOperators
+);
+
+export const columnOperators = genericSimpleColumnOperators
+  .concat(genericArrayColumnOperators)
+  .concat(genericBoolColumnOperators)
+  .concat(textOnlyColumnOperators)
+  .concat(jsonColumnOperators)
+  .concat(geometryColumnOperators);
+
+export const genericOperators = genericSimpleColumnOperators
+  .concat(genericArrayColumnOperators)
+  .concat(genericBoolColumnOperators);
+
+export const textColumnOperators = genericOperators.concat(
+  textOnlyColumnOperators
+);
+
+export const allOperators = boolOperators.concat(columnOperators);
+
+/* Util functions */
 
 export function isNotOperator(value) {
-  return value === boolOperators.not;
+  return notBoolOperators.includes(value);
 }
 
 export function isAndOrOperator(value) {
-  return value === boolOperators.or || value === boolOperators.and;
+  return andOrBoolOperators.includes(value);
 }
 
-export function isArrayColumnOperator(value) {
-  return arrayColumnOperators.indexOf(value) !== -1;
+export function isArrayTypeColumnOperator(value) {
+  return genericArrayColumnOperators.includes(value);
 }
 
-export function isBoolColumnOperator(value) {
-  return boolColumnOperators.indexOf(value) !== -1;
+export function isBoolTypeColumnOperator(value) {
+  return genericBoolColumnOperators.includes(value);
+}
+
+export function isJsonTypeColumnOperator(value) {
+  return jsonColumnOperators.concat(geometryColumnOperators).includes(value);
 }
 
 export function isColumnOperator(value) {
-  return columnOperators.indexOf(value) !== -1;
+  return columnOperators.includes(value);
+}
+
+export function getLegacyOperator(operator) {
+  return operator.replace('_', '$');
 }
 
 export function addToPrefix(prefix, value) {
@@ -122,27 +179,33 @@ export function getTableDef(tableName, schema) {
 export function getRefTable(rel, tableSchema) {
   let _refTable = null;
 
-  if (rel.rel_type === 'array') {
-    if (rel.rel_def.foreign_key_constraint_on) {
-      _refTable = rel.rel_def.foreign_key_constraint_on.table;
-    } else if (rel.rel_def.manual_configuration) {
-      _refTable = rel.rel_def.manual_configuration.remote_table;
-    }
+  // if manual relationship
+  if (rel.rel_def.manual_configuration) {
+    _refTable = rel.rel_def.manual_configuration.remote_table;
   }
 
-  if (rel.rel_type === 'object') {
-    if (rel.rel_def.foreign_key_constraint_on) {
+  // if foreign-key based relationship
+  if (rel.rel_def.foreign_key_constraint_on) {
+    // if array relationship
+    if (rel.rel_type === 'array') {
+      _refTable = rel.rel_def.foreign_key_constraint_on.table;
+    }
+
+    // if object relationship
+    if (rel.rel_type === 'object') {
       const fkCol = rel.rel_def.foreign_key_constraint_on;
 
       for (let i = 0; i < tableSchema.foreign_key_constraints.length; i++) {
         const fkConstraint = tableSchema.foreign_key_constraints[i];
-        if (fkCol === Object.keys(fkConstraint.column_mapping)[0]) {
-          _refTable = fkConstraint.ref_table;
+        const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
+        if (fkCol === fkConstraintCol) {
+          _refTable = getTableDef(
+            fkConstraint.ref_table,
+            fkConstraint.ref_table_table_schema
+          );
           break;
         }
       }
-    } else if (rel.rel_def.manual_configuration) {
-      _refTable = rel.rel_def.manual_configuration.remote_table;
     }
   }
 
@@ -151,6 +214,38 @@ export function getRefTable(rel, tableSchema) {
   }
 
   return _refTable;
+}
+
+export function getColumnType(columnName, tableSchema) {
+  let _columnType = '';
+
+  if (!tableSchema || !columnName) {
+    return _columnType;
+  }
+
+  const columnSchema = tableSchema.columns.find(
+    _columnSchema => _columnSchema.column_name === columnName
+  );
+
+  if (columnSchema) {
+    _columnType = columnSchema.data_type;
+
+    if (_columnType === 'USER-DEFINED') {
+      _columnType = columnSchema.udt_name;
+    }
+  }
+
+  return _columnType;
+}
+
+export function isJsonString(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+
+  return true;
 }
 
 export function getAllJsonPaths(json, prefix = '') {

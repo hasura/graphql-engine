@@ -17,9 +17,9 @@ endpoint to Hasura. Your GraphQL service can be written in any language or frame
 This is what Hasura running with "Remote schemas" looks like:
 
 
-.. image:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
+.. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
-   :width: 500px
+   :width: 75%
 
 .. note::
 
@@ -67,17 +67,21 @@ To merge your remote schema with GraphQL Engine's auto-generated schema:
 
 Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button
 
-.. image:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
+.. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
 
 You need to enter the following information:
 
 - **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
-  manually or by specifying an environment variable that contains this information. If you want to specify an
-  environment variable, please note that currently there is no validation that the environment variable is
-  actually available at the time of this configuration, so any errors in this configuration will result in a
-  runtime error.
+  manually or by specifying an environment variable that contains this information.
+
+  .. note::
+
+    During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
+    the server endpoint on the host. i.e. use ``host.docker.internal`` on mac or ``docker.for.win.localhost`` on
+    windows.
+
 - **Headers**: configure the headers to be sent to your custom GraphQL server.
 
   - Toggle forwarding all headers sent by the client (when making a GraphQL query) to your remote GraphQL server.
@@ -121,13 +125,8 @@ Current limitations
 - Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level fields have to be
   from the same GraphQL server.
 - Subscriptions on remote GraphQL servers are not supported.
-- Interfaces_ and Unions_ are not supported - if a remote schema has interfaces/unions, an error will be thrown if
-  you try to merge it.
 
 These limitations will be addressed in upcoming versions.
-
-.. _Interfaces: https://graphql.github.io/learn/schema/#interfaces
-.. _Unions: https://graphql.github.io/learn/schema/#union-types
 
 Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

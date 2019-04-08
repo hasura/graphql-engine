@@ -11,11 +11,13 @@ module Hasura.RQL.Types
        , withUserInfo
 
        , UserInfoM(..)
-       , RespBody
        , successMsg
 
        , HasHttpManager (..)
        , HasGCtxMap (..)
+
+       , SQLGenCtx(..)
+       , HasSQLGenCtx(..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -42,6 +44,7 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Common       as R
@@ -50,7 +53,8 @@ import           Hasura.RQL.Types.Error        as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.Subscribe    as R
+import           Hasura.RQL.Types.EventTrigger as R
+
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC
@@ -60,7 +64,6 @@ import qualified Database.PG.Query             as Q
 import           Data.Aeson
 
 import qualified Data.Aeson.Text               as AT
-import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
@@ -72,12 +75,11 @@ getFieldInfoMap
 getFieldInfoMap tn =
   fmap tiFieldInfoMap . M.lookup tn . scTables
 
-type RespBody = BL.ByteString
-
 data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
+  , qcSQLCtx      :: !SQLGenCtx
   } deriving (Show, Eq)
 
 class HasQCtx a where
@@ -86,8 +88,8 @@ class HasQCtx a where
 instance HasQCtx QCtx where
   getQCtx = id
 
-mkAdminQCtx :: SchemaCache -> QCtx
-mkAdminQCtx = QCtx adminUserInfo
+mkAdminQCtx :: Bool -> SchemaCache -> QCtx
+mkAdminQCtx b sc = QCtx adminUserInfo sc $ SQLGenCtx b
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -136,11 +138,22 @@ instance UserInfoM P1 where
 instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
+instance HasSQLGenCtx P1 where
+  askSQLGenCtx = qcSQLCtx <$> ask
+
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
 
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
+
+class (Monad m) => HasSQLGenCtx m where
+  askSQLGenCtx :: m SQLGenCtx
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -235,11 +248,13 @@ liftP1
   :: ( QErrM m
      , UserInfoM m
      , CacheRM m
+     , HasSQLGenCtx m
      ) => P1 a -> m a
 liftP1 m = do
   ui <- askUserInfo
   sc <- askSchemaCache
-  let qCtx = QCtx ui sc
+  sqlCtx <- askSQLGenCtx
+  let qCtx = QCtx ui sc sqlCtx
   liftP1WithQCtx qCtx m
 
 liftP1WithQCtx
@@ -337,7 +352,7 @@ defaultTxErrorHandler txe =
   let e = err500 PostgresError "postgres query error"
   in e {qeInternal = Just $ toJSON txe}
 
-successMsg :: BL.ByteString
+successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

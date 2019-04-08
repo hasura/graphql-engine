@@ -22,7 +22,7 @@ const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
 const LOAD_PROCESSED_EVENTS = 'Event/LOAD_PROCESSED_EVENTS';
 const LOAD_PENDING_EVENTS = 'Event/LOAD_PENDING_EVENTS';
 const LOAD_RUNNING_EVENTS = 'Event/LOAD_RUNNING_EVENTS';
-const ACCESS_KEY_ERROR = 'Event/ACCESS_KEY_ERROR';
+const ADMIN_SECRET_ERROR = 'Event/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
@@ -51,6 +51,11 @@ const loadTriggers = () => (dispatch, getState) => {
             schema: 'hdb_catalog',
           },
           columns: ['*'],
+          order_by: {
+            column: 'name',
+            type: 'asc',
+            nulls: 'last',
+          },
         },
       },
       initQueries.loadSchema,
@@ -237,7 +242,7 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
                     columns: ['*'],
                   },
                 ],
-                where: { event: { trigger_id: triggerData[0].id } },
+                where: { event: { trigger_name: triggerData[0].name } },
                 order_by: ['-created_at'],
                 limit: 10,
               },
@@ -451,9 +456,7 @@ const makeMigrationCall = (
 const deleteTrigger = triggerName => {
   return (dispatch, getState) => {
     dispatch(showSuccessNotification('Deleting Trigger...'));
-
-    const triggerList = getState().triggers.triggerList;
-    const currentTriggerInfo = triggerList.filter(
+    const currentTriggerInfo = getState().triggers.triggerList.filter(
       t => t.name === triggerName
     )[0];
     // apply migrations
@@ -472,9 +475,17 @@ const deleteTrigger = triggerName => {
           name: currentTriggerInfo.table_name,
           schema: currentTriggerInfo.schema_name,
         },
-        webhook: currentTriggerInfo.webhook,
+        retry_conf: { ...currentTriggerInfo.configuration.retry_conf },
+        ...currentTriggerInfo.configuration.definition,
+        headers: [...currentTriggerInfo.configuration.headers],
       },
     };
+    if (currentTriggerInfo.configuration.webhook_from_env) {
+      downPayload.args.webhook_from_env =
+        currentTriggerInfo.configuration.webhook_from_env;
+    } else {
+      downPayload.args.webhook = currentTriggerInfo.configuration.webhook;
+    }
     const upQueryArgs = [];
     upQueryArgs.push(payload);
     const downQueryArgs = [];
@@ -494,7 +505,8 @@ const deleteTrigger = triggerName => {
     const customOnSuccess = () => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
-      dispatch(loadTriggers()).then(() => dispatch(push('/manage/triggers')));
+      dispatch(showSuccessNotification('Trigger Deleted'));
+      dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
       return;
     };
     const customOnError = () => {
@@ -607,8 +619,8 @@ const eventReducer = (state = defaultState, action) => {
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
-    case ACCESS_KEY_ERROR:
-      return { ...state, accessKeyError: action.data };
+    case ADMIN_SECRET_ERROR:
+      return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
       return { ...state, dataHeaders: action.data };
     case MODAL_OPEN:
@@ -655,7 +667,7 @@ export {
   setRedeliverEvent,
   loadEventInvocations,
   redeliverEvent,
-  ACCESS_KEY_ERROR,
+  ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   LISTING_TRIGGER,
   MODAL_OPEN,

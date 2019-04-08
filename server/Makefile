@@ -3,8 +3,8 @@ registry := hasura
 version  := $(shell ../scripts/get-version.sh)
 
 # TODO: needs to be replaced with something like yq
-stack_resolver := $(shell grep '^resolver:' stack.yaml | awk '{print $$2;}')
-packager_ver := 1.2
+stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
+packager_ver := 20190326
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 

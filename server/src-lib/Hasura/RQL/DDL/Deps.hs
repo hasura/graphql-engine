@@ -9,15 +9,15 @@ module Hasura.RQL.DDL.Deps
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet        as HS
-import qualified Data.Text           as T
-import qualified Database.PG.Query   as Q
+import qualified Data.HashSet      as HS
+import qualified Data.Text         as T
+import qualified Database.PG.Query as Q
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 purgeRel :: QualifiedTable -> RelName -> Q.Tx ()
-purgeRel (QualifiedTable sn tn) rn =
+purgeRel (QualifiedObject sn tn) rn =
   Q.unitQ [Q.sql|
            DELETE FROM hdb_catalog.hdb_relationship
                  WHERE table_schema = $1
@@ -45,8 +45,8 @@ parseDropNotice t = do
   where
     dottedTxtToQualTable dt =
       case T.split (=='.') dt of
-        [tn]     -> return $ QualifiedTable publicSchema $ TableName tn
-        [sn, tn] -> return $ QualifiedTable (SchemaName sn) $ TableName tn
+        [tn]     -> return $ QualifiedObject publicSchema $ TableName tn
+        [sn, tn] -> return $ QualifiedObject (SchemaName sn) $ TableName tn
         _        -> throw400 ParseFailed $ "parsing dotted table failed : " <> dt
 
     getCascadeLines = do

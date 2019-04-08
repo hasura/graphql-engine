@@ -33,43 +33,52 @@ upsert request in case of conflicts.
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the author table or, if the primary key constraint, ``author_pkey``, is violated, update the columns
-specified in ``update_columns``:
+Insert a new object in the ``article`` table or, if the primary key constraint, ``article_pkey``, is violated, update
+the columns specified in ``update_columns``:
 
 .. graphiql::
   :view_only:
   :query:
-    mutation upsert_author {
-      insert_author(
+    mutation upsert_article {
+      insert_article (
         objects: [
-          {name: "John", id: 10}
+          {
+            id: 2,
+            title: "ex quis mattis",
+            content: "Pellentesque lobortis quam non leo faucibus efficitur",
+            published_on: "2018-10-12"
+          }
         ],
         on_conflict: {
-          constraint: author_pkey,
-          update_columns: [name]
+          constraint: article_pkey,
+          update_columns: [title, content]
         }
       ) {
-        affected_rows
-        returning{
+        returning {
           id
-          name
+          title
+          content
+          published_on
         }
       }
     }
   :response:
     {
       "data": {
-        "insert_author": {
-          "affected_rows": 1,
+        "insert_article": {
           "returning": [
-             {
-               "name": "John",
-               "id": 10
-             }
-           ]
+            {
+              "id": 2,
+              "title": "ex quis mattis",
+              "content": "Pellentesque lobortis quam non leo faucibus efficitur",
+              "published_on": "2018-06-10"
+            }
+          ]
         }
       }
     }
+
+The ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
 
 Ignore request on conflict
 --------------------------
@@ -101,13 +110,12 @@ the author table or, if the unique constraint, ``author_name_key``, is violated,
       }
     }
 
-In this case, the insert mutation is ignored because there is a conflict.
+In this case, the insert mutation is ignored because there is a conflict and ``update_columns`` is empty.
 
 
 Upsert in nested mutations
 --------------------------
 You can specify ``on_conflict`` clause while inserting nested objects
-
 
 .. graphiql::
   :view_only:
@@ -115,8 +123,9 @@ You can specify ``on_conflict`` clause while inserting nested objects
     mutation upsert_author_article {
       insert_author(
         objects: [
-          { name: "John",
+          {
             id: 10,
+            name: "John",
             articles: {
               data: [
                 {
@@ -146,9 +155,15 @@ You can specify ``on_conflict`` clause while inserting nested objects
     }
 
 
-.. note::
+.. admonition:: Edge-cases
 
-  Inserting nested objects fails when:
+  Nested upserts will fail when:
 
-  - Any of upsert in object relationships does not affect any rows (``update_columns: []``)
-  - Array relationships are queued for insert and parent insert does not affect any rows (``update_columns: []``)
+  - In case of an array relationship, parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
+    and a conflict occurs)
+  - In case of an object relationship, nested object upsert does not affect any row (i.e. ``update_columns: []`` for
+    nested object and a conflict occurs)
+
+  To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a
+  conflict, the conflicted column will be updated with the new value (which is the same value it had before and hence
+  will effectively leave it unchanged) and will allow the upsert to go through.

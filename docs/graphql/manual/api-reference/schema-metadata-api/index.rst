@@ -1,12 +1,14 @@
-Schema/Metadata API Reference
-=============================
+.. _metadata_apis:
+
+Schema / Metadata API Reference
+===============================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-The Schema/Metadata API provides the following features:
+The Schema / Metadata API provides the following features:
 
 1. Execute SQL on the underlying Postgres database, supports schema modifying actions.
 2. Modify Hasura metadata (permissions rules and relationships).
@@ -30,12 +32,17 @@ Request structure
       "args": <args-object>
    }
 
-Body syntax: :ref:`Query <query_syntax>`
+Request body
+^^^^^^^^^^^^
 
-.. _query_syntax:
+.. parsed-literal::
 
-``Query``
-^^^^^^^^^
+   Query_
+
+.. _Query:
+
+Query
+*****
 
 .. list-table::
    :header-rows: 1
@@ -60,7 +67,11 @@ The various types of queries are listed in the following table:
 
    * - ``type``
      - ``args``
-     - ``Synopsis``
+     - Synopsis
+
+   * - **bulk**
+     - :ref:`Query <Query>` array
+     - Execute multiple operations in a single query
 
    * - :ref:`run_sql`
      - :ref:`run_sql_args <run_sql_syntax>`
@@ -73,6 +84,14 @@ The various types of queries are listed in the following table:
    * - :ref:`untrack_table`
      - :ref:`untrack_table_args <untrack_table_syntax>`
      - Remove a table/view
+
+   * - :ref:`track_function`
+     - :ref:`FunctionName <FunctionName>`
+     - Add a SQL function
+
+   * - :ref:`untrack_function`
+     - :ref:`FunctionName <FunctionName>`
+     - Remove a SQL function
 
    * - :ref:`create_object_relationship`
      - :ref:`create_object_relationship_args <create_object_relationship_syntax>`
@@ -126,10 +145,6 @@ The various types of queries are listed in the following table:
      - :ref:`set_permission_comment_args <set_permission_comment_syntax>`
      - Set comment on an existing permission
 
-   * - ``"bulk"``
-     - :ref:`Query <query_syntax>` array
-     - Execute multiple operations in a single query
-
    * - :ref:`create_event_trigger`
      - :ref:`create_event_trigger_args <create_event_trigger_syntax>`
      - Create or replace event trigger
@@ -138,13 +153,31 @@ The various types of queries are listed in the following table:
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
 
+   * - :ref:`export_metadata`
+     - ``{}``
+     - Export the current metadata
+
+   * - :ref:`replace_metadata`
+     - :ref:`replace_metadata_args <replace_metadata_syntax>`
+     - Import and replace existing metadata
+
+   * - :ref:`reload_metadata`
+     - ``{}``
+     - Reload changes to the underlying Postgres DB
+
+   * - :ref:`clear_metadata`
+     - ``{}``
+     - Clear/wipe-out the current metadata state form server
+
 **See:**
 
 - :doc:`Run SQL <run-sql>`
 - :doc:`Tables/Views <table-view>`
+- :doc:`Custom SQL Functions <custom-functions>`
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
+- :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
 ------------------
@@ -203,8 +236,10 @@ Error codes
 
   Run SQL <run-sql>
   Tables/Views <table-view>
+  Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
+  Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
 

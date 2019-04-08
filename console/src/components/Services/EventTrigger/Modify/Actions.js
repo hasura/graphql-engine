@@ -6,6 +6,7 @@ import {
   loadProcessedEvents,
 } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+import { showErrorNotification } from '../Notification';
 
 const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
@@ -17,8 +18,10 @@ export const setWebhookUrlType = data => ({ type: SET_WEBHOOK_URL_TYPE, data });
 
 const SET_RETRY_NUM = 'ModifyTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'ModifyTrigger/SET_RETRY_INTERVAL';
+const SET_RETRY_TIMEOUT = 'ModifyTrigger/SET_RETRY_TIMEOUT';
 export const setRetryNum = data => ({ type: SET_RETRY_NUM, data });
 export const setRetryInterval = data => ({ type: SET_RETRY_INTERVAL, data });
+export const setRetryTimeout = data => ({ type: SET_RETRY_TIMEOUT, data });
 
 const TOGGLE_COLUMN = 'ModifyTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE = 'ModifyTrigger/TOGGLE_QUERY_TYPE_SELECTED';
@@ -59,6 +62,16 @@ export const setHeaderValue = (data, index) => ({
 
 export const REQUEST_ONGOING = 'ModifyTrigger/REQUEST_ONGOING';
 export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
+
+export const showValidationError = message => {
+  return dispatch => {
+    dispatch(
+      showErrorNotification('Error modifying trigger!', 'Invalid input', '', {
+        custom: message,
+      })
+    );
+  };
+};
 
 export const save = (property, triggerName) => {
   return (dispatch, getState) => {
@@ -104,6 +117,7 @@ export const save = (property, triggerName) => {
       upPayload.retry_conf = {
         num_retries: modifyTrigger.retryConf.numRetrys,
         interval_sec: modifyTrigger.retryConf.retryInterval,
+        timeout_sec: modifyTrigger.retryConf.timeout,
       };
     } else if (property === 'headers') {
       delete upPayload.headers;
@@ -193,7 +207,11 @@ const reducer = (state = defaultState, action) => {
     case TOGGLE_QUERY_TYPE:
       const newDefinition = { ...state.definition };
       if (action.value) {
-        newDefinition[action.query] = { columns: action.columns };
+        if (action.query === 'update') {
+          newDefinition[action.query] = { columns: action.columns };
+        } else {
+          newDefinition[action.query] = { columns: '*' };
+        }
       } else {
         delete newDefinition[action.query];
       }
@@ -221,7 +239,6 @@ const reducer = (state = defaultState, action) => {
           [action.query]: { columns: [...queryColumns, action.column] },
         },
       };
-
     case SET_RETRY_NUM:
       return {
         ...state,
@@ -236,6 +253,14 @@ const reducer = (state = defaultState, action) => {
         retryConf: {
           ...state.retryConf,
           retryInterval: action.data,
+        },
+      };
+    case SET_RETRY_TIMEOUT:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          timeout: action.data,
         },
       };
     case ADD_HEADER:

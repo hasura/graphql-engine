@@ -2,12 +2,14 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification, showTempNotification } from '../../App/Actions';
 import { notifExpand, notifMsg } from '../../App/Actions';
+import Button from '../../Common/Button/Button';
 
-const styles = require('./TableCommon/Table.scss');
+const styles = require('../../Common/TableCommon/Table.scss');
 
 const showErrorNotification = (title, message, reqBody, error) => {
   let modMessage;
   let refreshBtn;
+
   if (
     error &&
     error.message &&
@@ -44,73 +46,89 @@ const showErrorNotification = (title, message, reqBody, error) => {
   } else {
     modMessage = error ? error : message;
   }
+
   let finalJson = error ? error.message : '{}';
+
   if (error && 'action' in error) {
     refreshBtn = (
-      <button
-        className={styles.yellow_button + ' ' + styles.add_mar_top_small}
+      <Button
+        className={styles.add_mar_top_small}
+        color="yellow"
+        size="sm"
         onClick={e => {
           e.preventDefault();
           window.location.reload();
         }}
       >
         Refresh Console
-      </button>
+      </Button>
     );
     finalJson = error.action;
   } else if (error && 'internal' in error) {
     finalJson = error.internal;
   }
+
   return dispatch => {
     const expandClicked = finalMsg => {
       // trigger a modal with a bigger view
       dispatch(notifExpand(true));
       dispatch(notifMsg(JSON.stringify(finalMsg, null, 4)));
     };
+
+    const getNotificationAction = () => {
+      let action = null;
+
+      if (reqBody) {
+        const notification = [
+          <div className={styles.aceBlock}>
+            <i
+              onClick={e => {
+                e.preventDefault();
+                expandClicked(finalJson);
+              }}
+              className={styles.aceBlockExpand + ' fa fa-expand'}
+            />
+            <AceEditor
+              readOnly
+              showPrintMargin={false}
+              mode="json"
+              showGutter={false}
+              theme="github"
+              name="notification-response"
+              value={JSON.stringify(finalJson, null, 4)}
+              minLines={1}
+              maxLines={15}
+              width="100%"
+            />
+            {refreshBtn}
+          </div>,
+        ];
+
+        action = {
+          label: 'Details',
+          callback: () => {
+            dispatch(
+              showNotification({
+                level: 'error',
+                title,
+                message: modMessage,
+                dismissible: 'button',
+                children: notification,
+              })
+            );
+          },
+        };
+      }
+
+      return action;
+    };
+
     dispatch(
       showNotification({
         level: 'error',
         title,
         message: modMessage,
-        action: reqBody
-          ? {
-            label: 'Details',
-            callback: () => {
-              dispatch(
-                showNotification({
-                  level: 'error',
-                  title,
-                  message: modMessage,
-                  dismissible: 'button',
-                  children: [
-                    <div className={styles.aceBlock}>
-                      <i
-                        onClick={e => {
-                          e.preventDefault();
-                          expandClicked(finalJson);
-                        }}
-                        className={styles.aceBlockExpand + ' fa fa-expand'}
-                      />
-                      <AceEditor
-                        readOnly
-                        showPrintMargin={false}
-                        mode="json"
-                        showGutter={false}
-                        theme="github"
-                        name="notification-response"
-                        value={JSON.stringify(finalJson, null, 4)}
-                        minLines={1}
-                        maxLines={15}
-                        width="100%"
-                      />
-                      {refreshBtn}
-                    </div>,
-                  ],
-                })
-              );
-            },
-          }
-          : null,
+        action: getNotificationAction(),
       })
     );
   };

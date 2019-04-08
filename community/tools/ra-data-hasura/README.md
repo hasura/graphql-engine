@@ -58,7 +58,7 @@ export default App;
 
 ```
 
-In case the server is configured with access key or auth, configure the appropriate headers and pass it to the provider.
+In case the server is configured with admin secret or auth, configure the appropriate headers and pass it to the provider.
 
 ## Known Issues
 
