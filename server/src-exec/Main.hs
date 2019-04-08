@@ -21,6 +21,7 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Db
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -195,7 +196,7 @@ main =  do
     runAsAdmin pgLogger ci httpManager m = do
       pool <- getMinimalPool pgLogger ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager False pool Q.Serializable m
+              httpManager False (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
 
     procConnInfo rci =

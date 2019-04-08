@@ -106,13 +106,12 @@ explainField userInfo gCtx sqlGenCtx fld =
 
 explainGQLQuery
   :: (MonadError QErr m, MonadIO m)
-  => Q.PGPool
-  -> Q.TxIsolation
+  => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
+explainGQLQuery pgExecCtx sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   execPlan <- E.getExecPlanPartial userInfo sc query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet, _) ->
@@ -122,7 +121,7 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   case rootSelSet of
     GV.RQuery selSet -> do
       let tx = mapM (explainField userInfo gCtx sqlGenCtx) (toList selSet)
-      plans <- liftIO (runExceptT $ runTx tx) >>= liftEither
+      plans <- liftIO (runExceptT $ runLazyTx pgExecCtx tx) >>= liftEither
       return $ encJFromJValue plans
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
@@ -131,5 +130,3 @@ explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-
-    runTx = runLazyTx pool iso

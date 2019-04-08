@@ -3,7 +3,6 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import qualified Data.ByteString.Lazy                   as BL
-import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
@@ -16,7 +15,7 @@ import qualified Hasura.GraphQL.Execute                 as E
 
 runGQ
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
+  => PGExecCtx
   -> UserInfo
   -> SQLGenCtx
   -> E.PlanCache
@@ -27,27 +26,26 @@ runGQ
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL userInfo sqlGenCtx planCache sc scVer manager reqHdrs req rawReq = do
+runGQ pgExecCtx userInfo sqlGenCtx planCache sc scVer manager reqHdrs req rawReq = do
   execPlan <- E.getResolvedExecPlan planCache userInfo sqlGenCtx sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pool isoL userInfo resolvedOp
+      runHasuraGQ pgExecCtx userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool
-  -> Q.TxIsolation
+  => PGExecCtx
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pool isoL userInfo resolvedOp = do
+runHasuraGQ pgExecCtx userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx    ->
-      runLazyTx' pool tx
+      runLazyTx' pgExecCtx tx
     E.ExOpMutation tx ->
-      runLazyTx pool isoL $ withUserInfo userInfo tx
+      runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

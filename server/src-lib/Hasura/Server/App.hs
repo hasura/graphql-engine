@@ -118,8 +118,7 @@ withSCUpdate scr action = do
 
 data ServerCtx
   = ServerCtx
-  { scIsolation    :: Q.TxIsolation
-  , scPGPool       :: Q.PGPool
+  { scPGExecCtx    :: PGExecCtx
   , scLogger       :: L.Logger
   , scCacheRef     :: SchemaCacheRef
   , scAuthMode     :: AuthMode
@@ -241,10 +240,9 @@ v1QueryHandler query = do
       schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
       httpMgr <- scManager . hcServerCtx <$> ask
       strfyNum <- scStringifyNum . hcServerCtx <$> ask
-      pool <- scPGPool . hcServerCtx <$> ask
-      isoL <- scIsolation . hcServerCtx <$> ask
+      pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pool isoL instanceId userInfo schemaCache httpMgr strfyNum query
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr strfyNum query
 
     -- Also update the schema cache
     dbActionReload = do
@@ -266,11 +264,10 @@ v1Alpha1GQHandler query = do
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
   (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   planCache <- _scrPlanCache . scCacheRef . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) planCache
+  GH.runGQ pgExecCtx userInfo (SQLGenCtx strfyNum) planCache
     sc scVer manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
@@ -278,10 +275,9 @@ gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
   sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
+  GE.explainGQLQuery pgExecCtx sc (SQLGenCtx strfyNum) query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -326,9 +322,11 @@ mkWaiApp
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis = do
+    let pgExecCtx = PGExecCtx pool isoLevel
+        pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager strfyNum pool Q.Serializable $ do
+                httpManager strfyNum pgExecCtxSer $ do
                   buildSchemaCache
                   liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
@@ -340,7 +338,7 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
 
 
     let schemaCacheRef = SchemaCacheRef cacheLock cacheRef planCache
-        serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
+        serverCtx = ServerCtx pgExecCtx (L.mkLogger loggerCtx)
                     schemaCacheRef mode httpManager
                     strfyNum apis instanceId
 
@@ -352,7 +350,7 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
 
     wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
                    sqlGenCtx cacheRef
-                   (runExceptT . runLazyTx pool isoLevel)
+                   (runExceptT . runLazyTx pgExecCtx)
                    corsPolicy planCache
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
