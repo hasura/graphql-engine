@@ -1,6 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs     #-}
-
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
   , GExPHasura(..)
@@ -35,13 +32,16 @@ import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
 
-data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet
+data GExPHasura
+  = GExPHasura !GCtx !VQ.RootSelSet
   deriving (Show, Eq)
 
-data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
+data GExPRemote
+  = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
-data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+data GQExecPlan
+  = GQExecPlan (Maybe GExPHasura) [GExPRemote]
   deriving (Show, Eq)
 
 data QueryParts
@@ -54,61 +54,51 @@ data QueryParts
 type SplitSelSets    = Map.HashMap VT.TypeLoc G.SelectionSet
 type SplitQueryParts = Map.HashMap VT.TypeLoc QueryParts
 
---(G.TypedOperationDefinition, [G.FragmentDefinition])
 
 getExecPlan
-  :: (MonadError QErr m, MonadIO m)
+  :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
   -> GraphQLRequest
   -> m GQExecPlan
 getExecPlan userInfo sc req = do
-
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-  -- TODO: this should not be required here
-  rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
 
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
-      selsetSplits = foldr (splitSelSet gCtx) mempty $ G._todSelectionSet opDef
-      querySplits = splitQuery opDef fragDefs selsetSplits
+      ssSplits = foldr (splitSelSet gCtx) mempty $ G._todSelectionSet opDef
+      querySplits = splitQuery opDef fragDefs ssSplits
       newQs = Map.map (transformGQRequest req) querySplits
 
   newRootSels <- forM (Map.toList newQs) $ \(tl, q) ->
-    flip runReaderT gCtx $ do
-      p <- VQ.getQueryParts q
-      (,) tl <$> VQ.validateGQ p
+    flip runReaderT gCtx $
+      (,) tl <$> (VQ.getQueryParts q >>= VQ.validateGQ)
 
-  let newReqs =
-        zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) (Map.toList newQs) newRootSels
+  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) (Map.toList newQs) newRootSels
 
   case newReqs of
     -- this shouldn't happen
     [] -> throw500 "unexpected plan"
 
-    [(VT.HasuraType, _)] -> return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet ) []
-    [(VT.RemoteType _ rsi, _)] -> return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
-    x -> do
-      plans <- mapM (toExecPlan gCtx) x
-      rs <- foldM combPlan (GQExecPlan Nothing []) plans
-      return rs
+    [(VT.HasuraType, (_, rootSelSet))] ->
+      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet) []
+    [(VT.RemoteType _ rsi, (_, rootSelSet))] ->
+      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
+    xs -> foldM (combPlan gCtx) (GQExecPlan Nothing []) xs
+
   where
     gCtxRoleMap = scGCtxMap sc
 
-    toExecPlan gCtx' r = case r of
-      (VT.HasuraType, (newq, _)) -> do
-        qParts <- flip runReaderT gCtx' $ VQ.getQueryParts newq
-        selSet <- runReaderT (VQ.validateGQ qParts) gCtx'
-        return $ GQExecPlan (Just $ GExPHasura gCtx' selSet) []
-      (VT.RemoteType _ rsi, (newq, rs)) ->
-        return $ GQExecPlan Nothing [GExPRemote rsi newq rs]
-
-    combPlan (GQExecPlan initHasuraPlan initRemPlans )(GQExecPlan hasuraPlan remotePlans) = case initHasuraPlan of
-      Nothing -> return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
-      Just plan  -> if Just plan == hasuraPlan
-        then return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
-        else throw500 "cannot combine multiple hasura plans"
+    combPlan gCtx plan (tl, (newq, rs)) = case tl of
+      VT.HasuraType -> do
+        let GQExecPlan hPlan remPlans = plan
+        case hPlan of
+          Nothing -> return $ GQExecPlan (Just $ GExPHasura gCtx rs) remPlans
+          Just _  -> throw500 "encountered more than one hasura plan!"
+      VT.RemoteType _ rsi -> do
+        let GQExecPlan hPlan remPlans = plan
+        return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans)
 
 
 splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
@@ -176,10 +166,10 @@ splitQuery opDef fragDefs qMap =
       in nub $ curFrags ++ otherFrags
 
     mkNewQParts frags selset varDefs =
-      let o = opDef { G._todSelectionSet = selset
-                    , G._todVariableDefinitions = varDefs
-                    }
-      in QueryParts o frags
+      let od = opDef { G._todSelectionSet = selset
+                     , G._todVariableDefinitions = varDefs
+                     }
+      in QueryParts od frags
 
 
 transformGQRequest :: GraphQLRequest -> QueryParts -> GraphQLRequest
