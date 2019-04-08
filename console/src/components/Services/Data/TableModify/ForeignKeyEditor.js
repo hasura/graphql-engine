@@ -12,11 +12,12 @@ import {
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 
+import styles from './ModifyTable.scss';
+
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
   dispatch,
-  styles,
   fkModify,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
@@ -82,7 +83,6 @@ const ForeignKeyEditor = ({
         foreignKeys={fkModify}
         orderedColumns={orderedColumns}
         dispatch={dispatch}
-        styles={styles}
         setForeignKeys={setForeignKeys}
       />
     );

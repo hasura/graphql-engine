@@ -4,12 +4,13 @@ import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector'
 import { getForeignKeyConfig } from '../Common/ReusableComponents/utils';
 import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 
+import styles from '../../../Common/TableCommon/Table.scss';
+
 const ForeignKeyWrapper = ({
   foreignKeys,
   allSchemas,
   columns,
   dispatch,
-  styles,
   fkToggled,
 }) => {
   // columns in the right order with their indices
@@ -43,7 +44,6 @@ const ForeignKeyWrapper = ({
         foreignKeys={foreignKeys}
         orderedColumns={orderedColumns}
         dispatch={dispatch}
-        styles={styles}
         setForeignKeys={setForeignKeys}
       />
     );

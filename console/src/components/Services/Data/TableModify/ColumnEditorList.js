@@ -12,13 +12,14 @@ import {
 import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
 
+import styles from './ModifyTable.scss';
+
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
   allowRename,
   columnEdit,
   dispatch,
-  styles,
   columnComments,
 }) => {
   const tablePrimaryKeyColumns = tableSchema.primary_key

@@ -134,7 +134,6 @@ class ModifyTable extends React.Component {
               allowRename={this.state.supportTableColumnRename}
               columnComments={columnComments}
               dispatch={dispatch}
-              styles={styles}
               currentSchema={currentSchema}
             />
             <hr />
@@ -155,7 +154,6 @@ class ModifyTable extends React.Component {
               currentSchema={currentSchema}
               allSchemas={allSchemas}
               dispatch={dispatch}
-              styles={styles}
               fkModify={fkModify}
             />
             <hr />

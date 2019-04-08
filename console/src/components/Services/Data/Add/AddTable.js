@@ -42,6 +42,8 @@ import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
+
+import styles from '../../../Common/TableCommon/Table.scss';
 /*
 const typeDescriptionDict = convertListToDictUsingKV(
   'value',
@@ -224,7 +226,6 @@ class AddTable extends Component {
       lastSuccess,
       internalError,
     } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.scss');
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
@@ -420,7 +421,6 @@ class AddTable extends Component {
               columns={columns}
               setPk={setPk}
               dispatch={dispatch}
-              styles={styles}
             />
             <hr />
             <h4 className={styles.subheading_text}>
@@ -443,7 +443,6 @@ class AddTable extends Component {
               tableName={tableName}
               foreignKeys={foreignKeys}
               dispatch={dispatch}
-              styles={styles}
               setForeignKeys={setForeignKeys}
               fkToggled={fkToggled}
             />
