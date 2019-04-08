@@ -393,9 +393,11 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         query <- parseBody
         v1Alpha1GQHandler query
 
+#ifdef InternalAPIs
     get "internal/plan_cache" $ do
       respJ <- liftIO $ E.dumpPlanCache $ _scrPlanCache $ scCacheRef serverCtx
       json respJ
+#endif
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
