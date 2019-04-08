@@ -27,7 +27,7 @@ const helpStr = `POST the SQL file contents to this URL:
 
 curl --data-binary @filename.sql https://hasura-edit-pg-dump.now.sh > newfile.sql
 
-Source code can be found athttps://github.com/hasura/graphql-engine/tree/master/scripts/edit-pg-dump `
+Source code can be found at https://github.com/hasura/graphql-engine/tree/master/scripts/edit-pg-dump`
 
 // Handler is the now.sh serverless handler
 func Handler(w http.ResponseWriter, r *http.Request) {
