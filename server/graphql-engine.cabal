@@ -22,6 +22,11 @@ flag developer
   default: False
   manual: True
 
+flag profile
+  description: compile with profile options set
+  default: False
+  manual: True
+
 flag local-console
   description: embeds resources needed by console and serves them at /static/
   default: False
@@ -278,8 +283,10 @@ library
                       NoImplicitPrelude
 
 
-  if flag(developer)
+  if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(developer)
+    cpp-options: -DInternalAPIs -DLocalConsole
   if flag(local-console)
     cpp-options: -DLocalConsole
 
