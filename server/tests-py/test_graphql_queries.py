@@ -370,6 +370,9 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_overloading_function_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
 
+    def test_query_get_test_uuid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
