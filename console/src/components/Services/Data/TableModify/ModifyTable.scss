@@ -33,13 +33,6 @@
   }
 }
 
-.activeEdit {
-  padding: 10px;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin-bottom: 15px;
-}
-
 .newRoleInput {
   margin-left: 20px;
   width: calc(100% - 40px);
@@ -271,6 +264,12 @@ hr {
 }
 
 .activeEdit {
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  overflow: auto;
+
   .editPermissionsHeading {
     font-weight: bold;
     font-size: 16px;

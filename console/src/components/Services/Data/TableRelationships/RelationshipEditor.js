@@ -107,7 +107,7 @@ class RelationshipEditor extends React.Component {
 
     const expanded = () => (
       <div className={styles.activeEdit}>
-        <div className={tableStyles.add_mar_top}>
+        <div>
           <Button
             color="white"
             size="xs"
