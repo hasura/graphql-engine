@@ -210,5 +210,5 @@ directories.
 
 This readme is available in the following translations:
 
-- [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [French :fr:](README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))

@@ -17,11 +17,11 @@ Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation
 
 ------------------
 
-![Démo Hasura GraphQL Engine](assets/demo.gif)
+![Démo Hasura GraphQL Engine](../assets/demo.gif)
 
 ------------------
 
-![Démo Hasura GraphQL Engine Realtime](assets/realtime.gif)
+![Démo Hasura GraphQL Engine Realtime](../assets/realtime.gif)
 
 -------------------
 
@@ -29,7 +29,7 @@ Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation
 
 * **Réalisez des requêtes avancées**: filtrage intégré, pagination, recherche par patterns, mutations d'insertions en masse, mises-à-jour et suppression.
 * **Temps réel**: Convertissez n'importe quelle requête GraphQL en requête temps-réel en uttilisant les `subscriptions`.
-* **Fusionnez des schémas distants**: Accédez à vos propres schémas GraphQL pour votre logique métier, via un point d'accès GraphQL unique. [**Plus d'informations**](remote-schemas.french.md).
+* **Fusionnez des schémas distants**: Accédez à vos propres schémas GraphQL pour votre logique métier, via un point d'accès GraphQL unique. [Plus d'informations](remote-schemas.french.md).
 * **Déclenchez des webhooks ou des fonctions serverless**: En réactions aux évènements Postgres insert/update/delete ([Plus d'informations](event-triggers.french.md))
 * **Fonctionne avec les bases de données existantes**: Pointez GraphQL Engine vers une base de données Postgres existante afin d'obtenir instantanément une API GraphQL prête à l'emploi.
 * **Contrôle d'accès détaillé**: Contrôle d'accès dynamique qui s'intègre avec votre système d'authentification (ex: auth0, firebase-auth)
@@ -81,7 +81,7 @@ La manière la plus rapide d'essayer Hasura est via Heroku.
 
 ### Autres méthodes de déploiement
 
-Pour les méthodes de déploiement basées sur Docker et les options de configuration avancées, consultez les [guides de déploiement](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou les [manifestes d'installation](install-manifests).
+Pour les méthodes de déploiement basées sur Docker et les options de configuration avancées, consultez les [guides de déploiement](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ou les [manifestes d'installation](../install-manifests).
 
 ## Architecture
 
@@ -89,7 +89,7 @@ Hasura GraphQL Engine se place en frontal d'une base de données Postgres et peu
 
 Vous pouvez également fusionner des schémas GraphQL distants et fournir une API GraphQL unifiée.
 
-![Architecture de Hasura GraphQL Engine](assets/hasura-arch.svg)
+![Architecture de Hasura GraphQL Engine](../assets/hasura-arch.svg)
 
 ## Outils côté client
 
@@ -165,13 +165,13 @@ Consultez notre [guide de contribution](CONTRIBUTING.french.md) pour plus de dé
 ## Elements de marque
 
 Les élements de marque Hasura (logos, mascotte Hasura, badges "powered by" etc...) peuvent être
-trouvés dans le répertoire [assets/brand](assets/brand). N'hésitez pas à les utiliser dans votre
+trouvés dans le répertoire [assets/brand](../assets/brand). N'hésitez pas à les utiliser dans votre
 application/site Web etc... Nous serions ravis si vous ajoutiez le badge "Powered by Hasura"
 à votre application développée à l'aide d'Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -188,14 +188,10 @@ application/site Web etc... Nous serions ravis si vous ajoutiez le badge "Powere
 
 ## Licence
 
-Le GraphQL Engine est disponible sous [GNU Affero General Public
-License v3](https://www.gnu.org/licenses/agpl-3.0.en.html) (AGPL-3.0). Nous avons
-écrit plus en détails à propos de ce que vous pouvez faire ou pas sous licence AGPL
-[ici](https://github.com/hasura/graphql-engine/wiki/License-Explained).
+Le GraphQL Engine est disponible sous [Apache License
+2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
-
-**Des licences commerciales** sont disponibles à la demande, si vous ne souhaitez pas utiliser le Hasura GraphQL Engine sous licence AGPL. Typiquement, elles incluent des plans de support et des SLAs. N'hésitez pas à nous contacter à l'adresse build@hasura.io ou sur le [chat de notre site Web](https://hasura.io).
-
-Tous les **autres contenus** (à l'exception de ceux dans les répertoires [`server`](server), [`cli`](cli) et
-[`console`](console)) sont disponibles sous [Licence MIT](LICENSE-community).
-Cela inclut tout le contenu des répertoires [`docs`](docs) et [`community`](community).
+Tous les **autres contenus** (à l'exception de ceux dans les répertoires
+[`server`](../server), [`cli`](../cli) et [`console`](../console)) sont
+disponibles sous [Licence MIT](../LICENSE-community). Cela inclut tout le
+contenu des répertoires [`docs`](../docs) et [`community`](../community).
