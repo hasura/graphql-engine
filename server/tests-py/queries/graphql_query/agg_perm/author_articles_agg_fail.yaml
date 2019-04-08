@@ -1,6 +1,13 @@
 description: Select author with it's article aggregations with user role (Error)
 url: /v1alpha1/graphql
 status: 400
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.author.selectionSet.articles_agg
+      code: validation-failed
+    message: |-
+      field "articles_agg" not found in type: 'author'
 headers:
   X-Hasura-Role: user
 query:
