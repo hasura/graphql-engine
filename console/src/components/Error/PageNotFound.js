@@ -7,21 +7,24 @@ import Helmet from 'react-helmet';
 
 class PageNotFound extends Component {
   render() {
-    const lostImage = require('./404-logo.png');
-    const styles = require('./PageNotFound.scss');
+    const errorImage = require('./error-logo.png');
+    const styles = require('./ErrorPage.scss');
 
     return (
-      <div className={styles.viewcontainer}>
+      <div className={styles.viewContainer}>
         <Helmet title="404 - Page Not Found | Hasura" />
         <div className={'container ' + styles.centerContent}>
           <div className={'row ' + styles.message}>
             <div className="col-xs-8">
               <h1>404</h1>
-              This page doesn't exist. Head back <Link to="/">Home</Link>.
+              <br />
+              <div>
+                This page doesn't exist. Head back <Link to="/">Home</Link>.
+              </div>
             </div>
             <div className="col-xs-4">
               <img
-                src={lostImage}
+                src={errorImage}
                 className="img-responsive"
                 name="hasura"
                 title="We think you are lost!"

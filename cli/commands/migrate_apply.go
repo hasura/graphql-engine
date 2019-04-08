@@ -25,7 +25,14 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			opts.EC.Spin("Applying migrations...")
+			err := opts.run()
+			opts.EC.Spinner.Stop()
+			if err != nil {
+				return err
+			}
+			opts.EC.Logger.Info("migrations applied")
+			return nil
 		},
 	}
 	f := migrateApplyCmd.Flags()
@@ -85,7 +92,6 @@ func (o *migrateApplyOptions) run() error {
 		}
 		return errors.Wrap(err, "apply failed")
 	}
-	o.EC.Logger.Info("migrations applied")
 	return nil
 }
 

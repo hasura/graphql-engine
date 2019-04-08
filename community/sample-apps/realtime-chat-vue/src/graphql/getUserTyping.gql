@@ -1,0 +1,14 @@
+subscription ($selfId: Int ) {
+    user_typing (
+      where: {
+        id: {
+          _neq: $selfId
+        }
+      },
+      limit: 1
+      order_by: {last_typed:desc}
+    ){
+      last_typed
+      username
+    }
+  }
