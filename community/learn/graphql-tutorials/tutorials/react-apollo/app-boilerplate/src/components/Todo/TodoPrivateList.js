@@ -15,13 +15,13 @@ class TodoPrivateList extends Component {
       todos: [
         {
           id: "1",
-          text: "This is private todo 1",
+          title: "This is private todo 1",
           is_completed: true,
           is_public: false
         },
         {
           id: "2",
-          text: "This is private todo 2",
+          title: "This is private todo 2",
           is_completed: false,
           is_public: false
         }

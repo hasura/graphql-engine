@@ -39,13 +39,13 @@ class ApiRequestDetails extends Component {
       <div className={styles.overlay}>
         <div className={styles.overlayContent}>
           <div className={styles.overlayHeading}>
-            Welcome to the GraphQL tutorial GraphiQL
+            GraphiQL
           </div>
           <div className={styles.overlayMessage}>
-            Please login to continue
+            Login to explore your GraphQL APIs securely.
           </div>
           <div className={styles.overlayAction}>
-            { loginButton }
+            {loginButton}
           </div>
         </div>
       </div>

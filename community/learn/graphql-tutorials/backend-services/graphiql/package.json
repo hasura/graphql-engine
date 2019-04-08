@@ -45,6 +45,7 @@
     "babel-polyfill": "^6.26.0",
     "deep-equal": "^1.0.1",
     "graphiql": "^0.11.11",
+    "graphiql-explorer": "^0.3.7",
     "graphql": "^0.13.2",
     "hasura-console-graphiql": "0.0.1",
     "history": "^3.0.0",

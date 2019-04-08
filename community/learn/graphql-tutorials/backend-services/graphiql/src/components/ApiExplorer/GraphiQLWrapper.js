@@ -1,12 +1,17 @@
 import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
+import { getHeadersAsJSON } from './utils';
+import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
 import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
+import GraphiQLExplorer from 'graphiql-explorer';
+import { makeDefaultArg, getDefaultScalarArgValue } from './onegraphUtils';
 
 import './GraphiQL.css';
 
 class GraphiQLWrapper extends Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -14,6 +19,8 @@ class GraphiQLWrapper extends Component {
       error: false,
       queries: null,
       onBoardingEnabled: false,
+      explorerIsOpen: true,
+      query: ''
     };
     const queryFile = this.props.queryParams
       ? this.props.queryParams.query_file
@@ -25,8 +32,40 @@ class GraphiQLWrapper extends Component {
     }
   }
 
+  _handleEditQuery = (query: string): void => this.setState({query});
+
+  _handleToggleExplorer = () => {
+    this.setState({explorerIsOpen: !this.state.explorerIsOpen});
+  }
+
   shouldComponentUpdate(nextProps) {
     return !nextProps.headerFocus;
+  }
+
+  introspect() {
+    const { url, headers } = this.props.data;
+    fetch(url, {
+      method: 'POST',
+      headers: getHeadersAsJSON(headers || []),
+      body: JSON.stringify({
+        query: getIntrospectionQuery(),
+      }),
+    })
+    .then(response => response.json())
+    .then(result => {
+      this.setState({
+        schema: buildClientSchema(result.data)
+      });
+    })
+    .catch(error => {
+      this.setState({
+        schema: null
+      });
+    })
+  }
+
+  componentDidMount() {
+    this.introspect();
   }
 
   render() {
@@ -60,7 +99,41 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          <GraphiQL {...graphiqlProps} />
+          <div className="graphiql-container">
+           <GraphiQLExplorer
+              schema={this.state.schema}
+              query={this.state.query}
+              onEdit={this._handleEditQuery}
+              explorerIsOpen={this.state.explorerIsOpen}
+              onToggleExplorer={this._handleToggleExplorer}
+              getDefaultScalarArgValue={getDefaultScalarArgValue}
+              makeDefaultArg={makeDefaultArg}
+            />
+            <GraphiQL {...graphiqlProps}
+              ref={ref => (this._graphiql = ref)}
+              schema={this.state.schema}
+              query={this.state.query}
+              onEditQuery={this._handleEditQuery}
+            >
+              <GraphiQL.Toolbar>
+                <GraphiQL.Button
+                  onClick={() => this._graphiql.handlePrettifyQuery()}
+                  label="Prettify"
+                  title="Prettify Query (Shift-Ctrl-P)"
+                />
+                <GraphiQL.Button
+                  onClick={() => this._graphiql.handleToggleHistory()}
+                  label="History"
+                  title="Show History"
+                />
+                <GraphiQL.Button
+                  onClick={this._handleToggleExplorer}
+                  label="Explorer"
+                  title="Toggle Explorer"
+                />
+              </GraphiQL.Toolbar>
+            </GraphiQL>
+          </div>
         </div>
       </ErrorBoundary>
     );

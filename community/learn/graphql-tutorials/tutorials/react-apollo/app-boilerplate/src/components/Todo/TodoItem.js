@@ -39,8 +39,8 @@ class TodoItem extends Component {
         </div>
 
         <div className={"labelContent" + (todo.is_completed ? " completed" : '')}>
-          <div data-test={type + "_" + index + "_" + todo.text}>
-            {todo.text}
+          <div data-test={type + "_" + index + "_" + todo.title}>
+            {todo.title}
           </div>
         </div>
 
