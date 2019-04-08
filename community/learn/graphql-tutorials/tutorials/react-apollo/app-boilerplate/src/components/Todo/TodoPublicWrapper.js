@@ -1,22 +1,17 @@
-import React, { Component } from "react";
+import React from 'react';
 
-import TodoInput from "./TodoInput";
-import TodoPublicList from "./TodoPublicList";
-import "../../styles/App.css";
+import TodoInput from './TodoInput';
+import TodoPublicList from './TodoPublicList';
 
-class TodoPublicWrapper extends Component {
-  render() {
-    // const userId = localStorage.getItem("auth0:id_token:sub");
+const TodoPublicWrapper = () => {
+  return (
+    <div className="todoWrapper">
+      <div className="sectionHeader">Public feed (realtime) </div>
 
-    return (
-      <div className="todoWrapper">
-        <div className="sectionHeader">Public todos</div>
-
-        <TodoInput type="public" />
-        <TodoPublicList type="public" />
-      </div>
-    );
-  }
-}
+      <TodoInput isPublic />
+      <TodoPublicList />
+    </div>
+  );
+};
 
 export default TodoPublicWrapper;

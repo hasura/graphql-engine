@@ -1,13 +1,11 @@
 import React, { Component, Fragment } from "react";
-import PropTypes from "prop-types";
 
 import TodoItem from "./TodoItem";
 import TodoFilters from "./TodoFilters";
-import "../../styles/App.css";
 
 class TodoPrivateList extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       filter: "all",
@@ -39,10 +37,10 @@ class TodoPrivateList extends Component {
     });
   }
 
-  clearCompleted(type) {}
+  clearCompleted() {}
 
   render() {
-    const { type } = this.props;
+    const {todos} = this.props;
 
     let filteredTodos = this.state.todos;
     if (this.state.filter === "active") {
@@ -58,7 +56,6 @@ class TodoPrivateList extends Component {
           key={index}
           index={index}
           todo={todo}
-          type={type}
         />
       );
     });
@@ -73,7 +70,6 @@ class TodoPrivateList extends Component {
 
         <TodoFilters
           todos={filteredTodos}
-          type={type}
           currentFilter={this.state.filter}
           filterResultsFn={this.filterResults}
           clearCompletedFn={this.clearCompleted}
@@ -83,9 +79,5 @@ class TodoPrivateList extends Component {
     );
   }
 }
-
-TodoPrivateList.propTypes = {
-  type: PropTypes.string.isRequired
-};
 
 export default TodoPrivateList;

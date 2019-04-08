@@ -97,9 +97,6 @@ body {
   font-size: 14px;
 }
 
-.formInput input:focus {
-  outline: none;
-}
 
 .formInput {
   position: relative;
@@ -344,11 +341,6 @@ body {
 }
 
 .userInfoPublic {
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  min-height: 28px;
-  border-radius: 50%;
   background-color: #dfe3e6;
   display: flex;
   align-items: center;
@@ -356,6 +348,8 @@ body {
   margin-left: 10px;
   font-size: 12px;
   font-weight: bold;
+  padding: 5px 8px;
+  margin-right: 10px;
 }
 
 .overlay {

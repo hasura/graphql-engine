@@ -1,80 +1,69 @@
-import React, { Component, Fragment } from "react";
-import PropTypes from "prop-types";
+import React, { Component, Fragment } from 'react';
 
-import TodoItem from "./TodoItem";
-import TodoFilters from "./TodoFilters";
-import "../../styles/App.css";
+import TaskItem from "./TaskItem";
 
 class TodoPublicList extends Component {
   constructor() {
     super();
 
     this.state = {
-      filter: "all",
-      clearInProgress: false,
       olderTodosAvailable: true,
-      newTodosCount: 0,
+      newTodosCount: 1,
       todos: [
         {
           id: "1",
-          text: "This is public todo 1",
-          is_completed: true,
-          is_public: true,
+          title: "This is public todo 1",
           user: {
             name: "someUser1"
           }
         },
         {
           id: "2",
-          text: "This is public todo 2",
+          title: "This is public todo 2",
           is_completed: false,
           is_public: true,
           user: {
             name: "someUser2"
           }
+        },
+        {
+          id: "3",
+          title: "This is public todo 3",
+          user: {
+            name: "someUser3"
+          }
+        },
+        {
+          id: "4",
+          title: "This is public todo 4",
+          user: {
+            name: "someUser4"
+          }
         }
       ]
     };
 
-    this.filterResults = this.filterResults.bind(this);
-    this.clearCompleted = this.clearCompleted.bind(this);
-    this.loadMoreClicked = this.loadMoreClicked.bind(this);
-    this.loadOlderClicked = this.loadOlderClicked.bind(this);
+    this.loadNew = this.loadNew.bind(this);
+    this.loadOlder = this.loadOlder.bind(this);
   }
 
-  filterResults(filter) {
-    this.setState({
-      ...this.state,
-      filter: filter
-    });
-  }
+  loadNew() {}
 
-  clearCompleted(type) {}
-
-  loadMoreClicked() {}
-
-  loadOlderClicked() {}
+  loadOlder() {}
 
   render() {
-    const { type } = this.props;
 
-    let filteredTodos = this.state.todos;
-    if (this.state.filter === "active") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
-    } else if (this.state.filter === "completed") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
-    }
+    let todos = this.state.todos;
 
     const todoList = (
       <ul>
         {
-          filteredTodos.map((todo, index) => {
+          todos.map((todo, index) => {
             return (
-              <TodoItem
+              <TaskItem
                 key={index}
                 index={index}
                 todo={todo}
-                type={type}
               />
             );
           })
@@ -85,15 +74,15 @@ class TodoPublicList extends Component {
     let newTodosNotification = '';
     if (this.state.newTodosCount) {
       newTodosNotification = (
-        <div className={"loadMoreSection"} onClick={this.loadMoreClicked}>
-          You have {this.state.newTodosCount} new Todo{this.state.newTodosCount !== 1 ? "s" : ""}
+        <div className={"loadMoreSection"} onClick={this.loadNew}>
+          New tasks have arrived! ({this.state.newTodosCount.toString()})
         </div>
       );
     }
 
     const olderTodosMsg = (
-      <div className={"loadMoreSection"} onClick={this.loadOlderClicked}>
-        { this.state.olderTodosAvailable ? 'Load Older Todos' : 'No more Todos available'}
+      <div className={"loadMoreSection"} onClick={this.loadOlder}>
+        { this.state.olderTodosAvailable ? 'Load older tasks' : 'No more public tasks'}
       </div>
     );
 
@@ -106,22 +95,9 @@ class TodoPublicList extends Component {
 
           { olderTodosMsg }
         </div>
-
-        <TodoFilters
-          todos={filteredTodos}
-          type={type}
-          currentFilter={this.state.filter}
-          filterResultsFn={this.filterResults}
-          clearCompletedFn={this.clearCompleted}
-          clearInProgress={this.state.clearInProgress}
-        />
       </Fragment>
     );
   }
 }
-
-TodoPublicList.propTypes = {
-  type: PropTypes.string
-};
 
 export default TodoPublicList;

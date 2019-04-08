@@ -1,28 +1,16 @@
-import React, { Component } from "react";
-import PropTypes from "prop-types";
+import React from "react";
 
-import "../../styles/App.css";
-
-class OnlineUser extends Component {
-  render() {
-    const { user, index } = this.props;
-
-    return (
-      <div className="userInfo">
-        <div className="userImg">
-          <i className="far fa-user" />
-        </div>
-        <div data-test={index + "_" + user.name} className="userName">
-          {user.name}
-        </div>
+const OnlineUser = ({user}) => {
+  return (
+    <div className="userInfo">
+      <div className="userImg">
+        <i className="far fa-user" />
       </div>
-    );
-  }
-}
-
-OnlineUser.propTypes = {
-  user: PropTypes.object.isRequired,
-  index: PropTypes.number.isRequired
+      <div className="userName">
+        {user.name}
+      </div>
+    </div>
+  );
 };
 
 export default OnlineUser;
