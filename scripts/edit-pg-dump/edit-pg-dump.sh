@@ -37,7 +37,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 SET default_tablespace = '';
 SET default_with_oids = false;
-CREATE SCHEMA public
+CREATE SCHEMA public;
 EOF
 
 while read -r line; do
