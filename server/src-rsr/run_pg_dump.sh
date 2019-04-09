@@ -44,4 +44,4 @@ sed -i -E '/^CREATE TRIGGER "?notify_hasura_.+"? AFTER \w+ ON .+ FOR EACH ROW EX
 
 sed -i '/^[[:space:]]*$/d' "$filename"
 
-printf "$filename"
+printf "%s" "$filename"
