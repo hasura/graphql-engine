@@ -1,5 +1,4 @@
 .data_dropdown_wrapper {
-  position: absolute;
   display: inline-block;
   cursor: pointer;
   span {
@@ -12,7 +11,7 @@
       box-shadow: 7px 7px 20px 0 rgba(0, 0, 0, 0.32);
       background-color: #ffffff;
       color: yellow;
-      top: -15px;
+      top: -12px;
       left: 35px;
       z-index: 100000000;
       li {
@@ -40,4 +39,3 @@
     }
   }
 }
-

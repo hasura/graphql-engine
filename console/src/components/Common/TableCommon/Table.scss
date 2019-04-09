@@ -194,7 +194,7 @@ a.expanded {
 
 .tableCellCenterAligned {
   text-align: center;
-  overflow: auto !important;
+  overflow: unset !important;
 }
 
 .tableCellExpanded {
