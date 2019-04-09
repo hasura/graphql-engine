@@ -136,7 +136,7 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx strfyNum pool httpManager am
+        mkWaiApp isoL loggerCtx strfyNum pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs
 
       -- start a background thread for schema sync

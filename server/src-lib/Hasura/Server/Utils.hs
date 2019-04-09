@@ -23,6 +23,9 @@ import           Hasura.Prelude
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
+sqlHeader :: (T.Text, T.Text)
+sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
+
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 

@@ -4,9 +4,12 @@ set -e
 
 filename=/tmp/pg_dump-$(date +%s).sql
 template_file=/tmp/hasura_del_lines_template.txt
-SCHEMA=public
 
-pg_dump -O -x "$HASURA_GRAPHQL_DATABASE_URL" --schema-only --schema "$SCHEMA" -f "$filename"
+# input args
+DB_URL=$1
+SCHEMA=$2
+
+pg_dump -O -x "$DB_URL" --schema-only --schema "$SCHEMA" -f "$filename"
 
 # delete all comments
 

@@ -6,7 +6,6 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
-import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
@@ -51,7 +50,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
-import qualified Hasura.Server.PGDump as PGD
+import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -118,6 +117,7 @@ data ServerCtx
   = ServerCtx
   { scIsolation    :: Q.TxIsolation
   , scPGPool       :: Q.PGPool
+  , scConnInfo     :: Q.ConnInfo
   , scLogger       :: L.Logger
   , scCacheRef     :: SchemaCacheRef
   , scAuthMode     :: AuthMode
@@ -279,14 +279,55 @@ gqlExplainHandler query = do
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
 
-v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
+-- v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler BL.ByteString
 v1Alpha1PGDumpHandler b = do
-  output <- liftIO $ PGD.executePGDump b
-  case output of
-    Right (_, contents) -> do
-      setHeader "content-type" "application/sql"
-      lazyBytes contents
-    Left e -> lazyBytes $ C.pack $ "error: " <> e
+  onlyAdmin
+  -- logger <- scLogger . hcServerCtx <$> ask
+  ci <- scConnInfo . hcServerCtx <$> ask
+  PGD.execPGDump b ci
+
+mkPGDumpAction
+  :: (MonadIO m)
+  => (Bool -> QErr -> Value)
+  -> ServerCtx
+  -> Handler BL.ByteString
+  -> ActionT m ()
+mkPGDumpAction qErrEncoder serverCtx handler = do
+  req <- request
+  reqBody <- liftIO $ strictRequestBody req
+  let headers  = requestHeaders req
+      authMode = scAuthMode serverCtx
+      manager = scManager serverCtx
+
+  userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
+  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+
+  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
+
+  t1 <- liftIO getCurrentTime -- for measuring response time purposes
+  result <- liftIO $ runReaderT (runExceptT handler) handlerState
+  t2 <- liftIO getCurrentTime -- for measuring response time purposes
+
+  -- log result
+  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+
+  where
+    logger = scLogger serverCtx
+    -- encode error response
+    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
+    qErrToResp includeInternal qErr = do
+      setStatus $ qeStatus qErr
+      json $ qErrEncoder includeInternal qErr
+
+    logAndThrow req reqBody includeInternal qErr = do
+      logError Nothing req reqBody serverCtx qErr
+      qErrToResp includeInternal qErr
+
+    resToResp resp = do
+      uncurry setHeader sqlHeader
+      lazyBytes resp
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -325,11 +366,11 @@ initErrExit e = do
 
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> Bool
-  -> Q.PGPool -> HTTP.Manager -> AuthMode
+  -> Q.PGPool -> Q.ConnInfo -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx strfyNum pool ci httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis = do
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
@@ -343,7 +384,7 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
     cacheLock <- newMVar ()
 
     let schemaCacheRef = SchemaCacheRef cacheLock cacheRef
-        serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
+        serverCtx = ServerCtx isoLevel pool ci (L.mkLogger loggerCtx)
             schemaCacheRef mode httpManager strfyNum apis instanceId
 
     spockApp <- spockAsApp $ spockT id $
@@ -389,13 +430,9 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         mkSpockAction encodeQErr serverCtx $
         legacyQueryHandler (TableName tableName) queryType
 
-      post "v1alpha1/pg_dump" $ do
-        reqBody <- jsonBody
-        case reqBody of
-          Just b -> v1Alpha1PGDumpHandler b
-          Nothing -> do
-            let qErr = err400 InvalidParams "invalid request body"
-            raiseGenericApiError qErr
+      post "v1alpha1/pg_dump" $ mkPGDumpAction encodeQErr serverCtx $ do
+        query <- parseBody
+        v1Alpha1PGDumpHandler query
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
