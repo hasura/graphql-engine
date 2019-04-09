@@ -433,14 +433,16 @@ export const checkViewRelationship = () => {
   cy.wait(7000);
   validateCT(getTableName(0, testName), 'success');
   // Add foreign key
-  cy.get(getElementFromAlias('edit-someID')).click();
-  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
-  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
-  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(1000);
+  cy.get(getElementFromAlias('modify-table-edit-fk-0')).click();
+  cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
+    getTableName(0, testName)
+  );
+  cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('0');
+  cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select(getColName(0));
+  cy.get(getElementFromAlias('modify-table-fk-0-save')).click();
+  cy.wait(5000);
   // Add relationship
-  cy.get(getElementFromAlias('add-rel-mod')).click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
   cy.get(getElementFromAlias('suggested-rel-name'))
     .clear()

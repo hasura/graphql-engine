@@ -20,7 +20,7 @@ var frontMatter = []string{
 	"SET row_security = off;",
 	"SET default_tablespace = '';",
 	"SET default_with_oids = false;",
-	"CREATE SCHEMA public",
+	"CREATE SCHEMA public;",
 }
 
 const helpStr = `POST the SQL file contents to this URL:
