@@ -484,10 +484,6 @@ class Permissions extends Component {
               }
             }
 
-            if (role === '') {
-              className += ` ${styles.newRoleTd}`;
-            }
-
             _permissionsRowHtml.push(
               <td
                 key={i}

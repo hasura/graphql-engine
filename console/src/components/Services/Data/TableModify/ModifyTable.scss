@@ -155,9 +155,11 @@ hr {
 
 .permissionsTable {
   width: 85%;
+  font-size: 14px;
 
   td, th {
     text-align: center;
+    vertical-align: middle !important;
     position: relative;
   }
 
@@ -175,10 +177,6 @@ hr {
     overflow: auto;
     max-width: 250px;
     width: 250px;
-  }
-
-  .newRoleTd {
-    padding-top: 13px;
   }
 
   //.permissionDelete {
