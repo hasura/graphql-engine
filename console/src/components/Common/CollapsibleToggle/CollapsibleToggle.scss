@@ -1,22 +1,34 @@
 .collapsibleWrapper {
+  margin-bottom: 5px;
+
   .collapsibleToggle {
     cursor: pointer;
     display: inline-block;
-    .caretWrapper {
+
+    .collapsibleIndicatorWrapper {
       padding-right: 10px;
       font-size: 12px;
-      .rightArrow {
+
+      .collapsibleIndicator {
         transition: transform 0.3s ease;
       }
-      .downArrow {
+
+      .collapsibleIndicatorOpen {
         transform: rotate(90deg);
-        transition: transform 0.3s ease;
       }
     }
+
     .titleWrapper {
       display: inline-block;
     }
+
+    .collapsibleTitle {
+      color: #788095;
+      font-weight: bold;
+      font-size: 14px;
+    }
   }
+
   .collapsibleContent {
     margin-top: 10px;
     display: block;
