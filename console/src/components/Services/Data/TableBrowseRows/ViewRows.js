@@ -294,7 +294,7 @@ const ViewRows = ({
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
           const triggerTitle = 'Run manual trigger';
 
-          const triggerBtn = getButton(
+          const triggerBtn = getActionButton(
             'trigger',
             triggerIcon,
             triggerTitle,
