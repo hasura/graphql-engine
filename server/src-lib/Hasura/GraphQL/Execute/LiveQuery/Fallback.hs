@@ -4,7 +4,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Fallback
   , newLiveQueryMap
   , FallbackOp
   , addLiveQuery
-  , TxRunner
   , removeLiveQuery
   ) where
 
@@ -26,21 +25,19 @@ data LQHandler k
   -- the tx to be executed
   { _lqhRespTx  :: !LazyRespTx
   -- previous result
-  , _lqhPrevRes :: !(STM.TVar (Maybe GQResp))
+  , _lqhPrevRes :: !RespTV
   -- the actions that have been run previously
   -- we run these if the response changes
-  , _lqhCurOps  :: !(STMMap.Map k OnChange)
+  , _lqhCurOps  :: !(Sinks k)
   -- we run these operations regardless
   -- and then merge them with current operations
-  , _lqhNewOps  :: !(STMMap.Map k OnChange)
+  , _lqhNewOps  :: !(Sinks k)
   }
 
 type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new
-
-type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 removeLiveQuery
   :: (Eq k, Hashable k)
@@ -129,11 +126,11 @@ pollQuery
   -> IO ()
 pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
-  res <- runExceptT $ runLazyTx pgExecCtx respTx
+  resOrErr <- runExceptT $ runLazyTx pgExecCtx respTx
 
-  let resp = case res of
-        Left e   -> GQExecError [encodeGQErr False e]
-        Right bs -> GQSuccess $ encJToLBS bs
+  let (resp, respHashM) = case encJToLBS <$> resOrErr of
+        Left e    -> (GQExecError [encodeGQErr False e], Nothing)
+        Right lbs -> (GQSuccess lbs, Just $ mkRespHash lbs)
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do
@@ -146,10 +143,10 @@ pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
   runOperations resp newOps
 
   -- write to the current websockets if needed
-  prevRespM <- STM.readTVarIO respTV
-  when (isExecError resp || Just resp /= prevRespM) $ do
+  prevRespHashM <- STM.readTVarIO respTV
+  when (isExecError resp || respHashM /= prevRespHashM) $ do
     runOperations resp curOps
-    STM.atomically $ STM.writeTVar respTV $ Just resp
+    STM.atomically $ STM.writeTVar respTV respHashM
 
   where
     runOperation resp action = action resp

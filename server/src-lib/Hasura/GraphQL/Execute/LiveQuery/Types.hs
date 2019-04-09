@@ -3,10 +3,15 @@ module Hasura.GraphQL.Execute.LiveQuery.Types
   , OnChange
   , ThreadTM
   , Sinks
+  , RespHash
+  , mkRespHash
+  , RespTV
   ) where
 
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
+import qualified Crypto.Hash                            as CH
+import qualified Data.ByteString.Lazy                   as LBS
 import qualified StmContainers.Map                      as STMMap
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -27,3 +32,18 @@ instance Hashable LiveQuery
 
 type OnChange = GQResp -> IO ()
 type ThreadTM = STM.TMVar (A.Async ())
+
+-- a cryptographic hash should ensure that
+-- a hash collision is almost improbable
+-- Blake2b because it is faster than Sha256
+-- With 256 bits, and 86400 * 365 (a subscription open for 365 days)
+-- there is ~ 4.294417×10-63 chance of a hash collision.
+
+newtype RespHash
+  = RespHash {unRespHash :: CH.Digest CH.Blake2b_256}
+  deriving (Show, Eq)
+
+mkRespHash :: LBS.ByteString -> RespHash
+mkRespHash = RespHash . CH.hashlazy
+
+type RespTV = STM.TVar (Maybe RespHash)
