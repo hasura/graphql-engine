@@ -3,10 +3,17 @@ module Hasura.GraphQL.Execute.LiveQuery.Types
   , OnChange
   , ThreadTM
   , Sinks
+
   , RespHash
   , mkRespHash
   , RespTV
+
+  , RefetchInterval
+  , refetchIntervalFromMilli
+  , refetchIntervalToMicro
   ) where
+
+import           Data.Word                              (Word32)
 
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
@@ -57,3 +64,13 @@ mkRespHash :: LBS.ByteString -> RespHash
 mkRespHash = RespHash . CH.hashlazy
 
 type RespTV = STM.TVar (Maybe RespHash)
+
+newtype RefetchInterval
+  = RefetchInterval {unRefetchInterval :: Word32}
+  deriving (Show, Eq, J.ToJSON)
+
+refetchIntervalFromMilli :: Word32 -> RefetchInterval
+refetchIntervalFromMilli = RefetchInterval
+
+refetchIntervalToMicro :: RefetchInterval -> Int
+refetchIntervalToMicro ri = fromIntegral $ 1000 * unRefetchInterval ri

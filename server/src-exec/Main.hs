@@ -77,6 +77,9 @@ parseHGECommand =
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
                 <*> parseEnabledAPIs
+                <*> parseMxRefetchInt
+                <*> parseMxBatchSize
+                <*> parseFallbackRefetchInt
 
 
 parseArgs :: IO HGEOptions
@@ -113,8 +116,9 @@ main =  do
   let logger = mkLogger loggerCtx
       pgLogger = mkPGLogger logger
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
+                mJwtSecret mUnAuthRole corsCfg enableConsole
+                enableTelemetry strfyNum enabledAPIs lqOpts) -> do
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -138,7 +142,7 @@ main =  do
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx strfyNum pool httpManager am
-          corsCfg enableConsole enableTelemetry instanceId enabledAPIs
+          corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
       -- start a background thread for schema sync
       startSchemaSync strfyNum pool logger httpManager

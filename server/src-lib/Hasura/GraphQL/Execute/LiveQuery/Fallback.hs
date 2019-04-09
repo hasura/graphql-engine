@@ -1,8 +1,13 @@
 module Hasura.GraphQL.Execute.LiveQuery.Fallback
-  ( LiveQuery(..)
-  , LiveQueryMap
-  , newLiveQueryMap
-  , dumpLiveQueryMap
+  ( RefetchInterval
+  , refetchIntervalFromMilli
+  , FallbackOpts
+  , mkFallbackOpts
+
+  , LiveQueriesState
+  , initLiveQueriesState
+  , dumpLiveQueriesState
+
   , FallbackOp
   , addLiveQuery
   , removeLiveQuery
@@ -36,6 +41,50 @@ data LQHandler k
   , _lqhNewOps  :: !(Sinks k)
   }
 
+data FallbackOpts
+  = FallbackOpts
+  { _foRefetchInterval :: !RefetchInterval
+  } deriving (Show, Eq)
+
+instance J.ToJSON FallbackOpts where
+  toJSON (FallbackOpts refetchInterval) =
+    J.object [ "refetch_delay" J..= refetchInterval
+             ]
+
+-- 1 second
+defaultRefetchInterval :: RefetchInterval
+defaultRefetchInterval =
+  refetchIntervalFromMilli 1000
+
+mkFallbackOpts
+  :: Maybe RefetchInterval
+  -> FallbackOpts
+mkFallbackOpts refetchIntervalM =
+  FallbackOpts
+  (fromMaybe defaultRefetchInterval refetchIntervalM)
+
+data LiveQueriesState k
+  = LiveQueriesState
+  { _lqsOptions      :: !FallbackOpts
+  , _lqsLiveQueryMap :: !(LiveQueryMap k)
+  }
+
+dumpLiveQueriesState :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
+  lqMapJ <- dumpLiveQueryMap lqMap
+  return $ J.object
+    [ "options" J..= opts
+    , "live_queries_map" J..= lqMapJ
+    ]
+
+initLiveQueriesState
+  :: FallbackOpts
+  -> STM.STM (LiveQueriesState k)
+initLiveQueriesState lqOptions =
+  LiveQueriesState
+  lqOptions
+  <$> STMMap.new
+
 type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
 
 dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
@@ -55,17 +104,14 @@ dumpLiveQueryMap lqMap =
         , "previous_result_hash" J..= prevResHash
         ]
 
-newLiveQueryMap :: STM.STM (LiveQueryMap k)
-newLiveQueryMap = STMMap.new
-
 removeLiveQuery
   :: (Eq k, Hashable k)
-  => LiveQueryMap k
+  => LiveQueriesState k
   -- the query and the associated operation
   -> LiveQuery
   -> k
   -> IO ()
-removeLiveQuery lqMap liveQ k = do
+removeLiveQuery lqState liveQ k = do
 
   -- clean the handler's state
   threadRefM <- STM.atomically $ do
@@ -76,6 +122,7 @@ removeLiveQuery lqMap liveQ k = do
   onJust threadRefM A.cancel
 
   where
+    lqMap = _lqsLiveQueryMap lqState
     cleanLQHandler (handler, threadRef) = do
       let curOps = _lqhCurOps handler
           newOps = _lqhNewOps handler
@@ -97,7 +144,7 @@ type FallbackOp = LazyRespTx
 addLiveQuery
   :: (Eq k, Hashable k)
   => PGExecCtx
-  -> LiveQueryMap k
+  -> LiveQueriesState k
   -- the query
   -> LiveQuery
   -> FallbackOp
@@ -106,7 +153,7 @@ addLiveQuery
   -- the action to be executed when result changes
   -> OnChange
   -> IO ()
-addLiveQuery pgExecCtx lqMap liveQ respTx k onResultAction= do
+addLiveQuery pgExecCtx lqState liveQ respTx k onResultAction= do
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
@@ -118,10 +165,13 @@ addLiveQuery pgExecCtx lqMap liveQ respTx k onResultAction= do
   onJust handlerM $ \(handler, pollerThreadTM) -> do
     threadRef <- A.async $ forever $ do
       pollQuery pgExecCtx handler
-      threadDelay $ 1 * 1000 * 1000
+      threadDelay $ refetchIntervalToMicro refetchInterval
     STM.atomically $ STM.putTMVar pollerThreadTM threadRef
 
   where
+
+    LiveQueriesState lqOpts lqMap = lqState
+    FallbackOpts refetchInterval = lqOpts
 
     addToExistingHandler (handler, _) = do
       STMMap.insert onResultAction k $ _lqhNewOps handler

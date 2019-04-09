@@ -1,7 +1,16 @@
-{-# LANGUAGE RankNTypes #-}
-
 module Hasura.GraphQL.Execute.LiveQuery
-  ( LiveQueriesState
+  ( RefetchInterval
+  , refetchIntervalFromMilli
+  , LQM.BatchSize
+  , LQM.mkBatchSize
+  , LQM.MxOpts
+  , LQM.mkMxOpts
+  , LQF.FallbackOpts
+  , LQF.mkFallbackOpts
+  , LQOpts
+  , mkLQOpts
+
+  , LiveQueriesState
   , initLiveQueriesState
   , dumpLiveQueriesState
 
@@ -45,30 +54,41 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+data LQOpts
+  = LQOpts
+  { _loMxOpts       :: LQM.MxOpts
+  , _loFallbackOpts :: LQF.FallbackOpts
+  } deriving (Show, Eq)
+
+mkLQOpts :: LQM.MxOpts -> LQF.FallbackOpts -> LQOpts
+mkLQOpts = LQOpts
+
 data LiveQueriesState k
   = LiveQueriesState
-  { _lqsMultiplexed :: !(LQM.LiveQueryMap k)
-  , _lqsFallback    :: !(LQF.LiveQueryMap k)
+  { _lqsMultiplexed :: !(LQM.LiveQueriesState k)
+  , _lqsFallback    :: !(LQF.LiveQueriesState k)
   , _lqsPGExecTx    :: !PGExecCtx
   }
 
 dumpLiveQueriesState
   :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
 dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
-  mxJ <- LQM.dumpLiveQueryMap mx
-  fallbackJ <- LQF.dumpLiveQueryMap fallback
+  mxJ <- LQM.dumpLiveQueriesState mx
+  fallbackJ <- LQF.dumpLiveQueriesState fallback
   return $ J.object
     [ "fallback" J..= fallbackJ
     , "multiplexed" J..= mxJ
     ]
 
 initLiveQueriesState
-  :: PGExecCtx
+  :: LQOpts
+  -> PGExecCtx
   -> IO (LiveQueriesState k)
-initLiveQueriesState txRunner = do
+initLiveQueriesState (LQOpts mxOpts fallbackOpts) pgExecCtx = do
   (mxMap, fallbackMap) <- STM.atomically $
-    (,) <$> LQM.newLiveQueryMap <*> LQF.newLiveQueryMap
-  return $ LiveQueriesState mxMap fallbackMap txRunner
+    (,) <$> LQM.initLiveQueriesState mxOpts
+        <*> LQF.initLiveQueriesState fallbackOpts
+  return $ LiveQueriesState mxMap fallbackMap pgExecCtx
 
 data LiveQueryOp
   = LQMultiplexed !LQM.MxOp
