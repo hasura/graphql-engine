@@ -171,6 +171,7 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
+        let manualTriggersButton;
 
         const getActionButton = (type, icon, title, handleClick) => {
           return (
@@ -264,6 +265,49 @@ const ViewRows = ({
           );
         };
 
+        const getManualTriggersButton = () => {
+          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerTitle = 'Run manual trigger';
+
+          const triggerBtn = getButton(
+            'trigger',
+            triggerIcon,
+            triggerTitle,
+            () => {}
+          );
+
+          const triggerOptions = [
+            {
+              displayName: 'ban_employer',
+              onChange: () => null,
+              itemIdentifier: 'ban_employer',
+              prefixLabel: 'Run:',
+            },
+            {
+              displayName: 'activate_account',
+              onChange: () => null,
+              itemIdentifier: 'activate_account',
+              prefixLabel: 'Run:',
+            },
+            {
+              displayName: 'view_report',
+              onChange: () => null,
+              itemIdentifier: 'view_report',
+              prefixLabel: 'Run:',
+            },
+          ];
+
+          return (
+            <DataDropdown
+              elementId="data_browse_rows_trigger"
+              options={triggerOptions}
+              position="right"
+            >
+              {triggerBtn}
+            </DataDropdown>
+          );
+        };
+
         const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
 
         if (allowModify) {
@@ -276,27 +320,8 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
-
-        const triggerOptions = [
-          {
-            displayName: 'ban_employer',
-            onChange: () => null,
-            itemIdentifier: 'ban_employer',
-            prefixLabel: 'Run:',
-          },
-          {
-            displayName: 'activate_account',
-            onChange: () => null,
-            itemIdentifier: 'activate_account',
-            prefixLabel: 'Run:',
-          },
-          {
-            displayName: 'view_report',
-            onChange: () => null,
-            itemIdentifier: 'view_report',
-            prefixLabel: 'Run:',
-          },
-        ];
+        // eslint-disable-next-line prefer-const
+        manualTriggersButton = getManualTriggersButton();
 
         return (
           <div className={styles.tableCellCenterAligned}>
@@ -304,16 +329,7 @@ const ViewRows = ({
             {editButton}
             {deleteButton}
             {expandButton}
-            <DataDropdown
-              elementId="data_browse_rows_trigger"
-              options={triggerOptions}
-              position="right"
-            >
-              <img
-                src={require('./trigger-invoke-icon.svg')}
-                alt="Trigger events"
-              />
-            </DataDropdown>
+            {manualTriggersButton}
           </div>
         );
       };
