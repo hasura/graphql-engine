@@ -2,6 +2,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Fallback
   ( LiveQuery(..)
   , LiveQueryMap
   , newLiveQueryMap
+  , dumpLiveQueryMap
   , FallbackOp
   , addLiveQuery
   , removeLiveQuery
@@ -9,6 +10,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Fallback
 
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
+import qualified Data.Aeson                             as J
 import qualified ListT
 import qualified StmContainers.Map                      as STMMap
 
@@ -35,6 +37,23 @@ data LQHandler k
   }
 
 type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
+
+dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
+dumpLiveQueryMap lqMap =
+  fmap J.toJSON $ STM.atomically $ do
+    entries <- ListT.toList $ STMMap.listT lqMap
+    forM entries $ \(lq, (lqHandler, threadRef)) -> do
+      prevResHash <- STM.readTVar $ _lqhPrevRes lqHandler
+      threadId <-  A.asyncThreadId <$> STM.readTMVar threadRef
+      curOps <- ListT.toList $ STMMap.listT $ _lqhCurOps lqHandler
+      newOps <- ListT.toList $ STMMap.listT $ _lqhNewOps lqHandler
+      return $ J.object
+        [ "query" J..= lq
+        , "thread_id" J..= show threadId
+        , "current_ops" J..= map fst curOps
+        , "new_ops" J..= map fst newOps
+        , "previous_result_hash" J..= prevResHash
+        ]
 
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new

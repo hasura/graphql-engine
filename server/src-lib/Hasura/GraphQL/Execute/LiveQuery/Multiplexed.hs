@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
   ( LiveQueryMap
   , newLiveQueryMap
+  , dumpLiveQueryMap
   , MxOp
   , addLiveQuery
   , removeLiveQuery
@@ -63,10 +64,57 @@ data MLiveQueryId
 
 instance Hashable MLiveQueryId
 
+instance J.ToJSON MLiveQueryId where
+  toJSON (MLiveQueryId role query) =
+    J.object [ "role" J..= role
+             , "query" J..= query
+             ]
+
 type LiveQueryMap k = STMMap.Map MLiveQueryId (MLQHandler k, ThreadTM)
 
 newLiveQueryMap :: STM.STM (LiveQueryMap k)
 newLiveQueryMap = STMMap.new
+
+dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
+dumpLiveQueryMap lqMap =
+  fmap J.toJSON $ STM.atomically $ do
+    entries <- ListT.toList $ STMMap.listT lqMap
+    forM entries $ \(lq, (lqHandler, threadRef)) -> do
+      threadId <- A.asyncThreadId <$> STM.readTMVar threadRef
+      candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
+      -- prevResHash <- STM.readTVar $ _lqhPrevRes lqHandler
+      -- curOps <- ListT.toList $ STMMap.listT $ _lqhCurOps lqHandler
+      -- newOps <- ListT.toList $ STMMap.listT $ _lqhNewOps lqHandler
+      return $ J.object
+        [ "key" J..= lq
+        , "thread_id" J..= show threadId
+        , "alias" J..= _mhAlias lqHandler
+        , "multiplexed_query" J..= Q.getQueryText (_mhQuery lqHandler)
+        , "candidates" J..= candidatesJ
+        -- , "current_ops" J..= map fst curOps
+        -- , "new_ops" J..= map fst newOps
+        -- , "previous_result_hash" J..= prevResHash
+        ]
+  where
+    dumpCandidates candidateMap = do
+      candidates <- ListT.toList $ STMMap.listT candidateMap
+      forM candidates $ \((usrVars, varVals), candidate) -> do
+        candidateJ <- dumpCandidate candidate
+        return $ J.object
+          [ "session_vars" J..= usrVars
+          , "variable_values" J..= varVals
+          , "candidate" J..= candidateJ
+          ]
+    dumpCandidate (MLQHandlerCandidate respId _ respTV curOps newOps) = do
+      prevResHash <- STM.readTVar respTV
+      curOpIds <- ListT.toList $ STMMap.listT curOps
+      newOpIds <- ListT.toList $ STMMap.listT newOps
+      return $ J.object
+        [ "resp_id" J..= unRespId respId
+        , "current_ops" J..= map fst curOpIds
+        , "new_ops" J..= map fst newOpIds
+        , "previous_result_hash" J..= prevResHash
+        ]
 
 type ValidatedVariables = Map.HashMap G.Variable TxtEncodedPGVal
 
