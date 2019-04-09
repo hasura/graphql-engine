@@ -1,6 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs     #-}
-
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
   , GExPHasura(..)
@@ -69,14 +66,23 @@ data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
 instance Show GExPHasura where
   show (GExPHasura _ root remRels) = (show root) ++ "\n" ++ (show remRels)
 
-data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
+data GExPRemote
+  = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
-data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+data GQExecPlan
+  = GQExecPlan (Maybe GExPHasura) [GExPRemote]
   deriving Show
 
-type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
-type SplitQueryParts = (G.TypedOperationDefinition, [G.FragmentDefinition])
+data QueryParts
+  = QueryParts
+  { _qpOpDef     :: !G.TypedOperationDefinition
+  , _qpFragDefsL :: ![G.FragmentDefinition]
+  --, _qpVarValsM  :: !(Maybe VariableValues)
+  } deriving (Show, Eq)
+
+type SplitSelSets    = Map.HashMap VT.TypeLoc G.SelectionSet
+type SplitQueryParts = Map.HashMap VT.TypeLoc QueryParts
 
 getExecPlan
   :: (MonadError QErr m)
@@ -85,76 +91,69 @@ getExecPlan
   -> GraphQLRequest
   -> m GQExecPlan
 getExecPlan userInfo sc req = do
-  (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
-  let remoteSchemaMap = scRemoteResolvers sc
+  (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
+  let remoteSchemaMap = scRemoteResolvers sc
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
-      topLevelNodes = getTopLevelNodes opDef
-      typeLocs = gatherTypeLocs gCtx topLevelNodes
-      typeLocWTypes = zip typeLocs topLevelNodes
-      queryMap = foldr upsertType mempty typeLocWTypes
-      querySplits = splitQuery opDef fragDefs queryMap
-      newQs = map (\(tl, qp) -> (,) tl $ uncurry (transformGQRequest req) qp)
-              querySplits
+      ssSplits = foldr (splitSelSet gCtx) mempty $ G._todSelectionSet opDef
+      querySplits = splitQuery opDef fragDefs ssSplits
+      newQs = Map.map (transformGQRequest req) querySplits
 
-  newRootSels <- forM newQs $ \(tl, q) ->
-    flip runReaderT gCtx $ do
-      p <- VQ.getQueryParts q
-      (,) tl <$> VQ.validateGQ p
+  newRootSels <- forM (Map.toList newQs) $ \(tl, q) ->
+    flip runReaderT gCtx $
+      (,) tl <$> (VQ.getQueryParts q >>= VQ.validateGQ)
 
-  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) newQs newRootSels
+  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) (Map.toList newQs) newRootSels
 
   case newReqs of
     -- this shouldn't happen
     [] -> throw500 "unexpected plan"
 
-    [(VT.HasuraType, (_, rootSelSet'))] -> do
-      remotePlans <- getRemoteRelPlans gCtx req rootSelSet' remoteSchemaMap
-      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet' remotePlans) []
-    [(VT.RemoteType rsi, (req'' , rootSelSet''))] -> return $ GQExecPlan Nothing [GExPRemote rsi req'' rootSelSet'']
-    x -> do
-      plans <- mapM (toExecPlan gCtx) x
-      foldM combPlan (GQExecPlan Nothing []) plans
+    [(VT.HasuraType, (_, rootSelSet))] -> do
+      remotePlans <- getRemoteRelPlans gCtx req rootSelSet remoteSchemaMap
+      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet remotePlans) []
+    [(VT.RemoteType rsi, (_, rootSelSet))] ->
+      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
+    xs -> foldM (combPlan gCtx remoteSchemaMap) (GQExecPlan Nothing []) xs
   where
-    toExecPlan gCtx' r = case r of
-      (VT.HasuraType, (newq, _)) -> do
-        qParts <- flip runReaderT gCtx' $ VQ.getQueryParts newq
-        rSelSet <- runReaderT (VQ.validateGQ qParts) gCtx'
-        return $ GQExecPlan (Just $ GExPHasura gCtx' rSelSet []) []
-      (VT.RemoteType rsi, (newq, rs)) ->
-        return $ GQExecPlan Nothing [GExPRemote rsi newq rs]
-
-    combPlan (GQExecPlan initHasuraPlan initRemPlans )(GQExecPlan hasuraPlan remotePlans) = case initHasuraPlan of
-      Nothing -> return $ GQExecPlan hasuraPlan (initRemPlans <> remotePlans)
-      Just plan  -> if isNothing hasuraPlan
-        then return $ GQExecPlan (Just plan) (initRemPlans <> remotePlans)
-        else throw500 "cannot combine multiple hasura plans"
-
     gCtxRoleMap = scGCtxMap sc
 
-    upsertType :: (VT.TypeLoc, G.Name) -> QueryMap -> QueryMap
+    combPlan gCtx schemaMap plan (tl, (newq, rs)) = do
+      let GQExecPlan hPlan remPlans = plan
+      case tl of
+        VT.HasuraType -> do
+          case hPlan of
+            Nothing -> do
+              remotePlans <- getRemoteRelPlans gCtx req rs schemaMap
+              return $ GQExecPlan (Just $ GExPHasura gCtx rs remotePlans) remPlans
+            Just _  -> throw500 "encountered more than one hasura plan!"
+        VT.RemoteType rsi -> do
+          return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans)
+
+
+splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
+splitSelSet ctx sel theMap = case sel of
+  s@(G.SelectionField fld) ->
+    let loc = getTypeLoc ctx $ G._fName fld
+    in maybe theMap (\l -> upsertType (l, s) theMap) loc
+  -- TODO: what do we with fragments? we don't have any typeinfo on them
+  _ -> theMap
+  where
     upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
 
-    splitQuery
-      :: G.TypedOperationDefinition -> [G.FragmentDefinition] -> QueryMap
-      -> [(VT.TypeLoc, SplitQueryParts)]
-    splitQuery opDef fragDefs qMap =
-      flip map (Map.toList qMap) $ \(tl, tyNames) ->
-        let selSet = G._todSelectionSet opDef
-            (flds, vars) = pickFields opDef tyNames selSet
-            frags = pickFrags flds fragDefs
-        in (tl, (mkNewOpDef opDef flds vars, frags))
 
-    pickFields opDef fldNames selSet =
-      let flds = filter filterSel selSet
-          vars = filterVars flds $ G._todVariableDefinitions opDef
-      in (flds, vars)
-      where
-        filterSel sel = case sel of
-          G.SelectionField fld -> G._fName fld `elem` fldNames
-          _                    -> False
-
+splitQuery
+  :: G.TypedOperationDefinition
+  -> [G.FragmentDefinition]
+  -> SplitSelSets
+  -> SplitQueryParts
+splitQuery opDef fragDefs qMap =
+  flip Map.map qMap $ \selSet ->
+    let frags = pickFrags selSet
+        vars  = filterVars selSet $ G._todVariableDefinitions opDef
+    in mkNewQParts frags selSet vars
+  where
     filterVars selSet vars =
       let args = join $ map getArgs selSet
           filterVar var = G._vdVariable var `elem` join (map getVars args)
@@ -180,7 +179,7 @@ getExecPlan userInfo sc req = do
         in join $ map getVarFromVal xs
       _ -> []
 
-    pickFrags selSet fragDefs =
+    pickFrags selSet =
       let perSel sel = case sel of
             G.SelectionField fld ->
               join $ map perSel $ G._fSelectionSet fld
@@ -197,10 +196,11 @@ getExecPlan userInfo sc req = do
 
       in nub $ curFrags ++ otherFrags
 
-    mkNewOpDef opDef selset varDefs =
-      opDef { G._todSelectionSet = selset
-            , G._todVariableDefinitions = varDefs
-            }
+    mkNewQParts frags selset varDefs =
+      let od = opDef { G._todSelectionSet = selset
+                     , G._todVariableDefinitions = varDefs
+                     }
+      in QueryParts od frags
 
 batchQueryWithVals :: GraphQLRequest -> [J.Value] -> GraphQLRequest
 batchQueryWithVals _ _ = GraphQLRequest
@@ -331,20 +331,17 @@ getRemoteRelPlans gCtx (GraphQLRequest opName _ _ ) rss schemaMap = do
         CT.FldRemote rri -> G.unName remRelName == getRelTxt (rriName rri)
         _                -> False
 
-transformGQRequest
-  :: GraphQLRequest
-  -> G.TypedOperationDefinition
-  -> [G.FragmentDefinition]
-  -> GraphQLRequest
-transformGQRequest (GraphQLRequest opNameM _ varValsM) opDef fragDefs =
+transformGQRequest :: GraphQLRequest -> QueryParts -> GraphQLRequest
+transformGQRequest (GraphQLRequest opNameM _ varValsM)
+                   (QueryParts opDef fragDefs) =
   let op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped opDef
       frags = map G.ExecutableDefinitionFragment fragDefs
       exDefs = op:frags
       q = GraphQLQuery exDefs
+      -- TODO: do this variable splitting in query splitting?
       vars = map G._vdVariable $ G._todVariableDefinitions opDef
       varValsFltrd = Map.filterWithKey (\k _ -> k `elem` vars) <$> varValsM
   in GraphQLRequest opNameM q varValsFltrd
-
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)
@@ -383,20 +380,9 @@ execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
                   , "Cache-Control", "Connection", "DNT"
                   ]
 
--- TODO: we should fix this function asap
--- as this will fail when there is a fragment at the top level
-getTopLevelNodes :: G.TypedOperationDefinition -> [G.Name]
-getTopLevelNodes opDef =
-  mapMaybe f $ G._todSelectionSet opDef
-  where
-    f = \case
-      G.SelectionField fld        -> Just $ G._fName fld
-      G.SelectionFragmentSpread _ -> Nothing
-      G.SelectionInlineFragment _ -> Nothing
 
-gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
-gatherTypeLocs gCtx nodes =
-  catMaybes $ flip map nodes $ \node ->
+getTypeLoc :: GCtx -> G.Name -> Maybe VT.TypeLoc
+getTypeLoc gCtx node =
     VT._fiLoc <$> Map.lookup node schemaNodes
   where
     schemaNodes =

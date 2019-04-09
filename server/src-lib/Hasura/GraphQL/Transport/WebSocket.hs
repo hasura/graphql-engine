@@ -15,7 +15,6 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
@@ -223,14 +222,6 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
   execute userInfo reqHdrs execPlan
   where
     execute userInfo reqHdrs plan = undefined
-        -- E.GExPHasura gCtx rootSelSet ->
-        --   runHasuraGQ userInfo gCtx rootSelSet
-        -- E.GExPRemote rsi newq rootSelSet ->
-        --   runRemoteGQ userInfo reqHdrs rsi rootSelSet
-        -- E.GExPMixed plans ->
-        --   -- FIXME: is this correct?
-        --   mapM_ (execute userInfo reqHdrs) plans
-
     runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
     runHasuraGQ userInfo gCtx rootSelSet =
       case rootSelSet of

@@ -4,6 +4,9 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Debug.Trace
 
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Lazy                      as Map
+import qualified Data.Vector                            as V
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -14,9 +17,6 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Lazy                      as Map
-import qualified Data.Vector                            as V
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Validate                as V
@@ -41,7 +41,6 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
      (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
      _ -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
 
-
 runMixedGQ
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool
@@ -54,40 +53,41 @@ runMixedGQ
   -> E.GQExecPlan
   -> m EncJSON
 runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
-  let (E.GQExecPlan hasuraPlan remotePlans) = plan
-  hasuraRes <- case hasuraPlan of
-    Nothing -> return []
-    Just (E.GExPHasura gCtx rootSelSet remRelPlans) -> do
-      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
-      return [res]
-
-  remoteRes <- forM remotePlans $ \case
-    E.GExPRemote rsi newq rs ->
-      E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-
-  let resSet = hasuraRes ++ remoteRes
-      interimResBS = map encJToLBS resSet
+  let E.GQExecPlan hasuraPlan remotePlans = plan
+  allRes <- run (hasuraPlan, remotePlans)
+  let interimResBS = map encJToLBS allRes
   interimRes <- forM interimResBS $ \res -> do
-    let x = J.decode res :: (Maybe J.Object)
-    onNothing x $ throw500 "could not parse response as JSON"
+    let obj = J.decode res :: (Maybe J.Object)
+    onNothing obj $ do
+      liftIO $ print res
+      throw500 "could not parse response as JSON"
+
+  -- TODO: the order is not guaranteed! should we have a orderedmap?
   let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
       errs  = mapMaybe (Map.lookup "errors") interimRes
 
   return $ encJFromJValue $ J.object [ "data" J..= Map.unions datas
-                                     , "errors" J..= toMaybeArr errs
+                                     , "errors" J..= errs
                                      ]
-
   where
+    -- TODO: use async
+    run (hasuraPlan, remotePlans) = do
+      hasuraRes <- case hasuraPlan of
+        Nothing -> return []
+        Just (E.GExPHasura gCtx rootSelSet remRelPlans) -> do
+          res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
+          return [res]
+      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs) ->
+        E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
+
+      return $ hasuraRes ++ remoteRes
+
     -- TODO: should validate response and throw error?
     onlyObjs jVals =
       let fn jVal = case jVal of
             J.Object o -> Just o
             _          -> Nothing
       in mapMaybe fn jVals
-
-    toMaybeArr [] = Nothing
-    toMaybeArr x  = Just x
-
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
