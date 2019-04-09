@@ -356,7 +356,7 @@ class Permissions extends Component {
 
           const getEditLink = () => {
             return (
-              <span className={styles.editPermissionLink}>
+              <span className={styles.editPermsLink}>
                 <i className="fa fa-pencil" aria-hidden="true" />
               </span>
             );
@@ -559,9 +559,7 @@ class Permissions extends Component {
 
       return (
         <div className={styles.activeEdit}>
-          <div className={styles.editPermissionsHeading}>
-            Apply Bulk Actions
-          </div>
+          <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
           <div>
             <span className={styles.add_pad_right}>Selected Roles</span>
             {getSelectedRoles()}
@@ -596,7 +594,12 @@ class Permissions extends Component {
       const query = permissionsState.query;
 
       const noPermissions = !permissionsState[query];
-      const noPermissionsMsg = `Set row ${query} permissions first`;
+      const noPermissionsMsg = 'Set row permissions first';
+
+      let sectionClasses = styles.editPermsSection;
+      if (noPermissions) {
+        sectionClasses += ' ' + styles.disabled;
+      }
 
       const getSectionHeader = (title, toolTip, sectionStatus) => {
         let sectionStatusHtml;
@@ -678,8 +681,7 @@ class Permissions extends Component {
           );
 
           const addNoChecksOption = () => {
-            const isSelected =
-              !permissionsState.custom_checked && noChecks;
+            const isSelected = !permissionsState.custom_checked && noChecks;
 
             const allowAllLabel = (
               <span data-test="without-checks">Without any checks</span>
@@ -795,6 +797,8 @@ class Permissions extends Component {
                   }
                   value={limitValue}
                   onChange={e => dispatchLimit(e.target.value)}
+                  disabled={noPermissions}
+                  title={noPermissions ? noPermissionsMsg : ''}
                   type="number"
                   min="0"
                 />
@@ -825,12 +829,16 @@ class Permissions extends Component {
 
         return (
           <CollapsibleToggle
-            title={getSectionHeader(rowSectionTitle, rowPermissionTooltip, rowSectionStatus)}
+            title={getSectionHeader(
+              rowSectionTitle,
+              rowPermissionTooltip,
+              rowSectionStatus
+            )}
             defaultTitle
             testId={'toggle-row-permission'}
             isOpen={noAccess}
           >
-            <div className={styles.editPermissionsSection}>
+            <div className={styles.editPermsSection}>
               <div>
                 Allow role <b>{permissionsState.role}</b> to{' '}
                 {permissionsState.query} <b>rows</b>:{getFilterOptions()}
@@ -957,9 +965,15 @@ class Permissions extends Component {
           const colSectionTitle = 'Column ' + query + ' permissions';
 
           let colSectionStatus;
-          if (!permissionsState[query] || !permissionsState[query].columns.length) {
+          if (
+            !permissionsState[query] ||
+            !permissionsState[query].columns.length
+          ) {
             colSectionStatus = 'no columns';
-          } else if (permissionsState[query].columns.length === tableSchema.columns.length) {
+          } else if (
+            permissionsState[query].columns.length ===
+            tableSchema.columns.length
+          ) {
             colSectionStatus = 'all columns';
           } else {
             colSectionStatus = 'partial columns';
@@ -967,11 +981,18 @@ class Permissions extends Component {
 
           _columnSection = (
             <CollapsibleToggle
-              title={getSectionHeader(colSectionTitle, colPermissionTooltip, colSectionStatus)}
+              title={getSectionHeader(
+                colSectionTitle,
+                colPermissionTooltip,
+                colSectionStatus
+              )}
               defaultTitle
               testId={'toggle-col-permission'}
             >
-              <div className={styles.editPermissionsSection}>
+              <div
+                className={sectionClasses}
+                title={noPermissions ? noPermissionsMsg : ''}
+              >
                 <div>
                   <span className={styles.add_mar_right}>
                     Allow role <b>{permissionsState.role}</b> {getAccessText()}{' '}
@@ -1016,13 +1037,20 @@ class Permissions extends Component {
 
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Upsert queries permissions', upsertToolTip, upsertStatus)}
+            title={getSectionHeader(
+              'Upsert queries permissions',
+              upsertToolTip,
+              upsertStatus
+            )}
             defaultTitle
             testId={'toggle-upsert-permission'}
           >
-            <div className="radio">
-              <label>
-                <div className={styles.center_radio_label_input}>
+            <div
+              className={sectionClasses}
+              title={noPermissions ? noPermissionsMsg : ''}
+            >
+              <div className="checkbox">
+                <label>
                   <input
                     type="checkbox"
                     checked={upsertAllowed}
@@ -1030,14 +1058,10 @@ class Permissions extends Component {
                     onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
                     disabled={noPermissions}
                   />
-                  <span className={styles.mar_left}>
-                    <span className={styles.add_mar_right}>
-                      Allow role <b>{permissionsState.role}</b> to make upsert
-                      queries
-                    </span>
-                  </span>
-                </div>
-              </label>
+                  Allow role <b>{permissionsState.role}</b> to make upsert
+                  queries
+                </label>
+              </div>
             </div>
           </CollapsibleToggle>
         );
@@ -1324,9 +1348,12 @@ class Permissions extends Component {
           };
 
           return presets.map((preset, i) => {
-            const rowElementStyle = `${styles.display_inline} ${
-              styles.add_mar_right
-            } ${styles.input_element_wrapper}`;
+            const rowElementStyle =
+              styles.display_inline +
+              ' ' +
+              styles.add_mar_right +
+              ' ' +
+              styles.input_element_wrapper;
 
             return (
               <div className={styles.insertSetConfigRow} key={i}>
@@ -1359,18 +1386,28 @@ class Permissions extends Component {
 
         let presetStatus = '';
         if (presets.length > 1) {
-          presetStatus = presets.map(p => p.key).filter(p => p !== '').join(', ');
+          presetStatus = presets
+            .map(p => p.key)
+            .filter(p => p !== '')
+            .join(', ');
         } else {
           presetStatus = 'no presets';
         }
 
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Column presets', presetTooltip, presetStatus)}
+            title={getSectionHeader(
+              'Column presets',
+              presetTooltip,
+              presetStatus
+            )}
             defaultTitle
             testId={'toggle-presets-permission'}
           >
-            <div className={styles.editPermissionsSection}>
+            <div
+              className={sectionClasses}
+              title={noPermissions ? noPermissionsMsg : ''}
+            >
               <form className={styles.form_permission_insert_set_wrapper}>
                 <div className={styles.permission_insert_set_wrapper}>
                   {getPresetValues()}
@@ -1386,8 +1423,8 @@ class Permissions extends Component {
           return;
         }
 
-        const dispatchToggleAllowAggregation = checked => {
-          dispatch(permToggleAllowAggregation(checked));
+        const handleClick = e => {
+          dispatch(permToggleAllowAggregation(e.target.checked));
         };
 
         const aggregationAllowed = permissionsState.select
@@ -1413,23 +1450,22 @@ class Permissions extends Component {
             defaultTitle
             testId={'toggle-agg-permission'}
           >
-            <div className={styles.mar_small_neg_left_1}>
-              <div className="radio">
+            <div
+              className={sectionClasses}
+              title={noPermissions ? noPermissionsMsg : ''}
+            >
+              <div className="checkbox">
                 <label>
                   <input
                     type="checkbox"
                     checked={aggregationAllowed}
                     value="toggle_aggregation"
-                    onChange={e =>
-                      dispatchToggleAllowAggregation(e.target.checked)
-                    }
+                    onChange={handleClick}
                     disabled={noPermissions}
                     title={noPermissions ? noPermissionsMsg : ''}
                   />
-                  <span className={styles.mar_small_left}>
-                    Allow role <b>{permissionsState.role}</b> to make
-                    aggregation queries
-                  </span>
+                  Allow role <b>{permissionsState.role}</b> to make aggregation
+                  queries
                 </label>
               </div>
             </div>
@@ -1452,6 +1488,8 @@ class Permissions extends Component {
 
         const applyToList = permissionsState.applySamePermissions;
 
+        const disabledCloneMsg = 'No permissions are set';
+
         const getApplyToList = () => {
           const _applyToListHtml = [];
 
@@ -1472,13 +1510,18 @@ class Permissions extends Component {
 
               return (
                 <select
-                  className={`${styles.fkSelect} ${styles.fkInEdit} ${
-                    styles.add_mar_right
-                  } input-sm form-control`}
+                  className={
+                    styles.fkSelect +
+                    ' ' +
+                    styles.fkInEdit +
+                    ' ' +
+                    styles.add_mar_right +
+                    ' input-sm form-control'
+                  }
                   value={applyTo[type] || ''}
                   onChange={setApplyTo}
                   disabled={noPermissions}
-                  title={noPermissions ? 'No permissions are set' : ''}
+                  title={noPermissions ? disabledCloneMsg : ''}
                 >
                   <option disabled value="">
                     Select {type}
@@ -1545,7 +1588,10 @@ class Permissions extends Component {
                 defaultTitle
                 testId={'toggle-clone-permission'}
               >
-                <div className={styles.editPermissionsSection}>
+                <div
+                  className={sectionClasses}
+                  title={noPermissions ? disabledCloneMsg : ''}
+                >
                   <div>Apply same permissions for:</div>
                   <div className={styles.add_mar_top_small}>
                     {applyToListHtml}
@@ -1643,8 +1689,11 @@ class Permissions extends Component {
       };
 
       return (
-        <div key={`${permissionsState.role}-${permissionsState.query}`} className={styles.activeEdit}>
-          <div className={styles.editPermissionsHeading}>
+        <div
+          key={`${permissionsState.role}-${permissionsState.query}`}
+          className={styles.activeEdit}
+        >
+          <div className={styles.editPermsHeading}>
             <span className={styles.add_mar_right}>
               <Button
                 size="xs"
