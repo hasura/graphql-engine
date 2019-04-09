@@ -25,7 +25,7 @@ export const permNoCheck = (tableName, query, first) => {
     getElementFromAlias(`${query === first ? '' : 'role0'}-${query}`)
   ).click();
   // check the custom check textbox
-  cy.get(getElementFromAlias('toggle-row-permission')).click();
+  // cy.get(getElementFromAlias('toggle-row-permission')).click();
   cy.get(getElementFromAlias('without-checks')).click();
   // set filter { }
   // Toggle all columns in case
