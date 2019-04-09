@@ -122,7 +122,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
     traceShowM ("---------------------finding joinVals---------------")
     joinVals <- getJoinValues resp (E.jiParentAlias ji) (E.jiParentJoinKey ji)
     traceShowM joinVals
-    let newq = resolve req joinVals
+    let newq = resolve joinVals
     remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
     traceShowM ("---------------------remote response---------------")
     traceShowM (encJToLBS remResp)
@@ -148,7 +148,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
           let encResp = encJToLBS resp
               respObjM = J.decode encResp :: (Maybe J.Object)
               childKey = G.unName.G.unAlias $ E.jiChildAlias ji
-              childPath = ["data", childKey]
+              childPath = ["data"]
               childJoinKey = G.unName $ E.jiChildJoinKey ji
               parentKey = G.unName.G.unAlias $ E.jiParentAlias ji
               parentPath = [parentKey]
@@ -156,7 +156,8 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
 
           respObj <- onNothing respObjM $ throw500 "could not parse as json"
           respVal <- getValueAtPath respObj childPath
-          respArr <- assertArray respVal
+          respObj <- assertObject respVal
+          let respArr = Map.elems respObj
           traceShowM "-------------------response array----------------"
           traceShowM respArr
           initVal <- getValueAtPath initObj parentPath
@@ -164,7 +165,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
           traceShowM "-------------------init array----------------"
           traceShowM initArr
 
-          newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey (toList respArr) childJoinKey childKey)
+          newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey respArr childJoinKey childKey)
           let newJArr = J.Array (V.fromList newArr)
 
           setValueAtPath initObj [] (parentKey, newJArr)
