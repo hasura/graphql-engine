@@ -32,9 +32,7 @@ import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
-#ifdef InternalAPIs
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
-#endif
 import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
@@ -96,10 +94,10 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data SchemaCacheRef
   = SchemaCacheRef
-  { _scrLock      :: MVar ()
-  , _scrCache     :: IORef (SchemaCache, SchemaCacheVer)
+  { _scrLock     :: MVar ()
+  , _scrCache    :: IORef (SchemaCache, SchemaCacheVer)
   -- an action to run when schemacache changes
-  , _scrOnChange  :: IO ()
+  , _scrOnChange :: IO ()
   }
 
 withSCUpdate
@@ -131,7 +129,7 @@ data ServerCtx
   , scEnabledAPIs  :: S.HashSet API
   , scInstanceId   :: InstanceId
   , scPlanCache    :: E.PlanCache
-  , scWSEnv        :: WS.WSServerEnv
+  , scLQState      :: WS.LiveQueriesState
   }
 
 data HandlerCtx
@@ -325,9 +323,11 @@ mkWaiApp
   -> Q.PGPool -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
+  -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
-         enableConsole enableTelemetry instanceId apis = do
+         enableConsole enableTelemetry instanceId apis
+         lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
@@ -346,14 +346,15 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
         sqlGenCtx = SQLGenCtx strfyNum
         logger = L.mkLogger loggerCtx
 
-    wsServerEnv <- WS.createWSServerEnv logger httpManager
-                   sqlGenCtx cacheRef pgExecCtx corsPolicy planCache
+    lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState
+                   cacheRef httpManager corsPolicy sqlGenCtx planCache
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx logger
                     schemaCacheRef mode httpManager
-                    strfyNum apis instanceId planCache wsServerEnv
+                    strfyNum apis instanceId planCache lqState
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
@@ -405,8 +406,7 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
       json respJ
     get "internal/subscriptions" $ do
-      respJ <- liftIO $ EL.dumpLiveQueriesState $
-               WS._wseLiveQMap $ scWSEnv serverCtx
+      respJ <- liftIO $ EL.dumpLiveQueriesState $ scLQState serverCtx
       json respJ
 #endif
 

@@ -3,7 +3,8 @@
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
   , createWSServerEnv
-  , WSServerEnv(..)
+  , WSServerEnv
+  , LiveQueriesState
   ) where
 
 import qualified Control.Concurrent.Async                    as A
@@ -118,7 +119,6 @@ instance L.ToEngineLog WSLog where
 data WSServerEnv
   = WSServerEnv
   { _wseLogger     :: !L.Logger
-  , _wseServer     :: !WSServer
   , _wseRunTx      :: !PGExecCtx
   , _wseLiveQMap   :: !LiveQueriesState
   , _wseGCtxMap    :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
@@ -126,6 +126,7 @@ data WSServerEnv
   , _wseCorsPolicy :: !CorsPolicy
   , _wseSQLCtx     :: !SQLGenCtx
   , _wseQueryCache :: !E.PlanCache
+  , _wseServer     :: !WSServer
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -266,8 +267,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
-    WSServerEnv logger _ pgExecCtx lqMap gCtxMapRef httpMgr  _
-      sqlGenCtx planCache = serverEnv
+    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
+      sqlGenCtx planCache _ = serverEnv
 
     wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
@@ -410,19 +411,20 @@ onClose logger lqMap _ wsConn = do
 
 createWSServerEnv
   :: L.Logger
-  -> H.Manager -> SQLGenCtx
-  -> IORef.IORef (SchemaCache, SchemaCacheVer)
   -> PGExecCtx
+  -> LiveQueriesState
+  -> IORef.IORef (SchemaCache, SchemaCacheVer)
+  -> H.Manager
   -> CorsPolicy
+  -> SQLGenCtx
   -> E.PlanCache
   -> IO WSServerEnv
-createWSServerEnv logger httpManager sqlGenCtx cacheRef
-  pgExecCtx corsPolicy planCache = do
+createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
+  corsPolicy sqlGenCtx planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
-  lqState <- LQ.initLiveQueriesState pgExecCtx
-  return $ WSServerEnv logger wsServer
+  return $ WSServerEnv logger
     pgExecCtx lqState cacheRef
-    httpManager corsPolicy sqlGenCtx planCache
+    httpManager corsPolicy sqlGenCtx planCache wsServer
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

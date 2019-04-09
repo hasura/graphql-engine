@@ -1,7 +1,15 @@
 module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
-  ( LiveQueryMap
-  , newLiveQueryMap
-  , dumpLiveQueryMap
+  ( BatchSize
+  , mkBatchSize
+  , RefetchInterval
+  , refetchIntervalFromMilli
+  , MxOpts
+  , mkMxOpts
+
+  , LiveQueriesState
+  , initLiveQueriesState
+  , dumpLiveQueriesState
+
   , MxOp
   , addLiveQuery
   , removeLiveQuery
@@ -70,10 +78,55 @@ instance J.ToJSON MLiveQueryId where
              , "query" J..= query
              ]
 
+data MxOpts
+  = MxOpts
+  { _moBatchSize    :: !BatchSize
+  , _moRefetchInterval :: !RefetchInterval
+  } deriving (Show, Eq)
+
+instance J.ToJSON MxOpts where
+  toJSON (MxOpts batchSize refetchInterval) =
+    J.object [ "batch_size" J..= batchSize
+             , "refetch_delay" J..= refetchInterval
+             ]
+
+-- 1 second
+defaultRefetchInterval :: RefetchInterval
+defaultRefetchInterval =
+  refetchIntervalFromMilli 1000
+
+mkMxOpts
+  :: Maybe BatchSize
+  -> Maybe RefetchInterval
+  -> MxOpts
+mkMxOpts batchSizeM refetchIntervalM =
+  MxOpts
+  (fromMaybe defaultBatchSize batchSizeM)
+  (fromMaybe defaultRefetchInterval refetchIntervalM)
+
+data LiveQueriesState k
+  = LiveQueriesState
+  { _lqsOptions      :: !MxOpts
+  , _lqsLiveQueryMap :: !(LiveQueryMap k)
+  }
+
 type LiveQueryMap k = STMMap.Map MLiveQueryId (MLQHandler k, ThreadTM)
 
-newLiveQueryMap :: STM.STM (LiveQueryMap k)
-newLiveQueryMap = STMMap.new
+initLiveQueriesState
+  :: MxOpts
+  -> STM.STM (LiveQueriesState k)
+initLiveQueriesState lqOptions =
+  LiveQueriesState
+  lqOptions
+  <$> STMMap.new
+
+dumpLiveQueriesState :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
+  lqMapJ <- dumpLiveQueryMap lqMap
+  return $ J.object
+    [ "options" J..= opts
+    , "live_queries_map" J..= lqMapJ
+    ]
 
 dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
 dumpLiveQueryMap lqMap =
@@ -82,18 +135,12 @@ dumpLiveQueryMap lqMap =
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
       threadId <- A.asyncThreadId <$> STM.readTMVar threadRef
       candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
-      -- prevResHash <- STM.readTVar $ _lqhPrevRes lqHandler
-      -- curOps <- ListT.toList $ STMMap.listT $ _lqhCurOps lqHandler
-      -- newOps <- ListT.toList $ STMMap.listT $ _lqhNewOps lqHandler
       return $ J.object
         [ "key" J..= lq
         , "thread_id" J..= show threadId
         , "alias" J..= _mhAlias lqHandler
         , "multiplexed_query" J..= Q.getQueryText (_mhQuery lqHandler)
         , "candidates" J..= candidatesJ
-        -- , "current_ops" J..= map fst curOps
-        -- , "new_ops" J..= map fst newOps
-        -- , "previous_result_hash" J..= prevResHash
         ]
   where
     dumpCandidates candidateMap = do
@@ -160,7 +207,7 @@ type MxOp = (G.Alias, Q.Query, ValidatedVariables)
 addLiveQuery
   :: (Eq k, Hashable k)
   => PGExecCtx
-  -> LiveQueryMap k
+  -> LiveQueriesState k
   -- the query
   -> LiveQuery
   -> MxOp
@@ -169,7 +216,7 @@ addLiveQuery
   -- the action to be executed when result changes
   -> OnChange
   -> IO ()
-addLiveQuery pgExecCtx lqMap liveQ (als, mxQuery, valQVars) k onResultAction = do
+addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction = do
 
   -- generate a new result id
   responseId <- newRespId
@@ -194,11 +241,14 @@ addLiveQuery pgExecCtx lqMap liveQ (als, mxQuery, valQVars) k onResultAction = d
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \(handler, pollerThreadTM) -> do
     threadRef <- A.async $ forever $ do
-      pollQuery defaultBatchSize pgExecCtx handler
-      threadDelay $ 1 * 1000 * 1000
+      pollQuery batchSize pgExecCtx handler
+      threadDelay $ refetchIntervalToMicro refetchInterval
     STM.atomically $ STM.putTMVar pollerThreadTM threadRef
 
   where
+
+    LiveQueriesState lqOpts lqMap = lqState
+    MxOpts batchSize refetchInterval = lqOpts
 
     addToExistingCandidate handlerC =
       STMMap.insert onResultAction k $ _mlqhcNewOps handlerC
@@ -244,12 +294,12 @@ getHandlerId lq =
 
 removeLiveQuery
   :: (Eq k, Hashable k)
-  => LiveQueryMap k
+  => LiveQueriesState k
   -- the query and the associated operation
   -> LiveQuery
   -> k
   -> IO ()
-removeLiveQuery lqMap liveQ k = do
+removeLiveQuery lqState liveQ k = do
   threadRefM <- STM.atomically $ do
    detM <- getQueryDet
    fmap join $ forM detM $
@@ -258,6 +308,8 @@ removeLiveQuery lqMap liveQ k = do
   onJust threadRefM A.cancel
 
   where
+    lqMap = _lqsLiveQueryMap lqState
+
     getQueryDet = do
       handlerM <- STMMap.lookup handlerId lqMap
       fmap join $ forM handlerM $ \(handler, threadRef) -> do
@@ -333,7 +385,10 @@ getRespVars usrVars valVars =
 
 newtype BatchSize
   = BatchSize { unBatchSize :: Word32 }
-  deriving (Show, Eq)
+  deriving (Show, Eq, J.ToJSON)
+
+mkBatchSize :: Word32 -> BatchSize
+mkBatchSize = BatchSize
 
 defaultBatchSize :: BatchSize
 defaultBatchSize =
