@@ -19,6 +19,7 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
 };
 
 const defaultPermissionsState = {

@@ -20,6 +20,11 @@ const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
+
+const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
+const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+
 // const V_ADD_WHERE;
 // const V_REMOVE_WHERE;
 // const V_SET_LIMIT;
@@ -97,6 +102,41 @@ const vMakeRequest = () => {
       }
     );
   };
+};
+
+const fetchManualTriggers = () => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: ['*'],
+      order_by: {
+        column: 'name',
+        type: 'asc',
+        nulls: 'last',
+      },
+    },
+  };
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
+  };
+  dispatch({ type: FETCHING_MANUAL_TRIGGER });
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: data });
+    },
+    error => {
+      dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
+      console.error('Failed to load triggers' + JSON.stringify(error));
+    }
+  );
 };
 
 const deleteItem = pkClause => {
@@ -443,6 +483,25 @@ const viewReducer = (tableName, schemas, viewState, action) => {
         ...viewState,
         expandedRow: '',
       };
+    case FETCHING_MANUAL_TRIGGER:
+      return {
+        ...viewState,
+        ongoingRequest: true,
+        lastError: {},
+      };
+    case FETCH_MANUAL_TRIGGER_SUCCESS:
+      return {
+        ...viewState,
+        manualTriggers: action.data,
+        ongoingRequest: false,
+      };
+    case FETCH_MANUAL_TRIGGER_FAIL:
+      return {
+        ...viewState,
+        manualTriggers: [],
+        ongoingRequest: false,
+        lastError: action.data,
+      };
     default:
       return viewState;
   }
@@ -450,6 +509,7 @@ const viewReducer = (tableName, schemas, viewState, action) => {
 
 export default viewReducer;
 export {
+  fetchManualTriggers,
   vSetDefaults,
   vMakeRequest,
   vExpandRel,
