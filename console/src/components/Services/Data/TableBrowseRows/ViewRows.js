@@ -259,16 +259,6 @@ const ViewRows = ({
         };
 
         const getManualTriggersButton = () => {
-          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
-          const triggerTitle = 'Run manual trigger';
-
-          const triggerBtn = getButton(
-            'trigger',
-            triggerIcon,
-            triggerTitle,
-            () => {}
-          );
-
           const triggerOptions = [
             {
               displayName: 'ban_employer',
@@ -289,6 +279,20 @@ const ViewRows = ({
               prefixLabel: 'Run:',
             },
           ];
+
+          if (!triggerOptions.length) {
+            return;
+          }
+
+          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerTitle = 'Run manual trigger';
+
+          const triggerBtn = getButton(
+            'trigger',
+            triggerIcon,
+            triggerTitle,
+            () => {}
+          );
 
           return (
             <DataDropdown
