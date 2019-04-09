@@ -122,6 +122,9 @@ def MkHandlers(handlers):
             self.send_header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
             self.end_headers()
 
+        def log_message(self, format, *args):
+            return
+
     return HTTPHandler
 
 

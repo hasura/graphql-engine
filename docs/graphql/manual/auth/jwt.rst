@@ -138,7 +138,8 @@ public keys are not yet supported.
 ``key``
 ^^^^^^^
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
-  "abcdef...").
+  "abcdef..."). The key must be long enough for the algorithm chosen,
+  (e.g. for HS256 it must be at least 32 characters long).
 - In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 

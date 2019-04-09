@@ -113,6 +113,14 @@ a.expanded {
   width: 300px;
 }
 
+.select {
+  width: 300px;
+  display: inline-block;
+  height: 30px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
 .addCol {
   .input {
     width: 300px;
@@ -151,12 +159,15 @@ a.expanded {
     width: 200px;
     margin-right: 0px;
   }
+}
 
-  i:hover {
-    cursor: pointer;
-    color: #B85C27;
-    transition: 0.2s;
-  }
+.iClickable {
+}
+
+.iClickable:hover {
+  cursor: pointer;
+  color: #b85c27;
+  transition: 0.2s;
 }
 
 .insertBox {
@@ -196,3 +207,4 @@ a.expanded {
 .tableCellExpanded {
   white-space: normal;
 }
+

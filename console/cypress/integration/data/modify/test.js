@@ -16,6 +16,7 @@ import {
   passRemoveForeignKey,
   passMTRenameTable,
   passMTRenameColumn,
+  passModifyPkey,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -47,6 +48,7 @@ export const runModifyTableTests = () => {
     it('Pass modify with wrong default value', passMCWithRightDefaultValue);
     it('Pass create foreign-key', passCreateForeignKey);
     it('Pass remove foreign-key', passRemoveForeignKey);
+    it('Pass modifying a primary key', passModifyPkey);
     it('Delete the column', passMTDeleteCol);
     it('Delete Table Cancel', passMTDeleteTableCancel);
     it('Delete table', passMTDeleteTable);

@@ -21,11 +21,11 @@ class TestHorizantalScaleBasic():
         # teardown
         st_code, resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
         assert st_code == 200, resp
-    
+
     def test_horizontal_scale_basic(self, hge_ctx):
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.load(c)
-        
+            conf = yaml.safe_load(c)
+
         assert isinstance(conf, list) == True, 'Not an list'
         for _, step in enumerate(conf):
             # execute operation
@@ -37,8 +37,8 @@ class TestHorizantalScaleBasic():
             resp = response.json()
             assert st_code == 200, resp
 
-            # wait for 30 sec
-            time.sleep(30)
+            # wait for 20 sec
+            time.sleep(20)
             # validate data
             response = hge_ctx.http.post(
                 self.servers[step['validate']['server']] + "/v1alpha1/graphql",
@@ -54,7 +54,7 @@ class TestHorizantalScaleBasic():
                     'expected': step['validate']['response'],
                     'diff': jsondiff.diff(step['validate']['response'], resp)
                 })
-    
+
     @classmethod
     def dir(cls):
         return 'queries/horizontal_scale/basic'
