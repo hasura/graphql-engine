@@ -5,6 +5,10 @@ type relationship struct {
 
 	RelName string `json:"rel_name"`
 
+	RefTableSchema string `json:"ref_table_table_schema"`
+
+	RefTableName string `json:"ref_table"`
+
 	RelDef interface{} `json:"rel_def"`
 }
 

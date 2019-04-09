@@ -169,8 +169,14 @@ func (c *Config) Scan() error {
 					table.relationShipSuggestions = append(table.relationShipSuggestions, relItem)
 				}
 
-				// TODO: Need to validate RelTableName and RelTableSchema
-				table.relationships = append(table.relationships, relationships...)
+				for _, relItem := range relationships {
+					ok := c.checkSchemaAndTableToBeTracked(relItem.RefTableSchema, relItem.RefTableName)
+					if !ok {
+						continue
+					}
+
+					table.relationships = append(table.relationships, relItem)
+				}
 			}
 
 			c.tablesInfo = append(c.tablesInfo, *table)
