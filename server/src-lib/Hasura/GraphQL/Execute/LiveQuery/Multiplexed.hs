@@ -81,8 +81,6 @@ data MLQHandler k
        )
   }
 
-type RespRef = STM.TVar (Maybe GQResp)
-
 -- This type represents the state associated with
 -- the response of (role, gqlQueryText, userVars, variableValues)
 data MLQHandlerCandidate k
@@ -96,7 +94,7 @@ data MLQHandlerCandidate k
   , _mlqhcValidatedVars :: !ValidatedVariables
 
   -- we need to store the previous response
-  , _mlqhcPrevRes       :: !RespRef
+  , _mlqhcPrevRes       :: !RespTV
 
   -- the actions that have been run previously
   -- we run these if the response changes
@@ -244,19 +242,19 @@ removeLiveQuery lqMap liveQ k = do
 data CandidateSnapshot
   = CandidateSnapshot
   { _csRespVars   :: !RespVars
-  , _csPrevResRef :: !RespRef
+  , _csPrevResRef :: !RespTV
   , _csCurSinks   :: ![OnChange]
   , _csNewSinks   :: ![OnChange]
   }
 
-pushCandidateResult :: GQResp -> CandidateSnapshot -> IO ()
-pushCandidateResult resp candidateSnapshot = do
+pushCandidateResult :: GQResp -> Maybe RespHash -> CandidateSnapshot -> IO ()
+pushCandidateResult resp respHashM candidateSnapshot = do
   pushResultToSinks newSinks
   -- write to the current websockets if needed
-  prevRespM <- STM.readTVarIO respRef
-  when (isExecError resp || Just resp /= prevRespM) $ do
+  prevRespHashM <- STM.readTVarIO respRef
+  when (isExecError resp || respHashM /= prevRespHashM) $ do
     pushResultToSinks curSinks
-    STM.atomically $ STM.writeTVar respRef $ Just resp
+    STM.atomically $ STM.writeTVar respRef respHashM
   where
     CandidateSnapshot _ respRef curSinks newSinks = candidateSnapshot
     pushResultToSinks =
@@ -321,9 +319,12 @@ pollQuery batchSize pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
 
     let operations = getCandidateOperations candidateSnapshotMap mxRes
     -- concurrently push each unique result
-    A.mapConcurrently_ (uncurry pushCandidateResult) operations
+    A.mapConcurrently_ (uncurry3 pushCandidateResult) operations
 
   where
+    uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+    uncurry3 f (a, b, c) = f a b c
+
     getCandidateSnapshot ((usrVars, _), handlerC) = do
       let MLQHandlerCandidate resId valVars respRef curOpsTV newOpsTV = handlerC
       curOpsL <- ListT.toList $ STMMap.listT curOpsTV
@@ -346,7 +347,7 @@ pollQuery batchSize pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
       Left e ->
         -- TODO: this is internal error
         let resp = GQExecError [encodeGQErr False e]
-        in [ (resp, snapshot)
+        in [ (resp, Nothing, snapshot)
            | (_, snapshot) <- Map.toList candidateSnapshotMap
            ]
       Right responses ->
@@ -354,9 +355,11 @@ pollQuery batchSize pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
           -- TODO: change it to use bytestrings directly
 
           let fldAlsT = G.unName $ G.unAlias alias
-              resp = GQSuccess $ encJToLBS $
-                     encJFromAssocList $ pure $ (,) fldAlsT respEnc
-          in (resp,) <$> Map.lookup respId candidateSnapshotMap
+              respLbs = encJToLBS $ encJFromAssocList $
+                        pure $ (,) fldAlsT respEnc
+              resp = GQSuccess respLbs
+              respHash = mkRespHash respLbs
+          in (resp, Just respHash,) <$> Map.lookup respId candidateSnapshotMap
 
 
 mkMxQuery :: Q.Query -> Q.Query
