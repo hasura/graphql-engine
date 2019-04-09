@@ -3,6 +3,7 @@
 module Hasura.GraphQL.Execute.LiveQuery
   ( LiveQueriesState
   , initLiveQueriesState
+  , dumpLiveQueriesState
 
   -- TODO: we shouldn't be exporting
   -- the construction of LiveQuery
@@ -50,6 +51,16 @@ data LiveQueriesState k
   , _lqsFallback    :: !(LQF.LiveQueryMap k)
   , _lqsPGExecTx    :: !PGExecCtx
   }
+
+dumpLiveQueriesState
+  :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
+  mxJ <- LQM.dumpLiveQueryMap mx
+  fallbackJ <- LQF.dumpLiveQueryMap fallback
+  return $ J.object
+    [ "fallback" J..= fallbackJ
+    , "multiplexed" J..= mxJ
+    ]
 
 initLiveQueriesState
   :: PGExecCtx

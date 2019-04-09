@@ -32,6 +32,9 @@ import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
+#ifdef InternalAPIs
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+#endif
 import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
@@ -126,6 +129,7 @@ data ServerCtx
   , scStringifyNum :: Bool
   , scEnabledAPIs  :: S.HashSet API
   , scInstanceId   :: InstanceId
+  , scWSEnv        :: WS.WSServerEnv
   }
 
 data HandlerCtx
@@ -336,20 +340,20 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
     cacheLock <- newMVar ()
     planCache <- E.initPlanCache
 
+    let corsPolicy = mkDefaultCorsPolicy corsCfg
+        sqlGenCtx = SQLGenCtx strfyNum
+        logger = L.mkLogger loggerCtx
+
+    wsServerEnv <- WS.createWSServerEnv logger httpManager
+                   sqlGenCtx cacheRef pgExecCtx corsPolicy planCache
 
     let schemaCacheRef = SchemaCacheRef cacheLock cacheRef planCache
-        serverCtx = ServerCtx pgExecCtx (L.mkLogger loggerCtx)
+        serverCtx = ServerCtx pgExecCtx logger
                     schemaCacheRef mode httpManager
-                    strfyNum apis instanceId
+                    strfyNum apis instanceId wsServerEnv
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
-
-    let corsPolicy = mkDefaultCorsPolicy corsCfg
-        sqlGenCtx = SQLGenCtx strfyNum
-
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager
-                   sqlGenCtx cacheRef pgExecCtx corsPolicy planCache
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -396,6 +400,10 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 #ifdef InternalAPIs
     get "internal/plan_cache" $ do
       respJ <- liftIO $ E.dumpPlanCache $ _scrPlanCache $ scCacheRef serverCtx
+      json respJ
+    get "internal/subscriptions" $ do
+      respJ <- liftIO $ EL.dumpLiveQueriesState $
+               WS._wseLiveQMap $ scWSEnv serverCtx
       json respJ
 #endif
 

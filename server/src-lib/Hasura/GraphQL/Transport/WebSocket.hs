@@ -3,6 +3,7 @@
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
   , createWSServerEnv
+  , WSServerEnv(..)
   ) where
 
 import qualified Control.Concurrent.Async                    as A

@@ -11,6 +11,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Types
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
 import qualified Crypto.Hash                            as CH
+import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified StmContainers.Map                      as STMMap
 
@@ -18,15 +19,21 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
--- 'k' uniquely identifies a sink
--- in case of websockets, it is (wsId, opId)
-type Sinks k = STMMap.Map k OnChange
-
 data LiveQuery
   = LiveQuery
   { _lqUser    :: !UserInfo
   , _lqRequest :: !GQLReqUnparsed
   } deriving (Show, Eq, Generic)
+
+instance J.ToJSON LiveQuery where
+  toJSON (LiveQuery user req) =
+    J.object [ "user" J..= userVars user
+             , "request" J..= req
+             ]
+
+-- 'k' uniquely identifies a sink
+-- in case of websockets, it is (wsId, opId)
+type Sinks k = STMMap.Map k OnChange
 
 instance Hashable LiveQuery
 
@@ -42,6 +49,9 @@ type ThreadTM = STM.TMVar (A.Async ())
 newtype RespHash
   = RespHash {unRespHash :: CH.Digest CH.Blake2b_256}
   deriving (Show, Eq)
+
+instance J.ToJSON RespHash where
+  toJSON = J.toJSON . show . unRespHash
 
 mkRespHash :: LBS.ByteString -> RespHash
 mkRespHash = RespHash . CH.hashlazy
