@@ -35,7 +35,7 @@ import {
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
-import CollapsibleToggleHoc from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const appPrefix = globals.urlPrefix + '/data';
 
@@ -277,12 +277,12 @@ class Schema extends Component {
 
       return (
         <div className={styles.add_mar_top}>
-          <CollapsibleToggleHoc title={heading} isOpen>
+          <CollapsibleToggle title={heading} isOpen>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getUntrackedTablesList()}
             </div>
             <div className={styles.clear_fix} />
-          </CollapsibleToggleHoc>
+          </CollapsibleToggle>
         </div>
       );
     };
@@ -389,12 +389,12 @@ class Schema extends Component {
 
       return (
         <div className={styles.add_mar_top}>
-          <CollapsibleToggleHoc title={heading} isOpen>
+          <CollapsibleToggle title={heading} isOpen>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getUntrackedRelList()}
             </div>
             <div className={styles.clear_fix} />
-          </CollapsibleToggleHoc>
+          </CollapsibleToggle>
         </div>
       );
     };
@@ -418,7 +418,7 @@ class Schema extends Component {
 
         trackableFunctionList = (
           <div className={styles.add_mar_top} key={'custom-functions-content'}>
-            <CollapsibleToggleHoc title={heading} isOpen>
+            <CollapsibleToggle title={heading} isOpen>
               <div className={`${styles.padd_left_remove} col-xs-12`}>
                 {trackableFuncs.map((p, i) => (
                   <div
@@ -452,7 +452,7 @@ class Schema extends Component {
                 ))}
               </div>
               <div className={styles.clear_fix} />
-            </CollapsibleToggleHoc>
+            </CollapsibleToggle>
           </div>
         );
       }
