@@ -212,7 +212,7 @@ class Schema extends Component {
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
-              className={`${styles.display_inline} ${styles.addAllBtn}`}
+              className={`${styles.display_inline} ${styles.add_mar_left}`}
               color="white"
               size="xs"
               onClick={trackAllTables}
