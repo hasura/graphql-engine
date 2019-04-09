@@ -98,7 +98,8 @@ data SchemaCacheRef
   = SchemaCacheRef
   { _scrLock      :: MVar ()
   , _scrCache     :: IORef (SchemaCache, SchemaCacheVer)
-  , _scrPlanCache :: E.PlanCache
+  -- an action to run when schemacache changes
+  , _scrOnChange  :: IO ()
   }
 
 withSCUpdate
@@ -110,11 +111,11 @@ withSCUpdate scr action = do
   -- update schemacache in IO reference
   liftIO $ modifyIORef' cacheRef $
     \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-  liftIO $ E.clearPlanCache planCache
+  liftIO onChange
   releaseLock
   return res
   where
-    SchemaCacheRef lk cacheRef planCache = scr
+    SchemaCacheRef lk cacheRef onChange = scr
     onError e   = releaseLock >> throwError e
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
@@ -129,6 +130,7 @@ data ServerCtx
   , scStringifyNum :: Bool
   , scEnabledAPIs  :: S.HashSet API
   , scInstanceId   :: InstanceId
+  , scPlanCache    :: E.PlanCache
   , scWSEnv        :: WS.WSServerEnv
   }
 
@@ -270,7 +272,7 @@ v1Alpha1GQHandler query = do
   (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  planCache <- _scrPlanCache . scCacheRef . hcServerCtx <$> ask
+  planCache <- scPlanCache . hcServerCtx <$> ask
   GH.runGQ pgExecCtx userInfo (SQLGenCtx strfyNum) planCache
     sc scVer manager reqHeaders query reqBody
 
@@ -347,10 +349,11 @@ mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
     wsServerEnv <- WS.createWSServerEnv logger httpManager
                    sqlGenCtx cacheRef pgExecCtx corsPolicy planCache
 
-    let schemaCacheRef = SchemaCacheRef cacheLock cacheRef planCache
+    let schemaCacheRef =
+          SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx logger
                     schemaCacheRef mode httpManager
-                    strfyNum apis instanceId wsServerEnv
+                    strfyNum apis instanceId planCache wsServerEnv
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
@@ -399,7 +402,7 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
 #ifdef InternalAPIs
     get "internal/plan_cache" $ do
-      respJ <- liftIO $ E.dumpPlanCache $ _scrPlanCache $ scCacheRef serverCtx
+      respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
       json respJ
     get "internal/subscriptions" $ do
       respJ <- liftIO $ EL.dumpLiveQueriesState $
