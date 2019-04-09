@@ -1,6 +1,5 @@
 import React from 'react';
-import Editor from './Editor';
-
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
   setRetryNum,
   setRetryInterval,
@@ -81,96 +80,89 @@ class RetryConfEditor extends React.Component {
   };
 
   render() {
-    const { styles, dispatch, modifyTrigger } = this.props;
+    const { styles, dispatch, modifyTrigger, save } = this.props;
     const retryConf = this.props.retryConf || {};
     const { supportRetryTimeout } = this.state;
-    const collapsed = toggleButton => (
-      <div className={styles.modifyOpsCollapsed}>
-        {toggleButton('Edit')}
-        <div className={styles.modifyOps}>
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={'col-md-4 ' + styles.padd_remove}>
-              Number of retries:
-            </div>
-            <div className={'col-md-12 ' + styles.padd_remove}>
-              {retryConf.num_retries || 0}
-            </div>
+    const collapsed = () => (
+      <div className={styles.modifyOps}>
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={'col-md-4 ' + styles.padd_remove}>
+            Number of retries:
           </div>
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={'col-md-4 ' + styles.padd_remove}>
-              Retry Interval (sec):
-            </div>
-            <div className={'col-md-12 ' + styles.padd_remove}>
-              {retryConf.interval_sec || 10}
-            </div>
+          <div className={'col-md-12 ' + styles.padd_remove}>
+            {retryConf.num_retries || 0}
           </div>
-          {supportRetryTimeout && (
-            <div className={styles.modifyOpsCollapsedContent1}>
-              <div className={'col-md-4 ' + styles.padd_remove}>
-                Timeout (sec):
-              </div>
-              <div className={'col-md-12 ' + styles.padd_remove}>
-                {retryConf.timeout_sec || 60}
-              </div>
-            </div>
-          )}
         </div>
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={'col-md-4 ' + styles.padd_remove}>
+            Retry Interval (sec):
+          </div>
+          <div className={'col-md-12 ' + styles.padd_remove}>
+            {retryConf.interval_sec || 10}
+          </div>
+        </div>
+        {supportRetryTimeout && (
+          <div className={styles.modifyOpsCollapsedContent1}>
+            <div className={'col-md-4 ' + styles.padd_remove}>
+              Timeout (sec):
+            </div>
+            <div className={'col-md-12 ' + styles.padd_remove}>
+              {retryConf.timeout_sec || 60}
+            </div>
+          </div>
+        )}
       </div>
     );
 
-    const expanded = (toggleButton, saveButton) => (
-      <div className={styles.modifyOpsExpanded}>
-        {toggleButton('Close')}
-        <div className={styles.modifyOpsPadLeft}>
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={`col-md-4 ${styles.padd_remove}`}>
-              Number of retries: &nbsp;
-            </div>
-            <div className="col-md-12">
-              <input
-                type="text"
-                value={modifyTrigger.retryConf.numRetrys}
-                className={`${styles.input} form-control ${
-                  styles.add_mar_right
-                } ${styles.modifyRetryConfTextbox}`}
-                onChange={e => dispatch(setRetryNum(e.target.value))}
-              />
-            </div>
+    const expanded = () => (
+      <div className={styles.modifyOpsPadLeft}>
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={`col-md-4 ${styles.padd_remove}`}>
+            Number of retries: &nbsp;
           </div>
-          <div className={styles.modifyOpsCollapsedContent1}>
-            <div className={`col-md-4 ${styles.padd_remove}`}>
-              Retry interval (sec):&nbsp;
-            </div>
-            <div className="col-md-12">
-              <input
-                type="text"
-                className={`${styles.input} form-control ${
-                  styles.add_mar_right
-                } ${styles.modifyRetryConfTextbox}`}
-                value={modifyTrigger.retryConf.retryInterval}
-                onChange={e => dispatch(setRetryInterval(e.target.value))}
-              />
-            </div>
+          <div className="col-md-12">
+            <input
+              type="text"
+              value={modifyTrigger.retryConf.numRetrys}
+              className={`${styles.input} form-control ${
+                styles.add_mar_right
+              } ${styles.modifyRetryConfTextbox}`}
+              onChange={e => dispatch(setRetryNum(e.target.value))}
+            />
           </div>
-          {this.state.supportRetryTimeout && (
-            <div className={styles.modifyOpsCollapsedContent1}>
-              <div className={`col-md-4 ${styles.padd_remove}`}>
-                Timeout (sec):&nbsp;
-              </div>
-              <div className="col-md-12">
-                <input
-                  type="text"
-                  className={`${styles.input} form-control ${
-                    styles.add_mar_right
-                  } ${styles.modifyRetryConfTextbox}`}
-                  value={modifyTrigger.retryConf.timeout}
-                  onChange={e => dispatch(setRetryTimeout(e.target.value))}
-                />
-              </div>
-            </div>
-          )}
         </div>
-        {saveButton(this.validateAndSave)}
+        <div className={styles.modifyOpsCollapsedContent1}>
+          <div className={`col-md-4 ${styles.padd_remove}`}>
+            Retry interval (sec):&nbsp;
+          </div>
+          <div className="col-md-12">
+            <input
+              type="text"
+              className={`${styles.input} form-control ${
+                styles.add_mar_right
+              } ${styles.modifyRetryConfTextbox}`}
+              value={modifyTrigger.retryConf.retryInterval}
+              onChange={e => dispatch(setRetryInterval(e.target.value))}
+            />
+          </div>
+        </div>
+        {this.state.supportRetryTimeout && (
+          <div className={styles.modifyOpsCollapsedContent1}>
+            <div className={`col-md-4 ${styles.padd_remove}`}>
+              Timeout (sec):&nbsp;
+            </div>
+            <div className="col-md-12">
+              <input
+                type="text"
+                className={`${styles.input} form-control ${
+                  styles.add_mar_right
+                } ${styles.modifyRetryConfTextbox}`}
+                value={modifyTrigger.retryConf.timeout}
+                onChange={e => dispatch(setRetryTimeout(e.target.value))}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
 
@@ -186,7 +178,9 @@ class RetryConfEditor extends React.Component {
             editorExpanded={expanded}
             ongoingRequest={modifyTrigger.ongoingRequest}
             property={'retry'}
-            toggleCallback={this.setValues}
+            saveFunc={save}
+            service="modify-trigger"
+            expandCallback={this.setValues}
             styles={styles}
           />
         </div>
