@@ -82,7 +82,7 @@ class TodoPublicList extends Component {
 
     const olderTodosMsg = (
       <div className={"loadMoreSection"} onClick={this.loadOlder}>
-        { this.state.olderTodosAvailable ? 'Load older tasks' : 'No more public tasks'}
+        { this.state.olderTodosAvailable ? 'Load older tasks' : 'No more public tasks!'}
       </div>
     );
 
