@@ -25,7 +25,10 @@ const restAPIEndpoint = 'https://fast-lake-87402.herokuapp.com';
 const resolvers = {
     Query: {
         getUser: async (_, { userId, isRand }) => {
-            return await getData(restAPIEndpoint + '/users/' + id);
+            var res = await getData(restAPIEndpoint + '/users/' + userId);
+            res.userId = res.id;
+		console.log(res);
+            return res;
         },
 
         getAllUsers: async (_, { name }) => {
@@ -33,13 +36,17 @@ const resolvers = {
             if (name) {
                 nameParams = '?name=' + name;
             }
-            return await getData(restAPIEndpoint + '/users' + nameParams );
+            var res = await getData(restAPIEndpoint + '/users' + nameParams );
+            return res.map((obj) => { obj.userId = obj.id; return obj} );
         }
     },
 
     Mutation: {
         addUser: async (_, { name, balance } ) => {
-            return await postData(restAPIEndpoint + '/users', { name, balance } );
+            var res =  await postData(restAPIEndpoint + '/users', { name, balance } );
+            res.userId = res.id;
+		console.log(res);
+            return res;
         }
     }
 };

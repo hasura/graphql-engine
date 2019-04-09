@@ -117,7 +117,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteFldInfo)
 data RemoteRelInfo
   = RemoteRelInfo
   { rriName        :: !RelName
-  , rriRSchema     :: !T.Text
+  , rriRSchemaName :: !T.Text
   , rriTable       :: !QualifiedTable
   , rriColumn      :: !PGCol
   , rriRemoteField :: !RemoteFldInfo

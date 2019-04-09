@@ -2,6 +2,7 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
+import           Debug.Trace
 
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
@@ -37,7 +38,7 @@ runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   let (E.GQExecPlan hasuraPlan remotePlans) = execPlan
   case (hasuraPlan, remotePlans) of
      (Nothing, []) -> throw500 "no exec plan found"
-     (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs
+     (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
      _ -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
 
 
@@ -52,12 +53,12 @@ runMixedGQ
   -> GraphQLRequest
   -> E.GQExecPlan
   -> m EncJSON
-runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs _ plan = do
+runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
   let (E.GQExecPlan hasuraPlan remotePlans) = plan
   hasuraRes <- case hasuraPlan of
     Nothing -> return []
     Just (E.GExPHasura gCtx rootSelSet remRelPlans) -> do
-      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs
+      res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
       return [res]
 
   remoteRes <- forM remotePlans $ \case
@@ -99,8 +100,9 @@ runHasuraGQ
   -> [E.GExPDepRemote]
   -> HTTP.Manager
   -> [N.Header]
+  -> GraphQLRequest
   -> m EncJSON
-runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = do
+runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs req = do
   tx <- case rootSelSet of
     V.RQuery selSet ->
       return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
@@ -111,14 +113,19 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
+  traceM (show $ encJToLBS resp)
 
   -- merge with remotes
   remotesRespTup <- forM rrps $ \rr -> do
-    let E.GExPDepRemote rsi queryProm ji rs = rr
+    let E.GExPDepRemote rsi (E.GraphQLRequestPromise resolve) ji rs = rr
     -- TODO: use decodedResp instead of EncJSON
+    traceShowM ("---------------------finding joinVals---------------")
     joinVals <- getJoinValues resp (E.jiParentAlias ji) (E.jiParentJoinKey ji)
-    let newq = queryProm joinVals
+    traceShowM joinVals
+    let newq = resolve req joinVals
     remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
+    traceShowM ("---------------------remote response---------------")
+    traceShowM (encJToLBS remResp)
     return (ji, remResp)
 
   mergedResp <- mergeFields resp remotesRespTup
@@ -141,22 +148,26 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
           let encResp = encJToLBS resp
               respObjM = J.decode encResp :: (Maybe J.Object)
               childKey = G.unName.G.unAlias $ E.jiChildAlias ji
-              childPath = ["data", G.unName.G.unAlias $ E.jiChildAlias ji]
+              childPath = ["data", childKey]
               childJoinKey = G.unName $ E.jiChildJoinKey ji
               parentKey = G.unName.G.unAlias $ E.jiParentAlias ji
-              parentPath = ["data", parentKey]
+              parentPath = [parentKey]
               parentJoinKey = G.unName $ E.jiParentJoinKey ji
 
           respObj <- onNothing respObjM $ throw500 "could not parse as json"
           respVal <- getValueAtPath respObj childPath
           respArr <- assertArray respVal
+          traceShowM "-------------------response array----------------"
+          traceShowM respArr
           initVal <- getValueAtPath initObj parentPath
           initArr <- assertArray initVal
+          traceShowM "-------------------init array----------------"
+          traceShowM initArr
 
           newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey (toList respArr) childJoinKey childKey)
           let newJArr = J.Array (V.fromList newArr)
 
-          setValueAtPath initObj ["data"] (parentKey, newJArr)
+          setValueAtPath initObj [] (parentKey, newJArr)
 
 
     findAndMerge :: (MonadError QErr m) => J.Value -> Text -> [J.Value] -> Text -> Text -> m J.Value
@@ -174,11 +185,9 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
     getJoinValues res name key = do
       let bs = encJToLBS res
           decodedResM = J.decode bs :: (Maybe J.Object)
-      decodedRes <- onNothing decodedResM $ throw500 "could not parse response as JSON"
-      let dataValM = Map.lookup "data" decodedRes
-      dataVal <- onNothing dataValM $ throw500 "could not parse as json"
-      dataObj <- assertObject dataVal
-      let datas = Map.lookup (G.unName $ G.unAlias name) dataObj
+      traceShowM bs
+      decodedRes <- onNothing decodedResM $ throw500 "could not parse as JSON 1"
+      let datas = Map.lookup (G.unName $ G.unAlias name) decodedRes
       joinVals <- case datas of
         Nothing -> throw500 "could not find parent field"
         Just vs -> do
@@ -192,6 +201,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs = 
 
 getValueAtPath :: (MonadError QErr m) => J.Object -> [Text] -> m J.Value
 getValueAtPath obj [] = return (J.Object obj)
+getValueAtPath obj [x] = onNothing (Map.lookup x obj) $ throw500 "could not find any value at path"
 getValueAtPath obj (x:xs) = do
   val <- getValueAtPath obj [x]
   valObj <- assertObject val
@@ -208,10 +218,10 @@ setValueAtPath obj (x:xs) (k, newVal) = do
 assertObject :: (MonadError QErr m) => J.Value -> m J.Object
 assertObject val = case val of
   J.Object obj -> return obj
-  _            -> throw500 "could not parse as object"
+  _            -> throw500 "could not parse as JSON object"
 
 assertArray :: (MonadError QErr m) => J.Value -> m J.Array
 assertArray val = case val of
   J.Array arr -> return arr
-  _           -> throw500 "could not parse as array"
+  _           -> throw500 "could not parse as JSON array"
 

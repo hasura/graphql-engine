@@ -6,11 +6,14 @@ module Hasura.GraphQL.Execute
   , GExPHasura(..)
   , GExPRemote(..)
   , GExPDepRemote(..)
+  , GraphQLRequestPromise(..)
   , JoinInfo(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
   ) where
+
+import           Debug.Trace
 
 import           Control.Exception                      (try)
 import           Control.Lens                           hiding (op)
@@ -23,7 +26,6 @@ import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Hasura.GraphQL.Context                 as GC
-import qualified Hasura.GraphQL.Resolve.ContextTypes    as CT
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -35,10 +37,10 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Relationship.Remote
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Resolve.ContextTypes    as CT
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Field          as VF
 import qualified Hasura.GraphQL.Validate.Types          as VT
@@ -49,18 +51,29 @@ data JoinInfo
   , jiParentJoinKey :: !G.Name -- change to alias
   , jiChildJoinKey  :: !G.Name
   , jiChildAlias    :: !G.Alias
+  } deriving (Show, Eq)
+
+newtype GraphQLRequestPromise
+  = GraphQLRequestPromise
+  { grpResolve :: (GraphQLRequest -> [J.Value] -> GraphQLRequest)
   }
 
-type GraphQLRequestPromise = [J.Value] -> GraphQLRequest
+instance Show GraphQLRequestPromise where
+  show _ = "GraphQLRequestPromise Func"
 
 data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise JoinInfo !VQ.RootSelSet
+  deriving Show
 
 data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
+
+instance Show GExPHasura where
+  show (GExPHasura _ root remRels) = (show root) ++ "\n" ++ (show remRels)
 
 data GExPRemote = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
 data GQExecPlan = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+  deriving Show
 
 type QueryMap = Map.HashMap VT.TypeLoc [G.Name]
 type SplitQueryParts = (G.TypedOperationDefinition, [G.FragmentDefinition])
@@ -73,6 +86,7 @@ getExecPlan
   -> m GQExecPlan
 getExecPlan userInfo sc req = do
   (gCtx, _) <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
+  let remoteSchemaMap = scRemoteResolvers sc
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
@@ -96,7 +110,7 @@ getExecPlan userInfo sc req = do
     [] -> throw500 "unexpected plan"
 
     [(VT.HasuraType, (_, rootSelSet'))] -> do
-      remotePlans <- getRemoteRelPlans gCtx req rootSelSet'
+      remotePlans <- getRemoteRelPlans gCtx req rootSelSet' remoteSchemaMap
       return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet' remotePlans) []
     [(VT.RemoteType rsi, (req'' , rootSelSet''))] -> return $ GQExecPlan Nothing [GExPRemote rsi req'' rootSelSet'']
     x -> do
@@ -188,46 +202,101 @@ getExecPlan userInfo sc req = do
             , G._todVariableDefinitions = varDefs
             }
 
-batchQueryWithVals :: GraphQLQuery -> [J.Value] -> GraphQLRequest
-batchQueryWithVals = undefined
+batchQueryWithVals :: GraphQLRequest -> [J.Value] -> GraphQLRequest
+batchQueryWithVals _ _ = GraphQLRequest
+  { _grOperationName = Nothing
+  , _grQuery  = GraphQLQuery [def]
+  , _grVariables  = Nothing
+  }
+  where
+    def = G.ExecutableDefinitionOperation untypedDef
+    untypedDef = G.OperationDefinitionUnTyped [G.SelectionField topField]
+    topField = G.Field
+      { G._fAlias = Just (G.Alias "remoteUser")
+      , G._fName = "getAllUsers"
+      , G._fArguments = []
+      , G._fDirectives = []
+      , G._fSelectionSet = [G.SelectionField innerField1, G.SelectionField innerField2, G.SelectionField innerField3]
+      }
+    innerField1 = G.Field
+      { G._fAlias = Nothing
+      , G._fName = "userId"
+      , G._fArguments = []
+      , G._fDirectives = []
+      , G._fSelectionSet = []
+      }
+    innerField2 = G.Field
+      { G._fAlias = Nothing
+      , G._fName = "balance"
+      , G._fArguments = []
+      , G._fDirectives = []
+      , G._fSelectionSet = []
+      }
+    innerField3 = G.Field
+      { G._fAlias = Nothing
+      , G._fName = "name"
+      , G._fArguments = []
+      , G._fDirectives = []
+      , G._fSelectionSet = []
+      }
 
-getRemoteRelPlans :: (MonadError QErr m) => GCtx -> GraphQLRequest -> VQ.RootSelSet -> m [GExPDepRemote]
-getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
+getRemoteRelPlans :: (MonadError QErr m) => GCtx -> GraphQLRequest -> VQ.RootSelSet -> RemoteSchemaMap -> m [GExPDepRemote]
+getRemoteRelPlans gCtx (GraphQLRequest opName _ _ ) rss schemaMap = do
+  traceM (show opName)
   case rss of
     VQ.RQuery ss -> do
+      traceM (show "----------------------------------")
+      traceM (show "fetching remote plans")
       let hasuraTopFields = gatherHasuraFields (toList ss)
           remoteFields = getRemoteFields hasuraTopFields
-      concat <$> forM remoteFields (mkDepRemotePlan gCtx)
+
+      traceM (show "------------remote fields are-----------------")
+      traceM (show $ map snd remoteFields)
+      output <- concat <$> forM remoteFields (mkDepRemotePlan gCtx)
+
+      traceM (show "------------remote plans are-----------------")
+      traceM (show output)
+      return output
     _            -> return []
     where
-      mkDepRemotePlan gCtx' (hf, remFldsM) =
-        case remFldsM of
-          Nothing    -> return []
-          Just rFlds -> forM rFlds $ \rf -> do
-            rsi <- getRemoteSchemaInfoFromField gCtx' (VF._fName rf)
-            rri <- getRemoteRelInfoFromField gCtx' (VF._fType rf, VF._fName rf)
-            let typedOp = G.TypedOperationDefinition
-                  { G._todType = G.OperationTypeQuery
-                  , G._todName = Nothing
-                  , G._todVariableDefinitions = []
-                  , G._todDirectives = []
-                  , G._todSelectionSet = []
-                  }
-                op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped typedOp
-                q = GraphQLQuery [op]
-                joinInfo = JoinInfo
-                  { jiParentAlias = VF._fAlias hf
-                  , jiParentJoinKey = mkColName $ rriColumn rri  -- how to find alias
-                  , jiChildJoinKey = VF._fName rf
-                  , jiChildAlias = VF._fAlias rf
-                  }
-            return $ GExPDepRemote rsi (batchQueryWithVals q) joinInfo (VQ.RQuery (Seq.singleton rf))
+      mkDepRemotePlan gCtx' (hf, rFlds) =
+        forM rFlds $ \rf -> do
+        traceM (show "-----------------making remote plan-----------------------")
+        traceM (show (VF._fType rf, VF._fName rf))
+        let tableTy = VF._fType hf
+        rri <- getRemoteRelInfoFromField gCtx' (tableTy, VF._fName rf)
+        let remoteSchemaName = rriRSchemaName rri
+        rsi <- onNothing (Map.lookup remoteSchemaName schemaMap) $ throw500 "could not find remote schema"
+        let typedOp = G.TypedOperationDefinition
+              { G._todType = G.OperationTypeQuery
+              , G._todName = Nothing
+              , G._todVariableDefinitions = []
+              , G._todDirectives = []
+              , G._todSelectionSet = []
+              }
+            op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped typedOp
+            q = GraphQLQuery [op]
+            joinInfo = JoinInfo
+              { jiParentAlias = VF._fAlias hf
+              , jiParentJoinKey = mkColName $ rriColumn rri  -- how to find alias
+              , jiChildJoinKey = rriInputField rri -- join key maybe different than input key?
+              , jiChildAlias = VF._fAlias rf
+              }
+
+              -- field should be remote node or relationship node?
+        return $ GExPDepRemote rsi (GraphQLRequestPromise batchQueryWithVals) joinInfo (VQ.RQuery (Seq.singleton rf))
 
       onlyHasura fldInfo = case VT._fiLoc fldInfo of
         VT.HasuraType -> True
         _             -> False
 
+      onlyFldRemote typFld =  case typFld of
+        CT.FldRemote _ -> True
+        _              -> False
+
       getRemoteRelInfoFromField gctx nameTup = do
+        traceM (show "-----------------here are gctx keys---------------")
+        traceM (show $ Map.keys $ GC._gFields gctx)
         let typedFieldM = Map.lookup nameTup (GC._gFields gctx)
         fld <- onNothing typedFieldM (throw500 "cannot find field")
         case fld of
@@ -240,15 +309,27 @@ getRemoteRelPlans gCtx (GraphQLRequest opNameM origQuery varValsM) rss =
 
       gatherHasuraFields fields =
         catMaybes $ flip map fields $ \fld ->
-        Map.lookup (VF._fName fld) hasuraNodes >> Just fld
+        if isJust (Map.lookup (VF._fName fld) hasuraQueryNodes)
+        then Just fld
+        else Nothing
 
-      hasuraNodes = Map.filter onlyHasura $ VT._otiFields $ _gQueryRoot gCtx
-      remoteNodes = Map.filter onlyRemote $ VT._otiFields $ _gQueryRoot gCtx
+      hasuraQueryNodes = Map.filter onlyHasura $ VT._otiFields $ _gQueryRoot gCtx
+      remoteQueryNodes = Map.filter onlyRemote $ VT._otiFields $ _gQueryRoot gCtx
+      remoteRelationships = filter onlyFldRemote $ Map.elems $ _gFields gCtx
+
       getRemoteFields fields = flip map fields $ \fld ->
         let fldSelSet = VF._fSelSet fld
-            remoteFlds = map getRemoteFieldsFromField (toList fldSelSet)
-        in (fld, sequence remoteFlds)
-      getRemoteFieldsFromField fld = Map.lookup (VF._fName fld) remoteNodes >> Just fld
+            remoteFlds = filter isRemoteField (toList fldSelSet)
+        in (fld, remoteFlds)
+
+      isRemoteField fld =
+        let fldName = VF._fName fld
+            remoteRelM = find (hasRemoteRel fldName) remoteRelationships
+        in isJust remoteRelM
+
+      hasRemoteRel remRelName typFld = case typFld of
+        CT.FldRemote rri -> G.unName remRelName == getRelTxt (rriName rri)
+        _                -> False
 
 transformGQRequest
   :: GraphQLRequest
