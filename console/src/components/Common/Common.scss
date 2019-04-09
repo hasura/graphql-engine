@@ -83,21 +83,8 @@ table thead tr th {
         background-color: #f0f0f0;
         width: 100%;
         word-wrap: break-word;
-        padding: 15px 0px;
-        padding-left: 20px;
+        padding: 15px 0 15px 20px;
         display: block;
-      }
-    }
-
-    li:hover {
-      transition: color 0.5s;
-      cursor: pointer;
-      text-decoration: none;
-
-      a {
-        text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
       }
     }
 
@@ -117,8 +104,6 @@ table thead tr th {
 
       a {
         text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
         background-color: #FFF3D5;
         display: inline-block;
       }
