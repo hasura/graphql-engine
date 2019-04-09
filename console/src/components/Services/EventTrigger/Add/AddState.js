@@ -4,7 +4,12 @@ const defaultState = {
   schemaName: 'public',
   tableListBySchema: [],
   operations: { insert: [], update: [], delete: [] },
-  selectedOperations: { insert: false, update: false, delete: false },
+  selectedOperations: {
+    insert: false,
+    update: false,
+    delete: false,
+    manual: false,
+  },
   webhookURL: '',
   webhookUrlType: 'url',
   retryConf: {

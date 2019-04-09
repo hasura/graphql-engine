@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
+import Operations from './Operations';
 
 import {
   removeHeader,
@@ -43,6 +44,7 @@ class AddTrigger extends Component {
       supportWebhookEnv: false,
       supportRetryTimeout: false,
     };
+    this.handleOperationSelection = this.handleOperationSelection.bind(this);
   }
   componentDidMount() {
     // set defaults
@@ -66,6 +68,11 @@ class AddTrigger extends Component {
     // set defaults
     this.props.dispatch(setDefaults());
   }
+
+  handleOperationSelection = e => {
+    const { dispatch } = this.props;
+    dispatch(setOperationSelection(e.target.value));
+  };
 
   checkSemVer(version) {
     try {
@@ -232,6 +239,37 @@ class AddTrigger extends Component {
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
 
+    const triggerOnOperations = [
+      {
+        name: 'insert',
+        testIdentifier: 'insert-operation',
+        isChecked: selectedOperations.insert,
+        onChange: this.handleOperationSelection,
+        displayName: 'Insert',
+      },
+      {
+        name: 'update',
+        testIdentifier: 'update-operation',
+        isChecked: selectedOperations.update,
+        onChange: this.handleOperationSelection,
+        displayName: 'Update',
+      },
+      {
+        name: 'delete',
+        testIdentifier: 'delete-operation',
+        isChecked: selectedOperations.delete,
+        onChange: this.handleOperationSelection,
+        displayName: 'Delete',
+      },
+      {
+        name: 'manual',
+        testIdentifier: 'manual-operation',
+        isChecked: selectedOperations.manual,
+        onChange: this.handleOperationSelection,
+        displayName: 'Console',
+      },
+    ];
+
     const styles = require('../TableCommon/EventTable.scss');
     let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
@@ -261,10 +299,6 @@ class AddTrigger extends Component {
         });
       }
       dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
-    };
-
-    const handleOperationSelection = e => {
-      dispatch(setOperationSelection(e.target.value, e.target.checked));
     };
 
     const getColumnList = type => {
@@ -356,7 +390,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={handleOperationSelection}
+                onChange={this.handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="insert"
@@ -372,7 +406,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={handleOperationSelection}
+                onChange={this.handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="update"
@@ -388,7 +422,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={handleOperationSelection}
+                onChange={this.handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="delete"
@@ -566,64 +600,7 @@ class AddTrigger extends Component {
                   styles.add_mar_bottom + ' ' + styles.selectOperations
                 }
               >
-                <h4 className={styles.subheading_text}>
-                  Operations &nbsp; &nbsp;
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={tooltip.operationsDescription}
-                  >
-                    <i className="fa fa-question-circle" aria-hidden="true" />
-                  </OverlayTrigger>{' '}
-                </h4>
-                <div className={styles.display_inline}>
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="insert-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="insert"
-                      checked={selectedOperations.insert}
-                    />
-                    Insert
-                  </label>
-                </div>
-                <div
-                  className={styles.display_inline + ' ' + styles.add_mar_left}
-                >
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="update-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="update"
-                      checked={selectedOperations.update}
-                    />
-                    Update
-                  </label>
-                </div>
-                <div
-                  className={styles.display_inline + ' ' + styles.add_mar_left}
-                >
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="delete-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="delete"
-                      checked={selectedOperations.delete}
-                    />
-                    Delete
-                  </label>
-                </div>
+                <Operations operations={triggerOnOperations} />
               </div>
               <hr />
               <div className={styles.add_mar_bottom}>

@@ -4,6 +4,8 @@ import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
+import DataDropdown from '../../../Common/DataDropdown/DataDropdown';
+
 import {
   vExpandRel,
   vCloseRel,
@@ -268,12 +270,43 @@ const ViewRows = ({
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
 
+        const triggerOptions = [
+          {
+            displayName: 'ban_employer',
+            onChange: () => null,
+            itemIdentifier: 'ban_employer',
+            prefixLabel: 'Run:',
+          },
+          {
+            displayName: 'activate_account',
+            onChange: () => null,
+            itemIdentifier: 'activate_account',
+            prefixLabel: 'Run:',
+          },
+          {
+            displayName: 'view_report',
+            onChange: () => null,
+            itemIdentifier: 'view_report',
+            prefixLabel: 'Run:',
+          },
+        ];
+
         return (
           <div className={styles.tableCellCenterAligned}>
             {cloneButton}
             {editButton}
             {deleteButton}
             {expandButton}
+            <DataDropdown
+              elementId="data_browse_rows_trigger"
+              options={triggerOptions}
+              position="right"
+            >
+              <img
+                src={require('./trigger-invoke-icon.svg')}
+                alt="Trigger events"
+              />
+            </DataDropdown>
           </div>
         );
       };
@@ -676,7 +709,9 @@ const ViewRows = ({
       {getPrimaryKeyMsg()}
       <div className="row">
         <div className="col-xs-12">
-          <div className={styles.tableContainer}>{renderTableBody()}</div>
+          <div className={styles.tableContainerModified}>
+            {renderTableBody()}
+          </div>
           <br />
           <br />
           <div>{getChildComponent()}</div>
