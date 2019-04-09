@@ -7,6 +7,9 @@ module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
   , mkMxQuery
   ) where
 
+import           Data.List                              (unfoldr)
+import           Data.Word                              (Word32)
+
 import qualified Control.Concurrent.Async               as A
 import qualified Control.Concurrent.STM                 as STM
 import qualified Data.Aeson.Extended                    as J
@@ -145,7 +148,7 @@ addLiveQuery pgExecCtx lqMap liveQ (als, mxQuery, valQVars) k onResultAction = d
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \(handler, pollerThreadTM) -> do
     threadRef <- A.async $ forever $ do
-      pollQuery pgExecCtx handler
+      pollQuery defaultBatchSize pgExecCtx handler
       threadDelay $ 1 * 1000 * 1000
     STM.atomically $ STM.putTMVar pollerThreadTM threadRef
 
@@ -282,12 +285,25 @@ getRespVars usrVars valVars =
       TENull  -> J.Null
       TELit t -> J.String t
 
+newtype BatchSize
+  = BatchSize { unBatchSize :: Word32 }
+  deriving (Show, Eq)
+
+defaultBatchSize :: BatchSize
+defaultBatchSize =
+  BatchSize 100
+
+chunks :: Word32 -> [a] -> [[a]]
+chunks n =
+  takeWhile (not.null) . unfoldr (Just . splitAt (fromIntegral n))
+
 pollQuery
   :: (Eq k, Hashable k)
-  => PGExecCtx
+  => BatchSize
+  -> PGExecCtx
   -> MLQHandler k
   -> IO ()
-pollQuery pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
+pollQuery batchSize pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
 
   -- get a snapshot of all the candidates
   candidateSnapshotMap <- STM.atomically $ do
@@ -295,15 +311,17 @@ pollQuery pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
     candidateSnapshots <- mapM getCandidateSnapshot candidates
     return $ Map.fromList candidateSnapshots
 
-  let (respIds, respVars) = getQueryVars candidateSnapshotMap
+  let queryVarsBatches = chunks (unBatchSize batchSize) $
+                        getQueryVars candidateSnapshotMap
 
-  mxRes <- runExceptT $ runLazyTx' pgExecCtx $
-           liftTx $ Q.listQE defaultTxErrorHandler
-           pgQuery (respIds, respVars) True
+  flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
+    mxRes <- runExceptT $ runLazyTx' pgExecCtx $
+             liftTx $ Q.listQE defaultTxErrorHandler
+             pgQuery (mkMxQueryPrepArgs queryVars) True
 
-  let operations = getCandidateOperations candidateSnapshotMap mxRes
-  -- concurrently push each unique result
-  A.mapConcurrently_ (uncurry pushCandidateResult) operations
+    let operations = getCandidateOperations candidateSnapshotMap mxRes
+    -- concurrently push each unique result
+    A.mapConcurrently_ (uncurry pushCandidateResult) operations
 
   where
     getCandidateSnapshot ((usrVars, _), handlerC) = do
@@ -318,8 +336,10 @@ pollQuery pgExecCtx (MLQHandler alias pgQuery candidateMap) = do
       return (resId, candidateSnapshot)
 
     getQueryVars candidateSnapshotMap =
-      let (respIdL, respVarL) =
-            unzip $ Map.toList $ fmap _csRespVars candidateSnapshotMap
+      Map.toList $ fmap _csRespVars candidateSnapshotMap
+
+    mkMxQueryPrepArgs l =
+      let (respIdL, respVarL) = unzip l
       in (RespIdList respIdL, RespVarsList respVarL)
 
     getCandidateOperations candidateSnapshotMap = \case
