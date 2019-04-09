@@ -34,7 +34,8 @@ runScript
   -> String
   -> IO (Either String BL.ByteString)
 runScript dbUrl schema = do
-  (exitCode, filename, stdErr) <- readProcessWithExitCode "/bin/sh" ["/dev/stdin", dbUrl, schema] script
+  (exitCode, filename, stdErr) <- readProcessWithExitCode "/bin/sh"
+    ["/dev/stdin", dbUrl, schema] script
   case exitCode of
     ExitSuccess   -> do
       contents <- BL.readFile $ dropWhileEnd (== '\n') filename
@@ -53,10 +54,8 @@ execPGDump b ci = do
       RTE.throw500 $ "error while executing pg_dump: " <> T.pack err
     Right dump -> return dump
   where
-    dbUrl = getDbUrlFromConnInfo ci
+    -- FIXME(shahidhk): need to add connection options (Q.connOptions) too?
+    dbUrl = "postgres://" <> Q.connUser ci <> ":" <> Q.connPassword ci
+            <> "@" <>  Q.connHost ci <> ":" <> show (Q.connPort ci)
+            <> "/" <> Q.connDatabase ci
     schema = prbSchema b
-
-getDbUrlFromConnInfo :: Q.ConnInfo -> String
-getDbUrlFromConnInfo ci =
-  -- FIXME(shahidhk): need to add connection options too
-  "postgres://" <> (Q.connUser ci) <> ":" <> (Q.connPassword ci) <> "@" <> (Q.connHost ci) <> ":" <> show (Q.connPort ci) <> "/" <> (Q.connDatabase ci)
