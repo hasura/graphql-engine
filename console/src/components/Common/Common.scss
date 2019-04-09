@@ -431,11 +431,11 @@ input {
   margin-left: 5px;
 }
 
-.mar_small_neg_left {
+.mar_neg_left {
   margin-left: -10px;
 }
 
-.mar_small_neg_left_1 {
+.mar_small_neg_left {
   margin-left: -5px;
 }
 
@@ -574,6 +574,10 @@ code {
 
 .padd_top {
   padding-top: 20px !important;
+}
+
+.disabled {
+  color: #999;
 }
 
 .select_option_height {
