@@ -5,7 +5,6 @@ import TodoPrivateList from "./TodoPrivateList";
 
 class TodoPrivateWrapper extends Component {
   render() {
-
     return (
       <div className="todoWrapper">
         <div className="sectionHeader">Personal todos</div>

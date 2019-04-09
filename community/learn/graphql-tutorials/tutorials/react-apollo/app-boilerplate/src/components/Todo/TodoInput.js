@@ -12,6 +12,6 @@ const TodoInput = ({isPublic=false}) => {
       <i className="inputMarker fa fa-angle-right" />
     </form>
   );
-}
+};
 
 export default TodoInput;

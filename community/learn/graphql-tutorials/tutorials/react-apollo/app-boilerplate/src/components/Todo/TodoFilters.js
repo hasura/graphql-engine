@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React from 'react';
 
 const TodoFilters = ({
@@ -21,9 +22,16 @@ const TodoFilters = ({
 
   const activeTodos = todos.filter(todo => todo.is_completed !== true);
 
+  let itemCount = todos.length;
+  if (currentFilter === 'active') {
+    itemCount = activeTodos.length;
+  } else if (currentFilter === 'completed') {
+    itemCount = todos.length - activeTodos.length;
+  }
+
   return (
     <div className="footerList">
-      <span> {activeTodos.length} item{activeTodos.length !== 1 ? "s" : ""}</span>
+      <span> {itemCount} item{itemCount !== 1 ? "s" : ""}</span>
 
       <ul>
         <li onClick={filterResultsHandler("all")}>
