@@ -20,7 +20,7 @@ class OneGraphExplorer extends React.Component {
     schema: null,
     query: this.props.query,
     isResizing: false,
-    headers: [],
+    headers: this.props.headers || [],
   };
 
   componentDidMount() {
@@ -73,6 +73,7 @@ class OneGraphExplorer extends React.Component {
 
   introspect() {
     const { endpoint, headers } = this.props;
+
     fetch(endpoint, {
       method: 'POST',
       headers: getHeadersAsJSON(headers || []),
