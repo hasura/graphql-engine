@@ -78,7 +78,8 @@
     "jsx-a11y/anchor-is-valid": 0,
     "jsx-a11y/lang": 0,
     "jsx-a11y/alt-text": 0,
-    "max-len": 0
+    "max-len": 0,
+    "no-continue": 0
   },
   "plugins": [
     "react", "import", "cypress"

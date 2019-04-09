@@ -59,9 +59,8 @@ class TestRemoteSchemaBasic:
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
-        st_code, resp = check_query(hge_ctx, query)
-        assert st_code == 200, resp
+            query = yaml.safe_load(f)
+        resp = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['Hello'], ['hello'])
 #
 
@@ -211,9 +210,8 @@ class TestAddRemoteSchemaTbls:
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
-        st_code, resp = check_query(hge_ctx, query)
-        assert st_code == 200, resp
+            query = yaml.safe_load(f)
+        resp = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['User', 'hello'], ['user', 'hello'])
 
     def test_add_schema_duplicate_name(self, hge_ctx):
@@ -244,9 +242,10 @@ class TestRemoteSchemaQueriesOverWebsocket:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx):
+    def transact(self, hge_ctx, ws_client):
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_setup.yaml')
         assert st_code == 200, resp
+        ws_client.init_as_admin()
         yield
         # teardown
         st_code, resp = hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
@@ -254,39 +253,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         st_code, resp = hge_ctx.v1q(self.teardown)
         assert st_code == 200, resp
 
-    def _init(self, hge_ctx):
-        payload = {'type': 'connection_init', 'payload': {}}
-        if hge_ctx.hge_key:
-            payload['payload']['headers'] = {
-                'x-hasura-admin-secret': hge_ctx.hge_key
-            }
-        hge_ctx.ws.send(json.dumps(payload))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'connection_ack', ev
-
-    def _stop(self, hge_ctx, _id):
-        data = {'id': _id, 'type': 'stop'}
-        hge_ctx.ws.send(json.dumps(data))
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'complete', ev
-
-    def _send_query(self, hge_ctx, query):
-        self._init(hge_ctx)
-        _id = gen_id()
-        frame = {
-            'id': _id,
-            'type': 'start',
-            'payload': {'query': query},
-        }
-        if hge_ctx.hge_key:
-            frame['payload']['headers'] = {
-                'x-hasura-admin-secret': hge_ctx.hge_key
-            }
-        hge_ctx.ws.send(json.dumps(frame))
-        return _id
-
-    def test_remote_query(self, hge_ctx):
-        self._init(hge_ctx)
+    def test_remote_query(self, ws_client):
         query = """
         query {
           user(id: 2) {
@@ -295,14 +262,16 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = self._send_query(hge_ctx, query)
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'data' and ev['id'] == _id, ev
-        assert ev['payload']['data']['data']['user']['username'] == 'john'
-        self._stop(hge_ctx, _id)
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        try:
+            ev = next(resp)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            assert ev['payload']['data']['data']['user']['username'] == 'john'
+        finally:
+            ws_client.stop(query_id)
 
-    def test_remote_mutation(self, hge_ctx):
-        self._init(hge_ctx)
+    def test_remote_mutation(self, ws_client):
         query = """
         mutation {
           createUser(id: 42, username: "foobar") {
@@ -313,12 +282,15 @@ class TestRemoteSchemaQueriesOverWebsocket:
           }
         }
         """
-        _id = self._send_query(hge_ctx, query)
-        ev = hge_ctx.get_ws_event(3)
-        assert ev['type'] == 'data' and ev['id'] == _id, ev
-        assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
-        assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
-        self._stop(hge_ctx, _id)
+        query_id = ws_client.gen_id()
+        resp = ws_client.send_query({'query': query},query_id = query_id,timeout=5)
+        try:
+            ev = next(resp)
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
+            assert ev['payload']['data']['data']['createUser']['user']['id'] == 42
+            assert ev['payload']['data']['data']['createUser']['user']['username'] == 'foobar'
+        finally:
+            ws_client.stop(query_id)
 
 
 class TestAddRemoteSchemaCompareRootQueryFields:
@@ -335,9 +307,8 @@ class TestAddRemoteSchemaCompareRootQueryFields:
 
     def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.load(f)
-        st_code, introspect_hasura = check_query(hge_ctx, query)
-        assert st_code == 200, introspect_hasura
+            query = yaml.safe_load(f)
+        introspect_hasura = check_query(hge_ctx, query)
         resp = requests.post(
             self.remote,
             json=query['query']
@@ -347,33 +318,13 @@ class TestAddRemoteSchemaCompareRootQueryFields:
         remote_root_ty_info = get_query_root_info(introspect_remote)
         hasura_root_ty_info = get_query_root_info(introspect_hasura)
         has_fld = dict()
-        for fr in remote_root_ty_info['fields']:
-            has_fld[fr['name']] = False
-            for fh in filter(lambda f: f['name'] == fr['name'], hasura_root_ty_info['fields']):
-                has_fld[fr['name']] = True
-                assert fr['type'] == fh['type'], yaml.dump({
-                    'error' : 'Types do not match for fld ' + fr['name'],
-                    'remote_type' : fr['type'],
-                    'hasura_type' : fh['type']
-                })
-                has_arg = dict()
-                for ar in fr['args']:
-                    arg_path = fr['name'] + '(' + ar['name'] + ':)'
-                    has_arg[arg_path] = False
-                    for ah in filter(lambda a: a['name'] == ar['name'], fh['args']):
-                        has_arg[arg_path] = True
-                        assert ar['type'] == ah['type'], yaml.dump({
-                            'error' : 'Types do not match for arg ' + arg_path,
-                            'remote_type' : ar['type'],
-                            'hasura_type' : ah['type']
-                        })
-                        assert ar['defaultValue'] == ah['defaultValue'], yaml.dump({
-                            'error' : 'Default values do not match for arg ' + arg_path,
-                            'remote_default_value' : ar['defaultValue'],
-                            'hasura_default_value' : ah['defaultValue']
-                        })
-                    assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
-            assert has_fld[fr['name']], 'Field ' + fr['name'] + ' in the remote shema root query type not found in Hasura schema'
+
+        for fldR in remote_root_ty_info['fields']:
+            has_fld[fldR['name']] = False
+            for fldH in get_fld_by_name(hasura_root_ty_info, fldR['name']):
+                has_fld[fldR['name']] = True
+                compare_flds(fldH, fldR)
+            assert has_fld[fldR['name']], 'Field ' + fldR['name'] + ' in the remote shema root query type not found in Hasura schema'
 
 
 #    def test_remote_query_variables(self, hge_ctx):
@@ -418,5 +369,35 @@ def check_introspection_result(res, types, node_names):
 
     return satisfy_node and satisfy_ty
 
-def gen_id(size=6, chars=string.ascii_letters + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+def get_fld_by_name(ty, fldName):
+    return _filter(lambda f: f['name'] == fldName, ty['fields'])
+
+def get_arg_by_name(fld, argName):
+    return _filter(lambda a: a['name'] == argName, fld['args'])
+
+def compare_args(argH, argR):
+    assert argR['type'] == argH['type'], yaml.dump({
+        'error' : 'Types do not match for arg ' + arg_path,
+        'remote_type' : argR['type'],
+        'hasura_type' : argH['type']
+    })
+    assert argR['defaultValue'] == argH['defaultValue'], yaml.dump({
+        'error' : 'Default values do not match for arg ' + arg_path,
+        'remote_default_value' : argR['defaultValue'],
+        'hasura_default_value' : argH['defaultValue']
+    })
+
+def compare_flds(fldH, fldR):
+    assert fldH['type'] == fldR['type'], yaml.dump({
+        'error' : 'Types do not match for fld ' + fldH['name'],
+        'remote_type' : fldR['type'],
+        'hasura_type' : fldH['type']
+    })
+    has_arg = dict()
+    for argR in fldR['args']:
+        arg_path = fldR['name'] + '(' + argR['name'] + ':)'
+        has_arg[arg_path] = False
+        for argH in get_arg_by_name(fldH, argR['name']):
+            has_arg[arg_path] = True
+            compare_args(argH, argR)
+        assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'

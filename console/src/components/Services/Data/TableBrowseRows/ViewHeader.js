@@ -73,7 +73,7 @@ const ViewHeader = ({
           <ul className="nav nav-pills">
             <li
               role="presentation"
-              className={tabName === 'view' ? styles.active : ''}
+              className={tabName === 'browse' ? styles.active : ''}
             >
               <Link
                 to={

@@ -106,7 +106,7 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
 ```
 cd tests-py
-pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url>
+pytest --hge-urls http://127.0.0.1:8080 --pg-urls <database_url> -vv
 ```
 
 ### Create Pull Request

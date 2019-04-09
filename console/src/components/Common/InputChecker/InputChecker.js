@@ -35,7 +35,14 @@ export default class InputChecker extends React.Component {
       });
   }
   render() {
-    const { value, onChange, placeholder, indexId, disabled } = this.props;
+    const {
+      value,
+      onChange,
+      placeholder,
+      indexId,
+      disabled,
+      title,
+    } = this.props;
 
     const style = {
       border: '1px solid red',
@@ -51,7 +58,7 @@ export default class InputChecker extends React.Component {
         onBlur={this.onBlur.bind(this)}
         data-index-id={indexId || 0}
         disabled={disabled}
-        title={this.state.errorMessage || ''}
+        title={this.state.errorMessage || title}
         data-test={this.props['data-test']}
       />
     );
