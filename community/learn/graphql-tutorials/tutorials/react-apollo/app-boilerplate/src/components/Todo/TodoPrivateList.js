@@ -40,8 +40,6 @@ class TodoPrivateList extends Component {
   clearCompleted() {}
 
   render() {
-    const {todos} = this.props;
-
     let filteredTodos = this.state.todos;
     if (this.state.filter === "active") {
       filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
