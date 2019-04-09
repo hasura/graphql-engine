@@ -582,8 +582,6 @@ class Permissions extends Component {
         dispatch(permCloseEdit());
       };
 
-      // TODO: display current status in subSectionTitles
-
       const {
         showAggregation,
         showUpsertSection,
@@ -1658,10 +1656,12 @@ class Permissions extends Component {
           : undefined;
         const newQueryPermissions = permissionsState[permissionsState.query];
 
-        const disableSave =
-          permissionsState.applySamePermissions.length ||
-          JSON.stringify(newQueryPermissions) ===
-            JSON.stringify(currQueryPermissions);
+        const applySameSelected = permissionsState.applySamePermissions.length;
+        const permsChanged =
+          JSON.stringify(newQueryPermissions) !==
+          JSON.stringify(currQueryPermissions);
+
+        const disableSave = applySameSelected || !permsChanged;
         const disableRemoveAccess = !currQueryPermissions;
 
         const saveButton = getPermActionButton(
@@ -1669,7 +1669,7 @@ class Permissions extends Component {
           'yellow',
           dispatchSavePermissions,
           disableSave,
-          disableSave ? 'No changes made' : ''
+          !permsChanged ? 'No changes made' : ''
         );
 
         const removeAccessButton = getPermActionButton(
@@ -1677,7 +1677,7 @@ class Permissions extends Component {
           'red',
           dispatchRemoveAccess,
           disableRemoveAccess,
-          disableRemoveAccess ? 'No changes made' : ''
+          disableRemoveAccess ? 'No permissions set' : ''
         );
 
         return (
