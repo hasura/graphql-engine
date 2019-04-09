@@ -302,50 +302,6 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp "application/sql" output
 
-mkPGDumpAction
-  :: (MonadIO m)
-  => (Bool -> QErr -> Value)
-  -> ServerCtx
-  -> Handler BL.ByteString
-  -> ActionT m ()
-mkPGDumpAction qErrEncoder serverCtx handler = do
-  req <- request
-  reqBody <- liftIO $ strictRequestBody req
-  let headers  = requestHeaders req
-      authMode = scAuthMode serverCtx
-      manager = scManager serverCtx
-
-  userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
-
-  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
-
-  t1 <- liftIO getCurrentTime -- for measuring response time purposes
-  result <- liftIO $ runReaderT (runExceptT handler) handlerState
-  t2 <- liftIO getCurrentTime -- for measuring response time purposes
-
-  -- encoding
-
-  -- log result
-  logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp result
-
-  where
-    logger = scLogger serverCtx
-    -- encode error response
-    qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
-    qErrToResp includeInternal qErr = do
-      setStatus $ qeStatus qErr
-      json $ qErrEncoder includeInternal qErr
-
-    logAndThrow req reqBody includeInternal qErr = do
-      logError Nothing req reqBody serverCtx qErr
-      qErrToResp includeInternal qErr
-
-    resToResp resp = do
-      uncurry setHeader sqlHeader
-      lazyBytes resp
-
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
 
