@@ -137,6 +137,18 @@ data HandlerCtx
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
+data APIResp
+  = JSONResp !EncJSON
+  | RawResp !T.Text !BL.ByteString -- content-type, body
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp j  -> encJToLBS j
+  RawResp _ b -> b
+
+mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
+mkAPIRespHandler = fmap JSONResp
+
 isMetadataEnabled :: ServerCtx -> Bool
 isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 
@@ -186,7 +198,7 @@ mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
   -> ServerCtx
-  -> Handler EncJSON
+  -> Handler APIResp
   -> ActionT m ()
 mkSpockAction qErrEncoder serverCtx handler = do
   req <- request
@@ -201,14 +213,13 @@ mkSpockAction qErrEncoder serverCtx handler = do
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
-  result <- liftIO $ runReaderT (runExceptT handler) handlerState
+  eResult <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  let resLBS = fmap encJToLBS result
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx resLBS $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp resLBS
+  logResult (Just userInfo) req reqBody serverCtx (apiRespToLBS <$> eResult) $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp eResult
 
   where
     logger = scLogger serverCtx
@@ -222,9 +233,14 @@ mkSpockAction qErrEncoder serverCtx handler = do
       logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
-    resToResp resp = do
-      uncurry setHeader jsonHeader
-      lazyBytes resp
+    resToResp eResult = do
+      case eResult of
+        JSONResp j -> do
+          uncurry setHeader jsonHeader
+          lazyBytes $ encJToLBS j
+        RawResp ct b -> do
+          setHeader "content-type" ct
+          lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
@@ -279,13 +295,12 @@ gqlExplainHandler query = do
   strfyNum <- scStringifyNum . hcServerCtx <$> ask
   GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
 
--- v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> ActionCtxT () IO ()
-v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler BL.ByteString
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
-  -- logger <- scLogger . hcServerCtx <$> ask
   ci <- scConnInfo . hcServerCtx <$> ask
-  PGD.execPGDump b ci
+  output <- PGD.execPGDump b ci
+  return $ RawResp "application/sql" output
 
 mkPGDumpAction
   :: (MonadIO m)
@@ -308,6 +323,8 @@ mkPGDumpAction qErrEncoder serverCtx handler = do
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
+
+  -- encoding
 
   -- log result
   logResult (Just userInfo) req reqBody serverCtx result $ Just (t1, t2)
@@ -422,29 +439,28 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       put    ("v1/template" <//> var) tmpltPutOrPostH
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $ do
         query <- parseBody
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr serverCtx $
+        mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $
         legacyQueryHandler (TableName tableName) queryType
 
-      post "v1alpha1/pg_dump" $ mkPGDumpAction encodeQErr serverCtx $ do
+      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr serverCtx $ do
         query <- parseBody
         v1Alpha1PGDumpHandler query
 
     when enableGraphQL $ do
-      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-        expQuery <- parseBody
-        gqlExplainHandler expQuery
+      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $
+        mkAPIRespHandler $ do
+          expQuery <- parseBody
+          gqlExplainHandler expQuery
 
-      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
-        query <- parseBody
-        v1Alpha1GQHandler query
-
-        -- get "v1alpha1/graphql/schema" $
-        --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $
+        mkAPIRespHandler $ do
+          query <- parseBody
+          v1Alpha1GQHandler query
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
@@ -455,11 +471,12 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
+      mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $
+        mkQTemplateAction tmpltName tmpltArgs
 
     tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ do
+      mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $ do
         bodyTmpltArgs <- parseBody
         mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 
