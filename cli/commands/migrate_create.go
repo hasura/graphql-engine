@@ -33,7 +33,17 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
-			return opts.run()
+			opts.EC.Spin("Creating migration files...")
+			version, err := opts.run()
+			opts.EC.Spinner.Stop()
+			if err != nil {
+				return err
+			}
+			opts.EC.Logger.WithFields(log.Fields{
+				"version": version,
+				"name":    opts.name,
+			}).Info("Migrations files created")
+			return nil
 		},
 	}
 	f := migrateCreateCmd.Flags()
@@ -68,7 +78,7 @@ type migrateCreateOptions struct {
 	metaDataServer bool
 }
 
-func (o *migrateCreateOptions) run() (err error) {
+func (o *migrateCreateOptions) run() (version int64, err error) {
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
 
@@ -76,19 +86,19 @@ func (o *migrateCreateOptions) run() (err error) {
 		// sql-file flag is set
 		err := createOptions.SetSQLUpFromFile(o.sqlFile)
 		if err != nil {
-			return errors.Wrap(err, "cannot set sql file")
+			return 0, errors.Wrap(err, "cannot set sql file")
 		}
 	}
 
 	if o.flags.Changed("metadata-from-file") && o.metaDataServer {
-		return errors.New("only one metadata type can be set")
+		return 0, errors.New("only one metadata type can be set")
 	}
 
 	if o.flags.Changed("metadata-from-file") {
 		// metadata-file flag is set
 		err := createOptions.SetMetaUpFromFile(o.metaDataFile)
 		if err != nil {
-			return errors.Wrap(err, "cannot set metadata file")
+			return 0, errors.Wrap(err, "cannot set metadata file")
 		}
 	}
 
@@ -96,35 +106,35 @@ func (o *migrateCreateOptions) run() (err error) {
 		// create new migrate instance
 		migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
 		if err != nil {
-			return errors.Wrap(err, "cannot create migrate instance")
+			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
 
 		// fetch metadata from server
 		metaData, err := migrateDrv.ExportMetadata()
 		if err != nil {
-			return errors.Wrap(err, "cannot fetch metadata from server")
+			return 0, errors.Wrap(err, "cannot fetch metadata from server")
 		}
 
 		tmpfile, err := ioutil.TempFile("", "metadata")
 		if err != nil {
-			return errors.Wrap(err, "cannot create tempfile")
+			return 0, errors.Wrap(err, "cannot create tempfile")
 		}
 		defer os.Remove(tmpfile.Name())
 
 		t, err := yaml.Marshal(metaData)
 		if err != nil {
-			return errors.Wrap(err, "cannot marshal metadata")
+			return 0, errors.Wrap(err, "cannot marshal metadata")
 		}
 		if _, err := tmpfile.Write(t); err != nil {
-			return errors.Wrap(err, "cannot write to temp file")
+			return 0, errors.Wrap(err, "cannot write to temp file")
 		}
 		if err := tmpfile.Close(); err != nil {
-			return errors.Wrap(err, "cannot close tmp file")
+			return 0, errors.Wrap(err, "cannot close tmp file")
 		}
 
 		err = createOptions.SetMetaUpFromFile(tmpfile.Name())
 		if err != nil {
-			return errors.Wrap(err, "cannot parse metadata from the server")
+			return 0, errors.Wrap(err, "cannot parse metadata from the server")
 		}
 	}
 
@@ -141,13 +151,9 @@ func (o *migrateCreateOptions) run() (err error) {
 	}()
 	err = createOptions.Create()
 	if err != nil {
-		return errors.Wrap(err, "error creating migration files")
+		return 0, errors.Wrap(err, "error creating migration files")
 	}
-	o.EC.Logger.WithFields(log.Fields{
-		"version": timestamp,
-		"name":    o.name,
-	}).Info("Migrations files created")
-	return nil
+	return 0, nil
 }
 
 func getTime() int64 {

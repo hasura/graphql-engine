@@ -100,6 +100,8 @@ Step 3: Initialize the migrations as per your current state
      # POST the SQL to a serverless function and save the response
      curl --data-binary @public-schema.sql https://hasura-edit-pg-dump.now.sh > public-schema-edited.sql
 
+  (The source code for this function can be found on `GitHub <https://github.com/hasura/graphql-engine/tree/master/scripts/edit-pg-dump>`__ along with a bash script if you'd prefer that.)
+
 - Create a migration called ``init`` using this SQL file and the metadata that
   is on the server right now:
 

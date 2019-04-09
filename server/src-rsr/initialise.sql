@@ -368,14 +368,19 @@ SELECT
   END AS return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(pt.typname), '[]')
+      COALESCE(json_agg(q.type_name), '[]')
     FROM
       (
-        unnest(
-          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
-        ) WITH ORDINALITY pat(oid, ordinality)
-        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
-      )
+        SELECT
+          pt.typname AS type_name,
+          pat.ordinality
+        FROM
+          unnest(
+            COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+          ) WITH ORDINALITY pat(oid, ordinality)
+          LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+        ORDER BY pat.ordinality ASC
+      ) q
    ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
 FROM

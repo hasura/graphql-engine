@@ -110,9 +110,16 @@ refs:
           apt-get update
           apt install --yes pgbouncer jq curl postgresql-client
     - run:
+        name: Ensure databases are present
+        environment:
+          DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+        command: |
+          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
+    - run:
         name: Run Python tests
         environment:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+          HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh

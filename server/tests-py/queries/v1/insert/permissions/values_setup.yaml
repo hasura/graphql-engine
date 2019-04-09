@@ -1,0 +1,37 @@
+type: bulk
+args:
+
+#Insert residents
+- type: insert
+  args:
+    table: resident
+    objects:
+    - id: 1
+      name: Resident 1
+      age: 21
+    - id: 2
+      name: Resident 2
+      age: 22
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content
+      title: Article 1
+      author_id: 1
+    - content: Sample article content
+      title: Article 2
+      author_id: 1
+    - content: Sample article content
+      title: Article 3
+      author_id: 2
