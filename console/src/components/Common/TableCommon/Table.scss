@@ -9,6 +9,9 @@
   //margin-top: 25px;
 }
 
+.tableContainerModified {
+}
+
 .schemaWrapper {
   width: 100%;
 
@@ -191,6 +194,7 @@ a.expanded {
 
 .tableCellCenterAligned {
   text-align: center;
+  overflow: auto !important;
 }
 
 .tableCellExpanded {

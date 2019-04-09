@@ -27,8 +27,9 @@ const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
-const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
-const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
+const TOGGLE_OPERATION = 'AddTrigger/TOGGLE_OPERATION';
+// const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
+// const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
 const SET_HEADERKEY = 'AddTrigger/SET_HEADERKEY';
 const SET_HEADERTYPE = 'AddTrigger/SET_HEADERTYPE';
@@ -104,6 +105,9 @@ const createTrigger = () => {
     // operation definition
     if (currentState.selectedOperations.insert) {
       payload.args.insert = { columns: currentState.operations.insert };
+    }
+    if (currentState.selectedOperations.manual) {
+      payload.args.manual = currentState.selectedOperations.manual;
     }
     if (currentState.selectedOperations.update) {
       payload.args.update = { columns: currentState.operations.update };
@@ -273,13 +277,16 @@ const operationToggleAllColumns = (
   };
 };
 
-const setOperationSelection = (type, isChecked) => {
+const setOperationSelection = type => {
   return dispatch => {
+    dispatch({ type: TOGGLE_OPERATION, data: type });
+    /*
     if (isChecked) {
       dispatch({ type: TOGGLE_QUERY_TYPE_SELECTED, data: type });
     } else {
       dispatch({ type: TOGGLE_QUERY_TYPE_DESELECTED, data: type });
     }
+    */
   };
 };
 
@@ -414,6 +421,15 @@ const addTriggerReducer = (state = defaultState, action) => {
           update: action.cols,
         },
       };
+    case TOGGLE_OPERATION:
+      return {
+        ...state,
+        selectedOperations: {
+          ...state.selectedOperations,
+          [action.data]: !state.selectedOperations[action.data],
+        },
+      };
+    /*
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
       selectedOperations[action.data] = true;
@@ -422,6 +438,7 @@ const addTriggerReducer = (state = defaultState, action) => {
       const deselectedOperations = state.selectedOperations;
       deselectedOperations[action.data] = false;
       return { ...state, selectedOperations: { ...deselectedOperations } };
+    */
     case UPDATE_WEBHOOK_URL_TYPE:
       return {
         ...state,
