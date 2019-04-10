@@ -29,19 +29,23 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Validate                as VQ
+import qualified Hasura.GraphQL.Validate.Context        as VC
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
 
 data GExPHasura
   = GExPHasura !GCtx !VQ.RootSelSet
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show GExPHasura where
+  show (GExPHasura _ rs) = "GExPHasura { <GCtx> " ++ show rs ++ " }"
 
 data GExPRemote
   = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
   deriving (Show, Eq)
 
 data GQExecPlan
-  = GQExecPlan (Maybe GExPHasura) [GExPRemote]
+  = GQExecPlan (Maybe GExPHasura) [GExPRemote] G.OperationType
   deriving (Show, Eq)
 
 data QueryParts
@@ -64,12 +68,14 @@ getExecPlan
 getExecPlan userInfo sc req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
+  _ <- flip runReaderT gCtx $ VQ.validateGQ queryParts
 
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
       ssSplits = foldr (splitSelSet gCtx) mempty $ G._todSelectionSet opDef
       querySplits = splitQuery opDef fragDefs ssSplits
       newQs = Map.map (transformGQRequest req) querySplits
+      opTy = G._todType opDef
 
   newRootSels <- forM (Map.toList newQs) $ \(tl, q) ->
     flip runReaderT gCtx $
@@ -82,23 +88,24 @@ getExecPlan userInfo sc req = do
     [] -> throw500 "unexpected plan"
 
     [(VT.HasuraType, (_, rootSelSet))] ->
-      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet) []
+      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet) [] opTy
     [(VT.RemoteType _ rsi, (_, rootSelSet))] ->
-      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
-    xs -> foldM (combPlan gCtx) (GQExecPlan Nothing []) xs
+      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet] opTy
+    xs -> foldM (combPlan gCtx) (GQExecPlan Nothing [] opTy) xs
 
   where
     gCtxRoleMap = scGCtxMap sc
 
-    combPlan gCtx plan (tl, (newq, rs)) = case tl of
-      VT.HasuraType -> do
-        let GQExecPlan hPlan remPlans = plan
-        case hPlan of
-          Nothing -> return $ GQExecPlan (Just $ GExPHasura gCtx rs) remPlans
-          Just _  -> throw500 "encountered more than one hasura plan!"
-      VT.RemoteType _ rsi -> do
-        let GQExecPlan hPlan remPlans = plan
-        return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans)
+    combPlan gCtx plan (tl, (newq, rs)) = do
+      let GQExecPlan hPlan remPlans ty = plan
+      case tl of
+        VT.HasuraType ->
+          case hPlan of
+            Nothing ->
+              return $ GQExecPlan (Just $ GExPHasura gCtx rs) remPlans ty
+            Just _  -> throw500 "encountered more than one hasura plan!"
+        VT.RemoteType _ rsi ->
+          return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans) ty
 
 
 splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
@@ -225,9 +232,11 @@ execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
 
 getTypeLoc :: GCtx -> G.Name -> Maybe VT.TypeLoc
 getTypeLoc gCtx node =
-    VT._fiLoc <$> Map.lookup node schemaNodes
+  -- TODO: use getFieldInfo from Validation.Context
+  VT._fiLoc <$> Map.lookup node schemaNodes
   where
     schemaNodes =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
-      in maybe qr (Map.union qr) mr
+          sr = VT._otiFields <$> _gSubRoot gCtx
+      in foldr (\x cm -> maybe cm (Map.union cm) x) qr [sr, mr]
