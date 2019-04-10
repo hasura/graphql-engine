@@ -8,9 +8,14 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "apollo-cache-inmemory": "^1.5.1",
+    "apollo-client": "^2.5.1",
     "apollo-link-http": "^1.5.14",
+    "apollo-link-ws": "^1.0.17",
     "express": "^4.16.4",
+    "graphql": "^14.2.1",
     "morgan": "^1.9.1",
+    "subscriptions-transport-ws": "^0.9.16",
     "vue-apollo": "^3.0.0-beta.11"
   },
   "devDependencies": {

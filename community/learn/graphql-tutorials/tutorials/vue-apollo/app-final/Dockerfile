@@ -1,36 +1,20 @@
-FROM node:10-alpine as build
+FROM node:carbon
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh
-
-RUN mkdir /app
-
+# Create app directory
 WORKDIR /app
 
-COPY package.json .
+# Install app dependencies
+RUN npm -g install serve
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+COPY package*.json ./
 
 RUN npm install
 
-COPY . .
-
+# Bundle app source
+COPY . /app
+#Build react/vue/angular bundle static files
 RUN npm run build
 
-# ---------------
-
-FROM node:10-alpine
-
-RUN mkdir -p /app/dist
-
-WORKDIR /app
-
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package.json .
-COPY --from=build /app/server.js .
-
-ENV NODE_ENV production
-
-RUN npm install --production
-
-EXPOSE 3000
-
-CMD ["node", "server.js"]
+EXPOSE 8080
+# serve dist folder on port 8080
+CMD ["serve", "-s", "dist", "-p", "8080"]
