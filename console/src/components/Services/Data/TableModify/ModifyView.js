@@ -105,23 +105,37 @@ class ModifyView extends Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      const btnText = '-';
       const bg = '';
       return (
         <div key={i} className={bg}>
           <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <Button disabled="disabled" size="xs" color="yellow">
-                  {btnText}
+            <div className={`row + ${styles.add_mar_bottom}`}>
+              <h5>
+                <Button disabled="disabled" size="xs">
+                  -
                 </Button>{' '}
-                &nbsp; {c.column_name}
+                &nbsp; <b>{c.column_name}</b>
               </h5>
             </div>
           </div>
         </div>
       );
     });
+
+    const modifyBtn = (
+      <Button
+        type="submit"
+        color="yellow"
+        size="sm"
+        className={styles.add_mar_right}
+        onClick={() => {
+          this.modifyViewDefinition(tableName);
+        }}
+        data-test="modify-view"
+      >
+        Modify
+      </Button>
+    );
 
     const untrackBtn = (
       <Button
@@ -138,6 +152,23 @@ class ModifyView extends Component {
         data-test="untrack-view"
       >
         Untrack View
+      </Button>
+    );
+
+    const deleteBtn = (
+      <Button
+        type="submit"
+        color="red"
+        size="sm"
+        onClick={() => {
+          const isOk = confirm('Are you sure');
+          if (isOk) {
+            dispatch(deleteViewSql(tableName));
+          }
+        }}
+        data-test="delete-view"
+      >
+        Delete view
       </Button>
     );
 
@@ -229,7 +260,6 @@ class ModifyView extends Component {
             {columnEditors}
             <br />
             <h4>View Definition:</h4>
-
             <AceEditor
               mode="sql"
               theme="github"
@@ -242,33 +272,9 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            <Button
-              type="submit"
-              color="yellow"
-              size="sm"
-              className={styles.add_mar_right}
-              onClick={() => {
-                this.modifyViewDefinition(tableName);
-              }}
-              data-test="modify-view"
-            >
-              Modify
-            </Button>
+            {modifyBtn}
             {untrackBtn}
-            <Button
-              type="submit"
-              color="red"
-              size="sm"
-              onClick={() => {
-                const isOk = confirm('Are you sure');
-                if (isOk) {
-                  dispatch(deleteViewSql(tableName));
-                }
-              }}
-              data-test="delete-view"
-            >
-              Delete view
-            </Button>
+            {deleteBtn}
             <br />
             <br />
           </div>

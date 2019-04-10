@@ -11,47 +11,94 @@ import React from 'react';
  *    `children, react-element`: The content which needs to be toggled
  */
 
-class CollapsibleToggleHoc extends React.Component {
+class CollapsibleToggle extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {};
     this.state.isOpen = props.isOpen || false;
+
     this.toggle = this.toggle.bind(this);
   }
+
   toggle() {
     this.setState({ isOpen: !this.state.isOpen });
   }
+
   render() {
     return (
-      <CollapsibleToggle toggle={this.toggle} {...this.props} {...this.state} />
+      <CollapsibleToggleComponent
+        toggle={this.toggle}
+        {...this.props}
+        {...this.state}
+      />
     );
   }
 }
 
-const CollapsibleToggle = ({ testId, title, isOpen, toggle, children }) => {
+const CollapsibleToggleComponent = ({
+  title,
+  children,
+  isOpen,
+  toggle,
+  testId,
+  defaultTitle,
+}) => {
   const styles = require('./CollapsibleToggle.scss');
+
+  const getTitle = () => {
+    let _title;
+
+    if (defaultTitle) {
+      _title = <div className={styles.collapsibleTitle}>{title}</div>;
+    } else {
+      _title = title;
+    }
+
+    return _title;
+  };
+
+  const getChildren = () => {
+    let _children;
+
+    if (isOpen) {
+      _children = <div className={styles.collapsibleContent}>{children}</div>;
+    }
+
+    return _children;
+  };
+
+  const getIndicatorType = () => {
+    let _indicatorStateStyle;
+
+    if (isOpen) {
+      _indicatorStateStyle = styles.collapsibleIndicatorOpen;
+    }
+
+    return _indicatorStateStyle;
+  };
+
   return (
-    <div className={`${styles.collapsibleWrapper}`}>
+    <div className={styles.collapsibleWrapper}>
       <div
-        className={`${styles.collapsibleToggle}`}
+        className={styles.collapsibleToggle}
         data-test={testId}
         onClick={toggle}
       >
-        <span className={`${styles.caretWrapper}`}>
+        <span className={styles.collapsibleIndicatorWrapper}>
           <i
             className={`fa fa-chevron-right ${
-              isOpen ? styles.downArrow : styles.rightArrow
-            }`}
-            data-test="toggle-column-presets"
+              styles.collapsibleIndicator
+            } ${getIndicatorType()}`}
           />
         </span>
-        <span className={`${styles.titleWrapper}`}>{title}</span>
+
+        <span className={styles.titleWrapper}>{getTitle()}</span>
       </div>
-      {isOpen ? (
-        <div className={styles.collapsibleContent}>{children}</div>
-      ) : null}
+
+      {getChildren()}
     </div>
   );
 };
 
-export default CollapsibleToggleHoc;
+export default CollapsibleToggle;

@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+#Person table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        details JSONB NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: person
+
