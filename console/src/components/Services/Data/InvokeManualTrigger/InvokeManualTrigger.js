@@ -1,7 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-class InvokeTrigger extends React.Component {
+/* This component accepts for following props
+ *  1) Trigger name
+ *  2) Trigger object
+ * It creates a manual trigger and watches the response of the same.
+ * */
+class InvokeManualTrigger extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -13,8 +18,10 @@ class InvokeTrigger extends React.Component {
   }
 }
 
-InvokeTrigger.propTypes = {
+InvokeManualTrigger.propTypes = {
   args: PropTypes.object.isRequired,
+  name: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
-export default InvokeTrigger;
+export default InvokeManualTrigger;
