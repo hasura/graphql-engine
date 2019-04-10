@@ -167,14 +167,6 @@ class ApiRequest extends Component {
     );
   }
 
-  getCollapsibleTitle(title) {
-    return (
-      <div className={styles.responseWrapper}>
-        <div className={styles.responseHeader}>{title}</div>
-      </div>
-    );
-  }
-
   getHeaderRows() {
     const headers_map = new Map();
 
@@ -443,17 +435,15 @@ class ApiRequest extends Component {
   render() {
     return (
       <div className={styles.apiRequestWrapper}>
-        <CollapsibleToggle
-          title={this.getCollapsibleTitle('GraphQL Endpoint')}
-          isOpen
-        >
+        <CollapsibleToggle title={'GraphQL Endpoint'} isOpen defaultTitle>
           {this.getUrlBar()}
         </CollapsibleToggle>
         <div className={styles.headerWrapper}>
           <CollapsibleToggle
-            title={this.getCollapsibleTitle('Request Headers')}
+            title={'Request Headers'}
             testId="api-explorer-header"
             isOpen
+            defaultTitle
           >
             {this.getHeaderTableView()}
           </CollapsibleToggle>
