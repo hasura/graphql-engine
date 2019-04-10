@@ -115,17 +115,18 @@ class InsertItem extends Component {
       };
 
       const colType = col.data_type;
+
+      const placeHolder = hasDefault
+        ? col.column_default
+        : getPlaceholder(colType);
+
       let typedInput = (
-        <input {...standardInputProps} placeholder={getPlaceholder(colType)} />
+        <input {...standardInputProps} placeholder={placeHolder} />
       );
 
       if (isAutoIncrement) {
         typedInput = (
-          <input
-            {...standardInputProps}
-            readOnly
-            placeholder={getPlaceholder(colType)}
-          />
+          <input {...standardInputProps} readOnly placeholder={placeHolder} />
         );
       }
 
@@ -134,7 +135,7 @@ class InsertItem extends Component {
         typedInput = (
           <input
             {...standardInputProps}
-            placeholder={getPlaceholder(colType)}
+            placeholder={placeHolder}
             defaultValue={
               clone && colName in clone ? JSON.stringify(clone[colName]) : ''
             }
@@ -151,8 +152,11 @@ class InsertItem extends Component {
               e.target.parentNode.parentNode.click();
               e.target.focus();
             }}
+            defaultValue={placeHolder}
           >
-            <option value="" disabled>-- bool --</option>
+            <option value="" disabled>
+              -- bool --
+            </option>
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
