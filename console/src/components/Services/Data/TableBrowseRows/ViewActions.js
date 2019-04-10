@@ -104,7 +104,7 @@ const vMakeRequest = () => {
   };
 };
 
-const fetchManualTriggers = () => (dispatch, getState) => {
+const fetchManualTriggers = tableName => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
     type: 'select',
@@ -118,6 +118,9 @@ const fetchManualTriggers = () => (dispatch, getState) => {
         column: 'name',
         type: 'asc',
         nulls: 'last',
+      },
+      where: {
+        table_name: tableName,
       },
     },
   };

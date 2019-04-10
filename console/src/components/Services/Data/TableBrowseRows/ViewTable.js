@@ -1,11 +1,18 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
+import {
+  vSetDefaults,
+  vMakeRequest,
+  // vExpandHeading,
+  fetchManualTriggers,
+} from './ViewActions'; // eslint-disable-line no-unused-vars
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
 import { replace } from 'react-router-redux';
+
+import semverCheck from '../../../../helpers/semver';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -72,20 +79,26 @@ class ViewTable extends Component {
     };
     // this.state.dispatch = props.dispatch;
     // this.state.tableName = props.tablename;
-    const dispatch = this.props.dispatch;
+    // const dispatch = this.props.dispatch;
+    /*
     Promise.all([
       dispatch(setTable(this.props.tableName)),
       dispatch(vSetDefaults(this.props.tableName)),
       dispatch(vMakeRequest()),
     ]);
+    */
+    this.getInitialData(this.props.tableName);
   }
 
   componentWillReceiveProps(nextProps) {
-    const dispatch = this.props.dispatch;
+    // const dispatch = this.props.dispatch;
     if (nextProps.tableName !== this.props.tableName) {
+      this.getInitialData(nextProps.tableName);
+      /*
       dispatch(setTable(nextProps.tableName));
       dispatch(vSetDefaults(nextProps.tableName));
       dispatch(vMakeRequest());
+      */
     }
   }
 
@@ -114,6 +127,23 @@ class ViewTable extends Component {
     dispatch(vSetDefaults(this.props.tableName));
   }
 
+  getInitialData(tableName) {
+    const { dispatch } = this.props;
+    Promise.all([
+      dispatch(setTable(tableName)),
+      dispatch(vSetDefaults(tableName)),
+      dispatch(vMakeRequest()),
+      this.retrieveManualTriggers(tableName),
+    ]);
+  }
+
+  retrieveManualTriggers = tableName => {
+    const { dispatch } = this.props;
+    return !semverCheck('manualTriggers')
+      ? Promise.resolve()
+      : dispatch(fetchManualTriggers(tableName));
+  };
+
   render() {
     const {
       tableName,
@@ -132,6 +162,7 @@ class ViewTable extends Component {
       dispatch,
       expandedRow,
       currentSchema,
+      manualTriggers = [],
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
@@ -166,6 +197,7 @@ class ViewTable extends Component {
         count={count}
         dispatch={dispatch}
         expandedRow={expandedRow}
+        manualTriggers={manualTriggers}
       />
     );
 

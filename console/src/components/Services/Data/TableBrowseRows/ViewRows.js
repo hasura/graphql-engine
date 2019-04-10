@@ -53,6 +53,7 @@ const ViewRows = ({
   isView,
   count,
   expandedRow,
+  manualTriggers = [],
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -270,33 +271,16 @@ const ViewRows = ({
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
 
-        const triggerOptions = [
-          {
-            displayName: 'ban_employer',
-            onChange: () => null,
-            itemIdentifier: 'ban_employer',
+        const triggerOptions = manualTriggers.map(m => {
+          return {
+            displayName: m.name,
             prefixLabel: 'Run:',
-          },
-          {
-            displayName: 'activate_account',
+            itemIdentifier: m.name,
             onChange: () => null,
-            itemIdentifier: 'activate_account',
-            prefixLabel: 'Run:',
-          },
-          {
-            displayName: 'view_report',
-            onChange: () => null,
-            itemIdentifier: 'view_report',
-            prefixLabel: 'Run:',
-          },
-        ];
-
-        return (
-          <div className={styles.tableCellCenterAligned}>
-            {cloneButton}
-            {editButton}
-            {deleteButton}
-            {expandButton}
+          };
+        });
+        const renderManualTrigger = () => {
+          return manualTriggers.length > 0 ? (
             <DataDropdown
               elementId="data_browse_rows_trigger"
               options={triggerOptions}
@@ -305,8 +289,19 @@ const ViewRows = ({
               <img
                 src={require('./trigger-invoke-icon.svg')}
                 alt="Trigger events"
+                title="Trigger"
               />
             </DataDropdown>
+          ) : null;
+        };
+
+        return (
+          <div className={styles.tableCellCenterAligned}>
+            {cloneButton}
+            {editButton}
+            {deleteButton}
+            {expandButton}
+            {renderManualTrigger()}
           </div>
         );
       };
