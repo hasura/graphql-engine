@@ -53,11 +53,21 @@ const MetadataStatus = ({
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${ico.definition.table}"`;
             } else if (ico.type === 'table') {
-              name = ico.definition;
-              definition = ico.definition;
+              if (typeof ico.definition === 'string') {
+                name = ico.definition;
+                definition = ico.definition;
+              } else {
+                name = ico.definition.name;
+                definition = ico.definition.name;
+              }
             } else if (ico.type === 'function') {
-              name = ico.definition.name;
-              definition = ico.name;
+              if (typeof ico.definition === 'string') {
+                name = ico.definition;
+                definition = ico.definition;
+              } else {
+                name = ico.definition.name;
+                definition = ico.definition.name;
+              }
             } else if (ico.type === 'event_trigger') {
               name = ico.definition.configuration.name;
               definition = `event triggeer on table "${

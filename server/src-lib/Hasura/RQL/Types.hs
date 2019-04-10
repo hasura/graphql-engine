@@ -166,9 +166,9 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
   liftTx = lift . liftTx
 
 data LazyTx e a
-  = LTErr e
-  | LTNoTx a
-  | LTTx (Q.TxE e a)
+  = LTErr !e
+  | LTNoTx !a
+  | LTTx !(Q.TxE e a)
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case

@@ -83,21 +83,8 @@ table thead tr th {
         background-color: #f0f0f0;
         width: 100%;
         word-wrap: break-word;
-        padding: 15px 0px;
-        padding-left: 20px;
+        padding: 15px 0 15px 20px;
         display: block;
-      }
-    }
-
-    li:hover {
-      transition: color 0.5s;
-      cursor: pointer;
-      text-decoration: none;
-
-      a {
-        text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
       }
     }
 
@@ -117,8 +104,6 @@ table thead tr th {
 
       a {
         text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
         background-color: #FFF3D5;
         display: inline-block;
       }
@@ -446,11 +431,11 @@ input {
   margin-left: 5px;
 }
 
-.mar_small_neg_left {
+.mar_neg_left {
   margin-left: -10px;
 }
 
-.mar_small_neg_left_1 {
+.mar_small_neg_left {
   margin-left: -5px;
 }
 
@@ -589,6 +574,10 @@ code {
 
 .padd_top {
   padding-top: 20px !important;
+}
+
+.disabled {
+  color: #999;
 }
 
 .select_option_height {
@@ -1279,9 +1268,29 @@ code {
   top: 0;
   z-index: 1000;
 }
+.pkEditorWrapper {
+  width: 325px;
+  text-align: left;
+}
+
+.pkEditorExpandedTextWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;  
+}
+
+.pkEditorExpandedText {
+  width: 325px;
+}
+
+.wd100Percent {
+  width: 100% !important;
+}
 
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;
+
