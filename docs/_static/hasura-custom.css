@@ -191,6 +191,10 @@ article ol ol {
   width: 60%;
 }
 
+.highlight pre {
+  white-space: pre;
+}
+
 /*** random overrides END ***/
 
 /*** behavior styles ***/
