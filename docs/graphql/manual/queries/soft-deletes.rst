@@ -6,7 +6,7 @@ Soft deletes
   :depth: 1
   :local:
 
-Some projects may require records to be "soft deleted". This will not actually remove items from your database, but mark them with a timestamp to indicate when they were deleted.
+Some projects may require records to be "soft deleted". This pattern wil not actually remove items from your database, but mark them with a timestamp to indicate when they were deleted.
 
 A common approach is to add a column such as `deleted_at` which is a nullable timestamp. When
 there is a timestamp value, it should be excluded from queries by default.
