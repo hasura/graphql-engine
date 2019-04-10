@@ -28,7 +28,7 @@ class OneGraphExplorer extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.shouldIntrospect(this.props.headers, this.state.headers)) {
+    if (this.shouldIntrospect()) {
       this.introspect();
     }
   }
@@ -52,8 +52,10 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  shouldIntrospect(newHeadersArray, oldHeadersArray) {
-    return JSON.stringify(newHeadersArray) !== JSON.stringify(oldHeadersArray);
+  shouldIntrospect() {
+    return (
+      JSON.stringify(this.props.headers) !== JSON.stringify(this.state.headers)
+    );
   }
 
   introspect() {
@@ -129,22 +131,36 @@ class OneGraphExplorer extends React.Component {
       explorerWidth,
       isResizing,
     } = this.state;
+
     const { renderGraphiql } = this.props;
+
+    let explorerSeparator;
+    if (explorerOpen) {
+      explorerSeparator = (
+        <div
+          className="explorerGraphiqlSeparator explorerCursorResize"
+          onMouseDown={this.handleExplorerResize}
+          onMouseUp={this.handleExplorerResizeStop}
+        />
+      );
+    }
+
+    const graphiql = renderGraphiql({
+      query: query || undefined,
+      onEditQuery: this.editQuery,
+      schema: schema,
+      toggleExplorer: this.toggleExplorer,
+    });
+
     return (
       <div
-        className={`graphiql-container ${
-          isResizing ? 'explorerCursorResize' : ''
-        }`}
+        className={
+          'graphiql-container' + (isResizing ? ' explorerCursorResize' : '')
+        }
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          {explorerOpen && (
-            <div
-              className="explorerGraphiqlSeparator explorerCursorResize"
-              onMouseDown={this.handleExplorerResize}
-              onMouseUp={this.handleExplorerResizeStop}
-            />
-          )}
+          {explorerSeparator}
           <GraphiQLExplorer
             schema={schema}
             query={query}
@@ -156,12 +172,7 @@ class OneGraphExplorer extends React.Component {
             width={explorerWidth}
           />
         </div>
-        {renderGraphiql({
-          query: query || undefined,
-          onEditQuery: this.editQuery,
-          schema: schema,
-          toggleExplorer: this.toggleExplorer,
-        })}
+        {graphiql}
       </div>
     );
   }
