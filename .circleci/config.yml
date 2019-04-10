@@ -126,6 +126,8 @@ refs:
     - run:
         name: Generate coverage report
         working_directory: ./server
+        environment:
+          LC_ALL: 'C.UTF-8'
         command: |
           stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
