@@ -2,8 +2,6 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import           Debug.Trace
-
 import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Lazy                      as Map
 import qualified Data.Vector                            as V
@@ -102,7 +100,7 @@ runHasuraGQ
   -> [N.Header]
   -> GraphQLRequest
   -> m EncJSON
-runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs req = do
+runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ = do
   tx <- case rootSelSet of
     V.RQuery selSet ->
       return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
@@ -113,19 +111,14 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
-  traceM (show $ encJToLBS resp)
 
   -- merge with remotes
   remotesRespTup <- forM rrps $ \rr -> do
     let E.GExPDepRemote rsi (E.GraphQLRequestPromise resolve) ji rs = rr
     -- TODO: use decodedResp instead of EncJSON
-    traceShowM ("---------------------finding joinVals---------------")
     joinVals <- getJoinValues resp (E.jiParentAlias ji) (E.jiParentJoinKey ji)
-    traceShowM joinVals
-    let newq = resolve joinVals
+    newq <- resolve joinVals
     remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-    traceShowM ("---------------------remote response---------------")
-    traceShowM (encJToLBS remResp)
     return (ji, remResp)
 
   mergedResp <- mergeFields resp remotesRespTup
@@ -148,27 +141,36 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
           let encResp = encJToLBS resp
               respObjM = J.decode encResp :: (Maybe J.Object)
               childKey = G.unName.G.unAlias $ E.jiChildAlias ji
-              childPath = ["data"]
               childJoinKey = G.unName $ E.jiChildJoinKey ji
               parentKey = G.unName.G.unAlias $ E.jiParentAlias ji
               parentPath = [parentKey]
               parentJoinKey = G.unName $ E.jiParentJoinKey ji
 
-          respObj <- onNothing respObjM $ throw500 "could not parse as json"
-          respVal <- getValueAtPath respObj childPath
-          respObj <- assertObject respVal
-          let respArr = Map.elems respObj
-          traceShowM "-------------------response array----------------"
-          traceShowM respArr
-          initVal <- getValueAtPath initObj parentPath
-          initArr <- assertArray initVal
-          traceShowM "-------------------init array----------------"
-          traceShowM initArr
+          case respObjM of
+            Nothing -> throw500 "could not parse as json"
+            Just respObj -> case (Map.lookup "data" respObj, Map.lookup "errors" respObj) of
+              (Just respVal, Nothing) -> do
+                childRespObj <- assertObject respVal
+                let respArr = Map.elems childRespObj
+                initVal <- getValueAtPath initObj parentPath
+                initArr <- assertArray initVal
 
-          newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey respArr childJoinKey childKey)
-          let newJArr = J.Array (V.fromList newArr)
+                newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey respArr childJoinKey childKey)
+                let newJArr = J.Array (V.fromList newArr)
 
-          setValueAtPath initObj [] (parentKey, newJArr)
+                setValueAtPath initObj [] (parentKey, newJArr)
+              (Nothing, Just _)  -> return initObj
+              (Just respVal, Just _) -> do
+                childRespObj <- assertObject respVal
+                let respArr = Map.elems childRespObj
+                initVal <- getValueAtPath initObj parentPath
+                initArr <- assertArray initVal
+
+                newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey respArr childJoinKey childKey)
+                let newJArr = J.Array (V.fromList newArr)
+
+                setValueAtPath initObj [] (parentKey, newJArr)
+              _ -> throw500 "neither data nor error keys found in remote response"
 
 
     findAndMerge :: (MonadError QErr m) => J.Value -> Text -> [J.Value] -> Text -> Text -> m J.Value
@@ -177,7 +179,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
       val <- getValueAtPath parentObj [parentKey]
       objects <- forM values assertObject
       let matchedObj = find (\obj -> Just val == Map.lookup key obj) objects
-          insertObj = maybe "null" J.Object matchedObj
+          insertObj = maybe J.Null J.Object matchedObj
 
       newObj <- setValueAtPath parentObj [] (mergeKey, insertObj)
       return $ J.Object newObj
@@ -186,7 +188,6 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
     getJoinValues res name key = do
       let bs = encJToLBS res
           decodedResM = J.decode bs :: (Maybe J.Object)
-      traceShowM bs
       decodedRes <- onNothing decodedResM $ throw500 "could not parse as JSON 1"
       let datas = Map.lookup (G.unName $ G.unAlias name) decodedRes
       joinVals <- case datas of
@@ -202,7 +203,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs re
 
 getValueAtPath :: (MonadError QErr m) => J.Object -> [Text] -> m J.Value
 getValueAtPath obj [] = return (J.Object obj)
-getValueAtPath obj [x] = onNothing (Map.lookup x obj) $ throw500 "could not find any value at path"
+getValueAtPath obj [x] = onNothing (Map.lookup x obj) $ throw500 ("could not find any value at path: " <> x)
 getValueAtPath obj (x:xs) = do
   val <- getValueAtPath obj [x]
   valObj <- assertObject val

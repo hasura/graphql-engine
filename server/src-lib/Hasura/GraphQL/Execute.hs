@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
@@ -15,7 +16,6 @@ module Hasura.GraphQL.Execute
 import           Control.Exception                      (try)
 import           Control.Lens                           hiding (op)
 import           Data.List                              (nub)
-import           Debug.Trace
 
 import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
@@ -24,7 +24,6 @@ import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Hasura.GraphQL.Context                 as GC
-import qualified Hasura.GraphQL.Validate.InputValue     as IV
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -53,9 +52,9 @@ data JoinInfo
   } deriving (Show, Eq)
 
 newtype GraphQLRequestPromise
-  = GraphQLRequestPromise
-  { grpResolve :: [J.Value] -> GraphQLRequest
-  }
+  = GraphQLRequestPromise {
+      grpResolve  :: forall m. (MonadError QErr m) => [J.Value] -> m GraphQLRequest
+    }
 
 instance Show GraphQLRequestPromise where
   show _ = "GraphQLRequestPromise Func"
@@ -64,9 +63,7 @@ data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise Join
   deriving Show
 
 data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
-
-instance Show GExPHasura where
-  show (GExPHasura _ root remRels) = show root ++ "\n" ++ show remRels
+  deriving Show
 
 data GExPRemote
   = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
@@ -205,53 +202,63 @@ splitQuery opDef fragDefs qMap =
                      }
       in QueryPartsA od frags
 
-batchQueryWithVals :: GraphQLRequest -> G.Field -> VF.Field -> RemoteRelInfo -> [J.Value] -> GraphQLRequest
-batchQueryWithVals initReq fld remFld rri values = GraphQLRequest
-  { _grOperationName = Nothing
-  , _grQuery  = GraphQLQuery [def]
-  , _grVariables  = Nothing
-  }
+batchQueryWithVals
+  :: (MonadError QErr m)
+  => GraphQLRequest
+  -> G.Field
+  -> VF.Field
+  -> RemoteRelInfo
+  -> [J.Value]
+  -> m GraphQLRequest
+batchQueryWithVals initReq origFld remFld rri values = do
+  newDef <- mkDef
+  return GraphQLRequest
+    { _grOperationName = Nothing
+    , _grQuery  = GraphQLQuery [newDef]
+    , _grVariables  = Nothing
+    }
   where
-    def = G.ExecutableDefinitionOperation untypedDef
-    untypedDef = G.OperationDefinitionUnTyped (generateFields values)
-    generateFields values' = flip mapInd values' $
-      (\val ind -> G.SelectionField G.Field
-      { G._fAlias = Just (G.Alias (G.Name ( (getRelTxt $ rriName rri) <> "_" <> (T.pack $ show ind))))
-      , G._fName = rfiName $ rriRemoteField rri
-      , G._fArguments = [G.Argument (rriInputField rri) (G.VString (G.StringValue (getStringFromJValue val)))]
-      , G._fDirectives = []
-      , G._fSelectionSet = G._fSelectionSet fld
-      })
+    mkDef = do
+      untypedDef <- getOpDef
+      return $ G.ExecutableDefinitionOperation untypedDef
+    getOpDef = do
+      fields <- generateFields values
+      return $ G.OperationDefinitionUnTyped fields
+    generateFields jVals = forMWithInd jVals $
+      (\val ind -> do
+          gVal <- getGValFromJVal val
+          return $ G.SelectionField G.Field
+            { G._fAlias = Just (mkFldAlias (rriName rri) ind)
+            , G._fName = rfiName $ rriRemoteField rri
+            , G._fArguments = [G.Argument (rriInputField rri) gVal]
+            , G._fDirectives = []
+            , G._fSelectionSet = G._fSelectionSet origFld
+            }
+      )
 
-    getStringFromJValue jVal = case jVal of
-      J.String str -> str
-      _            -> "unexpected"
+    mkFldAlias relName ind = G.Alias . G.Name $ getRelTxt relName <> "_" <> T.pack (show ind)
 
-    mapInd :: (a -> Int -> b) -> [a] -> [b]
-    mapInd f l = zipWith f l [0..]
+    getGValFromJVal jVal = case jVal of
+      J.String str -> return . G.VString . G.StringValue $ str
+      _            -> throw500 "only string join columns are supported"
+
+    forMWithInd :: (Monad m) => [a] ->  (a -> Int -> m b) -> m [b]
+    forMWithInd xs f = zipWithM f xs [0..]
 
 getRemoteRelPlans :: (MonadError QErr m) => GCtx -> GraphQLRequest -> VQ.RootSelSet -> RemoteSchemaMap -> m [GExPDepRemote]
 getRemoteRelPlans gCtx req rss schemaMap = do
   case rss of
     VQ.RQuery ss -> do
-      traceM (show "----------------------------------")
-      traceM (show "fetching remote plans")
       let hasuraTopFields = gatherHasuraFields (toList ss)
           remoteFields = getRemoteFields hasuraTopFields
 
-      traceM (show "------------remote fields are-----------------")
-      traceM (show $ map snd remoteFields)
       output <- concat <$> forM remoteFields (mkDepRemotePlan gCtx)
 
-      traceM (show "------------remote plans are-----------------")
-      traceM (show output)
       return output
     _            -> return []
     where
       mkDepRemotePlan gCtx' (hf, rFlds) =
         forM rFlds $ \rf -> do
-        traceM (show "-----------------making remote plan-----------------------")
-        traceM (show (VF._fType rf, VF._fName rf))
         let tableTy = VF._fType hf
         queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
         let opDef = VQ.qpOpDef queryParts
@@ -301,8 +308,6 @@ getRemoteRelPlans gCtx req rss schemaMap = do
         _              -> False
 
       getRemoteRelInfoFromField gctx nameTup = do
-        traceM (show "-----------------here are gctx keys---------------")
-        traceM (show $ Map.keys $ GC._gFields gctx)
         let typedFieldM = Map.lookup nameTup (GC._gFields gctx)
         fld <- onNothing typedFieldM (throw500 "cannot find field")
         case fld of
