@@ -56,6 +56,7 @@ const TodoInput = ({isPublic = false}) => {
           }}>
           <input className="input"
             value={todoInput}
+            placeholder="What needs to be done?"
             disabled={loading}
             ref={n => (input = n)}
             onChange={e => (setTodoInput(e.target.value))}
