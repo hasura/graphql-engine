@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
+  , runGetRemoteSchemaInfo
   , writeRemoteSchemasToCache
   , refreshGCtxMapInSchema
   , fetchRemoteSchemas
@@ -11,14 +12,20 @@ module Hasura.RQL.DDL.RemoteSchema
 import           Hasura.EncJSON
 import           Hasura.Prelude
 
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict         as Map
-import qualified Database.PG.Query           as Q
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.HashMap.Strict           as Map
+import qualified Database.PG.Query             as Q
 
+import           Data.List
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
 
-import qualified Hasura.GraphQL.Schema       as GS
+import qualified Hasura.GraphQL.Context        as GC
+import qualified Hasura.GraphQL.Schema         as GS
+import qualified Hasura.GraphQL.Validate.Types as VT
+import qualified Language.GraphQL.Draft.Syntax as G
 
 runAddRemoteSchema
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -190,3 +197,37 @@ fetchRemoteSchemas =
      |] () True
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
+
+runGetRemoteSchemaInfo
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => GetRemoteSchemaInfoQuery -> m EncJSON
+runGetRemoteSchemaInfo _ = do
+  adminOnly
+  sc <- askSchemaCache
+  let rGCtx = scDefaultRemoteGCtx sc
+      queryMap = VT._otiFields $ GC._gQueryRoot rGCtx
+      mutMap = fromMaybe Map.empty (VT._otiFields <$> GC._gMutRoot rGCtx )
+      subMap = fromMaybe Map.empty (VT._otiFields <$> GC._gSubRoot rGCtx)
+      queryFields = Map.elems queryMap
+      queryTypLocs = nub $ flip map queryFields VT._fiLoc
+      queryFldsByTyp = flip map queryTypLocs $
+        (\ty -> (getSName ty, filter (\fld -> VT._fiLoc fld == ty) queryFields)
+        )
+      queryFldInfos = map pruneFields queryFldsByTyp
+  return $ encJFromJValue $ J.toJSON (Map.fromList queryFldInfos)
+  where
+    getSName typLoc = case typLoc of
+      VT.HasuraType     -> "hasura"
+      VT.RemoteType rsi -> rsName rsi
+    pruneFields (rsName, xs) = (rsName, map pruneField xs)
+    pruneField (VT.ObjFldInfo desc name params ty loc) = ObjFldInfoPruned desc name ty
+
+
+data ObjFldInfoPruned
+ = ObjFldInfoPruned
+  { _fipDesc :: !(Maybe G.Description)
+  , _fipName :: !G.Name
+  , _fipTy   :: !G.GType
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfoPruned)

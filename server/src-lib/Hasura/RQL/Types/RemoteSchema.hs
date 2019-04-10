@@ -4,6 +4,7 @@ import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
+import           Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.HashMap.Strict        as Map
@@ -55,6 +56,15 @@ data RemoveRemoteSchemaQuery
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoveRemoteSchemaQuery)
+
+data GetRemoteSchemaInfoQuery
+  = GetRemoteSchemaInfoQuery
+  deriving (Show, Eq, Lift)
+
+instance J.FromJSON GetRemoteSchemaInfoQuery where
+  parseJSON _ = return GetRemoteSchemaInfoQuery
+
+$(J.deriveToJSON J.defaultOptions ''GetRemoteSchemaInfoQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
 getUrlFromEnv urlFromEnv = do
