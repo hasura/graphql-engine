@@ -53,22 +53,7 @@ class OneGraphExplorer extends React.Component {
   }
 
   shouldIntrospect(newHeadersArray, oldHeadersArray) {
-    if (this.props.headerFocus) {
-      return false;
-    }
-    const oldHeaders = getHeadersAsJSON(oldHeadersArray);
-    const headers = getHeadersAsJSON(newHeadersArray);
-    if (Object.keys(oldHeaders).length !== Object.keys(headers).length) {
-      return true;
-    }
-    for (let i = Object.keys(headers).length - 1; i >= 0; i--) {
-      const key = Object.keys(headers)[i];
-      const value = headers[key];
-      if (oldHeaders[key] !== value) {
-        return true;
-      }
-    }
-    return false;
+    return JSON.stringify(newHeadersArray) !== JSON.stringify(oldHeadersArray);
   }
 
   introspect() {
@@ -174,6 +159,7 @@ class OneGraphExplorer extends React.Component {
         {renderGraphiql({
           query: query || undefined,
           onEditQuery: this.editQuery,
+          schema: schema,
           toggleExplorer: this.toggleExplorer,
         })}
       </div>
