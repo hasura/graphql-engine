@@ -298,6 +298,21 @@ handleInconsistentObj f action =
         allInconsObjs = inconsObj:scInconsistentObjs sc
     writeSchemaCache $ sc{scInconsistentObjs = allInconsObjs}
 
+checkNewInconsistentMeta
+  :: (QErrM m)
+  => SchemaCache -- old schema cache
+  -> SchemaCache -- new schema cache
+  -> m ()
+checkNewInconsistentMeta oldSC newSC = do
+  unless (null newInconsMetaObjects) $ do
+    let err = err500 Unexpected
+          "cannot continue due to newly found inconsistent metadata"
+    throwError err{qeInternal = Just $ toJSON newInconsMetaObjects}
+  where
+    oldInconsMeta = scInconsistentObjs oldSC
+    newInconsMeta = scInconsistentObjs newSC
+    newInconsMetaObjects = getDifference _moId newInconsMeta oldInconsMeta
+
 buildSchemaCacheStrict
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
@@ -305,8 +320,9 @@ buildSchemaCacheStrict = do
   buildSchemaCache
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
-  unless (null inconsObjs) $
-    throw400 Unexpected "metadata is inconsistent"
+  unless (null inconsObjs) $ do
+    let err = err400 Unexpected "cannot continue due to inconsistent metadata"
+    throwError err{qeInternal = Just $ toJSON inconsObjs}
 
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
@@ -564,7 +580,11 @@ execWithMDCheck (RunSQL t cascade _) = do
   -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff
 
-  let withReload = buildSchemaCacheStrict -- in case of any rename
+  let withReload = do -- in case of any rename
+        buildSchemaCache
+        newSC <- askSchemaCache
+        checkNewInconsistentMeta sc newSC
+
       withoutReload = do
         postSc <- askSchemaCache
         -- recreate the insert permission infra

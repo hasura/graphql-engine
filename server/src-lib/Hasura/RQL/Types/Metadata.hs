@@ -37,7 +37,9 @@ data TableMetadataObjId
   = MTORel !RelName !RelType
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable TableMetadataObjId
 
 data MetadataObjId
   = MOTable !QualifiedTable
@@ -45,7 +47,9 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable MetadataObjId
 
 data InconsistentMetadataObj
   = InconsistentMetadataObj
