@@ -49,6 +49,7 @@ data JoinInfo
   , jiParentJoinKey :: !G.Name -- change to alias
   , jiChildJoinKey  :: !G.Name
   , jiChildAlias    :: !G.Alias
+  , jiNamespace     :: !(Maybe G.Name)
   } deriving (Show, Eq)
 
 newtype GraphQLRequestPromise
@@ -223,7 +224,14 @@ batchQueryWithVals initReq origFld remFld rri values = do
       return $ G.ExecutableDefinitionOperation untypedDef
     getOpDef = do
       fields <- generateFields values
-      return $ G.OperationDefinitionUnTyped fields
+      let namespaceM =  rfiNamespace $ rriRemoteField rri
+      case namespaceM of
+        Nothing -> return $ G.OperationDefinitionUnTyped fields
+        Just ns -> do
+          let nsFldEmpty = generateEmptyNSField ns
+              fieldsWithNS = nsFldEmpty
+                { G._fSelectionSet = fields }
+          return $ G.OperationDefinitionUnTyped [G.SelectionField fieldsWithNS]
     generateFields jVals = forMWithInd jVals $
       (\val ind -> do
           gVal <- getGValFromJVal val
@@ -235,6 +243,14 @@ batchQueryWithVals initReq origFld remFld rri values = do
             , G._fSelectionSet = G._fSelectionSet origFld
             }
       )
+
+    generateEmptyNSField ns = G.Field
+      { G._fAlias = Nothing
+      , G._fName = ns
+      , G._fArguments = []
+      , G._fDirectives = []
+      , G._fSelectionSet = []
+      }
 
     mkFldAlias relName ind = G.Alias . G.Name $ getRelTxt relName <> "_" <> T.pack (show ind)
 
@@ -271,6 +287,7 @@ getRemoteRelPlans gCtx req rss schemaMap = do
               , jiParentJoinKey = mkColName $ rriColumn rri  -- how to find alias
               , jiChildJoinKey = rriInputField rri -- join key maybe different than input key?
               , jiChildAlias = VF._fAlias rf
+              , jiNamespace = rfiNamespace $ rriRemoteField rri
               }
 
               -- field should be remote node or relationship node?

@@ -107,9 +107,10 @@ $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''InpValInfo')
 
 data RemoteFldInfo
   = RemoteFldInfo
-  { rfiName     :: !G.Name
-  , rfiTy       :: !G.GType
-  , rfiParamMap :: !InpParamMap
+  { rfiNamespace :: !(Maybe G.Name)
+  , rfiName      :: !G.Name
+  , rfiTy        :: !G.GType
+  , rfiParamMap  :: !InpParamMap
   } deriving (Show, Eq, Lift)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteFldInfo)

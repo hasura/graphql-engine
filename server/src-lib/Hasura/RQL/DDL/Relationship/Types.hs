@@ -137,6 +137,7 @@ data RemoteRelUsing
   , rruRemoteField :: !G.Name
   , rruInputField  :: !G.Name
   , rruInputPath   :: !(Maybe T.Text)
+  , rruNamespace   :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RemoteRelUsing)

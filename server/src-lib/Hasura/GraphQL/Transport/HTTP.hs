@@ -140,6 +140,7 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ 
         mergeField initObj (ji, resp) = do
           let encResp = encJToLBS resp
               respObjM = J.decode encResp :: (Maybe J.Object)
+              namespaceM = G.unName <$> E.jiNamespace ji
               childKey = G.unName.G.unAlias $ E.jiChildAlias ji
               childJoinKey = G.unName $ E.jiChildJoinKey ji
               parentKey = G.unName.G.unAlias $ E.jiParentAlias ji
@@ -150,7 +151,12 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ 
             Nothing -> throw500 "could not parse as json"
             Just respObj -> case (Map.lookup "data" respObj, Map.lookup "errors" respObj) of
               (Just respVal, Nothing) -> do
-                childRespObj <- assertObject respVal
+                nsRespVal <- case namespaceM of
+                               Nothing -> return respVal
+                               Just ns -> do
+                                 nsObj <- assertObject respVal
+                                 getValueAtPath nsObj [ns]
+                childRespObj <- assertObject nsRespVal
                 let respArr = Map.elems childRespObj
                 initVal <- getValueAtPath initObj parentPath
                 initArr <- assertArray initVal
