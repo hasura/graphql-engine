@@ -575,13 +575,16 @@ data DirectiveInfo
 -- directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 defaultDirectives :: [DirectiveInfo]
 defaultDirectives =
-  [mkDirective "skip", mkDirective "include"]
+  [mkDirective "skip", mkDirective "include", asyncDir]
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
     args = Map.singleton "if" $ InpValInfo Nothing "if" Nothing $
            G.TypeNamed (G.Nullability False) $ G.NamedType $ G.Name "Boolean"
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
+
+    asyncDir = DirectiveInfo asyncDirDesc "async" mempty dirLocs
+    asyncDirDesc = Just "retrieve this field asynchronously"
 
 defDirectivesMap :: Map.HashMap G.Name DirectiveInfo
 defDirectivesMap = mapFromL _diName defaultDirectives

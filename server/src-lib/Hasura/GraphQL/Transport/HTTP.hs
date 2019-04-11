@@ -75,7 +75,7 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plan = do
         Just (E.GExPHasura gCtx rootSelSet) -> do
           res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
           return [res]
-      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs) ->
+      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs _) ->
         E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
       return $ hasuraRes ++ remoteRes
 

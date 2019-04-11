@@ -2,6 +2,7 @@ module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
   , GExPHasura(..)
   , GExPRemote(..)
+  , IsAsync(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
@@ -29,33 +30,46 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Validate                as VQ
-import qualified Hasura.GraphQL.Validate.Context        as VC
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
 
 data GExPHasura
   = GExPHasura !GCtx !VQ.RootSelSet
-  deriving (Eq)
+  deriving (Show, Eq)
 
-instance Show GExPHasura where
-  show (GExPHasura _ rs) = "GExPHasura { <GCtx> " ++ show rs ++ " }"
+newtype IsAsync
+  = IsAsync { unIsAsync :: Bool }
+  deriving (Show, Eq)
+
+asyncDir :: G.Name
+asyncDir = G.Name "async"
 
 data GExPRemote
-  = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
-  deriving (Show, Eq)
+  = GExPRemote
+  { _geprRemoteInfo :: !RemoteSchemaInfo
+  , _geprRequest    :: !GraphQLRequest
+  , _geprRootSelSet :: !VQ.RootSelSet
+  , _geprIsAsync    :: !IsAsync
+  } deriving (Show, Eq)
 
 data GQExecPlan
-  = GQExecPlan (Maybe GExPHasura) [GExPRemote] G.OperationType
-  deriving (Show, Eq)
+  = GQExecPlan
+  { _gqepHasura :: !(Maybe GExPHasura)
+  , _gqepRemote :: ![GExPRemote]
+  , _gqepOpType :: !G.OperationType
+  } deriving (Show, Eq)
 
 data QueryParts
   = QueryParts
   { _qpOpDef     :: !G.TypedOperationDefinition
   , _qpFragDefsL :: ![G.FragmentDefinition]
+  , _qpIsAsync   :: !IsAsync
   --, _qpVarValsM  :: !(Maybe VariableValues)
   } deriving (Show, Eq)
 
-type SplitSelSets    = Map.HashMap VT.TypeLoc G.SelectionSet
+data SelSetInfo = SelSetInfo !G.SelectionSet !IsAsync
+
+type SplitSelSets    = Map.HashMap VT.TypeLoc SelSetInfo
 type SplitQueryParts = Map.HashMap VT.TypeLoc QueryParts
 
 
@@ -77,7 +91,7 @@ getExecPlan userInfo sc req = do
       newQs = Map.map (transformGQRequest req) querySplits
       opTy = G._todType opDef
 
-  newRootSels <- forM (Map.toList newQs) $ \(tl, q) ->
+  newRootSels <- forM (Map.toList newQs) $ \(tl, (q, _)) ->
     flip runReaderT gCtx $
       (,) tl <$> (VQ.getQueryParts q >>= VQ.validateGQ)
 
@@ -89,14 +103,14 @@ getExecPlan userInfo sc req = do
 
     [(VT.HasuraType, (_, rootSelSet))] ->
       return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet) [] opTy
-    [(VT.RemoteType _ rsi, (_, rootSelSet))] ->
-      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet] opTy
+    [(VT.RemoteType _ rsi, ((_, async), rootSelSet))] ->
+      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet async] opTy
     xs -> foldM (combPlan gCtx) (GQExecPlan Nothing [] opTy) xs
 
   where
     gCtxRoleMap = scGCtxMap sc
 
-    combPlan gCtx plan (tl, (newq, rs)) = do
+    combPlan gCtx plan (tl, ((newq, async), rs)) = do
       let GQExecPlan hPlan remPlans ty = plan
       case tl of
         VT.HasuraType ->
@@ -104,19 +118,29 @@ getExecPlan userInfo sc req = do
             Nothing ->
               return $ GQExecPlan (Just $ GExPHasura gCtx rs) remPlans ty
             Just _  -> throw500 "encountered more than one hasura plan!"
-        VT.RemoteType _ rsi ->
-          return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans) ty
+        VT.RemoteType _ rsi -> do
+          let newplan = (GExPRemote rsi newq rs async):remPlans
+          return $ GQExecPlan hPlan newplan ty
 
 
 splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
 splitSelSet ctx sel theMap = case sel of
-  s@(G.SelectionField fld) ->
+  G.SelectionField fld ->
     let loc = getTypeLoc ctx $ G._fName fld
-    in maybe theMap (\l -> upsertType (l, s) theMap) loc
+        async = maybe (IsAsync False) (const $ IsAsync True) $
+                find (\d -> G._dName d == asyncDir) $ G._fDirectives fld
+        otherDirs = filter (\d -> G._dName d /= asyncDir) $ G._fDirectives fld
+        newFld = fld { G._fDirectives = otherDirs }
+        newSel = G.SelectionField newFld
+    in maybe theMap (\l -> upsertType (l, newSel) theMap async) loc
   -- TODO: what do we with fragments? we don't have any typeinfo on them
   _ -> theMap
   where
-    upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
+    upsertType (tl, n) qMap async = Map.alter (fn async n) tl qMap
+    fn async n mVal =
+      Just $ case mVal of
+        Nothing               -> SelSetInfo [n] async
+        Just (SelSetInfo s _) -> SelSetInfo (n:s) async
 
 
 splitQuery
@@ -125,10 +149,10 @@ splitQuery
   -> SplitSelSets
   -> SplitQueryParts
 splitQuery opDef fragDefs qMap =
-  flip Map.map qMap $ \selSet ->
+  flip Map.map qMap $ \(SelSetInfo selSet isAsync) ->
     let frags = pickFrags selSet
         vars  = filterVars selSet $ G._todVariableDefinitions opDef
-    in mkNewQParts frags selSet vars
+    in mkNewQParts frags selSet vars isAsync
   where
     filterVars selSet vars =
       let args = join $ map getArgs selSet
@@ -172,16 +196,16 @@ splitQuery opDef fragDefs qMap =
 
       in nub $ curFrags ++ otherFrags
 
-    mkNewQParts frags selset varDefs =
+    mkNewQParts frags selset varDefs isAsync =
       let od = opDef { G._todSelectionSet = selset
                      , G._todVariableDefinitions = varDefs
                      }
-      in QueryParts od frags
+      in QueryParts od frags isAsync
 
 
-transformGQRequest :: GraphQLRequest -> QueryParts -> GraphQLRequest
+transformGQRequest :: GraphQLRequest -> QueryParts -> (GraphQLRequest, IsAsync)
 transformGQRequest (GraphQLRequest opNameM _ varValsM)
-                   (QueryParts opDef fragDefs) =
+                   (QueryParts opDef fragDefs isAsync) =
   let op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped opDef
       frags = map G.ExecutableDefinitionFragment fragDefs
       exDefs = op:frags
@@ -189,7 +213,7 @@ transformGQRequest (GraphQLRequest opNameM _ varValsM)
       -- TODO: do this variable splitting in query splitting?
       vars = map G._vdVariable $ G._todVariableDefinitions opDef
       varValsFltrd = Map.filterWithKey (\k _ -> k `elem` vars) <$> varValsM
-  in GraphQLRequest opNameM q varValsFltrd
+  in (GraphQLRequest opNameM q varValsFltrd, isAsync)
 
 
 execRemoteGQ

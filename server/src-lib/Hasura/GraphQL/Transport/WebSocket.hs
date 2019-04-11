@@ -293,14 +293,15 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
       when (opTy == G.OperationTypeSubscription) $
         withComplete $ preExecErr $ err400 NotSupported
         "subscription to remote servers is not supported"
+      isAsync <- getIsAsync remotePlans
       logOpEv ODStarted
       hasuraRes <- case hasuraPlan of
         Nothing -> return []
         Just (E.GExPHasura gCtx rootSelSet) -> do
           resp <- liftIO $ runTx $ runHasuraGQEncJ userInfo gCtx rootSelSet
-          either postExecErr sendSuccResp resp
+          when isAsync $ either postExecErr sendSuccResp resp
           return [encodeGQResp . GQSuccess . encJToLBS <$> resp]
-      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs) ->
+      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs _) ->
         liftIO $ runExceptT $
           E.execRemoteGQ httpMgr userInfo reqHdrs newq rsi rs
       let combined = sequenceA (hasuraRes ++ remoteRes)
@@ -310,6 +311,10 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
           resp <- runExceptT $ HT.mergeResponse r
           either postExecErr sendSuccErrResp resp
           sendCompleted
+
+    getIsAsync remotePlans = case remotePlans of
+      [] -> withComplete $ preExecErr $ err500 Unexpected "unexpected empty remote"
+      xs -> return $ any (\(E.GExPRemote _ _ _ async) -> E.unIsAsync async) xs
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 

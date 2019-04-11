@@ -137,12 +137,15 @@ withDirectives dirs act = do
     else return Nothing
 
   where
-    getIfArg m = do
-      val <- onNothing (Map.lookup "if" m) $ throw500
-              "missing if argument in the directive"
-      case _aivValue val of
-        AGScalar _ (Just (PGValBoolean v)) -> return v
-        _ -> throw500 "did not find boolean scalar for if argument"
+    getIfArg m =
+      if Map.null m
+        then return False
+        else do
+          val <- onNothing (Map.lookup "if" m) $ throw500
+                  "missing if argument in the directive"
+          case _aivValue val of
+            AGScalar _ (Just (PGValBoolean v)) -> return v
+            _ -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
   :: ( MonadReader ValidationCtx m
