@@ -112,11 +112,26 @@ data LiveQueriesState k
   , _lqsLiveQueryMap :: !(LiveQueryMap k)
   }
 
+data RefetchMetrics
+  = RefetchMetrics
+  { _rmSnapshot :: !Metrics.Distribution
+  , _rmPush     :: !Metrics.Distribution
+  , _rmQuery    :: !Metrics.Distribution
+  , _rmTotal    :: !Metrics.Distribution
+  }
+
+initRefetchMetrics :: IO RefetchMetrics
+initRefetchMetrics =
+  RefetchMetrics
+  <$> Metrics.new
+  <*> Metrics.new
+  <*> Metrics.new
+  <*> Metrics.new
+
 data ThreadState
   = ThreadState
-  { _tsThread    :: !(A.Async ())
-  , _tsProcDist  :: !Metrics.Distribution
-  , _tsQueryDist :: !Metrics.Distribution
+  { _tsThread  :: !(A.Async ())
+  , _tsMetrics :: !RefetchMetrics
   }
 
 type LiveQueryMap k
@@ -143,21 +158,31 @@ dumpLiveQueryMap lqMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
-      ThreadState threadId procDist queryDist <-
+      ThreadState threadId metrics <-
         STM.atomically $ STM.readTMVar threadRef
-      procStats <- Metrics.read procDist
-      queryStats <- Metrics.read queryDist
-      candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
+      metricsJ <- dumpReftechMetrics metrics
+      -- candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
       return $ J.object
         [ "key" J..= lq
         , "thread_id" J..= show (A.asyncThreadId threadId)
         , "alias" J..= _mhAlias lqHandler
         , "multiplexed_query" J..= Q.getQueryText (_mhQuery lqHandler)
-        , "candidates" J..= candidatesJ
-        , "processing_stats" J..= dumpStats procStats
-        , "query_stats" J..= dumpStats queryStats
+        -- , "candidates" J..= candidatesJ
+        , "metrics" J..= metricsJ
         ]
   where
+    dumpReftechMetrics metrics = do
+      snapshotS <- Metrics.read $ _rmSnapshot metrics
+      queryS <- Metrics.read $ _rmQuery metrics
+      pushS <- Metrics.read $ _rmPush metrics
+      totalS <- Metrics.read $ _rmTotal metrics
+      return $ J.object
+        [ "snapshot" J..= dumpStats snapshotS
+        , "query" J..= dumpStats queryS
+        , "push" J..= dumpStats pushS
+        , "total" J..= dumpStats totalS
+        ]
+
     dumpStats stats =
       J.object
       [ "mean" J..= Metrics.mean stats
@@ -263,12 +288,11 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
   -- we can then attach a polling thread if it is new
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \(handler, pollerThreadTM) -> do
-    procDist <- Metrics.new
-    queryDist <- Metrics.new
+    metrics <- initRefetchMetrics
     threadRef <- A.async $ forever $ do
-      pollQuery procDist queryDist batchSize pgExecCtx handler
+      pollQuery metrics batchSize pgExecCtx handler
       threadDelay $ refetchIntervalToMicro refetchInterval
-    let threadState = ThreadState threadRef procDist queryDist
+    let threadState = ThreadState threadRef metrics
     STM.atomically $ STM.putTMVar pollerThreadTM threadState
 
   where
@@ -426,13 +450,12 @@ chunks n =
 
 pollQuery
   :: (Eq k, Hashable k)
-  => Metrics.Distribution
-  -> Metrics.Distribution
+  => RefetchMetrics
   -> BatchSize
   -> PGExecCtx
   -> MLQHandler k
   -> IO ()
-pollQuery procDist queryDist batchSize pgExecCtx handler = do
+pollQuery metrics batchSize pgExecCtx handler = do
 
   procInit <- Clock.getCurrentTime
   -- get a snapshot of all the candidates
@@ -440,25 +463,29 @@ pollQuery procDist queryDist batchSize pgExecCtx handler = do
     candidates <- ListT.toList $ STMMap.listT candidateMap
     candidateSnapshots <- mapM getCandidateSnapshot candidates
     return $ Map.fromList candidateSnapshots
-
   let queryVarsBatches = chunks (unBatchSize batchSize) $
                         getQueryVars candidateSnapshotMap
 
+  snapshotFinish <- Clock.getCurrentTime
+  Metrics.add (_rmSnapshot metrics) $
+    realToFrac $ Clock.diffUTCTime snapshotFinish procInit
   flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
     queryInit <- Clock.getCurrentTime
     mxRes <- runExceptT $ runLazyTx' pgExecCtx $
              liftTx $ Q.listQE defaultTxErrorHandler
              pgQuery (mkMxQueryPrepArgs queryVars) True
     queryFinish <- Clock.getCurrentTime
-    let mxQueryTime = realToFrac $ Clock.diffUTCTime queryFinish queryInit
-    Metrics.add queryDist mxQueryTime
+    Metrics.add (_rmQuery metrics) $
+      realToFrac $ Clock.diffUTCTime queryFinish queryInit
     let operations = getCandidateOperations candidateSnapshotMap mxRes
     -- concurrently push each unique result
     A.mapConcurrently_ (uncurry3 pushCandidateResult) operations
+    pushFinish <- Clock.getCurrentTime
+    Metrics.add (_rmPush metrics) $
+      realToFrac $ Clock.diffUTCTime pushFinish queryFinish
   procFinish <- Clock.getCurrentTime
-  let procTime = realToFrac $ Clock.diffUTCTime procFinish procInit
-  Metrics.add procDist procTime
-  return ()
+  Metrics.add (_rmTotal metrics) $
+    realToFrac $ Clock.diffUTCTime procFinish procInit
 
   where
     MLQHandler alias pgQuery candidateMap = handler
