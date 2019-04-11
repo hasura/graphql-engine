@@ -11,6 +11,15 @@ module Hasura.GraphQL.Execute.LiveQuery.Types
   , RefetchInterval
   , refetchIntervalFromMilli
   , refetchIntervalToMicro
+
+  , TMap
+  , newTMap
+  , resetTMap
+  , nullTMap
+  , insertTMap
+  , deleteTMap
+  , lookupTMap
+  , toListTMap
   ) where
 
 import           Data.Word                              (Word32)
@@ -20,7 +29,7 @@ import qualified Control.Concurrent.STM                 as STM
 import qualified Crypto.Hash                            as CH
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as LBS
-import qualified StmContainers.Map                      as STMMap
+import qualified Data.HashMap.Strict                    as Map
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
@@ -37,10 +46,6 @@ instance J.ToJSON LiveQuery where
     J.object [ "user" J..= userVars user
              , "request" J..= req
              ]
-
--- 'k' uniquely identifies a sink
--- in case of websockets, it is (wsId, opId)
-type Sinks k = STMMap.Map k OnChange
 
 instance Hashable LiveQuery
 
@@ -74,3 +79,41 @@ refetchIntervalFromMilli = RefetchInterval
 
 refetchIntervalToMicro :: RefetchInterval -> Int
 refetchIntervalToMicro ri = fromIntegral $ 1000 * unRefetchInterval ri
+
+-- compared to stm.stmmap, this provides a much faster
+-- iteration over the elements at the cost of slower
+-- concurrent insertions
+newtype TMap k v
+  = TMap {unTMap :: STM.TVar (Map.HashMap k v)}
+
+newTMap :: STM.STM (TMap k v)
+newTMap =
+  TMap <$> STM.newTVar Map.empty
+
+resetTMap :: TMap k v -> STM.STM ()
+resetTMap =
+  flip STM.writeTVar Map.empty . unTMap
+
+nullTMap :: TMap k v -> STM.STM Bool
+nullTMap =
+  fmap Map.null . STM.readTVar . unTMap
+
+insertTMap :: (Eq k, Hashable k) => v -> k -> TMap k v -> STM.STM ()
+insertTMap v k mapTv =
+  STM.modifyTVar' (unTMap mapTv) $ Map.insert k v
+
+deleteTMap :: (Eq k, Hashable k) => k -> TMap k v -> STM.STM ()
+deleteTMap k mapTv =
+  STM.modifyTVar' (unTMap mapTv) $ Map.delete k
+
+lookupTMap :: (Eq k, Hashable k) => k -> TMap k v -> STM.STM (Maybe v)
+lookupTMap k =
+  fmap (Map.lookup k) . STM.readTVar . unTMap
+
+toListTMap :: TMap k v -> STM.STM [(k, v)]
+toListTMap =
+  fmap Map.toList . STM.readTVar . unTMap
+
+-- 'k' uniquely identifies a sink
+-- in case of websockets, it is (wsId, opId)
+type Sinks k = TMap k OnChange

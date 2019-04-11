@@ -94,8 +94,8 @@ dumpLiveQueryMap lqMap =
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
       prevResHash <- STM.readTVar $ _lqhPrevRes lqHandler
       threadId <-  A.asyncThreadId <$> STM.readTMVar threadRef
-      curOps <- ListT.toList $ STMMap.listT $ _lqhCurOps lqHandler
-      newOps <- ListT.toList $ STMMap.listT $ _lqhNewOps lqHandler
+      curOps <- toListTMap $ _lqhCurOps lqHandler
+      newOps <- toListTMap $ _lqhNewOps lqHandler
       return $ J.object
         [ "query" J..= lq
         , "thread_id" J..= show threadId
@@ -126,11 +126,11 @@ removeLiveQuery lqState liveQ k = do
     cleanLQHandler (handler, threadRef) = do
       let curOps = _lqhCurOps handler
           newOps = _lqhNewOps handler
-      STMMap.delete k curOps
-      STMMap.delete k newOps
+      deleteTMap k curOps
+      deleteTMap k newOps
       cancelPollThread <- (&&)
-        <$> STMMap.null curOps
-        <*> STMMap.null newOps
+        <$> nullTMap curOps
+        <*> nullTMap newOps
       -- if this happens to be the last operation, take the
       -- ref for the polling thread to cancel it
       if cancelPollThread then do
@@ -174,16 +174,16 @@ addLiveQuery pgExecCtx lqState liveQ respTx k onResultAction= do
     FallbackOpts refetchInterval = lqOpts
 
     addToExistingHandler (handler, _) = do
-      STMMap.insert onResultAction k $ _lqhNewOps handler
+      insertTMap onResultAction k $ _lqhNewOps handler
       return Nothing
 
     newHandler = do
       handler <- LQHandler
                  <$> return respTx
                  <*> STM.newTVar Nothing
-                 <*> STMMap.new
-                 <*> STMMap.new
-      STMMap.insert onResultAction k $ _lqhNewOps handler
+                 <*> newTMap
+                 <*> newTMap
+      insertTMap onResultAction k $ _lqhNewOps handler
       asyncRefTM <- STM.newEmptyTMVar
       STMMap.insert (handler, asyncRefTM) liveQ lqMap
       return $ Just (handler, asyncRefTM)
@@ -203,10 +203,10 @@ pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 
   -- extract the current and new operations
   (curOps, newOps) <- STM.atomically $ do
-    curOpsL <- ListT.toList $ STMMap.listT curOpsTV
-    newOpsL <- ListT.toList $ STMMap.listT newOpsTV
-    forM_ newOpsL $ \(k, action) -> STMMap.insert action k curOpsTV
-    STMMap.reset newOpsTV
+    curOpsL <- toListTMap curOpsTV
+    newOpsL <- toListTMap newOpsTV
+    forM_ newOpsL $ \(k, action) -> insertTMap action k curOpsTV
+    resetTMap newOpsTV
     return (curOpsL, newOpsL)
 
   runOperations resp newOps
