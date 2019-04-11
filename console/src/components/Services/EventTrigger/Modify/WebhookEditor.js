@@ -47,8 +47,6 @@ class WebhookEditor extends React.Component {
       styles,
       save: saveWebhook,
     } = this.props;
-    console.log('This.props');
-    console.log(this.props);
     const collapsed = () => (
       <div className={styles.modifyProperty}>
         <p>
