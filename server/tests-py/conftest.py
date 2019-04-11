@@ -1,14 +1,25 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError
-
+from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient
+import threading
+import random
+from datetime import datetime
+import sys
+import os
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--hge-url", metavar="HGE_URL", help="url for graphql-engine", required=True
+        "--hge-urls",
+        metavar="HGE_URLS",
+        help="csv list of urls for graphql-engine",
+        required=False,
+        nargs='+'
     )
     parser.addoption(
-        "--pg-url", metavar="PG_URL", help="url for connecting to Postgres directly", required=True
+        "--pg-urls", metavar="PG_URLS",
+        help="csv list of urls for connecting to Postgres directly",
+        required=False,
+        nargs='+'
     )
     parser.addoption(
         "--hge-key", metavar="HGE_KEY", help="admin secret key for graphql-engine", required=False
@@ -57,20 +68,62 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
+#By default,
+#1) Set default parallelism to one
+#2) Set test grouping to by filename (--dist=loadfile)
+def pytest_cmdline_preparse(config, args):
+    worker = os.environ.get('PYTEST_XDIST_WORKER')
+    if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
+        num = 1
+        args[:] = ["-n" + str(num),"--dist=loadfile"] + args
 
-@pytest.fixture(scope='session')
+
+def pytest_configure(config):
+    if is_master(config):
+        config.hge_ctx_gql_server = HGECtxGQLServer()
+        if not config.getoption('--hge-urls'):
+            print("hge-urls should be specified")
+        if not config.getoption('--pg-urls'):
+            print("pg-urls should be specified")
+        config.hge_url_list = config.getoption('--hge-urls')
+        config.pg_url_list =  config.getoption('--pg-urls')
+        if config.getoption('-n', default=None):
+            xdist_threads = config.getoption('-n')
+            assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
+            assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
+
+    random.seed(datetime.now())
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_configure_node(node):
+    node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
+    node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
+
+def pytest_unconfigure(config):
+        config.hge_ctx_gql_server.teardown()
+
+@pytest.fixture(scope='module')
 def hge_ctx(request):
+    config = request.config
     print("create hge_ctx")
-    hge_url = request.config.getoption('--hge-url')
-    pg_url = request.config.getoption('--pg-url')
-    hge_key = request.config.getoption('--hge-key')
-    hge_webhook = request.config.getoption('--hge-webhook')
-    webhook_insecure = request.config.getoption('--test-webhook-insecure')
-    hge_jwt_key_file = request.config.getoption('--hge-jwt-key-file')
-    hge_jwt_conf = request.config.getoption('--hge-jwt-conf')
-    ws_read_cookie = request.config.getoption('--test-ws-init-cookie')
-    metadata_disabled = request.config.getoption('--test-metadata-disabled')
-    hge_scale_url = request.config.getoption('--test-hge-scale-url')
+    if is_master(config):
+        hge_url = config.hge_url_list[0]
+    else:
+        hge_url = config.slaveinput["hge-url"]
+
+    if is_master(config):
+        pg_url = config.pg_url_list[0]
+    else:
+        pg_url = config.slaveinput["pg-url"]
+
+    hge_key = config.getoption('--hge-key')
+    hge_webhook = config.getoption('--hge-webhook')
+    webhook_insecure = config.getoption('--test-webhook-insecure')
+    hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
+    hge_jwt_conf = config.getoption('--hge-jwt-conf')
+    ws_read_cookie = config.getoption('--test-ws-init-cookie')
+    metadata_disabled = config.getoption('--test-metadata-disabled')
+    hge_scale_url = config.getoption('--test-hge-scale-url')
     try:
         hge_ctx = HGECtx(
             hge_url=hge_url,
@@ -90,7 +143,24 @@ def hge_ctx(request):
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
-    time.sleep(2)
+    time.sleep(1)
+
+@pytest.fixture(scope='class')
+def evts_webhook(request):
+    webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5592))
+    web_server = threading.Thread(target=webhook_httpd.serve_forever)
+    web_server.start()
+    yield webhook_httpd
+    webhook_httpd.shutdown()
+    webhook_httpd.server_close()
+    web_server.join()
+
+@pytest.fixture(scope='class')
+def ws_client(request, hge_ctx):
+    client = GQLWsClient(hge_ctx)
+    time.sleep(0.1)
+    yield client
+    client.teardown()
 
 @pytest.fixture(scope='class')
 def setup_ctrl(request, hge_ctx):
@@ -102,3 +172,9 @@ def setup_ctrl(request, hge_ctx):
     yield setup_ctrl
     hge_ctx.may_skip_test_teardown = False
     request.cls().do_teardown(setup_ctrl, hge_ctx)
+
+def is_master(config):
+    """True if the code running the given pytest.config object is running in a xdist master
+    node or not running xdist at all.
+    """
+    return not hasattr(config, 'slaveinput')

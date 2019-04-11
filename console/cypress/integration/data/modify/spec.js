@@ -26,10 +26,8 @@ export const passMTCreateTable = () => {
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
-
   validateCT(getTableName(0, testName), 'success');
 };
-
 export const passMTCheckRoute = () => {
   // Click on the create table button
   cy.get(getElementFromAlias('table-modify')).click();
@@ -58,19 +56,19 @@ export const passMTRenameTable = () => {
 };
 
 export const passMTRenameColumn = () => {
-  cy.get(getElementFromAlias('edit-id')).click();
+  cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
     .type(getColName(3));
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(2500);
+  cy.get(getElementFromAlias('modify-table-column-0-save')).click();
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), [getColName(3)], 'success');
-  cy.get(getElementFromAlias(`edit-${getColName(3)}`)).click();
+  cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
     .type('id');
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(2500);
+  cy.get(getElementFromAlias('modify-table-column-0-save')).click();
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), ['id'], 'success');
 };
 
@@ -141,41 +139,57 @@ export const passMTAddColumn = () => {
 
 export const Movetocolumn = () => {
   Addcolumnname(getColName(1));
-  cy.get(getElementFromAlias(`edit-${getColName(1)}`)).click();
+  cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
 };
 
 export const failMCWithWrongDefaultValue = () => {
-  cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
+  cy.get(getElementFromAlias('modify-table-edit-column-1')).click();
   cy.get(getElementFromAlias('edit-col-default')).type('abcd');
-  cy.get(getElementFromAlias('save-button')).click();
+  cy.get(getElementFromAlias('modify-table-column-1-save')).click();
 };
 
 export const passMCWithRightDefaultValue = () => {
   cy.get(getElementFromAlias('edit-col-default'))
     .clear()
     .type('1234');
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(15000);
+  cy.get(getElementFromAlias('modify-table-column-1-save')).click();
+  cy.wait(10000);
 };
 
 export const passCreateForeignKey = () => {
-  cy.get(getElementFromAlias('edit-col-unique')).select('True');
-  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
-  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
-  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(15000);
+  cy.get(getElementFromAlias('modify-table-edit-fk-0')).click();
+  cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
+    getTableName(0, testName)
+  );
+  cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('0');
+  cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select('id');
+  cy.get(getElementFromAlias('modify-table-fk-0-save')).click();
+  cy.wait(10000);
 };
 
 export const passRemoveForeignKey = () => {
-  cy.get(getElementFromAlias('remove-constraint-button')).click();
+  cy.get(getElementFromAlias('modify-table-edit-fk-0')).click();
+  cy.get(getElementFromAlias('modify-table-fk-0-remove')).click();
   cy.wait(10000);
+};
+
+export const passModifyPkey = () => {
+  cy.get(getElementFromAlias('modify-table-edit-pks')).click();
+  cy.get(getElementFromAlias('primary-key-select-1')).select('1');
+  cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.wait(5000);
+  // TODO
+  // test disappearance expect
+  // (cy.get(getElementFromAlias('modify-table-column-1-remove'))).not.to.exist;
+  cy.get(getElementFromAlias('remove-pk-column-1')).click();
+  cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.get(getElementFromAlias('modify-table-close-pks')).click();
 };
 
 export const passMTDeleteCol = () => {
   // cy.get(getElementFromAlias(`edit-${getColName(0)}`)).click();
   // cy.wait(500);
-  cy.get(getElementFromAlias('remove-button')).click();
+  cy.get(getElementFromAlias('modify-table-column-1-remove')).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure you want to delete?').to.be.true;
   });

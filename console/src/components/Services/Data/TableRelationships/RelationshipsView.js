@@ -4,34 +4,13 @@ import ViewHeader from '../TableBrowseRows/ViewHeader';
 import { RESET } from '../TableModify/ModifyActions';
 import { addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
+import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 
-import AddRelationship from './AddManualRelationship';
 import Button from '../../../Common/Button/Button';
+import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import semverCheck from '../../../../helpers/semver';
-
-/* Gets the complete list of relationships and converts it to a list of object, which looks like so :
-{
-objRel: {objectRelationship},
-arrRel: {arrayRelationship}
-} */
-const getObjArrayRelationshipList = relationships => {
-  const objRels = relationships.filter(r => r.rel_type === 'object');
-  const arrRels = relationships.filter(r => r.rel_type !== 'object');
-  const requiredList = [];
-  const length =
-    objRels.length > arrRels.length ? objRels.length : arrRels.length;
-  for (let i = 0; i < length; i++) {
-    const objRel = objRels[i] ? objRels[i] : null;
-    const arrRel = arrRels[i] ? arrRels[i] : null;
-    requiredList.push({
-      objRel,
-      arrRel,
-    });
-  }
-  return requiredList;
-};
 
 class RelationshipsView extends Component {
   state = {
@@ -116,8 +95,11 @@ class RelationshipsView extends Component {
       );
     }
 
-    const addedRelationshipsView =
-      getObjArrayRelationshipList(tableSchema.relationships).length > 0 ? (
+    const objArrRelList = getObjArrRelList(tableSchema.relationships);
+
+    let addedRelationshipsView = null;
+    if (objArrRelList.length > 0) {
+      addedRelationshipsView = (
         <div className={tableStyles.tableContainer}>
           <table
             className={`${
@@ -132,54 +114,53 @@ class RelationshipsView extends Component {
               </tr>
             </thead>
             <tbody>
-              {getObjArrayRelationshipList(tableSchema.relationships).map(
-                rel => {
-                  const column1 = rel.objRel ? (
-                    <RelationshipEditor
-                      dispatch={dispatch}
-                      tableName={tableName}
-                      relName={rel.objRel.rel_name}
-                      key={rel.objRel.rel_name}
-                      relConfig={findAllFromRel(
-                        allSchemas,
-                        tableSchema,
-                        rel.objRel
-                      )}
-                      isObjRel
-                      allowRename={this.state.supportRename}
-                    />
-                  ) : (
-                    <td />
-                  );
-                  const column2 = rel.arrRel ? (
-                    <RelationshipEditor
-                      dispatch={dispatch}
-                      tableName={tableName}
-                      relName={rel.arrRel.rel_name}
-                      key={rel.arrRel.rel_name}
-                      relConfig={findAllFromRel(
-                        allSchemas,
-                        tableSchema,
-                        rel.arrRel
-                      )}
-                      isObjRel={false}
-                      allowRename={this.state.supportRename}
-                    />
-                  ) : (
-                    <td />
-                  );
-                  return (
-                    <tr>
-                      {column1}
-                      {column2}
-                    </tr>
-                  );
-                }
-              )}
+              {objArrRelList.map(rel => {
+                const column1 = rel.objRel ? (
+                  <RelationshipEditor
+                    dispatch={dispatch}
+                    tableName={tableName}
+                    key={rel.objRel.rel_name}
+                    relName={rel.objRel.rel_name}
+                    relConfig={findAllFromRel(
+                      allSchemas,
+                      tableSchema,
+                      rel.objRel
+                    )}
+                    isObjRel
+                    allowRename={this.state.supportRename}
+                  />
+                ) : (
+                  <td />
+                );
+                const column2 = rel.arrRel ? (
+                  <RelationshipEditor
+                    key={rel.arrRel.rel_name}
+                    dispatch={dispatch}
+                    tableName={tableName}
+                    relName={rel.arrRel.rel_name}
+                    relConfig={findAllFromRel(
+                      allSchemas,
+                      tableSchema,
+                      rel.arrRel
+                    )}
+                    isObjRel={false}
+                    allowRename={this.state.supportRename}
+                  />
+                ) : (
+                  <td />
+                );
+                return (
+                  <tr>
+                    {column1}
+                    {column2}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      ) : null;
+      );
+    }
 
     // if (tableSchema.primary_key.columns > 0) {}
     return (
@@ -199,7 +180,7 @@ class RelationshipsView extends Component {
             <br />
             {relAdd.isActive ? (
               <div className={styles.activeEdit}>
-                <AddRelationship
+                <AddManualRelationship
                   tableName={tableName}
                   isObjRel={relAdd.isObjRel}
                   rTable={relAdd.rTable}
@@ -208,8 +189,8 @@ class RelationshipsView extends Component {
                   rcol={relAdd.rcol}
                   allSchemas={allSchemas}
                   schemaList={schemaList}
-                  manualRelInfo={relAdd.manualRelInfo}
                   manualColumns={relAdd.manualColumns}
+                  manualRelInfo={relAdd.manualRelInfo}
                   titleInfo={'Add new relationship'}
                   currentSchema={currentSchema}
                   showClose={false}
