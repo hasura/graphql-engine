@@ -27,7 +27,7 @@ class ApiResponse extends React.Component {
       url,
     } = this.props;
 
-    const styles = require('./ApiExplorer.scss');
+    const styles = require('../ApiExplorer.scss');
 
     const suggestionFunction = suggestionFunctions[categoryType];
     const isResponseError =

@@ -2,10 +2,14 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { analyzeFetcher, graphQLFetcherFinal } from './Actions';
-import OneGraphExplorer from './OneGraphExplorer';
+import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
+
+
+import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
+import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
+import semverCheck from '../../../helpers/semver';
+
 import './GraphiQL.css';
-import semverCheck from '../../helpers/semver';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -27,7 +31,7 @@ class GraphiQLWrapper extends Component {
       );
     }
 
-    this.setQueryVariableSectionHeight();
+    setQueryVariableSectionHeight();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -38,15 +42,12 @@ class GraphiQLWrapper extends Component {
     }
   }
 
-  shouldComponentUpdate(nextProps) {
-    return !nextProps.headerFocus;
+  componentWillUnmount() {
+    clearCodeMirrorHints();
   }
 
-  setQueryVariableSectionHeight() {
-    const variableEditor = document.querySelectorAll('.variable-editor');
-    if (variableEditor && variableEditor.length > 0) {
-      variableEditor[0].style.height = '120px';
-    }
+  shouldComponentUpdate(nextProps) {
+    return !nextProps.headerFocus;
   }
 
   checkSemVer(version) {
@@ -92,11 +93,11 @@ class GraphiQLWrapper extends Component {
   }
 
   render() {
-    const styles = require('../Common/Common.scss');
+    const styles = require('../../Common/Common.scss');
 
     const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
 
-    const { numberOfTables, queryParams } = this.props;
+    const { numberOfTables, urlParams } = this.props;
     const graphqlNetworkData = this.props.data;
 
     const graphQLFetcher = graphQLParams => {
@@ -143,7 +144,7 @@ class GraphiQLWrapper extends Component {
             endpoint={graphqlNetworkData.url}
             headers={graphqlNetworkData.headers}
             headerFocus={headerFocus}
-            queryParams={queryParams}
+            urlParams={urlParams}
             numberOfTables={numberOfTables}
           />
         </div>
@@ -157,6 +158,7 @@ GraphiQLWrapper.propTypes = {
   data: PropTypes.object.isRequired,
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  urlParams: PropTypes.object.isRequired,
 };
 
 export default GraphiQLWrapper;
