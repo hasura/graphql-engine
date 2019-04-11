@@ -37,6 +37,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 SET default_tablespace = '';
 SET default_with_oids = false;
+CREATE SCHEMA public;
 EOF
 
 while read -r line; do
@@ -45,7 +46,7 @@ done <<< $lines
 
 # delete notify triggers
 
-sed -i -E '/^CREATE TRIGGER "?notify_hasura_\w+"? AFTER \w+ ON "?\w+"?\."?\w+"? FOR EACH ROW EXECUTE PROCEDURE "?hdb_views"?\."?notify_hasura_\w+"?\(\);$/d' $filename
+sed -i -E '/^CREATE TRIGGER "?notify_hasura_.+"? AFTER \w+ ON .+ FOR EACH ROW EXECUTE PROCEDURE "?hdb_views"?\."?notify_hasura_.+"?\(\);$/d' $filename
 
 # delete empty lines
 

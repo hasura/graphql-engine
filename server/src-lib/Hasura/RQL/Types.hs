@@ -50,10 +50,10 @@ import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Common       as R
 import           Hasura.RQL.Types.DML          as R
 import           Hasura.RQL.Types.Error        as R
+import           Hasura.RQL.Types.EventTrigger as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.EventTrigger as R
 
 import           Hasura.SQL.Types
 
@@ -165,9 +165,9 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
   liftTx = lift . liftTx
 
 data LazyTx e a
-  = LTErr e
-  | LTNoTx a
-  | LTTx (Q.TxE e a)
+  = LTErr !e
+  | LTNoTx !a
+  | LTTx !(Q.TxE e a)
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case

@@ -172,10 +172,8 @@ class TestJWTBasic:
         check_query(hge_ctx, self.conf, add_auth=False)
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
+    def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
         curr_time = datetime.now()
@@ -186,6 +184,12 @@ class TestJWTBasic:
             'iat': math.floor(curr_time.timestamp()),
             'exp': math.floor(exp_time.timestamp())
         }
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
         yield
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
         assert st_code == 200, resp

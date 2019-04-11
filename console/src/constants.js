@@ -35,6 +35,8 @@ export const getPlaceholder = type => {
       return '{"name": "foo"} or [12, "bar"]';
     case 'jsonb':
       return '{"name": "foo"} or [12, "bar"]';
+    case 'boolean':
+      return '';
     default:
       return 'text';
   }
