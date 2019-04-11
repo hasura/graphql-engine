@@ -499,13 +499,14 @@ class PermissionBuilder extends React.Component {
         dispatchFunc({ prefix: val });
       };
 
-      // let _expression = expression;
-      // if (typeof _expression === 'string') {
-      //   _expression = { $eq: _expression };
-      // }
+      // handle shorthand notation for eq
+      let _expression = expression;
+      if (typeof _expression !== 'object') {
+        _expression = { _eq: _expression };
+      }
 
-      const operator = Object.keys(expression)[0];
-      const operationValue = expression[operator];
+      const operator = Object.keys(_expression)[0];
+      const operationValue = _expression[operator];
 
       let operators;
       if (PGTypes.character.includes(valueType)) {

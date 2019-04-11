@@ -20,7 +20,7 @@ class OneGraphExplorer extends React.Component {
     schema: null,
     query: this.props.query,
     isResizing: false,
-    headers: [],
+    headers: this.props.headers || [],
   };
 
   componentDidMount() {
@@ -28,7 +28,7 @@ class OneGraphExplorer extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.shouldIntrospect(this.props.headers, this.state.headers)) {
+    if (this.shouldIntrospect()) {
       this.introspect();
     }
   }
@@ -52,27 +52,15 @@ class OneGraphExplorer extends React.Component {
     }
   }
 
-  shouldIntrospect(newHeadersArray, oldHeadersArray) {
-    if (this.props.headerFocus) {
-      return false;
-    }
-    const oldHeaders = getHeadersAsJSON(oldHeadersArray);
-    const headers = getHeadersAsJSON(newHeadersArray);
-    if (Object.keys(oldHeaders).length !== Object.keys(headers).length) {
-      return true;
-    }
-    for (let i = Object.keys(headers).length - 1; i >= 0; i--) {
-      const key = Object.keys(headers)[i];
-      const value = headers[key];
-      if (oldHeaders[key] !== value) {
-        return true;
-      }
-    }
-    return false;
+  shouldIntrospect() {
+    return (
+      JSON.stringify(this.props.headers) !== JSON.stringify(this.state.headers)
+    );
   }
 
   introspect() {
     const { endpoint, headers } = this.props;
+
     fetch(endpoint, {
       method: 'POST',
       headers: getHeadersAsJSON(headers || []),
@@ -143,22 +131,36 @@ class OneGraphExplorer extends React.Component {
       explorerWidth,
       isResizing,
     } = this.state;
+
     const { renderGraphiql } = this.props;
+
+    let explorerSeparator;
+    if (explorerOpen) {
+      explorerSeparator = (
+        <div
+          className="explorerGraphiqlSeparator explorerCursorResize"
+          onMouseDown={this.handleExplorerResize}
+          onMouseUp={this.handleExplorerResizeStop}
+        />
+      );
+    }
+
+    const graphiql = renderGraphiql({
+      query: query || undefined,
+      onEditQuery: this.editQuery,
+      schema: schema,
+      toggleExplorer: this.toggleExplorer,
+    });
+
     return (
       <div
-        className={`graphiql-container ${
-          isResizing ? 'explorerCursorResize' : ''
-        }`}
+        className={
+          'graphiql-container' + (isResizing ? ' explorerCursorResize' : '')
+        }
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          {explorerOpen && (
-            <div
-              className="explorerGraphiqlSeparator explorerCursorResize"
-              onMouseDown={this.handleExplorerResize}
-              onMouseUp={this.handleExplorerResizeStop}
-            />
-          )}
+          {explorerSeparator}
           <GraphiQLExplorer
             schema={schema}
             query={query}
@@ -170,11 +172,7 @@ class OneGraphExplorer extends React.Component {
             width={explorerWidth}
           />
         </div>
-        {renderGraphiql({
-          query: query || undefined,
-          onEditQuery: this.editQuery,
-          toggleExplorer: this.toggleExplorer,
-        })}
+        {graphiql}
       </div>
     );
   }
