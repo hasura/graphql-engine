@@ -13,11 +13,10 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/stretchr/testify/assert"
 )
 
 func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up string, down string, v string, vType string) {
-	logger, hook := test.NewNullLogger()
+	logger, _ := test.NewNullLogger()
 	opts := &migrateApplyOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
@@ -46,8 +45,6 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 	if err != nil {
 		t.Fatalf("failed applying migration: %v", err)
 	}
-
-	assert.Equal(t, "migrations applied", hook.LastEntry().Message)
 }
 
 func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {

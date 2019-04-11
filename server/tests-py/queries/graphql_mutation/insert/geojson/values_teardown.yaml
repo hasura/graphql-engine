@@ -1,0 +1,29 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      DELETE from drone_3d_location;
+
+      DELETE from landmark;
+      SELECT setval('landmark_id_seq', 1, FALSE);
+
+      DELETE from road;
+      SELECT setval('road_id_seq', 1, FALSE);
+
+
+      DELETE from service_locations;
+      SELECT setval('service_locations_id_seq', 1, FALSE);
+
+      DELETE from route;
+      SELECT setval('route_id_seq', 1, FALSE);
+
+      DELETE from area;
+      SELECT setval('area_id_seq', 1, FALSE);
+
+      DELETE from compounds;
+
+      DELETE from geometry_collection;
+      SELECT setval('geometry_collection_id_seq', 1, FALSE);
+

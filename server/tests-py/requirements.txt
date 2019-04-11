@@ -1,6 +1,7 @@
 psycopg2-binary
 sqlalchemy
 pytest
+pytest-xdist
 requests
 pyyaml
 websocket-client

@@ -1,7 +1,10 @@
 import defaultState from './AddState';
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
@@ -16,9 +19,10 @@ const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
 const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
 const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
-const ADD_PK = 'AddTable/ADD_PK';
-const REMOVE_PK = 'AddTable/REMOVE_PK';
 const SET_PK = 'AddTable/SET_PK';
+const SET_FKS = 'AddTable/SET_FKS';
+const TOGGLE_FK = 'AddTable/TOGGLE_FK';
+const CLEAR_FK_TOGGLE = 'AddTable/CLEAR_FK_TOGGLE';
 const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
@@ -59,9 +63,14 @@ const setColUnique = (isUnique, index) => ({
   index,
 });
 const addCol = () => ({ type: ADD_COL });
-const addPk = () => ({ type: ADD_PK });
-const removePk = index => ({ type: REMOVE_PK, index });
-const setPk = (pk, index) => ({ type: SET_PK, pk, index });
+const setPk = pks => ({ type: SET_PK, pks });
+const setForeignKeys = fks => ({
+  type: SET_FKS,
+  fks,
+});
+const toggleFk = i => ({ type: TOGGLE_FK, data: i });
+const clearFkToggle = () => ({ type: CLEAR_FK_TOGGLE });
+
 // General error during validation.
 // const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
@@ -76,7 +85,7 @@ const createTableSql = () => {
     dispatch(showSuccessNotification('Creating Table...'));
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
-
+    const { foreignKeys } = state;
     // validations
     if (state.tableName.trim() === '') {
       alert('Table name cannot be empty');
@@ -124,6 +133,41 @@ const createTableSql = () => {
       });
       tableColumns = tableColumns.slice(0, -1);
       tableColumns += ') ';
+    }
+    const numFks = foreignKeys.length;
+    let errorColumn = null;
+    if (numFks > 1) {
+      foreignKeys.forEach((fk, _i) => {
+        if (_i === numFks - 1) {
+          return;
+        }
+        const mappingObj = {};
+        const { colMappings, refTableName, onUpdate, onDelete } = fk;
+        const rCols = [];
+        const lCols = [];
+        colMappings.slice(0, -1).forEach(cm => {
+          if (mappingObj[cm.column] !== undefined) {
+            errorColumn = state.columns[cm.column].name;
+          }
+          mappingObj[cm.column] = cm.refColumn;
+          lCols.push(`"${state.columns[cm.column].name}"`);
+          rCols.push(`"${cm.refColumn}"`);
+        });
+        if (lCols.length === 0) return;
+        tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
+          ', '
+        )}) REFERENCES "${refTableName}"(${rCols.join(
+          ', '
+        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      });
+    }
+    if (errorColumn) {
+      return dispatch(
+        showErrorNotification(
+          'Create table failed',
+          `The column "${errorColumn}" seems to be referencing multiple foreign columns`
+        )
+      );
     }
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
@@ -275,16 +319,25 @@ const addTableReducer = (state = defaultState, action) => {
       return { ...state, tableComment: action.value };
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
-      const primaryKeys = state.primaryKeys.filter(
-        primaryKeyIndex => primaryKeyIndex !== action.index
-      );
+      const primaryKeys = state.primaryKeys
+        .map(primaryKeyIndex => {
+          const pkiValue = parseInt(primaryKeyIndex, 10);
+          if (pkiValue < action.index) {
+            return primaryKeyIndex;
+          }
+          if (pkiValue > action.index) {
+            return (pkiValue - 1).toString();
+          }
+        })
+        .filter(pki => Boolean(pki));
+
       return {
         ...state,
         columns: [
           ...state.columns.slice(0, action.index),
           ...state.columns.slice(action.index + 1),
         ],
-        primaryKeys: primaryKeys,
+        primaryKeys: [...primaryKeys, ''],
       };
     case SET_COLNAME:
       const i = action.index;
@@ -353,24 +406,25 @@ const addTableReducer = (state = defaultState, action) => {
       };
     case ADD_COL:
       return { ...state, columns: [...state.columns, { name: '', type: '' }] };
-    case ADD_PK:
-      return { ...state, primaryKeys: [...state.primaryKeys, ''] };
-    case REMOVE_PK:
-      return {
-        ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
-      };
     case SET_PK:
       return {
         ...state,
-        primaryKeys: [
-          ...state.primaryKeys.slice(0, action.index),
-          action.pk,
-          ...state.primaryKeys.slice(action.index + 1),
-        ],
+        primaryKeys: action.pks,
+      };
+    case SET_FKS:
+      return {
+        ...state,
+        foreignKeys: action.fks,
+      };
+    case TOGGLE_FK:
+      return {
+        ...state,
+        fkToggled: action.data,
+      };
+    case CLEAR_FK_TOGGLE:
+      return {
+        ...state,
+        fkToggled: null,
       };
     default:
       return state;
@@ -390,9 +444,10 @@ export {
   setColDefault,
   removeColDefault,
   addCol,
-  addPk,
-  removePk,
   setPk,
+  setForeignKeys,
   createTableSql,
+  toggleFk,
+  clearFkToggle,
 };
 export { resetValidation, validationError };

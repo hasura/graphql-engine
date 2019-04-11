@@ -72,13 +72,11 @@ const DataPageContainer = ({
               Schema:
               <select
                 onChange={handleSchemaChange}
+                value={currentSchema}
                 className={styles.changeSchema + ' form-control'}
               >
                 {schemaList.map(s => (
-                  <option
-                    key={s.schema_name}
-                    selected={s.schema_name === currentSchema}
-                  >
+                  <option key={s.schema_name} value={s.schema_name}>
                     {s.schema_name}
                   </option>
                 ))}
