@@ -6,8 +6,6 @@ import rawSQLReducer from './RawSQL/Actions';
 
 import customFunctionReducer from './Function/customFunctionReducer';
 
-import invokeManualTriggerReducer from './InvokeManualTrigger/InvokeManualTriggerAction';
-
 const dataReducer = {
   tables: tableReducer,
   functions: customFunctionReducer,
@@ -16,7 +14,6 @@ const dataReducer = {
     existingTableView: addExistingTableReducer,
   }),
   rawSQL: rawSQLReducer,
-  invokeManualTrigger: invokeManualTriggerReducer,
 };
 
 export default dataReducer;

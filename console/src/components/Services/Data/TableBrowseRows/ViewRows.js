@@ -6,6 +6,8 @@ import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
 import DataDropdown from '../../../Common/DataDropdown/DataDropdown';
 
+import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
+
 import {
   vExpandRel,
   vCloseRel,
@@ -54,6 +56,7 @@ const ViewRows = ({
   count,
   expandedRow,
   manualTriggers = [],
+  invokeEventTrigger,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -720,6 +723,16 @@ const ViewRows = ({
 
   return (
     <div className={isVisible ? '' : 'hide '}>
+      <InvokeManualTrigger
+        invokeEventTrigger={invokeEventTrigger}
+        dispatch={dispatch}
+        args={{
+          id: '1',
+          name: 'somename',
+        }}
+        name="newTrigger"
+        onClose={() => console.log('E')}
+      />
       {getFilterQuery()}
       <hr />
       {getPrimaryKeyMsg()}

@@ -3,7 +3,7 @@ const defaultState = {
   success: {},
   err: {},
   isStatusFetching: false,
-  status: {},
+  status: [],
   statusFetchingErr: {},
 };
 

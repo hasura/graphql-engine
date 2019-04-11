@@ -108,6 +108,12 @@ select.form-control {
   padding-right: 0 !important;
 }
 
+#invokeEventTrigger {
+  .modal-content {
+    min-height: 100px;
+  }
+}
+
 .generateCodeWrapper {
   width: 65% !important;
 

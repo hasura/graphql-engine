@@ -163,6 +163,7 @@ class ViewTable extends Component {
       expandedRow,
       currentSchema,
       manualTriggers = [],
+      invokeEventTrigger,
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
@@ -198,6 +199,7 @@ class ViewTable extends Component {
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
+        invokeEventTrigger={invokeEventTrigger}
       />
     );
 
@@ -261,6 +263,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    invokeEventTrigger: state.invokeEventTrigger,
     ...state.tables.view,
   };
 };
