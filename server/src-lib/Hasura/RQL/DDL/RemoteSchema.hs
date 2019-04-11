@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.RemoteSchema
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
@@ -198,13 +199,23 @@ fetchRemoteSchemas =
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
 
+data ObjFldInfoPrunedMore
+ = ObjFldInfoPrunedMore
+  { _fipmDesc       :: !(Maybe G.Description)
+  , _fipmName       :: !G.Name
+  , _fipmType       :: !G.GType
+  , _fipmInputTypes :: !(Map.HashMap G.Name G.GType)
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfoPrunedMore)
 
 data ObjFldInfoPruned
  = ObjFldInfoPruned
-  { _fipDesc       :: !(Maybe G.Description)
-  , _fipName       :: !G.Name
-  , _fipType       :: !G.GType
-  , _fipInputTypes :: !(Map.HashMap G.Name G.GType)
+  { _fipDesc            :: !(Maybe G.Description)
+  , _fipName            :: !G.Name
+  , _fipType            :: !G.GType
+  , _fipInputTypes      :: !(Map.HashMap G.Name G.GType)
+  , _fipSelectionFields :: ![ObjFldInfoPrunedMore]
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfoPruned)
@@ -232,14 +243,25 @@ runGetRemoteSchemaInfo _ = do
       queryFldsByTyp = flip map queryTypLocs $
         (\ty -> (getSName ty, filter (\fld -> VT._fiLoc fld == ty) queryFields)
         )
-      queryFldInfos = map pruneFields queryFldsByTyp
+      queryFldInfos = map (pruneFields rGCtx) queryFldsByTyp
       remoteSchemaInfo = flip map queryFldInfos (\(n, flds) -> RemoteSchemaFields n flds )
   return $ encJFromJValue $ J.toJSON remoteSchemaInfo
   where
     getSName typLoc = case typLoc of
       VT.HasuraType     -> "hasura"
       VT.RemoteType rsi -> rsName rsi
-    pruneFields (rsName, xs) = (rsName, map pruneField xs)
-    pruneField (VT.ObjFldInfo desc name params ty loc) = ObjFldInfoPruned desc name ty (convInputParams params)
+
+    pruneFields gCtx (rsName', xs) = (rsName', map (pruneField gCtx) xs)
+
+    pruneField gCtx (VT.ObjFldInfo desc name params ty _) = ObjFldInfoPruned desc name ty (convInputParams params) (getSelFields gCtx ty)
+    pruneFieldMore (VT.ObjFldInfo desc name params ty _) = ObjFldInfoPrunedMore desc name ty (convInputParams params)
     convInputParams inpParams = Map.map (VT._iviType ) inpParams
 
+
+    getSelFields :: GC.GCtx -> G.GType -> [ObjFldInfoPrunedMore]
+    getSelFields gCtx gTy =
+      let tyInfo = Map.lookup (getBaseTy gTy) (GC._gTypes gCtx)
+      in case tyInfo of
+        Just (VT.TIObj tyObjInfo) -> let objFldInfos = Map.elems $ VT._otiFields tyObjInfo
+                                  in map pruneFieldMore objFldInfos
+        _                -> []
