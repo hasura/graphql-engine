@@ -45,7 +45,7 @@ data UpdPermForIns
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icColumns   :: ![PGColInfo]
+  , icAllCols   :: ![PGColInfo]
   , icSet       :: !PreSetCols
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
