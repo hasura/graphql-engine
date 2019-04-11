@@ -80,6 +80,9 @@ encodeGQResp :: GQResp -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     GQSuccess r      -> [("data", encJFromLBS r)]
-    GQSuccessErr d e -> [("data", encJFromLBS d), ("errors", encJFromJValue e)]
     GQPreExecError e -> [("errors", encJFromJValue e)]
     GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
+    GQSuccessErr d e ->
+      if null e
+         then [("data", encJFromLBS d)]
+         else [("data", encJFromLBS d), ("errors", encJFromJValue e)]

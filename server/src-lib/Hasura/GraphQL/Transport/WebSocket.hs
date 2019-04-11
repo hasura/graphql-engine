@@ -301,9 +301,9 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
           resp <- liftIO $ runTx $ runHasuraGQEncJ userInfo gCtx rootSelSet
           when isAsync $ either postExecErr sendSuccResp resp
           return [encodeGQResp . GQSuccess . encJToLBS <$> resp]
-      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs _) ->
+      remoteRes <- forM remotePlans $ \remPlan ->
         liftIO $ runExceptT $
-          E.execRemoteGQ httpMgr userInfo reqHdrs newq rsi rs
+          E.execRemoteGQ httpMgr userInfo reqHdrs remPlan opTy
       let combined = sequenceA (hasuraRes ++ remoteRes)
       case combined of
         Left e -> withComplete $ postExecErr e
@@ -314,7 +314,7 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
 
     getIsAsync remotePlans = case remotePlans of
       [] -> withComplete $ preExecErr $ err500 Unexpected "unexpected empty remote"
-      xs -> return $ any (\(E.GExPRemote _ _ _ async) -> E.unIsAsync async) xs
+      xs -> return $ any (\(E.GExPRemote _ _ async) -> E.unIsAsync async) xs
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 

@@ -37,18 +37,10 @@ data GExPHasura
   = GExPHasura !GCtx !VQ.RootSelSet
   deriving (Show, Eq)
 
-newtype IsAsync
-  = IsAsync { unIsAsync :: Bool }
-  deriving (Show, Eq)
-
-asyncDir :: G.Name
-asyncDir = G.Name "async"
-
 data GExPRemote
   = GExPRemote
   { _geprRemoteInfo :: !RemoteSchemaInfo
   , _geprRequest    :: !GraphQLRequest
-  , _geprRootSelSet :: !VQ.RootSelSet
   , _geprIsAsync    :: !IsAsync
   } deriving (Show, Eq)
 
@@ -64,13 +56,19 @@ data QueryParts
   { _qpOpDef     :: !G.TypedOperationDefinition
   , _qpFragDefsL :: ![G.FragmentDefinition]
   , _qpIsAsync   :: !IsAsync
-  --, _qpVarValsM  :: !(Maybe VariableValues)
   } deriving (Show, Eq)
 
 data SelSetInfo = SelSetInfo !G.SelectionSet !IsAsync
 
 type SplitSelSets    = Map.HashMap VT.TypeLoc SelSetInfo
 type SplitQueryParts = Map.HashMap VT.TypeLoc QueryParts
+
+newtype IsAsync
+  = IsAsync { unIsAsync :: Bool }
+  deriving (Show, Eq)
+
+asyncDir :: G.Name
+asyncDir = G.Name "async"
 
 
 getExecPlan
@@ -82,7 +80,7 @@ getExecPlan
 getExecPlan userInfo sc req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
-  _ <- flip runReaderT gCtx $ VQ.validateGQ queryParts
+  rootSelSet <- flip runReaderT gCtx $ VQ.validateGQ queryParts
 
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
@@ -91,35 +89,32 @@ getExecPlan userInfo sc req = do
       newQs = Map.map (transformGQRequest req) querySplits
       opTy = G._todType opDef
 
-  newRootSels <- forM (Map.toList newQs) $ \(tl, (q, _)) ->
-    flip runReaderT gCtx $
-      (,) tl <$> (VQ.getQueryParts q >>= VQ.validateGQ)
-
-  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) (Map.toList newQs) newRootSels
-
-  case newReqs of
+  case Map.toList newQs of
     -- this shouldn't happen
     [] -> throw500 "unexpected plan"
 
-    [(VT.HasuraType, (_, rootSelSet))] ->
+    [(VT.HasuraType, _)] ->
+      -- use the rootSelSet which is already resolved
       return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet) [] opTy
-    [(VT.RemoteType _ rsi, ((_, async), rootSelSet))] ->
-      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet async] opTy
+    [(VT.RemoteType _ rsi, (_, isAsync))] ->
+      -- use the whole query
+      return $ GQExecPlan Nothing [GExPRemote rsi req isAsync] opTy
     xs -> foldM (combPlan gCtx) (GQExecPlan Nothing [] opTy) xs
 
   where
     gCtxRoleMap = scGCtxMap sc
 
-    combPlan gCtx plan (tl, ((newq, async), rs)) = do
+    combPlan gCtx plan (tl, (q, async)) = do
       let GQExecPlan hPlan remPlans ty = plan
       case tl of
         VT.HasuraType ->
           case hPlan of
-            Nothing ->
+            Nothing -> do
+              rs <- runReaderT (VQ.getQueryParts q >>= VQ.validateGQ) gCtx
               return $ GQExecPlan (Just $ GExPHasura gCtx rs) remPlans ty
             Just _  -> throw500 "encountered more than one hasura plan!"
         VT.RemoteType _ rsi -> do
-          let newplan = (GExPRemote rsi newq rs async):remPlans
+          let newplan = (GExPRemote rsi q async):remPlans
           return $ GQExecPlan hPlan newplan ty
 
 
@@ -221,26 +216,27 @@ execRemoteGQ
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> GraphQLRequest
-  -> RemoteSchemaInfo
-  -> VQ.RootSelSet
+  -> GExPRemote
+  -> G.OperationType
   -> m EncJSON
-execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
-  VQ.RSubscription _ ->
-    throw400 NotSupported "subscription to remote server is not supported"
-  _ -> do
-    hdrs <- getHeadersFromConf hdrConf
-    let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-        clientHdrs = bool [] filteredHeaders fwdClientHdrs
-        options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++
-                                          confHdrs)
+execRemoteGQ manager userInfo reqHdrs plan opTy = do
+  let GExPRemote rsi q _ = plan
+      RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
+  when (opTy == G.OperationTypeSubscription) $
+    throw400 UnexpectedPayload
+    "subscriptions are not supported over HTTP, use websockets instead"
 
-    res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
-    resp <- either httpThrow return res
-    return $ encJFromLBS $ resp ^. Wreq.responseBody
+  hdrs <- getHeadersFromConf hdrConf
+  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+      clientHdrs = bool [] filteredHeaders fwdClientHdrs
+      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++
+                                        confHdrs)
+
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
+  resp <- either httpThrow return res
+  return $ encJFromLBS $ resp ^. Wreq.responseBody
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 

@@ -60,23 +60,23 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plan = do
     throw400 UnexpectedPayload
     "subscriptions are not supported over HTTP, use websockets instead"
 
-  res <- run (hasuraPlan, remotePlans)
+  res <- run (hasuraPlan, remotePlans) opTy
   (datas, errs) <- mergeResponse res
   if null errs
-    then return $ encJFromJValue $ J.object [ "data" J..= datas ]
-    else return $ encJFromJValue $ J.object [ "data" J..= datas
-                                            , "errors" J..= errs
-                                            ]
+    then sendResp [ "data" J..= datas ]
+    else sendResp [ "data" J..= datas, "errors" J..= errs ]
+
   where
+    sendResp xs = return $ encJFromJValue $ J.object xs
     -- TODO: use async
-    run (hasuraPlan, remotePlans) = do
+    run (hasuraPlan, remotePlans) opTy = do
       hasuraRes <- case hasuraPlan of
         Nothing -> return []
         Just (E.GExPHasura gCtx rootSelSet) -> do
           res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
           return [res]
-      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs _) ->
-        E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
+      remoteRes <- forM remotePlans $ \remPlan ->
+        E.execRemoteGQ manager userInfo reqHdrs remPlan opTy
       return $ hasuraRes ++ remoteRes
 
 
