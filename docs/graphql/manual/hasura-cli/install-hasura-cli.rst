@@ -45,7 +45,7 @@ Install
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
+            curl -L https://cli.hasura.io/install.sh | bash
 
          This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -55,7 +55,7 @@ Install
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+            curl -L https://cli.hasura.io/install.sh | INSTALL_PATH=$HOME/bin bash
 
      - id: windows
        content: |
