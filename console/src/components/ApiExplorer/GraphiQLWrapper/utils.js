@@ -2,10 +2,6 @@ export const getGraphiQLQueryFromLocalStorage = () => {
   return window.localStorage.getItem('graphiql:query');
 };
 
-export const unsetGraphiQLQueryFromLocalStorage = () => {
-  return window.localStorage.removeItem('graphiql:query');
-};
-
 export const clearCodeMirrorHints = () => {
   const cmNodes = document.querySelectorAll('.CodeMirror-hints.graphiql');
 

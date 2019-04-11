@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 
-
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import semverCheck from '../../../helpers/semver';

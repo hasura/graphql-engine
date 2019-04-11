@@ -9,9 +9,9 @@ import {
   getExplorerWidth,
   setExplorerWidth,
   getExplorerIsOpen,
-  setExplorerIsOpen
+  setExplorerIsOpen,
 } from './utils';
-import { getGraphiQLQueryFromLocalStorage, unsetGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
+import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
 
@@ -46,15 +46,13 @@ class OneGraphExplorer extends React.Component {
     const queryFile = urlParams ? urlParams.query_file : null;
 
     if (queryFile) {
-      getRemoteQueries(
-        queryFile,
-        remoteQuery => this.setState({ query: remoteQuery })
+      getRemoteQueries(queryFile, remoteQuery =>
+        this.setState({ query: remoteQuery })
       );
     } else if (numberOfTables === 0) {
-      const NO_TABLES_MESSAGE =
-        `# Looks like you do not have any tables.
+      const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
 # Click on the "Data" tab on top to create tables
-# You can come back here and try out the GraphQL queries after you create tables
+# Try out GraphQL queries here after you create tables
 `;
 
       this.setState({ query: NO_TABLES_MESSAGE });
@@ -63,7 +61,9 @@ class OneGraphExplorer extends React.Component {
 
       if (localStorageQuery) {
         if (localStorageQuery.includes('do not have')) {
-          unsetGraphiQLQueryFromLocalStorage();
+          const FRESH_GRAPHQL_MSG = '# Try out GraphQL queries here\n';
+
+          this.setState({ query: FRESH_GRAPHQL_MSG });
         } else {
           this.setState({ query: localStorageQuery });
         }
