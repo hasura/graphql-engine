@@ -165,8 +165,15 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ 
                 let newJArr = J.Array (V.fromList newArr)
 
                 setValueAtPath initObj [] (parentKey, newJArr)
-              (Nothing, Just _)  -> return initObj
-              (Just respVal, Just _) -> do
+              (Nothing, Just errs)  -> do
+                let initErrM = Map.lookup "errors" initObj
+                case initErrM of
+                  Nothing -> setValueAtPath initObj [] ("errors", errs)
+                  Just rErrs -> do
+                    initArr <- assertArray errs
+                    rArr <- assertArray rErrs
+                    setValueAtPath initObj [] ("errors", J.Array $ initArr <> rArr)
+              (Just respVal, Just errs) -> do
                 childRespObj <- assertObject respVal
                 let respArr = Map.elems childRespObj
                 initVal <- getValueAtPath initObj parentPath
@@ -175,19 +182,30 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ 
                 newArr <- forM  (toList initArr) (\val -> findAndMerge val parentJoinKey respArr childJoinKey childKey)
                 let newJArr = J.Array (V.fromList newArr)
 
-                setValueAtPath initObj [] (parentKey, newJArr)
+                newObj <- setValueAtPath initObj [] (parentKey, newJArr)
+
+                let initErrM = Map.lookup "errors" initObj
+                case initErrM of
+                  Nothing -> setValueAtPath newObj [] ("errors", errs)
+                  Just rErrs -> do
+                    initArr' <- assertArray errs
+                    rArr <- assertArray rErrs
+                    setValueAtPath newObj [] ("errors", J.Array $ initArr' <> rArr)
+
               _ -> throw500 "neither data nor error keys found in remote response"
 
 
     findAndMerge :: (MonadError QErr m) => J.Value -> Text -> [J.Value] -> Text -> Text -> m J.Value
     findAndMerge parentVal parentKey values key mergeKey = do
       parentObj <- assertObject parentVal
-      val <- getValueAtPath parentObj [parentKey]
-      objects <- forM values assertObject
-      let matchedObj = find (\obj -> Just val == Map.lookup key obj) objects
-          insertObj = maybe J.Null J.Object matchedObj
+      pVal <- getValueAtPath parentObj [parentKey]
+      let matchedObj = find (\case
+                                J.Object obj -> Just pVal == Map.lookup key obj
+                                _ -> False
+                            ) values
+          insertVal = fromMaybe J.Null matchedObj
 
-      newObj <- setValueAtPath parentObj [] (mergeKey, insertObj)
+      newObj <- setValueAtPath parentObj [] (mergeKey, insertVal)
       return $ J.Object newObj
 
     getJoinValues :: (MonadError QErr m) => EncJSON -> G.Alias -> G.Name ->  m [J.Value]
