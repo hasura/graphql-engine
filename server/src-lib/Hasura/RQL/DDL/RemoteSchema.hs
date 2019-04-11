@@ -198,6 +198,25 @@ fetchRemoteSchemas =
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
 
+
+data ObjFldInfoPruned
+ = ObjFldInfoPruned
+  { _fipDesc       :: !(Maybe G.Description)
+  , _fipName       :: !G.Name
+  , _fipType       :: !G.GType
+  , _fipInputTypes :: !(Map.HashMap G.Name G.GType)
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfoPruned)
+
+data RemoteSchemaFields
+  = RemoteSchemaFields
+  { _rsfSchemaName :: !RemoteSchemaName
+  , _rsfFields     :: ![ObjFldInfoPruned]
+  }
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaFields)
+
 runGetRemoteSchemaInfo
   :: (QErrM m, UserInfoM m, CacheRM m)
   => GetRemoteSchemaInfoQuery -> m EncJSON
@@ -214,20 +233,13 @@ runGetRemoteSchemaInfo _ = do
         (\ty -> (getSName ty, filter (\fld -> VT._fiLoc fld == ty) queryFields)
         )
       queryFldInfos = map pruneFields queryFldsByTyp
-  return $ encJFromJValue $ J.toJSON (Map.fromList queryFldInfos)
+      remoteSchemaInfo = flip map queryFldInfos (\(n, flds) -> RemoteSchemaFields n flds )
+  return $ encJFromJValue $ J.toJSON remoteSchemaInfo
   where
     getSName typLoc = case typLoc of
       VT.HasuraType     -> "hasura"
       VT.RemoteType rsi -> rsName rsi
     pruneFields (rsName, xs) = (rsName, map pruneField xs)
-    pruneField (VT.ObjFldInfo desc name params ty loc) = ObjFldInfoPruned desc name ty
+    pruneField (VT.ObjFldInfo desc name params ty loc) = ObjFldInfoPruned desc name ty (convInputParams params)
+    convInputParams inpParams = Map.map (VT._iviType ) inpParams
 
-
-data ObjFldInfoPruned
- = ObjFldInfoPruned
-  { _fipDesc :: !(Maybe G.Description)
-  , _fipName :: !G.Name
-  , _fipTy   :: !G.GType
-  } deriving (Show, Eq)
-
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ObjFldInfoPruned)
