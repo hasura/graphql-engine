@@ -4,7 +4,6 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 --import           Control.Exception                      (catch, try)
-import           Debug.Trace
 
 --import qualified Control.Concurrent.Async               as A
 import qualified Data.Aeson                             as J
@@ -107,12 +106,9 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet = do
 mergeResponse :: (MonadError QErr m) => [EncJSON] -> m (J.Object, [J.Value])
 mergeResponse allRes = do
   let interimResBS = map encJToLBS allRes
-  traceM "OUR INTERIM RESULT"
-  traceM $ show interimResBS
   interimRes <- forM interimResBS $ \res -> do
     let obj = J.decode res :: (Maybe J.Object)
     onNothing obj $ do
-      traceM $ show res
       throw500 "could not parse response as JSON"
 
   -- TODO: the order is not guaranteed! should we have a orderedmap?
