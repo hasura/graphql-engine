@@ -28,14 +28,12 @@ import qualified Data.UUID                              as UUID
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified ListT
-import qualified StmContainers.Map                      as STMMap
 import qualified System.Metrics.Distribution            as Metrics
 
 import           Control.Concurrent                     (threadDelay)
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.LiveQuery.Types
+import           Hasura.GraphQL.Execute.LiveQuery.Types hiding (Sinks)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -44,6 +42,38 @@ import           Hasura.SQL.Value
 -- remove these when array encoding is merged
 import qualified Database.PG.Query.PTI                  as PTI
 import qualified PostgreSQL.Binary.Encoding             as PE
+
+
+newtype TMap k v
+  = TMap {unTMap :: STM.TVar (Map.HashMap k v)}
+
+newTMap :: STM.STM (TMap k v)
+newTMap =
+  TMap <$> STM.newTVar Map.empty
+
+resetTMap :: TMap k v -> STM.STM ()
+resetTMap =
+  flip STM.writeTVar Map.empty . unTMap
+
+nullTMap :: TMap k v -> STM.STM Bool
+nullTMap =
+  fmap Map.null . STM.readTVar . unTMap
+
+insertTMap :: (Eq k, Hashable k) => v -> k -> TMap k v -> STM.STM ()
+insertTMap v k mapTv =
+  STM.modifyTVar' (unTMap mapTv) $ Map.insert k v
+
+deleteTMap :: (Eq k, Hashable k) => k -> TMap k v -> STM.STM ()
+deleteTMap k mapTv =
+  STM.modifyTVar' (unTMap mapTv) $ Map.delete k
+
+lookupTMap :: (Eq k, Hashable k) => k -> TMap k v -> STM.STM (Maybe v)
+lookupTMap k =
+  fmap (Map.lookup k) . STM.readTVar . unTMap
+
+toListTMap :: TMap k v -> STM.STM [(k, v)]
+toListTMap =
+  fmap Map.toList . STM.readTVar . unTMap
 
 newtype RespId
   = RespId { unRespId :: UUID.UUID }
@@ -135,7 +165,7 @@ data ThreadState
   }
 
 type LiveQueryMap k
-  = STMMap.Map MLiveQueryId (MLQHandler k, STM.TMVar ThreadState)
+  = TMap MLiveQueryId (MLQHandler k, STM.TMVar ThreadState)
 
 initLiveQueriesState
   :: MxOpts
@@ -143,7 +173,7 @@ initLiveQueriesState
 initLiveQueriesState lqOptions =
   LiveQueriesState
   lqOptions
-  <$> STMMap.new
+  <$> newTMap
 
 dumpLiveQueriesState :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
 dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
@@ -156,7 +186,7 @@ dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
 dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
 dumpLiveQueryMap lqMap =
   fmap J.toJSON $ do
-    entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
+    entries <- STM.atomically $ toListTMap lqMap
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
       ThreadState threadId metrics <-
         STM.atomically $ STM.readTMVar threadRef
@@ -192,7 +222,7 @@ dumpLiveQueryMap lqMap =
       , "max" J..= Metrics.max stats
       ]
     dumpCandidates candidateMap = STM.atomically $ do
-      candidates <- ListT.toList $ STMMap.listT candidateMap
+      candidates <- toListTMap candidateMap
       forM candidates $ \((usrVars, varVals), candidate) -> do
         candidateJ <- dumpCandidate candidate
         return $ J.object
@@ -202,8 +232,8 @@ dumpLiveQueryMap lqMap =
           ]
     dumpCandidate (MLQHandlerCandidate respId _ respTV curOps newOps) = do
       prevResHash <- STM.readTVar respTV
-      curOpIds <- ListT.toList $ STMMap.listT curOps
-      newOpIds <- ListT.toList $ STMMap.listT newOps
+      curOpIds <- toListTMap curOps
+      newOpIds <- toListTMap newOps
       return $ J.object
         [ "resp_id" J..= unRespId respId
         , "current_ops" J..= map fst curOpIds
@@ -218,11 +248,13 @@ data MLQHandler k
   { _mhAlias      :: !G.Alias
   , _mhQuery      :: !Q.Query
   , _mhCandidates ::
-      !(STMMap.Map
+      !(TMap
         (UserVars, Maybe VariableValues)
         (MLQHandlerCandidate k)
        )
   }
+
+type Sinks k = TMap k OnChange
 
 -- This type represents the state associated with
 -- the response of (role, gqlQueryText, userVars, variableValues)
@@ -271,10 +303,10 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
-    handlerM <- STMMap.lookup handlerId lqMap
+    handlerM <- lookupTMap handlerId lqMap
     case handlerM of
       Just (handler, _) -> do
-        candidateM <- STMMap.lookup candidateId $ _mhCandidates handler
+        candidateM <- lookupTMap candidateId $ _mhCandidates handler
         case candidateM of
           Just candidate -> addToExistingCandidate candidate
           Nothing        -> addToExistingHandler responseId handler
@@ -282,7 +314,7 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
       Nothing -> do
         handler <- newHandler responseId
         asyncRefTM <- STM.newEmptyTMVar
-        STMMap.insert (handler, asyncRefTM) handlerId lqMap
+        insertTMap (handler, asyncRefTM) handlerId lqMap
         return $ Just (handler, asyncRefTM)
 
   -- we can then attach a polling thread if it is new
@@ -301,26 +333,26 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
     MxOpts batchSize refetchInterval = lqOpts
 
     addToExistingCandidate handlerC =
-      STMMap.insert onResultAction k $ _mlqhcNewOps handlerC
+      insertTMap onResultAction k $ _mlqhcNewOps handlerC
 
     newHandlerC responseId = do
       handlerC <- MLQHandlerCandidate
                   responseId
                   valQVars
                   <$> STM.newTVar Nothing
-                  <*> STMMap.new
-                  <*> STMMap.new
-      STMMap.insert onResultAction k $ _mlqhcNewOps handlerC
+                  <*> newTMap
+                  <*> newTMap
+      insertTMap onResultAction k $ _mlqhcNewOps handlerC
       return handlerC
 
     addToExistingHandler responseId handler = do
       handlerC <- newHandlerC responseId
-      STMMap.insert handlerC candidateId $ _mhCandidates handler
+      insertTMap handlerC candidateId $ _mhCandidates handler
 
     newHandler responseId = do
-      handler <- MLQHandler als mxQuery <$> STMMap.new
+      handler <- MLQHandler als mxQuery <$> newTMap
       handlerC <- newHandlerC responseId
-      STMMap.insert handlerC candidateId $ _mhCandidates handler
+      insertTMap handlerC candidateId $ _mhCandidates handler
       return handler
 
     handlerId   = getHandlerId liveQ
@@ -361,28 +393,28 @@ removeLiveQuery lqState liveQ k = do
     lqMap = _lqsLiveQueryMap lqState
 
     getQueryDet = do
-      handlerM <- STMMap.lookup handlerId lqMap
+      handlerM <- lookupTMap handlerId lqMap
       fmap join $ forM handlerM $ \(handler, threadRef) -> do
         let MLQHandler _ _ candidateMap = handler
-        candidateM <- STMMap.lookup candidateId candidateMap
+        candidateM <- lookupTMap candidateId candidateMap
         return $ fmap (handler, threadRef,) candidateM
 
     cleanHandlerC candidateMap threadRef handlerC = do
       let curOps = _mlqhcCurOps handlerC
           newOps = _mlqhcNewOps handlerC
-      STMMap.delete k curOps
-      STMMap.delete k newOps
+      deleteTMap k curOps
+      deleteTMap k newOps
       candidateIsEmpty <- (&&)
-        <$> STMMap.null curOps
-        <*> STMMap.null newOps
-      when candidateIsEmpty $ STMMap.delete candidateId candidateMap
-      handlerIsEmpty <- STMMap.null candidateMap
+        <$> nullTMap curOps
+        <*> nullTMap newOps
+      when candidateIsEmpty $ deleteTMap candidateId candidateMap
+      handlerIsEmpty <- nullTMap candidateMap
       -- when there is no need for handler
       -- i.e, this happens to be the last operation, take the
       -- ref for the polling thread to cancel it
       if handlerIsEmpty
         then do
-          STMMap.delete handlerId lqMap
+          deleteTMap handlerId lqMap
           Just <$> STM.takeTMVar threadRef
         else return Nothing
 
@@ -460,7 +492,7 @@ pollQuery metrics batchSize pgExecCtx handler = do
   procInit <- Clock.getCurrentTime
   -- get a snapshot of all the candidates
   candidateSnapshotMap <- STM.atomically $ do
-    candidates <- ListT.toList $ STMMap.listT candidateMap
+    candidates <- toListTMap candidateMap
     candidateSnapshots <- mapM getCandidateSnapshot candidates
     return $ Map.fromList candidateSnapshots
   let queryVarsBatches = chunks (unBatchSize batchSize) $
@@ -494,10 +526,10 @@ pollQuery metrics batchSize pgExecCtx handler = do
 
     getCandidateSnapshot ((usrVars, _), handlerC) = do
       let MLQHandlerCandidate resId valVars respRef curOpsTV newOpsTV = handlerC
-      curOpsL <- ListT.toList $ STMMap.listT curOpsTV
-      newOpsL <- ListT.toList $ STMMap.listT newOpsTV
-      forM_ newOpsL $ \(k, action) -> STMMap.insert action k curOpsTV
-      STMMap.reset newOpsTV
+      curOpsL <- toListTMap curOpsTV
+      newOpsL <- toListTMap newOpsTV
+      forM_ newOpsL $ \(k, action) -> insertTMap action k curOpsTV
+      resetTMap newOpsTV
       let resultVars = getRespVars usrVars valVars
           candidateSnapshot = CandidateSnapshot resultVars respRef
                               (map snd curOpsL) (map snd newOpsL)
