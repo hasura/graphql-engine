@@ -62,9 +62,11 @@ runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs plan = do
 
   res <- run (hasuraPlan, remotePlans)
   (datas, errs) <- mergeResponse res
-  return $ encJFromJValue $ J.object [ "data" J..= datas
-                                     , "errors" J..= errs
-                                     ]
+  if null errs
+    then return $ encJFromJValue $ J.object [ "data" J..= datas ]
+    else return $ encJFromJValue $ J.object [ "data" J..= datas
+                                            , "errors" J..= errs
+                                            ]
   where
     -- TODO: use async
     run (hasuraPlan, remotePlans) = do
@@ -108,8 +110,7 @@ mergeResponse allRes = do
   let interimResBS = map encJToLBS allRes
   interimRes <- forM interimResBS $ \res -> do
     let obj = J.decode res :: (Maybe J.Object)
-    onNothing obj $ do
-      throw500 "could not parse response as JSON"
+    onNothing obj $ throw500 "could not parse response as JSON"
 
   -- TODO: the order is not guaranteed! should we have a orderedmap?
   let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
