@@ -131,3 +131,25 @@ getRemoteSchemaInfoFromField gCtx fieldName = do
   case _fiLoc field of
     HasuraType -> throw400 ValidationFailed ("field: " <> G.unName fieldName <> "not found in any remote schema")
     RemoteType rsi -> return rsi
+
+runDropRemoteRel
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
+  => DropRemoteRel -> m EncJSON
+runDropRemoteRel (DropRemoteRel qt name _) = do
+  adminOnly
+  delRelFromCache name qt
+  liftTx $ delRemoteRelFromCatalog qt name
+  return successMsg
+
+delRemoteRelFromCatalog
+  :: QualifiedTable
+  -> RelName
+  -> Q.TxE QErr ()
+delRemoteRelFromCatalog (QualifiedObject sn tn) rn =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           DELETE FROM
+                  hdb_catalog.hdb_remote_relationship
+           WHERE table_schema =  $1
+             AND table_name = $2
+             AND rel_name = $3
+                |] (sn, tn, rn) True

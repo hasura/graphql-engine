@@ -42,6 +42,7 @@ data RQLQuery
   | RQCreateObjectRelationship !CreateObjRel
   | RQCreateArrayRelationship !CreateArrRel
   | RQCreateRemoteRelationship !CreateRemoteRel
+  | RQDropRemoteRelationship !DropRemoteRel
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
@@ -181,6 +182,7 @@ queryNeedsReload qi = case qi of
   RQCreateObjectRelationship _ -> True
   RQCreateArrayRelationship  _ -> True
   RQCreateRemoteRelationship _ -> True
+  RQDropRemoteRelationship _   -> True
   RQDropRelationship  _        -> True
   RQSetRelationshipComment  _  -> False
   RQRenameRelationship _       -> True
@@ -243,6 +245,7 @@ runQueryM rq = withPathK "args" $ case rq of
   RQCreateObjectRelationship q -> runCreateObjRel q
   RQCreateArrayRelationship  q -> runCreateArrRel q
   RQCreateRemoteRelationship q -> runCreateRemoteRel q
+  RQDropRemoteRelationship q   -> runDropRemoteRel q
   RQDropRelationship  q        -> runDropRel q
   RQSetRelationshipComment  q  -> runSetRelComment q
   RQRenameRelationship q       -> runRenameRel q

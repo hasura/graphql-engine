@@ -145,4 +145,11 @@ type RemoteRelDef = RelDef RemoteRelUsing
 
 type CreateRemoteRel = WithTable RemoteRelDef
 
+data DropRemoteRel
+  = DropRemoteRel
+  { drrTable   :: !QualifiedTable
+  , drrName    :: !RelName
+  , drrCascade :: !(Maybe Bool)
+  } deriving (Show, Eq, Lift)
 
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropRemoteRel)
