@@ -143,6 +143,9 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
+                     -- metrics in multiplexed subs
+                     , ekg-core
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
