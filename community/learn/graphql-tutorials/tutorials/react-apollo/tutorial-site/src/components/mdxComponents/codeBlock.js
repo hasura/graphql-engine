@@ -1,6 +1,7 @@
 import * as React from "react";
 import Highlight, { defaultProps } from "prism-react-renderer";
 import prismTheme from "prism-react-renderer/themes/duotoneLight";
+// import prismTheme from "prism-react-renderer/themes/dracula";
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live";
 
 import Pre from "./pre";
@@ -33,7 +34,7 @@ const CodeBlock = ({ children: exampleCode, ...props }) => {
       <Highlight
         {...defaultProps}
         code={exampleCode}
-        language="jsx"
+        language="javascript"
         theme={prismTheme}
       >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (

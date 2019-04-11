@@ -5,7 +5,7 @@ import Link from "./link";
 import './styles.css';
 import { forcedNavOrder } from '../config';
 
-const Sidebar = styled.aside`
+const Sidebar = styled('aside')`
   width: 224px;
   background-color: #fff;
   border-right: 1px solid #ede7f3;

@@ -6,7 +6,7 @@ import mdxComponents from "./mdxComponents";
 import Sidebar from "./sidebar";
 import RightSidebar from "./rightSidebar";
 
-const Wrapper = styled.div`
+const Wrapper = styled('div')`
   display: flex;
   justify-content: space-between;
 
@@ -15,7 +15,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const Content = styled.main`
+const Content = styled('main')`
   display: flex;
   flex-grow: 1;
   margin: 0px 88px;
@@ -28,7 +28,7 @@ const Content = styled.main`
   }
 `;
 
-const MaxWidth = styled.div`
+const MaxWidth = styled('div')`
 
   @media only screen and (max-width: 50rem) {
     width: 100%;

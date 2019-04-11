@@ -4,7 +4,7 @@ const Pre = system(
   {
     is: "pre",
     fontSize: 1,
-    fontFamily: "mono",
+    // fontFamily: "mono",
     m: 0
   },
   {

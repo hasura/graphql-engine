@@ -34,7 +34,7 @@ const Logo = styled(props => (
   }
 `;
 
-const Sidebar = styled.aside`
+const Sidebar = styled('aside')`
   width: 298px;
   /* background-color: rgb(245, 247, 249); */
   /* border-right: 1px solid #ede7f3; */
