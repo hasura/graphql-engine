@@ -2,34 +2,39 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import {
-  generateApiCodeClicked,
-  changeRequestMethod,
-  changeRequestUrl,
-  changeRequestParams,
-  addRequestHeader,
+  // generateApiCodeClicked,
+  // changeRequestMethod,
+  // changeRequestUrl,
+  // changeRequestParams,
+  // addRequestHeader,
+  // editGeneratedJson,
+  // updateFileObject,
   changeRequestHeader,
   removeRequestHeader,
-  updateFileObject,
-  editGeneratedJson,
   focusHeaderTextbox,
   unfocusTypingHeader,
 } from './Actions';
+
 import globals from '../../Globals';
 
 import GraphiQLWrapper from './GraphiQLWrapper';
+
+import CollapsibleToggle from '../Common/CollapsibleToggle/CollapsibleToggle';
 
 const styles = require('./ApiExplorer.scss');
 
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       deletedHeader: false,
+      adminSecretVisible: false,
+      bodyAllowedMethods: ['POST'],
+      tabIndex: 0,
+      timer: null,
     };
-    this.state.adminSecretVisible = false;
-    this.state.bodyAllowedMethods = ['POST'];
-    this.state.tabIndex = 0;
-    this.timer = null;
+
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
@@ -38,38 +43,10 @@ class ApiRequest extends Component {
     }
   }
 
-  onGenerateApiCodeClicked = () => {
-    this.props.dispatch(generateApiCodeClicked());
-  };
-
+  /*
   onUrlChanged = e => {
     this.props.dispatch(changeRequestUrl(e.target.value));
   };
-
-  onRequestParamsChanged = newValue => {
-    this.props.dispatch(changeRequestParams(newValue));
-  };
-
-  onEditJsonButtonClick = () => {
-    this.props.dispatch(editGeneratedJson());
-  };
-
-  onHeaderValueChanged(e) {
-    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
-    const key = e.target.getAttribute('data-element-name');
-    const newValue = e.target.value;
-    this.props.dispatch(changeRequestHeader(index, key, newValue, false));
-  }
-
-  onDeleteHeaderClicked(e) {
-    const index = parseInt(e.target.getAttribute('data-header-id'), 10);
-    this.setState({ deletedHeader: true });
-    this.props.dispatch(removeRequestHeader(index));
-  }
-
-  onShowAdminSecretClicked() {
-    this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
-  }
 
   onNewHeaderKeyChanged(e) {
     this.handleTypingTimeouts();
@@ -106,6 +83,32 @@ class ApiRequest extends Component {
     });
   };
 
+  onGenerateApiCodeClicked = () => {
+    this.props.dispatch(generateApiCodeClicked());
+  };
+
+  onRequestParamsChanged = newValue => {
+    this.props.dispatch(changeRequestParams(newValue));
+  };
+
+  onEditJsonButtonClick = () => {
+    this.props.dispatch(editGeneratedJson());
+  };
+
+  getHeaderBody() {
+    return (
+      <div className={styles.responseHeader + ' ' + styles.marginBottom}>
+        Request Body
+      </div>
+    );
+  }
+
+  handleFileChange(e) {
+    if (e.target.files.length > 0) {
+      this.props.dispatch(updateFileObject(e.target.files[0]));
+    }
+  }
+  */
   getUrlBar() {
     return (
       <div
@@ -134,7 +137,7 @@ class ApiRequest extends Component {
             </div>
             <input
               onChange={this.onUrlChanged}
-              value={this.props.url}
+              value={this.props.url || ''}
               type="text"
               readOnly
               className={styles.inputGroupInput + ' form-control '}
@@ -146,176 +149,245 @@ class ApiRequest extends Component {
     );
   }
 
-  getHeaderTitleView() {
-    return (
-      <div className={styles.responseWrapper}>
-        <div className={'col-xs-12 ' + styles.padd_remove}>
-          <div className={styles.responseHeader}>Request Headers</div>
-        </div>
-      </div>
-    );
-  }
+  getHeaderTableView() {
+    const getHeaderRows = () => {
+      const headers_map = new Map();
 
-  getHeaderRows() {
-    let headers;
-    const headers_map = new Map();
-    if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
-      const stored_headers = JSON.parse(
-        localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
-      );
-      for (const s_h of this.props.headers) {
-        if (!headers_map.has(s_h.key)) {
-          headers_map.set(s_h.key, 1);
-        }
-      }
-      //Case when user loads again.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === false
-      ) {
-        const initHeaderCount = this.props.headers.length - 1;
-        const input_row = this.props.headers.pop();
-        for (
-          let i = initHeaderCount;
-          i <= stored_headers.length - initHeaderCount;
-          i++
-        ) {
-          if (!headers_map.has(stored_headers[i].key)) {
-            this.props.headers.push(stored_headers[i]);
+      if (localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')) {
+        const stored_headers = JSON.parse(
+          localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS')
+        );
+
+        for (const s_h of this.props.headers) {
+          if (!headers_map.has(s_h.key)) {
+            headers_map.set(s_h.key, 1);
           }
         }
-        this.props.headers.push(input_row);
+
+        // Case when user loads again.
+        if (
+          stored_headers.length > this.props.headers.length &&
+          this.state.deletedHeader === false
+        ) {
+          const initHeaderCount = this.props.headers.length - 1;
+          const input_row = this.props.headers.pop();
+          for (
+            let i = initHeaderCount;
+            i <= stored_headers.length - initHeaderCount;
+            i++
+          ) {
+            if (!headers_map.has(stored_headers[i].key)) {
+              this.props.headers.push(stored_headers[i]);
+            }
+          }
+          this.props.headers.push(input_row);
+        }
+
+        // Case when user deletes a header from console.
+        if (
+          stored_headers.length > this.props.headers.length &&
+          this.state.deletedHeader === true
+        ) {
+          this.setState({ deletedHeader: false });
+        }
       }
-      //Case when user deletes a header from console.
-      if (
-        stored_headers.length > this.props.headers.length &&
-        this.state.deletedHeader === true
-      ) {
-        this.setState({ deletedHeader: false });
-      }
-      headers = this.props.headers;
+
+      const headers = this.props.headers;
       localStorage.setItem(
         'HASURA_CONSOLE_GRAPHIQL_HEADERS',
         JSON.stringify(headers)
       );
-    } else {
-      headers = this.props.headers;
-      localStorage.setItem(
-        'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-        JSON.stringify(headers)
-      );
-    }
-    const rows = headers.map((header, i) => {
-      return (
-        <tr key={i}>
-          {header.isNewHeader ? null : (
-            <td>
-              <input
-                type="checkbox"
-                name="sponsored"
-                className={styles.common_checkbox + ' common_checkbox'}
-                id={i + 1}
-                checked={header.isActive}
-                data-header-id={i}
-                onChange={this.onHeaderValueChanged.bind(this)}
-                data-element-name="isActive"
-              />
-              <label
-                htmlFor={i + 1}
-                className={
-                  styles.common_checkbox_label + ' common_checkbox_label'
-                }
-              />
-            </td>
-          )}
-          <td
-            colSpan={header.isNewHeader ? '2' : '1'}
-            className={
-              header.isNewHeader
-                ? styles.border_right +
-                  ' ' +
-                  styles.tableTdLeft +
-                  ' ' +
-                  styles.borderTop +
-                  ' ' +
-                  styles.tableEnterKey
-                : styles.border_right
-            }
-          >
-            <input
-              className={'form-control ' + styles.responseTableInput}
-              value={header.key}
-              disabled={header.isDisabled === true ? true : false}
-              data-header-id={i}
-              placeholder="Enter Key"
-              data-element-name="key"
-              onChange={this.onHeaderValueChanged.bind(this)}
-              onFocus={this.handleFocus}
-              onBlur={this.handleBlur}
-              type="text"
-              data-test={`header-key-${i}`}
-            />
-          </td>
-          <td
-            colSpan={header.isNewHeader ? '2' : '1'}
-            className={
-              header.isNewHeader
-                ? styles.borderTop +
-                  ' ' +
-                  styles.tableEnterKey +
-                  ' ' +
-                  styles.tableLastTd
-                : ''
-            }
-          >
-            <input
-              className={'form-control ' + styles.responseTableInput}
-              value={header.value}
-              disabled={header.isDisabled === true ? true : false}
-              data-header-id={i}
-              placeholder="Enter Value"
-              data-element-name="value"
-              onChange={this.onHeaderValueChanged.bind(this)}
-              onFocus={this.handleFocus}
-              onBlur={this.handleBlur}
-              data-test={`header-value-${i}`}
-              type={
-                header.key.toLowerCase() ===
-                  `x-hasura-${globals.adminSecretLabel}` &&
-                !this.state.adminSecretVisible
-                  ? 'password'
-                  : 'text'
-              }
-            />
-          </td>
-          {header.isNewHeader ? null : (
-            <td>
-              {header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}` ? (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={this.onShowAdminSecretClicked.bind(this)}
-                />
-              ) : null}
+
+      const handleFocus = () => {
+        this.props.dispatch(focusHeaderTextbox());
+      };
+
+      const handleBlur = () => {
+        this.props.dispatch(unfocusTypingHeader());
+      };
+
+      const onDeleteHeaderClicked = e => {
+        const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+        this.setState({ deletedHeader: true });
+        this.props.dispatch(removeRequestHeader(index));
+      };
+
+      const onHeaderValueChanged = e => {
+        const index = parseInt(e.target.getAttribute('data-header-id'), 10);
+        const key = e.target.getAttribute('data-element-name');
+        const newValue = e.target.value;
+        this.props.dispatch(changeRequestHeader(index, key, newValue, false));
+      };
+
+      const onShowAdminSecretClicked = () => {
+        this.setState({ adminSecretVisible: !this.state.adminSecretVisible });
+      };
+
+      return headers.map((header, i) => {
+        const getHeaderAdminVal = () => {
+          let headerAdminVal = null;
+
+          if (
+            header.key.toLowerCase() === `x-hasura-${globals.adminSecretLabel}`
+          ) {
+            headerAdminVal = (
               <i
-                className={styles.closeHeader + ' fa fa-times'}
+                className={styles.showAdminSecret + ' fa fa-eye'}
                 data-header-id={i}
                 aria-hidden="true"
-                onClick={this.onDeleteHeaderClicked.bind(this)}
+                onClick={onShowAdminSecretClicked}
+              />
+            );
+          }
+
+          return headerAdminVal;
+        };
+
+        const getHeaderActiveCheckBox = () => {
+          let headerActiveCheckbox = null;
+
+          if (!header.isNewHeader) {
+            headerActiveCheckbox = (
+              <td>
+                <input
+                  type="checkbox"
+                  name="sponsored"
+                  className={styles.common_checkbox + ' common_checkbox'}
+                  id={i + 1}
+                  checked={header.isActive}
+                  data-header-id={i}
+                  onChange={onHeaderValueChanged}
+                  data-element-name="isActive"
+                />
+                <label
+                  htmlFor={i + 1}
+                  className={
+                    styles.common_checkbox_label + ' common_checkbox_label'
+                  }
+                />
+              </td>
+            );
+          }
+
+          return headerActiveCheckbox;
+        };
+
+        const getHeaderRemoveBtn = () => {
+          return (
+            <i
+              className={styles.closeHeader + ' fa fa-times'}
+              data-header-id={i}
+              aria-hidden="true"
+              onClick={onDeleteHeaderClicked}
+            />
+          );
+        };
+
+        const getColSpan = () => {
+          return header.isNewHeader ? '2' : '1';
+        };
+
+        const getHeaderKey = () => {
+          let className = '';
+          if (header.isNewHeader) {
+            className =
+              styles.border_right +
+              ' ' +
+              styles.tableTdLeft +
+              ' ' +
+              styles.borderTop +
+              ' ' +
+              styles.tableEnterKey;
+          } else {
+            className = styles.border_right;
+          }
+
+          return (
+            <td colSpan={getColSpan()} className={className}>
+              <input
+                className={'form-control ' + styles.responseTableInput}
+                value={header.key || ''}
+                disabled={header.isDisabled === true}
+                data-header-id={i}
+                placeholder="Enter Key"
+                data-element-name="key"
+                onChange={onHeaderValueChanged}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                type="text"
+                data-test={`header-key-${i}`}
               />
             </td>
-          )}
-        </tr>
-      );
-    });
-    return rows;
-  }
+          );
+        };
 
-  getHeaderTableView() {
+        const getHeaderValue = () => {
+          let className = '';
+          if (header.isNewHeader) {
+            className =
+              styles.borderTop +
+              ' ' +
+              styles.tableEnterKey +
+              ' ' +
+              styles.tableLastTd;
+          }
+
+          let type = 'text';
+          if (
+            header.key.toLowerCase() ===
+              `x-hasura-${globals.adminSecretLabel}` &&
+            !this.state.adminSecretVisible
+          ) {
+            type = 'password';
+          }
+
+          return (
+            <td colSpan={getColSpan()} className={className}>
+              <input
+                className={'form-control ' + styles.responseTableInput}
+                value={header.value || ''}
+                disabled={header.isDisabled === true}
+                data-header-id={i}
+                placeholder="Enter Value"
+                data-element-name="value"
+                onChange={onHeaderValueChanged}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                data-test={`header-value-${i}`}
+                type={type}
+              />
+            </td>
+          );
+        };
+
+        const getHeaderActions = () => {
+          let headerActions = null;
+
+          if (!header.isNewHeader) {
+            headerActions = (
+              <td>
+                {getHeaderAdminVal()}
+                {getHeaderRemoveBtn()}
+              </td>
+            );
+          }
+
+          return headerActions;
+        };
+
+        return (
+          <tr key={i}>
+            {getHeaderActiveCheckBox()}
+            {getHeaderKey()}
+            {getHeaderValue()}
+            {getHeaderActions()}
+          </tr>
+        );
+      });
+    };
+
     return (
-      <div className={styles.responseTable}>
+      <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
         <table className={'table ' + styles.tableBorder}>
           <thead>
             <tr>
@@ -337,19 +409,12 @@ class ApiRequest extends Component {
               <th className={styles.wd4 + ' ' + styles.headerHeading} />
             </tr>
           </thead>
-          <tbody>{this.getHeaderRows()}</tbody>
+          <tbody>{getHeaderRows()}</tbody>
         </table>
       </div>
     );
   }
 
-  getHeaderBody() {
-    return (
-      <div className={styles.responseHeader + ' ' + styles.marginBottom}>
-        Request Body
-      </div>
-    );
-  }
   getValidBody() {
     switch (this.props.bodyType) {
       case 'graphql':
@@ -367,27 +432,22 @@ class ApiRequest extends Component {
     }
   }
 
-  handleFocus = () => {
-    this.props.dispatch(focusHeaderTextbox());
-  };
-
-  handleBlur = () => {
-    this.props.dispatch(unfocusTypingHeader());
-  };
-
-  handleFileChange(e) {
-    if (e.target.files.length > 0) {
-      this.props.dispatch(updateFileObject(e.target.files[0]));
-    }
-  }
-
   render() {
     return (
       <div className={styles.apiRequestWrapper}>
-        {this.getUrlBar()}
-        <hr />
-        {this.getHeaderTitleView()}
-        {this.getHeaderTableView()}
+        <CollapsibleToggle title={'GraphQL Endpoint'} isOpen defaultTitle>
+          {this.getUrlBar()}
+        </CollapsibleToggle>
+        <div className={styles.headerWrapper}>
+          <CollapsibleToggle
+            title={'Request Headers'}
+            testId="api-explorer-header"
+            isOpen
+            defaultTitle
+          >
+            {this.getHeaderTableView()}
+          </CollapsibleToggle>
+        </div>
         {this.getValidBody()}
       </div>
     );
@@ -403,7 +463,7 @@ ApiRequest.propTypes = {
   explorerData: PropTypes.object.isRequired,
   credentials: PropTypes.object.isRequired,
   bodyType: PropTypes.string.isRequired,
-  route: PropTypes.object.isRequired,
+  route: PropTypes.object,
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   queryParams: PropTypes.object.isRequired,

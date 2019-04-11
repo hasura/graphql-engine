@@ -7,9 +7,8 @@ class TestGraphqlIntrospection(DefaultTestSelectQueries):
 
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
-            conf = yaml.load(c)
-        code, resp = check_query(hge_ctx, conf)
-        assert code == 200, resp
+            conf = yaml.safe_load(c)
+        resp = check_query(hge_ctx, conf)
         hasArticle = False
         hasArticleAuthorFKRel = False
         hasArticleAuthorManualRel = False

@@ -64,4 +64,21 @@ getUrlFromEnv urlFromEnv = do
   where
     invalidUri uri = "not a valid URI: " <> T.pack uri
     envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"
+      "environment variable '" <> e <> "' not set"
+
+validateRemoteSchemaDef
+  :: (MonadError QErr m, MonadIO m)
+  => RemoteSchemaDef
+  -> m RemoteSchemaInfo
+validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs) =
+  case (mUrl, mUrlEnv) of
+    (Just url, Nothing)    ->
+      return $ RemoteSchemaInfo url hdrs fwdHdrs
+    (Nothing, Just urlEnv) -> do
+      url <- getUrlFromEnv urlEnv
+      return $ RemoteSchemaInfo url hdrs fwdHdrs
+    (Nothing, Nothing)     ->
+        throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
+    (Just _, Just _)       ->
+        throw400 InvalidParams "both `url` and `url_from_env` can't be present"
+  where hdrs = fromMaybe [] hdrC

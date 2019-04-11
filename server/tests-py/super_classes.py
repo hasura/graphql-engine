@@ -1,5 +1,6 @@
 import pytest
 from abc import ABC, abstractmethod
+import os
 
 class DefaultTestQueries(ABC):
 
@@ -24,6 +25,31 @@ class DefaultTestQueries(ABC):
     @abstractmethod
     def dir(self):
         pass
+
+class DefaultTestMutations(ABC):
+
+    @pytest.fixture(scope='class')
+    def schema_transact(self, request, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/schema_setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/schema_teardown.yaml')
+        assert st_code == 200, resp
+
+    @pytest.fixture(autouse=True)
+    def init_values_transact(self, schema_transact, hge_ctx):
+        setupValFile = self.dir() + '/values_setup.yaml'
+        if os.path.isfile(setupValFile):
+          st_code, resp = hge_ctx.v1q_f(setupValFile)
+          assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/values_teardown.yaml')
+        assert st_code == 200, resp
+
+    @abstractmethod
+    def dir(self):
+        pass
+
 
 
 class DefaultTestSelectQueries(ABC):

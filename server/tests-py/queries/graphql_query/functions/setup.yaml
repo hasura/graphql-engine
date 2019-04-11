@@ -41,4 +41,35 @@ args:
       ('post by hasura', 'content for post'),
       ('post by another', 'content for another post')
 
+# Table with uuid column
+- type: run_sql
+  args:
+    sql: |
+      create table test(
+        id serial primary key,
+        name text not null,
+        uuid_col uuid not null
+      );
+
+      insert into test (name, uuid_col) values
+       ('clarke', '8e3e4a14-c831-45a2-9e78-8e86028d1ee5')
+      ,('michael', '8e3e4a14-c831-45a2-9e78-8e86028d1ee5')
+      ,('fitch', '8e3e4a14-c831-45a2-9e78-8e86028d1ee6') ;
+
+      create function get_test(uuid_arg uuid, name_arg text)
+      returns setof test as $$
+      select * from test where uuid_col = uuid_arg and name = name_arg
+      $$ language sql stable;
+
+- type: track_table
+  args:
+    name: test
+    schema: public
+
+- type: track_function
+  args:
+    name: get_test
+    schema: public
+
+
 
