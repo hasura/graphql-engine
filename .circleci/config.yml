@@ -181,7 +181,9 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, non-optimized build with coverage"
-            BUILD_FLAGS="--fast --coverage" make ci-binary
+            # disable fast build temporarily
+            # BUILD_FLAGS="--fast --coverage" make ci-binary
+            make ci-binary
           fi
           make ci-image
           make ci-save-image
