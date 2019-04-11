@@ -34,6 +34,7 @@ import {
   REL_ADD_NEW_CLICKED,
   REL_SET_MANUAL_COLUMNS,
   REL_ADD_MANUAL_CLICKED,
+  LOAD_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -197,6 +198,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.relAdd,
           manualColumns: action.data,
         },
+      };
+    case LOAD_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: action.data,
       };
     case TABLE_COMMENT_EDIT:
       return {

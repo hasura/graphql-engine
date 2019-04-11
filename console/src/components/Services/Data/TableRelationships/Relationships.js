@@ -20,6 +20,7 @@ import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
+import RemoteRelationships from './RemoteRelationships/Wrapper';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import semverCheck from '../../../../helpers/semver';
@@ -153,8 +154,8 @@ const AddRelationship = ({
       <div className={`${styles.remove_margin_bottom} form-group`}>
         <label>
           {' '}
-          You have no new relationships that can be added. Add a foreign key to
-          get suggestions{' '}
+          You have no suggested relationships with another table. Add a foreign
+          key to get suggestions{' '}
         </label>
       </div>
     );
@@ -354,6 +355,7 @@ class Relationships extends Component {
       currentSchema,
       migrationMode,
       schemaList,
+      remoteRelationships,
     } = this.props;
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
@@ -466,7 +468,7 @@ class Relationships extends Component {
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
           <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Relationships</h4>
+            <h4 className={styles.subheading_text}>Table Relationships</h4>
             {addedRelationshipsView}
             <br />
             {relAdd.isActive ? (
@@ -514,7 +516,7 @@ class Relationships extends Component {
               <Button
                 type="submit"
                 color="white"
-                size="sm"
+                size="xs"
                 onClick={() => {
                   dispatch(relManualAddClicked());
                 }}
@@ -524,6 +526,12 @@ class Relationships extends Component {
               </Button>
             )}
             <hr />
+            <h4 className={styles.subheading_text}>Remote Relationships</h4>
+            <RemoteRelationships
+              dispatch={dispatch}
+              tableSchema={tableSchema}
+              remoteRels={remoteRelationships}
+            />
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
@@ -541,6 +549,7 @@ Relationships.propTypes = {
   relAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  remoteRelationships: PropTypes.array,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,

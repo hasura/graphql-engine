@@ -773,7 +773,6 @@ class Permissions extends Component {
                   queryLabel
                 )
               );
-
               if (isSelected) {
                 _filterOptionsSection.push(selectedValue);
               }
@@ -1422,7 +1421,6 @@ class Permissions extends Component {
             let _deleteBtn;
 
             const presetType = getPresetValueType(preset);
-
             if (presetType) {
               _deleteBtn = (
                 <i
@@ -1432,7 +1430,6 @@ class Permissions extends Component {
                 />
               );
             }
-
             return _deleteBtn;
           };
 

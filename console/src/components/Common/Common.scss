@@ -384,6 +384,9 @@ input {
 .remove_margin_bottom {
   margin-bottom: 0 !important;
 }
+.remove_margin_right {
+  margin-right: 0 !important;
+}
 
 .remove_margin {
   margin: 0 !important;
@@ -486,6 +489,10 @@ input {
 
 .add_mar_bottom_mid {
   margin-bottom: 10px;
+}
+
+.add_mar_bottom_small {
+  margin-bottom: 5px;
 }
 
 .add_mar_right {
@@ -1248,9 +1255,22 @@ code {
   width: 100% !important;
 }
 
+.wd150px {
+  width: 150px;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.display_flex_centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;
-

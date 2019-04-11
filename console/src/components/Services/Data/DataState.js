@@ -113,6 +113,7 @@ const defaultModifyState = {
       tables: [],
     },
   },
+  remoteRelationships: [],
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,

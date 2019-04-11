@@ -97,6 +97,7 @@ class GraphiQLWrapper extends Component {
     const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
 
     const { numberOfTables, queryParams } = this.props;
+
     const graphqlNetworkData = this.props.data;
 
     const graphQLFetcher = graphQLParams => {
