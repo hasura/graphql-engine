@@ -8,6 +8,7 @@ module Hasura.GraphQL.Execute
   , GExPDepRemote(..)
   , GraphQLRequestPromise(..)
   , JoinInfo(..)
+  , IsAsync(..)
   , getExecPlan
   , execRemoteGQ
   , transformGQRequest
@@ -20,7 +21,6 @@ import           Data.List                              (nub)
 import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.Sequence                          as Seq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Hasura.GraphQL.Context                 as GC
@@ -60,29 +60,44 @@ newtype GraphQLRequestPromise
 instance Show GraphQLRequestPromise where
   show _ = "GraphQLRequestPromise Func"
 
-data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise JoinInfo !VQ.RootSelSet
+data GExPDepRemote = GExPDepRemote !RemoteSchemaInfo !GraphQLRequestPromise JoinInfo IsAsync
   deriving Show
 
 data GExPHasura = GExPHasura !GCtx !VQ.RootSelSet [GExPDepRemote]
   deriving Show
 
 data GExPRemote
-  = GExPRemote !RemoteSchemaInfo !GraphQLRequest !VQ.RootSelSet
-  deriving (Show, Eq)
+  = GExPRemote
+  { _geprRemoteInfo :: !RemoteSchemaInfo
+  , _geprRequest    :: !GraphQLRequest
+  , _geprIsAsync    :: !IsAsync
+  } deriving (Show, Eq)
 
 data GQExecPlan
-  = GQExecPlan (Maybe GExPHasura) [GExPRemote]
-  deriving Show
+  = GQExecPlan
+  { _gqepHasura :: !(Maybe GExPHasura)
+  , _gqepRemote :: ![GExPRemote]
+  , _gqepOpType :: !G.OperationType
+  } deriving Show
 
 data QueryPartsA
   = QueryPartsA
   { _qpOpDef     :: !G.TypedOperationDefinition
   , _qpFragDefsL :: ![G.FragmentDefinition]
-  --, _qpVarValsM  :: !(Maybe VariableValues)
-  } deriving (Show, Eq)
+  , _qpIsAsync   :: !IsAsync
+  } deriving Show
 
-type SplitSelSets    = Map.HashMap VT.TypeLoc G.SelectionSet
+data SelSetInfo = SelSetInfo !G.SelectionSet !IsAsync
+
+type SplitSelSets    = Map.HashMap VT.TypeLoc SelSetInfo
 type SplitQueryParts = Map.HashMap VT.TypeLoc QueryPartsA
+
+newtype IsAsync
+  = IsAsync { unIsAsync :: Bool }
+  deriving (Show, Eq)
+
+asyncDir :: G.Name
+asyncDir = G.Name "async"
 
 getExecPlan
   :: (MonadError QErr m)
@@ -94,53 +109,63 @@ getExecPlan userInfo sc req = do
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
   let remoteSchemaMap = scRemoteResolvers sc
+  rootSelSet <- flip runReaderT gCtx $ VQ.validateGQ queryParts
+
   let opDef = VQ.qpOpDef queryParts
       fragDefs = VQ.qpFragDefsL queryParts
       ssSplits = foldr (splitSelSet gCtx) mempty $ G._todSelectionSet opDef
       querySplits = splitQuery opDef fragDefs ssSplits
       newQs = Map.map (transformGQRequest req) querySplits
+      opTy = G._todType opDef
 
-  newRootSels <- forM (Map.toList newQs) $ \(tl, q) ->
-    flip runReaderT gCtx $
-      (,) tl <$> (VQ.getQueryParts q >>= VQ.validateGQ)
-
-  let newReqs = zipWith (\(tl,q) (_,rs) -> (tl, (q,rs))) (Map.toList newQs) newRootSels
-
-  case newReqs of
+  case Map.toList newQs of
     -- this shouldn't happen
     [] -> throw500 "unexpected plan"
 
-    [(VT.HasuraType, (_, rootSelSet))] -> do
+    [(VT.HasuraType, _)] -> do
+      -- use the rootSelSet which is already resolved
       remotePlans <- getRemoteRelPlans gCtx req rootSelSet remoteSchemaMap
-      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet remotePlans) []
-    [(VT.RemoteType rsi, (_, rootSelSet))] ->
-      return $ GQExecPlan Nothing [GExPRemote rsi req rootSelSet]
-    xs -> foldM (combPlan gCtx remoteSchemaMap) (GQExecPlan Nothing []) xs
+      return $ GQExecPlan (Just $ GExPHasura gCtx rootSelSet remotePlans) [] opTy
+    [(VT.RemoteType rsi, (_, isAsync))] ->
+      -- use the whole query
+      return $ GQExecPlan Nothing [GExPRemote rsi req isAsync] opTy
+    xs -> foldM (combPlan gCtx remoteSchemaMap) (GQExecPlan Nothing [] opTy) xs
+
   where
     gCtxRoleMap = scGCtxMap sc
 
-    combPlan gCtx schemaMap plan (tl, (newq, rs)) = do
-      let GQExecPlan hPlan remPlans = plan
+    combPlan gCtx schemaMap plan (tl, (q, async)) = do
+      let GQExecPlan hPlan remPlans ty = plan
       case tl of
         VT.HasuraType ->
           case hPlan of
             Nothing -> do
-              remotePlans <- getRemoteRelPlans gCtx req rs schemaMap
-              return $ GQExecPlan (Just $ GExPHasura gCtx rs remotePlans) remPlans
+              rs <- runReaderT (VQ.getQueryParts q >>= VQ.validateGQ) gCtx
+              depRemotePlans <- getRemoteRelPlans gCtx req rs schemaMap
+              return $ GQExecPlan (Just $ GExPHasura gCtx rs depRemotePlans) remPlans ty
             Just _  -> throw500 "encountered more than one hasura plan!"
-        VT.RemoteType rsi ->
-          return $ GQExecPlan hPlan (GExPRemote rsi newq rs:remPlans)
-
+        VT.RemoteType rsi -> do
+          let newplan = (GExPRemote rsi q async):remPlans
+          return $ GQExecPlan hPlan newplan ty
 
 splitSelSet :: GCtx -> G.Selection -> SplitSelSets -> SplitSelSets
 splitSelSet ctx sel theMap = case sel of
-  s@(G.SelectionField fld) ->
+  G.SelectionField fld ->
     let loc = getTypeLoc ctx $ G._fName fld
-    in maybe theMap (\l -> upsertType (l, s) theMap) loc
+        async = maybe (IsAsync False) (const $ IsAsync True) $
+                find (\d -> G._dName d == asyncDir) $ G._fDirectives fld
+        otherDirs = filter (\d -> G._dName d /= asyncDir) $ G._fDirectives fld
+        newFld = fld { G._fDirectives = otherDirs }
+        newSel = G.SelectionField newFld
+    in maybe theMap (\l -> upsertType (l, newSel) theMap async) loc
   -- TODO: what do we with fragments? we don't have any typeinfo on them
   _ -> theMap
   where
-    upsertType (tl, n) qMap = Map.alter (Just . maybe [n] (n:)) tl qMap
+    upsertType (tl, n) qMap async = Map.alter (fn async n) tl qMap
+    fn async n mVal =
+      Just $ case mVal of
+        Nothing               -> SelSetInfo [n] async
+        Just (SelSetInfo s _) -> SelSetInfo (n:s) async
 
 
 filterVars :: [G.Selection] -> [G.VariableDefinition] -> [G.VariableDefinition]
@@ -149,6 +174,12 @@ filterVars selSet vars =
       filterVar var = G._vdVariable var `elem` join (map getVars args)
   in filter filterVar vars
   where
+    getArgs :: G.Selection -> [G.Argument]
+    getArgs sel = case sel of
+      G.SelectionField fld -> G._fArguments fld ++
+                              join (map getArgs $ G._fSelectionSet fld)
+      _                    -> []
+
     getVars :: G.Argument -> [G.Variable]
     getVars arg = getVarFromVal $ G._aValue arg
 
@@ -163,22 +194,16 @@ filterVars selSet vars =
         in join $ map getVarFromVal xs
       _ -> []
 
-    getArgs :: G.Selection -> [G.Argument]
-    getArgs sel = case sel of
-      G.SelectionField fld -> G._fArguments fld ++
-                              join (map getArgs $ G._fSelectionSet fld)
-      _                    -> []
-
 splitQuery
   :: G.TypedOperationDefinition
   -> [G.FragmentDefinition]
   -> SplitSelSets
   -> SplitQueryParts
 splitQuery opDef fragDefs qMap =
-  flip Map.map qMap $ \selSet ->
+  flip Map.map qMap $ \(SelSetInfo selSet isAsync) ->
     let frags = pickFrags selSet
         vars  = filterVars selSet $ G._todVariableDefinitions opDef
-    in mkNewQParts frags selSet vars
+    in mkNewQParts frags selSet vars isAsync
   where
     pickFrags selSet =
       let perSel sel = case sel of
@@ -197,11 +222,11 @@ splitQuery opDef fragDefs qMap =
 
       in nub $ curFrags ++ otherFrags
 
-    mkNewQParts frags selset varDefs =
+    mkNewQParts frags selset varDefs isAsync =
       let od = opDef { G._todSelectionSet = selset
                      , G._todVariableDefinitions = varDefs
                      }
-      in QueryPartsA od frags
+      in QueryPartsA od frags isAsync
 
 batchQueryWithVals
   :: (MonadError QErr m)
@@ -291,7 +316,7 @@ getRemoteRelPlans gCtx req rss schemaMap = do
               }
 
               -- field should be remote node or relationship node?
-        return $ GExPDepRemote rsi (GraphQLRequestPromise (batchQueryWithVals req remFldG rf rri)) joinInfo (VQ.RQuery (Seq.singleton rf))
+        return $ GExPDepRemote rsi (GraphQLRequestPromise (batchQueryWithVals req remFldG rf rri)) joinInfo (IsAsync False)
 
       getFieldFromOpDef opDef hName remName = do
         let selSet = G._todSelectionSet opDef
@@ -359,9 +384,9 @@ getRemoteRelPlans gCtx req rss schemaMap = do
         CT.FldRemote rri -> G.unName remRelName == getRelTxt (rriName rri)
         _                -> False
 
-transformGQRequest :: GraphQLRequest -> QueryPartsA -> GraphQLRequest
+transformGQRequest :: GraphQLRequest -> QueryPartsA -> (GraphQLRequest, IsAsync)
 transformGQRequest (GraphQLRequest opNameM _ varValsM)
-                   (QueryPartsA opDef fragDefs) =
+                   (QueryPartsA opDef fragDefs isAsync) =
   let op = G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped opDef
       frags = map G.ExecutableDefinitionFragment fragDefs
       exDefs = op:frags
@@ -369,33 +394,34 @@ transformGQRequest (GraphQLRequest opNameM _ varValsM)
       -- TODO: do this variable splitting in query splitting?
       vars = map G._vdVariable $ G._todVariableDefinitions opDef
       varValsFltrd = Map.filterWithKey (\k _ -> k `elem` vars) <$> varValsM
-  in GraphQLRequest opNameM q varValsFltrd
+  in (GraphQLRequest opNameM q varValsFltrd, isAsync)
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> GraphQLRequest
-  -> RemoteSchemaInfo
-  -> VQ.RootSelSet
+  -> GExPRemote
+  -> G.OperationType
   -> m EncJSON
-execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
-  VQ.RSubscription _ ->
-    throw400 NotSupported "subscription to remote server is not supported"
-  _ -> do
-    hdrs <- getHeadersFromConf hdrConf
-    let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-        clientHdrs = bool [] filteredHeaders fwdClientHdrs
-        options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++
-                                          confHdrs)
+execRemoteGQ manager userInfo reqHdrs plan opTy = do
+  let GExPRemote rsi q _ = plan
+      RemoteSchemaInfo _ url hdrConf fwdClientHdrs = rsi
+  when (opTy == G.OperationTypeSubscription) $
+    throw400 UnexpectedPayload
+    "subscriptions are not supported over HTTP, use websockets instead"
 
-    res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
-    resp <- either httpThrow return res
-    return $ encJFromLBS $ resp ^. Wreq.responseBody
+  hdrs <- getHeadersFromConf hdrConf
+  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
+      clientHdrs = bool [] filteredHeaders fwdClientHdrs
+      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++
+                                        confHdrs)
+
+  res  <- liftIO $ try $ Wreq.postWith options (show url) (encJFromJValue q)
+  resp <- either httpThrow return res
+  return $ encJFromLBS $ resp ^. Wreq.responseBody
 
   where
-    RemoteSchemaInfo _ url hdrConf fwdClientHdrs = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow err = throw500 $ T.pack . show $ err
 
@@ -408,12 +434,13 @@ execRemoteGQ manager userInfo reqHdrs q rsi rSelSet = case rSelSet of
                   , "Cache-Control", "Connection", "DNT"
                   ]
 
-
 getTypeLoc :: GCtx -> G.Name -> Maybe VT.TypeLoc
 getTypeLoc gCtx node =
-    VT._fiLoc <$> Map.lookup node schemaNodes
+  -- TODO: use getFieldInfo from Validation.Context
+  VT._fiLoc <$> Map.lookup node schemaNodes
   where
     schemaNodes =
       let qr = VT._otiFields $ _gQueryRoot gCtx
           mr = VT._otiFields <$> _gMutRoot gCtx
-      in maybe qr (Map.union qr) mr
+          sr = VT._otiFields <$> _gSubRoot gCtx
+      in foldr (\x cm -> maybe cm (Map.union cm) x) qr [sr, mr]

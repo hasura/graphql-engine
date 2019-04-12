@@ -127,7 +127,7 @@ explainGQLQuery
   -> m EncJSON
 explainGQLQuery pool iso sc sqlGenCtx (GQLExplain query userVarsRaw)= do
   execPlan <- E.getExecPlan userInfo sc query
-  let (E.GQExecPlan hasuraPlan _) = execPlan
+  let (E.GQExecPlan hasuraPlan _ _) = execPlan
 
   (gCtx, rootSelSet) <- case hasuraPlan of
     Just (E.GExPHasura gCtx rootSelSet _ ) ->

@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
+  , mergeResponse
   ) where
 
 import qualified Data.Aeson                             as J
@@ -33,10 +34,10 @@ runGQ
   -> m EncJSON
 runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req = do
   execPlan <- E.getExecPlan userInfo sc req
-  let (E.GQExecPlan hasuraPlan remotePlans) = execPlan
+  let E.GQExecPlan hasuraPlan remotePlans opTy = execPlan
   case (hasuraPlan, remotePlans) of
      (Nothing, []) -> throw500 "no exec plan found"
-     (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
+     (Just (E.GExPHasura gCtx rootSelSet remRelPlans), []) -> runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs  opTy
      _ -> runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req execPlan
 
 runMixedGQ
@@ -51,41 +52,29 @@ runMixedGQ
   -> E.GQExecPlan
   -> m EncJSON
 runMixedGQ pool isoL userInfo sqlGenCtx manager reqHdrs req plan = do
-  let E.GQExecPlan hasuraPlan remotePlans = plan
-  allRes <- run (hasuraPlan, remotePlans)
-  let interimResBS = map encJToLBS allRes
-  interimRes <- forM interimResBS $ \res -> do
-    let obj = J.decode res :: (Maybe J.Object)
-    onNothing obj $ do
-      liftIO $ print res
-      throw500 "could not parse response as JSON"
+  let E.GQExecPlan hasuraPlan remotePlans opTy = plan
+  when (opTy == G.OperationTypeSubscription) $
+    throw400 UnexpectedPayload
+    "subscriptions are not supported over HTTP, use websockets instead"
 
-  -- TODO: the order is not guaranteed! should we have a orderedmap?
-  let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
-      errs  = mapMaybe (Map.lookup "errors") interimRes
+  res <- run (hasuraPlan, remotePlans) opTy
+  (datas, errs) <- mergeResponse res
+  if null errs
+    then sendResp [ "data" J..= datas ]
+    else sendResp [ "data" J..= datas, "errors" J..= errs ]
 
-  return $ encJFromJValue $ J.object [ "data" J..= Map.unions datas
-                                     , "errors" J..= errs
-                                     ]
   where
+    sendResp xs = return $ encJFromJValue $ J.object xs
     -- TODO: use async
-    run (hasuraPlan, remotePlans) = do
+    run (hasuraPlan, remotePlans) opTy = do
       hasuraRes <- case hasuraPlan of
         Nothing -> return []
         Just (E.GExPHasura gCtx rootSelSet remRelPlans) -> do
-          res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs req
+          res <- runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet remRelPlans manager reqHdrs opTy
           return [res]
-      remoteRes <- forM remotePlans $ \(E.GExPRemote rsi newq rs) ->
-        E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
-
+      remoteRes <- forM remotePlans $ \remPlan ->
+        E.execRemoteGQ manager userInfo reqHdrs remPlan opTy
       return $ hasuraRes ++ remoteRes
-
-    -- TODO: should validate response and throw error?
-    onlyObjs jVals =
-      let fn jVal = case jVal of
-            J.Object o -> Just o
-            _          -> Nothing
-      in mapMaybe fn jVals
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
@@ -98,9 +87,9 @@ runHasuraGQ
   -> [E.GExPDepRemote]
   -> HTTP.Manager
   -> [N.Header]
-  -> GraphQLRequest
+  -> G.OperationType
   -> m EncJSON
-runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ = do
+runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs opTy = do
   tx <- case rootSelSet of
     V.RQuery selSet ->
       return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
@@ -114,11 +103,12 @@ runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet rrps manager reqHdrs _ 
 
   -- merge with remotes
   remotesRespTup <- forM rrps $ \rr -> do
-    let E.GExPDepRemote rsi (E.GraphQLRequestPromise resolve) ji rs = rr
+    let E.GExPDepRemote rsi (E.GraphQLRequestPromise resolve) ji isAsync = rr
     -- TODO: use decodedResp instead of EncJSON
     joinVals <- getJoinValues resp (E.jiParentAlias ji) (E.jiParentJoinKey ji)
     newq <- resolve joinVals
-    remResp <- E.execRemoteGQ manager userInfo reqHdrs newq rsi rs
+    let plan = E.GExPRemote rsi newq isAsync
+    remResp <- E.execRemoteGQ manager userInfo reqHdrs plan opTy
     return (ji, remResp)
 
   mergedResp <- mergeFields resp remotesRespTup
@@ -251,3 +241,22 @@ assertArray val = case val of
   J.Array arr -> return arr
   _           -> throw500 "could not parse as JSON array"
 
+-- merge response from different graphql servers
+mergeResponse :: (MonadError QErr m) => [EncJSON] -> m (J.Object, [J.Value])
+mergeResponse allRes = do
+  let interimResBS = map encJToLBS allRes
+  interimRes <- forM interimResBS $ \res -> do
+    let obj = J.decode res :: (Maybe J.Object)
+    onNothing obj $ throw500 "could not parse response as JSON"
+
+  -- TODO: the order is not guaranteed! should we have a orderedmap?
+  let datas = onlyObjs $ mapMaybe (Map.lookup "data") interimRes
+      errs  = mapMaybe (Map.lookup "errors") interimRes
+  return (Map.unions datas, errs)
+  where
+    -- TODO: should validate response and throw error?
+    onlyObjs jVals =
+      let fn jVal = case jVal of
+            J.Object o -> Just o
+            _          -> Nothing
+      in mapMaybe fn jVals

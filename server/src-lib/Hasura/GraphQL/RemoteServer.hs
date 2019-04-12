@@ -52,7 +52,7 @@ fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _) = do
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.RemoteType def
+            VT.RemoteType def
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
       mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
@@ -116,7 +116,7 @@ mergeGCtx gCtx rmMergedGCtx = do
   let newQR = mergeQueryRoot gCtx rmMergedGCtx
       newMR = mergeMutRoot gCtx rmMergedGCtx
       newSR = mergeSubRoot gCtx rmMergedGCtx
-      newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
+      newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR newSR
       updatedGCtx = gCtx { GS._gTypes = newTyMap
                          , GS._gQueryRoot = newQR
                          , GS._gMutRoot = newMR
@@ -176,19 +176,21 @@ mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
 
 
 mergeTyMaps
-  :: VT.TypeMap
+  :: VT.TypeMap         -- hasura type map
+  -> VT.TypeMap         -- remote type map
+  -> VT.ObjTyInfo       -- merged query root
+  -> Maybe VT.ObjTyInfo -- merged mutation root
+  -> Maybe VT.ObjTyInfo -- merged subscription root
   -> VT.TypeMap
-  -> VT.ObjTyInfo
-  -> Maybe VT.ObjTyInfo
-  -> VT.TypeMap
-mergeTyMaps hTyMap rmTyMap newQR newMR =
-  let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
-                  newTyMap
-  in maybe newTyMap' (\mr -> Map.insert
-                              (G.NamedType "mutation_root")
-                              (VT.TIObj mr) newTyMap') newMR
-
+mergeTyMaps hTyMap rmTyMap newQR newMR newSR =
+  let newTyMap = hTyMap <> rmTyMap
+      qRoot   = mk "query_root" newQR
+      mutRoot = mk "mutation_root" <$> newMR
+      subRoot = mk "subscription_root" <$> newSR
+  in foldr insert newTyMap [subRoot, mutRoot, Just qRoot]
+  where
+    insert obj m = maybe m (\x -> uncurry Map.insert x m) obj
+    mk n v = (G.NamedType n, VT.TIObj v)
 
 -- parsing the introspection query result
 

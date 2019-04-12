@@ -30,6 +30,7 @@ import           Hasura.GraphQL.Context                      (GCtx)
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Resolve                      as R
 import qualified Hasura.GraphQL.Resolve.LiveQuery            as LQ
+import qualified Hasura.GraphQL.Transport.HTTP               as HT
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -41,6 +42,7 @@ import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (bsToTxt)
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 -- uniquely identifies an operation
 type GOperationId = (WS.WSId, OperationId)
@@ -221,7 +223,31 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
   execPlan <- either (withComplete . preExecErr) return execPlanE
   execute userInfo reqHdrs execPlan
   where
-    execute userInfo reqHdrs plan = undefined
+    execute userInfo reqHdrs plan = do
+      let (E.GQExecPlan hasuraPlan remotePlans opTy) = plan
+
+      case opTy of
+        -- incase of subscriptions
+        G.OperationTypeSubscription ->
+          case (hasuraPlan, remotePlans) of
+            (Just (E.GExPHasura gCtx rootSelSet _), []) ->
+              runHasuraGQ userInfo gCtx rootSelSet
+            _ ->
+              withComplete $ preExecErr $ err400 NotSupported
+              "subscription to remote servers is not supported"
+
+        -- incase of queries/mutations
+        _ ->
+          case (hasuraPlan, remotePlans) of
+            (Nothing, []) ->
+              withComplete $ preExecErr $
+              err500 Unexpected "no exec plan found"
+            (Just (E.GExPHasura gCtx rootSelSet _), []) ->
+              runHasuraGQ userInfo gCtx rootSelSet
+            (_, _) -> do
+              runRemoteGQ userInfo reqHdrs plan
+              withComplete $ preExecErr $ err400 NotSupported "not yet"
+
     runHasuraGQ :: UserInfo -> GCtx -> V.RootSelSet -> ExceptT () IO ()
     runHasuraGQ userInfo gCtx rootSelSet =
       case rootSelSet of
@@ -246,21 +272,49 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
-    runRemoteGQ :: UserInfo -> [H.Header]
-                -> RemoteSchemaInfo
-                -> V.RootSelSet
-                -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs rsi rootSelSet = case rootSelSet of
-        V.RSubscription _ ->
-          withComplete $ preExecErr $
-          err400 NotSupported "subscription to remote server is not supported"
-        _ -> do
-          -- if it's not a subscription, use HTTP to execute the query on the
-          -- remote server
-          resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs query
-                  rsi rootSelSet
-          either postExecErr sendSuccResp resp
+    runHasuraGQEncJ :: UserInfo -> GCtx -> V.RootSelSet -> LazyTx QErr EncJSON
+    runHasuraGQEncJ userInfo gCtx rootSelSet =
+      case rootSelSet of
+        V.RQuery selSet ->
+          withUserInfo userInfo $
+          R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
+        V.RMutation selSet ->
+          withUserInfo userInfo $
+          R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
+        V.RSubscription _ -> throw500 "unexpected"
+
+    runRemoteGQ
+      :: UserInfo
+      -> [H.Header]
+      -> E.GQExecPlan
+      -> ExceptT () IO ()
+    runRemoteGQ userInfo reqHdrs plan = do
+      let E.GQExecPlan hasuraPlan remotePlans opTy = plan
+      when (opTy == G.OperationTypeSubscription) $
+        withComplete $ preExecErr $ err400 NotSupported
+        "subscription to remote servers is not supported"
+      isAsync <- getIsAsync remotePlans
+      logOpEv ODStarted
+      hasuraRes <- case hasuraPlan of
+        Nothing -> return []
+        Just (E.GExPHasura gCtx rootSelSet _) -> do
+          resp <- liftIO $ runTx $ runHasuraGQEncJ userInfo gCtx rootSelSet
+          when isAsync $ either postExecErr sendSuccResp resp
+          return [encodeGQResp . GQSuccess . encJToLBS <$> resp]
+      remoteRes <- forM remotePlans $ \remPlan ->
+        liftIO $ runExceptT $
+          E.execRemoteGQ httpMgr userInfo reqHdrs remPlan opTy
+      let combined = sequenceA (hasuraRes ++ remoteRes)
+      case combined of
+        Left e -> withComplete $ postExecErr e
+        Right r -> do
+          resp <- runExceptT $ HT.mergeResponse r
+          either postExecErr sendSuccErrResp resp
           sendCompleted
+
+    getIsAsync remotePlans = case remotePlans of
+      [] -> withComplete $ preExecErr $ err500 Unexpected "unexpected empty remote"
+      xs -> return $ any (\(E.GExPRemote _ _ async) -> E.unIsAsync async) xs
 
     WSServerEnv logger _ runTx lqMap gCtxMapRef httpMgr _ sqlGenCtx = serverEnv
 
@@ -290,6 +344,10 @@ onStart serverEnv wsConn (StartMsg opId query) = catchAndIgnore $ do
 
     sendSuccResp encJson =
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
+
+    sendSuccErrResp (jObj, errs) =
+      sendMsg wsConn $ SMData $ DataMsg opId $
+      GQSuccessErr (J.encode jObj) errs
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do

@@ -4,9 +4,9 @@ status: 400
 response:
   errors:
   - extensions:
-      code: not-supported
+      code: unexpected-payload
       path: $
-    message: subscription to remote server is not supported
+    message: subscriptions are not supported over HTTP, use websockets instead
 query:
   query: |
     subscription {

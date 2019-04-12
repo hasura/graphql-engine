@@ -76,4 +76,3 @@ getUrlFromEnv urlFromEnv = do
     invalidUri uri = "not a valid URI: " <> T.pack uri
     envNotFoundMsg e =
       "environment variable '" <> e <> "' not set"
-

@@ -66,6 +66,7 @@ encodeGQErr includeInternal qErr =
 
 data GQResp
   = GQSuccess !BL.ByteString
+  | GQSuccessErr !BL.ByteString ![J.Value]
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
   deriving (Show, Eq)
@@ -81,3 +82,7 @@ encodeGQResp gqResp =
     GQSuccess r      -> [("data", encJFromLBS r)]
     GQPreExecError e -> [("errors", encJFromJValue e)]
     GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
+    GQSuccessErr d e ->
+      if null e
+         then [("data", encJFromLBS d)]
+         else [("data", encJFromLBS d), ("errors", encJFromJValue e)]
