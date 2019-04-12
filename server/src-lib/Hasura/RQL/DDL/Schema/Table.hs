@@ -373,9 +373,14 @@ buildSchemaCache = do
         validateRemoteRel qt relDef
         remoteRelP2Setup qt relDef
 
-  _ <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
-  finalsc <- askSchemaCache
-  writeSchemaCache finalsc
+  sc' <- askSchemaCache
+  gCtxMap' <- GS.mkGCtxMap (scTables sc') (scFunctions sc')
+
+  let rmScMap' = M.fromList remoteScConf
+  (mergedGCtxMap', defGCtx') <- mergeSchemas rmScMap' gCtxMap' hMgr
+  writeRemoteSchemasToCache mergedGCtxMap' rmScMap'
+  postMergeSc' <- askSchemaCache
+  writeSchemaCache postMergeSc' { scDefaultRemoteGCtx = defGCtx' }
   where
     permHelper strfyNum sn tn rn pDef pa = do
       qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache
