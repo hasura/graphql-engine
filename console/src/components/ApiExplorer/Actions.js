@@ -133,14 +133,14 @@ const isSubscription = graphQlParams => {
 };
 
 const graphQLFetcherFinal = (graphQLParams, url, headers) => {
-  if (isSubscription(graphQLParams)) {
-    return graphqlSubscriber(graphQLParams, url, headers);
-  }
-  return fetch(url, {
-    method: 'POST',
-    headers: getHeadersAsJSON(headers),
-    body: JSON.stringify(graphQLParams),
-  }).then(response => response.json());
+  //if (isSubscription(graphQLParams)) {
+  return graphqlSubscriber(graphQLParams, url, headers);
+  // }
+  // return fetch(url, {
+  // method: 'POST',
+  // headers: getHeadersAsJSON(headers),
+  // body: JSON.stringify(graphQLParams),
+  // }).then(response => response.json());
 };
 
 /* Analyse Fetcher */
