@@ -34,6 +34,7 @@ import {
   REL_ADD_NEW_CLICKED,
   REL_SET_MANUAL_COLUMNS,
   REL_ADD_MANUAL_CLICKED,
+  UPDATE_MANUAL_REL_TABLE_LIST,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -550,6 +551,18 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         fkModify: action.fks,
+      };
+
+    case UPDATE_MANUAL_REL_TABLE_LIST:
+      return {
+        ...modifyState,
+        relAdd: {
+          ...modifyState.relAdd,
+          manualRelInfo: {
+            ...modifyState.relAdd.manualRelInfo,
+            tables: action.data,
+          },
+        },
       };
 
     default:
