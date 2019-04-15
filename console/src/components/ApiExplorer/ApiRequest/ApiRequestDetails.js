@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 class ApiRequestDetails extends Component {
   render() {
-    const styles = require('./ApiExplorer.scss');
+    const styles = require('../ApiExplorer.scss');
     return (
       <div className={styles.apiRequestWrapper + ' ' + styles.apiContentPadd}>
         <div className={styles.apiRequestheader}>{this.props.title}</div>

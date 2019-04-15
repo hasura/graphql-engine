@@ -349,7 +349,7 @@ class ApiCollectionPanel extends Component {
   }
 
   render() {
-    const styles = require('./ApiExplorer.scss');
+    const styles = require('../ApiExplorer.scss');
     const {
       selectedApi,
       currentTab,
