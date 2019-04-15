@@ -794,7 +794,7 @@ parseMxBatchSize =
 
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
-  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFTCH_INTERVAL"
+  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
   , "results will only be sent once in this interval (in milliseconds) for \
     \live queries which can be multiplexed. Default: 1000 (1sec)"
   )
@@ -817,7 +817,7 @@ parseFallbackRefetchInt =
 
 fallbackRefetchDelayEnv :: (String, String)
 fallbackRefetchDelayEnv =
-  ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFTCH_INTERVAL"
+  ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
   , "results will only be sent once in this interval (in milliseconds) for \
     \live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
