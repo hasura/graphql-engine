@@ -164,16 +164,18 @@ const ViewRows = ({
         return pkClause;
       };
 
-      const getButtons = () => {
+      const getActionButtons = () => {
         let editButton;
         let cloneButton;
         let deleteButton;
         let expandButton;
 
-        const getButton = (type, icon, title, handleClick) => {
+        const getActionButton = (type, icon, title, handleClick) => {
           return (
             <Button
-              className={styles.add_mar_right_small}
+              className={
+                styles.tableActionBtn + ' ' + styles.add_mar_right_small
+              }
               color="white"
               size="xs"
               onClick={handleClick}
@@ -205,7 +207,7 @@ const ViewRows = ({
 
           const expanderIcon = <i className={`fa ${icon}`} />;
 
-          return getButton('expand', expanderIcon, title, handleClick);
+          return getActionButton('expand', expanderIcon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
@@ -220,7 +222,7 @@ const ViewRows = ({
 
           const editTitle = 'Edit row';
 
-          return getButton('edit', editIcon, editTitle, handleEditClick);
+          return getActionButton('edit', editIcon, editTitle, handleEditClick);
         };
 
         const getDeleteButton = pkClause => {
@@ -232,7 +234,7 @@ const ViewRows = ({
 
           const deleteTitle = 'Delete row';
 
-          return getButton(
+          return getActionButton(
             'delete',
             deleteIcon,
             deleteTitle,
@@ -252,7 +254,12 @@ const ViewRows = ({
 
           const cloneTitle = 'Clone row';
 
-          return getButton('clone', cloneIcon, cloneTitle, handleCloneClick);
+          return getActionButton(
+            'clone',
+            cloneIcon,
+            cloneTitle,
+            handleCloneClick
+          );
         };
 
         const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
@@ -279,7 +286,7 @@ const ViewRows = ({
       };
 
       // Insert Edit, Delete, Clone in a cell
-      newRow.actions = getButtons();
+      newRow.actions = getActionButtons();
 
       // Insert column cells
       _tableSchema.columns.forEach(col => {

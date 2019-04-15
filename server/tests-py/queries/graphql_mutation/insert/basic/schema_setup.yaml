@@ -1,0 +1,156 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Person table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        details JSONB NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: person
+
+#Order table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE orders (
+        id SERIAL PRIMARY KEY,
+        placed TIMESTAMPTZ NOT NULL,
+        shipped TIMESTAMPTZ
+      )
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TYPE complex AS (
+          r       double precision,
+          i       double precision
+      );
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TYPE inventory_item AS (
+          name            text,
+          supplier_id     integer,
+          price           numeric
+      );
+
+#Test table with different types
+- type: run_sql
+  args:
+    sql: |
+      create table test_types (
+          c1_smallint smallint,
+          c2_integer integer,
+          c3_bigint bigint,
+          c4_decimal decimal (5, 2),
+          c5_numeric numeric (4, 3),
+          c6_real real,
+          c7_double_precision double precision,
+          c8_smallserial smallserial primary key,
+          c9_serial serial,
+          c10_bigserial bigserial,
+          c11_varchar_3 varchar(3),
+          c12_char_4 char(4),
+          c13_text text,
+          c14_timestamp timestamp,
+          c15_timestamptz timestamptz,
+          c16_date date,
+          c17_time time,
+          c18_time_with_zone time with time zone,
+          c19_interval interval,
+          c20_boolean boolean,
+          c21_point point,
+          c22_line line,
+          c23_lseg lseg,
+          c24_box box,
+          c25_closed_path path,
+          c26_open_path path,
+          c27_polygon  polygon,
+          c28_circle circle,
+          c29_cidr cidr,
+          c30_inet inet,
+          c31_macaddr macaddr,
+          c32_json json,
+          c33_jsonb jsonb,
+          c34_text_array text[],
+          c35_integer_2d_array integer[][],
+          c36_uuid uuid,
+          c37_composite_type_complex complex,
+          c38_composite_type_inventory inventory_item,
+          c39_range_integer int4range,
+          c40_range_bigint int8range,
+          c41_range_numeric numrange,
+          c42_range_timestamp tsrange,
+          c43_range_timestamptz tstzrange,
+          c44_xml xml
+      );
+- type: track_table
+  args:
+    schema: public
+    name: test_types
+
+#Set timezone
+- type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC';

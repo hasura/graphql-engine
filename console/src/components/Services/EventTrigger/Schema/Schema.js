@@ -27,18 +27,64 @@ class Schema extends Component {
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
-    const showFirstSection = listingTrigger.length ? false : true;
     const queryDefinition = `mutation {
   insert_user(objects: [{name: "testuser"}] ){
     affected_rows
   }
 }`;
+
+    const getIntroSection = () => {
+      const showIntroSection = !listingTrigger.length;
+      if (!showIntroSection) {
+        return null;
+      }
+
+      return (
+        <div>
+          <TopicDescription
+            title="What are Event Triggers?"
+            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+            imgAlt="Event Triggers"
+            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+          />
+          <hr className={styles.clear_fix} />
+        </div>
+      );
+    };
+
+    const getAddBtn = () => {
+      let addBtn = null;
+
+      if (migrationMode) {
+        const handleClick = e => {
+          e.preventDefault();
+
+          dispatch(push(`${appPrefix}/manage/triggers/add`));
+        };
+
+        addBtn = (
+          <Button
+            data-test="data-create-trigger"
+            color="yellow"
+            size="sm"
+            className={styles.add_mar_left}
+            onClick={handleClick}
+          >
+            Add
+          </Button>
+        );
+      }
+
+      return addBtn;
+    };
+
     const footerEvent = (
       <span>
         Head to the Events tab and see an event invoked under{' '}
         <span className={styles.fontWeightBold}> test-trigger</span>.
       </span>
     );
+
     return (
       <div
         className={`${styles.padd_left_remove} container-fluid ${
@@ -48,39 +94,15 @@ class Schema extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
           <div className={styles.display_flex}>
-            <h2
-              className={`${styles.headerText} ${styles.addPaddRight} ${
-                styles.inline_block
-              }`}
-            >
-              Event Triggers{' '}
+            <h2 className={`${styles.headerText} ${styles.inline_block}`}>
+              Event Triggers
             </h2>
-            {migrationMode ? (
-              <Button
-                data-test="data-create-trigger"
-                color="yellow"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  dispatch(push(`${appPrefix}/manage/triggers/add`));
-                }}
-              >
-                Add
-              </Button>
-            ) : null}
+            {getAddBtn()}
           </div>
           <hr />
-          {showFirstSection ? (
-            <div>
-              <TopicDescription
-                title="What are Event Triggers?"
-                imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
-                imgAlt="Event Triggers"
-                description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
-              />
-              <hr className={styles.clear_fix} />
-            </div>
-          ) : null}
+
+          {getIntroSection()}
+
           <TryItOut
             service="eventTrigger"
             title="Steps to deploy an example Event Trigger to Glitch"

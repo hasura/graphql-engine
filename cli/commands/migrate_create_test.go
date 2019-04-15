@@ -26,7 +26,7 @@ func TestMigrateCreateCmd(t *testing.T) {
 		flags: pflag.NewFlagSet("migrate-create-test", pflag.ContinueOnError),
 	}
 
-	err := opts.run()
+	_, err := opts.run()
 	if err != nil {
 		t.Fatalf("failed creating migration: %v", err)
 	}

@@ -78,11 +78,9 @@ You need to enter the following information:
 
   .. note::
 
-    - Currently there is no validation that an environment variable is actually available at the time
-      of this configuration, so any errors in this configuration will result in a runtime error.
-    - During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
-      the server endpoint on the host. i.e. use ``docker.host.internal`` on mac or ``docker.for.win.localhost`` on
-      windows.
+    During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
+    the server endpoint on the host. i.e. use ``host.docker.internal`` on mac or ``docker.for.win.localhost`` on
+    windows.
 
 - **Headers**: configure the headers to be sent to your custom GraphQL server.
 
