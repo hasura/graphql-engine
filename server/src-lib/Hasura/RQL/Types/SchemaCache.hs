@@ -103,10 +103,10 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -196,7 +196,8 @@ isPGColInfo _            = False
 
 data InsPermInfo
   = InsPermInfo
-  { ipiView            :: !QualifiedTable
+  { ipiCols            :: !(HS.HashSet PGCol)
+  , ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
   , ipiSet             :: !PreSetCols
   , ipiRequiredHeaders :: ![T.Text]
