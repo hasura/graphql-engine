@@ -16,9 +16,9 @@ nous puissions intégrer ou traiter vos contributions augmenteront.
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) est un mono-repo
 consistant en 3 composants. Chacun ayant son propre guide de contribution:
 
-1. [Server (Haskell)](server/CONTRIBUTING.md)
-2. [CLI (Go)](cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](console/README.md#contributing-to-hasura-console)
+1. [Server (Haskell)](../server/CONTRIBUTING.md)
+2. [CLI (Go)](../cli/CONTRIBUTING.md)
+3. [Console (JavaScript)](../console/README.md#contributing-to-hasura-console)
 
 Chacun de ces trois composants possède une version unique, désignée soit par le tag git, soit par une
 combinaison du nom de la branche et du SHA de commit git.
@@ -28,14 +28,14 @@ Pour toutes les contributions, un CLC (Contat de Licence de Contributeur) doit �
 
 ### Documentation
 
-Le guide de contribution pour la documentation peut être trouvé sur [docs/CONTRIBUTING.french.md](docs/CONTRIBUTING.french.md).
+Le guide de contribution pour la documentation peut être trouvé sur [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ### Contenu communautaire
 
 Il n'existe aucun guide spécifique pour la contribution au contenu communautaire.
 N'importe quoi pouvant aider la communauté ou les utilisateurs du GraphQL Engine
-peut faire partie de cette section. Nous avons identifié [boilerplates](community/boilerplates),
-[exemples](community/examples) et [outils](community/tools) comme candidats principaux.
+peut faire partie de cette section. Nous avons identifié [boilerplates](../community/boilerplates),
+[sample-apps](../community/sample-apps) et [outils](../community/tools) comme candidats principaux.
 N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajouter (n'appartenant
 pas forcément aux sections mentionnées ci-dessus).
 

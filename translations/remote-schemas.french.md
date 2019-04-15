@@ -6,9 +6,9 @@ Fusionnez des schémas GraphQL distants avec le schéma basé sur Postgres de Gr
 * Supporter des fonctionnalités telles que les paiements, etc ... et fournir une interface cohérente pour y accéder, c'est à dire au travers de l'API GraphQL Engine.
 * Récupérer de la donnée hétérogène à partir d'autres sources (*ex: d'une API de météo ou d'une autre base de données*)
 
-Pour supporter votre propre logique métier, vous devrez créer un serveur GraphQL (voir [kits de démarrage](community/boilerplates/graphql-servers)) et fusionner son schéma avec celui de GraphQL Engine.
+Pour supporter votre propre logique métier, vous devrez créer un serveur GraphQL (voir [kits de démarrage](../community/boilerplates/graphql-servers)) et fusionner son schéma avec celui de GraphQL Engine.
 
-![architecture des schémas distants](assets/remote-schemas-arch.png)
+![architecture des schémas distants](../assets/remote-schemas-arch.png)
 
 ## Démo (*40 secondes*)
 
@@ -56,7 +56,7 @@ La manière la plus rapide d'essayer les schémas distants est via Heroku.
 
 Des kits de démarrage pour vos propres serveurs GraphQL sont disponibles dans plusieurs langages/frameworks populaires.
 
-* [Kits de démarrage traditionnels](community/boilerplates/graphql-servers) qui peuvent être déployés n'importe où.
+* [Kits de démarrage traditionnels](../community/boilerplates/graphql-servers) qui peuvent être déployés n'importe où.
 * [Kits de démarrage Serverless](https://github.com/hasura/graphql-serverless) pouvant être déployés sur des plateformes serverless telles que AWS Lambda etc...
 
 Veullez noter que des kits de démarrage pour d'autres langages, frameworks, plateformes serverless, etc ... sont ajoutés progressivement, et que les contribution de la communauté sont les bienvenues.

@@ -116,25 +116,25 @@ Transformez les données dans Postgres ou exécutez de la logique métier dessus
 ## Démos
 
 Consultez toutes les applications d'example dans le répertoire
-[community/examples](community/examples).
+[community/sample-apps](../community/sample-apps).
 
 ### Applications temps-réel
 
 - Application de messagerie de groupe développée avec React, incluant un indicateur de frappe, les utilisateurs connectés & les
   notifications de nouveaux messages.
   - [Essayez la](https://realtime-chat.demo.hasura.app/)
-  - [Tutoriel](community/examples/realtime-chat)
+  - [Tutoriel](../community/examples/realtime-chat)
   - [Explorez les APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Application de localisation en temps-réel montrant un véhicule dont les coordonnées GPS évoluent
   se déplacer sur une carte.
   - [Essayez la](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutoriel](community/examples/realtime-location-tracking)
+  - [Tutoriel](../community/examples/realtime-location-tracking)
   - [Explorez les APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Un tableau de bord temps-réel pour l'aggrégation de données en constante évolution.
   - [Essayez la](https://realtime-poll.demo.hasura.app/)
-  - [Tutoriel](community/examples/realtime-poll)
+  - [Tutoriel](../community/examples/realtime-poll)
   - [Explorez les APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Vidéos
@@ -153,7 +153,7 @@ La documentation et la communauté vous aideront à résoudre la plupart des pro
 * Suivez les mise à jour du produit: [@HasuraHQ](https://twitter.com/hasurahq)
 * Parlez nous sur la [messagerie du site Web](https://hasura.io)
 
-Nous nous impliquons dans le développement d'un environnement ouvert et accueillant dans la communauté. Veuillez consulter le [Code de Conduite](code-of-conduct-fr.md).
+Nous nous impliquons dans le développement d'un environnement ouvert et accueillant dans la communauté. Veuillez consulter le [Code de Conduite](code-of-conduct.french.md).
 
 
 Si vous souhaitez rapporter un problème de sécurité, veuillez [lire ceci](SECURITY.french.md).

@@ -2,7 +2,7 @@
 
 Déclenchez des webhooks à partir d'évènements de la base de données en utilisant les évènenements déclencheurs d'Hasura GraphQL Engine.
 
-![Démo des évènenements déclencheurs](assets/event-triggers.gif)
+![Démo des évènenements déclencheurs](../assets/event-triggers.gif)
 
 ## Points clés
 
@@ -49,16 +49,16 @@ Pour les déploiements basés sur Docker et le options de configuration avancée
 
 ### Kits de démarrage Serverless
 
-Utilisez l'un des [kits de démarrage déclencheur serverless](community/boilerplates/serverless-triggers) pour déployer un webhook pouvant capturer des évènements de base de données. Plateformes Serverless/cloud-functions couvertes par les kits de démarrage:
+Utilisez l'un des [kits de démarrage déclencheur serverless](../community/boilerplates/serverless-triggers) pour déployer un webhook pouvant capturer des évènements de base de données. Plateformes Serverless/cloud-functions couvertes par les kits de démarrage:
 
-* [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
-* [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
-* [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
-* [Zeit Now](community/boilerplates/serverless-triggers/zeit-now)
+* [AWS Lambda](../community/boilerplates/serverless-triggers/aws-lambda)
+* [Google Cloud Functions](../community/boilerplates/serverless-triggers/google-cloud-functions)
+* [Azure Functions](../community/boilerplates/serverless-triggers/azure-functions)
+* [Zeit Now](../community/boilerplates/serverless-triggers/zeit-now)
 
 ## Architecture
 
-![Architecture des évènements déclencheurs](assets/event-triggers-arch.png)
+![Architecture des évènements déclencheurs](../assets/event-triggers-arch.png)
 
 ## Démos & Tutoriels: Développer des applications/fonctionnalités réactives & asynchrones
 
@@ -68,7 +68,7 @@ Déclenchez des notifications push et des emails à partir d'évènements de la 
 
 * [Regardez la démo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Essayez la](https://serverless-push.demo.hasura.app/)
-* [Tutoriel](community/examples/serverless-push)
+* [Tutoriel](../community/examples/serverless-push)
 
 
 <!--
@@ -88,12 +88,12 @@ Transformez et chargez de la donnée dans des data-stores externes. Allez voir c
 
 * [Regardez la démo](https://youtu.be/kWVEBWdEVAA)
 * [Essayez la](https://serverless-etl.demo.hasura.app/)
-* [Tutoriel](community/examples/serverless-etl)
+* [Tutoriel](../community/examples/serverless-etl)
 
 ### Construction d'UX réactive pour votre backend asynchrone avec une API GraphQL temps-réel
 
 Propagez de l'information asynchrone et évènementielle à l'UI des clients facilement avec les subscriptions GraphQL & les live-queries.
 
-![Artichecture d'applications réactives](assets/reactive-apps-arch.png)
+![Artichecture d'applications réactives](../assets/reactive-apps-arch.png)
 
 **Regardez**: [Construire des applications réactivez avec un backend asynchrones](https://youtu.be/kTSOxRrtCeI) (*04:15 mins*)
