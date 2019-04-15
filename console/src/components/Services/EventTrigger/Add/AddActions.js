@@ -1,6 +1,3 @@
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import dataHeaders from '../Common/Headers';
-import requestAction from '../../../../utils/requestAction';
 import defaultState from './AddState';
 import _push from '../push';
 import {
@@ -10,8 +7,8 @@ import {
   loadProcessedEvents,
 } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
-import { filterInconsistentMetadata } from '../../Data/Metadata/Actions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+import { fetchTableListBySchema } from '../../Data/DataActions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
@@ -194,42 +191,9 @@ const createTrigger = () => {
   };
 };
 
-const fetchTableListBySchema = schemaName => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*.*'],
-        where: { table_schema: schemaName },
-        order_by: ['+table_name'],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      let consistentSchemas;
-      const { inconsistentObjects } = getState().metadata;
-      if (inconsistentObjects.length > 0) {
-        consistentSchemas = filterInconsistentMetadata(
-          data,
-          inconsistentObjects,
-          'tables'
-        );
-      }
-      dispatch({ type: UPDATE_TABLE_LIST, data: consistentSchemas || data });
-    },
-    error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
+const loadTableList = schemaName => {
+  return dispatch =>
+    dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
 };
 
 const operationToggleColumn = (
@@ -457,7 +421,7 @@ export {
   setRetryInterval,
   setRetryTimeout,
   createTrigger,
-  fetchTableListBySchema,
+  loadTableList,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,

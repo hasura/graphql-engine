@@ -30,7 +30,6 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
-const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
 const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
@@ -594,7 +593,10 @@ const makeMigrationCall = (
   );
 };
 
-const fetchTableListBySchema = schemaName => (dispatch, getState) => {
+const fetchTableListBySchema = (schemaName, successAction, errorAction) => (
+  dispatch,
+  getState
+) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -622,10 +624,24 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: UPDATE_MANUAL_REL_TABLE_LIST, data: data });
+      if (successAction) {
+        let consistentSchemas;
+        const { inconsistentObjects } = getState().metadata;
+        if (inconsistentObjects.length > 0) {
+          consistentSchemas = filterInconsistentMetadata(
+            data,
+            inconsistentObjects,
+            'tables'
+          );
+        }
+        dispatch({ type: successAction, data: consistentSchemas || data });
+      }
     },
     error => {
       console.error('Failed to load table list' + JSON.stringify(error));
+      if (errorAction) {
+        dispatch({ type: errorAction, data: error });
+      }
     }
   );
 };
@@ -748,20 +764,6 @@ const dataReducer = (state = defaultState, action) => {
             manualRelInfo: {
               ...state.modify.relAdd.manualRelInfo,
               remoteSchema: action.data,
-            },
-          },
-        },
-      };
-    case UPDATE_MANUAL_REL_TABLE_LIST:
-      return {
-        ...state,
-        modify: {
-          ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: {
-              ...state.modify.relAdd.manualRelInfo,
-              tables: action.data,
             },
           },
         },
