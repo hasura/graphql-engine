@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
-import ErrorBoundary from './ErrorBoundary';
+import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
@@ -129,7 +129,7 @@ class GraphiQLWrapper extends Component {
     };
 
     return (
-      <ErrorBoundary>
+      <GraphiQLErrorBoundary>
         <div
           className={
             'react-container-graphql ' +
@@ -147,7 +147,7 @@ class GraphiQLWrapper extends Component {
             numberOfTables={numberOfTables}
           />
         </div>
-      </ErrorBoundary>
+      </GraphiQLErrorBoundary>
     );
   }
 }
