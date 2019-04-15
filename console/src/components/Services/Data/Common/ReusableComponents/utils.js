@@ -25,7 +25,7 @@ export const pgConfTypes = {
   a: 'no action',
   r: 'restrict',
   c: 'cascade',
-  n: 'null',
+  n: 'set null',
   d: 'set default',
 };
 
