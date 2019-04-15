@@ -428,10 +428,10 @@ const fetchColumnComment = (tableName, colName) => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_COLUMN_COMMENT, data });
+      dispatch({ type: LOAD_COLUMN_COMMENT, data, column: colName });
     },
     error => {
-      console.error('Failed to load table comment');
+      console.error('Failed to load column comment');
       console.error(error);
     }
   );
@@ -661,7 +661,14 @@ const dataReducer = (state = defaultState, action) => {
     case LOAD_TABLE_COMMENT:
       return { ...state, tableComment: action.data };
     case LOAD_COLUMN_COMMENT:
-      return { ...state, columnComment: action.data };
+      const loadedComment = action.data ? action.data.result[1] || '' : '';
+      return {
+        ...state,
+        columnComments: {
+          ...state.columnComments,
+          [action.column]: loadedComment,
+        },
+      };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:
