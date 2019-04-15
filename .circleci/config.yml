@@ -157,7 +157,7 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -171,6 +171,11 @@ jobs:
     - restore_cache:
         keys:
         - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - run:
+        name: Install latest postgresql client tools
+        command: |
+          apt-get -y update
+          apt-get install postgresql-client-11
     - run:
         name: Build the server
         working_directory: ./server
