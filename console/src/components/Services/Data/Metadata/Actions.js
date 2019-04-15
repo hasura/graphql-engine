@@ -85,7 +85,9 @@ export const loadInconsistentObjects = (
       data => {
         const allSchemas = getState().tables.allSchemas;
         const functions = getState().tables.trackedFunctions;
-        const inconsistentObjects = shouldReloadCache ? data[1] : data;
+        const inconsistentObjects = shouldReloadCache
+          ? data[1].inconsistent_objects
+          : data.inconsistent_objects;
         dispatch({
           type: LOAD_INCONSISTENT_OBJECTS,
           data: inconsistentObjects,

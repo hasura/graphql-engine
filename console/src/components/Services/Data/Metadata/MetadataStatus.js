@@ -206,7 +206,7 @@ const MetadataStatus = ({
         <i
           className={`${styles.add_mar_right_small} ${
             styles.fontStyleNormal
-          } fa-exclamation-circle`}
+          } fa fa-exclamation-circle`}
           aria-hidden="true"
         />
         <strong>
@@ -216,7 +216,7 @@ const MetadataStatus = ({
         <i
           className={`${styles.align_right} ${styles.fontStyleNormal} ${
             styles.cursorPointer
-          } fa-times`}
+          } fa fa-times`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />
