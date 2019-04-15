@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
 import { dropInconsistentObjects, loadInconsistentObjects } from './Actions';
-import { permissionTypes } from './metadataFilters';
+import { permissionTypes, getTableNameFromDef } from './metadataFilters';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -48,31 +48,25 @@ const MetadataStatus = ({
               ico.type === 'array_relation'
             ) {
               name = ico.definition.name;
-              definition = `relationship of table "${ico.definition.table}"`;
+              definition = `relationship of table "${getTableNameFromDef(
+                ico.definition.table
+              )}"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
-              definition = `${ico.type} on table "${ico.definition.table}"`;
+              definition = `${ico.type} on table "${getTableNameFromDef(
+                ico.definition.table
+              )}"`;
             } else if (ico.type === 'table') {
-              if (typeof ico.definition === 'string') {
-                name = ico.definition;
-                definition = ico.definition;
-              } else {
-                name = ico.definition.name;
-                definition = ico.definition.name;
-              }
+              name = getTableNameFromDef(ico.definition);
+              definition = name;
             } else if (ico.type === 'function') {
-              if (typeof ico.definition === 'string') {
-                name = ico.definition;
-                definition = ico.definition;
-              } else {
-                name = ico.definition.name;
-                definition = ico.definition.name;
-              }
+              name = getTableNameFromDef(ico.definition);
+              definition = name;
             } else if (ico.type === 'event_trigger') {
               name = ico.definition.configuration.name;
-              definition = `event triggeer on table "${
-                ico.definition.configuration.table
-              }"`;
+              definition = `event trigger on table "${getTableNameFromDef(
+                ico.definition.table
+              )}"`;
             } else if (ico.type === 'remote_schema') {
               name = ico.definition.name;
               let url = `"${ico.definition.definition.url ||
