@@ -39,7 +39,14 @@ class WebhookEditor extends React.Component {
   };
 
   render() {
-    const { webhook, modifyTrigger, env, dispatch, styles } = this.props;
+    const {
+      webhook,
+      modifyTrigger,
+      env,
+      dispatch,
+      styles,
+      save: saveWebhook,
+    } = this.props;
     const collapsed = () => (
       <div className={styles.modifyProperty}>
         <p>
@@ -91,6 +98,7 @@ class WebhookEditor extends React.Component {
             service="modify-trigger"
             ongoingRequest={modifyTrigger.ongoingRequest}
             styles={styles}
+            saveFunc={saveWebhook}
           />
         </div>
       </div>

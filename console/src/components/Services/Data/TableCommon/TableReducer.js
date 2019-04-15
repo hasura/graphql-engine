@@ -1,7 +1,7 @@
 import {
   defaultModifyState,
   defaultPermissionsState,
-  defaultSetState,
+  defaultPresetsState,
 } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
@@ -57,9 +57,9 @@ import {
   PERM_SELECT_BULK,
   PERM_DESELECT_BULK,
   PERM_RESET_BULK_SELECT,
-  PERM_RESET_BULK_SAME_SELECT,
-  PERM_SAME_APPLY_BULK,
-  PERM_DESELECT_SAME_APPLY_BULK,
+  PERM_RESET_APPLY_SAME,
+  PERM_SET_APPLY_SAME_PERM,
+  PERM_DEL_APPLY_SAME_PERM,
   toggleColumn,
   toggleAllColumns,
   getFilterKey,
@@ -67,11 +67,10 @@ import {
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
-  updateBulkSameSelect,
-  CREATE_NEW_SET_VAL,
-  DELETE_SET_VAL,
-  UPDATE_PERM_SET_KEY_VALUE,
-  TOGGLE_PERM_SET_OPERATION_CHECK,
+  updateApplySamePerms,
+  CREATE_NEW_PRESET,
+  DELETE_PRESET,
+  SET_PRESET_VALUE,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -430,70 +429,46 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-    case PERM_SAME_APPLY_BULK:
+    case PERM_SET_APPLY_SAME_PERM:
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          applySamePermissions: updateBulkSameSelect(
+          applySamePermissions: updateApplySamePerms(
+            modifyState.permissionsState,
+            action.data
+          ),
+        },
+      };
+    case PERM_DEL_APPLY_SAME_PERM:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          applySamePermissions: updateApplySamePerms(
             modifyState.permissionsState,
             action.data,
             true
           ),
         },
       };
-    case PERM_DESELECT_SAME_APPLY_BULK:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          applySamePermissions: updateBulkSameSelect(
-            modifyState.permissionsState,
-            action.data,
-            false
-          ),
-        },
-      };
 
-    /* Set operations */
-    case TOGGLE_PERM_SET_OPERATION_CHECK:
-      if (
-        modifyState.permissionsState[action.data.queryType].localSet.length ===
-          0 ||
-        (modifyState.permissionsState[action.data.queryType].localSet.length ===
-          1 &&
-          modifyState.permissionsState[action.data.queryType].localSet[0]
-            .key === '')
-      ) {
-        return {
-          ...modifyState,
-          permissionsState: {
-            ...modifyState.permissionsState,
-            [action.data.queryType]: {
-              ...modifyState.permissionsState[action.data.queryType],
-              isSetConfigChecked: !modifyState.permissionsState[
-                action.data.queryType
-              ].isSetConfigChecked,
-            },
-          },
-        };
-      }
-      return modifyState;
-    case CREATE_NEW_SET_VAL:
+    /* Preset operations */
+    case CREATE_NEW_PRESET:
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          [action.data.queryType]: {
-            ...modifyState.permissionsState[action.data.queryType],
-            localSet: [
-              ...modifyState.permissionsState[action.data.queryType].localSet,
-              { ...defaultSetState[action.data.queryType] },
+          [action.data.query]: {
+            ...modifyState.permissionsState[action.data.query],
+            localPresets: [
+              ...modifyState.permissionsState[action.data.query].localPresets,
+              { ...defaultPresetsState[action.data.query] },
             ],
           },
         },
       };
-    case DELETE_SET_VAL:
+    case DELETE_PRESET:
       const deleteIndex = action.data.index;
       return {
         ...modifyState,
@@ -501,26 +476,25 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localSet: [
+            localPresets: [
               ...modifyState.permissionsState[
                 action.data.queryType
-              ].localSet.slice(0, deleteIndex),
+              ].localPresets.slice(0, deleteIndex),
               ...modifyState.permissionsState[
                 action.data.queryType
-              ].localSet.slice(
+              ].localPresets.slice(
                 deleteIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localSet
+                modifyState.permissionsState[action.data.queryType].localPresets
                   .length
               ),
             ],
           },
         },
       };
-
-    case UPDATE_PERM_SET_KEY_VALUE:
+    case SET_PRESET_VALUE:
       const updatedIndex = action.data.index;
       const setKeyVal =
-        modifyState.permissionsState[action.data.queryType].localSet[
+        modifyState.permissionsState[action.data.queryType].localPresets[
           updatedIndex
         ];
       setKeyVal[action.data.key] = action.data.value;
@@ -534,16 +508,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localSet: [
+            localPresets: [
               ...modifyState.permissionsState[
                 action.data.queryType
-              ].localSet.slice(0, updatedIndex),
+              ].localPresets.slice(0, updatedIndex),
               { ...setKeyVal },
               ...modifyState.permissionsState[
                 action.data.queryType
-              ].localSet.slice(
+              ].localPresets.slice(
                 updatedIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localSet
+                modifyState.permissionsState[action.data.queryType].localPresets
                   .length
               ),
             ],
@@ -558,7 +532,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           bulkSelect: [],
         },
       };
-    case PERM_RESET_BULK_SAME_SELECT:
+    case PERM_RESET_APPLY_SAME:
       return {
         ...modifyState,
         permissionsState: {
@@ -566,6 +540,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           applySamePermissions: [],
         },
       };
+
     case SET_PRIMARY_KEYS:
       return {
         ...modifyState,
@@ -576,6 +551,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         fkModify: action.fks,
       };
+
     default:
       return modifyState;
   }
