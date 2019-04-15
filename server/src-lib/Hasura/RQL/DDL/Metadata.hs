@@ -26,7 +26,7 @@ module Hasura.RQL.DDL.Metadata
   , runDropInconsistentMetadata
   ) where
 
-import           Control.Lens
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -473,7 +473,11 @@ runGetInconsistentMetadata
   => GetInconsistentMetadata -> m EncJSON
 runGetInconsistentMetadata _ = do
   adminOnly
-  (encJFromJValue . scInconsistentObjs) <$> askSchemaCache
+  inconsObjs <- scInconsistentObjs <$> askSchemaCache
+  return $ encJFromJValue $ object
+                [ "is_consistent" .= null inconsObjs
+                , "inconsistent_objects" .= inconsObjs
+                ]
 
 data DropInconsistentMetadata
  = DropInconsistentMetadata
@@ -505,4 +509,3 @@ purgeMetadataObj = liftTx . \case
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn
-

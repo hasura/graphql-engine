@@ -42,8 +42,10 @@ class TestInconsistentObjects():
         st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
         assert st_code == 200, resp
         incons_objs_test = test['inconsistent_objects']
+        incons_objs_resp = resp['inconsistent_objects']
 
-        assert json_ordered(resp) == json_ordered(incons_objs_test), yaml.dump({
+        assert resp['is_consistent'] == False, resp
+        assert json_ordered(incons_objs_resp) == json_ordered(incons_objs_test), yaml.dump({
             'response': resp,
             'expected': incons_objs_test,
             'diff': jsondiff.diff(incons_objs_test, resp)
@@ -74,7 +76,8 @@ class TestInconsistentObjects():
         st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
         assert st_code == 200, resp
 
-        assert len(resp) == 0, resp
+        assert resp['is_consistent'] == True, resp
+        assert len(resp['inconsistent_objects']) == 0, resp
 
         # teardown
         st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
