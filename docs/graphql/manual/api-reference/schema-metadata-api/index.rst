@@ -221,5 +221,5 @@ Error codes
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
-  Syntax definitions <syntax-defs>
+  Common syntax definitions <syntax-defs>
 
