@@ -498,7 +498,7 @@ getInsCtx tn = do
   ctxMap <- asks getter
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
-  let defValMap = S.mkColDefValMap $ map pgiName $ icColumns insCtx
+  let defValMap = S.mkColDefValMap $ map pgiName $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
 

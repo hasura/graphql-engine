@@ -93,24 +93,30 @@ class GraphiQLWrapper extends Component {
 
   render() {
     const styles = require('../Common/Common.scss');
+
     const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
-    const { numberOfTables } = this.props;
+
+    const { numberOfTables, queryParams } = this.props;
     const graphqlNetworkData = this.props.data;
+
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
         return null;
       }
+
       return graphQLFetcherFinal(
         graphQLParams,
         graphqlNetworkData.url,
         graphqlNetworkData.headers
       );
     };
+
     const analyzeFetcherInstance = analyzeFetcher(
       graphqlNetworkData.url,
       graphqlNetworkData.headers,
       analyzeApiChange
     );
+
     const renderGraphiql = graphiqlProps => {
       return (
         <GraphiQL
@@ -121,6 +127,7 @@ class GraphiQLWrapper extends Component {
         />
       );
     };
+
     return (
       <ErrorBoundary>
         <div
@@ -136,7 +143,7 @@ class GraphiQLWrapper extends Component {
             endpoint={graphqlNetworkData.url}
             headers={graphqlNetworkData.headers}
             headerFocus={headerFocus}
-            queryParams={this.props.queryParams}
+            queryParams={queryParams}
             numberOfTables={numberOfTables}
           />
         </div>

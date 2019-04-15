@@ -71,9 +71,9 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { icCheck   :: !BoolExp
-  , icSet     :: !(Maybe ColVals)
-  , icColumns :: !(Maybe PermColSpec)
+  { ipCheck   :: !BoolExp
+  , ipSet     :: !(Maybe ColVals)
+  , ipColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -136,24 +136,17 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
   (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
   let reqHdrs = fltrHeaders `union` setHdrs
       deps = mkParentDep tn : beDeps ++ setColDeps
-  preSetCols <- HM.union setColsSQL <$> nonInsColVals
-  return (InsPermInfo vn be preSetCols reqHdrs, deps)
+      insColsWithoutPresets = insCols \\ HM.keys setColsSQL
+  return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiName $ getCols fieldInfoMap
-    nonInsCols = case mCols of
-      Nothing   -> return []
-      Just cols -> do
-        let insCols = convColSpec fieldInfoMap cols
-        withPathK "columns" $
-          indexedForM_ insCols $ \c -> void $ askPGType fieldInfoMap c ""
-        return $ allCols \\ insCols
-    nonInsColVals = S.mkColDefValMap <$> nonInsCols
+    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _) = do
+buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
