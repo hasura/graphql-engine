@@ -911,7 +911,7 @@ class Permissions extends Component {
               rowPermissionTooltip,
               rowSectionStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-row-permission'}
             isOpen={noAccess}
           >
@@ -1075,7 +1075,7 @@ class Permissions extends Component {
                 colPermissionTooltip,
                 colSectionStatus
               )}
-              defaultTitle
+              useDefaultTitleStyle
               testId={'toggle-col-permission'}
             >
               <div
@@ -1131,7 +1131,7 @@ class Permissions extends Component {
               upsertToolTip,
               upsertStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-upsert-permission'}
           >
             <div
@@ -1490,7 +1490,7 @@ class Permissions extends Component {
               presetTooltip,
               presetStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-presets-permission'}
           >
             <div
@@ -1536,7 +1536,7 @@ class Permissions extends Component {
               aggregationToolTip,
               aggregationStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-agg-permission'}
           >
             <div
@@ -1674,7 +1674,7 @@ class Permissions extends Component {
               <hr />
               <CollapsibleToggle
                 title={getSectionHeader('Clone permissions', cloneToolTip)}
-                defaultTitle
+                useDefaultTitleStyle
                 testId={'toggle-clone-permission'}
               >
                 <div

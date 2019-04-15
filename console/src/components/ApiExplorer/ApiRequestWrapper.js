@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ApiRequest from './ApiRequest';
-import ApiResponse from './ApiResponse';
+import ApiRequest from './ApiRequest/ApiRequest';
+import ApiResponse from './ApiResponse/ApiResponse';
 // import ApiRequestDetails from './ApiRequestDetails';
 
 class ApiRequestWrapper extends Component {
@@ -67,7 +67,7 @@ class ApiRequestWrapper extends Component {
           dataHeaders={this.props.dataHeaders}
           numberOfTables={this.props.numberOfTables}
           headerFocus={this.props.headerFocus}
-          queryParams={this.props.queryParams}
+          urlParams={this.props.urlParams}
           serverVersion={this.props.serverVersion}
         />
 
@@ -87,7 +87,7 @@ ApiRequestWrapper.propTypes = {
   dispatch: PropTypes.func,
   numberOfTables: PropTypes.number,
   headerFocus: PropTypes.bool.isRequired,
-  queryParams: PropTypes.bool.isRequired,
+  urlParams: PropTypes.bool.isRequired,
 };
 
 export default ApiRequestWrapper;
