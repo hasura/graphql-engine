@@ -14,10 +14,8 @@ module Hasura.GraphQL.Execute.LiveQuery
   , initLiveQueriesState
   , dumpLiveQueriesState
 
-  -- TODO: we shouldn't be exporting
-  -- the construction of LiveQuery
-  , LiveQuery(..)
   , LiveQueryOp
+  , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
 
@@ -63,15 +61,15 @@ data LQOpts
 mkLQOpts :: LQM.MxOpts -> LQF.FallbackOpts -> LQOpts
 mkLQOpts = LQOpts
 
-data LiveQueriesState k
+data LiveQueriesState
   = LiveQueriesState
-  { _lqsMultiplexed :: !(LQM.LiveQueriesState k)
-  , _lqsFallback    :: !(LQF.LiveQueriesState k)
+  { _lqsMultiplexed :: !LQM.LiveQueriesState
+  , _lqsFallback    :: !LQF.LiveQueriesState
   , _lqsPGExecTx    :: !PGExecCtx
   }
 
 dumpLiveQueriesState
-  :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+  :: LiveQueriesState -> IO J.Value
 dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
   mxJ <- LQM.dumpLiveQueriesState mx
   fallbackJ <- LQF.dumpLiveQueriesState fallback
@@ -83,7 +81,7 @@ dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
 initLiveQueriesState
   :: LQOpts
   -> PGExecCtx
-  -> IO (LiveQueriesState k)
+  -> IO LiveQueriesState
 initLiveQueriesState (LQOpts mxOpts fallbackOpts) pgExecCtx = do
   (mxMap, fallbackMap) <- STM.atomically $
     (,) <$> LQM.initLiveQueriesState mxOpts
@@ -94,53 +92,47 @@ data LiveQueryOp
   = LQMultiplexed !LQM.MxOp
   | LQFallback !LQF.FallbackOp
 
+data LiveQueryId
+  = LQIMultiplexed !LQM.LiveQueryId
+  | LQIFallback !LQF.LiveQueryId
+
 addLiveQuery
-  :: (Eq k, Hashable k)
-  => LiveQueriesState k
-  -- the query
-  -> LiveQuery
+  :: LiveQueriesState
   -> LiveQueryOp
-  -- a unique operation id
-  -> k
   -- the action to be executed when result changes
   -> OnChange
-  -> IO ()
-addLiveQuery lqState liveQ liveQOp k onResultAction =
+  -> IO LiveQueryId
+addLiveQuery lqState liveQOp onResultAction =
   case liveQOp of
     LQMultiplexed mxOp ->
-      LQM.addLiveQuery
-      pgExecCtx mxMap liveQ mxOp k onResultAction
+      LQIMultiplexed <$> LQM.addLiveQuery pgExecCtx mxMap mxOp onResultAction
     LQFallback fallbackOp ->
-      LQF.addLiveQuery
-      pgExecCtx fallbackMap liveQ fallbackOp k onResultAction
+      LQIFallback <$> LQF.addLiveQuery
+      pgExecCtx fallbackMap fallbackOp onResultAction
   where
     LiveQueriesState mxMap fallbackMap pgExecCtx = lqState
 
 removeLiveQuery
-  :: (Eq k, Hashable k)
-  => LiveQueriesState k
+  :: LiveQueriesState
   -- the query and the associated operation
-  -> LiveQuery
-  -> k
+  -> LiveQueryId
   -> IO ()
-removeLiveQuery lqState liveQ k = do
-  LQM.removeLiveQuery mxMap liveQ k
-  LQF.removeLiveQuery fallbackMap liveQ k
+removeLiveQuery lqState = \case
+  LQIMultiplexed lqId -> LQM.removeLiveQuery mxMap lqId
+  LQIFallback lqId -> LQF.removeLiveQuery fallbackMap lqId
   where
     LiveQueriesState mxMap fallbackMap _ = lqState
 
 data SubsPlan
   = SubsPlan
-  { _sfAlias         :: !G.Alias
-  , _sfQuery         :: !Q.Query
+  { _sfMxOpCtx       :: !LQM.MxOpCtx
   , _sfVariableTypes :: !GV.VarPGTypes
-  } deriving (Show, Eq)
+  }
 
 instance J.ToJSON SubsPlan where
-  toJSON (SubsPlan alias q variables) =
-    J.object [ "query"     J..= Q.getQueryText q
-             , "alias"     J..= alias
-             , "variables" J..= variables
+  toJSON (SubsPlan opCtx varTypes) =
+    J.object [ "mx_op_ctx"      J..= opCtx
+             , "variable_types" J..= varTypes
              ]
 
 collectNonNullableVars
@@ -195,38 +187,41 @@ subsOpFromPGAST
      , MonadIO m
      )
   => PGExecCtx
+  -> GH.GQLReqUnparsed
   -> [G.VariableDefinition]
   -> (G.Alias, GR.QueryRootFldUnresolved)
   -> m (LiveQueryOp, Maybe SubsPlan)
-subsOpFromPGAST pgExecCtx varDefs (fldAls, astUnresolved) = do
+subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
   userInfo <- asks getter
   (_, varTypes) <- flip runStateT mempty $ GR.traverseQueryRootFldAST
                    collectNonNullableVars astUnresolved
   -- can the subscription be multiplexed?
   if Set.fromList (Map.keys varTypes) == allVars
-    then multiplexedOp varTypes
-    else fallbackOp userInfo
+    then mkMultiplexedOp userInfo varTypes
+    else mkFallbackOp userInfo
   where
     allVars = Set.fromList $ map G._vdVariable varDefs
 
     -- multiplexed subscription
-    multiplexedOp varTypes = do
+    mkMultiplexedOp userInfo varTypes = do
       (astResolved, annVarVals) <-
         flip runStateT mempty $ GR.traverseQueryRootFldAST
         toMultiplexedQueryVar astUnresolved
-      let mxQuery = LQM.mkMxQuery $ GR.toPGQuery astResolved
-          plan    = SubsPlan fldAls mxQuery varTypes
+      let mxOpCtx = LQM.mkMxOpCtx userInfo reqUnparsed fldAls $
+                    GR.toPGQuery astResolved
       txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-      return (LQMultiplexed (fldAls, mxQuery, txtEncodedVars), Just plan)
+      let mxOp = (mxOpCtx, txtEncodedVars)
+      return (LQMultiplexed mxOp, Just $ SubsPlan mxOpCtx varTypes)
 
     -- fallback tx subscription
-    fallbackOp userInfo = do
+    mkFallbackOp userInfo = do
       (astResolved, prepArgs) <-
         flip runStateT mempty $ GR.traverseQueryRootFldAST
         GR.resolveValPrep astUnresolved
       let tx = withUserInfo userInfo $ liftTx $
                asSingleRowJsonResp (GR.toPGQuery astResolved) $ toList prepArgs
-      return (LQFallback $ withAlias tx, Nothing)
+          fallbackOp = LQF.mkFallbackOp userInfo reqUnparsed $ withAlias tx
+      return (LQFallback fallbackOp, Nothing)
 
     fldAlsT = G.unName $ G.unAlias fldAls
     withAlias tx =
@@ -282,7 +277,7 @@ subsOpFromPlan
   -> Maybe GH.VariableValues
   -> SubsPlan
   -> m LiveQueryOp
-subsOpFromPlan pgExecCtx varValsM (SubsPlan alias query varTypes) = do
+subsOpFromPlan pgExecCtx varValsM (SubsPlan mxOpCtx varTypes) = do
   annVarVals <- GV.getAnnPGVarVals varTypes varValsM
   txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-  return $ LQMultiplexed (alias, query, txtEncodedVars)
+  return $ LQMultiplexed (mxOpCtx, txtEncodedVars)

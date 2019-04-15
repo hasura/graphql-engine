@@ -4,7 +4,6 @@ module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
   , createWSServerEnv
   , WSServerEnv
-  , LiveQueriesState
   ) where
 
 import qualified Control.Concurrent.Async                    as A
@@ -42,11 +41,8 @@ import           Hasura.Server.Auth                          (AuthMode,
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (bsToTxt)
 
--- uniquely identifies an operation
-type GOperationId = (WS.WSId, OperationId)
-
 type OperationMap
-  = STMMap.Map OperationId LQ.LiveQuery
+  = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
 
 newtype WsHeaders
   = WsHeaders { unWsHeaders :: [H.Header] }
@@ -69,7 +65,6 @@ data WSConnData
   , _wscOpMap :: !OperationMap
   }
 
-type LiveQueriesState = LQ.LiveQueriesState GOperationId
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
@@ -120,7 +115,7 @@ data WSServerEnv
   = WSServerEnv
   { _wseLogger     :: !L.Logger
   , _wseRunTx      :: !PGExecCtx
-  , _wseLiveQMap   :: !LiveQueriesState
+  , _wseLiveQMap   :: !LQ.LiveQueriesState
   , _wseGCtxMap    :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
   , _wseHManager   :: !H.Manager
   , _wseCorsPolicy :: !CorsPolicy
@@ -235,9 +230,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         execQueryOrMut $ runLazyTx pgExecCtx $
         withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
-        let lq = LQ.LiveQuery userInfo q
-        liftIO $ STM.atomically $ STMMap.insert lq opId opMap
-        liftIO $ LQ.addLiveQuery lqMap lq lqOp (wsId, opId) liveQOnChange
+        lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
+        liftIO $ STM.atomically $
+          STMMap.insert (lqId, _grOperationName q) opId opMap
         logOpEv ODStarted
 
     execQueryOrMut action = do
@@ -270,7 +265,6 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ = serverEnv
 
-    wsId = WS.getWSId wsConn
     WSConnData userInfoR opMap = WS.getData wsConn
 
     logOpEv opDet =
@@ -336,16 +330,14 @@ onStop serverEnv wsConn (StopMsg opId) = do
   -- probably wrap the whole thing in a single tx?
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
-    Just liveQ -> do
-      let opNameM = _grOperationName $ LQ._lqRequest liveQ
+    Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
-      LQ.removeLiveQuery lqMap liveQ (wsId, opId)
+      LQ.removeLiveQuery lqMap lqId
     Nothing    -> return ()
   STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
-    wsId   = WS.getWSId wsConn
     opMap  = _wscOpMap $ WS.getData wsConn
 
 logWSEvent
@@ -396,23 +388,22 @@ onConnInit logger manager wsConn authMode connParamsM = do
 
 onClose
   :: L.Logger
-  -> LiveQueriesState
+  -> LQ.LiveQueriesState
   -> WS.ConnectionException
   -> WSConn
   -> IO ()
 onClose logger lqMap _ wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
-  void $ A.forConcurrently operations $ \(opId, liveQ) ->
-    LQ.removeLiveQuery lqMap liveQ (wsId, opId)
+  void $ A.forConcurrently operations $ \(_, (lqId, _)) ->
+    LQ.removeLiveQuery lqMap lqId
   where
-    wsId  = WS.getWSId wsConn
     opMap = _wscOpMap $ WS.getData wsConn
 
 createWSServerEnv
   :: L.Logger
   -> PGExecCtx
-  -> LiveQueriesState
+  -> LQ.LiveQueriesState
   -> IORef.IORef (SchemaCache, SchemaCacheVer)
   -> H.Manager
   -> CorsPolicy

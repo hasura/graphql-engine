@@ -129,7 +129,7 @@ data ServerCtx
   , scEnabledAPIs  :: S.HashSet API
   , scInstanceId   :: InstanceId
   , scPlanCache    :: E.PlanCache
-  , scLQState      :: WS.LiveQueriesState
+  , scLQState      :: EL.LiveQueriesState
   }
 
 data HandlerCtx

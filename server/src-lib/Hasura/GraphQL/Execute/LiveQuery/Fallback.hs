@@ -9,6 +9,8 @@ module Hasura.GraphQL.Execute.LiveQuery.Fallback
   , dumpLiveQueriesState
 
   , FallbackOp
+  , mkFallbackOp
+  , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
   ) where
@@ -27,7 +29,21 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-data LQHandler k
+data LiveQuery
+  = LiveQuery
+  { _lqUser    :: !UserInfo
+  , _lqRequest :: !GQLReqUnparsed
+  } deriving (Show, Eq, Generic)
+
+instance J.ToJSON LiveQuery where
+  toJSON (LiveQuery user req) =
+    J.object [ "user" J..= userVars user
+             , "request" J..= req
+             ]
+
+instance Hashable LiveQuery
+
+data LQHandler
   = LQHandler
   -- the tx to be executed
   { _lqhRespTx  :: !LazyRespTx
@@ -35,10 +51,10 @@ data LQHandler k
   , _lqhPrevRes :: !RespTV
   -- the actions that have been run previously
   -- we run these if the response changes
-  , _lqhCurOps  :: !(Sinks k)
+  , _lqhCurOps  :: !Sinks
   -- we run these operations regardless
   -- and then merge them with current operations
-  , _lqhNewOps  :: !(Sinks k)
+  , _lqhNewOps  :: !Sinks
   }
 
 data FallbackOpts
@@ -63,13 +79,13 @@ mkFallbackOpts refetchIntervalM =
   FallbackOpts
   (fromMaybe defaultRefetchInterval refetchIntervalM)
 
-data LiveQueriesState k
+data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !FallbackOpts
-  , _lqsLiveQueryMap :: !(LiveQueryMap k)
+  , _lqsLiveQueryMap :: !LiveQueryMap
   }
 
-dumpLiveQueriesState :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+dumpLiveQueriesState :: LiveQueriesState -> IO J.Value
 dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
   lqMapJ <- dumpLiveQueryMap lqMap
   return $ J.object
@@ -79,15 +95,21 @@ dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
 
 initLiveQueriesState
   :: FallbackOpts
-  -> STM.STM (LiveQueriesState k)
+  -> STM.STM LiveQueriesState
 initLiveQueriesState lqOptions =
   LiveQueriesState
   lqOptions
   <$> STMMap.new
 
-type LiveQueryMap k = STMMap.Map LiveQuery (LQHandler k, ThreadTM)
+data LiveQueryId
+  = LiveQueryId
+  { _lqiQuery     :: !LiveQuery
+  , _lqiSink      :: !SinkId
+  }
 
-dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
+type LiveQueryMap = STMMap.Map LiveQuery (LQHandler, ThreadTM)
+
+dumpLiveQueryMap :: LiveQueryMap -> IO J.Value
 dumpLiveQueryMap lqMap =
   fmap J.toJSON $ STM.atomically $ do
     entries <- ListT.toList $ STMMap.listT lqMap
@@ -105,13 +127,11 @@ dumpLiveQueryMap lqMap =
         ]
 
 removeLiveQuery
-  :: (Eq k, Hashable k)
-  => LiveQueriesState k
+  :: LiveQueriesState
   -- the query and the associated operation
-  -> LiveQuery
-  -> k
+  -> LiveQueryId
   -> IO ()
-removeLiveQuery lqState liveQ k = do
+removeLiveQuery lqState (LiveQueryId liveQ k) = do
 
   -- clean the handler's state
   threadRefM <- STM.atomically $ do
@@ -139,26 +159,31 @@ removeLiveQuery lqState liveQ k = do
         else return Nothing
 
 -- the transaction associated with this query
-type FallbackOp = LazyRespTx
+type FallbackOp = (LiveQuery, LazyRespTx)
+
+mkFallbackOp
+  :: UserInfo -> GQLReqUnparsed
+  -> LazyRespTx -> FallbackOp
+mkFallbackOp userInfo req tx =
+  (LiveQuery userInfo req, tx)
+
 
 addLiveQuery
-  :: (Eq k, Hashable k)
-  => PGExecCtx
-  -> LiveQueriesState k
+  :: PGExecCtx
+  -> LiveQueriesState
   -- the query
-  -> LiveQuery
   -> FallbackOp
-  -- a unique operation id
-  -> k
   -- the action to be executed when result changes
   -> OnChange
-  -> IO ()
-addLiveQuery pgExecCtx lqState liveQ respTx k onResultAction= do
+  -> IO LiveQueryId
+addLiveQuery pgExecCtx lqState (liveQ, respTx) onResultAction= do
+
+  sinkId <- newSinkId
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
     lqHandlerM <- STMMap.lookup liveQ lqMap
-    maybe newHandler addToExistingHandler lqHandlerM
+    maybe (newHandler sinkId) (addToExistingHandler sinkId) lqHandlerM
 
   -- we can then attach a polling thread if it is new
   -- the livequery can only be cancelled after putTMVar
@@ -168,30 +193,31 @@ addLiveQuery pgExecCtx lqState liveQ respTx k onResultAction= do
       threadDelay $ refetchIntervalToMicro refetchInterval
     STM.atomically $ STM.putTMVar pollerThreadTM threadRef
 
+  return $ LiveQueryId liveQ sinkId
+
   where
 
     LiveQueriesState lqOpts lqMap = lqState
     FallbackOpts refetchInterval = lqOpts
 
-    addToExistingHandler (handler, _) = do
-      insertTMap onResultAction k $ _lqhNewOps handler
+    addToExistingHandler sinkId (handler, _) = do
+      insertTMap onResultAction sinkId $ _lqhNewOps handler
       return Nothing
 
-    newHandler = do
+    newHandler sinkId = do
       handler <- LQHandler
                  <$> return respTx
                  <*> STM.newTVar Nothing
                  <*> newTMap
                  <*> newTMap
-      insertTMap onResultAction k $ _lqhNewOps handler
+      insertTMap onResultAction sinkId $ _lqhNewOps handler
       asyncRefTM <- STM.newEmptyTMVar
       STMMap.insert (handler, asyncRefTM) liveQ lqMap
       return $ Just (handler, asyncRefTM)
 
 pollQuery
-  :: (Eq k, Hashable k)
-  => PGExecCtx
-  -> LQHandler k
+  :: PGExecCtx
+  -> LQHandler
   -> IO ()
 pollQuery pgExecCtx (LQHandler respTx respTV curOpsTV newOpsTV) = do
 

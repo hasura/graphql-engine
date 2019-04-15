@@ -179,7 +179,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
             return $ ExOpQuery queryTx
           VQ.RSubscription fld -> do
             (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
-                             userInfo fld varDefs
+                             userInfo reqUnparsed varDefs fld
             mapM_ (addPlanToCache . EP.RPSubs) planM
             return $ ExOpSubs lqOp
 
@@ -278,16 +278,17 @@ getSubsOpM
      , MonadIO m
      )
   => PGExecCtx
+  -> GQLReqUnparsed
   -> [G.VariableDefinition]
   -> VQ.Field
   -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOpM pgExecCtx varDefs fld =
+getSubsOpM pgExecCtx req varDefs fld =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
       astUnresolved <- GR.queryFldToPGAST fld
-      EL.subsOpFromPGAST pgExecCtx varDefs (VQ._fAlias fld, astUnresolved)
+      EL.subsOpFromPGAST pgExecCtx req varDefs (VQ._fAlias fld, astUnresolved)
 
 getSubsOp
   :: ( MonadError QErr m
@@ -297,11 +298,12 @@ getSubsOp
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> VQ.Field
+  -> GQLReqUnparsed
   -> [G.VariableDefinition]
+  -> VQ.Field
   -> m (EL.LiveQueryOp, Maybe EL.SubsPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo fld varDefs =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx varDefs fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)

@@ -1,7 +1,8 @@
 module Hasura.GraphQL.Execute.LiveQuery.Types
-  ( LiveQuery(..)
-  , OnChange
+  ( OnChange
   , ThreadTM
+  , SinkId
+  , newSinkId
   , Sinks
 
   , RespHash
@@ -30,24 +31,11 @@ import qualified Crypto.Hash                            as CH
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.UUID                              as UUID
+import qualified Data.UUID.V4                           as UUID
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-
-data LiveQuery
-  = LiveQuery
-  { _lqUser    :: !UserInfo
-  , _lqRequest :: !GQLReqUnparsed
-  } deriving (Show, Eq, Generic)
-
-instance J.ToJSON LiveQuery where
-  toJSON (LiveQuery user req) =
-    J.object [ "user" J..= userVars user
-             , "request" J..= req
-             ]
-
-instance Hashable LiveQuery
 
 type OnChange = GQResp -> IO ()
 type ThreadTM = STM.TMVar (A.Async ())
@@ -114,6 +102,14 @@ toListTMap :: TMap k v -> STM.STM [(k, v)]
 toListTMap =
   fmap Map.toList . STM.readTVar . unTMap
 
--- 'k' uniquely identifies a sink
--- in case of websockets, it is (wsId, opId)
-type Sinks k = TMap k OnChange
+newtype SinkId
+  = SinkId {_unSinkId :: UUID.UUID}
+  deriving (Show, Eq, Hashable)
+
+newSinkId :: IO SinkId
+newSinkId = SinkId <$> UUID.nextRandom
+
+instance J.ToJSON SinkId where
+  toJSON = J.toJSON . show
+
+type Sinks = TMap SinkId OnChange

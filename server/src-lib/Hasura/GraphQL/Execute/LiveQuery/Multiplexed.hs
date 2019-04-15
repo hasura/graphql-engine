@@ -10,10 +10,13 @@ module Hasura.GraphQL.Execute.LiveQuery.Multiplexed
   , initLiveQueriesState
   , dumpLiveQueriesState
 
+  , MxOpCtx
+  , mkMxOpCtx
   , MxOp
+
+  , LiveQueryId
   , addLiveQuery
   , removeLiveQuery
-  , mkMxQuery
   ) where
 
 import           Data.List                              (unfoldr)
@@ -29,8 +32,8 @@ import qualified Data.UUID                              as UUID
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified System.Metrics.Distribution            as Metrics
 import qualified StmContainers.Map                      as STMMap
+import qualified System.Metrics.Distribution            as Metrics
 
 import           Control.Concurrent                     (threadDelay)
 
@@ -64,18 +67,18 @@ instance Q.ToPrepArg RespIdList where
 newRespId :: IO RespId
 newRespId = RespId <$> UUID.nextRandom
 
-data MLiveQueryId
+data LQGroup
   -- we don't need operation name here as a subscription will
   -- only have a single top level field
-  = MLiveQueryId
-  { _mlqRole         :: !RoleName
-  , _mlqGQLQueryText :: !GQLQueryText
+  = LQGroup
+  { _lgRole         :: !RoleName
+  , _lgGQLQueryText :: !GQLQueryText
   } deriving (Show, Eq, Generic)
 
-instance Hashable MLiveQueryId
+instance Hashable LQGroup
 
-instance J.ToJSON MLiveQueryId where
-  toJSON (MLiveQueryId role query) =
+instance J.ToJSON LQGroup where
+  toJSON (LQGroup role query) =
     J.object [ "role" J..= role
              , "query" J..= query
              ]
@@ -106,10 +109,10 @@ mkMxOpts batchSizeM refetchIntervalM =
   (fromMaybe defaultBatchSize batchSizeM)
   (fromMaybe defaultRefetchInterval refetchIntervalM)
 
-data LiveQueriesState k
+data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !MxOpts
-  , _lqsLiveQueryMap :: !(LiveQueryMap k)
+  , _lqsLiveQueryMap :: !LiveQueryMap
   }
 
 data RefetchMetrics
@@ -134,18 +137,18 @@ data ThreadState
   , _tsMetrics :: !RefetchMetrics
   }
 
-type LiveQueryMap k
-  = STMMap.Map MLiveQueryId (MLQHandler k, STM.TMVar ThreadState)
+type LiveQueryMap
+  = STMMap.Map LQGroup (LQHandler, STM.TMVar ThreadState)
 
 initLiveQueriesState
   :: MxOpts
-  -> STM.STM (LiveQueriesState k)
+  -> STM.STM LiveQueriesState
 initLiveQueriesState lqOptions =
   LiveQueriesState
   lqOptions
   <$> STMMap.new
 
-dumpLiveQueriesState :: (J.ToJSON k) => LiveQueriesState k -> IO J.Value
+dumpLiveQueriesState :: LiveQueriesState -> IO J.Value
 dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
   lqMapJ <- dumpLiveQueryMap lqMap
   return $ J.object
@@ -153,7 +156,7 @@ dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
     , "live_queries_map" J..= lqMapJ
     ]
 
-dumpLiveQueryMap :: (J.ToJSON k) => LiveQueryMap k -> IO J.Value
+dumpLiveQueryMap :: LiveQueryMap -> IO J.Value
 dumpLiveQueryMap lqMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
@@ -200,7 +203,7 @@ dumpLiveQueryMap lqMap =
           , "variable_values" J..= varVals
           , "candidate" J..= candidateJ
           ]
-    dumpCandidate (MLQHandlerCandidate respId _ respTV curOps newOps) = do
+    dumpCandidate (CandidateState respId _ respTV curOps newOps) = do
       prevResHash <- STM.readTVar respTV
       curOpIds <- toListTMap curOps
       newOpIds <- toListTMap newOps
@@ -213,61 +216,117 @@ dumpLiveQueryMap lqMap =
 
 type ValidatedVariables = Map.HashMap G.Variable TxtEncodedPGVal
 
-data MLQHandler k
-  = MLQHandler
+data LQHandler
+  = LQHandler
   { _mhAlias      :: !G.Alias
   , _mhQuery      :: !Q.Query
   , _mhCandidates ::
       !(TMap
         (UserVars, Maybe VariableValues)
-        (MLQHandlerCandidate k)
+        CandidateState
        )
   }
 
 -- This type represents the state associated with
 -- the response of (role, gqlQueryText, userVars, variableValues)
-data MLQHandlerCandidate k
-  = MLQHandlerCandidate
+data CandidateState
+  = CandidateState
   -- the laterally joined query responds with [(RespId, EncJSON)]
   -- so the resultid is used to determine the websockets
   -- where the data needs to be sent
-  { _mlqhcRespId        :: !RespId
+  { _csRespId        :: !RespId
 
   -- query variables which are validated and text encoded
-  , _mlqhcValidatedVars :: !ValidatedVariables
+  , _csValidatedVars :: !ValidatedVariables
 
   -- we need to store the previous response
-  , _mlqhcPrevRes       :: !RespTV
+  , _csPrevRes       :: !RespTV
 
   -- the actions that have been run previously
   -- we run these if the response changes
-  , _mlqhcCurOps        :: !(Sinks k)
+  , _csCurOps        :: !Sinks
 
   -- we run these operations regardless
   -- and then merge them with current operations
-  , _mlqhcNewOps        :: !(Sinks k)
+  , _csNewOps        :: !Sinks
   }
 
 -- the multiplexed query associated with the livequery
 -- and the validated, text encoded query variables
-type MxOp = (G.Alias, Q.Query, ValidatedVariables)
+data MxOpCtx
+  = MxOpCtx
+  { _mocGroup     :: !LQGroup
+  , _mocCandidate :: !CandidateId
+  , _mocAlias     :: !G.Alias
+  , _mocQuery     :: !Q.Query
+  }
+
+instance J.ToJSON MxOpCtx where
+  toJSON (MxOpCtx lqGroup candidate als q) =
+    J.object [ "query" J..= Q.getQueryText q
+             , "alias" J..= als
+             , "group" J..= lqGroup
+             , "candidate" J..= candidate
+             ]
+
+type MxOp = (MxOpCtx, ValidatedVariables)
+
+mkMxOpCtx
+  :: UserInfo -> GQLReqUnparsed
+  -> G.Alias -> Q.Query
+  -> MxOpCtx
+mkMxOpCtx userInfo req als query =
+  MxOpCtx lqGroup candidateId als $ mkMxQuery query
+  where
+    candidateId = (userVars userInfo, _grVariables req)
+    lqGroup = LQGroup (userRole userInfo) (_grQuery req)
+
+mkMxQuery :: Q.Query -> Q.Query
+mkMxQuery baseQuery =
+  Q.fromText $ mconcat $ map Q.getQueryText $
+      [mxQueryPfx, baseQuery, mxQuerySfx]
+  where
+    mxQueryPfx :: Q.Query
+    mxQueryPfx =
+      [Q.sql|
+        select
+          _subs.result_id, _fld_resp.root as result
+          from
+            unnest(
+              $1::uuid[], $2::json[]
+            ) _subs (result_id, result_vars)
+          left outer join lateral
+            (
+        |]
+
+    mxQuerySfx :: Q.Query
+    mxQuerySfx =
+      [Q.sql|
+            ) _fld_resp ON ('true')
+        |]
+
+data LiveQueryId
+  = LiveQueryId
+  { _lqiGroup     :: !LQGroup
+  , _lqiCandidate :: !CandidateId
+  , _lqiSink      :: !SinkId
+  }
 
 addLiveQuery
-  :: (Eq k, Hashable k)
-  => PGExecCtx
-  -> LiveQueriesState k
+  :: PGExecCtx
+  -> LiveQueriesState
   -- the query
-  -> LiveQuery
   -> MxOp
-  -- a unique operation id
-  -> k
   -- the action to be executed when result changes
   -> OnChange
-  -> IO ()
-addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction = do
+  -> IO LiveQueryId
+addLiveQuery pgExecCtx lqState (mxOpCtx, valQVars) onResultAction = do
 
   -- generate a new result id
   responseId <- newRespId
+
+  -- generate a new sink id
+  sinkId <- newSinkId
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
@@ -276,11 +335,11 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
       Just (handler, _) -> do
         candidateM <- lookupTMap candidateId $ _mhCandidates handler
         case candidateM of
-          Just candidate -> addToExistingCandidate candidate
-          Nothing        -> addToExistingHandler responseId handler
+          Just candidate -> addToExistingCandidate sinkId candidate
+          Nothing        -> addToExistingHandler sinkId responseId handler
         return Nothing
       Nothing -> do
-        handler <- newHandler responseId
+        handler <- newHandler sinkId responseId
         asyncRefTM <- STM.newEmptyTMVar
         STMMap.insert (handler, asyncRefTM) handlerId lqMap
         return $ Just (handler, asyncRefTM)
@@ -295,61 +354,45 @@ addLiveQuery pgExecCtx lqState liveQ (als, mxQuery, valQVars) k onResultAction =
     let threadState = ThreadState threadRef metrics
     STM.atomically $ STM.putTMVar pollerThreadTM threadState
 
+  return $ LiveQueryId handlerId candidateId sinkId
+
   where
 
+    MxOpCtx handlerId candidateId als mxQuery = mxOpCtx
     LiveQueriesState lqOpts lqMap = lqState
     MxOpts batchSize refetchInterval = lqOpts
 
-    addToExistingCandidate handlerC =
-      insertTMap onResultAction k $ _mlqhcNewOps handlerC
+    addToExistingCandidate sinkId handlerC =
+      insertTMap onResultAction sinkId $ _csNewOps handlerC
 
-    newHandlerC responseId = do
-      handlerC <- MLQHandlerCandidate
+    newHandlerC sinkId responseId = do
+      handlerC <- CandidateState
                   responseId
                   valQVars
                   <$> STM.newTVar Nothing
                   <*> newTMap
                   <*> newTMap
-      insertTMap onResultAction k $ _mlqhcNewOps handlerC
+      insertTMap onResultAction sinkId $ _csNewOps handlerC
       return handlerC
 
-    addToExistingHandler responseId handler = do
-      handlerC <- newHandlerC responseId
+    addToExistingHandler sinkId responseId handler = do
+      handlerC <- newHandlerC sinkId responseId
       insertTMap handlerC candidateId $ _mhCandidates handler
 
-    newHandler responseId = do
-      handler <- MLQHandler als mxQuery <$> newTMap
-      handlerC <- newHandlerC responseId
+    newHandler sinkId responseId = do
+      handler <- LQHandler als mxQuery <$> newTMap
+      handlerC <- newHandlerC sinkId responseId
       insertTMap handlerC candidateId $ _mhCandidates handler
       return handler
 
-    handlerId   = getHandlerId liveQ
-    candidateId = getCandidateId liveQ
-
 type CandidateId = (UserVars, Maybe VariableValues)
 
-getCandidateId :: LiveQuery -> CandidateId
-getCandidateId lq =
-  (usrVars, queryVars)
-  where
-    usrVars   = userVars $ _lqUser lq
-    queryVars = _grVariables $ _lqRequest lq
-
-getHandlerId :: LiveQuery -> MLiveQueryId
-getHandlerId lq =
-  MLiveQueryId role queryStr
-  where
-    role     = userRole $ _lqUser lq
-    queryStr = _grQuery $ _lqRequest lq
-
 removeLiveQuery
-  :: (Eq k, Hashable k)
-  => LiveQueriesState k
+  :: LiveQueriesState
   -- the query and the associated operation
-  -> LiveQuery
-  -> k
+  -> LiveQueryId
   -> IO ()
-removeLiveQuery lqState liveQ k = do
+removeLiveQuery lqState (LiveQueryId handlerId candidateId sinkId) = do
   threadRefM <- STM.atomically $ do
    detM <- getQueryDet
    fmap join $ forM detM $
@@ -363,15 +406,15 @@ removeLiveQuery lqState liveQ k = do
     getQueryDet = do
       handlerM <- STMMap.lookup handlerId lqMap
       fmap join $ forM handlerM $ \(handler, threadRef) -> do
-        let MLQHandler _ _ candidateMap = handler
+        let LQHandler _ _ candidateMap = handler
         candidateM <- lookupTMap candidateId candidateMap
         return $ fmap (handler, threadRef,) candidateM
 
     cleanHandlerC candidateMap threadRef handlerC = do
-      let curOps = _mlqhcCurOps handlerC
-          newOps = _mlqhcNewOps handlerC
-      deleteTMap k curOps
-      deleteTMap k newOps
+      let curOps = _csCurOps handlerC
+          newOps = _csNewOps handlerC
+      deleteTMap sinkId curOps
+      deleteTMap sinkId newOps
       candidateIsEmpty <- (&&)
         <$> nullTMap curOps
         <*> nullTMap newOps
@@ -385,9 +428,6 @@ removeLiveQuery lqState liveQ k = do
           STMMap.delete handlerId lqMap
           Just <$> STM.takeTMVar threadRef
         else return Nothing
-
-    handlerId   = getHandlerId liveQ
-    candidateId = getCandidateId liveQ
 
 data CandidateSnapshot
   = CandidateSnapshot
@@ -449,11 +489,10 @@ chunks n =
   takeWhile (not.null) . unfoldr (Just . splitAt (fromIntegral n))
 
 pollQuery
-  :: (Eq k, Hashable k)
-  => RefetchMetrics
+  :: RefetchMetrics
   -> BatchSize
   -> PGExecCtx
-  -> MLQHandler k
+  -> LQHandler
   -> IO ()
 pollQuery metrics batchSize pgExecCtx handler = do
 
@@ -488,12 +527,12 @@ pollQuery metrics batchSize pgExecCtx handler = do
     realToFrac $ Clock.diffUTCTime procFinish procInit
 
   where
-    MLQHandler alias pgQuery candidateMap = handler
+    LQHandler alias pgQuery candidateMap = handler
     uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
     uncurry3 f (a, b, c) = f a b c
 
     getCandidateSnapshot ((usrVars, _), handlerC) = do
-      let MLQHandlerCandidate resId valVars respRef curOpsTV newOpsTV = handlerC
+      let CandidateState resId valVars respRef curOpsTV newOpsTV = handlerC
       curOpsL <- toListTMap curOpsTV
       newOpsL <- toListTMap newOpsTV
       forM_ newOpsL $ \(k, action) -> insertTMap action k curOpsTV
@@ -527,27 +566,3 @@ pollQuery metrics batchSize pgExecCtx handler = do
               resp = GQSuccess respLbs
               respHash = mkRespHash respLbs
           in (resp, Just respHash,) <$> Map.lookup respId candidateSnapshotMap
-
-mkMxQuery :: Q.Query -> Q.Query
-mkMxQuery baseQuery =
-  Q.fromText $ mconcat $ map Q.getQueryText $
-      [mxQueryPfx, baseQuery, mxQuerySfx]
-  where
-    mxQueryPfx :: Q.Query
-    mxQueryPfx =
-      [Q.sql|
-        select
-          _subs.result_id, _fld_resp.root as result
-          from
-            unnest(
-              $1::uuid[], $2::json[]
-            ) _subs (result_id, result_vars)
-          left outer join lateral
-            (
-        |]
-
-    mxQuerySfx :: Q.Query
-    mxQuerySfx =
-      [Q.sql|
-            ) _fld_resp ON ('true')
-        |]
