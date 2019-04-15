@@ -35,6 +35,10 @@ select::-moz-focus-inner {
 
 option::-moz-focus-inner { border: 0; outline: 0 }
 
+table {
+  font-size: 14px;
+}
+
 table thead tr th {
   background-color: #F2F2F2 !important;
   color: #4D4D4D;

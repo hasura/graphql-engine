@@ -1,4 +1,4 @@
-const getHeadersAsJSON = (headers = []) => {
+export const getHeadersAsJSON = (headers = []) => {
   const headerJSON = {};
   const nonEmptyHeaders = headers.filter(header => {
     return header.key && header.isActive;
@@ -10,5 +10,3 @@ const getHeadersAsJSON = (headers = []) => {
 
   return headerJSON;
 };
-
-export { getHeadersAsJSON };

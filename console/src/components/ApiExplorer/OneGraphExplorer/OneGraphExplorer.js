@@ -1,29 +1,36 @@
 import React from 'react';
+
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
-import { getHeadersAsJSON } from './utils';
 import GraphiQLExplorer from 'graphiql-explorer-hasura';
-import './GraphiQL.css';
-import './OneGraphExplorer.css';
+
 import {
   makeDefaultArg,
   getDefaultScalarArgValue,
-  getExplorerWidthFromLocalStorage,
-  setExplorerWidthInLocalStorage,
-} from './onegraphUtils';
-import { getRemoteQueries } from './Actions';
+  getExplorerWidth,
+  setExplorerWidth,
+  getExplorerIsOpen,
+  setExplorerIsOpen,
+} from './utils';
+import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
+import { getRemoteQueries } from '../Actions';
+import { getHeadersAsJSON } from '../utils';
+
+import '../GraphiQLWrapper/GraphiQL.css';
+import './OneGraphExplorer.css';
 
 class OneGraphExplorer extends React.Component {
   state = {
-    explorerOpen: false,
-    explorerWidth: getExplorerWidthFromLocalStorage(),
+    explorerOpen: getExplorerIsOpen(),
+    explorerWidth: getExplorerWidth(),
     explorerClientX: null,
     schema: null,
-    query: this.props.query,
+    query: undefined,
     isResizing: false,
     headers: this.props.headers || [],
   };
 
   componentDidMount() {
+    this.setPersistedQuery();
     this.introspect();
   }
 
@@ -34,20 +41,32 @@ class OneGraphExplorer extends React.Component {
   }
 
   setPersistedQuery() {
-    const queryFile = this.props.queryParams
-      ? this.props.queryParams.query_file
-      : null;
+    const { urlParams, numberOfTables } = this.props;
+
+    const queryFile = urlParams ? urlParams.query_file : null;
 
     if (queryFile) {
-      getRemoteQueries(queryFile, query => this.setState({ query }));
-    } else {
-      const NO_TABLES_MESSAGE =
-        '# Looks like you do not have any tables.\n# Click on the "Data" tab on top to create tables\n# You can come back here and try out the GraphQL queries after you create tables\n';
+      getRemoteQueries(queryFile, remoteQuery =>
+        this.setState({ query: remoteQuery })
+      );
+    } else if (numberOfTables === 0) {
+      const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
+# Click on the "Data" tab on top to create tables
+# Try out GraphQL queries here after you create tables
+`;
 
-      if (this.props.numberOfTables === 0) {
-        this.setState({
-          query: NO_TABLES_MESSAGE,
-        });
+      this.setState({ query: NO_TABLES_MESSAGE });
+    } else {
+      const localStorageQuery = getGraphiQLQueryFromLocalStorage();
+
+      if (localStorageQuery) {
+        if (localStorageQuery.includes('do not have')) {
+          const FRESH_GRAPHQL_MSG = '# Try out GraphQL queries here\n';
+
+          this.setState({ query: FRESH_GRAPHQL_MSG });
+        } else {
+          this.setState({ query: localStorageQuery });
+        }
       }
     }
   }
@@ -85,11 +104,14 @@ class OneGraphExplorer extends React.Component {
 
   onExplorerResize = e => {
     const { explorerClientX, explorerWidth } = this.state;
+
     if (explorerClientX === null) {
       this.setState({ explorerClientX: e.clientX });
     } else {
       const newExplorerWidth = explorerWidth + e.clientX - explorerClientX;
-      setExplorerWidthInLocalStorage(newExplorerWidth);
+
+      setExplorerWidth(newExplorerWidth);
+
       this.setState({
         explorerWidth: newExplorerWidth,
         explorerClientX: e.clientX,
@@ -101,10 +123,12 @@ class OneGraphExplorer extends React.Component {
     this.setState({ query });
   };
 
-  toggleExplorer = () => {
-    this.setState(state => ({
-      explorerOpen: !state.explorerOpen,
-    }));
+  handleToggle = () => {
+    const newIsOpen = !this.state.explorerOpen;
+
+    setExplorerIsOpen(newIsOpen);
+
+    this.setState({ explorerOpen: newIsOpen });
   };
 
   handleExplorerResize = e => {
@@ -134,6 +158,19 @@ class OneGraphExplorer extends React.Component {
 
     const { renderGraphiql } = this.props;
 
+    const explorer = (
+      <GraphiQLExplorer
+        schema={schema}
+        query={query}
+        onEdit={this.editQuery}
+        explorerIsOpen={explorerOpen}
+        onToggleExplorer={this.handleToggle}
+        getDefaultScalarArgValue={getDefaultScalarArgValue}
+        makeDefaultArg={makeDefaultArg}
+        width={explorerWidth}
+      />
+    );
+
     let explorerSeparator;
     if (explorerOpen) {
       explorerSeparator = (
@@ -146,10 +183,10 @@ class OneGraphExplorer extends React.Component {
     }
 
     const graphiql = renderGraphiql({
-      query: query || undefined,
+      query: query,
       onEditQuery: this.editQuery,
       schema: schema,
-      toggleExplorer: this.toggleExplorer,
+      toggleExplorer: this.handleToggle,
     });
 
     return (
@@ -160,17 +197,8 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
+          {explorer}
           {explorerSeparator}
-          <GraphiQLExplorer
-            schema={schema}
-            query={query}
-            onEdit={this.editQuery}
-            explorerIsOpen={explorerOpen}
-            onToggleExplorer={this.toggleExplorer}
-            getDefaultScalarArgValue={getDefaultScalarArgValue}
-            makeDefaultArg={makeDefaultArg}
-            width={explorerWidth}
-          />
         </div>
         {graphiql}
       </div>

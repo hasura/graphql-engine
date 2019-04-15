@@ -63,11 +63,6 @@ toSQLConflict conflict = case conflict of
       Column pgCols -> S.SQLColumn pgCols
       Constraint cn -> S.SQLConstraint cn
 
-mkDefValMap :: FieldInfoMap -> HM.HashMap PGCol S.SQLExp
-mkDefValMap cim =
-  HM.fromList $ flip zip (repeat $ S.SEUnsafe "DEFAULT") $
-  map (PGCol . getFieldNameTxt) $ HM.keys $ HM.filter isPGColInfo cim
-
 getInsertDeps
   :: InsertQueryP1 -> [SchemaDependency]
 getInsertDeps (InsertQueryP1 tn _ _ _ _ mutFlds _) =
@@ -201,7 +196,8 @@ convInsertQuery objsParser prepFn (InsertQuery tableName val oC mRetCols) = do
 
   let mutFlds = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = mkDefValMap fieldInfoMap
+  let defInsVals = S.mkColDefValMap $
+                   map pgiName $ getCols fieldInfoMap
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
       insView    = ipiView insPerm
