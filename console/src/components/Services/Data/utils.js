@@ -139,9 +139,9 @@ const getTableName = t => {
 
 const getSchemaQuery = schemaName => {
   const runSql = `select 
-  json_agg(
+  COALESCE(json_agg(
     row_to_json(info)
-  ) AS tables 
+  ), '[]'::JSON) AS tables 
 FROM 
   (
     select 

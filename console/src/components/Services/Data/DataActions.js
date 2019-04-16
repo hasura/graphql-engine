@@ -494,34 +494,17 @@ const fetchTableListBySchema = (schemaName, successAction, errorAction) => (
   getState
 ) => {
   const url = Endpoints.getSchema;
+  const body = getSchemaQuery(schemaName);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*.*',
-          {
-            name: 'columns',
-            columns: ['*'],
-            order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
-          },
-        ],
-        where: { table_schema: schemaName },
-        order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
       if (successAction) {
-        dispatch({ type: successAction, data });
+        dispatch({ type: successAction, data: JSON.parse(data.result[1]) });
       }
     },
     error => {
