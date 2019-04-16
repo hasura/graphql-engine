@@ -29,6 +29,8 @@ const DataSubSidebar = ({
   const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
 
   const handleFunc = semverCheck('customFunctionSection', serverVersion);
+  const trackedTablesLength = schema.filter(table => table.is_table_tracked)
+    .length;
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
@@ -70,7 +72,9 @@ const DataSubSidebar = ({
 
     const tables = {};
     listingSchema.map(t => {
-      tables[t.table_name] = t;
+      if (t.is_table_tracked) {
+        tables[t.table_name] = t;
+      }
     });
 
     const currentLocation = location.pathname;
@@ -194,7 +198,7 @@ const DataSubSidebar = ({
     <LeftSubSidebar
       migrationMode={migrationMode}
       searchInput={getSearchInput()}
-      heading={`Tables (${schema.length})`}
+      heading={`Tables (${trackedTablesLength})`}
       addLink={'/data/schema/' + schemaName + '/table/add'}
       addLabel={'Add Table'}
       addTestString={'sidebar-add-table'}

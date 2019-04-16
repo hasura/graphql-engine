@@ -78,7 +78,6 @@ class Schema extends Component {
     const {
       schema,
       schemaList,
-      untrackedTables,
       migrationMode,
       untrackedRelations,
       currentSchema,
@@ -122,26 +121,13 @@ class Schema extends Component {
     };
 
     const getUntrackedTables = () => {
-      const tableNames = schema.map(item => item.table_name);
-      const untrackedTableNames = untrackedTables.map(item => item.table_name);
-
-      const schemaUntrackedTables = schema.filter(
-        table => !untrackedTableNames.includes(table.table_name)
-      );
-
-      const untrackedTablesNotInSchema = untrackedTables.filter(
-        table => !tableNames.includes(table.table_name)
-      );
-
       const tableSortFunc = (a, b) => {
         return a.table_name === b.table_name
           ? 0
           : +(a.table_name > b.table_name) || -1;
       };
 
-      const _untrackedTables = schemaUntrackedTables.concat(
-        untrackedTablesNotInSchema
-      );
+      const _untrackedTables = schema.filter(table => !table.is_table_tracked);
 
       return _untrackedTables.sort(tableSortFunc);
     };

@@ -1,9 +1,9 @@
 import requestAction from '../../../../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
+  loadUntrackedRelations,
   handleMigrationErrors,
   makeMigrationCall,
-  LOAD_UNTRACKED_RELATIONS,
   fetchTableComment,
 } from '../DataActions';
 import _push from '../push';
@@ -14,7 +14,6 @@ import {
 } from '../Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlViewErrorNotif,
@@ -574,16 +573,9 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      const allSchemas = getState().tables.allSchemas;
-      const untrackedRelations = getAllUnTrackedRelations(
-        allSchemas,
-        currentSchema
-      ).bulkRelTrack;
-      dispatch({
-        type: LOAD_UNTRACKED_RELATIONS,
-        untrackedRelations: untrackedRelations,
+      dispatch(loadUntrackedRelations()).then(() => {
+        dispatch(_push('/'));
       });
-      dispatch(_push('/'));
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });

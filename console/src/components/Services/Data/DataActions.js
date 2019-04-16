@@ -11,6 +11,7 @@ import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
+import { getSchemaQuery } from './utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
@@ -20,7 +21,6 @@ const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
 const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
-const LOAD_UNTRACKED_SCHEMA = 'Data/LOAD_UNTRACKED_SCHEMA';
 const LOAD_TABLE_COMMENT = 'Data/LOAD_TABLE_COMMENT';
 const LOAD_COLUMN_COMMENT = 'Data/LOAD_COLUMN_COMMENT';
 const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
@@ -56,38 +56,6 @@ const initQueries = {
             'hdb_views',
           ],
         },
-      },
-    },
-  },
-  loadSchema: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_table',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        '*.*',
-        {
-          name: 'columns',
-          columns: ['*.*'],
-          order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
-        },
-      ],
-      where: { table_schema: '' },
-      order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
-    },
-  },
-  loadUntrackedSchema: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'tables',
-        schema: 'information_schema',
-      },
-      columns: ['table_name'],
-      where: {
-        table_schema: '',
       },
     },
   },
@@ -205,20 +173,12 @@ const fetchTrackedFunctions = () => {
 };
 
 const fetchDataInit = () => (dispatch, getState) => {
+  const currentSchema = getState().tables.currentSchema;
   const url = Endpoints.getSchema;
   const body = {
     type: 'bulk',
-    args: [
-      initQueries.schemaList,
-      initQueries.loadSchema,
-      initQueries.loadUntrackedSchema,
-    ],
+    args: [initQueries.schemaList, getSchemaQuery(currentSchema)],
   };
-
-  // set schema in queries
-  const currentSchema = getState().tables.currentSchema;
-  body.args[1].args.where.table_schema = currentSchema;
-  body.args[2].args.where.table_schema = currentSchema;
 
   const options = {
     credentials: globalCookiePolicy,
@@ -229,8 +189,15 @@ const fetchDataInit = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      dispatch({ type: LOAD_SCHEMA, allSchemas: data[1] });
-      dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data[2] });
+      if (data[1].result_type !== 'TuplesOk') {
+        // show error
+        console.error('Failed to fetch schema ' + JSON.stringify(data[1]));
+        return;
+      }
+      dispatch({
+        type: LOAD_SCHEMA,
+        allSchemas: JSON.parse(data[1].result[1]),
+      });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -295,8 +262,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
 const loadSchema = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
-  const body = initQueries.loadSchema;
-  body.args.where.table_schema = currentSchema;
+  const body = getSchemaQuery(currentSchema);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -305,7 +271,7 @@ const loadSchema = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_SCHEMA, allSchemas: data });
+      dispatch({ type: LOAD_SCHEMA, allSchemas: JSON.parse(data.result[1]) });
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));
@@ -346,29 +312,8 @@ const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
   return dispatch(requestAction(url, options));
 };
 
-const loadUntrackedSchema = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const currentSchema = getState().tables.currentSchema;
-  const body = initQueries.loadUntrackedSchema;
-  body.args.where.table_schema = currentSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_UNTRACKED_SCHEMA, untrackedSchemas: data });
-    },
-    error => {
-      console.error('Failed to load schema ' + JSON.stringify(error));
-    }
-  );
-};
-
 const loadUntrackedRelations = () => (dispatch, getState) => {
-  dispatch(loadSchema()).then(() => {
+  return dispatch(loadSchema()).then(() => {
     const untrackedRelations = getAllUnTrackedRelations(
       getState().tables.allSchemas,
       getState().tables.currentSchema
@@ -562,7 +507,7 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
           '*.*',
           {
             name: 'columns',
-            columns: ['*.*'],
+            columns: ['*'],
             order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
           },
         ],
@@ -647,12 +592,6 @@ const dataReducer = (state = defaultState, action) => {
         allSchemas: action.allSchemas,
         listingSchemas: action.allSchemas,
       };
-    case LOAD_UNTRACKED_SCHEMA:
-      return {
-        ...state,
-        untrackedSchemas: action.untrackedSchemas,
-        information_schema: action.untrackedSchemas,
-      };
     case LOAD_UNTRACKED_RELATIONS:
       return {
         ...state,
@@ -732,7 +671,6 @@ export {
   REQUEST_ERROR,
   setTable,
   loadSchema,
-  loadUntrackedSchema,
   fetchTableComment,
   fetchColumnComment,
   handleMigrationErrors,

@@ -137,6 +137,96 @@ const getTableName = t => {
   return '';
 };
 
+const getSchemaQuery = schemaName => {
+  const runSql = `select 
+  json_agg(
+    row_to_json(info)
+  ) AS tables 
+FROM 
+  (
+    select 
+      ist.table_schema, 
+      ist.table_name,
+      row_to_json(ist.*) as detail,
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(isc) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS columns, 
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(hdb_fkc) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS foreign_key_constraints, 
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(hdb_uc) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS unique_constraints, 
+      COALESCE(
+        row_to_json(hdb_pk.*) :: JSONB, 
+        '{}' :: JSONB
+      ) AS primary_key, 
+      hdb_table.table_name IS NOT NULL AS is_table_tracked, 
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(hdb_rel) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS relationships, 
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(hdb_perm) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS permissions 
+    from 
+      information_schema.tables AS ist 
+      LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
+      and isc.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema 
+      and hdb_fkc.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = ist.table_schema 
+      and hdb_pk.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = ist.table_schema 
+      and hdb_uc.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS hdb_table ON hdb_table.table_schema = ist.table_schema 
+      and hdb_table.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_relationship AS hdb_rel ON hdb_rel.table_schema = ist.table_schema 
+      and hdb_rel.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_permission_agg AS hdb_perm ON hdb_perm.table_schema = ist.table_schema 
+      and hdb_perm.table_name = ist.table_name 
+    where 
+      ist.table_schema = '${schemaName}' 
+    GROUP BY 
+      ist.table_schema, 
+      ist.table_name,
+      ist.*,
+      row_to_json(hdb_pk.*):: JSONB, 
+      hdb_table.table_name
+  ) AS info
+`;
+  return {
+    type: 'run_sql',
+    args: {
+      sql: runSql,
+    },
+  };
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -146,4 +236,5 @@ export {
   escapeRegExp,
   getTableName,
   tabNameMap,
+  getSchemaQuery,
 };

@@ -9,7 +9,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
     r => r.rel_type === 'object'
   );
   const currentArrRels = currentTableRelationships.filter(
-    r => r.rel_type !== 'object'
+    r => r.rel_type === 'array'
   );
   for (let i = 0; i < allSchemas.length; i++) {
     const schema = allSchemas[i];
@@ -45,7 +45,14 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             }
           }
         }
-        if (!isExistingObjRel) {
+        if (
+          !isExistingObjRel &&
+          allSchemas.some(
+            table =>
+              table.table_name === constraint.ref_table &&
+              table.is_table_tracked
+          )
+        ) {
           objRels.push({
             tableName: tableName,
             isObjRel: true,
@@ -84,7 +91,12 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isExistingArrayRel = true;
           }
         }
-        if (!isExistingArrayRel) {
+        if (
+          !isExistingArrayRel &&
+          allSchemas.some(
+            table => table.table_name === rTable && table.is_table_tracked
+          )
+        ) {
           arrRels.push({
             tableName: tableName,
             isObjRel: false,
@@ -127,7 +139,12 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isExistingArrayRel = true;
           }
         }
-        if (!isExistingArrayRel) {
+        if (
+          !isExistingArrayRel &&
+          allSchemas.some(
+            table => table.table_name === rTable && table.is_table_tracked
+          )
+        ) {
           arrRels.push({
             tableName: tableName,
             isObjRel: false,
