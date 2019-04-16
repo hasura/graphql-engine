@@ -97,7 +97,7 @@ triggers etc.
 .. _get_inconsistent_metadata:
 
 get_inconsistent_metadata
-------------------------
+-------------------------
 
 ``get_inconsistent_metadata`` can be used to fetch all inconsistent metadata objects.
 
@@ -154,7 +154,7 @@ Response:-
 .. _drop_inconsistent_metadata:
 
 drop_inconsistent_metadata
--------------------------
+--------------------------
 
 ``drop_inconsistent_metadata`` can be used to purge all inconsistent objects from metadata.
 
