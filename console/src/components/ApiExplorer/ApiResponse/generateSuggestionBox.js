@@ -1,6 +1,6 @@
 import React from 'react';
 
-const styles = require('./ApiExplorer.scss');
+const styles = require('../ApiExplorer.scss');
 
 const generateSuggestionBox = (response, parseFunc) => {
   const suggestionText = parseFunc(response);

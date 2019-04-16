@@ -156,7 +156,7 @@ const createTableSql = () => {
         if (lCols.length === 0) return;
         tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
           ', '
-        )}) REFERENCES "${refTableName}"(${rCols.join(
+        )}) REFERENCES "${currentSchema}"."${refTableName}"(${rCols.join(
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });
