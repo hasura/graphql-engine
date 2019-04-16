@@ -57,9 +57,7 @@ const ForeignKeySelector = ({
         </div>
         <select
           value={refTableName || ''}
-          className={`${styles.select} form-control ${
-            styles.add_pad_left
-          }`}
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-table-${index}`}
           onChange={dispatchSetRefTable}
         >

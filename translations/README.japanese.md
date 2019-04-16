@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQLエンジンは **Postgres上で瞬時にリアルタイムのGraphQL API** を[**ウェブフックトリガー**](event-triggers.md)をデータベースイベントで起動し、ビジネスロジック用の[**リモートスキーマ**](remote-schemas.md)を提供する、非常に高速なGraphQLサーバーです。
+Hasura GraphQLエンジンは **Postgres上で瞬時にリアルタイムのGraphQL API** を[**ウェブフックトリガー**](../event-triggers.md)をデータベースイベントで起動し、ビジネスロジック用の[**リモートスキーマ**](../remote-schemas.md)を提供する、非常に高速なGraphQLサーバーです。
 
 Hasuraは、Postgresをバックエンドに持つGraphQLアプリケーションを構築したり、Postgresを使用して既存のアプリケーションをGraphQLに段階的に移行したりするのに役立ちます。
 
@@ -16,11 +16,11 @@ Hasuraは、Postgresをバックエンドに持つGraphQLアプリケーショ�
 
 ------------------
 
-![Hasura GraphQL エンジンデモ](assets/demo.gif)
+![Hasura GraphQL エンジンデモ](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL エンジンリアルタイムデモ](assets/realtime.gif)
+![Hasura GraphQL エンジンリアルタイムデモ](../assets/realtime.gif)
 
 -------------------
 
@@ -28,8 +28,8 @@ Hasuraは、Postgresをバックエンドに持つGraphQLアプリケーショ�
 
 * **強力なクエリ**: 組み込みフィルタリング、ページ付け、パターン検索、一括挿入、更新、削除などのmutations
 * **リアルタイム**: subscriptions使って様々なGraphQLクエリをライブクエリに変換
-* **リモートスキーマのマージ**: 単一のGraphQLエンジンエンドポイントを介してビジネスロジック用のカスタムGraphQLスキーマにアクセスカスタムのGraphQLスキーマにアクセス [**続きを読む**](remote-schemas.md).
-* **ウェブフックやサーバーレス機能を起動する**: Postgresのinsert / update / deleteイベント時 ([続きを読む](event-triggers.md))
+* **リモートスキーマのマージ**: 単一のGraphQLエンジンエンドポイントを介してビジネスロジック用のカスタムGraphQLスキーマにアクセスカスタムのGraphQLスキーマにアクセス [**続きを読む**](../remote-schemas.md).
+* **ウェブフックやサーバーレス機能を起動する**: Postgresのinsert / update / deleteイベント時 ([続きを読む](../event-triggers.md))
 * **既存のライブデータベースと連携**: 既存のPostgresデータベースから、すぐに使えるGraphQL APIが即座に作られます
 * **きめ細かいアクセス制御**: 認証システムと統合する動的アクセス制御（例：auth0、firebase-auth）
 * **管理UIと移行**: 最大15MBのドッカーイメージ。最大50MB RAM @ 1000 req/s。マルチコア対応
@@ -84,12 +84,12 @@ Hasuraを試す最も早い方法はHerokuを使うことです。
 | **インフラ業者** | **ワンクリックリンク** | **追加情報** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![DigitalOceanへのデプロイ](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [ドキュメント](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Azureへのデプロイ](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| Azure | [![Azureへのデプロイ](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### 他のデプロイ方法
 
 Dockerでのデプロイと高度なカスタマイズオプションについては [デプロイガイド](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) か
-[インストールマニフェスト](install-manifests)を参考にしてください。
+[インストールマニフェスト](../install-manifests)を参考にしてください。
 
 ## アーキテクチャ
 
@@ -97,7 +97,7 @@ Hasura GraphQLエンジンはPostgresデータベースインスタンスの前�
 
 リモートのGraphQLスキーマをマージして、統一されたGraphQL APIを提供することもできます。
 
-![Hasura GraphQLエンジンアーキテクチャ](assets/hasura-arch.svg)
+![Hasura GraphQLエンジンアーキテクチャ](../assets/hasura-arch.svg)
 
 ## クライアント側ツール
 
@@ -109,12 +109,12 @@ GraphQLエンジンは、バックエンドにカスタムビジネスロジッ�
 
 ### リモートスキーマ
 
-HasuraのPostgresベースのGraphQLスキーマに加えて、リモートスキーマにカスタムリゾルバを追加します。支払いAPIの実装、データベースに無いデータの問い合わせなどのユースケースに最適です - [続きを読む](remote-schemas.md)。
+HasuraのPostgresベースのGraphQLスキーマに加えて、リモートスキーマにカスタムリゾルバを追加します。支払いAPIの実装、データベースに無いデータの問い合わせなどのユースケースに最適です - [続きを読む](../remote-schemas.md)。
 
 ### データベースイベントによるウェブフックの起動
 
 データベースイベントから起動する非同期ビジネスロジックを追加します。
-通知、Postgresからのデータパイプライン、または非同期に最適です - [続きを読む](event-triggers.md)。
+通知、Postgresからのデータパイプライン、または非同期に最適です - [続きを読む](../event-triggers.md)。
 
 ### 派生データまたはデータ変換
 
@@ -122,23 +122,23 @@ PostgreSQLのデータを変換するか、あるいはその上でビジネス�
 
 ## デモ
 
-[コミュニティ・サンプル](community/examples) ディレクトリにあるサンプルアプリケーションをチェックできます。
+[コミュニティ・サンプル](../community/sample-apps) ディレクトリにあるサンプルアプリケーションをチェックできます。
 
 ### リアルタイムアプリケーション
 
 - Reactを使用して構築されたグループチャットアプリケーション。タイピングインジケーター、オンラインユーザー、新しいメッセージ通知が含まれます。
   - [試してみよう](https://realtime-chat.demo.hasura.app/)
-  - [チュートリアル](community/examples/realtime-chat)
+  - [チュートリアル](../community/sample-apps/realtime-chat)
   - [APIの参照](https://realtime-chat.demo.hasura.app/console)
 
 - 現在の場所を追跡できるアプリ。地図上を移動する乗り物の現在のGPS座標を表示します。
   - [試してみよう](https://realtime-location-tracking.demo.hasura.app/)
-  - [チュートリアル](community/examples/realtime-location-tracking)
+  - [チュートリアル](../community/sample-apps/realtime-location-tracking)
   - [APIの参照](https://realtime-location-tracking.demo.hasura.app/console)
 
 - 常にに変化するデータを集約するリアルタイムダッシュボード。
   - [試してみよう](https://realtime-poll.demo.hasura.app/)
-  - [チュートリアル](community/examples/realtime-poll)
+  - [チュートリアル](../community/sample-apps/realtime-poll)
   - [APIの参照](https://realtime-poll.demo.hasura.app/console)
 
 ### 動画
@@ -157,22 +157,22 @@ PostgreSQLのデータを変換するか、あるいはその上でビジネス�
 * プロダクトアップデートをフォロー: [@HasuraHQ](https://twitter.com/hasurahq)
 * 直接話す [ウェブサイトチャット](https://hasura.io)
 
-私たちはこのコミュニティの中でオープンで心地よい環境を達成することを約束します。 [行動規範](code-of-onduct.md)をご覧ください。
+私たちはこのコミュニティの中でオープンで心地よい環境を達成することを約束します。 [行動規範](../code-of-onduct.md)をご覧ください。
 
-セキュリティに関する問題はこちらから報告をお願いします。[詳細を読む](SECURITY.md).
+セキュリティに関する問題はこちらから報告をお願いします。[詳細を読む](../SECURITY.md).
 
 ## 開発への参加
 
-[開発者へのガイド](CONTRIBUTING.md) を参照してください。
+[開発者へのガイド](../CONTRIBUTING.md) を参照してください。
 
 ## ブランド資産
 
-Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなどを使用）[ブランド資産](assets / brand)フォルダにあります。自由に使用してください。
+Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなどを使用）[ブランド資産](../assets/brand)フォルダにあります。自由に使用してください。
 あなたが作ったアプリに"Powered by Hasura"を追加してもらえるととてもうれしいです！
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -191,6 +191,6 @@ Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなど�
 
 GraphQLエンジンのコアは[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)（Apache-2.0）の下で提供されています。
 
-全ての **その他のコンテンツ** ([`サーバー`](server), [`クライアント`](cli) と
-[`コンソール`](console) ディレクトリ以外) は [MITライセンス](LICENSE-community)の下に提供されます。
-これは [`ドキュメント`](docs) と [`コミュニティ`](community) ディレクトリに入っているもの全てを含みます。
+全ての **その他のコンテンツ** ([`サーバー`](../server), [`クライアント`](../cli) と
+[`コンソール`](../console) ディレクトリ以外) は [MITライセンス](../LICENSE-community)の下に提供されます。
+これは [`ドキュメント`](../docs) と [`コミュニティ`](../community) ディレクトリに入っているもの全てを含みます。

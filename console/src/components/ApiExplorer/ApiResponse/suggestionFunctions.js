@@ -2,7 +2,7 @@ import React from 'react';
 
 import dataErrorMapping from './dataErrorMapping';
 
-const styles = require('./ApiExplorer.scss');
+const styles = require('../ApiExplorer.scss');
 
 const dataApiErrorMap = {
   'postgres-error': dataErrorMapping['postgres-error'],

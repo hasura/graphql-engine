@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-class ErrorBoundary extends React.Component {
+class GraphiQLErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, info: null };
@@ -22,8 +22,8 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-ErrorBoundary.propTypes = {
+GraphiQLErrorBoundary.propTypes = {
   children: PropTypes.element,
 };
 
-export default ErrorBoundary;
+export default GraphiQLErrorBoundary;
