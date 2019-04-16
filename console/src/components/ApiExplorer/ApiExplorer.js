@@ -19,20 +19,6 @@ import {triggerOnBoarding} from '../Main/Actions';
 */
 
 class ApiExplorer extends Component {
-  componentWillUnmount() {
-    this.clearCodeMirrorHints();
-  }
-
-  clearCodeMirrorHints() {
-    const cmNodes = document.querySelectorAll('.CodeMirror-hints.graphiql');
-
-    if (cmNodes.length > 0) {
-      cmNodes.forEach(cm => {
-        cm.remove();
-      });
-    }
-  }
-
   /*
   onTabSelectionChanged = tabIndex => {
     this.props.dispatch(changeTabSelection(tabIndex));
@@ -92,7 +78,7 @@ class ApiExplorer extends Component {
             dataHeaders={dataHeaders}
             numberOfTables={tables.length}
             headerFocus={headerFocus}
-            queryParams={location.query}
+            urlParams={location.query}
             serverVersion={serverVersion}
           />
         </div>
