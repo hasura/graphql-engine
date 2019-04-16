@@ -61,12 +61,12 @@ export const loadInconsistentObjects = (
 ) => {
   return (dispatch, getState) => {
     if (!semverCheck('inconsistentState', serverVersion)) {
-      return;
+      return Promise.resolve();
     }
     if (!serverVersion) {
       const serverVersionFromState = getState().main.serverVersion;
       if (!semverCheck('inconsistentState', serverVersionFromState)) {
-        return;
+        return Promise.resolve();
       }
     }
     const headers = getState().tables.dataHEaders;
