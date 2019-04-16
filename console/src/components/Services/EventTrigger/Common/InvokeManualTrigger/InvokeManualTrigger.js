@@ -8,6 +8,9 @@ import {
   loadEventInvocations,
 } from './InvokeManualTriggerAction';
 
+let i = 0;
+const MAX = 2;
+
 /* This component accepts for following props
  *  1) Trigger name
  *  2) Trigger object
@@ -27,6 +30,10 @@ class InvokeManualTrigger extends React.Component {
     this.setState({
       isModalOpen: false,
     });
+    const { onClose } = this.props;
+    if (onClose && typeof onClose !== 'undefined') {
+      onClose();
+    }
   };
   constructor() {
     super();
@@ -36,19 +43,36 @@ class InvokeManualTrigger extends React.Component {
   }
   componentDidMount() {
     const { name, args, dispatch } = this.props;
-    dispatch(invokeManualTrigger(name, args))
-      .then(data => {
-        const pollId = setInterval(() => {
-          dispatch(loadEventInvocations(data.event_id)).then(d => {
-            if (d.length > 0) {
-              clearInterval(pollId);
-            }
-          });
-        }, 1000);
-      })
-      .catch(err => {
-        console.error('Error invoking trigger' + err);
-      });
+    console.log(name, args, dispatch);
+    console.log('/********* Did Mount *********/');
+    console.log(this.props);
+    console.log(this.props.identifier);
+    // this.props.onClose();
+    if (i !== MAX) {
+      i += 1;
+      dispatch(invokeManualTrigger(name, args))
+        .then(data => {
+          const pollId = setInterval(() => {
+            dispatch(loadEventInvocations(data.event_id)).then(d => {
+              if (d.length > 0) {
+                clearInterval(pollId);
+              }
+            });
+          }, 10000);
+        })
+        .catch(err => {
+          console.error('Error invoking trigger' + err);
+        });
+    }
+  }
+  componentWillUnmount() {
+    console.log('/*********/');
+    console.log(this.props.identifier);
+    console.log('Unmounted');
+  }
+  componentWillReceiveProps(nextProps) {
+    console.log('/**** Next Props ****/');
+    console.log(nextProps);
   }
   render() {
     const { isModalOpen } = this.state;
@@ -58,6 +82,7 @@ class InvokeManualTrigger extends React.Component {
       success,
       status,
       // err,
+      identifier,
     } = invokeEventTrigger;
     const styles = require('./InvokeManualTrigger.scss');
     const loader = () => <i className="fa fa-spinner fa-spin" />;
@@ -139,18 +164,20 @@ class InvokeManualTrigger extends React.Component {
       };
     };
     return (
-      <Modal
-        show={isModalOpen}
-        style={modalStyle()}
-        onHide={this.onModalClose}
-        dialogClassName={styles.invoke_trigger_modal}
-        id="invokeEventTrigger"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Trigger Manual Event</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{getEventData()}</Modal.Body>
-      </Modal>
+      <div key={identifier}>
+        <Modal
+          show={isModalOpen}
+          style={modalStyle()}
+          onHide={this.onModalClose}
+          dialogClassName={styles.invoke_trigger_modal}
+          id="invokeEventTrigger"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Trigger Manual Event</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{getEventData()}</Modal.Body>
+        </Modal>
+      </div>
     );
   }
 }

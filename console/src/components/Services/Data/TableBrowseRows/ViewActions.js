@@ -25,6 +25,9 @@ const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 
+const UPDATE_TRIGGER_ROW = 'ViewTable/UPDATE_TRIGGER_ROW';
+const UPDATE_TRIGGER_FUNCTION = 'ViewTable/UPDATE_TRIGGER_FUNCTION';
+
 // const V_ADD_WHERE;
 // const V_REMOVE_WHERE;
 // const V_SET_LIMIT;
@@ -505,6 +508,17 @@ const viewReducer = (tableName, schemas, viewState, action) => {
         ongoingRequest: false,
         lastError: action.data,
       };
+    case UPDATE_TRIGGER_ROW:
+      return {
+        ...viewState,
+        triggeredRow: action.data,
+      };
+
+    case UPDATE_TRIGGER_FUNCTION:
+      return {
+        ...viewState,
+        triggeredFunction: action.data,
+      };
     default:
       return viewState;
   }
@@ -521,4 +535,6 @@ export {
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  UPDATE_TRIGGER_ROW,
+  UPDATE_TRIGGER_FUNCTION,
 };

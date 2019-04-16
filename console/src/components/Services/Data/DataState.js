@@ -20,6 +20,8 @@ const defaultViewState = {
   lastError: {},
   lastSuccess: {},
   manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
