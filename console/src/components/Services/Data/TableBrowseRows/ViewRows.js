@@ -56,7 +56,6 @@ const ViewRows = ({
   count,
   expandedRow,
   manualTriggers = [],
-  invokeEventTrigger,
   updateInvocationRow,
   updateInvocationFunction,
   triggeredRow,
@@ -309,14 +308,9 @@ const ViewRows = ({
             () => {}
           );
 
-          console.log('triggeredRow');
-          console.log(triggeredRow);
-          console.log(rowIndex);
           const invokeManualTrigger = r =>
             triggeredRow === rowIndex && (
               <InvokeManualTrigger
-                invokeEventTrigger={invokeEventTrigger}
-                dispatch={dispatch}
                 args={r}
                 name={`${triggeredFunction}`}
                 onClose={onCloseInvokeTrigger}
@@ -324,7 +318,7 @@ const ViewRows = ({
                 identifier={`invoke_function_${triggeredFunction}`}
               />
             );
-          return (
+          return [
             <DataDropdown
               elementId={`data_browse_rows_trigger_${rowIndex}`}
               options={triggerOptions}
@@ -333,9 +327,9 @@ const ViewRows = ({
               identifier={`invoke_data_dropdown_${rowIndex}`}
             >
               {triggerBtn}
-              {invokeManualTrigger(row)}
-            </DataDropdown>
-          );
+            </DataDropdown>,
+            invokeManualTrigger(row),
+          ];
         };
 
         const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;

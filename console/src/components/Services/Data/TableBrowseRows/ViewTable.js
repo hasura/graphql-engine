@@ -181,7 +181,6 @@ class ViewTable extends Component {
       expandedRow,
       currentSchema,
       manualTriggers = [],
-      invokeEventTrigger,
       triggeredRow,
       triggeredFunction,
     } = this.props; // eslint-disable-line no-unused-vars
@@ -219,7 +218,6 @@ class ViewTable extends Component {
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
-        invokeEventTrigger={invokeEventTrigger}
         updateInvocationRow={this.updateInvocationRow.bind(this)}
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
@@ -287,7 +285,6 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
-    invokeEventTrigger: state.invokeEventTrigger,
     ...state.tables.view,
   };
 };

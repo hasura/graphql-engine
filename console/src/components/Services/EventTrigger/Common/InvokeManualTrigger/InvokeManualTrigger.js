@@ -2,14 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-bootstrap/lib/Modal';
 import AceEditor from 'react-ace';
+import { connect } from 'react-redux';
 
 import {
   invokeManualTrigger,
   loadEventInvocations,
+  RESET,
 } from './InvokeManualTriggerAction';
-
-let i = 0;
-const MAX = 2;
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -39,49 +38,47 @@ class InvokeManualTrigger extends React.Component {
     super();
     this.state = {
       isModalOpen: true,
+      pollId: null,
     };
   }
   componentDidMount() {
     const { name, args, dispatch } = this.props;
-    console.log(name, args, dispatch);
-    console.log('/********* Did Mount *********/');
-    console.log(this.props);
-    console.log(this.props.identifier);
-    // this.props.onClose();
-    if (i !== MAX) {
-      i += 1;
-      dispatch(invokeManualTrigger(name, args))
-        .then(data => {
-          const pollId = setInterval(() => {
-            dispatch(loadEventInvocations(data.event_id)).then(d => {
-              if (d.length > 0) {
-                clearInterval(pollId);
-              }
-            });
-          }, 10000);
-        })
-        .catch(err => {
-          console.error('Error invoking trigger' + err);
-        });
-    }
+    dispatch(invokeManualTrigger(name, args))
+      .then(data => {
+        const currThis = this;
+        const pollId = setInterval(() => {
+          dispatch(loadEventInvocations(data.event_id)).then(d => {
+            if (d.length > 0) {
+              clearInterval(currThis.state.pollId);
+            }
+          });
+        }, 5000);
+        this.setPoll(pollId);
+      })
+      .catch(err => {
+        console.error('Error invoking trigger' + err);
+      });
+  }
+  setPoll(pollId) {
+    this.setState({
+      pollId,
+    });
   }
   componentWillUnmount() {
-    console.log('/*********/');
-    console.log(this.props.identifier);
-    console.log('Unmounted');
-  }
-  componentWillReceiveProps(nextProps) {
-    console.log('/**** Next Props ****/');
-    console.log(nextProps);
+    const { dispatch } = this.props;
+    clearInterval(this.state.pollId);
+    dispatch({
+      type: RESET,
+    });
   }
   render() {
     const { isModalOpen } = this.state;
-    const { invokeEventTrigger } = this.props;
+    const { name, invokeEventTrigger } = this.props;
     const {
       isCreatingManualTrigger,
       success,
       status,
-      // err,
+      err,
       identifier,
     } = invokeEventTrigger;
     const styles = require('./InvokeManualTrigger.scss');
@@ -89,13 +86,15 @@ class InvokeManualTrigger extends React.Component {
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;
     const getEventPayload = () => {
-      if (isCreatingManualTrigger || status.length === 0) {
-        return null;
+      if (status.length === 0) {
+        return <div>Fetching invocation info {loader()}</div>;
       }
+      /*
       if (status.length > 0 && !status[0].event.delivered) {
         console.log('Not Delivered');
         console.log(status);
       }
+      */
       return (
         <div className={styles.displayFlexContainer}>
           <div className={`${styles.padd_left_remove} col-md-5`}>
@@ -134,28 +133,28 @@ class InvokeManualTrigger extends React.Component {
         </div>
       );
     };
-    const getRecentInvocation = () =>
-      !isCreatingManualTrigger && (
-        <div
-          className={`${styles.remove_padding_left} container-fluid ${
-            styles.clear_fix
-          } ${styles.padding_top_20}`}
-        >
-          <div className={styles.margin_bottom_20}>
-            <em>Recent Invocations</em>
-          </div>
-          {''}
-        </div>
-      );
+    /*
+     * If there is no error, get the event info. Otherwise check if the err is an object with `error` as key. Print a default message finally
+     * */
+    const getEventIdErrorText = error => {
+      return <span className={styles.error_text}>{error}</span>;
+    };
+    const eventInfo =
+      (!err && getEventId()) ||
+      (err && 'error' in err && getEventIdErrorText(err.error)) ||
+      getEventIdErrorText('Unable to invoke trigger');
     const getEventData = () => (
-      <div className="content-fluid">
+      <div
+        className={`${styles.remove_padding_left} container-fluid ${
+          styles.clear_fix
+        }`}
+      >
         <div className={`${styles.remove_padding_left} col-md-12`}>
           <div className={`${styles.margin_bottom_20} `}>
-            Event ID - {getEventId()}
+            Event ID - {eventInfo}
           </div>
-          {getEventPayload()}
+          {!err && getEventPayload()}
         </div>
-        {getRecentInvocation()}
       </div>
     );
     const modalStyle = () => {
@@ -173,7 +172,7 @@ class InvokeManualTrigger extends React.Component {
           id="invokeEventTrigger"
         >
           <Modal.Header closeButton>
-            <Modal.Title>Trigger Manual Event</Modal.Title>
+            <Modal.Title>Invoking {name}</Modal.Title>
           </Modal.Header>
           <Modal.Body>{getEventData()}</Modal.Body>
         </Modal>
@@ -190,4 +189,10 @@ InvokeManualTrigger.propTypes = {
   invokeEventTrigger: PropTypes.object.isRequired,
 };
 
-export default InvokeManualTrigger;
+const mapStateToProps = state => {
+  return {
+    invokeEventTrigger: state.invokeEventTrigger,
+  };
+};
+
+export default connect(mapStateToProps)(InvokeManualTrigger);

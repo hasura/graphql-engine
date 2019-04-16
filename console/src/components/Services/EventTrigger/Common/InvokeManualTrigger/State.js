@@ -1,7 +1,7 @@
 const defaultState = {
   isCreatingManualTrigger: false,
   success: {},
-  err: {},
+  err: null,
   isStatusFetching: false,
   status: [],
   statusFetchingErr: {},

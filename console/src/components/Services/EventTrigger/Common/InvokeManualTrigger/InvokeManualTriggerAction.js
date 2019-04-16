@@ -94,7 +94,7 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
         ...state,
         isCreatingManualTrigger: true,
         success: {},
-        err: {},
+        err: null,
         status: [],
       };
     case INVOKE_SUCCESS:
@@ -139,6 +139,6 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
   }
 };
 
-export { invokeManualTrigger, loadEventInvocations };
+export { invokeManualTrigger, loadEventInvocations, RESET };
 
 export default invokeManualTriggerReducer;
