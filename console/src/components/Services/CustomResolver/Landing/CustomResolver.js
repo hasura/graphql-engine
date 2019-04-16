@@ -15,9 +15,8 @@ class CustomResolver extends React.Component {
     // const Rectangle = require('./Rectangle.svg');
 
     const { dispatch, migrationMode, customResolverList } = this.props;
-
+    const showIntroSection = !customResolverList.resolvers.length;
     const getIntroSection = () => {
-      const showIntroSection = !customResolverList.resolvers.length;
       if (!showIntroSection) {
         return null;
       }
@@ -90,6 +89,7 @@ class CustomResolver extends React.Component {
               MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/azure-functions/nodejs"
               awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs"
               adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/"
+              isAvailable={showIntroSection}
             />
           </div>
         </div>

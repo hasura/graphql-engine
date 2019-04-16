@@ -32,9 +32,9 @@ class Schema extends Component {
     affected_rows
   }
 }`;
-
+    const showIntroSection = !listingTrigger.length;
     const getIntroSection = () => {
-      const showIntroSection = !listingTrigger.length;
+
       if (!showIntroSection) {
         return null;
       }
@@ -113,6 +113,7 @@ class Schema extends Component {
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
             awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
             adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+            isAvailable={showIntroSection}
           />
         </div>
       </div>

@@ -207,7 +207,11 @@ a.expanded {
   text-align: center;
   overflow: unset !important;
 }
-
+.tableCellCenterAlignedOverflow
+{
+  text-align: center;
+  overflow: hidden !important;
+}
 .tableCellExpanded {
   white-space: normal;
 }
@@ -218,4 +222,3 @@ a.expanded {
     padding-bottom: 3px;
   }
 }
-
