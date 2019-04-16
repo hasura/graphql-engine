@@ -24,15 +24,14 @@ const getInconsistentObjectsQuery = {
   args: {},
 };
 
+const reloadCacheQuery = {
+  type: 'reload_metadata',
+  args: {},
+};
+
 const reloadCacheAndGetInconsistentObjectsQuery = {
   type: 'bulk',
-  args: [
-    {
-      type: 'reload_metadata',
-      args: {},
-    },
-    getInconsistentObjectsQuery,
-  ],
+  args: [reloadCacheQuery, getInconsistentObjectsQuery],
 };
 
 const dropInconsistentObjectsQuery = {
@@ -117,6 +116,42 @@ export const loadInconsistentObjects = (
           failureCb(error);
         }
       }
+    );
+  };
+};
+
+export const reloadMetadata = (successCb, failureCb) => {
+  return (dispatch, getState) => {
+    const serverVersionFromState = getState().main.serverVersion;
+    if (!semverCheck('inconsistentState', serverVersionFromState)) {
+      const headers = getState().tables.dataHEaders;
+      return dispatch(
+        requestAction(endpoints.query, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(reloadCacheQuery),
+        })
+      ).then(
+        data => {
+          if (successCb) {
+            successCb(data);
+          }
+        },
+        error => {
+          console.error(error);
+          if (failureCb) {
+            failureCb(error);
+          }
+        }
+      );
+    }
+    return dispatch(
+      loadInconsistentObjects(
+        serverVersionFromState,
+        true,
+        successCb,
+        failureCb
+      )
     );
   };
 };

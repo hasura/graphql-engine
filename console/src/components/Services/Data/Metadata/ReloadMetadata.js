@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
-import { loadInconsistentObjects } from './Actions';
+import { reloadMetadata } from './Actions';
 
 import {
   showSuccessNotification,
@@ -21,9 +21,7 @@ class ReloadMetadata extends Component {
     const reloadMetadataAndLoadInconsistentMetadata = () => {
       this.setState({ isReloading: true });
       dispatch(
-        loadInconsistentObjects(
-          null,
-          true,
+        reloadMetadata(
           () => {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
