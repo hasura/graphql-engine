@@ -10,7 +10,7 @@ ARG postgres_ver="11"
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
     && apt-get -y install curl gnupg2 \
-    &&  echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get -y update \
     && apt-get install -y g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip postgresql-client-${postgres_ver} postgresql-client-common \
