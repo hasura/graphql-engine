@@ -1,7 +1,7 @@
 /* */
-import Endpoints from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import dataHeaders from '../Common/Headers';
+import Endpoints from '../../../../../Endpoints';
+import requestAction from '../../../../../utils/requestAction';
+import dataHeaders from '../../../Data/Common/Headers';
 import defaultState from './State';
 /* */
 
@@ -18,7 +18,7 @@ const RESET = '@invokeManualTrigger/RESET';
 
 /* */
 
-const invokeManualTriger = (name, args) => (dispatch, getState) => {
+const invokeManualTrigger = (name, args) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const manualTriggerObj = {
     type: 'invoke_event_trigger',
@@ -35,8 +35,14 @@ const invokeManualTriger = (name, args) => (dispatch, getState) => {
     body: JSON.stringify(manualTriggerObj),
   };
   return dispatch(requestAction(url, options))
-    .then(data => dispatch({ type: INVOKE_SUCCESS, data: data }))
-    .catch(err => dispatch({ type: INVOKE_FAIL, data: err }));
+    .then(data => {
+      dispatch({ type: INVOKE_SUCCESS, data: data });
+      return Promise.resolve(data);
+    })
+    .catch(err => {
+      dispatch({ type: INVOKE_FAIL, data: err });
+      return Promise.reject(err);
+    });
 };
 
 const loadEventInvocations = eventId => (dispatch, getState) => {
@@ -58,7 +64,9 @@ const loadEventInvocations = eventId => (dispatch, getState) => {
             columns: ['*'],
           },
         ],
-        where: { event_id: eventId },
+        where: {
+          event_id: eventId,
+        },
         order_by: ['-created_at'],
       },
     }),
@@ -67,9 +75,11 @@ const loadEventInvocations = eventId => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_EVENT_STATUS_SUCCESS, data: data });
+      return Promise.resolve(data);
     },
     err => {
       dispatch({ type: FETCH_EVENT_STATUS_FAIL, data: err });
+      return Promise.reject(err);
     }
   );
 };
@@ -85,7 +95,7 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
         isCreatingManualTrigger: true,
         success: {},
         err: {},
-        status: {},
+        status: [],
       };
     case INVOKE_SUCCESS:
       return {
@@ -103,7 +113,7 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
       return {
         ...state,
         isStatusFetching: true,
-        status: {},
+        status: [],
         statusFetchingErr: {},
       };
     case FETCH_EVENT_STATUS_SUCCESS:
@@ -129,6 +139,6 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
   }
 };
 
-export { invokeManualTriger, loadEventInvocations };
+export { invokeManualTrigger, loadEventInvocations };
 
 export default invokeManualTriggerReducer;

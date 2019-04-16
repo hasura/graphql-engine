@@ -5,6 +5,8 @@ import {
   vMakeRequest,
   // vExpandHeading,
   fetchManualTriggers,
+  UPDATE_TRIGGER_ROW,
+  UPDATE_TRIGGER_FUNCTION,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
@@ -137,6 +139,22 @@ class ViewTable extends Component {
     ]);
   }
 
+  updateInvocationRow = row => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: UPDATE_TRIGGER_ROW,
+      data: row,
+    });
+  };
+
+  updateInvocationFunction = triggerFunc => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: UPDATE_TRIGGER_FUNCTION,
+      data: triggerFunc,
+    });
+  };
+
   retrieveManualTriggers = tableName => {
     const { dispatch } = this.props;
     return !semverCheck('manualTriggers')
@@ -163,6 +181,9 @@ class ViewTable extends Component {
       expandedRow,
       currentSchema,
       manualTriggers = [],
+      invokeEventTrigger,
+      triggeredRow,
+      triggeredFunction,
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
@@ -198,6 +219,11 @@ class ViewTable extends Component {
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
+        invokeEventTrigger={invokeEventTrigger}
+        updateInvocationRow={this.updateInvocationRow.bind(this)}
+        updateInvocationFunction={this.updateInvocationFunction.bind(this)}
+        triggeredRow={triggeredRow}
+        triggeredFunction={triggeredFunction}
       />
     );
 
@@ -261,6 +287,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    invokeEventTrigger: state.invokeEventTrigger,
     ...state.tables.view,
   };
 };

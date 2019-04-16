@@ -5,7 +5,11 @@ const styles = require('./DataDropdown.scss');
 const ComponentData = ({ options }) => {
   const generateOptions = () => {
     return options.map((o, i) => (
-      <li key={i} onClick={o.onChange} data-test={o.itemIdentifier}>
+      <li
+        key={i}
+        onClick={() => o.onChange.call(undefined, o.displayName, o.rowIndex)}
+        data-test={o.itemIdentifier}
+      >
         {`${o.prefixLabel} ${o.displayName}`}
       </li>
     ));
@@ -16,15 +20,27 @@ const ComponentData = ({ options }) => {
   return <ul className={styles.dropdown_wrapper}>{generateOptions()}</ul>;
 };
 
-const DataDropdown = ({ elementId, children, options, position }) => {
+const DataDropdown = ({
+  identifier,
+  elementId,
+  children,
+  options,
+  position,
+}) => {
   const [dropdownState, toggle] = useState(false);
   const toggleDropdown = () => toggle(!dropdownState);
   const showDropdown = () =>
     dropdownState && <ComponentData position={position} options={options} />;
   return (
-    <div testId={`${elementId}`} className={styles.data_dropdown_wrapper}>
-      <span onClick={toggleDropdown}>
-        {children}
+    <div
+      key={`${identifier}_wrapper`}
+      data-test={`${elementId}`}
+      className={styles.data_dropdown_wrapper}
+    >
+      <span key={`${identifier}_children_wrapper`}>
+        <span key={`${identifier}_children`} onClick={toggleDropdown}>
+          {children}
+        </span>
         {showDropdown()}
       </span>
     </div>

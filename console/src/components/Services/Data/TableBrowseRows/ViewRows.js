@@ -6,6 +6,8 @@ import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
 import DataDropdown from '../../../Common/DataDropdown/DataDropdown';
 
+import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
+
 import {
   vExpandRel,
   vCloseRel,
@@ -54,8 +56,24 @@ const ViewRows = ({
   count,
   expandedRow,
   manualTriggers = [],
+  invokeEventTrigger,
+  updateInvocationRow,
+  updateInvocationFunction,
+  triggeredRow,
+  triggeredFunction,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
+
+  // Invoke manual trigger status
+  const invokeTrigger = (trigger, row) => {
+    updateInvocationRow(row);
+    updateInvocationFunction(trigger);
+  };
+
+  const onCloseInvokeTrigger = () => {
+    updateInvocationRow(-1);
+    updateInvocationFunction(null);
+  };
 
   const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
@@ -272,7 +290,8 @@ const ViewRows = ({
               displayName: m.name,
               prefixLabel: 'Run:',
               itemIdentifier: m.name,
-              onChange: () => null,
+              onChange: invokeTrigger,
+              rowIndex: rowIndex,
             };
           });
 
@@ -290,13 +309,31 @@ const ViewRows = ({
             () => {}
           );
 
+          console.log('triggeredRow');
+          console.log(triggeredRow);
+          console.log(rowIndex);
+          const invokeManualTrigger = r =>
+            triggeredRow === rowIndex && (
+              <InvokeManualTrigger
+                invokeEventTrigger={invokeEventTrigger}
+                dispatch={dispatch}
+                args={r}
+                name={`${triggeredFunction}`}
+                onClose={onCloseInvokeTrigger}
+                key={`invoke_function_${triggeredFunction}`}
+                identifier={`invoke_function_${triggeredFunction}`}
+              />
+            );
           return (
             <DataDropdown
-              elementId="data_browse_rows_trigger"
+              elementId={`data_browse_rows_trigger_${rowIndex}`}
               options={triggerOptions}
               position="right"
+              key={`invoke_data_dropdown_${rowIndex}`}
+              identifier={`invoke_data_dropdown_${rowIndex}`}
             >
               {triggerBtn}
+              {invokeManualTrigger(row)}
             </DataDropdown>
           );
         };
@@ -317,7 +354,7 @@ const ViewRows = ({
         manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div className={styles.tableCellCenterAligned}>
+          <div key={rowIndex} className={styles.tableCellCenterAligned}>
             {cloneButton}
             {editButton}
             {deleteButton}
@@ -333,6 +370,20 @@ const ViewRows = ({
       // Insert column cells
       _tableSchema.columns.forEach(col => {
         const columnName = col.column_name;
+
+        /* Row is a JSON object with `key` as the column name in the db
+         * and `value` as corresponding column value of the column in the database,
+         * Ex: author table with the following schema:
+         *  id int Primary key,
+         *  name text,
+         *  address json
+         *  `row`:
+         *    {
+         *      id: 1,
+         *      name: "Hasura",
+         *      address: {Hello: "World", Foo: "Bar"}
+         *    }
+         * */
 
         const getColCellContent = () => {
           const rowColumnValue = row[columnName];
@@ -350,6 +401,9 @@ const ViewRows = ({
             cellValue = JSON.stringify(rowColumnValue);
             cellTitle = cellValue;
           } else {
+            /*
+             * This will render [object Object] if the state is not common data types
+             * */
             cellValue = rowColumnValue.toString();
             cellTitle = cellValue;
           }
@@ -720,6 +774,18 @@ const ViewRows = ({
 
   return (
     <div className={isVisible ? '' : 'hide '}>
+      {/*
+      <InvokeManualTrigger
+        invokeEventTrigger={invokeEventTrigger}
+        dispatch={dispatch}
+        args={{
+          id: '1',
+          name: 'somename',
+        }}
+        name="newTrigger"
+        onClose={() => console.log('E')}
+      />
+      */}
       {getFilterQuery()}
       <hr />
       {getPrimaryKeyMsg()}

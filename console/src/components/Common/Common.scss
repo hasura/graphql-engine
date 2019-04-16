@@ -381,10 +381,20 @@ input {
   padding-right: 0 !important;
 }
 
+.padding_top_20 {
+  padding-top: 20px;
+}
+.margin_bottom_20 {
+  margin-bottom: 20px;
+}
+
 .remove_margin_bottom {
   margin-bottom: 0 !important;
 }
 
+.remove_padding_left {
+  padding-left: 0 !important;
+}
 .remove_margin {
   margin: 0 !important;
 }
