@@ -4,22 +4,20 @@ title: "Handle loading/errors"
 
 As we saw in the previous step, Apollo injected props into the component’s render prop function. Among them `loading` and `error` are common ones that you will need to handle in your app.
 
-Now let's go back to our `<Query>` component that you wrote in the previous step.
+Now let's go back to the `<Query>` component that you wrote in the previous step.
 
-```
+```javascript
 
-  <Query query={QUERY_PRIVATE_TODO} variables={{ userId: userId }}>
-    {({ loading, error, data, refetch }) => {
+  <Query query={GET_MY_TODOS}>
+    {({ loading, error, data, client}) => {
       if (loading) {
-        return <div>Loading. Please wait...</div>;
+        return (<div>Loading...</div>);
       }
       if (error) {
-        return <div>An error occurred</div>;
+        console.error(error);
+        return (<div>Error!</div>);
       }
-      ... some code
-      return (
-        ... some code
-      );
+      return (<TodoPrivateList client={client} todos={data.todos} />);
     }}
   </Query>
 

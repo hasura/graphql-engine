@@ -1,0 +1,122 @@
+---
+title: "Set up Apollo Client"
+---
+
+Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options. You can directly write queries and mutations in GraphQL and send them using an ApolloClient instance.
+
+Let's get started by installing apollo dependenices:
+
+```bash
+$ npm install apollo-boost --save
+```
+
+`apollo-boost` comes bundled with several most used packages that you need to with Apollo Client. 
+
+Here they are:
+> 
+> `apollo-client`: the client that can be used with any javascript front-end.
+> 
+> `apollo-cache-inmemory`: recommended cache implementation for Apollo Client 2.0.
+> 
+> `apollo-link-http`: An Apollo Link for modifying control flow of GraphQL requests.  
+> 
+> `apollo-link-error`: An Apollo Link for handling and inspecting errors.
+> 
+> `apollo-link-state`: An Apollo Link for managing local data.
+> 
+> `graphql-tag`: Utitily for parsing GraphQL queries. 
+> 
+
+**Note**: apollo-boost is a minimal config way to start using Apollo Client. It includes some sensible defaults.
+
+Apart from `apollo-boost`, you also need to install `react-apollo` , `graphql` and `apollo-link-context` packages.
+
+```bash
+$ npm install react-apollo graphql apollo-link-context --save
+```
+
+`react-apollo` has the necessary bindings to use Apollo Client with React.
+
+Open `src/components/App.js` and add the following imports at the top:
+
+```js
+import React from 'react';
+
+import Header from './Header';
+import TodoPrivateWrapper from './Todo/TodoPrivateWrapper';
+import TodoPublicWrapper from './Todo/TodoPublicWrapper';
+import OnlineUsersWrapper from './OnlineUsers/OnlineUsersWrapper';
+
++ import ApolloClient from 'apollo-client';
++ import { InMemoryCache } from 'apollo-cache-inmemory';
++ import { HttpLink } from 'apollo-link-http';
++ import { ApolloProvider } from 'react-apollo';
+
+const App = ({auth}) => {
+  return (
+    <div>
+      <Header logoutHandler={auth.logout} />
+      <div className="container-fluid p-left-right-0">
+        <div className="col-xs-12 col-md-9 p-left-right-0">
+          <div className="col-xs-12 col-md-6 sliderMenu p-30">
+            <TodoPrivateWrapper />
+          </div>
+          <div className="col-xs-12 col-md-6 sliderMenu p-30 bg-gray border-right">
+            <TodoPublicWrapper />
+          </div>
+        </div>
+        <div className="col-xs-12 col-md-3 p-left-right-0">
+          <div className="col-xs-12 col-md-12 sliderMenu p-30 bg-gray">
+            <OnlineUsersWrapper />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
+```
+
+These are the required apollo dependenices to get started. Now let's define a function which will return apollo client with httplink and cache.
+
+```js
+const createApolloClient = (authToken) => {
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: 'https://backend.graphql-tutorials.org/v1alpha1/graphql',
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    }),
+    cache: new InMemoryCache(),
+  });
+};
+```
+Create the apollo client inside `App` and pass the client prop to `<ApolloProvider>` component.
+
+```js
+const App = ({auth}) => {
++  const client = createApolloClient(auth.idToken);
+   return (
++    <ApolloProvider client={client}>
+       <div>
+       </div>
++    </ApolloProvider>
+   );
+};
+```
+
+Let's try to understand what is happening here. 
+
+We are creating an `HttpLink` to connect ApolloClient with the GraphQL server. As you know already, our GraphQL server is running at [https://backend.graphql-tutorials.org/v1alpha1/graphql](https://backend.graphql-tutorials.org/v1alpha1/graphql)
+
+At the end, we instantiate ApolloClient by passing in our HttpLink and a new instance of `InMemoryCache` (recommended caching solution). We are wrapping all of this in a function which will return the client.
+
+We are going to make use of this function inside `App` component.
+
+
+
+
+
+

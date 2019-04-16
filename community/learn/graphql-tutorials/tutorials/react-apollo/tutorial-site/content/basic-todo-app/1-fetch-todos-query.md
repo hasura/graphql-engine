@@ -1,21 +1,17 @@
 ---
-title: "Fetch todos: query"
+title: "Fetch todos - query"
 ---
 
-The first piece of code you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user. Let's define a graphql query to fetch the required data.
+The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user. Let's define a graphql query to fetch the required data.
 
 ```graphql
-query fetch_todos {
-    todos(
-      where: { is_public: { _eq: false } }
-      order_by: { created_at: desc }
-    ) {
-      id
-      text
-      is_completed
-      created_at
-      is_public
-    }
+query getMyTodos {
+  todos(where: { is_public: { _eq: false} }, order_by: { created_at: desc }) {
+    id
+    title
+    created_at
+    is_completed
+  }
 }
 ```
 

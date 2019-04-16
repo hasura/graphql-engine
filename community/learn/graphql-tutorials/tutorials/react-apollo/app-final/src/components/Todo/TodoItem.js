@@ -44,7 +44,7 @@ const TodoItem = ({index, todo, client}) => {
       mutation: TOGGLE_TODO,
       variables: {id: todo.id, isCompleted: !todo.is_completed},
       optimisticResponse: {},
-      update: (cache, {}) => {
+      update: (cache) => {
         const existingTodos = cache.readQuery({ query: GET_MY_TODOS });
         const newTodos = existingTodos.todos.map(t => {
           if (t.id === todo.id) {

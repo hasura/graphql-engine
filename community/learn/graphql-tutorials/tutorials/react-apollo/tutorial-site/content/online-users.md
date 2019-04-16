@@ -2,16 +2,14 @@
 title: "Online Users"
 ---
 
-We cruised through our first GraphQL query and mutation. We queried for todos and added a todo.
+We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
 Now let's get to the exciting part.
 
 GraphQL Subscriptions
 ---------------------
 
-We have a section of UI which displays the list of online users. So far we have made queries to fetch data and display them on the UI. But typically online users data is dynamic. 
-
-So do we poll our server every few seconds with a graphql query to see who are online? Technically, you can do it. But it will put a huge load on the server when all of your clients are requesting it at the same time.
+We have a section of UI which displays the list of online users. So far we have made queries to fetch data and display them on the UI. But typically online users data is dynamic.
 
 We can make use of GraphQL Subscription API to get realtime data from the graphql server to efficiently handle this.
 
@@ -23,54 +21,64 @@ We have to make this change to see yourself online first. Remember that you are 
 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
 
-Open `src/components/Home/Home.js` and add the following imports:
+Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports:
 
 ```
 import gql from "graphql-tag";
-import moment from "moment";
 ```
 
-In `componentDidMount`, we will create a `setInterval` to update the last_seen of the user every 5 seconds.
+Now set the client prop in the constructor
 
+```javascript
++ import {withApollo} from 'react-apollo';
+class OnlineUsersWrapper extends Component {
+- constructor() {
++ constructor(props) {
+-   super();
++   super(props);
++   this.client = props.client;
+
+    this.state = {
+      onlineUsers: [
+        { name: "someUser1" },
+        { name: "someUser2" }
+      ]
+    };
+  }
 ```
+
+Update the export by wrapping the OnlineUsersWrapper component with `withApollo`
+
+```javascript
+- export default OnlineUsersWrapper;
++ export default withApollo(OnlineUsersWrapper);
+```
+
+In `componentDidMount`, we will create a `setInterval` to update the last_seen of the user every 30 seconds.
+
+```javascript
   componentDidMount() {
-    // eslint-disable-next-line
-    const lastSeenMutation = setInterval(this.updateLastSeen.bind(this), 5000);
+    // Every 30s, run a mutation to tell the backend that you're online
+    this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
   }
 ```
 
 Now let's write the definition of the `updateLastSeen`.
 
 ```
-  updateLastSeen = () => {
-    const userId = localStorage.getItem("auth0:id_token:sub");
-    const timestamp = moment().format();
-    if (this.props.client) {
-      this.props.client
-        .mutate({
-          mutation: gql`
-            mutation($userId: String!, $timestamp: timestamptz!) {
-              update_users(
-                where: { auth0_id: { _eq: $userId } }
-                _set: { auth0_id: $userId, last_seen: $timestamp }
-              ) {
-                affected_rows
-              }
-            }
-          `,
-          variables: {
-            userId: userId,
-            timestamp: timestamp
-          }
-        })
-        .then(() => {
-          // handle response if required
-        })
-        .catch(error => {
-          console.error(error);
-        });
-    }
-  };
+  updateLastSeen() {
+    // Use the apollo client to run a mutation to update the last_seen value
+    const UPDATE_LASTSEEN_MUTATION=gql`
+      mutation updateLastSeen ($now: timestamptz!) {
+        update_users(where: {}, _set: {last_seen: $now}) {
+          affected_rows
+        }
+      }`;
+    this.client.mutate({
+      mutation: UPDATE_LASTSEEN_MUTATION,
+      variables: {now: (new Date()).toISOString()}
+    });
+  }
 ```
 
 Again, we are making use of `client.mutate` to update the `users` table of the database.

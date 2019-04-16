@@ -3,6 +3,16 @@ body {
   font-family: 'Roboto';
 }
 
+.diffNewLine {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.diffRemoveLine {
+  color: red;
+  background-color: #ffcccc;
+}
+
 .navbar-default .navbar-toggle .icon-bar {
   background-color: #fff !important;
 }

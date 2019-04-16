@@ -14,7 +14,7 @@ Less than 2 hours
 ## What you'll be able to do after this tutorial
 Use (realtime) GraphQL in your react app.
 
-## Who is this tutorial for
+## Who is this tutorial for?
 You should know the basics of how to build a React app.
 
 ## Topics covered in this tutorial
