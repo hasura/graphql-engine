@@ -1,5 +1,4 @@
-.alertDanger
-{
+.alertDanger {
   position: sticky;
   position: -webkit-sticky;
   position: -moz-sticky;
@@ -8,17 +7,20 @@
   top: 0;
   z-index: 1000;
 }
+
 .notifModalDialog {
   width: 800px;
   margin: 30px auto;
   right: 100px;
   top: -15px;
 }
+
 :global {
   @keyframes react-progress-spinner {
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg);
     }
@@ -33,9 +35,11 @@
     opacity: 1;
     transition: all 400ms;
     z-index: 9999;
+
     &.react-progress-bar-on-top {
       height: 100%;
     }
+
     &.react-progress-bar-hide {
       opacity: 0;
       visibility: hidden;

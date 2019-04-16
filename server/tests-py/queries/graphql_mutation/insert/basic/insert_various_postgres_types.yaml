@@ -8,10 +8,10 @@
         - c1_smallint: 32767
           c2_integer: 2147483647
           c3_bigint: "9223372036854775807"
-          c4_decimal: 123.45
-          c5_numeric: 1.234
+          c4_decimal: "123.45"
+          c5_numeric: "1.234"
           c6_real: 0.00390625
-          c7_double_precision: 16.0001220703125
+          c7_double_precision: "16.0001220703125"
           c8_smallserial: 1
           c9_serial: 1
           c10_bigserial: "1"
@@ -146,14 +146,3 @@
           }
         }
       }
-- description: Delete the inserted rows in test_types table
-  url: /v1/query
-  status: 200
-  query:
-    type: run_sql
-    args:
-      sql: |
-        delete from test_types;
-        SELECT setval('test_types_c10_bigserial_seq', 1, FALSE);
-        SELECT setval('test_types_c9_serial_seq', 1, FALSE);
-        SELECT setval('test_types_c8_smallserial_seq', 1, FALSE);

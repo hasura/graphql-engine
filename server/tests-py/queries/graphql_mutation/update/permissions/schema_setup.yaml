@@ -1,0 +1,160 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL,
+        title TEXT,
+        version TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP,
+        PRIMARY KEY (id,version)
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Person table
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE person (
+        id SERIAL PRIMARY KEY,
+        details JSONB NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: person
+
+
+#Author select permission for user
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        id: X-HASURA-USER-ID
+
+#Article select permission for user
+- type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: true
+
+
+#Article update permission for user
+#Allow modifications only on unpublished articles
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns:
+      - title
+      - content
+      - is_published
+      - published_on
+      - version
+      filter:
+        $and:
+          - author_id: X-HASURA-USER-ID
+          - is_published: false
+
+#Resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        city TEXT NOT NULL
+      );
+
+- type: track_table
+  args:
+    name: resident
+    schema: public
+
+#Permissions
+- type: create_select_permission
+  args:
+    table: resident
+    role: user1
+    permission:
+      filter: {}
+      columns: '*'
+- type: create_update_permission
+  args:
+    table: resident
+    role: user1
+    permission:
+      filter: {}
+      columns: '*'
+      set:
+        city: melbourne
+
+- type: create_select_permission
+  args:
+    table: resident
+    role: user2
+    permission:
+      filter: {}
+      columns: '*'
+- type: create_update_permission
+  args:
+    table: resident
+    role: user2
+    permission:
+      filter: {}
+      columns: '*'
+      set:
+        city: X-Hasura-City

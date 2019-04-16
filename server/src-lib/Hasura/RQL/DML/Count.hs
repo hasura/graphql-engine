@@ -14,6 +14,7 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
 import           Hasura.Prelude
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -106,25 +107,25 @@ validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
       "Relationships can't be used in \"distinct\"."
 
 validateCountQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
   liftDMLP1 . validateCountQWith binRHSBuilder
 
 countQToTx
   :: (QErrM m, MonadTx m)
-  => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+  => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
 countQToTx (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
           (Q.fromBuilder countSQL) (toList p) True
-  return $ BB.toLazyByteString $ encodeCount qRes
+  return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
 runCount
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => CountQuery -> m RespBody
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  => CountQuery -> m EncJSON
 runCount q =
   validateCountQ q >>= countQToTx

@@ -19,7 +19,7 @@ class App extends Component {
   }
   componentWillReceiveProps(nextProps) {
     if ( nextProps.vehicleId !== this.props.vehicleId ) {
-      this.setState({ ...this.state, vehicleId: nextProps.vehicleId });
+      this.setState({ vehicleId: nextProps.vehicleId });
     }
   }
   render() {

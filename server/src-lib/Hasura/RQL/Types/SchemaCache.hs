@@ -63,7 +63,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , InsSetCols
+       , PreSetCols
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -103,10 +103,10 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.Subscribe
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -152,8 +152,8 @@ onlyComparableCols :: [PGColInfo] -> [PGColInfo]
 onlyComparableCols = filter (isComparableType . pgiType)
 
 getColInfos :: [PGCol] -> [PGColInfo] -> [PGColInfo]
-getColInfos cols allColInfos = flip filter allColInfos $ \ci ->
-  pgiName ci `elem` cols
+getColInfos cols allColInfos =
+  flip filter allColInfos $ \ci -> pgiName ci `elem` cols
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -196,9 +196,10 @@ isPGColInfo _            = False
 
 data InsPermInfo
   = InsPermInfo
-  { ipiView            :: !QualifiedTable
+  { ipiCols            :: !(HS.HashSet PGCol)
+  , ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !InsSetCols
+  , ipiSet             :: !PreSetCols
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -221,6 +222,7 @@ data UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpSQL
+  , upiSet             :: !PreSetCols
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -253,8 +255,7 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId          :: !TriggerId
-   , etiName        :: !TriggerName
+   { etiName        :: !TriggerName
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
@@ -353,9 +354,9 @@ mkTableInfo
   -> [PGColInfo]
   -> [PGCol]
   -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined uniqCons cols pcols mVI =
+mkTableInfo tn isSystemDefined uniqCons cols pCols mVI =
   TableInfo tn isSystemDefined colMap (M.fromList [])
-  uniqCons pcols mVI (M.fromList [])
+    uniqCons pCols mVI (M.fromList [])
   where
     colMap     = M.fromList $ map f cols
     f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
@@ -771,7 +772,6 @@ getDependentObjsWith f sc objId =
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
-
     -- induces a b : is b dependent on a
     induces (SOTable tn1) (SOTable tn2)      = tn1 == tn2
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2

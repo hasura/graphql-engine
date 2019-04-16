@@ -14,6 +14,9 @@ import {
   failMCWithWrongDefaultValue,
   passCreateForeignKey,
   passRemoveForeignKey,
+  passMTRenameTable,
+  passMTRenameColumn,
+  passModifyPkey,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -36,6 +39,8 @@ export const runModifyTableTests = () => {
     it('Creating a table', passMTCreateTable);
     it('Moving to the table', passMTMoveToTable);
     it('Modify table button opens the correct route', passMTCheckRoute);
+    it('Pass renaming table', passMTRenameTable);
+    it('Pass renaming column', passMTRenameColumn);
     it('Fails to add column without column name', failMTWithoutColName);
     it('Fails without type selected', failMTWithoutColType);
     it('Add a column', passMTAddColumn);
@@ -43,6 +48,7 @@ export const runModifyTableTests = () => {
     it('Pass modify with wrong default value', passMCWithRightDefaultValue);
     it('Pass create foreign-key', passCreateForeignKey);
     it('Pass remove foreign-key', passRemoveForeignKey);
+    it('Pass modifying a primary key', passModifyPkey);
     it('Delete the column', passMTDeleteCol);
     it('Delete Table Cancel', passMTDeleteTableCancel);
     it('Delete table', passMTDeleteTable);

@@ -1,21 +1,25 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ApiCollectionPanel from './ApiCollectionPanel';
-import ApiRequestWrapper from './ApiRequestWrapper';
 import Helmet from 'react-helmet';
+
+import ApiRequestWrapper from './ApiRequestWrapper';
+
+/*
+import ApiCollectionPanel from './ApiCollectionPanel';
 
 import {
   changeTabSelection,
   changeApiSelection,
   expandAuthApi,
   clearHistory,
-  changeRequestParams,
+  // changeRequestParams,
 } from './Actions';
 
-// import {triggerOnBoarding} from '../Main/Actions';
+import {triggerOnBoarding} from '../Main/Actions';
+*/
 
 class ApiExplorer extends Component {
+  /*
   onTabSelectionChanged = tabIndex => {
     this.props.dispatch(changeTabSelection(tabIndex));
   };
@@ -43,39 +47,41 @@ class ApiExplorer extends Component {
   updateDQBState(data) {
     this.props.dispatch(hydrateDQBData(data));
   }
+  */
 
   render() {
-    const styles = require('./ApiExplorer.scss');
-    let wrapperClass = styles.apiExplorerWrapper;
-    let panelStyles = '';
-    let requestStyles = '';
-    let wdClass = '';
-    // check if onboarding is enabled
+    const {
+      displayedApi,
+      credentials,
+      explorerData,
+      route,
+      dataHeaders,
+      tables,
+      headerFocus,
+      location,
+      serverVersion,
+    } = this.props;
 
-    // show api request wrapper or graphiql depending on selection
-    const displayedApi = this.props.displayedApi;
-    let requestWrapper = (
-      <ApiRequestWrapper
-        credentials={this.props.credentials}
-        explorerData={this.props.explorerData}
-        details={displayedApi.details}
-        request={displayedApi.request}
-        requestStyles={requestStyles}
-        dispatch={this.props.dispatch}
-        wdStyles={wdClass}
-        route={this.props.route}
-        dataHeaders={this.props.dataHeaders}
-        numberOfTables={this.props.tables.length}
-        headerFocus={this.props.headerFocus}
-        queryParams={this.props.location.query}
-        serverVersion={this.props.serverVersion}
-      />
-    );
+    const styles = require('./ApiExplorer.scss');
 
     return (
       <div className={'container-fluid ' + styles.padd_remove}>
         <Helmet title="API Explorer | Hasura" />
-        <div className={wrapperClass}>{requestWrapper}</div>
+        <div className={styles.apiExplorerWrapper}>
+          <ApiRequestWrapper
+            dispatch={this.props.dispatch}
+            credentials={credentials}
+            explorerData={explorerData}
+            details={displayedApi.details}
+            request={displayedApi.request}
+            route={route}
+            dataHeaders={dataHeaders}
+            numberOfTables={tables.length}
+            headerFocus={headerFocus}
+            urlParams={location.query}
+            serverVersion={serverVersion}
+          />
+        </div>
       </div>
     );
   }

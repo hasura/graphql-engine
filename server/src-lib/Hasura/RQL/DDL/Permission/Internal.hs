@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes            #-}
 {-# LANGUAGE RankNTypes             #-}
 {-# LANGUAGE TypeApplications       #-}
 {-# LANGUAGE TypeFamilies           #-}
@@ -15,11 +16,13 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Text.Extended         as T
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value           (withGeoVal)
 
 import qualified Database.PG.Query          as Q
 import qualified Hasura.SQL.DML             as S
@@ -112,6 +115,21 @@ savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
                 |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment) True
 
+updatePermDefInCatalog
+  :: (ToJSON a)
+  => PermType
+  -> QualifiedTable
+  -> RoleName
+  -> a
+  -> Q.TxE QErr ()
+updatePermDefInCatalog pt (QualifiedObject sn tn) rn qdef =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+           UPDATE hdb_catalog.hdb_permission
+              SET perm_def = $1 :: jsonb
+             WHERE table_schema = $2 AND table_name = $3
+               AND role_name = $4 AND perm_type = $5
+           |] (Q.AltJ qdef, sn, tn, rn, permTypeToCode pt) True
+
 dropPermFromCatalog
   :: QualifiedTable
   -> RoleName
@@ -167,25 +185,23 @@ procBoolExp tn fieldInfoMap be = do
 isReqUserId :: T.Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
-getDependentHeaders :: BoolExp -> [T.Text]
-getDependentHeaders (BoolExp boolExp) =
-  flip foldMap boolExp $ \(ColExp _ v) -> parseValue v
+getDepHeadersFromVal :: Value -> [T.Text]
+getDepHeadersFromVal val = case val of
+  Object o -> parseObject o
+  _        -> parseOnlyString val
   where
-    parseValue val = case val of
-      (Object o) -> parseObject o
-      _          -> parseOnlyString val
-
-    parseOnlyString val = case val of
+    parseOnlyString v = case v of
       (String t)
         | isUserVar t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap parseOnlyString (M.elems o)
-      -- if isRQLOp k
-      --                        then parseOnlyString v
-      --                        else []
+      concatMap getDepHeadersFromVal (M.elems o)
+
+getDependentHeaders :: BoolExp -> [T.Text]
+getDependentHeaders (BoolExp boolExp) =
+  flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
 valueParser columnType = \case
@@ -198,9 +214,9 @@ valueParser columnType = \case
   val -> txtRHSBuilder columnType val
   where
     curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr =
+    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
       S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-      `S.SETyAnn` (S.AnnType $ T.pack $ show columnType)
+    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
@@ -307,7 +323,7 @@ runCreatePerm
   :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
      )
-  => CreatePerm a -> m RespBody
+  => CreatePerm a -> m EncJSON
 runCreatePerm defn@(WithTable tn pd) = do
   permInfo <- createPermP1 defn
   addPermP2 tn pd permInfo
@@ -334,7 +350,7 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
 
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropPerm a -> m RespBody
+  => DropPerm a -> m EncJSON
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn
   dropPermP2 defn permInfo

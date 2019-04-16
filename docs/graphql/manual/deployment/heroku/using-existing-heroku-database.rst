@@ -11,10 +11,10 @@ like add GraphQL on it.
 
 .. note::
 
-   In case you're exposing an existing database (esp. if it is production), please configure an access key
+   In case you're exposing an existing database (esp. if it is production), please configure an admin secret key
    for the console and the GraphQL endpoint.
 
-Step 0: Deploy Hasura on Heroku
+Step 1: Deploy Hasura on Heroku
 -------------------------------
 
 Deploy Hasura on Heroku by clicking on this button:
@@ -28,24 +28,30 @@ Deploy Hasura on Heroku by clicking on this button:
 Follow the Heroku instructions to deploy, check if the Hasura console loads up when you **View app** and then head
 to the **Manage App** screen on your Heroku dashboard.
 
-Step 1: Remove the existing Postgres addon in the app
+This will deploy Hasura with a free Postgres add-on automatically provisioned.
+
+Step 2: Remove the created Postgres add-on in the app
 -----------------------------------------------------
 
-Head to your Heroku dashboard and delete the Postgres addon:
+Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
-.. image:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
+.. thumbnail:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
 
-Step 2: Configure environment variables
+Step 3: Configure environment variables
 ---------------------------------------
 
-Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ACCESS_KEY``
+Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
 if you want to secure your endpoint.
 
-.. image:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
+.. thumbnail:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
 
-Step 3: Track tables and relationships
+.. note::
+
+  Hasura GraphQL engine needs access permissions to your Postgres database as described in
+  :doc:`Postgres permissions <../postgres-permissions>`
+
+Step 4: Track tables and relationships
 --------------------------------------
 
-Wait for the GraphQL engine to restart and you'll see your existing tables as "untracked tables" in the console.
-
-.. image:: ../../../../img/graphql/manual/getting-started/TrackTable.jpg
+Wait for the GraphQL engine to restart and then see :doc:`../../schema/using-existing-database` to enable GraphQL
+over the database.

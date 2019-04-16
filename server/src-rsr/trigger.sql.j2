@@ -40,9 +40,9 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
                         )::text;
      IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
        INSERT INTO
-       hdb_catalog.event_log (id, schema_name, table_name, trigger_name, trigger_id, payload)
+       hdb_catalog.event_log (id, schema_name, table_name, trigger_name, payload)
        VALUES
-       (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', '{{ID}}', payload);
+       (id, TG_TABLE_SCHEMA, TG_TABLE_NAME, '{{NAME}}', payload);
      END IF;
      RETURN NULL;
    END;

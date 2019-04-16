@@ -4,7 +4,13 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
+import {
+  getPlaceholder,
+  BOOLEAN,
+  JSONB,
+  JSONDTYPE,
+} from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
@@ -25,7 +31,6 @@ class InsertItem extends Component {
     // Since the state variable lifecycle is tired to the instance of the class
     // and making this change using an anonymous function will case errors.
     this.setState({
-      ...this.state,
       insertedRows: this.state.insertedRows + 1,
     });
   }
@@ -44,14 +49,14 @@ class InsertItem extends Component {
       dispatch,
     } = this.props;
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const _columns = schemas.find(x => x.table_name === tableName).columns;
     const refs = {};
     const columns = _columns.sort(ordinalColSort);
 
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
-      const isDefault = col.column_default && col.column_default.trim() !== '';
+      const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
 
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
@@ -76,10 +81,10 @@ class InsertItem extends Component {
         onClick: clicker,
         onChange: e => {
           if (isAutoIncrement) return;
-          if (!isNullable && !isDefault) return;
+          if (!isNullable && !hasDefault) return;
 
           const textValue = e.target.value;
-          const radioToSelectWhenEmpty = isDefault
+          const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
 
@@ -88,7 +93,7 @@ class InsertItem extends Component {
         },
         onFocus: e => {
           if (isAutoIncrement) return;
-          if (!isNullable && !isDefault) return;
+          if (!isNullable && !hasDefault) return;
 
           const textValue = e.target.value;
           if (
@@ -96,7 +101,7 @@ class InsertItem extends Component {
             textValue === null ||
             textValue.length === 0
           ) {
-            const radioToSelectWhenEmpty = isDefault
+            const radioToSelectWhenEmpty = hasDefault
               ? refs[colName].defaultNode
               : refs[colName].nullNode;
 
@@ -109,53 +114,28 @@ class InsertItem extends Component {
         type: 'text',
       };
 
-      const getPlaceholder = type => {
-        switch (type) {
-          case 'integer':
-            return 'integer';
-          case 'bigint':
-            return 'BIG integer';
-          case 'numeric':
-            return 'float';
-          case 'timestamp with time zone':
-            return new Date().toISOString();
-          case 'date':
-            return new Date().toISOString().slice(0, 10);
-          case 'timetz':
-            const time = new Date().toISOString().slice(11, 19);
-            return `${time}Z or ${time}+05:30`;
-          case 'uuid':
-            return 'UUID';
-          case 'json':
-            return '{"name": "foo"} or [12, "asdf"]';
-          case 'jsonb':
-            return '{"name": "foo"} or [12, "asdf"]';
-          default:
-            return 'text';
-        }
-      };
-
       const colType = col.data_type;
+
+      const placeHolder = hasDefault
+        ? col.column_default
+        : getPlaceholder(colType);
+
       let typedInput = (
-        <input {...standardInputProps} placeholder={getPlaceholder(colType)} />
+        <input {...standardInputProps} placeholder={placeHolder} />
       );
 
       if (isAutoIncrement) {
         typedInput = (
-          <input
-            {...standardInputProps}
-            readOnly
-            placeholder={getPlaceholder(colType)}
-          />
+          <input {...standardInputProps} readOnly placeholder={placeHolder} />
         );
       }
 
-      if (colType === 'json' || colType === 'jsonb') {
+      if (colType === JSONDTYPE || colType === JSONB) {
         // JSON/JSONB
         typedInput = (
           <input
             {...standardInputProps}
-            placeholder={getPlaceholder(colType)}
+            placeholder={placeHolder}
             defaultValue={
               clone && colName in clone ? JSON.stringify(clone[colName]) : ''
             }
@@ -163,7 +143,7 @@ class InsertItem extends Component {
         );
       }
 
-      if (colType === 'boolean') {
+      if (colType === BOOLEAN) {
         // Boolean
         typedInput = (
           <select
@@ -172,38 +152,14 @@ class InsertItem extends Component {
               e.target.parentNode.parentNode.click();
               e.target.focus();
             }}
+            defaultValue={placeHolder}
           >
+            <option value="" disabled>
+              -- bool --
+            </option>
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
-        );
-      }
-
-      let showDefaultOption = (
-        <input
-          type="radio"
-          ref={node => {
-            refs[colName].defaultNode = node;
-          }}
-          name={colName + '-value'}
-          value="option3"
-          defaultChecked={isDefault}
-          data-test={`typed-input-default-${i}`}
-        />
-      );
-      if (!isDefault) {
-        showDefaultOption = (
-          <input
-            disabled
-            type="radio"
-            ref={node => {
-              refs[colName].defaultNode = node;
-            }}
-            name={colName + '-value'}
-            value="option3"
-            defaultChecked={isDefault}
-            data-test={`typed-input-default-${i}`}
-          />
         );
       }
 
@@ -224,7 +180,7 @@ class InsertItem extends Component {
               }}
               name={colName + '-value'}
               value="option1"
-              defaultChecked={!isDefault & !isNullable}
+              defaultChecked={!hasDefault & !isNullable}
             />
             {typedInput}
           </label>
@@ -243,7 +199,17 @@ class InsertItem extends Component {
             <span className={styles.radioSpan}>NULL</span>
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
-            {showDefaultOption}
+            <input
+              disabled={!hasDefault}
+              type="radio"
+              ref={node => {
+                refs[colName].defaultNode = node;
+              }}
+              name={colName + '-value'}
+              value="option3"
+              defaultChecked={hasDefault}
+              data-test={`typed-input-default-${i}`}
+            />
             <span className={styles.radioSpan}>Default</span>
           </label>
         </div>

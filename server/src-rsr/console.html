@@ -1,12 +1,14 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/png" href="https://storage.googleapis.com/hasura-graphql-engine/console/assets/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="https://graphql-engine-cdn.hasura.io/img/hasura_icon_green.svg" />
     <script>
      window.__env = {
        consoleMode: "server",
        urlPrefix: "/console",
        consolePath: "{{consolePath}}",
-       isAccessKeySet: {{isAccessKeySet}}
+       isAccessKeySet: {{isAdminSecretSet}},
+       isAdminSecretSet: {{isAdminSecretSet}},
+       enableTelemetry: {{enableTelemetry}}
      };
     </script>
   </head>

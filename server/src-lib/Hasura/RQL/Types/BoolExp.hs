@@ -4,6 +4,8 @@ module Hasura.RQL.Types.BoolExp
        , gBoolExpToJSON
        , parseGBoolExp
 
+       , DWithinGeomOp(..)
+       , DWithinGeogOp(..)
        , OpExpG(..)
 
        , AnnBoolExpFld(..)
@@ -22,7 +24,9 @@ import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Internal
+import           Data.Aeson.TH
 import qualified Data.Aeson.Types           as J
 import qualified Data.HashMap.Strict        as M
 import           Instances.TH.Lift          ()
@@ -90,6 +94,21 @@ foldBoolExp f (BoolNot notExp) =
 foldBoolExp f (BoolFld ce)  =
   f ce
 
+data DWithinGeomOp a =
+  DWithinGeomOp
+  { dwgeomDistance :: !a
+  , dwgeomFrom     :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
+
+data DWithinGeogOp a =
+  DWithinGeogOp
+  { dwgeogDistance    :: !a
+  , dwgeogFrom        :: !a
+  , dwgeogUseSpheroid :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
+
 data OpExpG a
   = AEQ !Bool !a
   | ANE !Bool !a
@@ -119,7 +138,8 @@ data OpExpG a
 
   | ASTContains !a
   | ASTCrosses !a
-  | ASTDWithin !S.SQLExp !a
+  | ASTDWithinGeom !(DWithinGeomOp a)
+  | ASTDWithinGeog !(DWithinGeogOp a)
   | ASTEquals !a
   | ASTIntersects !a
   | ASTOverlaps !a
@@ -166,14 +186,15 @@ opExpToJPair f = \case
   AHasKeysAny a  -> ("_has_keys_any", toJSON a)
   AHasKeysAll a  -> ("_has_keys_all", toJSON a)
 
-  ASTContains a   -> ("_st_contains", f a)
-  ASTCrosses a    -> ("_st_crosses", f a)
-  ASTDWithin _ a  -> ("_st_d_within", f a)
-  ASTEquals a     -> ("_st_equals", f a)
-  ASTIntersects a -> ("_st_intersects", f a)
-  ASTOverlaps a   -> ("_st_overlaps", f a)
-  ASTTouches a    -> ("_st_touches", f a)
-  ASTWithin a     -> ("_st_within", f a)
+  ASTContains a    -> ("_st_contains", f a)
+  ASTCrosses a     -> ("_st_crosses", f a)
+  ASTDWithinGeom o -> ("_st_d_within", toJSON $ f <$> o)
+  ASTDWithinGeog o -> ("_st_d_within", toJSON $ f <$> o)
+  ASTEquals a      -> ("_st_equals", f a)
+  ASTIntersects a  -> ("_st_intersects", f a)
+  ASTOverlaps a    -> ("_st_overlaps", f a)
+  ASTTouches a     -> ("_st_touches", f a)
+  ASTWithin a      -> ("_st_within", f a)
 
   ANISNULL       -> ("_is_null", toJSON True)
   ANISNOTNULL    -> ("_is_null", toJSON False)

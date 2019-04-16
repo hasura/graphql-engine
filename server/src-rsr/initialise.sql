@@ -1,6 +1,9 @@
 CREATE TABLE hdb_catalog.hdb_version (
+    hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     version TEXT NOT NULL,
-    upgraded_on TIMESTAMPTZ NOT NULL
+    upgraded_on TIMESTAMPTZ NOT NULL,
+    cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    console_state JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
 CREATE UNIQUE INDEX hdb_version_one_row
@@ -42,7 +45,7 @@ CREATE TABLE hdb_catalog.hdb_relationship
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, rel_name),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_permission
@@ -56,7 +59,7 @@ CREATE TABLE hdb_catalog.hdb_permission
     is_system_defined boolean default false,
 
     PRIMARY KEY (table_schema, table_name, role_name, perm_type),
-    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name)
+    FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE VIEW hdb_catalog.hdb_permission_agg AS
@@ -275,13 +278,14 @@ $$;
 
 CREATE TABLE hdb_catalog.event_triggers
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT UNIQUE,
+  name TEXT PRIMARY KEY,
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
-  comment TEXT
+  comment TEXT,
+  FOREIGN KEY (schema_name, table_name)
+  REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
 
 CREATE TABLE hdb_catalog.event_log
@@ -289,7 +293,6 @@ CREATE TABLE hdb_catalog.event_log
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  trigger_id TEXT NOT NULL,
   trigger_name TEXT NOT NULL,
   payload JSONB NOT NULL,
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
@@ -300,7 +303,7 @@ CREATE TABLE hdb_catalog.event_log
   next_retry_at TIMESTAMP
 );
 
-CREATE INDEX ON hdb_catalog.event_log (trigger_id);
+CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -365,14 +368,19 @@ SELECT
   END AS return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(pt.typname), '[]')
+      COALESCE(json_agg(q.type_name), '[]')
     FROM
       (
-        unnest(
-          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
-        ) WITH ORDINALITY pat(oid, ordinality)
-        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
-      )
+        SELECT
+          pt.typname AS type_name,
+          pat.ordinality
+        FROM
+          unnest(
+            COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+          ) WITH ORDINALITY pat(oid, ordinality)
+          LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
+        ORDER BY pat.ordinality ASC
+      ) q
    ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
 FROM
@@ -400,3 +408,32 @@ CREATE TABLE hdb_catalog.remote_schemas (
   definition JSON,
   comment TEXT
 );
+
+CREATE TABLE hdb_catalog.hdb_schema_update_event (
+  id BIGSERIAL PRIMARY KEY,
+  instance_id uuid NOT NULL,
+  occurred_at timestamptz NOT NULL DEFAULT NOW()
+);
+
+CREATE FUNCTION hdb_catalog.hdb_schema_update_event_notifier() RETURNS trigger AS
+$function$
+  DECLARE
+    instance_id uuid;
+    occurred_at timestamptz;
+    curr_rec record;
+  BEGIN
+    instance_id = NEW.instance_id;
+    occurred_at = NEW.occurred_at;
+    PERFORM pg_notify('hasura_schema_update', json_build_object(
+      'instance_id', instance_id,
+      'occurred_at', occurred_at
+      )::text);
+    RETURN curr_rec;
+  END;
+$function$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
+  FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
+
+

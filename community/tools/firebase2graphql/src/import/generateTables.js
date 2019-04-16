@@ -17,10 +17,10 @@ const getDataType = (data, column) => {
   if (data.constructor.name === 'Date') {
     return 'timestamptz';
   }
-  if (data.constructor.name === 'Object') {
+  if (data.constructor.name === 'Object' || data.constructor.name === 'Array') {
     return 'json';
   }
-  throwError(`Message: invalid data type given for column ${column}: ${typeof data}`);
+  throwError(`Message: invalid data type given for column ${column}: ${data.constructor.name}`);
 };
 
 const isForeign = (name, db) => {

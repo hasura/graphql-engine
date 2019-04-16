@@ -21,11 +21,11 @@ GraphQL schema:
 .. code-block:: bash
 
   # If the GraphQL engine is running at https://my-graphql-engine.com/v1alpha1/graphql,
-  # without an access key
+  # without an admin secret key
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect > schema.graphql
 
-  # If Hasura GraphQL Engine is running with an access key
-  gq https://my-graphql-engine.com/v1alpha1/graphql -H 'X-Hasura-Access-Key: secretaccesskey' --introspect > schema.graphql
+  # If Hasura GraphQL Engine is running with an admin secret
+  gq https://my-graphql-engine.com/v1alpha1/graphql -H 'X-Hasura-Admin-Secret: adminsecretkey' --introspect > schema.graphql
 
 By default, it downloads the schema in ``.graphql`` format. If you want it in JSON format, you can use an additional
 flag ``--format json``:

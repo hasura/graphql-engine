@@ -5,6 +5,7 @@ import qualified Database.PG.Query.Connection as Q
 import           Data.Aeson
 import           Data.List.Split
 import           Network.URI
+import           System.Environment
 import           System.Exit
 import           System.Process
 
@@ -26,8 +27,11 @@ jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
-accessKeyHeader :: T.Text
-accessKeyHeader = "x-hasura-access-key"
+deprecatedAccessKeyHeader :: T.Text
+deprecatedAccessKeyHeader = "x-hasura-access-key"
+
+adminSecretHeader :: T.Text
+adminSecretHeader = "x-hasura-admin-secret"
 
 userIdHeader :: T.Text
 userIdHeader = "x-hasura-user-id"
@@ -73,7 +77,15 @@ uriAuthParameters uriAuth = port . host . auth
                  [u, p] -> \info -> info { Q.connUser = unEscapeString u, Q.connPassword = unEscapeString $ dropLast p }
                  _      -> id
 
--- Running shell script during compile time
+-- Get an env var during compile time
+getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
+getValFromEnvOrScript n s = do
+  maybeVal <- TH.runIO $ lookupEnv n
+  case maybeVal of
+    Just val -> TH.lift val
+    Nothing  -> runScript s
+
+-- Run a shell script during compile time
 runScript :: FilePath -> TH.Q TH.Exp
 runScript fp = do
   TH.addDependentFile fp
@@ -126,3 +138,8 @@ matchRegex regex caseSensitive src =
       }
     execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
     compiledRegexE = TDFA.compile compOpt execOption regex
+
+
+fmapL :: (a -> a') -> Either a b -> Either a' b
+fmapL fn (Left e) = Left (fn e)
+fmapL _ (Right x) = pure x

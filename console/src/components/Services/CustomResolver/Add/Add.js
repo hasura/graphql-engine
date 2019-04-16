@@ -3,7 +3,7 @@ import Common from '../Common/Common';
 
 import { addResolver, RESET } from './addResolverReducer';
 import Helmet from 'react-helmet';
-import Button from '../../Layout/Button/Button';
+import Button from '../../../Common/Button/Button';
 
 import { pageTitle } from '../constants';
 
@@ -11,9 +11,12 @@ class Add extends React.Component {
   componentWillUnmount() {
     this.props.dispatch({ type: RESET });
   }
+
   render() {
-    const styles = require('../Styles.scss');
+    const styles = require('../CustomResolver.scss');
+
     const { isRequesting, dispatch } = this.props;
+
     return (
       <div className={styles.addWrapper}>
         <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />

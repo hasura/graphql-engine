@@ -1,0 +1,17 @@
+{
+  "name": "google-cloud-functions-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "googleCtx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-cloud-functions": "^2.4.8",
+    "graphql": "^0.13.1",
+    "graphql-tag": "^2.10.1"
+  }
+}

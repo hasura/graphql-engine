@@ -1,14 +1,14 @@
 import { makeDataAPIOptions } from "../../helpers/dataHelpers";
 // ***************** UTIL FUNCTIONS **************************
 
-let accessKey;
+let adminSecret;
 let dataApiUrl;
 
 export const setMetaData = () => {
   cy.window().then(win => {
-    // accessKey = win.__env.accessKey;
+    // adminSecret = win.__env.adminSecret;
     // dataApiUrl = win.__env.dataApiUrl;
-    accessKey = "abcd";
+    adminSecret = "abcd";
     dataApiUrl = "https://hasura-todo-test.herokuapp.com";
   });
 };
@@ -27,7 +27,7 @@ export const validateTodo = (todoName, result, is_public) => {
       where: { user_id: userId, text: todoName, is_public: is_public }
     }
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, accessKey, reqBody);
+  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     console.log(response);
     if (result.status === "success") {

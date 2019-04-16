@@ -143,7 +143,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -159,7 +159,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -174,7 +174,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -293,56 +293,61 @@ instance ToJSON PGColType where
 instance ToSQL PGColType where
   toSQL pct = fromString $ show pct
 
+
+txtToPgColTy :: Text -> PGColType
+txtToPgColTy t = case t of
+  "serial"                   -> PGSerial
+  "bigserial"                -> PGBigSerial
+
+  "smallint"                 -> PGSmallInt
+  "int2"                     -> PGSmallInt
+
+  "integer"                  -> PGInteger
+  "int4"                     -> PGInteger
+
+  "bigint"                   -> PGBigInt
+  "int8"                     -> PGBigInt
+
+  "real"                     -> PGFloat
+  "float4"                   -> PGFloat
+
+  "double precision"         -> PGDouble
+  "float8"                   -> PGDouble
+
+  "numeric"                  -> PGNumeric
+  "decimal"                  -> PGNumeric
+
+  "boolean"                  -> PGBoolean
+  "bool"                     -> PGBoolean
+
+  "character"                -> PGChar
+
+  "varchar"                  -> PGVarchar
+  "character varying"        -> PGVarchar
+
+  "text"                     -> PGText
+  "citext"                   -> PGText
+
+  "date"                     -> PGDate
+
+  "timestamptz"              -> PGTimeStampTZ
+  "timestamp with time zone" -> PGTimeStampTZ
+
+  "timetz"                   -> PGTimeTZ
+  "time with time zone"      -> PGTimeTZ
+
+  "json"                     -> PGJSON
+  "jsonb"                    -> PGJSONB
+
+  "geometry"                 -> PGGeometry
+  "geography"                -> PGGeography
+  _                          -> PGUnknown t
+
+
 instance FromJSON PGColType where
-  parseJSON (String "serial")      = return PGSerial
-  parseJSON (String "bigserial")   = return PGBigSerial
+  parseJSON (String t) = return $ txtToPgColTy t
+  parseJSON _          = fail "Expecting a string for PGColType"
 
-  parseJSON (String "smallint")    = return PGSmallInt
-  parseJSON (String "int2")    = return PGSmallInt
-
-  parseJSON (String "integer")     = return PGInteger
-  parseJSON (String "int4")        = return PGInteger
-
-  parseJSON (String "bigint")      = return PGBigInt
-  parseJSON (String "int8")      = return PGBigInt
-
-  parseJSON (String "real")        = return PGFloat
-  parseJSON (String "float4")      = return PGFloat
-
-  parseJSON (String "double precision")      = return PGDouble
-  parseJSON (String "float8")      = return PGDouble
-
-  parseJSON (String "numeric")     = return PGNumeric
-  parseJSON (String "decimal")     = return PGNumeric
-
-  parseJSON (String "boolean")     = return PGBoolean
-  parseJSON (String "bool")        = return PGBoolean
-
-  parseJSON (String "character")   = return PGChar
-
-  parseJSON (String "varchar")     = return PGVarchar
-  parseJSON (String "character varying")     = return PGVarchar
-
-  parseJSON (String "text")        = return PGText
-  parseJSON (String "citext")      = return PGText
-
-  parseJSON (String "date")        = return PGDate
-
-  parseJSON (String "timestamptz") = return PGTimeStampTZ
-  parseJSON (String "timestamp with time zone") = return PGTimeStampTZ
-
-  parseJSON (String "timetz")      = return PGTimeTZ
-  parseJSON (String "time with time zone") = return PGTimeTZ
-
-  parseJSON (String "json") = return PGJSON
-  parseJSON (String "jsonb") = return PGJSONB
-
-  parseJSON (String "geometry") = return PGGeometry
-  parseJSON (String "geography") = return PGGeography
-
-  parseJSON (String t)             = return $ PGUnknown t
-  parseJSON _                      =
-    fail "Expecting a string for PGColType"
 
 pgTypeOid :: PGColType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
@@ -391,3 +396,17 @@ isComparableType PGGeography   = False
 isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
+
+isBigNum :: PGColType -> Bool
+isBigNum = \case
+  PGBigInt    -> True
+  PGBigSerial -> True
+  PGNumeric   -> True
+  PGDouble    -> True
+  _           -> False
+
+isGeoType :: PGColType -> Bool
+isGeoType = \case
+  PGGeometry  -> True
+  PGGeography -> True
+  _           -> False

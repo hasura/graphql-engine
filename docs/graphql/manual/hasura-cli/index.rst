@@ -30,12 +30,12 @@ Commands
 - :doc:`hasura <hasura>`
 - :doc:`hasura completion <hasura_completion>`
 - :doc:`hasura console <hasura_console>`
-- :doc:`hasura example <hasura_example>`
 - :doc:`hasura init <hasura_init>`
 - :doc:`hasura metadata <hasura_metadata>`
 - :doc:`hasura metadata apply <hasura_metadata_apply>`
 - :doc:`hasura metadata export <hasura_metadata_export>`
-- :doc:`hasura metadata reset <hasura_metadata_reset>`
+- :doc:`hasura metadata reload <hasura_metadata_reload>`
+- :doc:`hasura metadata clear <hasura_metadata_clear>`
 - :doc:`hasura migrate <hasura_migrate>`
 - :doc:`hasura migrate apply <hasura_migrate_apply>`
 - :doc:`hasura migrate create <hasura_migrate_create>`
@@ -57,13 +57,12 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura <hasura>
    hasura completion <hasura_completion>
    hasura console <hasura_console>
-   hasura example <hasura_example>
    hasura init <hasura_init>
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>
    hasura metadata export <hasura_metadata_export>
    hasura metadata reload <hasura_metadata_reload>
-   hasura metadata reset <hasura_metadata_reset>
+   hasura metadata clear <hasura_metadata_clear>
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
    hasura migrate create <hasura_migrate_create>

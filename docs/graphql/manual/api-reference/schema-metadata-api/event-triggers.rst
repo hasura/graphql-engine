@@ -136,8 +136,8 @@ Args syntax
  
 .. _TriggerName:
 
-``TriggerName``
-&&&&&&&&&&&&&&&
+TriggerName
+&&&&&&&&&&&
 
 .. parsed-literal::
 
@@ -145,8 +145,8 @@ Args syntax
 
 .. _OperationSpec:
 
-``OperationSpec``
-&&&&&&&&&&&&&&&&&
+OperationSpec
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -166,8 +166,8 @@ Args syntax
 
 .. _HeaderFromValue:
 
-``HeaderFromValue``
-&&&&&&&&&&&&&&&&&&&
+HeaderFromValue
+&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -187,8 +187,8 @@ Args syntax
 
 .. _HeaderFromEnv:
 
-``HeaderFromEnv``
-&&&&&&&&&&&&&&&&&
+HeaderFromEnv
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -208,8 +208,8 @@ Args syntax
 
 .. _EventTriggerColumns:
 
-``EventTriggerColumns``
-&&&&&&&&&&&&&&&&&&&&&&&
+EventTriggerColumns
+&&&&&&&&&&&&&&&&&&&
 
 .. parsed-literal::
    :class: haskell-pre

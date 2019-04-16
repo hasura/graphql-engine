@@ -9,9 +9,8 @@ import {
 const delRel = (table, relname) => {
   cy.get(getElementFromAlias(table)).click();
   cy.get(getElementFromAlias('table-relationships')).click();
-  cy.get(getElementFromAlias(`remove-button-${relname}`))
-    .first()
-    .click();
+  cy.get(getElementFromAlias(`relationship-toggle-editor-${relname}`)).click();
+  cy.get(getElementFromAlias(`relationship-remove-${relname}`)).click();
   cy.on('window:alert', str => {
     expect(str === 'Are you sure?').to.be.true;
   });
@@ -36,6 +35,35 @@ export const Createtable = (name, fields) => {
 
   // Select primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
+
+  if (name === 'article') {
+    cy.get(getElementFromAlias('add-table-edit-fk-0')).click();
+    cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
+      'author_table_rt'
+    );
+    cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('3');
+    cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select('id');
+    cy.get(getElementFromAlias('foreign-key-0-onUpdate-cascade')).check();
+    cy.get(getElementFromAlias('foreign-key-0-onDelete-cascade')).check();
+  } else if (name === 'comment') {
+    cy.get(getElementFromAlias('add-table-edit-fk-0')).click();
+    cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
+      'author_table_rt'
+    );
+    cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('1');
+    cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select('id');
+    cy.get(getElementFromAlias('foreign-key-0-onUpdate-cascade')).check();
+    cy.get(getElementFromAlias('foreign-key-0-onDelete-cascade')).check();
+    cy.get(getElementFromAlias('add-table-edit-fk-1')).click();
+    cy.get(getElementFromAlias('foreign-key-ref-table-1')).select(
+      'article_table_rt'
+    );
+    cy.get(getElementFromAlias('foreign-key-1-lcol-0')).select('2');
+    cy.get(getElementFromAlias('foreign-key-1-rcol-0')).select('id');
+    cy.get(getElementFromAlias('foreign-key-1-onUpdate-cascade')).check();
+    cy.get(getElementFromAlias('foreign-key-1-onDelete-cascade')).check();
+  }
+
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(15000);
   cy.url().should(
@@ -126,33 +154,6 @@ export const passRTAddManualArrayRel = () => {
   );
 };
 
-export const passRTAddForeignKey = () => {
-  cy.get(getElementFromAlias('article_table_rt')).click();
-  cy.get(getElementFromAlias('table-modify')).click();
-  cy.get(getElementFromAlias('edit-author_id')).click();
-  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
-  cy.get(getElementFromAlias('ref-table')).select('author_table_rt');
-  cy.get(getElementFromAlias('ref-col')).select('id');
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(15000);
-  cy.get(getElementFromAlias('comment_table_rt')).click();
-  cy.get(getElementFromAlias('table-modify')).click();
-  cy.get(getElementFromAlias('edit-article_id')).click();
-  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
-  cy.get(getElementFromAlias('ref-table')).select('article_table_rt');
-  cy.get(getElementFromAlias('ref-col')).select('id');
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(15000);
-};
-
-export const checkAddManualRelationshipsButton = () => {
-  cy.get(getElementFromAlias('add-rel-mod')).click();
-  cy.url().should(
-    'eq',
-    `${baseUrl}/data/schema/public/tables/comment_table_rt/relationships`
-  );
-};
-
 export const passRTDeleteRelationships = () => {
   delRel('article_table_rt', 'author');
   validateColumn(
@@ -176,7 +177,7 @@ export const passRTAddSuggestedRel = () => {
     .clear()
     .type('author');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
@@ -189,7 +190,34 @@ export const passRTAddSuggestedRel = () => {
     .clear()
     .type('comments');
   cy.get(getElementFromAlias('arr-rel-save-0')).click();
-  cy.wait(15000);
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments', columns: ['comment'] }],
+    'success'
+  );
+};
+
+export const passRTRenameRelationship = () => {
+  cy.get(getElementFromAlias('relationship-toggle-editor-comments')).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments'))
+    .clear()
+    .type('comments_renamed');
+  cy.get(getElementFromAlias('relationship-save-comments')).click();
+  cy.wait(5000);
+  validateColumn(
+    'article_table_rt',
+    ['title', { name: 'comments_renamed', columns: ['comment'] }],
+    'success'
+  );
+  cy.get(
+    getElementFromAlias('relationship-toggle-editor-comments_renamed')
+  ).click();
+  cy.get(getElementFromAlias('relationship-name-input-comments_renamed'))
+    .clear()
+    .type('comments');
+  cy.get(getElementFromAlias('relationship-save-comments_renamed')).click();
+  cy.wait(5000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],

@@ -230,5 +230,5 @@ func compareMetadata(t testing.TB, metadataFile string, actualData []byte) {
 	if err != nil {
 		t.Fatalf("error reading metadata %s", err)
 	}
-	assert.Equal(t, actualData, data)
+	assert.Equal(t, string(actualData), string(data))
 }

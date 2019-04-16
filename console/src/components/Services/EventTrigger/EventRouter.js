@@ -5,15 +5,16 @@ import globals from '../../../Globals';
 
 import {
   schemaConnector,
-  schemaContainerConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
   pendingEventsConnector,
   runningEventsConnector,
-  eventHeaderConnector,
+  eventPageConnector,
   streamingLogsConnector,
 } from '.';
+
+import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   loadTriggers,
@@ -37,11 +38,11 @@ const makeEventRouter = (
   return (
     <Route
       path="events"
-      component={eventHeaderConnector(connect)}
+      component={eventPageConnector(connect)}
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={schemaContainerConnector(connect)}>
+      <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
         <Route path="triggers" component={schemaConnector(connect)} />
         <Route
@@ -78,20 +79,22 @@ const makeEventRouter = (
   );
 };
 
-const eventRouter = (connect, store, composeOnEnterHooks) => {
+const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
-    // check if access key is available in localstorage. if so use that.
-    // if localstorage access key didn't work, redirect to login (meaning value has changed)
-    // if access key is not available in localstorage, check if cli is giving it via window.__env
-    // if access key is not available in localstorage and cli, make a api call to data without access key.
+    // check if admin secret is available in localstorage. if so use that.
+    // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
+    // if admin secret is not available in localstorage, check if cli is giving it via window.__env
+    // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
       triggers: { triggerList },
     } = store.getState();
+
     if (triggerList.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadTriggers())]).then(
       () => {
         cb();
@@ -103,14 +106,17 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requireProcessedEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { processedEvents },
     } = store.getState();
+
     if (processedEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadProcessedEvents())]).then(
       () => {
         cb();
@@ -122,14 +128,17 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requirePendingEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { pendingEvents },
     } = store.getState();
+
     if (pendingEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadPendingEvents())]).then(
       () => {
         cb();
@@ -141,14 +150,17 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requireRunningEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { runningEvents },
     } = store.getState();
+
     if (runningEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadRunningEvents())]).then(
       () => {
         cb();
@@ -160,6 +172,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
@@ -168,6 +181,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState(globals.urlPrefix + '/events/manage');
@@ -175,6 +189,7 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   return {
     makeEventRouter: makeEventRouter(
       connect,
@@ -192,4 +207,4 @@ const eventRouter = (connect, store, composeOnEnterHooks) => {
   };
 };
 
-export default eventRouter;
+export default eventRouterUtils;

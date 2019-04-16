@@ -8,11 +8,13 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as Set
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
+import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
@@ -74,17 +76,17 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR (ObjTyInfo descM n flds) fld =
+objectTypeR (ObjTyInfo descM n iFaces flds) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKOBJECT
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> retJ ([] :: [()])
+    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
     "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                    sortBy (comparing _fiName) $
-                    filter notBuiltinFld $ Map.elems flds
+                     sortOn _fiName $
+                     filter notBuiltinFld $ Map.elems flds
     _             -> return J.Null
 
 notBuiltinFld :: ObjFldInfo -> Bool
@@ -92,6 +94,60 @@ notBuiltinFld f =
   fldName /= "__typename" && fldName /= "__type" && fldName /= "__schema"
   where
     fldName = _fiName f
+
+getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
+getImplTypes aot = do
+   tyInfo :: TypeMap <- asks getter
+   return $ sortOn _otiName $
+     Map.elems $ getPossibleObjTypes' tyInfo aot
+
+-- 4.5.2.3
+unionR
+  :: (MonadReader t m, MonadError QErr m, Has TypeMap t)
+  => UnionTyInfo -> Field -> m J.Object
+unionR u@(UnionTyInfo descM n _) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Field"
+    "kind"          -> retJ TKUNION
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "possibleTypes" -> fmap J.toJSON $
+                       mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
+    _               -> return J.Null
+
+-- 4.5.2.4
+ifaceR
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => G.NamedType
+  -> Field
+  -> m J.Object
+ifaceR n fld = do
+  tyInfo <- getTyInfo n
+  case tyInfo of
+    TIIFace ifaceTyInfo -> ifaceR' ifaceTyInfo fld
+    _                   -> throw500 $ "Unknown interface " <> showNamedTy n
+
+ifaceR'
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m)
+  => IFaceTyInfo
+  -> Field
+  -> m J.Object
+ifaceR' i@(IFaceTyInfo descM n flds) fld =
+  withSubFields (_fSelSet fld) $ \subFld ->
+  case _fName subFld of
+    "__typename"    -> retJT "__Type"
+    "kind"          -> retJ TKINTERFACE
+    "name"          -> retJ $ namedTyToTxt n
+    "description"   -> retJ $ fmap G.unDescription descM
+    "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                      sortOn _fiName $
+                      filter notBuiltinFld $ Map.elems flds
+    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
+                       =<< getImplTypes (AOTIFace i)
+    _               -> return J.Null
 
 -- 4.5.2.5
 enumTypeR
@@ -107,7 +163,7 @@ enumTypeR (EnumTyInfo descM n vals _) fld =
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
     "enumValues"  -> fmap J.toJSON $ mapM (enumValueR subFld) $
-                     sortBy (comparing _eviVal) $ Map.elems vals
+                     sortOn _eviVal $ Map.elems vals
     _             -> return J.Null
 
 -- 4.5.2.6
@@ -125,7 +181,7 @@ inputObjR (InpObjTyInfo descM nt flds _) fld =
     "name"        -> retJ $ namedTyToTxt nt
     "description" -> retJ $ fmap G.unDescription descM
     "inputFields" -> fmap J.toJSON $ mapM (inputValueR subFld) $
-                     sortBy (comparing _iviName) $ Map.elems flds
+                     sortOn _iviName $ Map.elems flds
     _             -> return J.Null
 
 -- 4.5.2.7
@@ -178,6 +234,8 @@ namedTypeR' fld = \case
   TIObj objTyInfo       -> objectTypeR objTyInfo fld
   TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
   TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
+  TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
+  TIUnion unionTyInfo   -> unionR unionTyInfo fld
 
 -- 4.5.3
 fieldR
@@ -191,7 +249,7 @@ fieldR (ObjFldInfo descM n params ty _) fld =
     "name"         -> retJ $ G.unName n
     "description"  -> retJ $ fmap G.unDescription descM
     "args"         -> fmap J.toJSON $ mapM (inputValueR subFld) $
-                      sortBy (comparing _iviName) $ Map.elems params
+                      sortOn _iviName $ Map.elems params
     "type"         -> J.toJSON <$> gtypeR ty subFld
     "isDeprecated" -> retJ False
     _              -> return J.Null
@@ -201,7 +259,7 @@ inputValueR
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m)
   => Field -> InpValInfo -> m J.Object
-inputValueR fld (InpValInfo descM n ty) =
+inputValueR fld (InpValInfo descM n defM ty) =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"   -> retJT "__InputValue"
@@ -209,7 +267,7 @@ inputValueR fld (InpValInfo descM n ty) =
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
     -- TODO: figure out what the spec means by 'string encoding'
-    "defaultValue" -> return J.Null
+    "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 
 -- 4.5.5
@@ -238,7 +296,7 @@ directiveR fld (DirectiveInfo descM n args locs) =
     "description" -> retJ $ fmap G.unDescription descM
     "locations"   -> retJ $ map showDirLoc locs
     "args"        -> fmap J.toJSON $ mapM (inputValueR subFld) $
-                     sortBy (comparing _iviName) $ Map.elems args
+                     sortOn _iviName $ Map.elems args
     _             -> return J.Null
 
 showDirLoc :: G.DirectiveLocation -> Text
@@ -267,12 +325,12 @@ schemaR fld =
   case _fName subFld of
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
-                      sortBy (comparing getNamedTy) $ Map.elems tyMap
+                      sortOn getNamedTy $ Map.elems tyMap
     "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
     "mutationType" -> typeR' "mutation_root" subFld
     "subscriptionType" -> typeR' "subscription_root" subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
-                      (sortBy (comparing _diName) defaultDirectives)
+                      (sortOn _diName defaultDirectives)
     _              -> return J.Null
 
 typeR
@@ -281,7 +339,7 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- withArg args "name" $ \arg -> do
-    (_, pgColVal) <- asPGColVal arg
+    pgColVal <- _apvValue <$> asPGColVal arg
     case pgColVal of
       PGValText t -> return t
       _           -> throw500 "expecting string for name arg of __type"

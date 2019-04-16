@@ -67,21 +67,18 @@ docs tree. A user can land on a page via search as well. e.g. Say you are adding
 Hasura GraphQL engine`. It's fine to alias it to just `AWS` in the sidebar as there the user has the context of the 
 page hierarchy.
 - Ensure every new added page has a ``Table of contents`` section with the right depth. You can see any existing
-page for reference on how to do this.
-- When referring to an external link using `` `....`_``, add an extra underscore to the link. ie. `` `...`__``. A 
-single underscore creates a global link which can then be referred from any page in the docs and hence might cause 
-some conflicts with other links sometimes (a conflict will show up as a Warning though while building).   
+page for reference on how to do this.   
 - Before adding an image to docs, first compress it via some tool to ensure users won't have to unnecessarily 
 download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by 
 upto 75% without losing any visible quality.
+- Use the thumbnail directive for images if you want to allow click to zoom.
 - Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
 some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
 X and Y ...", make "create a relationship" a link to the `Create relationships` page.
 - Try to commit logically separate changes into different commits. i.e. if you need to update the `.gitignore` 
 file for some reason and also have other normal docs changes, commit the gitignore change separately for better 
 visibility. Ideally each commit should perform just one specific function. e.g. add xyz deployment guide, update 
-gitignore, fix broken link, etc. This is not very important though so don't spend too much effort trying to achieve 
-this. 
+gitignore, fix broken link, etc.
 
 **Notes:** 
 - Docs are currently deployed manually. Changes will not reflect immediately after a PR gets merged.
