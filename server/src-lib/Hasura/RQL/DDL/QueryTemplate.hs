@@ -16,6 +16,7 @@ module Hasura.RQL.DDL.QueryTemplate
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal    (sessVarFromCurrentSetting)
 import           Hasura.RQL.GBoolExp        (txtRHSBuilder)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -88,9 +89,9 @@ mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
 
 data QueryTP1
   = QTP1Insert R.InsertQueryP1
-  | QTP1Select R.AnnSel
-  | QTP1Update R.UpdateQueryP1
-  | QTP1Delete R.DeleteQueryP1
+  | QTP1Select R.AnnSimpleSel
+  | QTP1Update R.AnnUpd
+  | QTP1Delete R.AnnDel
   | QTP1Count R.CountQueryP1
   | QTP1Bulk [QueryTP1]
   deriving (Show, Eq)
@@ -100,11 +101,16 @@ validateTQuery
   => QueryT
   -> m QueryTP1
 validateTQuery qt = withPathK "args" $ case qt of
-  QTInsert q -> QTP1Insert <$> R.convInsertQuery decodeInsObjs validateParam q
-  QTSelect q -> QTP1Select <$> (mkSelQ q >>= R.convSelectQuery validateParam)
-  QTUpdate q -> QTP1Update <$> R.validateUpdateQueryWith validateParam q
-  QTDelete q -> QTP1Delete <$> R.validateDeleteQWith validateParam q
-  QTCount q  -> QTP1Count  <$> R.validateCountQWith validateParam q
+  QTInsert q -> QTP1Insert <$>
+    R.convInsertQuery decodeInsObjs sessVarFromCurrentSetting validateParam q
+  QTSelect q -> QTP1Select <$>
+    (mkSelQ q >>= R.convSelectQuery sessVarFromCurrentSetting validateParam)
+  QTUpdate q -> QTP1Update <$>
+    R.validateUpdateQueryWith sessVarFromCurrentSetting validateParam q
+  QTDelete q -> QTP1Delete <$>
+    R.validateDeleteQWith sessVarFromCurrentSetting validateParam q
+  QTCount q  -> QTP1Count  <$>
+    R.validateCountQWith sessVarFromCurrentSetting validateParam q
   QTBulk q   -> QTP1Bulk   <$> mapM validateTQuery q
   where
     decodeInsObjs val = do
