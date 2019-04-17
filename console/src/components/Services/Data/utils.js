@@ -139,15 +139,18 @@ const getTableName = t => {
 
 const getSchemaQuery = schemaName => {
   const runSql = `select 
-  COALESCE(json_agg(
-    row_to_json(info)
-  ), '[]'::JSON) AS tables 
+  COALESCE(
+    json_agg(
+      row_to_json(info)
+    ), 
+    '[]' :: JSON
+  ) AS tables 
 FROM 
   (
     select 
       ist.table_schema, 
-      ist.table_name,
-      row_to_json(ist.*) as detail,
+      ist.table_name, 
+      row_to_json(ist.*) as detail, 
       to_jsonb(
         array_remove(
           array_agg(
@@ -172,10 +175,7 @@ FROM
           NULL
         )
       ) AS unique_constraints, 
-      COALESCE(
-        row_to_json(hdb_pk.*) :: JSONB, 
-        '{}' :: JSONB
-      ) AS primary_key, 
+      row_to_json(hdb_pk.*) :: JSONB AS primary_key, 
       hdb_table.table_name IS NOT NULL AS is_table_tracked, 
       to_jsonb(
         array_remove(
@@ -213,8 +213,8 @@ FROM
       ist.table_schema = '${schemaName}' 
     GROUP BY 
       ist.table_schema, 
-      ist.table_name,
-      ist.*,
+      ist.table_name, 
+      ist.*, 
       row_to_json(hdb_pk.*):: JSONB, 
       hdb_table.table_name
   ) AS info
