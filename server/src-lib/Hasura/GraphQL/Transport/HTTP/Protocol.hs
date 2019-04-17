@@ -1,6 +1,10 @@
 module Hasura.GraphQL.Transport.HTTP.Protocol
-  ( GraphQLRequest(..)
-  , GraphQLQuery(..)
+  ( GQLReq(..)
+  , GQLReqUnparsed
+  , GQLReqParsed
+  , toParsed
+  , GQLQueryText
+  , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues
   , encodeGQErr
@@ -10,6 +14,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
@@ -21,41 +26,56 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 
-newtype GraphQLQuery
-  = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
-  deriving (Show, Eq, Hashable)
+newtype GQLExecDoc
+  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
+  deriving (Ord, Show, Eq, Hashable)
 
-instance J.FromJSON GraphQLQuery where
-  parseJSON = J.withText "GraphQLQuery" $ \t ->
+instance J.FromJSON GQLExecDoc where
+  parseJSON = J.withText "GQLExecDoc" $ \t ->
     case G.parseExecutableDoc t of
       Left _  -> fail "parsing the graphql query failed"
-      Right q -> return $ GraphQLQuery $ G.getExecutableDefinitions q
+      Right q -> return $ GQLExecDoc $ G.getExecutableDefinitions q
 
-instance J.ToJSON GraphQLQuery where
+instance J.ToJSON GQLExecDoc where
   -- TODO, add pretty printer in graphql-parser
-  toJSON _ = J.String "toJSON not implemented for GraphQLQuery"
+  toJSON _ = J.String "toJSON not implemented for GQLExecDoc"
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName . G.Name <$> J.parseJSON v
 
 type VariableValues = Map.HashMap G.Variable J.Value
 
-data GraphQLRequest
-  = GraphQLRequest
+data GQLReq a
+  = GQLReq
   { _grOperationName :: !(Maybe OperationName)
-  , _grQuery         :: !GraphQLQuery
+  , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
-  ''GraphQLRequest
+  ''GQLReq
  )
 
-instance Hashable GraphQLRequest
+instance (Hashable a) => Hashable (GQLReq a)
+
+newtype GQLQueryText
+  = GQLQueryText
+  { _unGQLQueryText :: Text
+  } deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable)
+
+type GQLReqUnparsed = GQLReq GQLQueryText
+type GQLReqParsed = GQLReq GQLExecDoc
+
+toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
+toParsed req = case G.parseExecutableDoc gqlText of
+  Left _ -> withPathK "query" $ throwVE "not a valid graphql query"
+  Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
+  where
+    gqlText = _unGQLQueryText $ _grQuery req
 
 encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =

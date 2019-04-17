@@ -4,6 +4,9 @@
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
        , SchemaCache(..)
+       , SchemaCacheVer
+       , initSchemaCacheVer
+       , incSchemaCacheVer
        , emptySchemaCache
        , TableInfo(..)
        , TableConstraint(..)
@@ -63,7 +66,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , PreSetCols
+       , PreSetColsPartial
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -198,8 +201,8 @@ data InsPermInfo
   = InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
   , ipiView            :: !QualifiedTable
-  , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !PreSetCols
+  , ipiCheck           :: !AnnBoolExpPartialSQL
+  , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -209,7 +212,7 @@ data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpSQL
+  , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
   , spiAllowAgg        :: !Bool
   , spiRequiredHeaders :: ![T.Text]
@@ -221,8 +224,8 @@ data UpdPermInfo
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
-  , upiFilter          :: !AnnBoolExpSQL
-  , upiSet             :: !PreSetCols
+  , upiFilter          :: !AnnBoolExpPartialSQL
+  , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -231,7 +234,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 data DelPermInfo
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !AnnBoolExpSQL
+  , dpiFilter          :: !AnnBoolExpPartialSQL
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -420,6 +423,17 @@ addToDepMap schObj deps =
 removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
+
+newtype SchemaCacheVer
+  = SchemaCacheVer { unSchemaCacheVer :: Word64 }
+  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+
+initSchemaCacheVer :: SchemaCacheVer
+initSchemaCacheVer = SchemaCacheVer 0
+
+incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
+incSchemaCacheVer (SchemaCacheVer prev) =
+  SchemaCacheVer $ prev + 1
 
 data SchemaCache
   = SchemaCache

@@ -10,16 +10,25 @@ module Hasura.RQL.Types.BoolExp
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
+       , traverseAnnBoolExp
+       , fmapAnnBoolExp
        , annBoolExpTrue
        , andAnnBoolExps
 
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
+       , PartialSQLExp(..)
+       , AnnBoolExpFldPartialSQL
+       , AnnBoolExpPartialSQL
+
+       , PreSetCols
+       , PreSetColsPartial
        , foldBoolExp
        ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Permission
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
@@ -214,6 +223,25 @@ data AnnBoolExpFld a
 type AnnBoolExp a
   = GBoolExp (AnnBoolExpFld a)
 
+traverseAnnBoolExp
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnBoolExp a
+  -> f (AnnBoolExp b)
+traverseAnnBoolExp f =
+  traverse $ \case
+   AVCol pgColInfo opExps ->
+     AVCol pgColInfo <$> traverse (traverse f) opExps
+   AVRel relInfo annBoolExp ->
+     AVRel relInfo <$> traverseAnnBoolExp f annBoolExp
+
+fmapAnnBoolExp
+  :: (a -> b)
+  -> AnnBoolExp a
+  -> AnnBoolExp b
+fmapAnnBoolExp f =
+  runIdentity . traverseAnnBoolExp (pure . f)
+
 annBoolExpTrue :: AnnBoolExp a
 annBoolExpTrue = gBoolExpTrue
 
@@ -223,8 +251,24 @@ andAnnBoolExps l r =
 
 type AnnBoolExpFldSQL = AnnBoolExpFld S.SQLExp
 type AnnBoolExpSQL = AnnBoolExp S.SQLExp
+type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
+type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
 
-instance ToJSON AnnBoolExpSQL where
+type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
+type PreSetCols = M.HashMap PGCol S.SQLExp
+
+-- doesn't resolve the session variable
+data PartialSQLExp
+  = PSESessVar !PGColType !SessVar
+  | PSESQLExp !S.SQLExp
+  deriving (Show, Eq)
+
+instance ToJSON PartialSQLExp where
+  toJSON = \case
+    PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
+    PSESQLExp e -> toJSON $ toSQLTxt e
+
+instance ToJSON AnnBoolExpPartialSQL where
   toJSON = gBoolExpToJSON f
     where
       f annFld = case annFld of
@@ -236,6 +280,6 @@ instance ToJSON AnnBoolExpSQL where
           ( getRelTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
-      opExpSToJSON :: OpExpG S.SQLExp -> Value
+      opExpSToJSON :: OpExpG PartialSQLExp -> Value
       opExpSToJSON =
-        object . pure . opExpToJPair (toJSON . toSQLTxt)
+        object . pure . opExpToJPair toJSON
