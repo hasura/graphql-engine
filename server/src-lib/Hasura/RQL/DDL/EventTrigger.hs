@@ -360,12 +360,19 @@ runInvokeEventTrigger
   => InvokeEventTriggerQuery -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name new old) = do
   adminOnly
+  trigInfo <- askEventTriggerInfo name
+  assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger name
   let rowData =  object [ "new" .= new
                         , "old" .= old
                         ]
   eid <-liftTx $ insertManualEvent (tiName ti) name rowData
   return $ encJFromJValue $ object ["event_id" .= eid]
+  where
+    assertManual (TriggerOpsDef _ _ _ man) = case man of
+      Nothing -> throw400 NotSupported errMsg
+      Just m  -> unless m (throw400 NotSupported errMsg)
+    errMsg = "manual is disabled for event trigger"
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)
