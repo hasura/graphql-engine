@@ -13,8 +13,8 @@ import           Instances.TH.Lift       ()
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
-import           Hasura.Prelude
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types

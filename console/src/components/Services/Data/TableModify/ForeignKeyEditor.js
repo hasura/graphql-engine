@@ -14,12 +14,7 @@ import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector'
 
 import styles from './ModifyTable.scss';
 
-const ForeignKeyEditor = ({
-  tableSchema,
-  allSchemas,
-  dispatch,
-  fkModify,
-}) => {
+const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   // columns in the right order with their indices
