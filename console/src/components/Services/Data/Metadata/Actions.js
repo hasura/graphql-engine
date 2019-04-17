@@ -68,7 +68,7 @@ export const loadInconsistentObjects = (
         return Promise.resolve();
       }
     }
-    const headers = getState().tables.dataHEaders;
+    const headers = getState().tables.dataHeaders;
     dispatch({ type: LOADING_METADATA });
     return dispatch(
       requestAction(endpoints.query, {
@@ -124,7 +124,7 @@ export const reloadMetadata = (successCb, failureCb) => {
   return (dispatch, getState) => {
     const serverVersionFromState = getState().main.serverVersion;
     if (!semverCheck('inconsistentState', serverVersionFromState)) {
-      const headers = getState().tables.dataHEaders;
+      const headers = getState().tables.dataHeaders;
       return dispatch(
         requestAction(endpoints.query, {
           method: 'POST',
@@ -158,7 +158,7 @@ export const reloadMetadata = (successCb, failureCb) => {
 
 export const dropInconsistentObjects = () => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHEaders;
+    const headers = getState().tables.dataHeaders;
     dispatch({ type: DROP_INCONSISTENT_METADATA });
     return dispatch(
       requestAction(endpoints.query, {
