@@ -3,8 +3,8 @@ from super_classes import DefaultTestSelectQueries
 import os
 
 resp_pg_version_map = {
-    '9_4': 'response_9',
     '9_5': 'response_9',
+    '9_6': 'response_9',
     '10_6': 'response_10_11',
     '11_1': 'response_10_11',
     'latest': 'response_10_11'
