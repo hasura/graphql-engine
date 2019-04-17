@@ -920,7 +920,6 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
       }
     }
 
-
 Filter nested objects
 ---------------------
 
@@ -1320,6 +1319,78 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
+Filter based on presence of nested objects
+------------------------------------------
+
+You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
+achieved by using the expression ``{}`` which basically evaluates to check if ``true``.
+
+
+Example:
+^^^^^^^^
+Fetch all authors which have at least one article written by them:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author (
+        where: {
+          articles: {}
+        }
+      ) {
+        id
+        name
+        articles_aggregate {
+          aggregate {
+            count
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Justin",
+            "articles_aggregate": {
+              "aggregate": {
+                "count": 2
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "articles_aggregate": {
+              "aggregate": {
+                "count": 2
+              }
+            }
+          },
+          {
+            "id": 3,
+            "name": "Sidney",
+            "articles_aggregate": {
+              "aggregate": {
+                "count": 3
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "Anjela",
+            "articles_aggregate": {
+              "aggregate": {
+                "count": 2
+              }
+            }
+          }
+        ]
+      }
+    }
 
 
 
