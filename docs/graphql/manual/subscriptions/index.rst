@@ -37,17 +37,26 @@ for sending and receiving events.
 
 .. admonition:: Setting headers for subscriptions with Apollo client
 
-  If you are using Apollo Client, headers can be passed to a subscription by setting the following while
+  If you are using Apollo Client, headers can be passed to a subscription by setting ``connectionParams`` while
   `creating the wsLink <https://www.apollographql.com/docs/react/advanced/subscriptions.html#subscriptions-client>`_:
 
   .. code-block:: js
+    :emphasize-lines: 6-8
 
-    options: {
-      reconnect: true,
-      connectionParams: {
-        headers: {headers-object}
+    // Create a WebSocket link:
+    const wsLink = new WebSocketLink({
+      uri: `<graphql-endpoint>`,
+      options: {
+        reconnect: true,
+        connectionParams: {
+          headers: {headers-object}
+        }
       }
-    }
+    });
+
+  See `this <https://www.apollographql.com/docs/react/advanced/subscriptions.html#authentication>`_ for more info on
+  using ``connectionParams``.
+
 
 Cookies and WebSockets
 ----------------------
