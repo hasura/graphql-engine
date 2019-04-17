@@ -144,27 +144,27 @@ peelRun
   -> UserInfo
   -> HTTP.Manager
   -> SQLGenCtx
-  -> Q.PGPool -> Q.TxIsolation
+  -> PGExecCtx
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr sqlGenCtx pgPool txIso (Run m) =
-  runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
+peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
+  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation -> InstanceId
+  => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr sqlGenCtx query = do
+runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr sqlGenCtx pool isoL $ runQueryM query
+    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
   either throwError withReload resE
   where
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing)
-             $ recordSchemaUpdate instanceId
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+             $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
 

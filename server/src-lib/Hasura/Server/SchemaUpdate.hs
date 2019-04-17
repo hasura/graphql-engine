@@ -194,7 +194,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef $
            peelRun emptySchemaCache adminUserInfo
-           httpManager sqlGenCtx pool PG.Serializable buildSchemaCache
+           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSchemaCache
   case resE of
     Left e -> logError logger threadType $ TEQueryError e
     Right _ ->

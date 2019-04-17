@@ -1,20 +1,22 @@
 module Hasura.Server.Init where
 
-import qualified Database.PG.Query            as Q
+import qualified Database.PG.Query                as Q
 
 import           Options.Applicative
 
-import qualified Data.Aeson                   as J
-import qualified Data.HashSet                 as Set
-import qualified Data.String                  as DataString
-import qualified Data.Text                    as T
-import qualified Data.UUID                    as UUID
-import qualified Data.UUID.V4                 as UUID
-import qualified Hasura.Logging               as L
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
+import qualified Data.Aeson                       as J
+import qualified Data.HashSet                     as Set
+import qualified Data.String                      as DataString
+import qualified Data.Text                        as T
+import qualified Data.UUID                        as UUID
+import qualified Data.UUID.V4                     as UUID
+import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
+import qualified Hasura.Logging                   as L
+import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types             (RoleName (..), SchemaCache (..))
+import           Hasura.RQL.Types                 (RoleName (..),
+                                                   SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
@@ -40,20 +42,23 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions
   = RawServeOptions
-  { rsoPort            :: !(Maybe Int)
-  , rsoHost            :: !(Maybe HostPreference)
-  , rsoConnParams      :: !RawConnParams
-  , rsoTxIso           :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret     :: !(Maybe AdminSecret)
-  , rsoAuthHook        :: !RawAuthHook
-  , rsoJwtSecret       :: !(Maybe Text)
-  , rsoUnAuthRole      :: !(Maybe RoleName)
-  , rsoCorsConfig      :: !(Maybe CorsConfig)
-  , rsoEnableConsole   :: !Bool
-  , rsoEnableTelemetry :: !(Maybe Bool)
-  , rsoWsReadCookie    :: !Bool
-  , rsoStringifyNum    :: !Bool
-  , rsoEnabledAPIs     :: !(Maybe [API])
+  { rsoPort               :: !(Maybe Int)
+  , rsoHost               :: !(Maybe HostPreference)
+  , rsoConnParams         :: !RawConnParams
+  , rsoTxIso              :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret        :: !(Maybe AdminSecret)
+  , rsoAuthHook           :: !RawAuthHook
+  , rsoJwtSecret          :: !(Maybe Text)
+  , rsoUnAuthRole         :: !(Maybe RoleName)
+  , rsoCorsConfig         :: !(Maybe CorsConfig)
+  , rsoEnableConsole      :: !Bool
+  , rsoEnableTelemetry    :: !(Maybe Bool)
+  , rsoWsReadCookie       :: !Bool
+  , rsoStringifyNum       :: !Bool
+  , rsoEnabledAPIs        :: !(Maybe [API])
+  , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
+  , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -71,6 +76,7 @@ data ServeOptions
   , soEnableTelemetry :: !Bool
   , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
+  , soLiveQueryOpts   :: !LQ.LQOpts
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -149,6 +155,12 @@ instance FromEnv CorsConfig where
 
 instance FromEnv [API] where
   fromEnv = readAPIs
+
+instance FromEnv LQ.BatchSize where
+  fromEnv = fmap LQ.mkBatchSize . readEither
+
+instance FromEnv LQ.RefetchInterval where
+  fromEnv = fmap LQ.refetchIntervalFromMilli . readEither
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
@@ -253,9 +265,10 @@ mkServeOptions rso = do
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+  lqOpts <- mkLQOpts
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole enableTelemetry
-                        strfyNum enabledAPIs
+                        unAuthRole corsCfg enableConsole
+                        enableTelemetry strfyNum enabledAPIs lqOpts
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -286,6 +299,16 @@ mkServeOptions rso = do
       return $ case corsCfg of
         CCDisabled _ -> CCDisabled wsReadCookie
         _            -> corsCfg
+
+    mkLQOpts = do
+      mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $
+                       fst mxRefetchDelayEnv
+      mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $
+                      fst mxBatchSizeEnv
+      fallbackRefetchIntM <- withEnv (rsoFallbackRefetchInt rso) $
+                             fst fallbackRefetchDelayEnv
+      return $ LQ.mkLQOpts (LQ.mkMxOpts mxBatchSizeM mxRefetchIntM)
+        (LQ.mkFallbackOpts fallbackRefetchIntM)
 
 
 mkExamplesDoc :: [[String]] -> PP.Doc
@@ -751,6 +774,54 @@ parseEnabledAPIs = optional $
          ( long "enabled-apis" <>
            help (snd enabledAPIsEnv)
          )
+
+parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
+parseMxRefetchInt =
+  optional $
+    option (eitherReader fromEnv)
+    ( long "live-queries-multiplexed-refetch-interval" <>
+      metavar "<INTERVAL(ms)>" <>
+      help (snd mxRefetchDelayEnv)
+    )
+
+parseMxBatchSize :: Parser (Maybe LQ.BatchSize)
+parseMxBatchSize =
+  optional $
+    option (eitherReader fromEnv)
+    ( long "live-queries-multiplexed-batch-size" <>
+      metavar "BATCH_SIZE" <>
+      help (snd mxBatchSizeEnv)
+    )
+
+mxRefetchDelayEnv :: (String, String)
+mxRefetchDelayEnv =
+  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
+  , "results will only be sent once in this interval (in milliseconds) for \
+    \live queries which can be multiplexed. Default: 1000 (1sec)"
+  )
+
+mxBatchSizeEnv :: (String, String)
+mxBatchSizeEnv =
+  ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
+  , "multiplexed live queries are split into batches of the specified \
+    \size. Default 100. "
+  )
+
+parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)
+parseFallbackRefetchInt =
+  optional $
+    option (eitherReader fromEnv)
+    ( long "live-queries-fallback-refetch-interval" <>
+      metavar "<INTERVAL(ms)>" <>
+      help (snd mxRefetchDelayEnv)
+    )
+
+fallbackRefetchDelayEnv :: (String, String)
+fallbackRefetchDelayEnv =
+  ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
+  , "results will only be sent once in this interval (in milliseconds) for \
+    \live queries which cannot be multiplexed. Default: 1000 (1sec)"
+  )
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog

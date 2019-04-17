@@ -21,6 +21,7 @@ import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
 import qualified Network.Wai.Handler.Warp   as Warp
 
+import           Hasura.Db
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -78,6 +79,9 @@ parseHGECommand =
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
                 <*> parseEnabledAPIs
+                <*> parseMxRefetchInt
+                <*> parseMxBatchSize
+                <*> parseFallbackRefetchInt
 
 
 parseArgs :: IO HGEOptions
@@ -114,9 +118,9 @@ main =  do
   let logger = mkLogger loggerCtx
       pgLogger = mkPGLogger logger
   case hgeCmd of
-    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook mJwtSecret
-                mUnAuthRole corsCfg enableConsole enableTelemetry strfyNum enabledAPIs) -> do
-
+    HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
+                mJwtSecret mUnAuthRole corsCfg enableConsole
+                enableTelemetry strfyNum enabledAPIs lqOpts) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
       -- log serve options
       unLogger logger $ serveOptsToLog so
@@ -141,7 +145,7 @@ main =  do
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx pool httpManager am
-          corsCfg enableConsole enableTelemetry instanceId enabledAPIs
+          corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
       sc <- getSCFromRef cacheRef
       -- log inconsistent schema objects
@@ -162,7 +166,8 @@ main =  do
       let scRef = _scrCache cacheRef
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
-      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders httpManager pool scRef eventEngineCtx
+      void $ C.forkIO $ processEventQueue hloggerCtx logEnvHeaders
+        httpManager pool scRef eventEngineCtx
 
       -- start a background thread to check for updates
       void $ C.forkIO $ checkForUpdates loggerCtx httpManager
@@ -203,7 +208,7 @@ main =  do
     runAsAdmin sqlGenCtx pgLogger ci httpManager m = do
       pool <- getMinimalPool pgLogger ci
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-              httpManager sqlGenCtx pool Q.Serializable m
+              httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
 
     procConnInfo rci =

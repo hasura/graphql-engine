@@ -73,10 +73,11 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => SessVarBldr m
+  -> (PGColType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   tableInfo <- askTabInfo qt
 
   -- Check if select is allowed
@@ -93,11 +94,14 @@ validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp' colInfoMap selPerm be prepValBuilder
+    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+
+  resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
+                     spiFilter selPerm
 
   return $ CountQueryP1
     qt
-    (spiFilter selPerm, annSQLBoolExp)
+    (resolvedSelFltr, annSQLBoolExp)
     mDistCols
   where
     selNecessaryMsg =
@@ -110,7 +114,7 @@ validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
-  liftDMLP1 . validateCountQWith binRHSBuilder
+  liftDMLP1 . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
 
 countQToTx
   :: (QErrM m, MonadTx m)
