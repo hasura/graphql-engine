@@ -171,6 +171,17 @@ const fetchTrackedFunctions = () => {
   };
 };
 
+const setUntrackedRelations = () => (dispatch, getState) => {
+  const untrackedRelations = getAllUnTrackedRelations(
+    getState().tables.allSchemas,
+    getState().tables.currentSchema
+  ).bulkRelTrack;
+  dispatch({
+    type: LOAD_UNTRACKED_RELATIONS,
+    untrackedRelations,
+  });
+};
+
 const fetchDataInit = () => (dispatch, getState) => {
   const currentSchema = getState().tables.currentSchema;
   const url = Endpoints.getSchema;
@@ -197,6 +208,7 @@ const fetchDataInit = () => (dispatch, getState) => {
         type: LOAD_SCHEMA,
         allSchemas: JSON.parse(data[1].result[1]),
       });
+      dispatch(setUntrackedRelations());
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -311,16 +323,9 @@ const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
   return dispatch(requestAction(url, options));
 };
 
-const loadUntrackedRelations = () => (dispatch, getState) => {
+const loadUntrackedRelations = () => dispatch => {
   return dispatch(loadSchema()).then(() => {
-    const untrackedRelations = getAllUnTrackedRelations(
-      getState().tables.allSchemas,
-      getState().tables.currentSchema
-    ).bulkRelTrack;
-    dispatch({
-      type: LOAD_UNTRACKED_RELATIONS,
-      untrackedRelations,
-    });
+    dispatch(setUntrackedRelations());
   });
 };
 

@@ -25,13 +25,11 @@ import {
   loadUntrackedRelations,
   fetchDataInit,
   fetchFunctionInit,
-  LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
 } from '../DataActions';
 import {
   autoAddRelName,
   autoTrackRelations,
-  getAllUnTrackedRelations,
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
@@ -50,28 +48,6 @@ class Schema extends Component {
     // Initialize this table
     this.props.dispatch(fetchDataInit());
     this.props.dispatch(fetchFunctionInit());
-
-    const untrackedRelations = getAllUnTrackedRelations(
-      this.props.schema,
-      this.props.currentSchema
-    ).bulkRelTrack;
-
-    this.props.dispatch({
-      type: LOAD_UNTRACKED_RELATIONS,
-      untrackedRelations,
-    });
-  }
-
-  componentDidMount() {
-    const untrackedRelations = getAllUnTrackedRelations(
-      this.props.schema,
-      this.props.currentSchema
-    ).bulkRelTrack;
-
-    this.props.dispatch({
-      type: LOAD_UNTRACKED_RELATIONS,
-      untrackedRelations,
-    });
   }
 
   render() {
