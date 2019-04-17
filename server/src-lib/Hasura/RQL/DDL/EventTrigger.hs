@@ -222,7 +222,7 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete _manual retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete manual retryConf webhook webhookFromEnv mheaders replace) = do
   adminOnly
   ti <- askTabInfo qt
   -- can only replace for same table
@@ -235,7 +235,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete _manual retryCo
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete) webhook webhookFromEnv rconf mheaders)
+  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete manual) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -262,7 +262,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
 
 getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
-getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
+getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
                       , subsOpSpecDeps <$> mUpd
                       , subsOpSpecDeps <$> mDel

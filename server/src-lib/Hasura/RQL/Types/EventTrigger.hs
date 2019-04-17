@@ -111,7 +111,7 @@ data CreateEventTriggerQuery
   , cetqInsert         :: !(Maybe SubscribeOpSpec)
   , cetqUpdate         :: !(Maybe SubscribeOpSpec)
   , cetqDelete         :: !(Maybe SubscribeOpSpec)
-  , cetqManual         :: !Bool
+  , cetqManual         :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
   , cetqWebhook        :: !(Maybe T.Text)
   , cetqWebhookFromEnv :: !(Maybe T.Text)
@@ -137,8 +137,7 @@ instance FromJSON CreateEventTriggerQuery where
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
-    let allowManual = fromMaybe False manual
-    if any isJust [insert, update, delete] || allowManual then
+    if any isJust [insert, update, delete] || isJust manual then
       return ()
       else
       fail "at least one among the insert/update/delete/manual specs must be provided"
@@ -148,7 +147,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete allowManual retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery name table insert update delete manual retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
@@ -164,6 +163,7 @@ data TriggerOpsDef
   { tdInsert :: !(Maybe SubscribeOpSpec)
   , tdUpdate :: !(Maybe SubscribeOpSpec)
   , tdDelete :: !(Maybe SubscribeOpSpec)
+  , tdManual :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
