@@ -30,6 +30,7 @@ SET row_security = off;
 SET default_tablespace = '';
 SET default_with_oids = false;
 CREATE SCHEMA public;
+COMMENT ON SCHEMA public IS 'standard public schema';
 EOF
 
 while read -r line; do

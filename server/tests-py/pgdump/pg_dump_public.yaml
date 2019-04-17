@@ -5,10 +5,10 @@ query:
   schema: public
 response: |
   CREATE TABLE public.articles (
-    id integer NOT NULL,
-    author_id integer NOT NULL,
-    title text NOT NULL,
-    body text NOT NULL
+      id integer NOT NULL,
+      author_id integer NOT NULL,
+      title text NOT NULL,
+      body text NOT NULL
   );
   CREATE SEQUENCE public.articles_id_seq
       AS integer
