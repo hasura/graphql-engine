@@ -12,7 +12,10 @@ import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
 import { initQueries } from '../Data/DataActions';
-import { filterInconsistentMetadata } from '../Data/Metadata/Actions';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from '../Data/Metadata/Actions';
 import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -98,6 +101,7 @@ const loadTriggers = () => (dispatch, getState) => {
         type: LOAD_TRIGGER_LIST,
         triggerList: consistentTriggers || data[0],
       });
+      dispatch(loadInconsistentObjects(null, false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
