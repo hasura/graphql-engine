@@ -122,7 +122,6 @@ class Schema extends Component {
 
 Schema.propTypes = {
   schema: PropTypes.array.isRequired,
-  untracked: PropTypes.array.isRequired,
   untrackedRelations: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
@@ -132,7 +131,6 @@ Schema.propTypes = {
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
-  untracked: state.tables.untrackedSchemas,
   migrationMode: state.main.migrationMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,

@@ -146,10 +146,7 @@ const defaultState = {
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
   listedFunctions: [],
-
   listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
   tableComment: null,
   columnComments: {},
   untrackedRelations: [],
