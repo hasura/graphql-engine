@@ -62,14 +62,14 @@ export const passMTRenameColumn = () => {
     .clear()
     .type(getColName(3));
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
-  cy.wait(15000);
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), [getColName(3)], 'success');
   cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
   cy.get(getElementFromAlias('edit-col-name'))
     .clear()
     .type('id');
   cy.get(getElementFromAlias('modify-table-column-0-save')).click();
-  cy.wait(15000);
+  cy.wait(5000);
   validateColumn(getTableName(0, testName), ['id'], 'success');
 };
 
