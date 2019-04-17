@@ -203,7 +203,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -234,6 +234,15 @@ NotExp
    {
        "$not" : BoolExp_
    }
+
+
+TrueExp
+^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+    {}
 
 ColumnExp
 ^^^^^^^^^
