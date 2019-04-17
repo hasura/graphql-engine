@@ -169,12 +169,8 @@ export const validateCT = (tableName, result) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
-      cy.log('success');
-      cy.log(response);
       expect(response.status === 200).to.be.true;
     } else {
-      cy.log('failure');
-      cy.log(response);
       expect(response.status === 200).to.be.false;
     }
   });
