@@ -8,8 +8,8 @@ module Hasura.Server.PGDump
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import qualified Data.ByteString.Lazy   as BL
-import           Data.FileEmbed
-import           Data.List
+import qualified Data.FileEmbed         as FE
+import qualified Data.List              as L
 import qualified Data.Text              as T
 import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
@@ -20,14 +20,14 @@ import           System.Process
 data PGDumpReqBody
   = PGDumpReqBody
   { prbSchema :: !String
-  , prbOpts   :: !(Maybe String)
+  , prbOpts   :: !(Maybe String) -- for future use
   }
   deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
 
 script :: IsString a => a
-script = $(embedStringFile "src-rsr/run_pg_dump.sh")
+script = $(FE.embedStringFile "src-rsr/run_pg_dump.sh")
 
 runScript
   :: String
@@ -38,7 +38,7 @@ runScript dbUrl schema = do
     ["/dev/stdin", dbUrl, schema] script
   case exitCode of
     ExitSuccess   -> do
-      contents <- BL.readFile $ dropWhileEnd (== '\n') filename
+      contents <- BL.readFile $ L.dropWhileEnd (== '\n') filename
       return $ Right contents
     ExitFailure _ ->  return $ Left stdErr
 
