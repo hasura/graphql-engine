@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   postgres:
-    image: postgres:11.2
+    image: postgres
     restart: always
     volumes:
     - db_data:/var/lib/postgresql/data
@@ -13,7 +13,7 @@ services:
     - "postgres"
     restart: always
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://hasurauser:hasurauser@postgres:5432/postgres
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
