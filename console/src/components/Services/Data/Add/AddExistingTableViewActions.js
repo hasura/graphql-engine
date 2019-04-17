@@ -2,12 +2,11 @@ import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
   loadSchema,
-  LOAD_UNTRACKED_RELATIONS,
+  loadUntrackedRelations,
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
 import { showSuccessNotification } from '../Notification';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -213,16 +212,7 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnSuccess = () => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
-        const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(
-          allSchemas,
-          currentSchema
-        ).bulkRelTrack;
-        dispatch({
-          type: LOAD_UNTRACKED_RELATIONS,
-          untrackedRelations: untrackedRelations,
-        });
+      dispatch(loadUntrackedRelations()).then(() => {
         dispatch(_push('/schema/' + currentSchema));
       });
       return;

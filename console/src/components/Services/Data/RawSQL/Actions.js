@@ -1,7 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  // loadSchema,
   handleMigrationErrors,
   fetchTrackedFunctions,
   fetchDataInit,

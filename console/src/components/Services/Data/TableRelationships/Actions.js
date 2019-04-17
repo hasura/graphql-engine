@@ -3,7 +3,6 @@ import inflection from 'inflection';
 import {
   makeMigrationCall,
   loadUntrackedRelations,
-  loadSchema,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -559,7 +558,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    Promise.all([dispatch(loadSchema()), dispatch(loadUntrackedRelations())]);
+    Promise.all([dispatch(loadUntrackedRelations())]);
   };
   const customOnError = () => {};
 
