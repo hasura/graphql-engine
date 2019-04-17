@@ -372,6 +372,17 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
 
+    -- Health check endpoint
+    get "healthz" $ do
+      sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
+      let reportOK = do
+            setStatus N.status200
+            lazyBytes "OK"
+          reportError = do
+            setStatus N.status500
+            lazyBytes "ERROR"
+      bool reportError reportOK $ null $ scInconsistentObjs sc
+
     get "v1/version" $ do
       uncurry setHeader jsonHeader
       lazyBytes $ encode $ object [ "version" .= currentVersion ]
