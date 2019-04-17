@@ -45,14 +45,14 @@ export const passMTRenameTable = () => {
     .clear()
     .type(getTableName(3, testName));
   cy.get(getElementFromAlias('heading-edit-table-save')).click();
-  cy.wait(25000);
+  cy.wait(10000);
   validateCT(getTableName(3, testName), 'success');
   cy.get(getElementFromAlias('heading-edit-table')).click();
   cy.get(getElementFromAlias('heading-edit-table-input'))
     .clear()
     .type(getTableName(0, testName));
   cy.get(getElementFromAlias('heading-edit-table-save')).click();
-  cy.wait(25000);
+  cy.wait(10000);
   validateCT(getTableName(0, testName), 'success');
 };
 
