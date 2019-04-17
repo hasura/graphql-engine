@@ -10,7 +10,10 @@ import { showErrorNotification, showSuccessNotification } from './Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { filterInconsistentMetadata } from './Metadata/Actions';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from './Metadata/Actions';
 import globals from '../../../Globals';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -354,6 +357,7 @@ const loadSchema = () => (dispatch, getState) => {
         );
       }
       dispatch({ type: LOAD_SCHEMA, allSchemas: schemas });
+      dispatch(loadInconsistentObjects(null, false));
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));
