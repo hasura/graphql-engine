@@ -28,6 +28,7 @@ export const passMTCreateTable = () => {
   );
   validateCT(getTableName(0, testName), 'success');
 };
+
 export const passMTCheckRoute = () => {
   // Click on the create table button
   cy.get(getElementFromAlias('table-modify')).click();
