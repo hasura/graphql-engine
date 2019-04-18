@@ -150,6 +150,7 @@ FROM
     select 
       ist.table_schema, 
       ist.table_name, 
+      obj_description((ist.table_schema || '.' || ist.table_name)::regclass, 'pg_class') as comment, 
       row_to_json(ist.*) as detail, 
       to_jsonb(
         array_remove(

@@ -6,7 +6,7 @@ import {
   untrackTableSql,
   RESET,
 } from '../TableModify/ModifyActions';
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
@@ -25,7 +25,6 @@ class ModifyTable extends React.Component {
     const { dispatch, serverVersion } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchTableComment(this.props.tableName));
     if (serverVersion) {
       this.checkTableColumnRenameSupport(serverVersion);
     }
@@ -59,7 +58,6 @@ class ModifyTable extends React.Component {
       dispatch,
       migrationMode,
       currentSchema,
-      tableComment,
       columnComments,
       tableCommentEdit,
       columnEdit,
@@ -67,6 +65,7 @@ class ModifyTable extends React.Component {
       fkModify,
     } = this.props;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableComment = tableSchema.comment;
 
     const untrackBtn = (
       <Button
@@ -173,7 +172,6 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  tableComment: PropTypes.string.isRequired,
   columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
@@ -195,7 +193,6 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
-  tableComment: state.tables.tableComment,
   columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,

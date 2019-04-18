@@ -21,7 +21,6 @@ const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
 const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
-const LOAD_TABLE_COMMENT = 'Data/LOAD_TABLE_COMMENT';
 const LOAD_COLUMN_COMMENT = 'Data/LOAD_COLUMN_COMMENT';
 const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
@@ -329,33 +328,6 @@ const loadUntrackedRelations = () => dispatch => {
   });
 };
 
-const fetchTableComment = tableName => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const currentSchema = getState().tables.currentSchema;
-  const commentSql = `select obj_description('${currentSchema}.${tableName}'::regclass) as description from pg_class
-    WHERE relkind = 'r' AND relname = '${tableName}'`;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'run_sql',
-      args: {
-        sql: commentSql,
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_TABLE_COMMENT, data });
-    },
-    error => {
-      console.error('Failed to load table comment');
-      console.error(error);
-    }
-  );
-};
-
 const fetchColumnComment = (tableName, colName) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const currentSchema = getState().tables.currentSchema;
@@ -592,8 +564,6 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         untrackedRelations: action.untrackedRelations,
       };
-    case LOAD_TABLE_COMMENT:
-      return { ...state, tableComment: action.data };
     case LOAD_COLUMN_COMMENT:
       const loadedComment = action.data ? action.data.result[1] || '' : '';
       return {
@@ -652,7 +622,6 @@ export {
   REQUEST_ERROR,
   setTable,
   loadSchema,
-  fetchTableComment,
   fetchColumnComment,
   handleMigrationErrors,
   makeMigrationCall,

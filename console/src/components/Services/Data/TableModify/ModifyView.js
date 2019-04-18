@@ -14,7 +14,7 @@ import {
   RESET,
 } from './ModifyActions';
 import { ordinalColSort } from '../utils';
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import semverCheck from '../../../../helpers/semver';
 
@@ -27,7 +27,6 @@ class ModifyView extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
-    dispatch(fetchTableComment(this.props.tableName));
     if (serverVersion) {
       this.checkTableColumnRenameSupport(serverVersion);
     }
@@ -70,7 +69,6 @@ class ModifyView extends Component {
       lastSuccess,
       dispatch,
       currentSchema,
-      tableComment,
       tableCommentEdit,
       migrationMode,
     } = this.props;
@@ -78,6 +76,7 @@ class ModifyView extends Component {
     const styles = require('./ModifyTable.scss');
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
+    const tableComment = tableSchema.comment;
 
     let alert = null;
     if (ongoingRequest) {
@@ -184,7 +183,6 @@ class ModifyView extends Component {
     const commentEditCancel = () => {
       dispatch(activateCommentEdit(false, null));
     };
-    const commentText = tableComment ? tableComment.result[1] : null;
     let commentHtml = (
       <div className={styles.add_pad_bottom}>
         <div className={styles.commentText}>Add a comment</div>
@@ -193,11 +191,11 @@ class ModifyView extends Component {
         </div>
       </div>
     );
-    if (commentText && !tableCommentEdit.enabled) {
+    if (tableComment && !tableCommentEdit.enabled) {
       commentHtml = (
         <div>
           <div className={styles.commentText + ' alert alert-warning'}>
-            {commentText}
+            {tableComment}
           </div>
           <div onClick={editCommentClicked} className={styles.commentEdit}>
             <i className="fa fa-edit" />
@@ -290,7 +288,6 @@ ModifyView.propTypes = {
   tableName: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  tableComment: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
@@ -305,7 +302,6 @@ const mapStateToProps = (state, ownProps) => {
     allSchemas: state.tables.allSchemas,
     sql: state.rawSQL.sql,
     currentSchema: state.tables.currentSchema,
-    tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.modify,
