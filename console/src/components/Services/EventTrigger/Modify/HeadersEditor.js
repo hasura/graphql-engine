@@ -1,7 +1,6 @@
 import React from 'react';
-import Editor from './Editor';
+import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import AceEditor from 'react-ace';
-
 import {
   addHeader,
   removeHeader,
@@ -25,7 +24,6 @@ class HeadersEditor extends React.Component {
       }
     });
   };
-
   addExtraHeader = () => {
     const { dispatch, modifyTrigger } = this.props;
     const lastHeader = modifyTrigger.headers[modifyTrigger.headers.length - 1];
@@ -51,9 +49,8 @@ class HeadersEditor extends React.Component {
         };
       });
     };
-    const collapsed = toggleButton => (
-      <div className={styles.modifyOpsCollapsed}>
-        {toggleButton('Edit')}
+    const collapsed = () => (
+      <div>
         {headers.length > 0 ? (
           <div className={styles.modifyHeaders}>
             <AceEditor
@@ -75,62 +72,58 @@ class HeadersEditor extends React.Component {
       </div>
     );
 
-    const expanded = (toggleButton, saveButton) => (
-      <div className={styles.modifyOpsExpanded}>
-        {toggleButton('Close')}
-        <div className={styles.modifyOpsPadLeft}>
-          {modifyTrigger.headers.map((h, i) => {
-            return (
-              <div className={styles.modifyHeadersCollapsedContent} key={i}>
-                <input
-                  type="text"
-                  className={`${styles.input} form-control ${
-                    styles.add_mar_right
-                  } ${styles.modifyHeadersTextbox}`}
-                  value={h.key}
-                  onChange={e => {
-                    dispatch(setHeaderKey(e.target.value, i));
+    const expanded = () => (
+      <div className={styles.modifyOpsPadLeft}>
+        {modifyTrigger.headers.map((h, i) => {
+          return (
+            <div className={styles.modifyHeadersCollapsedContent} key={i}>
+              <input
+                type="text"
+                className={`${styles.input} form-control ${
+                  styles.add_mar_right
+                } ${styles.modifyHeadersTextbox}`}
+                value={h.key}
+                onChange={e => {
+                  dispatch(setHeaderKey(e.target.value, i));
+                }}
+                placeholder="key"
+              />
+              <div className={styles.dropDownGroup}>
+                <DropdownButton
+                  dropdownOptions={[
+                    { display_text: 'Value', value: 'static' },
+                    { display_text: 'From env var', value: 'env' },
+                  ]}
+                  title={h.type === 'env' ? 'From env var' : 'Value'}
+                  dataKey={h.type === 'env' ? 'env' : 'static'}
+                  onButtonChange={e => this.handleSelectionChange(e, i)}
+                  onInputChange={e => {
+                    dispatch(setHeaderValue(e.target.value, i));
+                    this.addExtraHeader();
                   }}
-                  placeholder="key"
-                />
-                <div className={styles.dropDownGroup}>
-                  <DropdownButton
-                    dropdownOptions={[
-                      { display_text: 'Value', value: 'static' },
-                      { display_text: 'From env var', value: 'env' },
-                    ]}
-                    title={h.type === 'env' ? 'From env var' : 'Value'}
-                    dataKey={h.type === 'env' ? 'env' : 'static'}
-                    onButtonChange={e => this.handleSelectionChange(e, i)}
-                    onInputChange={e => {
-                      dispatch(setHeaderValue(e.target.value, i));
-                      this.addExtraHeader();
-                    }}
-                    required
-                    bsClass={styles.dropdown_button}
-                    inputVal={h.value}
-                    id={`header-value-${i}`}
-                    inputPlaceHolder={
-                      h.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
-                    }
-                    testId={`header-value-${i}`}
-                  />
-                </div>
-                <i
-                  className={`${styles.fontAwosomeClose}
-                      ${styles.removeHeader}
-                      ${i !== modifyTrigger.headers.length - 1 &&
-                        'fa-lg fa fa-times'}
-                    `}
-                  onClick={() => {
-                    dispatch(removeHeader(i));
-                  }}
+                  required
+                  bsClass={styles.dropdown_button}
+                  inputVal={h.value}
+                  id={`header-value-${i}`}
+                  inputPlaceHolder={
+                    h.type === 'env' ? 'HEADER_FROM_ENV' : 'value'
+                  }
+                  testId={`header-value-${i}`}
                 />
               </div>
-            );
-          })}
-        </div>
-        {saveButton(save)}{' '}
+              <i
+                className={`${styles.fontAwosomeClose}
+                    ${styles.removeHeader}
+                    ${i !== modifyTrigger.headers.length - 1 &&
+                      'fa-lg fa fa-times'}
+                  `}
+                onClick={() => {
+                  dispatch(removeHeader(i));
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
     );
 
@@ -144,9 +137,11 @@ class HeadersEditor extends React.Component {
           <Editor
             editorCollapsed={collapsed}
             editorExpanded={expanded}
-            toggleCallback={this.setValues}
+            expandCallback={this.setValues}
             ongoingRequest={modifyTrigger.ongoingRequest}
             property="headers"
+            service="modify-trigger"
+            saveFunc={save}
             styles={styles}
           />
         </div>

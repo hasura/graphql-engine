@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, IndexRoute } from 'react-router';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -19,8 +19,9 @@ import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator'
 
 import generatedLoginConnector from './components/Login/Login';
 
-import { metadataConnector } from './components/Services/Data';
-
+import metadataContainer from './components/Services/Data/Metadata/Container';
+import metadataOptionsContainer from './components/Services/Data/Metadata/MetadataOptions';
+import metadataStatusContainer from './components/Services/Data/Metadata/MetadataStatus';
 import globals from './Globals';
 
 import validateLogin from './components/Common/validateLogin';
@@ -90,7 +91,14 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
-          <Route path="metadata" component={metadataConnector(connect)} />
+          <Route path="metadata" component={metadataContainer(connect)}>
+            <IndexRedirect to="actions" />
+            <Route path="status" component={metadataStatusContainer(connect)} />
+            <Route
+              path="actions"
+              component={metadataOptionsContainer(connect)}
+            />
+          </Route>
           {dataRouter}
           {eventRouter}
           {customResolverRouter}

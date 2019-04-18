@@ -22,12 +22,3 @@
           }
         }
       }
-- description: Delete the inserted persons
-  url: /v1/query
-  status: 200
-  query:
-    type: run_sql
-    args:
-      sql: |
-        delete from person;
-        SELECT setval('person_id_seq', 1, FALSE);
