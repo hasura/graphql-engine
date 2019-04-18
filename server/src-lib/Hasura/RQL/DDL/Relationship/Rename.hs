@@ -2,12 +2,13 @@ module Hasura.RQL.DDL.Relationship.Rename
   (runRenameRel)
 where
 
-import           Hasura.Prelude
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Rename      (renameRelInCatalog)
-import           Hasura.RQL.DDL.Schema.Table       (buildSchemaCache)
+import           Hasura.RQL.DDL.Schema.Table       (buildSchemaCache,
+                                                    checkNewInconsistentMeta)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -23,6 +24,7 @@ renameRelP2
      )
   => QualifiedTable -> RelName -> RelInfo -> m ()
 renameRelP2 qt newRN relInfo = do
+  oldSC <- askSchemaCache
   tabInfo <- askTabInfo qt
   -- check for conflicts in fieldInfoMap
   case HM.lookup (fromRel newRN) $ tiFieldInfoMap tabInfo of
@@ -35,6 +37,9 @@ renameRelP2 qt newRN relInfo = do
   renameRelInCatalog qt oldRN newRN
   -- update schema cache
   buildSchemaCache
+  newSC <- askSchemaCache
+  -- check for new inconsistency
+  checkNewInconsistentMeta oldSC newSC
   where
     oldRN = riName relInfo
 

@@ -1,6 +1,5 @@
 module Hasura.RQL.DML.Returning where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select
@@ -8,21 +7,21 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.Text               as T
-import qualified Database.PG.Query       as Q
+import qualified Hasura.SQL.DML          as S
 
-data MutFld
+data MutFldG v
   = MCount
   | MExp !T.Text
-  | MRet ![(FieldName, AnnFld)]
-  | MQuery !(Q.TxE QErr EncJSON)
+  | MRet ![(FieldName, AnnFldG v)]
+  | MQuery !RespTx
 
-instance Show MutFld where
+instance Show v => Show (MutFldG v) where
   show MCount     = "count"
   show (MExp t)   = "expression: " ++ T.unpack t
   show (MRet l)   = "returning: " ++ show l
   show (MQuery _) = "query tx"
 
-instance Eq MutFld where
+instance Eq v => Eq (MutFldG v) where
   MCount == MCount = True
   MCount == _ = False
   (MExp l) == (MExp r) = l == r
@@ -32,7 +31,30 @@ instance Eq MutFld where
   (MQuery _) == (MQuery _) = True
   (MQuery _) == _ = False
 
-type MutFlds = [(T.Text, MutFld)]
+traverseMutFld
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldG a
+  -> f (MutFldG b)
+traverseMutFld f = \case
+  MCount    -> pure MCount
+  MExp t    -> pure $ MExp t
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
+  MQuery q  -> pure $ MQuery q
+
+type MutFld = MutFldG S.SQLExp
+
+type MutFldsG v = [(T.Text, MutFldG v)]
+
+traverseMutFlds
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldsG a
+  -> f (MutFldsG b)
+traverseMutFlds f =
+  traverse (traverse (traverseMutFld f))
+
+type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutFlds -> Bool
 hasNestedFld = any isNestedMutFld

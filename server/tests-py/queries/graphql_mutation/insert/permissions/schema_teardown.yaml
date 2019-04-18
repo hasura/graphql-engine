@@ -1,0 +1,20 @@
+type: bulk
+args:
+#Drop relationship first
+- type: drop_relationship
+  args:
+    table:
+      name: author
+      schema: public
+    relationship: articles
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE address;
+      DROP TABLE resident;
+      DROP TABLE article;
+      DROP TABLE blog;
+      DROP TABLE author;
+      DROP TABLE "Company";
+    cascade: true

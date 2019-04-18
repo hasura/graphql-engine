@@ -36,12 +36,3 @@
           }
         }
       }
-- description: Delete the inserted orders
-  url: /v1/query
-  status: 200
-  query:
-    type: run_sql
-    args:
-      sql: |
-        delete from orders;
-        SELECT setval('orders_id_seq', 1, FALSE);

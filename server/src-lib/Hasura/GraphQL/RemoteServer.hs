@@ -47,7 +47,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
-  when (statusCode /= 200) $ schemaErr respData
+  when (statusCode /= 200) $ schemaErr $ show respData
 
   introspectRes :: (FromIntrospection IntrospectionResult) <-
     either schemaErr return $ J.eitherDecode respData
@@ -70,10 +70,11 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
-    schemaErr err = remoteSchemaErr (T.pack $ show err)
+    schemaErr err = remoteSchemaErr (T.pack err)
 
     throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
-    throwHttpErr = schemaErr
+    throwHttpErr _ = schemaErr $
+      "HTTP exception occurred while sending the request to " <> show url
 
 mergeSchemas
   :: (MonadIO m, MonadError QErr m)

@@ -1,0 +1,15 @@
+- args:
+    permission:
+      columns:
+      - id
+      - title
+      - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+      set: {}
+    role: user
+    table:
+      name: article
+      schema: public
+  type: create_update_permission

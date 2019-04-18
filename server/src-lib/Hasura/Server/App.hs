@@ -31,6 +31,8 @@ import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
 
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
@@ -39,8 +41,8 @@ import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.Prelude                         hiding (get, put)
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
@@ -92,9 +94,14 @@ mkConsoleHTML path authMode enableTelemetry =
 
 data SchemaCacheRef
   = SchemaCacheRef
-  { _scrLock  :: MVar ()
-  , _scrCache :: IORef SchemaCache
+  { _scrLock     :: MVar ()
+  , _scrCache    :: IORef (SchemaCache, SchemaCacheVer)
+  -- an action to run when schemacache changes
+  , _scrOnChange :: IO ()
   }
+
+getSCFromRef :: SchemaCacheRef -> IO SchemaCache
+getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
 
 withSCUpdate
   :: (MonadIO m, MonadError e m)
@@ -103,26 +110,29 @@ withSCUpdate scr action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
   -- update schemacache in IO reference
-  liftIO $ writeIORef cacheRef newSC
+  liftIO $ modifyIORef' cacheRef $
+    \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+  liftIO onChange
   releaseLock
   return res
   where
-    SchemaCacheRef lk cacheRef = scr
+    SchemaCacheRef lk cacheRef onChange = scr
     onError e   = releaseLock >> throwError e
     acquireLock = liftIO $ takeMVar lk
     releaseLock = liftIO $ putMVar lk ()
 
 data ServerCtx
   = ServerCtx
-  { scIsolation    :: Q.TxIsolation
-  , scPGPool       :: Q.PGPool
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scStringifyNum :: Bool
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
+  { scPGExecCtx   :: PGExecCtx
+  , scLogger      :: L.Logger
+  , scCacheRef    :: SchemaCacheRef
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
+  , scInstanceId  :: InstanceId
+  , scPlanCache   :: E.PlanCache
+  , scLQState     :: EL.LiveQueriesState
   }
 
 data HandlerCtx
@@ -159,9 +169,9 @@ buildQCtx ::  Handler QCtx
 buildQCtx = do
   scRef    <- scCacheRef . hcServerCtx <$> ask
   userInfo <- asks hcUser
-  cache <- liftIO $ readIORef $ _scrCache scRef
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  return $ QCtx userInfo cache $ SQLGenCtx strfyNum
+  cache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  return $ QCtx userInfo cache sqlGenCtx
 
 logResult
   :: (MonadIO m)
@@ -234,48 +244,43 @@ v1QueryHandler query = do
     dbAction = do
       userInfo <- asks hcUser
       scRef <- scCacheRef . hcServerCtx <$> ask
-      schemaCache <- liftIO $ readIORef $ _scrCache scRef
+      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
       httpMgr <- scManager . hcServerCtx <$> ask
-      strfyNum <- scStringifyNum . hcServerCtx <$> ask
-      pool <- scPGPool . hcServerCtx <$> ask
-      isoL <- scIsolation . hcServerCtx <$> ask
+      sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+      pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
-      runQuery pool isoL instanceId userInfo schemaCache httpMgr strfyNum query
+      runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
 
     -- Also update the schema cache
     dbActionReload = do
       (resp, newSc) <- dbAction
       httpMgr <- scManager . hcServerCtx <$> ask
       --FIXME: should we be fetching the remote schema again? if not how do we get the remote schema?
-      newGCtxMap <- GS.mkGCtxMap (scTables newSc) (scFunctions newSc)
-      (mergedGCtxMap, defGCtx) <-
-        mergeSchemas (scRemoteResolvers newSc) newGCtxMap httpMgr
-      let newSc' =
-            newSc { scGCtxMap = mergedGCtxMap, scDefaultRemoteGCtx = defGCtx }
+      newSc' <- GS.updateSCWithGCtx newSc >>= flip resolveRemoteSchemas httpMgr
       return (resp, newSc')
 
-v1Alpha1GQHandler :: GH.GraphQLRequest -> Handler EncJSON
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef $ _scrCache scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GH.runGQ pool isoL userInfo (SQLGenCtx strfyNum) sc manager reqHeaders query reqBody
+  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  planCache <- scPlanCache . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx userInfo sqlGenCtx planCache
+    sc scVer manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
-  sc <- liftIO $ readIORef $ _scrCache scRef
-  pool <- scPGPool . hcServerCtx <$> ask
-  isoL <- scIsolation . hcServerCtx <$> ask
-  strfyNum <- scStringifyNum . hcServerCtx <$> ask
-  GE.explainGQLQuery pool isoL sc (SQLGenCtx strfyNum) query
+  sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  GE.explainGQLQuery pgExecCtx sc sqlGenCtx query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -313,37 +318,44 @@ initErrExit e = do
   exitFailure
 
 mkWaiApp
-  :: Q.TxIsolation -> L.LoggerCtx -> Bool
+  :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
   -> Q.PGPool -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
+  -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx strfyNum pool httpManager mode corsCfg
-         enableConsole enableTelemetry instanceId apis = do
+mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
+         enableConsole enableTelemetry instanceId apis
+         lqOpts = do
+    let pgExecCtx = PGExecCtx pool isoLevel
+        pgExecCtxSer = PGExecCtx pool Q.Serializable
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun emptySchemaCache adminUserInfo
-                httpManager strfyNum pool Q.Serializable $ do
+                httpManager sqlGenCtx pgExecCtxSer $ do
                   buildSchemaCache
                   liftTx fetchLastUpdate
       (time, sc) <- either initErrExit return pgResp
-      scRef <- newIORef sc
+      scRef <- newIORef (sc, initSchemaCacheVer)
       return (scRef, snd <$> time)
 
     cacheLock <- newMVar ()
+    planCache <- E.initPlanCache
 
-    let schemaCacheRef = SchemaCacheRef cacheLock cacheRef
-        serverCtx = ServerCtx isoLevel pool (L.mkLogger loggerCtx)
-            schemaCacheRef mode httpManager strfyNum apis instanceId
+    let corsPolicy = mkDefaultCorsPolicy corsCfg
+        logger = L.mkLogger loggerCtx
+
+    lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState
+                   cacheRef httpManager corsPolicy sqlGenCtx planCache
+
+    let schemaCacheRef =
+          SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
+        serverCtx = ServerCtx pgExecCtx logger
+                    schemaCacheRef mode httpManager
+                    sqlGenCtx apis instanceId planCache lqState
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
-
-    let runTx tx = runExceptT $ runLazyTx pool isoLevel tx
-        corsPolicy = mkDefaultCorsPolicy corsCfg
-        sqlGenCtx = SQLGenCtx strfyNum
-
-    wsServerEnv <- WS.createWSServerEnv (scLogger serverCtx) httpManager sqlGenCtx
-                   cacheRef runTx corsPolicy
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -359,6 +371,17 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
+
+    -- Health check endpoint
+    get "healthz" $ do
+      sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
+      let reportOK = do
+            setStatus N.status200
+            lazyBytes "OK"
+          reportError = do
+            setStatus N.status500
+            lazyBytes "ERROR"
+      bool reportError reportOK $ null $ scInconsistentObjs sc
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -387,8 +410,14 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         query <- parseBody
         v1Alpha1GQHandler query
 
-        -- get "v1alpha1/graphql/schema" $
-        --   mkSpockAction encodeQErr serverCtx v1Alpha1GQSchemaHandler
+#ifdef InternalAPIs
+    get "internal/plan_cache" $ do
+      respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+      json respJ
+    get "internal/subscriptions" $ do
+      respJ <- liftIO $ EL.dumpLiveQueriesState $ scLQState serverCtx
+      json respJ
+#endif
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
