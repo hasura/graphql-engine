@@ -4,17 +4,23 @@ import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
+import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.HashMap.Strict        as Map
 import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Error
 
 type UrlFromEnv = Text
-type RemoteSchemaName = Text
+
+newtype RemoteSchemaName
+  = RemoteSchemaName
+  { unRemoteSchemaName :: Text}
+  deriving (Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey, J.FromJSON, Q.ToPrepArg, Q.FromCol)
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
@@ -75,7 +81,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 
 data RemoveRemoteSchemaQuery
   = RemoveRemoteSchemaQuery
-  { _rrsqName    :: !Text
+  { _rrsqName    :: !RemoteSchemaName
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoveRemoteSchemaQuery)
@@ -89,7 +95,7 @@ getUrlFromEnv urlFromEnv = do
   where
     invalidUri uri = "not a valid URI: " <> T.pack uri
     envNotFoundMsg e =
-      "cannot find environment variable " <> e <> " for custom resolver"
+      "environment variable '" <> e <> "' not set"
 
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)

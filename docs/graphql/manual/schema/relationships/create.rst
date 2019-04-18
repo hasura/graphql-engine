@@ -25,8 +25,9 @@ Let us now connect these tables to enable nested queries using a foreign-key:
 Step 1: Add foreign-key constraint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the console, navigate to the ``Modify`` tab of the ``article`` table. Edit the ``author_id`` column and configure
-it as a foreign-key for the ``id`` column in the ``author`` table:
+In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
+the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
+the ``author`` table:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
 

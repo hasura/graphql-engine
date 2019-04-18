@@ -10,6 +10,10 @@ import { loadServerVersion, checkServerUpdates } from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import semverCheck from '../../helpers/semver';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Data/Metadata/Actions';
 
 const semver = require('semver');
 
@@ -36,6 +40,9 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
+      dispatch(loadInconsistentObjects(this.props.serverVersion)).then(() => {
+        this.handleMetadataRedirect();
+      });
       dispatch(loadConsoleOpts());
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
@@ -96,6 +103,11 @@ class Main extends React.Component {
   handleDropdownToggle() {
     document.getElementById('dropdown_wrapper').classList.toggle('open');
   }
+  handleMetadataRedirect() {
+    if (this.props.metadata.inconsistentObjects.length > 0) {
+      this.props.dispatch(redirectToMetadataStatus());
+    }
+  }
   closeLoveIcon() {
     const s = {
       isDismissed: true,
@@ -122,6 +134,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       latestServerVersion,
+      metadata,
     } = this.props;
 
     const styles = require('./Main.scss');
@@ -151,7 +164,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return mainContent;
     };
 
@@ -163,6 +175,23 @@ class Main extends React.Component {
       }
 
       return metadataSelectedMarker;
+    };
+
+    const getMetadataIcon = () => {
+      if (metadata.inconsistentObjects.length === 0) {
+        return <i className={styles.question + ' fa fa-cog'} />;
+      }
+      return (
+        <div className={styles.question}>
+          <i className={'fa fa-cog'} />
+          <div className={styles.overlappingExclamation}>
+            <div className={styles.iconWhiteBackground} />
+            <div>
+              <i className={'fa fa-exclamation-circle'} />
+            </div>
+          </div>
+        </div>
+      );
     };
 
     const getAdminSecretSection = () => {
@@ -187,7 +216,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return adminSecretHtml;
     };
 
@@ -238,7 +266,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return bannerNotificationHtml;
     };
 
@@ -509,7 +536,7 @@ class Main extends React.Component {
 
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  <i className={styles.question + ' fa fa-cog'} />
+                  {getMetadataIcon()}
                   {getMetadataSelectedMarker()}
                 </div>
               </Link>
@@ -610,6 +637,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    metadata: state.metadata,
   };
 };
 
