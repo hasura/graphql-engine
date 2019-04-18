@@ -210,7 +210,7 @@ class ModifyView extends Component {
             className={'form-control ' + styles.commentInput}
             type="text"
             value={tableCommentEdit.value}
-            defaultValue={tableComment.result[1]}
+            defaultValue={tableComment}
           />
           <div
             onClick={commentEditSave}
