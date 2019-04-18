@@ -158,7 +158,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx queryVars subsPlan
+        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
