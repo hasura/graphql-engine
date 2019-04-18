@@ -225,13 +225,11 @@ kill_hge_servers
 ###########
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH VERBOSE API RESPONSE ENABLED #####################################>\n"
 
-"$GRAPHQL_ENGINE" serve  --verbose-api-response >> "$OUTPUT_FOLDER/graphql-engine.log" & PID=$!
+run_hge_with_args serve --verbose-api-response
 
-wait_for_port 8080
+pytest -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-verbose-api-response  test_graphql_mutations.py::TestGraphqlInsertPermissionVerboseResponse
 
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-verbose-api-response  test_graphql_mutations.py::TestGraphqlInsertPermissionVerboseResponse
-
-kill_hge_and_combine_hpc_reports
+kill_hge_servers
 
 ##########
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
