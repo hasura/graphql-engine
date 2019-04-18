@@ -58,7 +58,6 @@ class ModifyTable extends React.Component {
       dispatch,
       migrationMode,
       currentSchema,
-      columnComments,
       tableCommentEdit,
       columnEdit,
       pkModify,
@@ -131,7 +130,6 @@ class ModifyTable extends React.Component {
               tableSchema={tableSchema}
               columnEdit={columnEdit}
               allowRename={this.state.supportTableColumnRename}
-              columnComments={columnComments}
               dispatch={dispatch}
               currentSchema={currentSchema}
             />
@@ -172,7 +170,6 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -193,7 +190,6 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
-  columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,

@@ -147,8 +147,6 @@ const defaultState = {
   trackedFunctions: [],
   listedFunctions: [],
   listingSchemas: [],
-  tableComment: null,
-  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',

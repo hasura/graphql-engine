@@ -21,7 +21,6 @@ const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
 const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
-const LOAD_COLUMN_COMMENT = 'Data/LOAD_COLUMN_COMMENT';
 const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
@@ -328,36 +327,6 @@ const loadUntrackedRelations = () => dispatch => {
   });
 };
 
-const fetchColumnComment = (tableName, colName) => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const currentSchema = getState().tables.currentSchema;
-  const commentSql = `SELECT pgd.description FROM pg_catalog.pg_statio_all_tables as st
-    inner join pg_catalog.pg_description pgd on (pgd.objoid=st.relid)
-    inner join information_schema.columns c on (pgd.objsubid=c.ordinal_position
-    and  c.table_schema=st.schemaname and c.table_name=st.relname)
-    WHERE column_name = '${colName}' AND table_name = '${tableName}' AND table_schema = '${currentSchema}';`;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'run_sql',
-      args: {
-        sql: commentSql,
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_COLUMN_COMMENT, data, column: colName });
-    },
-    error => {
-      console.error('Failed to load column comment');
-      console.error(error);
-    }
-  );
-};
-
 const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 /* **********Shared functions between table actions********* */
@@ -564,15 +533,6 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         untrackedRelations: action.untrackedRelations,
       };
-    case LOAD_COLUMN_COMMENT:
-      const loadedComment = action.data ? action.data.result[1] || '' : '';
-      return {
-        ...state,
-        columnComments: {
-          ...state.columnComments,
-          [action.column]: loadedComment,
-        },
-      };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:
@@ -622,7 +582,6 @@ export {
   REQUEST_ERROR,
   setTable,
   loadSchema,
-  fetchColumnComment,
   handleMigrationErrors,
   makeMigrationCall,
   LISTING_SCHEMA,

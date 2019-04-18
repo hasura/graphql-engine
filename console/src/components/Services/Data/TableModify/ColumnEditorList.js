@@ -9,7 +9,6 @@ import {
   resetColumnEdit,
   editColumn,
 } from '../TableModify/ModifyActions';
-import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
 
 import styles from './ModifyTable.scss';
@@ -20,7 +19,6 @@ const ColumnEditorList = ({
   allowRename,
   columnEdit,
   dispatch,
-  columnComments,
 }) => {
   const tablePrimaryKeyColumns = tableSchema.primary_key
     ? tableSchema.primary_key.columns
@@ -122,7 +120,7 @@ const ColumnEditorList = ({
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={columnComments[c.column_name]}
+          columnComment={c.comment}
           allowRename={allowRename}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
@@ -133,7 +131,6 @@ const ColumnEditorList = ({
 
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
-      dispatch(fetchColumnComment(tableName, colName));
     };
 
     const editorCollapseCallback = () => {

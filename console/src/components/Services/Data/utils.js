@@ -150,12 +150,33 @@ FROM
     select 
       ist.table_schema, 
       ist.table_name, 
-      obj_description((ist.table_schema || '.' || ist.table_name)::regclass, 'pg_class') as comment, 
+      obj_description(
+        (
+          ist.table_schema || '.' || ist.table_name
+        ):: regclass, 
+        'pg_class'
+      ) as comment, 
       row_to_json(ist.*) as detail, 
       to_jsonb(
         array_remove(
           array_agg(
-            DISTINCT row_to_json(isc) :: JSONB
+            DISTINCT row_to_json(isc) :: JSONB || jsonb_build_object(
+              'comment', 
+              (
+                SELECT 
+                  pg_catalog.col_description(
+                    c.oid, isc.ordinal_position :: int
+                  ) 
+                FROM 
+                  pg_catalog.pg_class c 
+                WHERE 
+                  c.oid = (
+                    SELECT 
+                      ('"' || isc.table_name || '"'):: regclass :: oid
+                  ) 
+                  AND c.relname = isc.table_name
+              )
+            )
           ), 
           NULL
         )
@@ -218,7 +239,7 @@ FROM
       ist.*, 
       row_to_json(hdb_pk.*):: JSONB, 
       hdb_table.table_name
-  ) AS info
+  ) AS info;
 `;
   return {
     type: 'run_sql',
