@@ -220,11 +220,7 @@ data LQHandler
   = LQHandler
   { _mhAlias      :: !G.Alias
   , _mhQuery      :: !Q.Query
-  , _mhCandidates ::
-      !(TMap
-        (UserVars, Maybe VariableValues)
-        CandidateState
-       )
+  , _mhCandidates :: !(TMap CandidateId CandidateState)
   }
 
 -- This type represents the state associated with
@@ -256,30 +252,27 @@ data CandidateState
 data MxOpCtx
   = MxOpCtx
   { _mocGroup     :: !LQGroup
-  , _mocCandidate :: !CandidateId
   , _mocAlias     :: !G.Alias
   , _mocQuery     :: !Q.Query
   }
 
 instance J.ToJSON MxOpCtx where
-  toJSON (MxOpCtx lqGroup candidate als q) =
+  toJSON (MxOpCtx lqGroup als q) =
     J.object [ "query" J..= Q.getQueryText q
              , "alias" J..= als
              , "group" J..= lqGroup
-             , "candidate" J..= candidate
              ]
 
-type MxOp = (MxOpCtx, ValidatedVariables)
+type MxOp = (MxOpCtx, UserVars, ValidatedVariables)
 
 mkMxOpCtx
-  :: UserInfo -> GQLReqUnparsed
+  :: RoleName -> GQLQueryText
   -> G.Alias -> Q.Query
   -> MxOpCtx
-mkMxOpCtx userInfo req als query =
-  MxOpCtx lqGroup candidateId als $ mkMxQuery query
+mkMxOpCtx role queryTxt als query =
+  MxOpCtx lqGroup als $ mkMxQuery query
   where
-    candidateId = (userVars userInfo, _grVariables req)
-    lqGroup = LQGroup (userRole userInfo) (_grQuery req)
+    lqGroup = LQGroup role queryTxt
 
 mkMxQuery :: Q.Query -> Q.Query
 mkMxQuery baseQuery =
@@ -320,7 +313,7 @@ addLiveQuery
   -- the action to be executed when result changes
   -> OnChange
   -> IO LiveQueryId
-addLiveQuery pgExecCtx lqState (mxOpCtx, valQVars) onResultAction = do
+addLiveQuery pgExecCtx lqState (mxOpCtx, usrVars, valQVars) onResultAction = do
 
   -- generate a new result id
   responseId <- newRespId
@@ -358,9 +351,11 @@ addLiveQuery pgExecCtx lqState (mxOpCtx, valQVars) onResultAction = do
 
   where
 
-    MxOpCtx handlerId candidateId als mxQuery = mxOpCtx
+    MxOpCtx handlerId als mxQuery = mxOpCtx
     LiveQueriesState lqOpts lqMap = lqState
     MxOpts batchSize refetchInterval = lqOpts
+
+    candidateId = (usrVars, valQVars)
 
     addToExistingCandidate sinkId handlerC =
       insertTMap onResultAction sinkId $ _csNewOps handlerC
@@ -385,7 +380,7 @@ addLiveQuery pgExecCtx lqState (mxOpCtx, valQVars) onResultAction = do
       insertTMap handlerC candidateId $ _mhCandidates handler
       return handler
 
-type CandidateId = (UserVars, Maybe VariableValues)
+type CandidateId = (UserVars, ValidatedVariables)
 
 removeLiveQuery
   :: LiveQueriesState
@@ -466,12 +461,8 @@ instance Q.ToPrepArg RespVarsList where
 getRespVars :: UserVars -> ValidatedVariables -> RespVars
 getRespVars usrVars valVars =
   J.object [ "user" J..= usrVars
-           , "variables" J..= fmap asJson valVars
+           , "variables" J..= valVars
            ]
-  where
-    asJson = \case
-      TENull  -> J.Null
-      TELit t -> J.String t
 
 newtype BatchSize
   = BatchSize { unBatchSize :: Word32 }
