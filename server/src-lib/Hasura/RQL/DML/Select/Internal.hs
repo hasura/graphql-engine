@@ -460,10 +460,10 @@ mkBaseNode
   :: Iden -> FieldName -> TableAggFld -> TableFrom
   -> TablePerm -> TableArgs -> Bool -> BaseNode
 mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs strfyNum =
-  BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
+  BaseNode pfx distExprM fromItem finalWhere ordByExpM limitM offsetM
   allExtrs allObjsWithOb allArrsWithOb
   where
-    TablePerm fltr _ = tablePerm
+    fltr = _tpFilter tablePerm
     TableArgs whereM orderByM limitM offsetM distM = tableArgs
     aggOrdByRelNames = fetchOrdByAggRels orderByM
 
@@ -526,7 +526,6 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs strfyNum =
       toSQLBoolExp tableQual $ maybe fltr (andAnnBoolExps fltr) whereM
     fromItem = tableFromToFromItem tableFrom
     tableQual = tableFromToQual tableFrom
-    finalLimit = limitM
 
     mkArrRelCtx arrSels = ArrRelCtx arrSels aggOrdByRelNames
 

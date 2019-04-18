@@ -15,7 +15,8 @@ import qualified Hasura.Logging                   as L
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..))
+import           Hasura.RQL.Types                 (RoleName (..),
+                                                   SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
@@ -853,3 +854,9 @@ serveOptsToLog so =
 mkGenericStrLog :: T.Text -> String -> StartupLog
 mkGenericStrLog k msg =
   StartupLog L.LevelInfo k $ J.toJSON msg
+
+inconsistentMetadataLog :: SchemaCache -> StartupLog
+inconsistentMetadataLog sc =
+  StartupLog L.LevelWarn "inconsistent_metadata" infoVal
+  where
+    infoVal = J.object ["objects" J..= scInconsistentObjs sc]
