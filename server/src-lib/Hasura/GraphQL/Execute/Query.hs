@@ -7,6 +7,8 @@ module Hasura.GraphQL.Execute.Query
 import           Data.Has
 
 import qualified Data.Aeson                             as J
+import qualified Data.ByteString                        as B
+import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
@@ -49,12 +51,15 @@ instance J.ToJSON PGPlan where
              ]
 
 data RootFieldPlan
-  = RFPRaw !EncJSON
+  = RFPRaw !B.ByteString
   | RFPPostgres !PGPlan
+
+fldPlanFromJ :: (J.ToJSON a) => a -> RootFieldPlan
+fldPlanFromJ = RFPRaw . LBS.toStrict . J.encode
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
-    RFPRaw encJson     -> J.toJSON $ TBS.fromLBS $ encJToLBS encJson
+    RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
 
 type VariableTypes = Map.HashMap G.Variable PGColType
@@ -122,7 +127,7 @@ mkCurPlanTx
 mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
   fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
-      RFPRaw resp        -> return resp
+      RFPRaw resp        -> return $ encJFromBS resp
       RFPPostgres pgPlan -> liftTx $ planTx pgPlan
     return (G.unName $ G.unAlias alias, fldResp)
   where
@@ -208,9 +213,9 @@ convertQuerySelSet varDefs fields = do
   usrVars <- asks (userVars . getter)
   fldPlans <- forM (toList fields) $ \fld -> do
     fldPlan <- case V._fName fld of
-      "__type"     -> RFPRaw . encJFromJValue <$> R.typeR fld
-      "__schema"   -> RFPRaw . encJFromJValue <$> R.schemaR fld
-      "__typename" -> return $ RFPRaw $ encJFromJValue queryRootName
+      "__type"     -> fldPlanFromJ <$> R.typeR fld
+      "__schema"   -> fldPlanFromJ <$> R.schemaR fld
+      "__typename" -> return $ fldPlanFromJ queryRootName
       _            -> do
         unresolvedAst <- R.queryFldToPGAST fld
         (q, PlanningSt _ vars prepped) <-
@@ -233,7 +238,7 @@ queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
-          RFPRaw resp        -> return resp
+          RFPRaw resp        -> return $ encJFromBS resp
           RFPPostgres pgPlan -> liftTx $ withPlan usrVars pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
   return tx
