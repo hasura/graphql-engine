@@ -2,7 +2,8 @@ descriptions: Execute pg_dump on public schema
 url: /v1alpha1/pg_dump
 status: 200
 query:
-  schema: public
+  opts: -O -x --schema-only --schema public
+  clean: true
 # response on postgres 9.4 and 9.5
 response_9: |
   CREATE TABLE public.articles (
