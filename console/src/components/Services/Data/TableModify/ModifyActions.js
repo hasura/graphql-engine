@@ -157,8 +157,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -183,8 +183,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -253,7 +253,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName};`,
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`,
         },
       });
     }
@@ -267,8 +267,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     migrationUp.push({
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName ||
-          generatedConstraintName} foreign key (${lcols.join(
+        sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName ||
+          generatedConstraintName}" foreign key (${lcols.join(
           ', '
         )}) references "${schemaName}"."${refTableName}"(${rcols.join(
           ', '
@@ -279,8 +279,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName ||
-            generatedConstraintName};`,
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName ||
+            generatedConstraintName}";`,
         },
       },
     ];
@@ -289,7 +289,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationDown.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName} foreign key (${Object.keys(
+          sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" foreign key (${Object.keys(
             oldConstraint.column_mapping
           )
             .map(lc => `"${lc}"`)
@@ -363,9 +363,9 @@ const removeForeignKey = (index, tableSchema) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${
             oldConstraint.constraint_name
-          };`,
+          }";`,
         },
       },
     ];
@@ -1110,24 +1110,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
