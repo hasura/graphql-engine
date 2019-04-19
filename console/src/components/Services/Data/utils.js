@@ -1,4 +1,46 @@
-const tabNameMap = {
+export const INTEGER = 'integer';
+export const SERIAL = 'serial';
+export const BIGINT = 'bigint';
+export const BIGSERIAL = 'bigserial';
+export const UUID = 'uuid';
+export const JSONDTYPE = 'json';
+export const JSONB = 'jsonb';
+export const TIMESTAMP = 'timestamp with time zone';
+export const TIME = 'time with time zone';
+export const NUMERIC = 'numeric';
+export const DATE = 'date';
+export const TIMETZ = 'timetz';
+export const BOOLEAN = 'boolean';
+
+export const getPlaceholder = type => {
+  switch (type) {
+    case 'integer':
+      return 'integer';
+    case 'bigint':
+      return 'BIG integer';
+    case 'numeric':
+      return 'float';
+    case 'timestamp with time zone':
+      return new Date().toISOString();
+    case 'date':
+      return new Date().toISOString().slice(0, 10);
+    case 'timetz':
+      const time = new Date().toISOString().slice(11, 19);
+      return `${time}Z or ${time}+05:30`;
+    case 'uuid':
+      return 'UUID';
+    case 'json':
+      return '{"name": "foo"} or [12, "bar"]';
+    case 'jsonb':
+      return '{"name": "foo"} or [12, "bar"]';
+    case 'boolean':
+      return '';
+    default:
+      return 'text';
+  }
+};
+
+export const tabNameMap = {
   view: 'Browse Rows',
   insert: 'Insert Row',
   modify: 'Modify',
@@ -6,7 +48,7 @@ const tabNameMap = {
   permissions: 'Permissions',
 };
 
-const ordinalColSort = (a, b) => {
+export const ordinalColSort = (a, b) => {
   if (a.ordinal_position < b.ordinal_position) {
     return -1;
   }
@@ -25,7 +67,7 @@ const findFKConstraint = (curTable, column) => {
   );
 };
 
-const findTableFromRel = (schemas, curTable, rel) => {
+export const findTableFromRel = (schemas, curTable, rel) => {
   let rtable = null;
 
   // for view
@@ -58,7 +100,7 @@ const findTableFromRel = (schemas, curTable, rel) => {
   return schemas.find(x => x.table_name === rtable);
 };
 
-const findAllFromRel = (schemas, curTable, rel) => {
+export const findAllFromRel = (schemas, curTable, rel) => {
   let rtable = null;
   let lcol;
   let rcol;
@@ -107,7 +149,7 @@ const findAllFromRel = (schemas, curTable, rel) => {
   return { lcol, rtable, rcol };
 };
 
-const getIngForm = string => {
+export const getIngForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -115,7 +157,7 @@ const getIngForm = string => {
   );
 };
 
-const getEdForm = string => {
+export const getEdForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -123,11 +165,11 @@ const getEdForm = string => {
   );
 };
 
-const escapeRegExp = string => {
+export const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
-const getTableName = t => {
+export const getTableName = t => {
   const typ = typeof t;
   if (typ === 'string') {
     return t;
@@ -135,15 +177,4 @@ const getTableName = t => {
     return 'name' in t ? t.name : '';
   }
   return '';
-};
-
-export {
-  ordinalColSort,
-  findTableFromRel,
-  findAllFromRel,
-  getEdForm,
-  getIngForm,
-  escapeRegExp,
-  getTableName,
-  tabNameMap,
 };

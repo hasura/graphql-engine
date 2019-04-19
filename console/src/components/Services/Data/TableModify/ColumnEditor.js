@@ -11,7 +11,7 @@ import {
   JSONB,
   TIMESTAMP,
   TIME,
-} from '../../../../constants';
+} from '../utils';
 
 const ColumnEditor = ({
   column,
