@@ -49,7 +49,14 @@ data PGColValue
 data TxtEncodedPGVal
   = TENull
   | TELit !Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable TxtEncodedPGVal
+
+instance ToJSON TxtEncodedPGVal where
+  toJSON = \case
+    TENull  -> Null
+    TELit t -> String t
 
 txtEncodedPGVal :: PGColValue -> TxtEncodedPGVal
 txtEncodedPGVal colVal = case colVal of

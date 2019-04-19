@@ -4,6 +4,8 @@ module Hasura.RQL.DDL.Schema.Diff
   , ConstraintMeta(..)
   , fetchTableMeta
 
+  , getDifference
+
   , TableDiff(..)
   , getTableDiff
   , getTableChangeDeps

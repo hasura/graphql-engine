@@ -70,13 +70,9 @@ const ForeignKeyWrapper = ({
     // Label to show next to the 'Edit' button (the FK configuration)
     let collapsedLabelText;
     if (fkConfig) {
-      collapsedLabelText = (
-        <b>{fkConfig}</b>
-      );
+      collapsedLabelText = <b>{fkConfig}</b>;
     } else if (isLast && numFks === 1) {
-      collapsedLabelText = (
-        <i>(You can add foreign keys later as well)</i>
-      );
+      collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
     }
 
     const collapsedLabel = () => (

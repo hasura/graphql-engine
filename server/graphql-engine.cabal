@@ -177,6 +177,7 @@ library
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
