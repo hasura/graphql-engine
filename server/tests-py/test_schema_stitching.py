@@ -218,7 +218,7 @@ class TestAddRemoteSchemaTbls:
         q = mk_add_remote_q('simple2-graphql', 'http://localhost:5000/country-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 500, resp
-        assert resp['code'] == 'postgres-error'
+        assert resp['code'] == 'unexpected'
 
     def test_add_schema_same_type_containing_same_scalar(self, hge_ctx):
         """
