@@ -29,6 +29,12 @@ export const getTableName = (i, testName = '') =>
   `apic_test_table_${testName}_${i}`;
 export const getElementFromAlias = alias => `[data-test=${alias}]`;
 export const getElementFromClassName = cn => `.${cn}`;
+export const clickReactSelectElement = (cy, alias) => {
+  cy.get(`${getElementFromAlias(alias)} .css-10nd86i`)
+    .click()
+    .find('input')
+    .focus();
+};
 export const makeDataAPIUrl = dataApiUrl => `${dataApiUrl}/v1/query`;
 export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   method: 'POST',

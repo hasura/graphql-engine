@@ -1,4 +1,5 @@
 import {
+  clickReactSelectElement,
   getElementFromAlias,
   getTableName,
   getColName,
@@ -35,7 +36,8 @@ export const failCTWithoutPK = () => {
   //   Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   // cy.get(getElementFromClassName('col-type-0')).select('serial');
-  cy.get(getElementFromAlias('col-type-0')).click();
+  clickReactSelectElement(cy, 'col-type-0');
+  // cy.get(`${getElementFromAlias('col-type-0')} .css-10nd86i`).click();
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   //   Click on create
   cy.get(getElementFromAlias('table-create')).click();
@@ -51,7 +53,8 @@ export const failCTDuplicateColumns = () => {
   //   Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(0));
   // cy.get(getElementFromClassName('col-type-1')).select('serial');
-  cy.get(getElementFromAlias('col-type-1')).click();
+  // cy.get(`${getElementFromAlias('col-type-1')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -75,7 +78,8 @@ export const failCTDuplicatePrimaryKey = () => {
     .clear()
     .type(getColName(1));
   // cy.get(getElementFromClassName('col-type-1')).select('serial');
-  cy.get(getElementFromAlias('col-type-1')).click();
+  // cy.get(`${getElementFromAlias('col-type-1')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -100,7 +104,8 @@ export const failCTWrongDefaultValue = () => {
     .clear()
     .type(getColName(1));
   // cy.get(getElementFromClassName('col-type-1')).select('integer');
-  cy.get(getElementFromAlias('col-type-1')).click();
+  // cy.get(`${getElementFromAlias('col-type-1')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   cy.get(getElementFromAlias('col-default-1')).type('qwerty');
   //   Set primary key
@@ -119,7 +124,8 @@ export const passCT = () => {
     .clear()
     .type(getColName(1));
   // cy.get(getElementFromClassName('col-type-1')).select('serial');
-  cy.get(getElementFromAlias('col-type-1')).click();
+  // cy.get(`${getElementFromAlias('col-type-1')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   cy.get(getElementFromAlias('col-default-1')).clear();
   //   Set primary key
@@ -146,10 +152,17 @@ export const passCTWithFK = () => {
     .clear()
     .type(getTableName(1, testName)); //   Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+
+  // cy.get(`${getElementFromAlias('col-type-0')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
+  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   // Set second column
-  cy.get(getElementFromAlias('column-1')).type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('text');
+  // cy.get(getElementFromAlias('column-1')).type(getColName(1));
+  // cy.get(getElementFromAlias('col-type-1')).select('text');
+  // cy.get(`${getElementFromAlias('col-type-1')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Set foreign key
@@ -184,7 +197,8 @@ export const failCTDuplicateTable = () => {
   //   Set column
   cy.get(getElementFromAlias('column-0')).type(getColName(1));
   // cy.get(getElementFromClassName('col-type-0')).select('serial');
-  cy.get(getElementFromAlias('col-type-0')).click();
+  // cy.get(`${getElementFromAlias('col-type-0')} .css-10nd86i`).click();
+  clickReactSelectElement(cy, 'col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
