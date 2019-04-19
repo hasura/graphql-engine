@@ -920,10 +920,13 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
       }
     }
 
+.. _nested_filter:
+
 Filter nested objects
 ---------------------
 
-The ``where`` argument can be used in nested objects as well to filter the nested objects
+The ``where`` argument can be used in **array relationships** as well to filter the nested objects.
+**Object relationships** have only one nested object and hence they do not expose the ``where`` argument.
 
 Example:
 ^^^^^^^^
