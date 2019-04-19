@@ -17,12 +17,11 @@ import qualified Hasura.RQL.Types.Error as RTE
 import           System.Exit
 import           System.Process
 
-data PGDumpReqBody
-  = PGDumpReqBody
-  { prbSchema :: !String
-  , prbOpts   :: !(Maybe String) -- for future use
-  }
-  deriving (Show, Eq)
+data PGDumpReqBody =
+  PGDumpReqBody
+  { prbOpts  :: !String
+  , prbClean :: !(Maybe Bool)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
 
@@ -32,10 +31,11 @@ script = $(FE.embedStringFile "src-rsr/run_pg_dump.sh")
 runScript
   :: String
   -> String
+  -> String
   -> IO (Either String BL.ByteString)
-runScript dbUrl schema = do
+runScript dbUrl opts clean = do
   (exitCode, filename, stdErr) <- readProcessWithExitCode "/bin/sh"
-    ["/dev/stdin", dbUrl, schema] script
+    ["/dev/stdin", dbUrl, opts, clean] script
   case exitCode of
     ExitSuccess   -> do
       contents <- BL.readFile $ L.dropWhileEnd (== '\n') filename
@@ -48,7 +48,7 @@ execPGDump
   -> Q.ConnInfo
   -> m BL.ByteString
 execPGDump b ci = do
-  output <- liftIO $ runScript dbUrl schema
+  output <- liftIO $ runScript dbUrl opts clean
   case output of
     Left err ->
       RTE.throw500 $ "error while executing pg_dump: " <> T.pack err
@@ -58,4 +58,7 @@ execPGDump b ci = do
     dbUrl = "postgres://" <> Q.connUser ci <> ":" <> Q.connPassword ci
             <> "@" <>  Q.connHost ci <> ":" <> show (Q.connPort ci)
             <> "/" <> Q.connDatabase ci
-    schema = prbSchema b
+    opts = prbOpts b
+    clean = case prbClean b of
+      Just v -> show v
+      Nothing -> "False"
