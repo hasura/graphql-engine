@@ -1,4 +1,8 @@
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import {
+  getElementFromAlias,
+  baseUrl,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -17,7 +21,7 @@ export const Createtable = (name, dict) => {
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
     cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
-    cy.get(getElementFromAlias(`col-type-${i}`)).click();
+    tableColumnTypeSelector(`col-type-${i}`);
     cy.get(
       getElementFromAlias(`data_test_column_type_value_${values[i]}`)
     ).click();

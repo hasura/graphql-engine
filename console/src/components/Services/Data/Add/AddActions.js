@@ -102,7 +102,7 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND pg_catalog.pg_type_is_visible(t.oid)
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
-  AND t.typname not in ('int4', 'uuid', 'int8', 'boolean', 'text', 'numeric', 'date', 'json', 'jsonb', 'time', 'timestamptz')
+  AND t.typname not in ('int4', 'uuid', 'int8', 'boolean', 'text', 'numeric', 'date', 'json', 'jsonb', 'timetz', 'timestamptz')
 GROUP BY t.typcategory;`;
     const url = Endpoints.getSchema;
     const reqQuery = {

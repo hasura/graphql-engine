@@ -29,7 +29,7 @@ export const getTableName = (i, testName = '') =>
   `apic_test_table_${testName}_${i}`;
 export const getElementFromAlias = alias => `[data-test=${alias}]`;
 export const getElementFromClassName = cn => `.${cn}`;
-export const clickReactSelectElement = (cy, alias) => {
+export const tableColumnTypeSelector = alias => {
   cy.get(`${getElementFromAlias(alias)} .css-10nd86i`)
     .click()
     .find('input')

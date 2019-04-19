@@ -5,6 +5,7 @@ import {
   dataTypes,
   getElementFromAlias,
   typeDefaults,
+  tableColumnTypeSelector,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -24,7 +25,8 @@ const setColumns = () => {
     // Type column name
     cy.get(getElementFromAlias(`column-${i}`)).type(getColName(i));
     // Select column type
-    cy.get(getElementFromAlias(`col-type-${i}`)).click();
+    tableColumnTypeSelector(`col-type-${i}`);
+    // cy.get(getElementFromAlias(`col-type-${i}`)).click();
     cy.get(
       getElementFromAlias(`data_test_column_type_value_${dataTypes[i]}`)
     ).click();
@@ -114,7 +116,7 @@ export const passSearchTables = () => {
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   // Select column type
   // cy.get(getElementFromAlias('col-type-0')).select('integer');
-  cy.get(getElementFromAlias('col-type-0')).click();
+  tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -431,10 +433,12 @@ export const checkViewRelationship = () => {
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(getElementFromAlias('col-type-0')).click();
+  tableColumnTypeSelector('col-type-0');
+  // cy.get(getElementFromAlias('col-type-0')).click();
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
   cy.get(getElementFromAlias('column-1')).type('someID');
-  cy.get(getElementFromAlias('col-type-1')).click();
+  tableColumnTypeSelector('col-type-1');
+  // cy.get(getElementFromAlias('col-type-1')).click();
   cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set primary key

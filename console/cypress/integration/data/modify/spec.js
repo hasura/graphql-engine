@@ -1,4 +1,5 @@
 import {
+  tableColumnTypeSelector,
   baseUrl,
   getTableName,
   getColName,
@@ -18,7 +19,7 @@ export const passMTCreateTable = () => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(getElementFromAlias('col-type-0')).click();
+  tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
   // cy.get(getElementFromAlias('col-type-0')).select('Integer');
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
