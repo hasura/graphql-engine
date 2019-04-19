@@ -76,10 +76,27 @@ const ColumnEditorList = ({
 
     const keyProperties = () => {
       const propertiesList = [];
-      if (columnProperties.isPrimaryKey) propertiesList.push('primary key');
-      if (columnProperties.isNullable) propertiesList.push('nullable');
-      if (columnProperties.isUnique) propertiesList.push('unique');
+
+      propertiesList.push(columnProperties.type);
+
+      if (columnProperties.isPrimaryKey) {
+        propertiesList.push('primary key');
+      }
+
+      if (columnProperties.isUnique) {
+        propertiesList.push('unique');
+      }
+
+      if (columnProperties.isNullable) {
+        propertiesList.push('nullable');
+      }
+
+      if (columnProperties.default) {
+        propertiesList.push(`default: ${columnProperties.default}`);
+      }
+
       const keyPropertiesString = propertiesList.join(', ');
+
       return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
     };
 

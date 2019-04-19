@@ -24,30 +24,35 @@ const ColumnEditor = ({
   editColumn,
 }) => {
   const colName = columnProperties.name;
-  useEffect(() => {
-    dispatch(editColumn(colName, 'comment', columnComment));
-  }, [columnComment]);
-  const c = column;
+
   if (!selectedProperties[colName]) {
     return null;
   }
+
   const styles = require('./ModifyTable.scss');
-  // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
+
+  useEffect(() => {
+    dispatch(editColumn(colName, 'comment', columnComment));
+  }, [columnComment]);
+
+  // filter the datatypes where hasuraDatatype === null
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
     'value',
     dataTypes.filter(dataType => dataType.hasuraDatatype)
   );
+
   const additionalOptions = [];
   let finalDefaultValue = typeMap[columnProperties.type];
-  if (!typeMap[c.data_type]) {
-    finalDefaultValue = c.data_type;
+  if (!typeMap[column.data_type]) {
+    finalDefaultValue = column.data_type;
     additionalOptions.push(
       <option value={finalDefaultValue} key={finalDefaultValue}>
-        {c.data_type}
+        {column.data_type}
       </option>
     );
   }
+
   const generateAlterOptions = datatypeOptions => {
     return dataTypes.map(datatype => {
       if (datatypeOptions.includes(datatype.value)) {
@@ -73,11 +78,12 @@ const ColumnEditor = ({
       'numeric',
       'text',
     ];
-    const bigintOptions = ['bigint', 'bigserial', 'text', 'numeric'];
+    const bigintOptions = ['bigint', 'bigserial', 'numeric', 'text'];
     const uuidOptions = ['uuid', 'text'];
     const jsonOptions = ['json', 'jsonb', 'text'];
     const timestampOptions = ['timestamptz', 'text'];
     const timeOptions = ['timetz', 'text'];
+
     switch (columntype) {
       case INTEGER:
         return generateAlterOptions(integerOptions);
