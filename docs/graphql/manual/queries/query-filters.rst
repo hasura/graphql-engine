@@ -1322,11 +1322,11 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
-Filter based on presence of nested objects
-------------------------------------------
+Filter based on existence of nested objects
+-------------------------------------------
 
 You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
-achieved by using the expression ``{}`` which basically evaluates to check if ``true``.
+achieved by using the expression ``{}`` which evaluates to ``true`` if any object exists.
 
 
 Example:
