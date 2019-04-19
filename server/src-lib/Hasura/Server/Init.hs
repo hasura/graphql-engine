@@ -102,6 +102,7 @@ data HGECommandG a
 data API
   = METADATA
   | GRAPHQL
+  | PGDUMP
   deriving (Show, Eq, Read, Generic)
 
 instance Hashable API
@@ -263,7 +264,7 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
-  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
+  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL,PGDUMP] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
@@ -528,7 +529,7 @@ stringifyNumEnv =
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -686,7 +687,8 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
           "METADATA" -> Right METADATA
           "GRAPHQL"  -> Right GRAPHQL
-          _          -> Left "Only expecting list of comma separated API types metadata / graphql"
+          "PGDUMP"   -> Right PGDUMP
+          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =

@@ -165,6 +165,9 @@ isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
+isPGDumpEnabled :: ServerCtx -> Bool
+isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
 parseBody = do
@@ -426,6 +429,7 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $
         legacyQueryHandler (TableName tableName) queryType
 
+    when enablePGDump $
       post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr serverCtx $ do
         query <- parseBody
         v1Alpha1PGDumpHandler query
@@ -457,6 +461,7 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
   where
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
+    enablePGDump = isPGDumpEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr serverCtx $ mkAPIRespHandler $
