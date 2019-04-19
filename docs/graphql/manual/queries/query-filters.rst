@@ -582,17 +582,18 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
     }
 
 
-PostGIS topology operators (_st_contains, _st_crosses, etc.)
-------------------------------------------------------------
+PostGIS spatial relationship operators (_st_contains, _st_crosses, etc.)
+------------------------------------------------------------------------
 
 The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
 ``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
 
 ``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
 
-For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.
+For more details on what these operators do, refer to
+`PostGIS spatial relationship docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_.
 
-Use JSON (`GeoJSON <https://tools.ietf.org/html/rfc7946>`__) representation of ``geometry`` and ``geography`` values in
+Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
 ``variables`` as shown in the following examples:
 
 
