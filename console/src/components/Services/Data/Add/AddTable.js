@@ -3,13 +3,18 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
 import Button from '../../../Common/Button/Button';
+import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import ForeignKeyWrapper from './ForeignKeyWrapper';
 
 import { showErrorNotification } from '../Notification';
+import { setForeignKeys } from './AddActions';
 
 import TableName from './TableName';
 import TableColumns from './TableColumns';
-import TablePrimaryKeys from './TablePrimaryKeys';
 import TableComment from './TableComment';
+
+import * as tooltip from './Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import {
   setTableName,
@@ -23,20 +28,14 @@ import {
   addCol,
   fetchColumnTypes,
 } from './AddActions';
-import {
-  setDefaults,
-  setPk,
-  addPk,
-  removePk,
-  createTableSql,
-} from './AddActions';
+import { setDefaults, setPk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
 import {
   ATLEAST_ONE_PRIMARY_KEY_MSG,
   ATLEAST_ONE_COLUMN_MSG,
 } from './AddWarning';
-import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
+import { fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDuplicate,
@@ -71,8 +70,6 @@ class AddTable extends Component {
     this.onColNullableChange = this.onColNullableChange.bind(this);
     this.onColUniqueChange = this.onColUniqueChange.bind(this);
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
-    this.onPrimaryKeyRemove = this.onPrimaryKeyRemove.bind(this);
-    this.onPrimaryKeyChange = this.onPrimaryKeyChange.bind(this);
   }
   componentDidMount() {
     this.props.dispatch(fetchColumnTypes()).then(data => {
@@ -84,11 +81,6 @@ class AddTable extends Component {
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
   }
-
-  onPrimaryKeyRemove = i => {
-    const { dispatch } = this.props;
-    dispatch(removePk(i));
-  };
   onTableNameChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableName(e.target.value));
@@ -122,24 +114,6 @@ class AddTable extends Component {
     dispatch(setColUnique(e.target.checked, i));
   };
 
-  onPrimaryKeyChange(i, e) {
-    const value = parseInt(e.target.value, 10);
-    this.props.dispatch(resetValidation());
-    if (this.props.primaryKeys.filter(key => value === key).length > 0) {
-      this.props.dispatch(
-        validationError(
-          primaryKeyAlreadyPresentMsg(this.props.columns[value].name)
-        )
-      );
-      return false;
-    }
-
-    this.props.dispatch(setPk(value, i));
-    if (i + 1 === this.props.primaryKeys.length) {
-      this.props.dispatch(addPk());
-    }
-    return true;
-  }
   setColDefaultValue = (i, isNullableChecked, e) => {
     const { dispatch } = this.props;
     dispatch(setColDefault(e.target.value, i, isNullableChecked));
@@ -289,6 +263,12 @@ class AddTable extends Component {
     const {
       columns,
       primaryKeys,
+      allSchemas,
+      foreignKeys,
+      fkToggled,
+      tableName,
+      currentSchema,
+      dispatch,
       ongoingRequest,
       lastError,
       lastSuccess,
@@ -339,11 +319,48 @@ class AddTable extends Component {
               setColDefaultValue={this.setColDefaultValue}
             />
             <hr />
-            <TablePrimaryKeys
-              columns={columns}
+            <h4 className={styles.subheading_text}>
+              Primary Key &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.primaryKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <PrimaryKeySelector
               primaryKeys={primaryKeys}
-              onRemove={this.onPrimaryKeyRemove}
-              onChange={this.onPrimaryKeyChange}
+              columns={columns}
+              setPk={setPk}
+              dispatch={dispatch}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Foreign Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.foreignKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <ForeignKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              foreignKeys={foreignKeys}
+              dispatch={dispatch}
+              setForeignKeys={setForeignKeys}
+              fkToggled={fkToggled}
             />
             <hr />
             <TableComment onChange={this.onTableCommentChange} />
@@ -367,7 +384,9 @@ class AddTable extends Component {
 AddTable.propTypes = {
   columns: PropTypes.array.isRequired,
   tableName: PropTypes.string,
+  allSchemas: PropTypes.array.isRequired,
   primaryKeys: PropTypes.array.isRequired,
+  foreignKeys: PropTypes.array.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   internalError: PropTypes.string,
@@ -375,7 +394,11 @@ AddTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({ ...state.addTable.table });
+const mapStateToProps = state => ({
+  ...state.addTable.table,
+  allSchemas: state.tables.allSchemas,
+  currentSchema: state.tables.currentSchema,
+});
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);
 

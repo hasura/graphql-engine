@@ -33,13 +33,6 @@
   }
 }
 
-.activeEdit {
-  padding: 10px;
-  background: #fff;
-  border: 1px solid #ccc;
-  margin-bottom: 15px;
-}
-
 .newRoleInput {
   margin-left: 20px;
   width: calc(100% - 40px);
@@ -170,6 +163,7 @@ hr {
 
   td, th {
     text-align: center;
+    vertical-align: middle !important;
     position: relative;
   }
 
@@ -189,16 +183,12 @@ hr {
     width: 250px;
   }
 
-  .newRoleTd {
-    padding-top: 13px;
-  }
-
   //.permissionDelete {
   //  cursor: pointer;
   //  margin-left: 10px;
   //}
 
-  .editPermissionLink {
+  .editPermsLink {
     font-size: 12px;
     position: absolute;
     right: 10px;
@@ -260,34 +250,25 @@ hr {
   height: auto;
 }
 
-.bulkApplyBtn {
-  display: block;
-  margin-top: 10px;
-  clear: both;
-}
-
-.center_radio_label_input {
-  display: flex;
-  align-content: center;
-
-  input {
-    margin-top: 0px;
-  }
-}
-
 .activeEdit {
-  .editPermissionsHeading {
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  overflow: auto;
+
+  .editPermsHeading {
     font-weight: bold;
     font-size: 16px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
     word-wrap: break-word;
   }
 
-  .editPermissionsSection.removePadding {
-    padding-top: 0px;
+  .sectionStatus {
+    font-weight: normal;
   }
 
-  .editPermissionsSection {
+  .editPermsSection {
     margin: 5px;
     padding: 10px;
     word-wrap: break-word;
@@ -295,18 +276,6 @@ hr {
     .columnListElement {
       float: left;
       margin-right: 50px;
-    }
-
-    .toggleAll {
-      display: inline-block;
-      margin-left: 30px;
-      text-decoration: underline;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .editActionButton {
-      margin-right: 20px;
     }
 
     .form_permission_insert_set_wrapper {
@@ -332,10 +301,6 @@ hr {
           margin: 10px 0px;
           display: flex;
           align-items: center;
-
-          .e_g_text {
-            font-style: italic;
-          }
 
           .input_element_wrapper {
             width: 20%;

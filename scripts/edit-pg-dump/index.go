@@ -20,11 +20,14 @@ var frontMatter = []string{
 	"SET row_security = off;",
 	"SET default_tablespace = '';",
 	"SET default_with_oids = false;",
+	"CREATE SCHEMA public;",
 }
 
 const helpStr = `POST the SQL file contents to this URL:
 
-curl --data-binary @filename.sql https://hasura-edit-pg-dump.now.sh > newfile.sql`
+curl --data-binary @filename.sql https://hasura-edit-pg-dump.now.sh > newfile.sql
+
+Source code can be found at https://github.com/hasura/graphql-engine/tree/master/scripts/edit-pg-dump`
 
 // Handler is the now.sh serverless handler
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +53,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// build the regular expression for matching triggers created by Hasura
-	triggerRe, err := regexp.Compile(`(?m)^CREATE TRIGGER "?notify_hasura_\w+"? AFTER \w+ ON "?\w+"?\."?\w+"? FOR EACH ROW EXECUTE PROCEDURE "?hdb_views"?\."?notify_hasura_\w+"?\(\);$`)
+	triggerRe, err := regexp.Compile(`(?m)^CREATE TRIGGER "?notify_hasura_.+"? AFTER \w+ ON .+ FOR EACH ROW EXECUTE PROCEDURE "?hdb_views"?\."?notify_hasura_.+"?\(\);$`)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return

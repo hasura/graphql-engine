@@ -29,7 +29,6 @@ const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
-const UPDATE_MANUAL_REL_TABLE_LIST = 'Data/UPDATE_MANUAL_REL_TABLE_LIST';
 const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 
@@ -428,10 +427,10 @@ const fetchColumnComment = (tableName, colName) => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_COLUMN_COMMENT, data });
+      dispatch({ type: LOAD_COLUMN_COMMENT, data, column: colName });
     },
     error => {
-      console.error('Failed to load table comment');
+      console.error('Failed to load column comment');
       console.error(error);
     }
   );
@@ -545,7 +544,10 @@ const makeMigrationCall = (
   );
 };
 
-const fetchTableListBySchema = schemaName => (dispatch, getState) => {
+const fetchTableListBySchema = (schemaName, successAction, errorAction) => (
+  dispatch,
+  getState
+) => {
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -573,10 +575,15 @@ const fetchTableListBySchema = schemaName => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: UPDATE_MANUAL_REL_TABLE_LIST, data: data });
+      if (successAction) {
+        dispatch({ type: successAction, data });
+      }
     },
     error => {
       console.error('Failed to load table list' + JSON.stringify(error));
+      if (errorAction) {
+        dispatch({ type: errorAction, data: error });
+      }
     }
   );
 };
@@ -661,7 +668,14 @@ const dataReducer = (state = defaultState, action) => {
     case LOAD_TABLE_COMMENT:
       return { ...state, tableComment: action.data };
     case LOAD_COLUMN_COMMENT:
-      return { ...state, columnComment: action.data };
+      const loadedComment = action.data ? action.data.result[1] || '' : '';
+      return {
+        ...state,
+        columnComments: {
+          ...state.columnComments,
+          [action.column]: loadedComment,
+        },
+      };
     case LISTING_SCHEMA:
       return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:
@@ -684,20 +698,6 @@ const dataReducer = (state = defaultState, action) => {
             manualRelInfo: {
               ...state.modify.relAdd.manualRelInfo,
               remoteSchema: action.data,
-            },
-          },
-        },
-      };
-    case UPDATE_MANUAL_REL_TABLE_LIST:
-      return {
-        ...state,
-        modify: {
-          ...state.modify,
-          relAdd: {
-            ...state.modify.relAdd,
-            manualRelInfo: {
-              ...state.modify.relAdd.manualRelInfo,
-              tables: action.data,
             },
           },
         },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
@@ -19,7 +19,6 @@ const customStyles = {
 };
 
 const TableColumn = props => {
-  const [menuIsOpen, toggleMenu] = useState(false);
   const styles = require('../../../Common/TableCommon/Table.scss');
   const {
     column,
@@ -57,10 +56,6 @@ const TableColumn = props => {
     return removeIcon;
   };
 
-  const toggleMenuBox = () => {
-    toggleMenu(!menuIsOpen);
-  };
-
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>
       <input
@@ -74,10 +69,8 @@ const TableColumn = props => {
       <span
         className={`${styles.select} ${styles.select200}`}
         data-test={`col-type-${i}`}
-        onClick={toggleMenuBox}
       >
         <SearchableSelectBox
-          menuIsOpen={menuIsOpen}
           options={columnDataTypes}
           onChange={handleColTypeChange}
           column={column.type && columnTypeValueMap[column.type]}
