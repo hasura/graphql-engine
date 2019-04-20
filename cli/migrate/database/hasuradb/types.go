@@ -85,6 +85,11 @@ type PostgresError struct {
 	Hint        string `json:"hint"`
 }
 
+type SchemaDump struct {
+	Opts  string `json:"opts"`
+	Clean bool   `json:"clean"`
+}
+
 func (h *HasuraError) CMDError() error {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -48,7 +49,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
+	f.BoolVar(&opts.fromServer, "from-server", false, "")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the up actions")
+	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "")
+	f.StringArrayVar(&opts.schemaNames, "schema-name", []string{"public"}, "")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -73,14 +77,37 @@ type migrateCreateOptions struct {
 	flags *pflag.FlagSet
 
 	// Flags
+	fromServer     bool
 	sqlFile        string
+	sqlServer      bool
 	metaDataFile   string
 	metaDataServer bool
+	schemaNames    []string
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
+
+	if o.fromServer {
+		o.sqlServer = true
+		o.metaDataServer = true
+	}
+
+	if o.flags.Changed("metadata-from-file") && o.sqlServer {
+		return 0, errors.New("only one sql type can be set")
+	}
+	if o.flags.Changed("metadata-from-file") && o.metaDataServer {
+		return 0, errors.New("only one metadata type can be set")
+	}
+
+	var migrateDrv *migrate.Migrate
+	if o.sqlServer || o.metaDataServer {
+		migrateDrv, err = newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+		if err != nil {
+			return 0, errors.Wrap(err, "cannot create migrate instance")
+		}
+	}
 
 	if o.flags.Changed("sql-from-file") {
 		// sql-file flag is set
@@ -89,9 +116,14 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 			return 0, errors.Wrap(err, "cannot set sql file")
 		}
 	}
-
-	if o.flags.Changed("metadata-from-file") && o.metaDataServer {
-		return 0, errors.New("only one metadata type can be set")
+	if o.sqlServer {
+		for _, schemName := range o.schemaNames {
+			data, err := migrateDrv.ExportSchemaDump(schemName)
+			if err != nil {
+				return 0, errors.Wrap(err, "cannot fetch schema dump")
+			}
+			createOptions.AppendSQLUp(data)
+		}
 	}
 
 	if o.flags.Changed("metadata-from-file") {
@@ -103,12 +135,6 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	if o.metaDataServer {
-		// create new migrate instance
-		migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot create migrate instance")
-		}
-
 		// fetch metadata from server
 		metaData, err := migrateDrv.ExportMetadata()
 		if err != nil {
@@ -138,7 +164,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer {
 		// Set empty data for [up|down].yaml
 		createOptions.MetaUp = []byte(`[]`)
 		createOptions.MetaDown = []byte(`[]`)
@@ -153,7 +179,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "error creating migration files")
 	}
-	return 0, nil
+	return timestamp, nil
 }
 
 func getTime() int64 {
