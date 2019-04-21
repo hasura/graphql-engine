@@ -9,6 +9,7 @@
     "@emotion/core": "^10.0.10",
     "@mdx-js/loader": "^0.15.0-2",
     "@mdx-js/mdx": "^0.20.3",
+    "@playlyfe/gql": "^2.6.1",
     "core-js": "^2.6.5",
     "dotenv": "^6.2.0",
     "emotion": "^10.0.9",

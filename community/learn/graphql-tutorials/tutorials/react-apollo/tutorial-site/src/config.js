@@ -3,10 +3,12 @@ const forcedNavOrder = [
     "/introduction",
     "/intro-to-graphql",
     "/setup",
-    "/basic-todo-app",
-    "/online-users",
-    "/public-todos",
-    "/fragment"
+    "/apollo-client",
+    "/queries",
+    "/mutations-variables",
+    "/optimistic-update-mutations",
+    "/subscriptions",
+    "/realtime-feed"
 ];
 
 export { forcedNavOrder };

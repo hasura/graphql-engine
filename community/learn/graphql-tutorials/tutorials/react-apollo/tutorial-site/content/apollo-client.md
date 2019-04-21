@@ -1,41 +1,14 @@
 ---
-title: "Set up Apollo Client"
+title: "Set up a GraphQL client with Apollo"
 ---
 
-Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options. You can directly write queries and mutations in GraphQL and send them using an ApolloClient instance.
+Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
-Let's get started by installing apollo dependenices:
-
-```bash
-$ npm install apollo-boost --save
-```
-
-`apollo-boost` comes bundled with several most used packages that you need to with Apollo Client. 
-
-Here they are:
-> 
-> `apollo-client`: the client that can be used with any javascript front-end.
-> 
-> `apollo-cache-inmemory`: recommended cache implementation for Apollo Client 2.0.
-> 
-> `apollo-link-http`: An Apollo Link for modifying control flow of GraphQL requests.  
-> 
-> `apollo-link-error`: An Apollo Link for handling and inspecting errors.
-> 
-> `apollo-link-state`: An Apollo Link for managing local data.
-> 
-> `graphql-tag`: Utitily for parsing GraphQL queries. 
-> 
-
-**Note**: apollo-boost is a minimal config way to start using Apollo Client. It includes some sensible defaults.
-
-Apart from `apollo-boost`, you also need to install `react-apollo` , `graphql` and `apollo-link-context` packages.
+Let's get started by installing apollo client & peer graphql dependenices:
 
 ```bash
-$ npm install react-apollo graphql apollo-link-context --save
+$ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-link-http graphql graphql-tag
 ```
-
-`react-apollo` has the necessary bindings to use Apollo Client with React.
 
 Open `src/components/App.js` and add the following imports at the top:
 

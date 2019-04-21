@@ -1,7 +1,6 @@
 import * as React from "react";
 import Highlight, { defaultProps } from "prism-react-renderer";
-import prismTheme from "prism-react-renderer/themes/duotoneLight";
-// import prismTheme from "prism-react-renderer/themes/dracula";
+import prismTheme from "prism-react-renderer/themes/vsDark";
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live";
 import '../styles.css';
 
@@ -42,10 +41,16 @@ const CodeBlock = ({ children: exampleCode, ...props }) => {
           <Pre className={className} style={style} p={3}>
             {cleanTokens(tokens).map((line, i) => {
               let lineClass = {};
-              if(line[1] && line[1].content === '+') {
-                lineClass = { 'color': '#000', 'backgroundColor': '#c1f0c1'};
-              } else if(line[1] && line[1].content === '-') {
-                lineClass = { 'color': '#000', 'backgroundColor': '#ff9999'};
+              if (line[0] && line[0].content.length && line[0].content[0] === '+') {
+                lineClass = {'backgroundColor': 'rgba(76, 175, 80, 0.2)'};
+              }
+              else if (line[0] && line[0].content.length && line[0].content[0] === '-') {
+                lineClass = {'backgroundColor': 'rgba(244, 67, 54, 0.2)'};
+              }
+              else if(line[0] && line[0].content === '' && line[1] && line[1].content === '+') {
+                lineClass = {'backgroundColor': 'rgba(76, 175, 80, 0.2)'};
+              } else if(line[0] && line[0].content === ''&& line[1] && line[1].content === '-') {
+                lineClass = {'backgroundColor': 'rgba(244, 67, 54, 0.2)'};
               }
               const lineProps = getLineProps({line, key: i});
               lineProps.style = lineClass;

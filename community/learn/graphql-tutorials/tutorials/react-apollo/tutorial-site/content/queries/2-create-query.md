@@ -14,7 +14,7 @@ Great! Now let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPrivateList.js` and add the following code:
 
-```javascript
+```
 import React, { Component, Fragment } from "react";
 
 import TodoItem from "./TodoItem";

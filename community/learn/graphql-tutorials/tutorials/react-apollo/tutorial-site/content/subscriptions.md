@@ -1,5 +1,5 @@
 ---
-title: "Online Users"
+title: "Subscriptions to show online users"
 ---
 
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.

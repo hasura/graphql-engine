@@ -92,7 +92,7 @@ body {
 
 pre {
   border: 0 !important;
-  background-color: rgb(245, 247, 249) !important;
+  background-color: rgb(245, 247, 249); /* !important; */
 }
 
 .mainWrapper ul, .mainWrapper ol {
