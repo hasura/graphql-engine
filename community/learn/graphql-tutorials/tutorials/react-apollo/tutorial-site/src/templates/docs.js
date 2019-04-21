@@ -41,7 +41,7 @@ injectGlobal`
   }
 `;
 
-const Edit = styled.div`
+const Edit = styled('div')`
   padding: 1rem 1.5rem;
   text-align: right;
 

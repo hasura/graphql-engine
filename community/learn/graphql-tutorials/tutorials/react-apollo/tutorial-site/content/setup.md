@@ -1,16 +1,30 @@
 ---
-title: "Setup"
+title: "Tutorial & boilerplate setup"
 ---
 
-In this tutorial, you’ll use the following technologies for building the app:
+For this tutorial, the GraphQL backend and the basic app UI is already ready.
+Our task will be convert the "static" UI into a working realtime app.
 
-- Frontend
-    - React v0.16.3
-    - Apollo Client 2.1
+### Download and run the boilerplate
 
-- Backend
-    - Hasura GraphQL Engine
+<!-- FIXME: Add the zip URL here -->
 
-The good news is that, the backend is already set up and running live at `https://react-apollo-todo-demo.hasura.app/v1alpha1/graphql`
+1. Download the boilerplate at: https://learn.hasura.io/graphql/react/boilerplate.zip
+2. Unzip and make sure you're in the `app-boilerplate` directory
+3. Install dependencies and run the "static" app
+    - `npm install`
+    - `npm start`
+4. Signup/login as a user to load the todo app page
 
-Some parts of the frontend (non-graphql code) has already been written for convenience. You will be cloning a boilerplate to get started in the next step.
+This is what you should see after the steps above:
+
+![Boilerplate after login](./assets/boilerplate-after-login.png)
+
+### Load GraphiQL to play with your GraphQL APIs
+
+1. Head to https://learn.hasura.io/graphiql
+2. Log in (so that you can test the GraphQL APIs with a valid user token)
+
+This is what you should see after the steps above:
+
+![GraphiQL after login](./assets/graphiql-after-login.png)

@@ -18,7 +18,7 @@ const notificationTypes = {
 const getColor = (type = "info", shade = "dark") =>
   notificationTypes[type][shade];
 
-const Notification = styled.section`
+const Notification = styled('section')`
   color: ${props => getColor(props.type, "light")};
   background: ${props => getColor(props.type)};
   width: 100%;
