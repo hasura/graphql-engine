@@ -7,7 +7,12 @@ import {
 
 import styles from './ModifyTable.scss';
 
-const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
+const TableCommentEditor = ({
+  tableComment,
+  tableCommentEdit,
+  isTable,
+  dispatch,
+}) => {
   const editCommentClicked = () => {
     dispatch(activateCommentEdit(true, tableComment));
   };
@@ -17,7 +22,7 @@ const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
   };
 
   const commentEditSave = () => {
-    dispatch(saveTableCommentSql(true));
+    dispatch(saveTableCommentSql(isTable));
   };
 
   const commentEditCancel = () => {

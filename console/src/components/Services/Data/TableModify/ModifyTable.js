@@ -123,6 +123,7 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
+              isTable
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
