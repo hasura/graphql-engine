@@ -134,12 +134,14 @@ class StreamingLogs extends Component {
       triggerName,
       migrationMode,
       log,
-      tableSchemas,
       count,
       dispatch,
+      triggerList,
     } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
+
+    const currentTrigger = triggerList.find(s => s.name === triggerName);
 
     const invocationColumns = [
       'redeliver',
@@ -204,13 +206,7 @@ class StreamingLogs extends Component {
           );
         }
         if (col === 'primary_key') {
-          const tableName = requestData[i].data.table.name;
-          const tableSchema = requestData[i].data.table.schema;
-          const tableData = tableSchemas.filter(
-            row =>
-              row.table_name === tableName && row.table_schema === tableSchema
-          );
-          const primaryKey = tableData[0].primary_key.columns; // handle all primary keys
+          const primaryKey = currentTrigger.primary_key.columns; // handle all primary keys
           const pkHtml = [];
           primaryKey.map(pk => {
             const newPrimaryKeyData = requestData[i].data.event.data.new
@@ -477,8 +473,8 @@ StreamingLogs.propTypes = {
   log: PropTypes.object,
   currentTableSchema: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  allSchemas: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
+  triggerList: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -488,7 +484,7 @@ const mapStateToProps = (state, ownProps) => {
     triggerName: ownProps.params.trigger,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
-    allSchemas: state.tables.allSchemas,
+    triggerList: state.triggers.triggerList,
   };
 };
 

@@ -11,8 +11,8 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import { initQueries } from '../Data/DataActions';
 import { replace } from 'react-router-redux';
+import { getEventTriggersQuery } from './utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
@@ -26,7 +26,6 @@ const ADMIN_SECRET_ERROR = 'Event/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
-const LOAD_EVENT_TABLE_SCHEMA = 'Event/LOAD_EVENT_TABLE_SCHEMA';
 const MODAL_OPEN = 'Event/MODAL_OPEN';
 const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
 const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
@@ -40,32 +39,7 @@ const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 /* ************ action creators *********************** */
 const loadTriggers = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const body = {
-    type: 'bulk',
-    args: [
-      {
-        type: 'select',
-        args: {
-          table: {
-            name: 'event_triggers',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: {
-            column: 'name',
-            type: 'asc',
-            nulls: 'last',
-          },
-        },
-      },
-      initQueries.loadSchema,
-    ],
-  };
-  body.args[1].args.where = {
-    table_schema: {
-      $nin: ['information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views'],
-    },
-  };
+  const body = getEventTriggersQuery();
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -74,8 +48,14 @@ const loadTriggers = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: data[1] });
-      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data[0] });
+      if (data.result_type !== 'TuplesOk') {
+        console.error('Failed to event trigger info' + JSON.stringify(data[1]));
+        return;
+      }
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: JSON.parse(data.result[1]),
+      });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -473,7 +453,7 @@ const deleteTrigger = triggerName => {
         name: triggerName,
         table: {
           name: currentTriggerInfo.table_name,
-          schema: currentTriggerInfo.schema_name,
+          schema: currentTriggerInfo.table_schema,
         },
         retry_conf: { ...currentTriggerInfo.configuration.retry_conf },
         ...currentTriggerInfo.configuration.definition,
@@ -611,11 +591,6 @@ const eventReducer = (state = defaultState, action) => {
       return {
         ...state,
         log: { ...state.log, rows: action.data, count: action.data.length },
-      };
-    case LOAD_EVENT_TABLE_SCHEMA:
-      return {
-        ...state,
-        tableSchemas: action.data,
       };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };

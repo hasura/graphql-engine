@@ -84,7 +84,7 @@ export const save = (property, triggerName) => {
       name: oldTrigger.name,
       table: {
         name: oldTrigger.table_name,
-        schema: oldTrigger.schema_name,
+        schema: oldTrigger.table_schema,
       },
       retry_conf: { ...oldTrigger.configuration.retry_conf },
       ...oldTrigger.configuration.definition,
@@ -122,20 +122,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
     }
     const upQuery = {
       type: 'bulk',
