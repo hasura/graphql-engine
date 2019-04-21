@@ -1,4 +1,15 @@
-# Gatsby Tutorial Starter Kit
+## To run for development
+
+```bash
+npm i -g gatsby-cli
+gatsby develop
+```
+
+
+----------------------------------------------------------------------
+
+
+## Gatsby Tutorial Starter Kit
 
 - Uses `gatsby-mdx` boilerplate
 - Theme similar to gitbook
