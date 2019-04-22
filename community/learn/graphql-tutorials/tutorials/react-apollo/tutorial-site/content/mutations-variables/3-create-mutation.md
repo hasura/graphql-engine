@@ -4,7 +4,7 @@ title: "Run mutation, update cache"
 
 Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
 
-```
+```javscript
 import { Mutation } from "react-apollo";
 ```
 

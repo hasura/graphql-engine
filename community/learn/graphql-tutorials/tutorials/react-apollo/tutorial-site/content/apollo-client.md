@@ -12,7 +12,7 @@ $ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-lin
 
 Open `src/components/App.js` and add the following imports at the top:
 
-```js
+```javascript
 import React from 'react';
 
 import Header from './Header';
@@ -53,11 +53,11 @@ export default App;
 
 These are the required apollo dependenices to get started. Now let's define a function which will return apollo client with httplink and cache.
 
-```js
+```javascript
 const createApolloClient = (authToken) => {
   return new ApolloClient({
     link: new HttpLink({
-      uri: 'https://backend.graphql-tutorials.org/v1alpha1/graphql',
+      uri: 'https://learn.hasura.io/graphql',
       headers: {
         Authorization: `Bearer ${authToken}`
       }
@@ -68,7 +68,7 @@ const createApolloClient = (authToken) => {
 ```
 Create the apollo client inside `App` and pass the client prop to `<ApolloProvider>` component.
 
-```js
+```javascript
 const App = ({auth}) => {
 +  const client = createApolloClient(auth.idToken);
    return (
@@ -82,14 +82,8 @@ const App = ({auth}) => {
 
 Let's try to understand what is happening here. 
 
-We are creating an `HttpLink` to connect ApolloClient with the GraphQL server. As you know already, our GraphQL server is running at [https://backend.graphql-tutorials.org/v1alpha1/graphql](https://backend.graphql-tutorials.org/v1alpha1/graphql)
+We are creating an `HttpLink` to connect ApolloClient with the GraphQL server. As you know already, our GraphQL server is running at [https://learn.hasura.io/graphql](https://learn.hasura.io/graphql)
 
 At the end, we instantiate ApolloClient by passing in our HttpLink and a new instance of `InMemoryCache` (recommended caching solution). We are wrapping all of this in a function which will return the client.
 
 We are going to make use of this function inside `App` component.
-
-
-
-
-
-

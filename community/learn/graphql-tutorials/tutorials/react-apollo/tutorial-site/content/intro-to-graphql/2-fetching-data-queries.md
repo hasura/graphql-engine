@@ -20,21 +20,21 @@ to use and integrate APIs in your app without requiring
 external documentation tools.
 
 You can access the GraphiQL for this realtime todo app tutorial here:
-[graphiql.graphql-tutorials.org](http://graphiql.graphql-tutorials.org)
+[learn.hasura.io/graphql/graphiql](https://learn.hasura.io/graphql/graphiql)
 
 When you work with a GraphQL API in a project you will almost always
 use a tool like GraphiQL to explore and test your GraphQL queries.
 
 ## Basic GraphQL query
 
-1. Open GraphiQL at: [graphiql.graphql-tutorials.org](http://graphiql.graphql-tutorials.org). 
+1. Open GraphiQL at: [learn.hasura.io/graphql/graphiql](https://learn.hasura.io/graphql/graphiql). 
    You'll have to login to get an auth token to query the API. In a real-world scenario
    your GraphQL APIs will be protected.
 2. You'll see a URL, and headers that contain the auth
    token that will be sent along with your GraphQL query.
-2. Now, paste this GraphQL query in the GraphiQL window
+3. Now, paste this GraphQL query in the GraphiQL window
 
- ```graphql
+```graphql
  query {
    users {
      name
@@ -42,8 +42,8 @@ use a tool like GraphiQL to explore and test your GraphQL queries.
  }
  ```
 
-3. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
-4. On the right, you should see a list of users by their names that are in the system!
+4. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
+5. On the right, you should see a list of users by their names that are in the system!
 
 __Try it out in GraphiQL__
 
@@ -66,7 +66,7 @@ Let's try making queries that fetch different slices of our data from the overal
 
 This GraphQL query will fetch all the users and their publicly visible todos:
 
- ```graphql
+```graphql
  query {
    users {
      name
@@ -75,7 +75,7 @@ This GraphQL query will fetch all the users and their publicly visible todos:
      }
    }
  }
- ```
+```
 
 __Try it out in GraphiQL__
 
@@ -85,7 +85,7 @@ __Try it out in GraphiQL__
 This GraphQL query will fetch all the currently online users
 and their profile information (which is just their name for now):
 
- ```graphql
+```graphql
  query {
    online_users {
      last_seen
@@ -94,7 +94,7 @@ and their profile information (which is just their name for now):
      }
    }
  }
- ```
+```
 
 <!-- [//]: # TODO: -->
 __Try it out in GraphiQL__
@@ -112,14 +112,14 @@ The GraphQL query analog of this is *arguments* that you can attach to a "field"
 
 This GraphQL query will fetch 10 todos and not all of them.
 
- ```graphql
+```graphql
 query {
   todos(limit: 10) {
     id
     title
   }
 }
- ```
+```
 
 <!-- [//]: # TODO: -->
 __Try it out in GraphiQL__
@@ -131,7 +131,7 @@ The GraphQL server or API that you use, might provide a different set of argumen
 
 ### Multiple arguments on multiple fields: Fetch 1 user and 5 most recent todos for each user
 
- ```graphql
+```graphql
 query {
   users (limit: 1) {
     id
@@ -142,7 +142,7 @@ query {
     }
   }
 }
- ```
+```
 
 Notice that we are passing arguments to different fields. This GraphQL query reads as:
 > Fetch users (with limit 1), and their todos (ordered by descending creation time, and limited to 5).

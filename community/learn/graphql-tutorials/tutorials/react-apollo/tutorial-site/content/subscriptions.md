@@ -23,7 +23,7 @@ The goal is to update every few seconds from the client that you are online. Ide
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports:
 
-```
+```javascript
 import gql from "graphql-tag";
 ```
 
@@ -65,7 +65,7 @@ In `componentDidMount`, we will create a `setInterval` to update the last_seen o
 
 Now let's write the definition of the `updateLastSeen`.
 
-```
+```javascript
   updateLastSeen() {
     // Use the apollo client to run a mutation to update the last_seen value
     const UPDATE_LASTSEEN_MUTATION=gql`
@@ -84,4 +84,3 @@ Now let's write the definition of the `updateLastSeen`.
 Again, we are making use of `client.mutate` to update the `users` table of the database.
 
 Great! Now the metadata about whether the user is online will be available in the backend. Let's now do the integration to display realtime data of online users.
-

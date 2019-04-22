@@ -24,7 +24,7 @@ const createApolloClient = (authToken) => {
   return new ApolloClient({
 -   link: new HttpLink({
 +   link: new WebSocketLink({
-      uri: 'https://backend.graphql-tutorials.org/v1alpha1/graphql',
+      uri: 'https://learn.hasura.io/graphql',
 +     options: {
 +       reconnect: true,
 +       connectionParams: {

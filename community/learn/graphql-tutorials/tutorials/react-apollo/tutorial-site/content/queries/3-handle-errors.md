@@ -30,4 +30,3 @@ Now, the query could also end up in an `error` state due to various reasons. Som
 In this error state, typically you can send these error messages to third-party services to track what went wrong.
 
 All said and done, these are two important states that need to be handled inside your component. What you have written above is basic, but sufficient for this tutorial.
-

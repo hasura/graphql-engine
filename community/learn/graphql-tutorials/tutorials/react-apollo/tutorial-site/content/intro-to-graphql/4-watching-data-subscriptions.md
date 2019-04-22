@@ -14,10 +14,10 @@ they allow you to build great experiences without having to deal with websocket 
 
 ## Make your first GraphQL subscription
 
-1. Step 1: Head to https://graphql-tutorials.com/graphiql
+1. Step 1: Head to https://learn.hasura.io/graphql/graphiql
 2. Step 2: Write this GraphQL query in the textarea:
 
-```
+```graphql
 subscription {
   online_users {
     id

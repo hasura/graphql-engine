@@ -6,7 +6,7 @@ So let's define the graphql subscription to be used.
 
 Open `src/components/OnlineUsers/OnlineUsers.js` and add the following code, below the other imports
 
-```
+```javascript
 - import React, { Component } from "react";
 + import React, { Component, Fragment } from "react";
 - import {withApollo} from 'react-apollo';
@@ -17,7 +17,7 @@ We are importing the `Subscription` component from `react-apollo` and the graphq
 
 Now, we will wrap the component with `Subscription` passing our graphql mutation constant that we imported. Replace the `return` with the following code:
 
-```
+```javascript
  return (
    <div className="onlineUsersWrapper">
 +    <Subscription subscription={gql`
