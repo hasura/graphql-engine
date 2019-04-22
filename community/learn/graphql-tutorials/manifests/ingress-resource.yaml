@@ -6,7 +6,7 @@ metadata:
   #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: graphql-tutorials.org
+  - host: learn.hasura.io
     http:
       paths:
       - path: /
