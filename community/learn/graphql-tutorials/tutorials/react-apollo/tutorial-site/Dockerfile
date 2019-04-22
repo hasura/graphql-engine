@@ -12,7 +12,7 @@ COPY package.json ./
 RUN npm install
 
 # Bundle app source
-COPY tutorial-site/ .
+COPY . .
 
 ENV GATSBY_PATH_PREFIX="/graphql/react"
 
