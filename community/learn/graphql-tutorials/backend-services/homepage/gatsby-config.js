@@ -1,7 +1,8 @@
 module.exports = {
 	"siteMetadata": {
     "title": 'GraphQL Tutorials | learn.hasura.io',
-		"description": 'GraphQL tutorials using Hasura GraphQL Engine'
+		"description": 'GraphQL tutorials using Hasura GraphQL Engine',
+		"siteUrl": 'http://learn.hasura.io'
   },
 	"plugins" : [
 		"gatsby-plugin-sass",
