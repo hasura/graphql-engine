@@ -20,7 +20,7 @@ Following are the list of error messages returned by the GraphQL Engine when it 
 Error: no such table/view exists in postgres
 --------------------------------------------
 
-This error is thrown when a table/view tracked by the Hasura GraphQL engine is deleted or is not available in the
+This error is thrown when a table/view tracked by the Hasura GraphQL engine is not available in the
 database.
 
 For example, you will encounter the above error if you have:
@@ -83,4 +83,27 @@ OR
 
 - Connect to the database and switch to ``hdb_catalog`` schema.
 - In the ``hdb_relationship`` table, find the entry for the above relationship and delete it.
+- Restart GraphQL engine to verify.
+
+Error: column does not exist
+----------------------------
+
+This error is thrown when a column of a table used by the Hasura GraphQL engine is not available in the
+database.
+
+For example, you will encounter the above error if you have:
+
+- Created a permission rule using a column in a check.
+- Opened ``psql`` or ``adminer`` or any other PostgreSQL client and deleted the column from the table.
+- Restarted GraphQL engine.
+
+In this example, the GraphQL engine expects the column to be available in the table to
+function properly but it can't find it.
+
+Solution
+^^^^^^^^
+
+- Connect to the database and switch to ``hdb_catalog`` schema.
+- Delete the row from ``hdb_permission`` table where the column ``table_name`` has the value same as the table
+  mentioned in the error and the column ``perm_def`` involves the missing column.
 - Restart GraphQL engine to verify.

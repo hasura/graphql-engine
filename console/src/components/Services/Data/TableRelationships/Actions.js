@@ -20,6 +20,8 @@ export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
 export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
+export const UPDATE_MANUAL_REL_TABLE_LIST =
+  'ModifyTable/UPDATE_MANUAL_REL_TABLE_LIST';
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });

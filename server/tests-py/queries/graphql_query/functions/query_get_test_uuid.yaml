@@ -1,0 +1,22 @@
+description: Query using get_test function
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    get_test:
+    - id: 1
+      uuid_col: 8e3e4a14-c831-45a2-9e78-8e86028d1ee5
+      name: clarke
+query:
+  query: |
+    query {
+      get_test(
+      args: { uuid_arg: "8e3e4a14-c831-45a2-9e78-8e86028d1ee5"
+            , name_arg: "clarke"
+            }
+     ) {
+        id
+        uuid_col
+        name
+      }
+    }

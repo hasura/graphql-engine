@@ -203,7 +203,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -234,6 +234,15 @@ NotExp
    {
        "$not" : BoolExp_
    }
+
+
+TrueExp
+^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+    {}
 
 ColumnExp
 ^^^^^^^^^
@@ -350,3 +359,42 @@ A JSONObject_
    }
 
 .. _JSONObject: https://tools.ietf.org/html/rfc7159
+
+.. _Empty Object:
+
+Empty Object
+^^^^^^^^^^^^
+
+An empty JSONObject_
+
+.. code-block:: json
+
+   {}
+
+.. _ColumnPresetExp:
+
+ColumnPresetsExp
+^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to value mapping, where value can be static or derived from a session variable.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : colVal1,
+      "column2" : colVal2,
+      ..
+   }
+
+E.g. where ``id`` is derived from session variable and ``city`` is a static value.
+
+.. code-block:: json
+
+   {
+      "id" : "x-hasura-User-Id", 
+      "city" : "San Francisco"
+   }
+
+.. note::
+
+   If the value of any key begins with "x-hasura-" (*case-insensitive*), the value of the column specified in the key will be derived from a session variable of the same name.

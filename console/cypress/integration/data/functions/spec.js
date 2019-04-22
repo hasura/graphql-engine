@@ -76,7 +76,9 @@ export const verifyPermissionTab = () => {
     `data/schema/public/functions/${getCustomFunctionName(1)}/permissions`
   );
   cy.wait(5000);
-  cy.get(getElementFromAlias('custom-function-permission-btn')).should('exist');
+  cy.get(getElementFromAlias('custom-function-permission-link')).should(
+    'exist'
+  );
   cy.wait(5000);
 };
 
