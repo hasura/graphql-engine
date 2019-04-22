@@ -11,6 +11,8 @@ import {
   JSONB,
   TIMESTAMP,
   TIME,
+  NUMERIC,
+  TEXT,
 } from '../utils';
 
 const ColumnEditor = ({
@@ -70,19 +72,12 @@ const ColumnEditor = ({
   };
 
   const modifyAlterOptions = columntype => {
-    const integerOptions = [
-      'integer',
-      'serial',
-      'bigint',
-      'bigserial',
-      'numeric',
-      'text',
-    ];
-    const bigintOptions = ['bigint', 'bigserial', 'numeric', 'text'];
-    const uuidOptions = ['uuid', 'text'];
-    const jsonOptions = ['json', 'jsonb', 'text'];
-    const timestampOptions = ['timestamptz', 'text'];
-    const timeOptions = ['timetz', 'text'];
+    const integerOptions = [INTEGER, SERIAL, BIGINT, BIGSERIAL, NUMERIC, TEXT];
+    const bigintOptions = [BIGINT, BIGSERIAL, NUMERIC, TEXT];
+    const uuidOptions = [UUID, TEXT];
+    const jsonOptions = [JSON, JSONB, TEXT];
+    const timestampOptions = [TIMESTAMP, TEXT];
+    const timeOptions = [TIME, TEXT];
 
     switch (columntype) {
       case INTEGER:
@@ -113,7 +108,7 @@ const ColumnEditor = ({
         return generateAlterOptions(timeOptions);
 
       default:
-        return generateAlterOptions([columntype, 'text']);
+        return generateAlterOptions([columntype, TEXT]);
     }
   };
 

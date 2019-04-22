@@ -11,29 +11,30 @@ export const NUMERIC = 'numeric';
 export const DATE = 'date';
 export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
+export const TEXT = 'text';
 
 export const getPlaceholder = type => {
   switch (type) {
-    case 'integer':
+    case INTEGER:
       return 'integer';
-    case 'bigint':
+    case BIGINT:
       return 'BIG integer';
-    case 'numeric':
+    case NUMERIC:
       return 'float';
-    case 'timestamp with time zone':
+    case TIMESTAMP:
       return new Date().toISOString();
-    case 'date':
+    case DATE:
       return new Date().toISOString().slice(0, 10);
-    case 'timetz':
+    case TIMETZ:
       const time = new Date().toISOString().slice(11, 19);
       return `${time}Z or ${time}+05:30`;
-    case 'uuid':
+    case UUID:
       return 'UUID';
-    case 'json':
+    case JSON:
       return '{"name": "foo"} or [12, "bar"]';
-    case 'jsonb':
+    case JSONB:
       return '{"name": "foo"} or [12, "bar"]';
-    case 'boolean':
+    case BOOLEAN:
       return '';
     default:
       return 'text';
