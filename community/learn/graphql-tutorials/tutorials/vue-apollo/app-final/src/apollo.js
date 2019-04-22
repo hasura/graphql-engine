@@ -6,13 +6,8 @@ import { split } from "apollo-link";
 import { getMainDefinition } from "apollo-utilities";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
-/*
-const GRAPHQL_URL = 'https://react-apollo-todo.demo.hasura.app/v1alpha1/graphql';
-const REALTIME_GRAPHQL_URL = 'wss://react-apollo-todo.demo.hasura.app/v1alpha1/graphql'
-*/
-
-const GRAPHQL_URL = 'https://backend.graphql-tutorials.org/v1alpha1/graphql';
-const REALTIME_GRAPHQL_URL = 'wss://backend.graphql-tutorials.org/v1alpha1/graphql'
+const GRAPHQL_URL = 'https://learn.hasura.io/graphql';
+const REALTIME_GRAPHQL_URL = 'wss://learn.hasura.io/graphql'
 
 const getHeaders = () => {
   const headers = {};

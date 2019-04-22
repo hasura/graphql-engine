@@ -19,8 +19,7 @@
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/test_complete.js' --config baseUrl=$CYPRESS_BASE_URL",
-    "deploy": "now --docker --public && now alias && now alias hasura-graphiql.now.sh graphiql-online.com"
+    "test": "cypress run --spec 'cypress/integration/test_complete.js' --config baseUrl=$CYPRESS_BASE_URL"
   },
   "betterScripts": {
     "start-prod": {
