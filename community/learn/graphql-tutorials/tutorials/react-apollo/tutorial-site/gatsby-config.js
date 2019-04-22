@@ -4,7 +4,7 @@ module.exports = {
   siteMetadata: {
     title: 'React Apollo | GraphQL Tutorial',
     description: 'GraphQL tutorial for react developers using Apollo client',
-    docsLocation: 'https://github.com/hasura/gatsby-tutorial-starter',
+    docsLocation: 'https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/content',
     headerTitle: 'React Apollo'
   },
   plugins: [
