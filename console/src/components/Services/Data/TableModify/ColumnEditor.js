@@ -16,7 +16,6 @@ import {
 } from '../utils';
 
 const ColumnEditor = ({
-  column,
   onSubmit,
   dispatch,
   columnComment,
@@ -44,34 +43,37 @@ const ColumnEditor = ({
     dataTypes.filter(dataType => dataType.hasuraDatatype)
   );
 
-  const additionalOptions = [];
-  let finalDefaultValue = typeMap[columnProperties.type];
-  if (!typeMap[column.data_type]) {
-    finalDefaultValue = column.data_type;
-    additionalOptions.push(
-      <option value={finalDefaultValue} key={finalDefaultValue}>
-        {column.data_type}
-      </option>
-    );
-  }
+  const getAlternateTypeOptions = columntype => {
+    const generateOptions = datatypeOptions => {
+      const options = [];
 
-  const generateAlterOptions = datatypeOptions => {
-    return dataTypes.map(datatype => {
-      if (datatypeOptions.includes(datatype.value)) {
-        return (
-          <option
-            value={datatype.value}
-            key={datatype.name}
-            title={datatype.description}
-          >
-            {datatype.name}
+      dataTypes.forEach(datatype => {
+        if (datatypeOptions.includes(datatype.value)) {
+          options.push(
+            <option
+              value={datatype.value}
+              key={datatype.name}
+              title={datatype.description}
+            >
+              {datatype.name}
+            </option>
+          );
+        }
+      });
+
+      let finalDefaultValue = typeMap[columnProperties.type];
+      if (!finalDefaultValue) {
+        finalDefaultValue = columnProperties.type;
+        options.push(
+          <option value={finalDefaultValue} key={finalDefaultValue}>
+            {finalDefaultValue}
           </option>
         );
       }
-    });
-  };
 
-  const modifyAlterOptions = columntype => {
+      return options;
+    };
+
     const integerOptions = [INTEGER, SERIAL, BIGINT, BIGSERIAL, NUMERIC, TEXT];
     const bigintOptions = [BIGINT, BIGSERIAL, NUMERIC, TEXT];
     const uuidOptions = [UUID, TEXT];
@@ -81,34 +83,34 @@ const ColumnEditor = ({
 
     switch (columntype) {
       case INTEGER:
-        return generateAlterOptions(integerOptions);
+        return generateOptions(integerOptions);
 
       case SERIAL:
-        return generateAlterOptions(integerOptions);
+        return generateOptions(integerOptions);
 
       case BIGINT:
-        return generateAlterOptions(bigintOptions);
+        return generateOptions(bigintOptions);
 
       case BIGSERIAL:
-        return generateAlterOptions(bigintOptions);
+        return generateOptions(bigintOptions);
 
       case UUID:
-        return generateAlterOptions(uuidOptions);
+        return generateOptions(uuidOptions);
 
       case JSONDTYPE:
-        return generateAlterOptions(jsonOptions);
+        return generateOptions(jsonOptions);
 
       case JSONB:
-        return generateAlterOptions(jsonOptions);
+        return generateOptions(jsonOptions);
 
       case TIMESTAMP:
-        return generateAlterOptions(timestampOptions);
+        return generateOptions(timestampOptions);
 
       case TIME:
-        return generateAlterOptions(timeOptions);
+        return generateOptions(timeOptions);
 
       default:
-        return generateAlterOptions([columntype, TEXT]);
+        return generateOptions([columntype, TEXT]);
     }
   };
 
@@ -155,10 +157,9 @@ const ColumnEditor = ({
               value={selectedProperties[colName].type}
               onChange={updateColumnType}
               className="input-sm form-control"
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
             >
-              {modifyAlterOptions(columnProperties.type)}
-              {additionalOptions}
+              {getAlternateTypeOptions(columnProperties.type)}
             </select>
           </div>
         </div>
@@ -169,7 +170,7 @@ const ColumnEditor = ({
               className="input-sm form-control"
               value={selectedProperties[colName].isNullable}
               onChange={toggleColumnNullable}
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-nullable"
             >
               <option value="true">True</option>
@@ -182,9 +183,11 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={selectedProperties[colName].isUnique.toString()}
+              value={
+                selectedProperties[colName].uniqueConstraint ? 'true' : 'false'
+              }
               onChange={toggleColumnUnique}
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-unique"
             >
               <option value="true">True</option>
@@ -200,7 +203,7 @@ const ColumnEditor = ({
               value={selectedProperties[colName].default || ''}
               onChange={updateColumnDef}
               type="text"
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-default"
             />
           </div>
