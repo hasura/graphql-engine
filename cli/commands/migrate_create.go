@@ -17,6 +17,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
+  hasura migrate create "init" --from-sever`
+
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &migrateCreateOptions{
@@ -27,6 +30,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:          "create [migration-name]",
 		Short:        "Create files required for a migration",
 		Long:         "Create sql and yaml files required for a migration",
+		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -50,10 +54,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
-	f.BoolVar(&opts.fromServer, "from-server", false, "")
+	f.BoolVar(&opts.fromServer, "from-server", false, "get SQL statements and hasura metadata from the server")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
 	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration")
-	f.StringArrayVar(&opts.schemaNames, "schema-name", []string{"public"}, "Postgres schema's to export as migration")
+	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as migration")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
