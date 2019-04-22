@@ -6,39 +6,22 @@ metadata:
   #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: graphql-tutorials.org
+  - host: learn.hasura.io
     http:
       paths:
       - path: /
         backend:
           serviceName: homepage
           servicePort: 80
-      - path: /react-apollo
+      - path: /graphql/react
         backend:
           serviceName: react-apollo
           servicePort: 80
-  - host: www.graphql-tutorials.org
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: homepage
-          servicePort: 80
-      - path: /react-apollo
-        backend:
-          serviceName: react-apollo
-          servicePort: 80
-  - host: backend.graphql-tutorials.org
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: hasura
-          servicePort: 80
-  - host: graphiql.graphql-tutorials.org
-    http:
-      paths:
-      - path: /
+      - path: /graphql/graphiql
         backend:
           serviceName: graphiql
+          servicePort: 80
+      - path: /graphql
+        backend:
+          serviceName: hasura
           servicePort: 80
