@@ -61,4 +61,4 @@ execPGDump b ci = do
     opts = prbOpts b
     clean = case prbClean b of
       Just v -> show v
-      Nothing -> "False"
+      Nothing -> show False
