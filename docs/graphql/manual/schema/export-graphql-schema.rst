@@ -36,7 +36,7 @@ flag ``--format json``:
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect --format json > schema.json
 
 Using **Apollo CLI**
--------------------
+--------------------
 
 Using Apollo CLI, you can get the schema as follows:
 
@@ -53,4 +53,4 @@ Run ``npm install -g apollo`` to install the Apollo CLI. You can then run the fo
 
 Note that ``apollo schema:download`` is an alias of the command `apollo service:download <https://github.com/apollographql/apollo-tooling#apollo-servicedownload-output>`__.
 
-By default, this downloads the schema to a file called schema.json. This command has no other output types.
+By default, this downloads the schema to a file called ``schema.json``. This command has no other output types.
