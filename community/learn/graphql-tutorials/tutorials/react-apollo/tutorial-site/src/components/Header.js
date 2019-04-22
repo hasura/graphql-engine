@@ -1,5 +1,6 @@
 import React from 'react';
 import { StaticQuery, graphql } from 'gatsby';
+import GitHubButton from 'react-github-btn'
 import './styles.css';
 
 import Sidebar from "./sidebar";
@@ -46,7 +47,8 @@ const Header = ({location}) => (
                 <hr/>
               </div>
               <ul className={'nav navbar-nav navBarUL'}>
-                <li><a href="https://github.com/hasura/graphql-engine">GitHub</a></li>
+                <li><GitHubButton href="https://github.com/hasura/graphql-engine" data-show-count="true" aria-label="Star hasura/graphql-engine on GitHub">Star</GitHubButton>
+                </li>
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>
               <ul className={'nav navbar-nav navBarUL navbar-right'}>

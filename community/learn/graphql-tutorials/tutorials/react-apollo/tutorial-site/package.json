@@ -34,6 +34,7 @@
     "react-dom": "^16.8.6",
     "react-emotion": "^9.1.3",
     "react-feather": "^1.1.6",
+    "react-github-btn": "^1.0.5",
     "react-helmet": "^5.2.0",
     "react-live": "^2.0.1",
     "system-components": "^3.0.3"
