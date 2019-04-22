@@ -8,12 +8,13 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	log "github.com/sirupsen/logrus"
 )
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -50,15 +51,16 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
 	f.BoolVar(&opts.fromServer, "from-server", false, "")
-	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the up actions")
-	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "")
-	f.StringArrayVar(&opts.schemaNames, "schema-name", []string{"public"}, "")
+	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
+	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration")
+	f.StringArrayVar(&opts.schemaNames, "schema-name", []string{"public"}, "Postgres schema's to export as migration")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
 	migrateCreateCmd.MarkFlagFilename("sql-from-file")
 	migrateCreateCmd.MarkFlagFilename("metadata-from-file")
 
