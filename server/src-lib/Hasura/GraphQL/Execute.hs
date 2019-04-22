@@ -49,11 +49,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
--- <<<<<<< HEAD
--- data GQExecPlan
---   = GExPHasura !GCtx !VQ.RootSelSet
---   | GExPRemote !RemoteSchemaName !RemoteSchemaInfo !G.TypedOperationDefinition
--- =======
+
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
 --
