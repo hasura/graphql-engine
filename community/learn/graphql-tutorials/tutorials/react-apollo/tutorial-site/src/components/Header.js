@@ -50,7 +50,7 @@ const Header = ({location}) => (
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>
               <ul className={'nav navbar-nav navBarUL navbar-right'}>
-                <li><a href="http://graphql-tutorials.org/" target="_blank">graphql-tutorials.org</a></li>
+                <li><a href="https://learn.hasura.io/" target="_blank">learn.hasura.io</a></li>
               </ul>
             </div>
           </nav>
