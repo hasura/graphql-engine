@@ -6,7 +6,7 @@ Access control examples
   :depth: 1
   :local:
 
-This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended that you first check out the different :ref:`access control use-cases <acl-use-cases>` that will be referenced throughout this guide.
+This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended that you first check out :doc:`access control basics <basics>` and :doc:`reference documentation for permissions<reference-permissions>` that will be referred to throughout this guide.
 
 Here are some examples of common use-cases.
 

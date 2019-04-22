@@ -9,56 +9,69 @@ Authentication & Authorization
 Introduction
 ------------
 
-The following is the life-cycle of a GraphQL query to Hasura:
+In Hasura, access control or authorization is based on roles. Let's take a look at how this works when GraphQL engine receives a request:
 
-<Client->Query->Authn->Authz/Permissions->Postgres->Response>
+.. thumbnail:: ../../../img/graphql/manual/auth/auth-high-level-overview.png
 
-As you can see from this diagram:
+As you can see from this:
 
-- **Authentication** is handled outside Hasura and Hasura can be configured to work with your existing (*or new/custom*) Authentication system.
+- **Authentication** is handled outside Hasura. Hasura delegates authentication and resolution of request headers into session variables to your existing (*or new/custom*) authentication service.
 
-- For **Authorization** or **Access Control**, Hasura helps you define granular role-based access control rules for every field in your GraphQL schema i.e. every row or column in your database.
+- Your authentication service is required to pass a user's **role** information in the form of session variables like ``X-Hasura-Role``, etc. More often than not, you'll also need to pass user information for your use-cases.
+
+- For **Authorization** or **Access Control**, Hasura helps you define granular role-based access control rules for every field in your GraphQL schema i.e. granular enough to control access to any row or column in your database.
+
+- Hasura uses the role/user information in the session variables and the actual query itself to validate the query against the rules defined by you. If the query/operation is allowed, it generates a SQL query, which includes the row/column-level constraints from the access control rules, and sends it to the database to perform the required operation (*fetch the required rows for queries, insert/edit rows for mutations, etc.*).
 
 
 Authentication - Overview
 -------------------------
 Hasura supports two modes of authentication configuration:
 
-1) **Webhook**: Your auth server exposes a webhook that is used to authenticate all incoming requests to the Hasura GraphQL engine server and to get metadata about the request to evaluate access control rules. The life-cycle of a GraphQL query, modified for **Webhook** mode looks like this:
+1) **Webhook**: Your auth server exposes a webhook that is used to authenticate all incoming requests to the Hasura GraphQL engine server and to get metadata about the request to evaluate access control rules. Here's how a GraphQL request is processed in Webhook mode:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/webhook-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/auth-webhook-overview.png
 
-2) **JWT** (JSON Web Token): Your auth server will issue JWT tokens to your client app, which, when sent as part of the request, are verified and decoded by GraphQL engine to get metadata about the request to evaluate access control rules. The life-cycle of a GraphQL query, modified for **JWT** mode looks like this:
+2) **JWT** (JSON Web Token): Your auth server issues JWTs to your client app, which, when sent as part of the request, are verified and decoded by GraphQL engine to get metadata about the request to evaluate access control rules. Here's how a GraphQL query is processed in JWT mode:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/auth-jwt-overview.png
 
 Authorization - Overview
 ------------------------
 
-Access control is done by creating permission rules for each role, table and operation(like *insert*, *update*, etc.). These access control rules use dynamic session variables that are passed to GraphQL engine with every request.
+Hasura supports role-based authorization where access control is done by creating rules for each role, table and operation(like *insert*, *update*, etc.). These access control rules use dynamic session variables that are passed to GraphQL engine from your authentication service (*webhook or JWT*) with every request. Role information is inferred from the ``X-Hasura-Role`` and ``X-Hasura-Allowed-Roles``. Other session variables can be passed by your auth as per your requirements.
 
 **For example:**
 
 .. thumbnail:: ../../../img/graphql/manual/auth/hasura-perms.png
    :width: 80 %
 
+Getting started with Auth & Access Control in Hasura
+----------------------------------------------------
 
-.. admonition:: Getting started with access control
+.. admonition:: Trying access control out
 
-  1) **While developing**, you need not set up or integrate your auth service with GraphQL Engine and you can just send the session variables as request headers directly in the Graphiql interface of the console.
+   If you just want to see role-based access control in action, you need not set up or integrate your auth service with GraphQL Engine. You can just:
+   
+   * Define permission rules for a table for a role. See :doc:`access control basics<basics>`.
+   
+   * Use the GraphiQL interface in the console to make a request and send the session variables as request headers (*send a* ``X-Hasura-Role`` *key, with its value as the name of the role you've defined rules for*). The data in the response will be restricted as per your definition.
 
-  2) While this is not exactly a mode of authentication and is highly **NOT RECOMMENDED** in production, you can secure your GraphQL endpoint by :doc:`configuring an admin secret key <../deployment/securing-graphql-endpoint>`.
+   While this is not a mode of authentication and is highly **NOT RECOMMENDED in production**, you can secure your GraphQL endpoint while trying Hasura out or development by :doc:`configuring an admin secret key <../deployment/securing-graphql-endpoint>`.
 
-However, **in production** when your application is deployed, your app can't send these authorization variables
-directly! Your app will likely only send an authorization token or cookie provided by your app's authentication
-system to Hasura. In this case, Hasura will make a request to a webhook set up by you with the request headers your
-app has sent (authorization tokens, cookies, etc). The webhook should then return the variables required as context for
-the access control rules. Alternatively, your app can send to Hasura JWT tokens, which can then be decoded by Hasura to
-get the variables required for the access control rules.
+Here's how we would recommend you go about setting up auth and access control:
 
-See :doc:`webhook` or :doc:`jwt` for more details on passing dynamic session variables.
+1) Check out this :doc:`overview of access control<basics>` and, if and when required, see the :doc:`reference documentation for permissions<reference-permissions>`.
 
-Next, let's setup some :doc:`basic access control rules <basics>`.
+2) Go through :doc:`access control examples<common-roles-auth-examples>`.
+
+3) Read more about :doc:`roles and session variables<roles-variables>`
+
+4) Check out the :doc:`basics of modeling roles<modeling-roles>`.
+
+5) Configure authentication in either :doc:`webhook<webhook>` or :doc:`JWT<jwt>` mode.
+
+
 
 **See:**
 
@@ -66,9 +79,12 @@ Next, let's setup some :doc:`basic access control rules <basics>`.
    :maxdepth: 1
 
    basics
-   roles-variables
+   reference-permissions
    common-roles-auth-examples
+   modeling-roles
+   roles-variables
    webhook
    webhook-examples
    jwt
    jwt-examples
+   
