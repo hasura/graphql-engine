@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
-func (h *HasuraDB) ExportSchemaDump(schemaName string) ([]byte, error) {
+func (h *HasuraDB) ExportSchemaDump(schemaNames []string) ([]byte, error) {
 	query := SchemaDump{
-		Opts:  fmt.Sprintf("-O -x --schema %s --schema-only", schemaName),
+		Opts:  fmt.Sprintf("-O -x --schema %s --schema-only", strings.Join(schemaNames, " --schema ")),
 		Clean: true,
 	}
 

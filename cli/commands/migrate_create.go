@@ -119,13 +119,11 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		for _, schemName := range o.schemaNames {
-			data, err := migrateDrv.ExportSchemaDump(schemName)
-			if err != nil {
-				return 0, errors.Wrap(err, "cannot fetch schema dump")
-			}
-			createOptions.AppendSQLUp(data)
+		data, err := migrateDrv.ExportSchemaDump(o.schemaNames)
+		if err != nil {
+			return 0, errors.Wrap(err, "cannot fetch schema dump")
 		}
+		createOptions.SetSQLUp(string(data))
 	}
 
 	if o.flags.Changed("metadata-from-file") {

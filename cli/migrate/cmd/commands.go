@@ -96,15 +96,6 @@ func (c *CreateOptions) SetSQLUp(data string) error {
 	return nil
 }
 
-func (c *CreateOptions) AppendSQLUp(data []byte) error {
-	if c.SQLUp == nil {
-		c.SQLUp = data
-	} else {
-		c.SQLUp = append(c.SQLUp, data...)
-	}
-	return nil
-}
-
 func (c *CreateOptions) SetSQLUpFromFile(filePath string) error {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
