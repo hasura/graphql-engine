@@ -22,7 +22,7 @@ spec:
         name: graphiql
         env:
         - name: GRAPHQL_ENDPOINT
-          value: http://backend.graphql-tutorials.org/v1alpha1/graphql
+          value: https://learn.hasura.io/graphql
         ports:
         - containerPort: 8080
           protocol: TCP
