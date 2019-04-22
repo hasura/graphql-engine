@@ -14,7 +14,7 @@ RUN npm install
 # Bundle app source
 COPY tutorial-site/ .
 
-ENV GATSBY_PATH_PREFIX="/react-apollo"
+ENV GATSBY_PATH_PREFIX="/graphql/react"
 
 # Build react/vue/angular bundle static files
 RUN npm run build
