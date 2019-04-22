@@ -31,7 +31,10 @@ const requestAction = (
 
   return (dispatch, getState) => {
     if (includeDataHeaders) {
-      options.headers = getState().tables.dataHeaders;
+      options.headers = {
+        ...options.headers,
+        ...getState().tables.dataHeaders
+      };
     }
     const p1 = new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
