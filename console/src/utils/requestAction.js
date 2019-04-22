@@ -18,13 +18,21 @@ const requestAction = (
   options,
   SUCCESS,
   ERROR,
-  includeCredentials = true
+  includeCredentials = true,
+  includeDataHeaders
 ) => {
   if (!options.credentials && includeCredentials) {
     options.credentials = 'omit';
   }
 
-  return dispatch => {
+  if (!options.headers) {
+    options.headers = {};
+  }
+
+  return (dispatch, getState) => {
+    if (includeDataHeaders) {
+      options.headers = getState().tables.dataHeaders;
+    }
     const p1 = new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
       fetch(url, options).then(
