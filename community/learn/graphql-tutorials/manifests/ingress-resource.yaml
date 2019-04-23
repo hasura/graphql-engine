@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
-    nginx.org/rewrites: "serviceName=hasura rewrite=/v1alpha1/graphql;"
+    nginx.ingress.kubernetes.io/rewrite-target: /v1alpha1/graphql
   #  annotations:
   #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
