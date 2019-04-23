@@ -17,12 +17,8 @@ data:
       proxy /graphql/v1/query hasura/v1/query {
         without /graphql/v1/query
       }
-      proxy /graphql/graphiql graphiql {
-        without /graphql/graphiql
-      }
-      proxy /graphql/react react-apollo {
-        without /graphql/react
-      }
+      proxy /graphql/graphiql graphiql
+      proxy /graphql/react react-apollo
       proxy /graphql hasura/v1alpha1/graphql {
         without /graphql
         websocket
