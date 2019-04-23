@@ -3,13 +3,13 @@ kind: Ingress
 metadata:
   name: ingress-hasura
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /graphql
+    nginx.ingress.kubernetes.io/rewrite-target: /v1alpha1/graphql
 spec:
   rules:
   - host: learn.hasura.io
     http:
       paths:
-      - path: /v1alpha1/graphql
+      - path: /graphql
         backend:
           serviceName: hasura
           servicePort: 80
