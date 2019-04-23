@@ -6,23 +6,22 @@ export default class HTML extends React.Component {
     return (
       <html {...this.props.htmlAttributes}>
         <head>
-          <title>GraphQL tutorials</title>
+          <title>GraphQL Tutorials for frontend developers | learn.hasura.io</title>
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=no"
           />
-          <meta title="GraphQL tutorials" />
-          <meta name="title" content="GraphQL tutorials" />
-          <meta name="description" content="GraphQL tutorials" />
-          <meta property="og:title" content="GraphQL tutorials" />
-          <meta property="og:description" content="GraphQL tutorials" />
-          <meta property="og:image" content="https://adoring-carson-d8a8e1.netlify.com/card.png" />
+          <meta name="title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
+          <meta name="description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
+          <meta property="og:title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
+          <meta property="og:description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
+          <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:title" content="GraphQL tutorials" />
-          <meta property="twitter:description" content="GraphQL tutorials" />
-          <meta property="twitter:image" content="https://adoring-carson-d8a8e1.netlify.com/card.png" />
+          <meta property="twitter:title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
+          <meta property="twitter:description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
+          <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
 
           {this.props.headComponents}
           <link rel="shortcut icon" href="./images/favicon.png" type="image/png" />

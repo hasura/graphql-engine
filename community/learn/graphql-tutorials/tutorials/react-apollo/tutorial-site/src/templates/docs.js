@@ -116,7 +116,7 @@ export default class MDXRuntimeTest extends Component {
     return (
       <Layout {...this.props}>
         <Helmet>
-          <title>{mdx.fields.title} | {title} | GraphQL Tutorials</title>
+          <title>{mdx.fields.title} | {title}</title>
         </Helmet>
         <div className={'titleWrapper'}>
           <h1 className={'title'}>

@@ -1,7 +1,7 @@
 module.exports = {
 	"siteMetadata": {
-    "title": 'GraphQL Tutorials | learn.hasura.io',
-		"description": 'GraphQL tutorials using Hasura GraphQL Engine',
+    "title": 'GraphQL Tutorials for frontend developers | learn.hasura.io',
+		"description": 'Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine',
 		"siteUrl": 'http://learn.hasura.io'
   },
 	"plugins" : [
