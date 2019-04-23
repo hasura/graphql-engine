@@ -1,6 +1,6 @@
 require("dotenv").config();
 module.exports = {
-  pathPrefix: process.env.GATSBY_PATH_PREFIX,
+  // pathPrefix: process.env.GATSBY_PATH_PREFIX,
   siteMetadata: {
     title: 'React Apollo | GraphQL Tutorial',
     description: 'GraphQL tutorial for react developers using Apollo client',
