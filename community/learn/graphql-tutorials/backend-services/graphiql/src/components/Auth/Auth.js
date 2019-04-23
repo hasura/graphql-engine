@@ -25,11 +25,6 @@ export default class Auth {
     this.auth0.parseHash((err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
         this.setSession(authResult);
-        // store in db
-        this.auth0.client.userInfo(authResult.accessToken, function(err, user) {
-          // Now you have the user's information
-          window.location.href = "/graphql/graphiql";
-        });
       } else if (err) {
         console.error(err);
         window.location.replace("/graphql/graphiql");

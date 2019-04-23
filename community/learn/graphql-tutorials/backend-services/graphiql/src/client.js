@@ -74,8 +74,8 @@ if (__DEVELOPMENT__ && module.hot) {
 // Main routes and rendering
 const main = (
   <Router
-    // history={useBasename(() => history)({ basename: '/graphql/graphiql' })}
-    history={useBasename(() => history)({ basename: '/' })}
+    history={useBasename(() => history)({ basename: '/graphql/graphiql' })}
+    // history={useBasename(() => history)({ basename: '/' })}
     routes={getRoutes(store)}
     onUpdate={hashLinkScroll}
   />
