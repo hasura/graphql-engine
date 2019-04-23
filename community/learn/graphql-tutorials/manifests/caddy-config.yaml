@@ -23,6 +23,9 @@ data:
       proxy /graphql/v1/query hasura/v1/query {
         without /graphql/v1/query
       }
+      proxy /graphql/v1/version hasura/v1/version {
+        without /graphql/v1/version
+      }
       proxy /graphql/graphiql graphiql {
         without /graphql/graphiql
       }
