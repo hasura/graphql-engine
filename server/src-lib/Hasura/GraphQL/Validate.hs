@@ -1,10 +1,17 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , showVars
   , RootSelSet(..)
   , getTypedOp
-  , GraphQLRequest
   , QueryParts (..)
   , getQueryParts
+  , getAnnVarVals
+
+  , VarPGTypes
+  , AnnPGVarVals
+  , getAnnPGVarVals
+  , Field(..)
+  , SelSet
   ) where
 
 import           Data.Has
@@ -21,6 +28,9 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+
+import           Hasura.SQL.Types (PGColType)
+import           Hasura.SQL.Value (PGColValue, parsePGValue)
 
 data QueryParts
   = QueryParts
@@ -89,16 +99,47 @@ getAnnVarVals varDefsL inpVals = do
     annInpValM <- withPathK "variableValues" $
                   mapM (validateInputValue jsonParser ty) inpValM
     let varValM = annInpValM <|> annDefM
-    onNothing varValM $ throwVE $ "expecting a value for non-null type: "
-      <> G.showGT ty <> " in variableValues"
+    onNothing varValM $ throwVE $
+      "expecting a value for non-nullable variable: " <>
+      showVars [var] <>
+      " of type: " <> G.showGT ty <>
+      " in variableValues"
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
       <> "(enums, scalars, input objects), but "
       <> showNamedTy namedTy <> " is an object type"
 
-    showVars :: (Functor f, Foldable f) => f G.Variable -> Text
-    showVars = showNames . fmap G.unVariable
+showVars :: (Functor f, Foldable f) => f G.Variable -> Text
+showVars = showNames . fmap G.unVariable
+
+type VarPGTypes = Map.HashMap G.Variable PGColType
+type AnnPGVarVals = Map.HashMap G.Variable (PGColType, PGColValue)
+
+-- this is in similar spirit to getAnnVarVals, however
+-- here it is much simpler and can get rid of typemap requirement
+-- combine the two if possible
+getAnnPGVarVals
+  :: (MonadError QErr m)
+  => VarPGTypes
+  -> Maybe VariableValues
+  -> m AnnPGVarVals
+getAnnPGVarVals varTypes varValsM =
+  flip Map.traverseWithKey varTypes $ \varName varType -> do
+    let unexpectedVars = filter
+          (not . (`Map.member` varTypes)) $ Map.keys varVals
+    unless (null unexpectedVars) $
+      throwVE $ "unexpected variables in variableValues: " <>
+      showVars unexpectedVars
+    varVal <- onNothing (Map.lookup varName varVals) $
+      throwVE $ "expecting a value for non-nullable variable: " <>
+      showVars [varName] <>
+      -- TODO: we don't have the graphql type
+      -- " of type: " <> T.pack (show varType) <>
+      " in variableValues"
+    (varType,) <$> runAesonParser (parsePGValue varType) varVal
+  where
+    varVals = fromMaybe Map.empty varValsM
 
 validateFrag
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -156,9 +197,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)
-  => GraphQLRequest
+  => GQLReqParsed
   -> m QueryParts
-getQueryParts (GraphQLRequest opNameM q varValsM) = do
+getQueryParts (GQLReq opNameM q varValsM) = do
   -- get the operation that needs to be evaluated
   opDef <- getTypedOp opNameM selSets opDefs
   ctx <- ask
@@ -172,4 +213,4 @@ getQueryParts (GraphQLRequest opNameM q varValsM) = do
       onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
   return $ QueryParts opDef opRoot fragDefsL varValsM
   where
-    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q
+    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q

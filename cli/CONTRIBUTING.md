@@ -28,7 +28,7 @@ follow the instructions below to make sure the import paths are correct:
 - `mkdir -p $GOPATH/src/github.com/hasura`
 - `cd $GOPATH/src/github.com/hasura`
 - `git clone https://github.com/<your-username>/graphql-engine`
-- `cd graphql-engine`
+- `cd graphql-engine/cli`
 - `git remote add upstream https://github.com/hasura/graphql-engine`
 - `git checkout -b <branch-name>`
 - `make deps`

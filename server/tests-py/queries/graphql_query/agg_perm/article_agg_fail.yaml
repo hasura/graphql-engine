@@ -1,6 +1,13 @@
 description: Query aggregations on article with user role (Error)
 url: /v1alpha1/graphql
 status: 400
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.article_agg
+      code: validation-failed
+    message: |-
+      field "article_agg" not found in type: 'query_root'
 headers:
   X-Hasura-Role: user
 query:

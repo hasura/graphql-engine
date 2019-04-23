@@ -12,6 +12,10 @@ import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
 import { initQueries } from '../Data/DataActions';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from '../Data/Metadata/Actions';
 import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -74,8 +78,30 @@ const loadTriggers = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_EVENT_TABLE_SCHEMA, data: data[1] });
-      dispatch({ type: LOAD_TRIGGER_LIST, triggerList: data[0] });
+      const { inconsistentObjects } = getState().metadata;
+      let consistentSchemas;
+      let consistentTriggers;
+      if (inconsistentObjects.length > 1) {
+        consistentSchemas = filterInconsistentMetadata(
+          data[1],
+          inconsistentObjects,
+          'tables'
+        );
+        consistentTriggers = filterInconsistentMetadata(
+          data[0],
+          inconsistentObjects,
+          'events'
+        );
+      }
+      dispatch({
+        type: LOAD_EVENT_TABLE_SCHEMA,
+        data: consistentSchemas || data[1],
+      });
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: consistentTriggers || data[0],
+      });
+      dispatch(loadInconsistentObjects(null, false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
