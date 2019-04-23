@@ -60,6 +60,7 @@ body {
   -moz-box-shadow: -1px 0px 4px 1px rgba(175,158,232,.8);
   -o-box-shadow: -1px 0px 4px 1px rgba(175,158,232,.4);
   z-index: 1;
+  padding: 15px;
 }
 
 .navBarBrand {
@@ -68,7 +69,10 @@ body {
   line-height: 1.5;
   font-weight: 500;
   color: #fff !important;
-  padding: 20px;
+  padding: 0px 0px;
+  display: flex;
+  align-items: center;
+
 }
 
 .navBarBrand img {
@@ -83,13 +87,24 @@ body {
   font-size: 16px;
   font-weight: 500;
   line-height: 1em;
+  opacity: 1;
 }
-
+.navBarUL
+{
+  display: flex;
+  align-items: center;
+}
+.navBarUL li a img
+{
+  width: 20px;
+}
 .mainWrapper {
   color: rgb(59, 69, 78);
   max-width: 750px;
 }
-
+.navBarUL li a:hover {
+  opacity: .7;
+}
 pre {
   border: 0 !important;
   background-color: rgb(245, 247, 249); /* !important; */
@@ -413,7 +428,10 @@ img {
   max-width: 100%;
 }
 /* end image */
-
+.githubBtn {
+  display: flex;
+  align-items: center;
+}
 @media (max-width: 767px) {
   hr {
     margin-top: 0;
@@ -428,10 +446,6 @@ img {
   .navBarUL {
     display: flex;
     padding-left: 16px;
-  }
-
-  .githubBtn {
-    display: flex;
     align-items: center;
   }
 
