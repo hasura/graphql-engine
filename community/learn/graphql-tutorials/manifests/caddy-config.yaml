@@ -7,10 +7,6 @@ data:
   Caddyfile: |
     learn.hasura.io {
       proxy / homepage
-      proxy /graphql hasura/v1alpha1/graphql {
-        without /graphql
-        websocket
-      }
       proxy /graphql/console hasura/console {
         without /graphql/console
       }
@@ -25,4 +21,8 @@ data:
         without /graphql/graphiql
       }
       proxy /graphql/react react-apollo
+      proxy /graphql hasura/v1alpha1/graphql {
+        without /graphql
+        websocket
+      }
     }
