@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /graphql
+  #  annotations:
+  #    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: learn.hasura.io
+    http:
+      - path: /v1alpha1/graphql
+        backend:
+          serviceName: hasura
+          servicePort: 80

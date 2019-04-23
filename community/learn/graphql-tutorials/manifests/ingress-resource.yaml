@@ -2,8 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /v1alpha1/graphql
   #  annotations:
   #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
@@ -18,14 +16,6 @@ spec:
       - path: /graphql/graphiql
         backend:
           serviceName: graphiql
-          servicePort: 80
-      - path: /graphql
-        backend:
-          serviceName: hasura
-          servicePort: 80
-      - path: /graphql/console
-        backend:
-          serviceName: hasura
           servicePort: 80
       - path: /
         backend:
