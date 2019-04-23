@@ -86,8 +86,8 @@ type PostgresError struct {
 }
 
 type SchemaDump struct {
-	Opts  string `json:"opts"`
-	Clean bool   `json:"clean"`
+	Opts        []string `json:"opts"`
+	CleanOutput bool     `json:"clean_output"`
 }
 
 func (h *HasuraError) CMDError() error {
