@@ -1,8 +1,8 @@
 FROM node:8.9-alpine
 
 # Create app directory
-ENV GRAPHQL_ENDPOINT=https://learn.hasura.io/graphql
-ENV REACT_APP_CALLBACK_URL=https://learn.hasura.io/graphql/graphiql/callback
+ENV GRAPHQL_ENDPOINT=http://learn.hasura.io/graphql
+ENV REACT_APP_CALLBACK_URL=http://learn.hasura.io/graphql/graphiql/callback
 WORKDIR /app
 
 # Install app dependencies
