@@ -1,18 +1,18 @@
-apiVersion: extensions/v1beta1
+---
+apiVersion: apps/v1 
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: graphiql
-    hasuraService: custom
   name: graphiql
   namespace: default
 spec:
   replicas: 1
-  strategy: {}
+  selector:
+    matchLabels:
+      app: graphiql
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: graphiql
     spec:
@@ -26,7 +26,19 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
-        resources: {}
-      securityContext: {}
-      terminationGracePeriodSeconds: 0
-status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: graphiql
+  name: graphiql
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: graphiql
+  type: ClusterIP

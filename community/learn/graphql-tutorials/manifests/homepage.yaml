@@ -1,18 +1,18 @@
-apiVersion: extensions/v1beta1
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: homepage
-    hasuraService: custom
   name: homepage
   namespace: default
 spec:
   replicas: 1
-  strategy: {}
+  selector:
+    matchLabels:
+      app: homepage
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: homepage
     spec:
@@ -23,7 +23,19 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
-        resources: {}
-      securityContext: {}
-      terminationGracePeriodSeconds: 0
-status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: homepage
+  name: homepage
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: homepage
+  type: ClusterIP
