@@ -1,0 +1,17 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql:
+      delete from address;
+      select setval('address_id_seq', 1, false);
+
+      delete from resident;
+      select setval('resident_id_seq', 1, false);
+
+      delete from article;
+      select setval('article_id_seq', 1, false);
+
+      delete from author;
+      select setval('author_id_seq', 1, false);

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddy-config
+  namespace: default
+data:
+  Caddyfile: |
+    learn.hasura.io {
+      proxy / homepage
+      proxy /graphql hasura/v1alpha1/graphql {
+        without /graphql
+        websocket
+      }
+      proxy /graphql/console hasura/console {
+        without /graphql/console
+      }
+      proxy /graphql/v1alpha1/graphql hasura/v1alpha1/graphql {
+        without /graphql/v1alpha1/graphql
+        websocket
+      }
+      proxy /graphql/v1/query hasura/v1/query {
+        without /graphql/v1/query
+      }
+      proxy /graphiql graphiql {
+        without /graphiql
+      }
+      proxy /graphql/react react-apollo {
+        without /graphql/react
+      }
+    }

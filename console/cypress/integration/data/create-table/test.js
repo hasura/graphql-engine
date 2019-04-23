@@ -15,6 +15,7 @@ import {
   failAddExistingTable,
   passAddExistingTable,
   deleteCTTestTable,
+  passCTWithFK,
 } from './spec';
 
 const setup = () => {
@@ -35,9 +36,9 @@ export const runCreateTableTests = () => {
     it('Fails to create table without columns', failCTWithoutColumns);
     it('Fails to create table without primary key', failCTWithoutPK);
     it('Fails to create with duplicate columns', failCTDuplicateColumns);
-    it('Fails to create with duplicate primary key', failCTDuplicatePrimaryKey);
     it('Fails to create with wrong default value', failCTWrongDefaultValue);
     it('Successfuly creates table', passCT);
+    it('Successfuly creates table with primary key', passCTWithFK);
     it('Fails to create duplicate table', failCTDuplicateTable);
     it('Delete off the test table', deleteCTTestTable);
   });

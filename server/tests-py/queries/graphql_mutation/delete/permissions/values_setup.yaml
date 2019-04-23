@@ -1,0 +1,43 @@
+type: bulk
+args:
+
+- type: insert
+  args:
+    table: resident
+    objects:
+    - name: Griffin
+      age: 25
+    - name: Clarke
+      age: 26
+
+#Insert Author table data
+- type: insert
+  args:
+    table: author
+    objects:
+      - name: Author 1
+      - name: Author 2
+      - name: Author 3
+        payments_done: true
+
+#Insert aticle table data
+- type: insert
+  args:
+    table: article
+    objects:
+    - content: Sample article content 1
+      title: Article 1
+      author_id: 1
+    - content: Sample article content 2
+      title: Article 2
+      author_id: 1
+    - content: Sample article content 3
+      author_id: 1
+      title: Article 3
+    - content: Sample article content 4
+      author_id: 2
+      title: Article 4
+    - content: Sample article content 5
+      author_id: 2
+      title: Article 5
+

@@ -5,6 +5,7 @@ module Hasura.EncJSON
   ( EncJSON
   , encJFromBuilder
   , encJToLBS
+  , encJToBS
   , encJFromJValue
   , encJFromChar
   , encJFromText
@@ -21,6 +22,7 @@ import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.Text.Encoding      as TE
+import qualified Database.PG.Query       as Q
 
 -- encoded json
 -- TODO: can be improved with gadts capturing bytestring, lazybytestring
@@ -29,9 +31,16 @@ newtype EncJSON
   = EncJSON { unEncJSON :: BB.Builder }
   deriving (Semigroup, Monoid, IsString)
 
+instance Q.FromCol EncJSON where
+  fromCol = fmap encJFromBS . Q.fromCol
+
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON
 {-# INLINE encJToLBS #-}
+
+encJToBS :: EncJSON -> B.ByteString
+encJToBS = BL.toStrict . encJToLBS
+{-# INLINE encJToBS #-}
 
 encJFromBuilder :: BB.Builder -> EncJSON
 encJFromBuilder = EncJSON

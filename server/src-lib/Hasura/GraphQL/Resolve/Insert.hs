@@ -29,7 +29,10 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (dmlTxErrorHandler)
+import           Hasura.RQL.DML.Internal           ( dmlTxErrorHandler
+                                                   , convPartialSQLExp
+                                                   , sessVarFromCurrentSetting
+                                                   )
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
@@ -121,13 +124,15 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
 
         let rTable = riRTable relInfo
         InsCtx rtView rtCols rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
+        rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
+                        rtDefVals
 
         withPathK (G.unName gName) $ case riType relInfo of
           ObjRel -> do
             dataObj <- asObject dataVal
             annDataObj <- mkAnnInsObj rtRelInfoMap dataObj
             ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefVals
+            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefValsRes
                 objRelIns = RelIns singleObjIns relInfo
             return (AnnInsObj cols (objRelIns:objRels) arrRels)
 
@@ -138,7 +143,8 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
                     dataObj <- asObject arrDataVal
                     mkAnnInsObj rtRelInfoMap dataObj
                   ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm
-                  let multiObjIns = AnnIns annDataObjs ccM rtView rtCols rtDefVals
+                  let multiObjIns = AnnIns annDataObjs ccM rtView
+                                    rtCols rtDefValsRes
                       arrRelIns = RelIns multiObjIns relInfo
                   return (AnnInsObj cols objRels (arrRelIns:arrRels))
             -- if array relation insert input data has empty objects
@@ -158,8 +164,12 @@ parseOnConflict tn updFiltrM val = withPathK "on_conflict" $
       _  -> do
           UpdPermForIns _ updFiltr preSet <- onNothing updFiltrM $ throw500
             "cannot update columns since update permission is not defined"
-          return $ RI.CP1Update constraint updCols preSet $
-            toSQLBoolExp (S.mkQual tn) updFiltr
+          preSetRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) preSet
+          updFltrRes <- traverseAnnBoolExp
+                        (convPartialSQLExp sessVarFromCurrentSetting)
+                        updFiltr
+          return $ RI.CP1Update constraint updCols preSetRes $
+            toSQLBoolExp (S.mkQual tn) updFltrRes
 
   where
     getUpdCols o = do
@@ -465,23 +475,31 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: RoleName
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
+     )
+  => RoleName
   -> QualifiedTable -- table
   -> Field -- the mutation field
-  -> Convert RespTx
+  -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFldsUnres <- convertMutResp (_fType fld) $ _fSelSet fld
+  mutFldsRes <- RR.traverseMutFlds resolveValTxt mutFldsUnres
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFlds) (withEmptyObjs mutFlds) $ null annVals
+  bool (withNonEmptyObjs annVals mutFldsRes)
+    (withEmptyObjs mutFldsRes) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
       InsCtx vn tableCols defValMap relInfoMap updPerm <- getInsCtx tn
       annObjs <- mapM asObject annVals
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm
-      let multiObjIns = AnnIns annInsObjs conflictClauseM vn tableCols defValMap
+      defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
+                      defValMap
+      let multiObjIns = AnnIns annInsObjs conflictClauseM
+                        vn tableCols defValMapRes
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
@@ -498,7 +516,8 @@ getInsCtx tn = do
   ctxMap <- asks getter
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
-  let defValMap = S.mkColDefValMap $ map pgiName $ icColumns insCtx
+  let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiName $
+                  icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
 

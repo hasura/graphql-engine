@@ -25,8 +25,6 @@ export dataRouterUtils from './DataRouter';
 
 export dataReducer from './DataReducer';
 
-export metadataConnector from './Metadata/Metadata.js';
-
 /* Function component */
 
 export functionWrapperConnector from './Function/FunctionWrapper';
