@@ -7,7 +7,14 @@ data:
   Caddyfile: |
     :80 { 
       proxy / homepage
-      proxy /graphql hasura
-      proxy /graphiql grahiql
-      proxy /graphql/react react-apollo
+      proxy /graphql hasura {
+        without /graphql
+        websocket
+      }
+      proxy /graphiql graphiql {
+        without /graphiql
+      }
+      proxy /graphql/react react-apollo {
+        without /graphql/react
+      }
     }
