@@ -46,7 +46,7 @@
     "build": "gatsby build --prefix-paths"
   },
   "devDependencies": {
-    "gatsby-plugin-remove-trailing-slashes": "^2.0.6",
+    "gatsby-plugin-remove-trailing-slashes": "^2.0.11",
     "prism-react-renderer": "^0.1.6"
   }
 }
