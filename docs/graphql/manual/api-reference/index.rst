@@ -84,7 +84,7 @@ Postgres instance connected to Hasura. The ``pg_dump`` CLI tool's argument can
 be passed as POST request body to the API and the response is sent back to the
 client.
 
-Find more details at :doc:`pg_dump_api_reference`.
+Find more details at :doc:`pgdump`.
 
 Supported PostgreSQL types
 --------------------------
