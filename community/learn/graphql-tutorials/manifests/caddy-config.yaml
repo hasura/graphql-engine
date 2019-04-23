@@ -6,6 +6,9 @@ metadata:
 data:
   Caddyfile: |
     learn.hasura.io {
+      redir 301 {
+        /graphql/react/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-boilerplate/boilerplate.zip
+      }
       proxy / homepage
       proxy /graphql/console hasura/console {
         without /graphql/console
