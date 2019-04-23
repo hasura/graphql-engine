@@ -30,17 +30,19 @@ class ChooseTechnology extends React.Component {
             </div>
             <div className={'chooseListWrapper'}>
               <div className={'col-md-3 col-sm-3 col-xs-12 mb-20'}>
-                <div className={'chooseListDisable'}>
-                  <div className={'circle cirLeft'}>
-                    <img className={'img-responsive'} src={circleGray} alt={'circle'}/>
+                <a href="/graphql/react">
+                  <div className={'chooseList'}>
+                    <div className={'circle cirLeft'}>
+                      <img className={'img-responsive'} src={circleGray} alt={'circle'}/>
+                    </div>
+                    <div className={'chooseListImg'}>
+                      <img className={'img-responsive'} src={react} alt={'react logo'}/>
+                    </div>
                   </div>
-                  <div className={'chooseListImg'}>
-                    <img className={'img-responsive'} src={react} alt={'react logo'}/>
+                  <div className={'techNameGray'}>
+                    REACT JS + GRAPHQL <br/>
                   </div>
-                </div>
-                <div className={'techNameGray'}>
-                  REACT JS + GRAPHQL <br/>COMING SOON!
-                </div>
+                </a>
               </div>
               <div className={'col-md-3 col-sm-3 col-xs-12 mb-20'}>
                 <div className={'chooseListDisable'}>
