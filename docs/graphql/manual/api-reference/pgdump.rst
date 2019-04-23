@@ -24,16 +24,16 @@ API Spec
    X-Hasura-Role: admin
 
    {
-     "opts": "-O -x --schema-only --schema public",
+     "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
      "clean": true
    }
 
-- ``opts``: Arguments to be passed to the ``pg_dump`` tool. The underlying
-  command that is executed is:
+- ``opts``: Arguments to be passed to the ``pg_dump`` tool. Represented as array
+  of strings. The underlying command that is executed is:
 
   .. code-block:: bash
 
-     pg_dump $DATABASE_URL $OPTS -f $FILENAME.sql
+     pg_dump $DATABASE_URL $OPTS -f $FILENAME
 
 - ``clean``: When this optional argument is set to ``true``, the output SQL from
   the command is cleaned to remove the following:

@@ -19,8 +19,8 @@ import           System.Process
 
 data PGDumpReqBody =
   PGDumpReqBody
-  { prbOpts  :: !String
-  , prbClean :: !(Maybe Bool)
+  { prbOpts        :: ![String]
+  , prbCleanOutput :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
@@ -30,12 +30,12 @@ script = $(FE.embedStringFile "src-rsr/run_pg_dump.sh")
 
 runScript
   :: String
-  -> String
+  -> [String]
   -> String
   -> IO (Either String BL.ByteString)
 runScript dbUrl opts clean = do
   (exitCode, filename, stdErr) <- readProcessWithExitCode "/bin/sh"
-    ["/dev/stdin", dbUrl, opts, clean] script
+    ["/dev/stdin", dbUrl, unwords opts, clean] script
   case exitCode of
     ExitSuccess   -> do
       contents <- BL.readFile $ L.dropWhileEnd (== '\n') filename
@@ -59,6 +59,6 @@ execPGDump b ci = do
             <> "@" <>  Q.connHost ci <> ":" <> show (Q.connPort ci)
             <> "/" <> Q.connDatabase ci
     opts = prbOpts b
-    clean = case prbClean b of
-      Just v -> show v
+    clean = case prbCleanOutput b of
+      Just v  -> show v
       Nothing -> show False
