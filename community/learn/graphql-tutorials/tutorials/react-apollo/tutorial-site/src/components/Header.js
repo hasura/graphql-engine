@@ -47,7 +47,7 @@ const Header = ({location}) => (
                 <hr/>
               </div>
               <ul className={'nav navbar-nav navBarUL'}>
-                <li><GitHubButton href="https://github.com/hasura/graphql-engine" data-show-count="true" aria-label="Star hasura/graphql-engine on GitHub">Star</GitHubButton>
+                <li className={'githubBtn'}><GitHubButton href="https://github.com/hasura/graphql-engine" data-show-count="true" aria-label="Star hasura/graphql-engine on GitHub">Star</GitHubButton>
                 </li>
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>

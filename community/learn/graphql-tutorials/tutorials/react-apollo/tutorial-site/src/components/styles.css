@@ -426,7 +426,13 @@ img {
   }
 
   .navBarUL {
+    display: flex;
     padding-left: 16px;
+  }
+
+  .githubBtn {
+    display: flex;
+    align-items: center;
   }
 
   .navBarUL li a {
