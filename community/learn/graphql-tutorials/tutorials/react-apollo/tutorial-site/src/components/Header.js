@@ -19,6 +19,7 @@ const Header = ({location}) => (
         `}
     render={(data) => {
       const logo = require('./images/react-logo.svg');
+      const twitter = require('./images/twitter.svg');
       const {
         site: {
           siteMetadata: {
@@ -47,11 +48,12 @@ const Header = ({location}) => (
                 <hr/>
               </div>
               <ul className={'nav navbar-nav navBarUL'}>
-                <li className={'githubBtn'}><GitHubButton href="https://github.com/hasura/graphql-engine" data-show-count="true" aria-label="Star hasura/graphql-engine on GitHub">Star</GitHubButton>
+                <li className={'githubBtn'}><a><GitHubButton href="https://github.com/hasura/graphql-engine" data-show-count="true" aria-label="Star hasura/graphql-engine on GitHub">Star</GitHubButton></a>
                 </li>
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>
               <ul className={'nav navbar-nav navBarUL navbar-right'}>
+                <li><a href="https://twitter.com/intent/tweet?&text=I used the Hasura GraphQL engine and all I got was this tweet" target="_blank"><img className={'twitterIcon'} src={twitter} alt={'Twitter'} /></a></li>
                 <li><a href="https://learn.hasura.io/" target="_blank">learn.hasura.io</a></li>
               </ul>
             </div>
