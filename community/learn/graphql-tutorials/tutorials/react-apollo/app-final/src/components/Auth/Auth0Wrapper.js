@@ -2,7 +2,7 @@ import React from 'react';
 import auth0 from 'auth0-js';
 
 import history from '../../utils/history';
-import {AUTH_CONFIG} from './auth0-variables-netlify';
+import {AUTH_CONFIG} from './auth0-variables';
 import App from '../App';
 import Callback from './Callback';
 import Login from './Login';
@@ -101,7 +101,7 @@ export default class Auth0Wrapper extends React.Component {
     localStorage.removeItem('isLoggedIn');
 
     this.auth0.logout({
-      return_to: window.location.origin
+      return_to: AUTH_CONFIG.afterLogout
     });
 
     // navigate to the home route
