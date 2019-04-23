@@ -8,9 +8,9 @@ module.exports = {
     headerTitle: 'React Apollo'
   },
   plugins: [
-    `gatsby-plugin-sharp`,
+    'gatsby-plugin-sharp',
     {
-      resolve: `gatsby-mdx`,
+      resolve: 'gatsby-mdx',
       options: {
         gatsbyRemarkPlugins: [
           {
@@ -27,9 +27,9 @@ module.exports = {
         extensions: [".mdx", ".md"]
       }
     },
-    `gatsby-plugin-emotion`,
-    `gatsby-plugin-remove-trailing-slashes`,
-    `gatsby-plugin-react-helmet`,
+    'gatsby-plugin-emotion',
+    'gatsby-plugin-remove-trailing-slashes',
+    'gatsby-plugin-react-helmet',
     {
       resolve: "gatsby-source-filesystem",
       options: {
