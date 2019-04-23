@@ -4,12 +4,11 @@ metadata:
   name: ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /graphql
-  #  annotations:
-  #    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
   - host: learn.hasura.io
     http:
+      paths:
       - path: /v1alpha1/graphql
         backend:
           serviceName: hasura
