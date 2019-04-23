@@ -28,11 +28,9 @@ export default class Auth {
         // store in db
         this.auth0.client.userInfo(authResult.accessToken, function(err, user) {
           // Now you have the user's information
-          console.log('here');
-          // window.location.href = "/graphql/graphiql";
+          window.location.href = "/graphql/graphiql";
         });
       } else if (err) {
-        console.log('error');
         console.error(err);
         window.location.replace("/graphql/graphiql");
         alert(`Error: ${err.error}. Check the console for further details.`);
@@ -50,7 +48,6 @@ export default class Auth {
     localStorage.setItem("auth0:expires_at", expiresAt);
     localStorage.setItem("auth0:id_token:sub", authResult.idTokenPayload.sub);
     // navigate to the home route
-    console.log('set session');
     window.location.replace("/graphql/graphiql");
   }
 

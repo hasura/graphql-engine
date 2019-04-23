@@ -17,6 +17,4 @@ You will also need to pass in the values for the variables.
 
 [Try](https://learn.hasura.io/graphql/graphiql) this mutation in GraphiQL against the application database to see what the response looks like.
 
-**Note** You need to pass the `Authorization: Bearer <token>` header before querying to get the results. The token can be obtained from the UI; (appears at the top header after logging in)
-
 Let's now integrate this graphql mutation into our react app.

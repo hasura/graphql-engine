@@ -8,7 +8,8 @@ const forcedNavOrder = [
     "/mutations-variables",
     "/optimistic-update-mutations",
     "/subscriptions",
-    "/realtime-feed"
+    "/realtime-feed",
+    "/what-next"
 ];
 
 export { forcedNavOrder };
