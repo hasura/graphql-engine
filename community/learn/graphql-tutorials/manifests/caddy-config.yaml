@@ -5,7 +5,7 @@ metadata:
   namespace: default
 data:
   Caddyfile: |
-    :80 { 
+    learn.hasura.io {
       proxy / homepage
       proxy /graphql hasura {
         without /graphql
