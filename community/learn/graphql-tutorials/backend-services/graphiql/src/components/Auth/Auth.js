@@ -28,11 +28,11 @@ export default class Auth {
         // store in db
         this.auth0.client.userInfo(authResult.accessToken, function(err, user) {
           // Now you have the user's information
-          window.location.href = "/";
+          window.location.href = "/graphql/graphiql";
         });
       } else if (err) {
-        window.location.href("/");
         console.error(err);
+        window.location.href("/graphql/graphiql");
         alert(`Error: ${err.error}. Check the console for further details.`);
       }
     });
