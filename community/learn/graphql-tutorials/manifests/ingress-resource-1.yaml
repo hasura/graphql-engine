@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress
+  name: ingress-hasura
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /graphql
 spec:
