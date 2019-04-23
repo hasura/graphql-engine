@@ -2,7 +2,7 @@ import React from 'react';
 import auth0 from 'auth0-js';
 
 import history from '../../utils/history';
-import {AUTH_CONFIG} from './auth0-variables';
+import {AUTH_CONFIG} from './auth0-variables-netlify';
 import App from '../App';
 import Callback from './Callback';
 import Login from './Login';
