@@ -26,6 +26,7 @@ class OnlineUsersWrapper extends Component {
 
   componentDidMount() {
     // Every 30s, run a mutation to tell the backend that you're online
+    this.updateLastSeen();
     this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
   }
 

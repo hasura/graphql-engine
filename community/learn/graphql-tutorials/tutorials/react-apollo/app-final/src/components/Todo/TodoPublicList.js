@@ -18,13 +18,13 @@ class _TodoPublicList extends Component {
     this.loadOlder = this.loadOlder.bind(this);
 
     this.client = props.client;
-    this.oldestTodoId = props.latestTodo.id + 1;
-    this.newestTodoId = props.latestTodo.id;
+    this.oldestTodoId = props.latestTodo ? (props.latestTodo.id + 1) : 0;
+    this.newestTodoId = props.latestTodo ? props.latestTodo.id : 0;
   }
 
   loadNew() {
     const GET_NEW_PUBLIC_TODOS = gql`
-      query getNewPublicTodos ($latestVisibleId: Int!) {
+      query getNewPublicTodos ($latestVisibleId: Int) {
         todos(where: { is_public: { _eq: true}, id: {_gt: $latestVisibleId}}, order_by: { created_at: desc }) {
           id
           title
@@ -38,7 +38,7 @@ class _TodoPublicList extends Component {
 
     this.client.query({
       query: GET_NEW_PUBLIC_TODOS,
-      variables: {latestVisibleId: this.state.todos[0].id}
+      variables: {latestVisibleId: this.state.todos.length ? this.state.todos[0].id : null}
     })
       .then(({data}) => {
         this.newestTodoId = data.todos[0].id;
@@ -83,7 +83,7 @@ class _TodoPublicList extends Component {
 
   componentDidUpdate(prevProps) {
     // Do we have a new todo available?
-    if (this.props.latestTodo.id > this.newestTodoId) {
+    if (this.props.latestTodo && this.props.latestTodo.id > this.newestTodoId) {
       this.newestTodoId = this.props.latestTodo.id;
       this.setState({newTodosCount: this.state.newTodosCount + 1});
     }
