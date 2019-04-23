@@ -32,8 +32,9 @@ export default class Auth {
           // window.location.href = "/graphql/graphiql";
         });
       } else if (err) {
+        console.log('error');
         console.error(err);
-        window.location.href("/graphql/graphiql");
+        window.location.replace("/graphql/graphiql");
         alert(`Error: ${err.error}. Check the console for further details.`);
       }
     });
@@ -61,7 +62,7 @@ export default class Auth {
     localStorage.removeItem("auth0:id_token:sub");
     // navigate to the home route
     // history.replace("/home");
-    window.location.href="/graphql/graphiql";
+    window.location.replace("/graphql/graphiql");
   }
 
   isAuthenticated() {
