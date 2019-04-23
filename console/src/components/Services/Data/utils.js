@@ -184,7 +184,9 @@ FROM
       to_jsonb(
         array_remove(
           array_agg(
-            DISTINCT row_to_json(hdb_fkc) :: JSONB
+            DISTINCT row_to_json(hdb_fkc) :: JSONB || jsonb_build_object(
+              'is_ref_table_tracked', fk_ref_table.table_name IS NOT NULL
+            )
           ), 
           NULL
         )
@@ -221,6 +223,8 @@ FROM
       and isc.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema 
       and hdb_fkc.table_name = ist.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
+      and fk_ref_table.table_name = hdb_fkc.ref_table 
       LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = ist.table_schema 
       and hdb_pk.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = ist.table_schema 

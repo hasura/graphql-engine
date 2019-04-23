@@ -18,6 +18,9 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
       const constraint = foreignKeyConstraints[j];
       if (constraint.table_name === tableName) {
         /* Object Relationships */
+        if (!constraint.is_ref_table_tracked) {
+          continue;
+        }
         const lcol = Object.keys(constraint.column_mapping);
         let isExistingObjRel = false;
         for (let k = 0; k < currentObjRels.length; k++) {
@@ -45,14 +48,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             }
           }
         }
-        if (
-          !isExistingObjRel &&
-          allSchemas.some(
-            table =>
-              table.table_name === constraint.ref_table &&
-              table.is_table_tracked
-          )
-        ) {
+        if (!isExistingObjRel) {
           objRels.push({
             tableName: tableName,
             isObjRel: true,
@@ -64,6 +60,9 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
         }
       } else if (constraint.ref_table === tableName) {
         /* Array Relationships */
+        if (!schema.is_table_tracked) {
+          continue;
+        }
         const rcol = Object.keys(constraint.column_mapping);
         const rTable = constraint.table_name;
         let isExistingArrayRel = false;
@@ -91,12 +90,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
             isExistingArrayRel = true;
           }
         }
-        if (
-          !isExistingArrayRel &&
-          allSchemas.some(
-            table => table.table_name === rTable && table.is_table_tracked
-          )
-        ) {
+        if (!isExistingArrayRel) {
           arrRels.push({
             tableName: tableName,
             isObjRel: false,
