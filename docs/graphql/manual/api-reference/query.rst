@@ -298,7 +298,7 @@ BoolExp
 
 .. parsed-literal::
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ######
@@ -326,6 +326,13 @@ NotExp
     {
       _not: BoolExp_
     }
+
+TrueExp
+#######
+
+.. parsed-literal::
+
+    {}
 
 ColumnExp
 #########

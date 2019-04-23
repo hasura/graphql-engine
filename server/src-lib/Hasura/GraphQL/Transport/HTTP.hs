@@ -3,58 +3,53 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import qualified Data.ByteString.Lazy                   as BL
-import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Resolve                 as R
-import qualified Hasura.GraphQL.Validate                as V
 
 runGQ
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation
+  => PGExecCtx
   -> UserInfo
   -> SQLGenCtx
+  -> E.PlanCache
   -> SchemaCache
+  -> SchemaCacheVer
   -> HTTP.Manager
   -> [N.Header]
-  -> GraphQLRequest
+  -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pool isoL userInfo sqlGenCtx sc manager reqHdrs req rawReq = do
-  execPlan <- E.getExecPlan userInfo sc req
+runGQ pgExecCtx userInfo sqlGenCtx planCache sc scVer
+  manager reqHdrs req rawReq = do
+  execPlan <- E.getResolvedExecPlan pgExecCtx planCache
+              userInfo sqlGenCtx sc scVer req
   case execPlan of
-    E.GExPHasura gCtx rootSelSet ->
-      runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet
+    E.GExPHasura resolvedOp ->
+      runHasuraGQ pgExecCtx userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool
-  -> Q.TxIsolation
+  => PGExecCtx
   -> UserInfo
-  -> SQLGenCtx
-  -> GCtx
-  -> V.RootSelSet
+  -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pool isoL userInfo sqlGenCtx gCtx rootSelSet = do
-  tx <- case rootSelSet of
-    V.RQuery selSet ->
-      return $ R.resolveQuerySelSet userInfo gCtx sqlGenCtx selSet
-    V.RMutation selSet ->
-      return $ R.resolveMutSelSet userInfo gCtx sqlGenCtx selSet
-    V.RSubscription _  ->
+runHasuraGQ pgExecCtx userInfo resolvedOp = do
+  respE <- liftIO $ runExceptT $ case resolvedOp of
+    E.ExOpQuery tx    ->
+      runLazyTx' pgExecCtx tx
+    E.ExOpMutation tx ->
+      runLazyTx pgExecCtx $ withUserInfo userInfo tx
+    E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
-  resp <- liftIO (runExceptT $ runTx tx) >>= liftEither
+  resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
-  where
-    runTx tx = runLazyTx pool isoL $ withUserInfo userInfo tx

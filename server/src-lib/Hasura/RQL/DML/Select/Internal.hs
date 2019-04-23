@@ -527,7 +527,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs strfyNum =
       FArr ar -> Just (f, ar)
       _       -> Nothing
 
-annSelToBaseNode :: Iden -> FieldName -> AnnSel -> BaseNode
+annSelToBaseNode :: Iden -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode pfx fldAls annSel =
   mkBaseNode pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
   where
@@ -613,7 +613,7 @@ mkAggSelect annAggSel =
     ArrNode extr _ bn =
       aggSelToArrNode (Iden "root") (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSel -> S.Select
+mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
 mkSQLSelect isSingleObject annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
@@ -623,26 +623,25 @@ mkSQLSelect isSingleObject annSel =
     rootFldAls  = S.Alias $ toIden rootFldName
 
 mkFuncSelectWith
-  :: QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs -> Bool
-  -> Either TableAggFlds AnnFlds -> S.FromItem -> S.SelectWith
-mkFuncSelectWith qf tn tabPerm tabArgs strfyNum eSelFlds frmItem = selWith
+  :: (AnnSelG a S.SQLExp -> S.Select)
+  -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
+  -> S.SelectWith
+mkFuncSelectWith f annFn =
+  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
+  -- we'll need to modify the table from of the underlying
+  -- select to the alias of the select from function
+  f annSel { _asnFrom = newTabFrom }
   where
+    AnnFnSel qf fnArgs annSel = annFn
+
     -- SELECT * FROM function_name(args)
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
                          , S.selExtr = [S.Extractor S.SEStar Nothing]
                          }
+    frmItem = S.mkFuncFromItem qf fnArgs
 
-    mainSel = case eSelFlds of
-      Left aggFlds  -> mkAggSelect $
-                       AnnSelG aggFlds tabFrom tabPerm tabArgs strfyNum
-      Right annFlds -> mkSQLSelect False $
-                       AnnSelG annFlds tabFrom tabPerm tabArgs strfyNum
-
-    tabFrom = TableFrom tn $ Just $ toIden funcAls
+    newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
 
     QualifiedObject sn fn = qf
     funcAls = S.Alias $ Iden $
       getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"
-
-    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel

@@ -10,7 +10,7 @@ You can fetch a single node or multiple nodes of the same type using a simple ob
 
 Fetch list of objects
 ---------------------
-For example, fetch a list of authors:
+**Example:** Fetch a list of authors:
 
 .. graphiql::
   :view_only:

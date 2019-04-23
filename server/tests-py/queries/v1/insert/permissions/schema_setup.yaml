@@ -1,0 +1,186 @@
+type: bulk
+args:
+
+#Author table
+- type: run_sql
+  args:
+    sql: |
+      create table author(
+          id serial primary key,
+          name text unique,
+          bio text,
+          is_registered boolean not null default false
+      );
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BOOLEAN,
+        published_on TIMESTAMP
+      )
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Create resident table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        age INTEGER NOT NULL
+      )
+- type: track_table
+  args:
+    schema: public
+    name: resident
+
+#Create address table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE address (
+        id SERIAL PRIMARY KEY,
+        door_no TEXT NOT NULL,
+        street TEXT NOT NULL,
+        city TEXT NOT NULL,
+        resident_id INTEGER REFERENCES resident(id)
+      )
+- type: track_table
+  args:
+    schema: public
+    name: address
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Article select permission for user
+- type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: true
+
+#Article insert and udpate permission for user
+- type: create_insert_permission
+  args:
+    table: article
+    role: user
+    permission:
+      check:
+        author_id: X-Hasura-User-Id
+
+- type: create_update_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        author_id: X-Hasura-User-Id
+
+#Author select permission for user
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      - is_registered
+      filter:
+        id: X-HASURA-USER-ID
+
+#Author insert and update permission for user
+#Only admin can set is_registered to true
+- type: create_insert_permission
+  args:
+    table: author
+    role: user
+    permission:
+      check:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
+
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $and:
+        - id: X-HASURA-USER-ID
+        - is_registered: false
+
+#Author insert permission for student
+#A Student should specify their Bio
+- type: create_insert_permission
+  args:
+    table: author
+    role: student
+    permission:
+      check:
+        bio:
+          _is_null: false
+
+#resident table permissions for resident role
+- type: create_insert_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      check:
+        id: X-Hasura-Resident-Id
+
+- type: create_update_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+- type: create_select_permission
+  args:
+    table: resident
+    role: resident
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-Resident-Id
+
