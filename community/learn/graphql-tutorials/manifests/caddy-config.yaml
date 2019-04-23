@@ -24,7 +24,5 @@ data:
       proxy /graphiql graphiql {
         without /graphiql
       }
-      proxy /graphql/react react-apollo {
-        without /graphql/react
-      }
+      proxy /graphql/react react-apollo
     }
