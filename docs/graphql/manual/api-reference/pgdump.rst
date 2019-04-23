@@ -25,7 +25,7 @@ API Spec
 
    {
      "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
-     "clean": true
+     "clean_output": true
    }
 
 - ``opts``: Arguments to be passed to the ``pg_dump`` tool. Represented as array
@@ -35,7 +35,7 @@ API Spec
 
      pg_dump $DATABASE_URL $OPTS -f $FILENAME
 
-- ``clean``: When this optional argument is set to ``true``, the output SQL from
+- ``clean_output``: When this optional argument is set to ``true``, the output SQL from
   the command is cleaned to remove the following:
 
   -  SQL front matter, like SET statements.
