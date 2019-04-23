@@ -10,7 +10,7 @@ data:
         /graphql/react/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-boilerplate/boilerplate.zip
       }
       redir 301 {
-        /graphql/react /graphql/react/introduction
+        /graphql/react/ /graphql/react/introduction
       }
       proxy / homepage
       proxy /graphql/console hasura/console {
