@@ -30,7 +30,8 @@ export const getTableName = (i, testName = '') =>
 export const getElementFromAlias = alias => `[data-test=${alias}]`;
 export const getElementFromClassName = cn => `.${cn}`;
 export const tableColumnTypeSelector = alias => {
-  cy.get(`${getElementFromAlias(alias)} .css-10nd86i`)
+  cy.get(`${getElementFromAlias(alias)}`)
+    .children('div')
     .click()
     .find('input')
     .focus();

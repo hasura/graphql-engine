@@ -109,7 +109,9 @@ export const failMTWithoutColType = () => {
 export const Addcolumnnullable = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(3));
-  cy.get(getElementFromAlias('data-type')).select('Text');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  // cy.get(getElementFromAlias('data-type')).select('Text');
   cy.get(getElementFromAlias('nullable-checkbox')).uncheck({ force: true });
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(2500);
@@ -124,7 +126,10 @@ export const Addcolumnnullable = () => {
 export const Addcolumnname = name => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(name);
-  cy.get(getElementFromAlias('data-type')).select('integer');
+
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  // cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5000);
@@ -134,7 +139,9 @@ export const Addcolumnname = name => {
 export const passMTAddColumn = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(0));
-  cy.get(getElementFromAlias('data-type')).select('integer');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  // cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5000);
   // cy.get('.notification-success').click();
