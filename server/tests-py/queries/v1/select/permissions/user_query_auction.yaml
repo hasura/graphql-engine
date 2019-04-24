@@ -1,0 +1,18 @@
+description: Query bid prices more than action price
+url: /v1/query
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+- id: 4
+  bid_price: 260
+query:
+  type: select
+  args:
+    table: auction
+    columns:
+    - id
+    - bid_price
+    order_by:
+    - bid_price
+    limit: 1
