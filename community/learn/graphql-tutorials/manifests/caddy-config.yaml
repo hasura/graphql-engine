@@ -14,7 +14,12 @@ data:
         /graphql/react/ /graphql/react/introduction
       }
 
-      proxy / homepage
+      redir 302 {
+        if {path} is /
+        / /graphql/react/introduction
+      }
+
+      # proxy / homepage
 
       proxy /graphql/console hasura/console {
         without /graphql/console
