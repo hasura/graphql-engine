@@ -21,7 +21,6 @@ const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
 const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
-const LISTING_SCHEMA = 'Data/LISTING_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
@@ -526,15 +525,12 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         allSchemas: action.allSchemas,
-        listingSchemas: action.allSchemas,
       };
     case LOAD_UNTRACKED_RELATIONS:
       return {
         ...state,
         untrackedRelations: action.untrackedRelations,
       };
-    case LISTING_SCHEMA:
-      return { ...state, listingSchemas: action.updatedSchemas };
     case SET_TABLE:
       return { ...state, currentTable: action.tableName };
     case FETCH_SCHEMA_LIST:
@@ -584,7 +580,6 @@ export {
   loadSchema,
   handleMigrationErrors,
   makeMigrationCall,
-  LISTING_SCHEMA,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
   loadUntrackedRelations,
