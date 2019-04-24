@@ -1,8 +1,8 @@
-## GraphiQL Demo
+## GraphiQL
 
 This version of GraphiQL is a fork of the original version with a simple header management UI.
 
-You can access it live here - https://graphiql-online.com
+You can access it live here - https://learn.hasura.io/graphql/graphiql
 
 ## Usage of Environment Variables
 
@@ -30,7 +30,3 @@ $ npm run build
 ```
 
 The static assets will be generated in `static` folder. There is an index.html file referencing the css and js assets inside `dist` folder.
-
-For a quick Docker based deployment, use `docker build -t graphiql .` && `docker run -d -p 8080:8080 graphiql` for running the production build locally.
-
-You can also use now.sh for a cloud deployment. Just simply run `now` to deploy this and get a live URL.
