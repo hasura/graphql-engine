@@ -16,6 +16,12 @@ const customStyles = {
       padding: '5px',
     };
   },
+  singleValue: provided => {
+    return {
+      ...provided,
+      color: '#555555',
+    };
+  },
 };
 
 const TableColumn = props => {

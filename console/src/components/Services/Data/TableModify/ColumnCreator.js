@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { showErrorNotification } from '../Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import dataTypes from '../Common/DataTypes';
+
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+
+import { getDataOptions } from '../Add/utils';
+
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
@@ -67,8 +72,8 @@ const useColumnEditor = (dispatch, tableName) => {
     },
     colType: {
       value: colType,
-      onChange: e => {
-        setColumnState({ ...columnState, colType: e.target.value });
+      onChange: selected => {
+        setColumnState({ ...columnState, colType: selected.value });
       },
     },
     colNull: {
@@ -93,13 +98,15 @@ const useColumnEditor = (dispatch, tableName) => {
   };
 };
 
+/*
 const alterTypeOptions = dataTypes.map((datatype, index) => (
   <option value={datatype.value} key={index} title={datatype.description}>
     {datatype.name}
   </option>
 ));
+*/
 
-const ColumnCreator = ({ dispatch, tableName }) => {
+const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
   const {
     colName,
     colType,
@@ -108,6 +115,40 @@ const ColumnCreator = ({ dispatch, tableName }) => {
     colDefault,
     onSubmit,
   } = useColumnEditor(dispatch, tableName);
+
+  const { columnDataTypes, columnTypeValueMap } = getDataOptions(
+    dataTypes,
+    restTypes,
+    0
+  );
+
+  const customStyles = {
+    container: provided => ({
+      ...provided,
+      width: '186px',
+    }),
+    dropdownIndicator: provided => {
+      return {
+        ...provided,
+        padding: '5px',
+      };
+    },
+    placeholder: provided => {
+      return {
+        ...provided,
+        top: '44%',
+        fontSize: '12px',
+      };
+    },
+    singleValue: provided => {
+      return {
+        ...provided,
+        fontSize: '12px',
+        top: '44%',
+        color: '#555555',
+      };
+    },
+  };
 
   return (
     <div className={styles.activeEdit}>
@@ -122,6 +163,16 @@ const ColumnCreator = ({ dispatch, tableName }) => {
           data-test="column-name"
           {...colName}
         />
+        <span className={`${styles.select}`} data-test="col-type-0">
+          <SearchableSelectBox
+            options={columnDataTypes}
+            onChange={colType.onChange}
+            value={colType.value && columnTypeValueMap[colType.value]}
+            bsClass={`col-type-${0} modify_select`}
+            customStyle={customStyles}
+          />
+        </span>
+        {/*
         <select
           className={`${styles.select} input-sm form-control`}
           data-test="data-type"
@@ -132,6 +183,7 @@ const ColumnCreator = ({ dispatch, tableName }) => {
           </option>
           {alterTypeOptions}
         </select>
+        */}
 
         <input
           type="checkbox"

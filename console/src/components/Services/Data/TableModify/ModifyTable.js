@@ -82,6 +82,8 @@ class ModifyTable extends React.Component {
       pkModify,
       fkModify,
     } = this.props;
+
+    const { dataTypes } = this.state;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
     const untrackBtn = (
@@ -169,7 +171,11 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
-            <ColumnCreator dispatch={dispatch} tableName={tableName} />
+            <ColumnCreator
+              dispatch={dispatch}
+              tableName={tableName}
+              dataTypes={dataTypes}
+            />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
