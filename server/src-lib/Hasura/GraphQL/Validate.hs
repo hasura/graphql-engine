@@ -74,7 +74,7 @@ getAnnVarVals
   => [G.VariableDefinition]
   -> VariableValues
   -> m AnnVarVals
-getAnnVarVals varDefsL inpVals = do
+getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
 
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
     throwVE $ "the following variables are defined more than once: " <>
@@ -96,7 +96,7 @@ getAnnVarVals varDefsL inpVals = do
     annDefM <- withPathK "defaultValue" $
                mapM (validateInputValue constValueParser ty) defM'
     let inpValM = Map.lookup var inpVals
-    annInpValM <- withPathK "variableValues" $
+    annInpValM <- withPathK (G.unName $ G.unVariable var) $
                   mapM (validateInputValue jsonParser ty) inpValM
     let varValM = annInpValM <|> annDefM
     onNothing varValM $ throwVE $
