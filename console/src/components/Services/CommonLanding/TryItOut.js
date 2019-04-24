@@ -72,13 +72,14 @@ class TryItOut extends React.Component {
               href={this.props.googleCloudLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'Google Cloud'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img
                     className={'img-responsive'}
                     src={googleCloud}
-                    alt={'googleCloud'}
+                    alt={'Google Cloud'}
                   />
                 </div>
               </div>
@@ -87,6 +88,7 @@ class TryItOut extends React.Component {
               href={this.props.MicrosoftAzureLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'Microsoft Azure'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
@@ -102,6 +104,7 @@ class TryItOut extends React.Component {
               href={this.props.awsLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'AWS'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
