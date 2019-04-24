@@ -14,7 +14,9 @@ class Twist extends React.Component {
               A twist to the good old to-do app
             </div>
             <div className={'gradientBtn'}>
-              <button>TRY NOW</button>
+              <a href="https://final-graphql-tutorial.netlify.com/">
+                <button>TRY NOW</button>
+              </a>
             </div>
             <div className={'twistImg'}>
               <img className={'img-responsive'} src={laptop} alt={'laptop'} />
