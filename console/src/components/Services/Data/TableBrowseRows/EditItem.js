@@ -18,7 +18,7 @@ import {
   JSONB,
   TIMESTAMP,
   TIMETZ,
-} from '../../../../constants';
+} from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
