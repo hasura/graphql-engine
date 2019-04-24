@@ -1,0 +1,4 @@
+- args:
+    cascade: true
+    sql: drop table users cascade;
+  type: run_sql
