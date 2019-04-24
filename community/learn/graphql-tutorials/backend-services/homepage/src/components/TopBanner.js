@@ -34,7 +34,7 @@ const formProps = {
 
 class TopBanner extends React.Component {
   render() {
-    const rightArrow = require('../images/right-arrow.svg');
+    // const rightArrow = require('../images/right-arrow.svg');
     const mobile = require('../images/smartphone.svg');
     const graphqlLogo =require('../images/GraphQL_Logo.png');
     const hasuraDumbledore =require('../images/hasura-dumbledore.png');

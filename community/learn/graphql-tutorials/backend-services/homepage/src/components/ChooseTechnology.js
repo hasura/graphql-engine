@@ -17,9 +17,11 @@ class ChooseTechnology extends React.Component {
     // const circle = require('../images/circle.svg');
     const circleGray = require('../images/circle-gray.svg');
 
+    /*
     const hoverHandler = (item, status) => {
       this.setState({ ...this.state, [item]:status})
     };
+    */
 
     return (
       <div className={'commonSectionWrapper'}>

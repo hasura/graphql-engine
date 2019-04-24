@@ -22,7 +22,7 @@ module.exports = function (user, context, cb) {
       `,
       endpoint: 'https://learn.hasura.io/graphql',
       headers: {
-        'x-hasura-access-key': '<replace-with-access-key>'
+        'x-hasura-admin-secret': '<replace-with-admin-secret>'
       },
       variables: {
         userId: userIdPrefix + user.id,
