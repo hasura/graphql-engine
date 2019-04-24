@@ -82,4 +82,4 @@ Here's a quick chart to show you the GraphQL analogs of typical REST-ish terms:
 | Fetching data objects | GET | query |
 | Writing data | POST | mutation |
 | Updating/deleting data | PUT/PATCH/DELETE | mutation |
-| Watching/subscribing to data | - | mutation |
+| Watching/subscribing to data | - | subscription |

@@ -54,7 +54,7 @@ const Header = ({location}) => (
               </ul>
               <ul className={'nav navbar-nav navBarUL navbar-right'}>
                 <li><a href="https://twitter.com/intent/tweet?&text=Check out this GraphQL course for React developers by @HasuraHQ https://learn.hasura.io/graphql/react" target="_blank"><img className={'twitterIcon'} src={twitter} alt={'Twitter'} /></a></li>
-                <li><a href="https://learn.hasura.io/" target="_blank">learn.hasura.io</a></li>
+                <li><a href="https://hasura.io/" target="_blank">hasura.io</a></li>
               </ul>
             </div>
           </nav>
