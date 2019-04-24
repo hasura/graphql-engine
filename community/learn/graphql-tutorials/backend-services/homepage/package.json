@@ -12,6 +12,7 @@
     "gatsby": "^2.0.9",
     "gatsby-link": "^2.0.2",
     "gatsby-plugin-favicon": "^3.1.4",
+    "gatsby-plugin-gtag": "^1.0.10",
     "gatsby-plugin-react-helmet": "^3.0.0",
     "gatsby-plugin-robots-txt": "^1.4.0",
     "gatsby-plugin-sass": "^2.0.1",

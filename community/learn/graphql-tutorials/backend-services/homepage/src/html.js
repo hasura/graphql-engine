@@ -22,16 +22,6 @@ export default class HTML extends React.Component {
           <meta property="twitter:title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
           <meta property="twitter:description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
           <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
-
-          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-59768903-1"></script>
-          <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'UA-59768903-1');
-          </script>
-
           {this.props.headComponents}
           <link rel="shortcut icon" href="./images/favicon.png" type="image/png" />
           <link rel="stylesheet"
