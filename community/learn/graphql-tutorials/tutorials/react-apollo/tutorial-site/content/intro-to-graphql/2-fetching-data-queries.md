@@ -45,7 +45,7 @@ use a tool like GraphiQL to explore and test your GraphQL queries.
 4. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
 5. On the right, you should see a list of users by their names that are in the system!
 
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 Recall that there is no magic here! The hosted GraphiQL app is sending a GraphQL query string
 to the server at the given endpoint with the HTTP headers. The server then sends the response
@@ -77,7 +77,7 @@ This GraphQL query will fetch all the users and their publicly visible todos:
  }
 ```
 
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 
 ### Fetch online users and their profile information
@@ -96,8 +96,7 @@ and their profile information (which is just their name for now):
  }
 ```
 
-<!-- [//]: # TODO: -->
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 
 ## Adding parameters (arguments) to GraphQL queries
@@ -121,8 +120,7 @@ query {
 }
 ```
 
-<!-- [//]: # TODO: -->
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 The most important bit to check here is `limit: 10`. GraphQL servers will provide a list of
 arguments that can be used in `()` next to specific fields. In our case, we are using
@@ -147,8 +145,7 @@ query {
 Notice that we are passing arguments to different fields. This GraphQL query reads as:
 > Fetch users (with limit 1), and their todos (ordered by descending creation time, and limited to 5).
 
-<!-- [//]: # TODO: -->
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 <a name="query-variables"></a>
 ## GraphQL variables: Passing arguments to your queries dynamically
@@ -196,8 +193,7 @@ Let's try this out in GraphiQL:
 3. Scroll to the bottom of the page, where you see a smaller panel "Query Variables"
 4. Add the query variable as a JSON object
 
-<!-- [//]: # TODO: -->
-__Try it out in GraphiQL__
+<b><a href="https://learn.hasura.io/graphql/graphiql" target="_blank">Try it out in GraphiQL</a></b>
 
 ## Summary
 
