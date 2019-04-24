@@ -322,7 +322,7 @@ class Main extends React.Component {
                   Roses are red, <br />
                   Violets are blue;
                   <br />
-                  Star us on Github,
+                  Star us on GitHub,
                   <br />
                   To make our <i className={'fa fa-heart'} /> go wooooo!
                 </li>
@@ -338,7 +338,7 @@ class Main extends React.Component {
                         src={
                           'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
                         }
-                        alt={'Github'}
+                        alt={'GitHub'}
                       />
                     </div>
                     <div className={styles.pixelText}>
