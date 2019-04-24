@@ -9,6 +9,11 @@ data:
       redir 301 {
         /graphql/react/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-boilerplate/boilerplate.zip
       }
+
+      redir 301 {
+        / /graphql/react/introduction
+      }
+
       redir 301 {
         /graphql/react/ /graphql/react/introduction
       }
