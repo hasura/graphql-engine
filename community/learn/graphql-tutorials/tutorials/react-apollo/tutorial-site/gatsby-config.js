@@ -10,6 +10,12 @@ module.exports = {
   plugins: [
     'gatsby-plugin-sharp',
     {
+      resolve: `gatsby-plugin-layout`,
+      options: {
+          component: require.resolve(`./src/templates/docs.js`)
+      }
+    },
+    {
       resolve: 'gatsby-mdx',
       options: {
         gatsbyRemarkPlugins: [

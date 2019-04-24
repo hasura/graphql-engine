@@ -20,6 +20,7 @@
     "gatsby-mdx": "^0.6.2",
     "gatsby-plugin-emotion": "4.0.6",
     "gatsby-plugin-gtag": "^1.0.10",
+    "gatsby-plugin-layout": "^1.0.15",
     "gatsby-plugin-react-helmet": "3.0.12",
     "gatsby-plugin-sharp": "^2.0.35",
     "gatsby-remark-copy-linked-files": "^2.0.11",
