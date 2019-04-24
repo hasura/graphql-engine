@@ -92,8 +92,6 @@ withJsonAggExtr permLimitM ordBy alias =
 
     withPermLimit limit =
       let subSelect = mkSubSelect limit
-          newOrdBy = bool (Just $ S.OrderByExp newOBItems) Nothing $
-                     null newOBItems
           rowIden = S.mkQIdenExp subSelAls alias
           extr = S.Extractor (mkSimpleJsonAgg rowIden newOrdBy) Nothing
           fromExp = S.FromExp $ pure $
@@ -110,6 +108,7 @@ withJsonAggExtr permLimitM ordBy alias =
       in S.mkSelect { S.selExtr    = jsonRowExtr : obExtrs
                     , S.selFrom    = Just $ S.FromExp $ pure unnestFromItem
                     , S.selLimit   = Just $ S.LimitExp $ S.intToSQLExp limit
+                    , S.selOrderBy = newOrdBy
                     }
 
     unnestFromItem =
@@ -117,6 +116,8 @@ withJsonAggExtr permLimitM ordBy alias =
                           \s -> S.SEFnApp "array_agg" [s] Nothing
       in S.FIUnnest arrayAggItems (S.Alias unnestTable) $
          rowIdenExp : map S.SEIden newOBAliases
+
+    newOrdBy = bool (Just $ S.OrderByExp newOBItems) Nothing $ null newOBItems
 
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrdBy ordBy
     transformOrdBy (S.OrderByExp l) = unzip3 $
