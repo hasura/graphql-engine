@@ -148,7 +148,19 @@ const convertDateTimeToLocale = dateTime => {
   return new Date(dateTime + 'Z').toLocaleString('en-US', options);
 };
 
-const getEventTriggersQuery = () => {
+const getEventTriggersQuery = (triggerNames) => {
+  let whereQuery = '';
+  const triggerLength = triggerNames.length;
+  if (triggerLength !== 0) {
+    // append to whereQuery
+    whereQuery = 'where';
+    triggerNames.forEach((triggerName, index) => {
+      whereQuery = whereQuery + ` hdb_et.name='${triggerName}'`;
+      if ((index + 1) !== triggerLength) {
+        whereQuery = whereQuery + ' and';
+      }
+    });
+  }
   const runSql = `select 
   COALESCE(
     json_agg(
@@ -180,7 +192,8 @@ FROM
       JOIN information_schema.columns AS isc ON isc.table_schema = hdb_table.table_schema 
       and isc.table_name = hdb_table.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = hdb_table.table_schema 
-      and hdb_pk.table_name = hdb_table.table_name 
+      and hdb_pk.table_name = hdb_table.table_name
+    ${whereQuery}
     GROUP BY 
       hdb_et.name, 
       row_to_json(hdb_pk.*):: JSONB 

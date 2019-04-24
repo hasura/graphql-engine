@@ -523,20 +523,20 @@ class AddTrigger extends Component {
                 className={styles.selectTrigger + ' form-control'}
               >
                 {schemaList.map(s => {
-                  if (s.table_schema === schemaName) {
+                  if (s.schema_name === schemaName) {
                     return (
                       <option
-                        value={s.table_schema}
-                        key={s.table_schema}
+                        value={s.schema_name}
+                        key={s.schema_name}
                         selected="selected"
                       >
-                        {s.table_schema}
+                        {s.schema_name}
                       </option>
                     );
                   }
                   return (
-                    <option value={s.table_schema} key={s.table_schema}>
-                      {s.table_schema}
+                    <option value={s.schema_name} key={s.schema_name}>
+                      {s.schema_name}
                     </option>
                   );
                 })}

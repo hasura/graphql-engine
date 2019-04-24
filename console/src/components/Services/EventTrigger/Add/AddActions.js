@@ -1,11 +1,6 @@
 import defaultState from './AddState';
 import _push from '../push';
-import {
-  loadTriggers,
-  makeMigrationCall,
-  setTrigger,
-  loadProcessedEvents,
-} from '../EventActions';
+import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { fetchTableListBySchema } from '../../Data/DataActions';
@@ -89,7 +84,6 @@ const createTrigger = () => {
       args: {
         name: triggerName,
         table: { name: tableName, schema: currentSchema },
-        // webhook: webhook,
         ...getWebhookKey(webhookType, webhook),
       },
     };
@@ -158,15 +152,11 @@ const createTrigger = () => {
     const errorMsg = 'Create trigger failed';
 
     const customOnSuccess = () => {
-      // dispatch({ type: REQUEST_SUCCESS });
-
       dispatch(setTrigger(triggerName.trim()));
-      dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents()).then(() => {
-          dispatch(
-            _push('/manage/triggers/' + triggerName.trim() + '/processed')
-          );
-        });
+      dispatch(loadTriggers([triggerName])).then(() => {
+        dispatch(
+          _push('/manage/triggers/' + triggerName.trim() + '/processed')
+        );
       });
       return;
     };

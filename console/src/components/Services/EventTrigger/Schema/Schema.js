@@ -19,7 +19,7 @@ class Schema extends Component {
     super(props);
     // Initialize this table
     const dispatch = this.props.dispatch;
-    dispatch(loadTriggers());
+    dispatch(loadTriggers([]));
   }
 
   render() {

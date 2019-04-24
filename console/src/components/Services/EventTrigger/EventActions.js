@@ -37,9 +37,9 @@ const REQUEST_SUCCESS = 'Event/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 
 /* ************ action creators *********************** */
-const loadTriggers = () => (dispatch, getState) => {
+const loadTriggers = triggerNames => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const body = getEventTriggersQuery();
+  const body = getEventTriggersQuery(triggerNames);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -52,51 +52,21 @@ const loadTriggers = () => (dispatch, getState) => {
         console.error('Failed to event trigger info' + JSON.stringify(data[1]));
         return;
       }
+      data = JSON.parse(data.result[1]);
+      if (triggerNames.length !== 0) {
+        // getExisting state
+        const existingTriggers = getState().triggers.triggerList.filter(
+          trigger => triggerNames.some(item => item !== trigger.name)
+        );
+        const triggerLists = existingTriggers.concat(data);
+        data = triggerLists.sort((a, b) => {
+          return a.name === b.name ? 0 : +(a.name > b.name) || -1;
+        });
+      }
       dispatch({
         type: LOAD_TRIGGER_LIST,
-        triggerList: JSON.parse(data.result[1]),
+        triggerList: data,
       });
-    },
-    error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
-};
-
-const loadProcessedEvents = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: {
-              $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
-            },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_PROCESSED_EVENTS, data: data });
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -413,7 +383,6 @@ const makeMigrationCall = (
     if (globals.consoleMode === 'cli') {
       dispatch(loadMigrationStatus()); // don't call for server mode
     }
-    dispatch(loadTriggers());
     customOnSuccess();
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
@@ -486,7 +455,15 @@ const deleteTrigger = triggerName => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch(showSuccessNotification('Trigger Deleted'));
-      dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
+      // remove this trigger from state
+      const existingTriggers = getState().triggers.triggerList.filter(
+        trigger => trigger.name !== triggerName
+      );
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: existingTriggers,
+      });
+      dispatch(push('/manage/triggers'));
       return;
     };
     const customOnError = () => {
@@ -633,7 +610,6 @@ export {
   setTrigger,
   loadTriggers,
   deleteTrigger,
-  loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
   loadEventLogs,

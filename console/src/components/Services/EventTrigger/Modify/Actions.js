@@ -1,10 +1,5 @@
 import defaultState from './State';
-import {
-  loadTriggers,
-  makeMigrationCall,
-  setTrigger,
-  loadProcessedEvents,
-} from '../EventActions';
+import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { showErrorNotification } from '../Notification';
 
@@ -168,9 +163,7 @@ export const save = (property, triggerName) => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_COMPLETE });
       dispatch(setTrigger(triggerName.trim()));
-      dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents());
-      });
+      dispatch(loadTriggers([triggerName]));
       return;
     };
     const customOnError = err => {

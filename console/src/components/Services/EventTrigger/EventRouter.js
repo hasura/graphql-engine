@@ -18,7 +18,6 @@ import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   loadTriggers,
-  loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
@@ -30,7 +29,6 @@ const makeEventRouter = (
   store,
   composeOnEnterHooks,
   requireSchema,
-  requireProcessedEvents,
   requirePendingEvents,
   requireRunningEvents,
   migrationRedirects
@@ -48,7 +46,6 @@ const makeEventRouter = (
         <Route
           path="triggers/:trigger/processed"
           component={processedEventsConnector(connect)}
-          onEnter={composeOnEnterHooks([requireProcessedEvents])}
         />
         <Route
           path="triggers/:trigger/pending"
@@ -95,29 +92,7 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       return;
     }
 
-    Promise.all([store.dispatch(loadTriggers())]).then(
-      () => {
-        cb();
-      },
-      () => {
-        // alert('Could not load schema.');
-        replaceState(globals.urlPrefix);
-        cb();
-      }
-    );
-  };
-
-  const requireProcessedEvents = (nextState, replaceState, cb) => {
-    const {
-      triggers: { processedEvents },
-    } = store.getState();
-
-    if (processedEvents.length) {
-      cb();
-      return;
-    }
-
-    Promise.all([store.dispatch(loadProcessedEvents())]).then(
+    Promise.all([store.dispatch(loadTriggers([]))]).then(
       () => {
         cb();
       },
@@ -196,7 +171,6 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       store,
       composeOnEnterHooks,
       requireSchema,
-      requireProcessedEvents,
       requirePendingEvents,
       requireRunningEvents,
       migrationRedirects,
