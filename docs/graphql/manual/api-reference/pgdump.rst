@@ -5,7 +5,7 @@ PG Dump API Reference
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 The PG Dump API is an admin-only endpoint that can be used to execute ``pg_dump`` on the
@@ -22,6 +22,9 @@ All requests are ``POST`` requests to the ``/v1alpha1/pg_dump`` endpoint.
 
 API Spec
 --------
+
+Request
+^^^^^^^
 
 .. code-block:: http
 
@@ -52,6 +55,28 @@ API Spec
 
 
 Source code for the script that is executed can be found `here <https://github.com/hasura/graphql-engine/tree/master/server/src-rsr/run_pg_dump.sh>`_.
+
+Sample response
+^^^^^^^^^^^^^^^
+
+.. code-block:: http
+
+  HTTP/1.1 200 OK
+  Content-Type: application/sql
+
+  CREATE TABLE public.author (
+      id integer NOT NULL,
+      name text NOT NULL
+  );
+  CREATE SEQUENCE public.author_id_seq
+      AS integer
+      START WITH 1
+      INCREMENT BY 1
+      NO MINVALUE
+      NO MAXVALUE
+      CACHE 1;
+  ALTER SEQUENCE public.author_id_seq OWNED BY public.author.id;
+  ALTER TABLE ONLY public.author ALTER COLUMN id SET DEFAULT nextval('public.author_id_seq'::regclass);
 
 Disabling PG Dump API
 ---------------------
