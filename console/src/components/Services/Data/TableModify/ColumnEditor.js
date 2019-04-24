@@ -1,6 +1,10 @@
 import React, { useEffect } from 'react';
 import dataTypes from '../Common/DataTypes';
 import { convertListToDictUsingKV } from '../../../../utils/data';
+
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+
+/*
 import {
   INTEGER,
   SERIAL,
@@ -12,6 +16,9 @@ import {
   TIMESTAMP,
   TIME,
 } from '../../../../constants';
+*/
+
+import { getValidAlterOptions } from './utils';
 
 const ColumnEditor = ({
   column,
@@ -22,16 +29,55 @@ const ColumnEditor = ({
   columnProperties,
   selectedProperties,
   editColumn,
+  alterTypeOptions,
 }) => {
   const colName = columnProperties.name;
   useEffect(() => {
     dispatch(editColumn(colName, 'comment', columnComment));
   }, [columnComment]);
+
+  const getColumnType = () => {
+    return (
+      colName in selectedProperties &&
+      'type' in selectedProperties[colName] &&
+      selectedProperties[colName].type
+    );
+  };
   const c = column;
+  const columnTypePG = getColumnType();
   if (!selectedProperties[colName]) {
     return null;
   }
   const styles = require('./ModifyTable.scss');
+
+  const customStyles = {
+    dropdownIndicator: provided => {
+      return {
+        ...provided,
+        padding: '5px',
+      };
+    },
+    placeholder: provided => {
+      return {
+        ...provided,
+        top: '44%',
+        fontSize: '12px',
+      };
+    },
+    singleValue: provided => {
+      return {
+        ...provided,
+        fontSize: '12px',
+        top: '44%',
+        color: '#555555',
+      };
+    },
+  };
+  const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
+    alterTypeOptions,
+    colName
+  );
+
   // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
@@ -48,6 +94,7 @@ const ColumnEditor = ({
       </option>
     );
   }
+  /*
   const generateAlterOptions = datatypeOptions => {
     return dataTypes.map(datatype => {
       if (datatypeOptions.includes(datatype.value)) {
@@ -63,7 +110,9 @@ const ColumnEditor = ({
       }
     });
   };
+  */
 
+  /*
   const modifyAlterOptions = columntype => {
     const integerOptions = [
       'integer',
@@ -110,12 +159,13 @@ const ColumnEditor = ({
         return generateAlterOptions([columntype, 'text']);
     }
   };
+  */
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
   };
-  const updateColumnType = e => {
-    dispatch(editColumn(colName, 'type', e.target.value));
+  const updateColumnType = selected => {
+    dispatch(editColumn(colName, 'type', selected.value));
   };
   const updateColumnDef = e => {
     dispatch(editColumn(colName, 'default', e.target.value));
@@ -150,6 +200,14 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Type</label>
           <div className="col-xs-6">
+            <SearchableSelectBox
+              options={alterOptions}
+              onChange={updateColumnType}
+              value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              bsClass={`col-type-${0} modify_select`}
+              customStyle={customStyles}
+            />
+            {/*
             <select
               value={selectedProperties[colName].type}
               onChange={updateColumnType}
@@ -159,6 +217,7 @@ const ColumnEditor = ({
               {modifyAlterOptions(columnProperties.type)}
               {additionalOptions}
             </select>
+            */}
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>

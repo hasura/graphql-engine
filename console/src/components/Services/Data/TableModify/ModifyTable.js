@@ -4,12 +4,14 @@ import TableHeader from '../TableCommon/TableHeader';
 
 // import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
 
+import { convertArrayToJson } from './utils';
 import { fetchColumnTypes } from '../Add/AddActions';
 
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
+  fetchColumnCasts,
 } from '../TableModify/ModifyActions';
 // import dataTypes from '../Common/DataTypes';
 import { setTable, fetchTableComment } from '../DataActions';
@@ -26,6 +28,7 @@ class ModifyTable extends React.Component {
   state = {
     supportTableColumnRename: false,
     dataTypes: [],
+    validTypeCasts: [],
   };
 
   componentDidMount() {
@@ -41,6 +44,17 @@ class ModifyTable extends React.Component {
       })
       .catch(err => {
         console.error(err);
+      });
+
+    dispatch(fetchColumnCasts())
+      .then(data => {
+        this.setState({
+          validTypeCasts: convertArrayToJson(data.result.slice(1)),
+        });
+      })
+      .catch(err => {
+        console.log('Fetch cast failed');
+        console.log(err);
       });
     if (serverVersion) {
       this.checkTableColumnRenameSupport(serverVersion);
@@ -83,7 +97,8 @@ class ModifyTable extends React.Component {
       fkModify,
     } = this.props;
 
-    const { dataTypes } = this.state;
+    const { dataTypes, validTypeCasts } = this.state;
+
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
     const untrackBtn = (
@@ -162,6 +177,7 @@ class ModifyTable extends React.Component {
             />
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
+              validTypeCasts={validTypeCasts}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
               allowRename={this.state.supportTableColumnRename}

@@ -21,6 +21,8 @@ const ColumnEditorList = ({
   columnEdit,
   dispatch,
   columnComments,
+  //
+  validTypeCasts,
 }) => {
   const tablePrimaryKeyColumns = tableSchema.primary_key
     ? tableSchema.primary_key.columns
@@ -29,13 +31,16 @@ const ColumnEditorList = ({
   const tableName = tableSchema.table_name;
   const columns = tableSchema.columns.sort(ordinalColSort);
 
+  /*
+   * c.udt_name contains internal representation of the data type
+   * */
   return columns.map((c, i) => {
     const colName = c.column_name;
     const columnProperties = {
       name: c.column_name,
       tableName: c.table_name,
       schemaName: c.table_schema,
-      type: c.data_type,
+      type: c.udt_name,
       isNullable: c.is_nullable === 'YES' ? true : false,
       isPrimaryKey: tablePrimaryKeyColumns.includes(c.column_name),
       isUnique: false,
@@ -116,6 +121,7 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
+          alterTypeOptions={validTypeCasts[c.udt_name]}
           column={c}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}

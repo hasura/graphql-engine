@@ -100,4 +100,4 @@ const getDefaultValue = column => {
   return ('default' in column && column.default.value) || '';
 };
 
-export { getDataOptions, getPlaceholder, getDefaultValue };
+export { getDataOptions, getPlaceholder, getDefaultValue, getDataTypeInfo };

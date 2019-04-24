@@ -26,8 +26,9 @@ import {
   setColDefault,
   setColUnique,
   addCol,
-  fetchColumnTypes,
 } from './AddActions';
+
+import { fetchColumnTypes, RESET_COLUMN_TYPE_LIST } from '../DataActions';
 import { setDefaults, setPk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
@@ -58,9 +59,6 @@ import gqlPattern, {
 class AddTable extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      dataTypes: [],
-    };
     this.props.dispatch(setDefaults());
     this.onTableNameChange = this.onTableNameChange.bind(this);
     this.onTableCommentChange = this.onTableCommentChange.bind(this);
@@ -72,14 +70,13 @@ class AddTable extends Component {
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
   }
   componentDidMount() {
-    this.props.dispatch(fetchColumnTypes()).then(data => {
-      this.setState({
-        dataTypes: data.result.slice(1),
-      });
-    });
+    this.props.dispatch(fetchColumnTypes());
   }
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
+    this.props.dispatch({
+      type: RESET_COLUMN_TYPE_LIST,
+    });
   }
   onTableNameChange = e => {
     const { dispatch } = this.props;
@@ -273,6 +270,7 @@ class AddTable extends Component {
       lastError,
       lastSuccess,
       internalError,
+      dataTypes,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -309,7 +307,7 @@ class AddTable extends Component {
             <TableName onChange={this.onTableNameChange.bind(this)} />
             <hr />
             <TableColumns
-              dataTypes={this.state.dataTypes}
+              dataTypes={dataTypes}
               columns={columns}
               onRemoveColumn={this.onRemoveColumn}
               onColumnChange={this.onColumnNameChange}
@@ -398,6 +396,8 @@ const mapStateToProps = state => ({
   ...state.addTable.table,
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
+  dataTypes: state.tables.columnDataTypes,
+  columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

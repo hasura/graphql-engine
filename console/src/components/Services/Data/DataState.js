@@ -121,9 +121,12 @@ const defaultModifyState = {
   viewDefinition: null,
   viewDefinitionError: null,
   tableCommentEdit: { enabled: false, editedValue: null },
+  alterColumnOptions: [], // Store supported implicit column -> column casts
 };
 
 const defaultState = {
+  columnDataTypes: [], // To store list of column types supported by postgres
+  columnDataTypeFetchErr: null,
   currentTable: null,
   view: { ...defaultViewState },
   modify: { ...defaultModifyState },
