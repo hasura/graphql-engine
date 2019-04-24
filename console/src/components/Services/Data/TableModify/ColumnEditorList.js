@@ -52,6 +52,8 @@ const ColumnEditorList = ({
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
+      display_type_name:
+        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
       type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
       pkConstraint: columnPKConstraints[colName],
@@ -84,7 +86,7 @@ const ColumnEditorList = ({
     const keyProperties = () => {
       const propertiesList = [];
 
-      propertiesList.push(columnProperties.type);
+      propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
         propertiesList.push(`primary key (${columnProperties.pkConstraint})`);
