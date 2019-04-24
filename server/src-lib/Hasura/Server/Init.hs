@@ -857,6 +857,8 @@ mkGenericStrLog k msg =
 
 inconsistentMetadataLog :: SchemaCache -> StartupLog
 inconsistentMetadataLog sc =
-  StartupLog L.LevelWarn "inconsistent_metadata" infoVal
+  StartupLog logLevel "inconsistent_metadata" infoVal
   where
-    infoVal = J.object ["objects" J..= scInconsistentObjs sc]
+    inconsObjs = scInconsistentObjs sc
+    logLevel = bool L.LevelWarn L.LevelInfo $ null inconsObjs
+    infoVal = J.object ["objects" J..= inconsObjs]
