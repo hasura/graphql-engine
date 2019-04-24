@@ -11,8 +11,14 @@ Reference documentation for access control permissions.
 How permissions work
 --------------------
 
-Hasura converts GraphQL queries (*or mutations/subscriptions*) into a single SQL query that is executed on the configured database instance. 
-Hasura also includes constraints from role-based access control permission rules in the SQL query itself. Let's see an example to understand this in more detail.
+Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*) level granulaity:
+
+.. thumbnail:: ../../../img/graphql/manual/auth/permission-rule-granularity.png
+
+Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting user's role, and the table and action information is inferred from the request itself. This information is used to determine the right permission rule to be applied (*if one has been defined*) to the incoming request.
+
+Hasura converts GraphQL queries (*or mutations/subscriptions*) into a single SQL query that is executed on the configured database instance.
+Hasura also includes constraints from permission rules in the SQL query itself. Let's see an example to understand this in more detail.
 
 Let's say you want to make the following simple query:
 
@@ -57,7 +63,7 @@ If you make this query as an admin in the Graphiql section of the console and cl
         ) AS "_0_root.base"
     ) AS "_2_root"
 
-Let's say you now define the following permission rule on the ``authors`` table (*as described* :doc:`here <basics>`):
+Let's say you now define the following permission rule on the ``authors`` table (*as described in the example* :doc:`here <basics>`):
 
 .. thumbnail:: ../../../img/graphql/manual/auth/permission-basics-simple-example.png
 
@@ -180,60 +186,21 @@ E.g. to allow an ``author`` to access only their articles, you can use the ``X-H
 **Using relationships or nested objects**
 #########################################
 
-You can leverage relationships to define permission rules with fields from a nested object. Let's take the following example:
+You can leverage :doc:`relationships<../schema/relationships/index>` to define permission rules with fields from a nested object. 
 
-* An author/articles schema where an article can have one or more reviewers i.e. users with the role ``reviewer`` can only edit those articles that have been assigned to them:
+For e.g. let's say you have an object relationship called ``agent`` from the ``authors`` table to another table called ``agent`` (*an author can have an agent*) and we want to allow users with the role ``agent`` to access the details of the authors who they manage in ``authors`` table. We can define the following permission rule that uses the aforementioned object relationship:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/schema-for-nested-object-based-permissions.png
+.. thumbnail:: ../../../img/graphql/manual/auth/nested-object-permission-simple-example.png
 
-* The foreign key constraint from ``reviewers`` :: ``article_id``  →  ``articles`` :: ``id`` is used for an array relationship called  ``reviewers`` in the ``articles`` table:
+This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's* ``id`` *, allow access to the author's details*.
 
-.. thumbnail:: ../../../img/graphql/manual/auth/array-relationship-reviewers.png
-   :class: no-shadow
 
-We can use this relationship in a permission rule for the ``articles`` table  to limit access for users with the role ``reviewer`` to only assigned rows:
-
-.. thumbnail:: ../../../img/graphql/manual/auth/nested-object-permissions-rule.gif
-
-Via the relationship, we are using the ``reviewer_id`` field of the nested object ``reviewers`` in the the above permission rule that reads as "Allow updating an article if the **reviewer_id of any of the reviewers assigned to this article** is the same as the requesting user's id (*which is sent in the resolved session variable* ``X-Hasura-User-ID``)".
-
-Let's say we have the following test data for the list of reviewers:
-
-.. list-table:: Data in the ``reviewers`` table
-   :header-rows: 1
-
-   * - id
-     - article_id
-     - reviewer_id
-   * - 1
-     - 1
-     - 5
-   * - 2
-     - 3
-     - 5
-   * - 3
-     - 5
-     - 5
-   * - 4
-     - 2
-     - 6
-   * - 5
-     - 4
-     - 6
-
-Applying the above permission rule for "update" to "select" operation also, let's query the  ``articles`` table to watch this permission rule in action:
-
-.. thumbnail:: ../../../img/graphql/manual/auth/restricted-data-for-role-reviewer.png
-  :class: no-shadow
-
-As we've made this query with the role ``reviewer`` and user ID ``5`` (*highlighted in the request headers in the above image*), we can only query those articles for which this user is a reviewer. This will be the case for update mutations too. As the user with id ``5`` does not have access to article with id ``2`` (*refer to the table above*), the following mutation will not update any rows of the ``articles`` table:
-
-.. thumbnail:: ../../../img/graphql/manual/auth/unsuccessful-mutation-for-role-reviewer.png
-  :class: no-shadow
-   
 .. admonition:: Array and Object relationships work similarly
-  
-  The above example would have worked even if the relationship were an object relationship. In our example, the corresponding rule for an object relationship would have read "*if this article's reviewer's id is the same as the requesting user's id, allow access to it*".
+
+   - The above example would have worked even if the relationship were an array relationship. In our example, the corresponding rule for an array relationship would have read "*if any of this author's agents'* ``id`` *is the same as the requesting user's* ``id`` *, allow access to the author's details*".
+
+   - You can also check out this more elaborate :ref:`example<nested-object-permissions-example>`.
+
 
 .. _col-level-permissions:
 
