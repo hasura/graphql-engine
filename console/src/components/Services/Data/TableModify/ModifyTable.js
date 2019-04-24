@@ -4,17 +4,18 @@ import TableHeader from '../TableCommon/TableHeader';
 
 // import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
 
-import { convertArrayToJson } from './utils';
-import { fetchColumnTypes } from '../Add/AddActions';
-
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
   fetchColumnCasts,
 } from '../TableModify/ModifyActions';
-// import dataTypes from '../Common/DataTypes';
-import { setTable, fetchTableComment } from '../DataActions';
+import {
+  setTable,
+  fetchTableComment,
+  fetchColumnTypes,
+  RESET_COLUMN_TYPE_LIST,
+} from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
@@ -27,8 +28,6 @@ import styles from './ModifyTable.scss';
 class ModifyTable extends React.Component {
   state = {
     supportTableColumnRename: false,
-    dataTypes: [],
-    validTypeCasts: [],
   };
 
   componentDidMount() {
@@ -36,26 +35,8 @@ class ModifyTable extends React.Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));
-    dispatch(fetchColumnTypes())
-      .then(data => {
-        this.setState({
-          dataTypes: data.result.slice(1),
-        });
-      })
-      .catch(err => {
-        console.error(err);
-      });
-
-    dispatch(fetchColumnCasts())
-      .then(data => {
-        this.setState({
-          validTypeCasts: convertArrayToJson(data.result.slice(1)),
-        });
-      })
-      .catch(err => {
-        console.log('Fetch cast failed');
-        console.log(err);
-      });
+    dispatch(fetchColumnTypes());
+    dispatch(fetchColumnCasts());
     if (serverVersion) {
       this.checkTableColumnRenameSupport(serverVersion);
     }
@@ -68,6 +49,12 @@ class ModifyTable extends React.Component {
     ) {
       this.checkTableColumnRenameSupport(nextProps.serverVersion);
     }
+  }
+
+  componentWillUnmount() {
+    this.props.dispatch({
+      type: RESET_COLUMN_TYPE_LIST,
+    });
   }
 
   checkTableColumnRenameSupport = serverVersion => {
@@ -95,9 +82,9 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      dataTypes,
+      validTypeCasts,
     } = this.props;
-
-    const { dataTypes, validTypeCasts } = this.state;
 
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
@@ -253,6 +240,9 @@ const mapStateToProps = (state, ownProps) => ({
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
+  dataTypes: state.tables.columnDataTypes,
+  validTypeCasts: state.tables.modify.alterColumnOptions,
+  columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   ...state.tables.modify,
 });
 

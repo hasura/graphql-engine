@@ -122,6 +122,7 @@ const defaultModifyState = {
   viewDefinitionError: null,
   tableCommentEdit: { enabled: false, editedValue: null },
   alterColumnOptions: [], // Store supported implicit column -> column casts
+  alterColumnOptionsFetchErr: null,
 };
 
 const defaultState = {

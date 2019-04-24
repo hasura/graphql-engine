@@ -25,6 +25,8 @@ import {
   generateFKConstraintName,
 } from '../Common/ReusableComponents/utils';
 
+import { fetchColumnCastsQuery, convertArrayToJson } from './utils';
+
 const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
         Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
 
@@ -49,6 +51,8 @@ const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
 const SAVE_FOREIGN_KEY = 'ModifyTable/SAVE_FOREIGN_KEY';
 const REMOVE_FOREIGN_KEY = 'ModifyTable/REMOVE_FOREIGN_KEY';
 
+const FETCH_COLUMN_TYPE_CASTS = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS';
+const FETCH_COLUMN_TYPE_CASTS_FAIL = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS_FAIL';
 const RESET = 'ModifyTable/RESET';
 
 const setForeignKeys = fks => ({
@@ -1607,37 +1611,11 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
 
 const fetchColumnCasts = () => {
   return (dispatch, getState) => {
-    const fetchQuery = `
-SELECT ts.typname AS "Source Type",
-       pg_catalog.format_type(castsource, NULL) AS "Source Info",
-       pg_catalog.obj_description(castsource, 'pg_type') as "Source Descriptions",
-       string_agg(tt.typname, ',') AS "Target Type",
-       string_agg(pg_catalog.format_type(casttarget, NULL), ',') AS "Target Info",
-       string_agg(pg_catalog.obj_description(casttarget, 'pg_type'), ':') as "Target Descriptions",
-       string_agg(CASE WHEN castfunc = 0 THEN '(binary coercible)'
-            ELSE p.proname
-       END, ',') as "Function"
-     FROM pg_catalog.pg_cast c LEFT JOIN pg_catalog.pg_proc p
-     ON c.castfunc = p.oid
-     LEFT JOIN pg_catalog.pg_type ts
-     ON c.castsource = ts.oid
-     LEFT JOIN pg_catalog.pg_namespace ns
-     ON ns.oid = ts.typnamespace
-     LEFT JOIN pg_catalog.pg_type tt
-     ON c.casttarget = tt.oid
-     LEFT JOIN pg_catalog.pg_namespace nt
-     ON nt.oid = tt.typnamespace
-WHERE ( (true  AND pg_catalog.pg_type_is_visible(ts.oid)
-) OR (true  AND pg_catalog.pg_type_is_visible(tt.oid)
-) ) AND (c.castcontext != 'e') AND ts.typname != tt.typname
-GROUP BY ts.typname, castsource
-ORDER BY 1, 2;
-`;
     const url = Endpoints.getSchema;
     const reqQuery = {
       type: 'run_sql',
       args: {
-        sql: fetchQuery,
+        sql: fetchColumnCastsQuery,
       },
     };
     const options = {
@@ -1648,18 +1626,32 @@ ORDER BY 1, 2;
     };
     return dispatch(requestAction(url, options)).then(
       data => {
-        return Promise.resolve(data);
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS,
+          data: convertArrayToJson(data.result.slice(1)),
+        });
       },
       error => {
-        console.error('Failed to load table comment');
-        console.error(error);
-        return Promise.reject(error);
+        dispatch(
+          showErrorNotification(
+            'Error fetching column casts information',
+            'Kindly reach out to us in case you face this issue again',
+            error,
+            error
+          )
+        );
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS_FAIL,
+          data: error,
+        });
       }
     );
   };
 };
 
 export {
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
   SET_COLUMN_EDIT,

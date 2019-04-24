@@ -18,6 +18,8 @@ import {
   EDIT_COLUMN,
   SET_PRIMARY_KEYS,
   SET_FOREIGN_KEYS,
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   RESET,
 } from '../TableModify/ModifyActions';
 
@@ -551,6 +553,20 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         fkModify: action.fks,
+      };
+
+    case FETCH_COLUMN_TYPE_CASTS:
+      return {
+        ...modifyState,
+        alterColumnOptions: action.data,
+        alterColumnOptionsFetchErr: null,
+      };
+
+    case FETCH_COLUMN_TYPE_CASTS_FAIL:
+      return {
+        ...modifyState,
+        alterColumnOptions: [],
+        alterColumnOptionsFetchErr: action.data,
       };
 
     case UPDATE_MANUAL_REL_TABLE_LIST:
