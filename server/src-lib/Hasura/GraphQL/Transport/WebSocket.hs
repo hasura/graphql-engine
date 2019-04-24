@@ -155,8 +155,12 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath =
-      when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
-      throw404 "only /v1alpha1/graphql is supported on websockets"
+      when (WS.requestPath requestHead `notElem` allowedPaths) $
+        throw404 $ "only [" <> T.intercalate ", " allowedPaths
+                   <> "] is supported on websockets"
+
+    allowedPaths :: (IsString a) => [a]
+    allowedPaths = ["/v1alpha1/graphql", "/v1/graphql"]
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)

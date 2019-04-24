@@ -193,10 +193,11 @@ logError userInfoM req reqBody sc qErr =
 mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
+  -> (QErr -> QErr)
   -> ServerCtx
   -> Handler EncJSON
   -> ActionT m ()
-mkSpockAction qErrEncoder serverCtx handler = do
+mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let headers  = requestHeaders req
@@ -212,7 +213,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  let resLBS = fmap encJToLBS result
+  let resLBS = fmapL qErrModifier $ fmap encJToLBS result
 
   -- log result
   logResult (Just userInfo) req reqBody serverCtx resLBS $ Just (t1, t2)
@@ -272,6 +273,9 @@ v1Alpha1GQHandler query = do
   planCache <- scPlanCache . hcServerCtx <$> ask
   GH.runGQ pgExecCtx userInfo sqlGenCtx planCache
     sc scVer manager reqHeaders query reqBody
+
+v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1GQHandler = v1Alpha1GQHandler
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
@@ -375,13 +379,9 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- Health check endpoint
     get "healthz" $ do
       sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
-      let reportOK = do
-            setStatus N.status200
-            lazyBytes "OK"
-          reportError = do
-            setStatus N.status500
-            lazyBytes "ERROR"
-      bool reportError reportOK $ null $ scInconsistentObjs sc
+      if null $ scInconsistentObjs sc
+        then setStatus N.status200 >> lazyBytes "OK"
+        else setStatus N.status500 >> lazyBytes "ERROR"
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -393,22 +393,28 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       put    ("v1/template" <//> var) tmpltPutOrPostH
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+      post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ do
         query <- parseBody
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr serverCtx $
+        mkSpockAction encodeQErr id serverCtx $
         legacyQueryHandler (TableName tableName) queryType
 
     when enableGraphQL $ do
-      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-        expQuery <- parseBody
-        gqlExplainHandler expQuery
+      post "v1alpha1/graphql/explain" $
+        mkSpockAction encodeQErr id serverCtx $ do
+          expQuery <- parseBody
+          gqlExplainHandler expQuery
 
-      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $ do
         query <- parseBody
         v1Alpha1GQHandler query
+
+      post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $ do
+        query <- parseBody
+        v1GQHandler query
+
 
 #ifdef InternalAPIs
     get "internal/plan_cache" $ do
@@ -424,15 +430,18 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       raiseGenericApiError qErr
 
   where
+    -- all graphql errors should be of type 200
+    allMod200 qe = qe { qeStatus = N.status200 }
+
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
+      mkSpockAction encodeQErr id serverCtx $ mkQTemplateAction tmpltName tmpltArgs
 
     tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ do
+      mkSpockAction encodeQErr id serverCtx $ do
         bodyTmpltArgs <- parseBody
         mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 
