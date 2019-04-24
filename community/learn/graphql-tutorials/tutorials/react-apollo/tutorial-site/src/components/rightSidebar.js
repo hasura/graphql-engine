@@ -6,7 +6,7 @@ import './styles.css';
 import { forcedNavOrder } from '../config';
 
 const Sidebar = styled('aside')`
-  width: 224px;
+  width: 100%;
   background-color: #fff;
   border-right: 1px solid #ede7f3;
   height: 100vh;
@@ -71,7 +71,7 @@ const SidebarLayout = ({ location }) => (
               fields {
                 slug
               }
-              tableOfContents 
+              tableOfContents
             }
           }
         }
