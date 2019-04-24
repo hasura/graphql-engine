@@ -6,7 +6,7 @@ import {Link} from 'gatsby';
 
 These are the concepts you should know before you attack mutations (haha):
 - <Link to="/intro-to-graphql/2-fetching-data-queries#graphiql">Using GraphiQL</Link>
-- <Link to="/intro-to-graphql/2-fetching-data-queries#graphql-query-variables">Using query variables</Link>
+- <Link to="/intro-to-graphql/2-fetching-data-queries#query-variables">Using query variables</Link>
 
 Now, let's get started with seeing how we can use GraphQL to "write" data.
 GraphQL mutations are types of GraphQL queries that may result in the state
@@ -64,7 +64,7 @@ mutation {
       title
       is_completed
       is_public
-      created
+      created_at
     }
   }
 }
@@ -84,7 +84,7 @@ Now that we know how to parametrise using query variables, let's use that:
 
 ```graphql
 # The parametrised GraphQL mutation
-mutation($todo: insert_todo_input!){
+mutation($todo: todos_insert_input!){
   insert_todos(objects: [$todo]) {
     returning {
       id

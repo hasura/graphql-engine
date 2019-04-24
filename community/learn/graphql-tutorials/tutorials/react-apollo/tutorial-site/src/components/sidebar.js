@@ -194,7 +194,7 @@ const SidebarLayout = ({ location }) => (
               key={node.fields.slug}
               to={`${node.fields.slug}`}
               level={node.fields.slug.split("/").length - 2}
-              active={location? location.pathname === node.fields.slug: false}
+              active={location? location.pathname === ('/graphql/react' + node.fields.slug): false}
             >
               {node.fields.title}
             </ListItem>
