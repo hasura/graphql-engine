@@ -18,7 +18,7 @@ export default class HTML extends React.Component {
           <meta property="og:description" content="Introduction to GraphQL course react developers" />
           <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:title" content="Firebase2GraphQL: Get GraphQL on your Firebase data with Hasura" />
+          <meta property="twitter:title" content="GraphQL for react devs | Hasura" />
           <meta property="twitter:description" content="Introduction to GraphQL course react developers" />
           <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <link rel="stylesheet"
