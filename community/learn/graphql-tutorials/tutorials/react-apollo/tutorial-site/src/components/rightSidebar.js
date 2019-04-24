@@ -84,7 +84,8 @@ const SidebarLayout = ({ location }) => (
         const navItems = allMdx.edges.map((item, index) => {
           let innerItems;
           if(item !== undefined) {
-            if (item.node.fields.slug === location.pathname) {
+            console.log(item.node.fields.slug);
+            if ((item.node.fields.slug === location.pathname) || ('/graphql/react' + item.node.fields.slug) === location.pathname) {
               if (item.node.tableOfContents.items) {
                 innerItems = item.node.tableOfContents.items.map((innerItem, index) => {
                   return (
