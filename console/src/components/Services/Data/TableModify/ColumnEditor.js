@@ -11,10 +11,11 @@ import {
   JSONB,
   TIMESTAMP,
   TIME,
-} from '../../../../constants';
+  NUMERIC,
+  TEXT,
+} from '../utils';
 
 const ColumnEditor = ({
-  column,
   onSubmit,
   dispatch,
   columnComment,
@@ -24,90 +25,92 @@ const ColumnEditor = ({
   editColumn,
 }) => {
   const colName = columnProperties.name;
-  useEffect(() => {
-    dispatch(editColumn(colName, 'comment', columnComment));
-  }, [columnComment]);
-  const c = column;
+
   if (!selectedProperties[colName]) {
     return null;
   }
+
   const styles = require('./ModifyTable.scss');
-  // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
+
+  useEffect(() => {
+    dispatch(editColumn(colName, 'comment', columnComment));
+  }, [columnComment]);
+
+  // filter the datatypes where hasuraDatatype === null
   const typeMap = convertListToDictUsingKV(
     'hasuraDatatype',
     'value',
     dataTypes.filter(dataType => dataType.hasuraDatatype)
   );
-  const additionalOptions = [];
-  let finalDefaultValue = typeMap[columnProperties.type];
-  if (!typeMap[c.data_type]) {
-    finalDefaultValue = c.data_type;
-    additionalOptions.push(
-      <option value={finalDefaultValue} key={finalDefaultValue}>
-        {c.data_type}
-      </option>
-    );
-  }
-  const generateAlterOptions = datatypeOptions => {
-    return dataTypes.map(datatype => {
-      if (datatypeOptions.includes(datatype.value)) {
-        return (
-          <option
-            value={datatype.value}
-            key={datatype.name}
-            title={datatype.description}
-          >
-            {datatype.name}
+
+  const getAlternateTypeOptions = columntype => {
+    const generateOptions = datatypeOptions => {
+      const options = [];
+
+      dataTypes.forEach(datatype => {
+        if (datatypeOptions.includes(datatype.value)) {
+          options.push(
+            <option
+              value={datatype.value}
+              key={datatype.name}
+              title={datatype.description}
+            >
+              {datatype.name}
+            </option>
+          );
+        }
+      });
+
+      let finalDefaultValue = typeMap[columnProperties.type];
+      if (!finalDefaultValue) {
+        finalDefaultValue = columnProperties.type;
+        options.push(
+          <option value={finalDefaultValue} key={finalDefaultValue}>
+            {finalDefaultValue}
           </option>
         );
       }
-    });
-  };
 
-  const modifyAlterOptions = columntype => {
-    const integerOptions = [
-      'integer',
-      'serial',
-      'bigint',
-      'bigserial',
-      'numeric',
-      'text',
-    ];
-    const bigintOptions = ['bigint', 'bigserial', 'text', 'numeric'];
-    const uuidOptions = ['uuid', 'text'];
-    const jsonOptions = ['json', 'jsonb', 'text'];
-    const timestampOptions = ['timestamptz', 'text'];
-    const timeOptions = ['timetz', 'text'];
+      return options;
+    };
+
+    const integerOptions = [INTEGER, SERIAL, BIGINT, BIGSERIAL, NUMERIC, TEXT];
+    const bigintOptions = [BIGINT, BIGSERIAL, NUMERIC, TEXT];
+    const uuidOptions = [UUID, TEXT];
+    const jsonOptions = [JSON, JSONB, TEXT];
+    const timestampOptions = [TIMESTAMP, TEXT];
+    const timeOptions = [TIME, TEXT];
+
     switch (columntype) {
       case INTEGER:
-        return generateAlterOptions(integerOptions);
+        return generateOptions(integerOptions);
 
       case SERIAL:
-        return generateAlterOptions(integerOptions);
+        return generateOptions(integerOptions);
 
       case BIGINT:
-        return generateAlterOptions(bigintOptions);
+        return generateOptions(bigintOptions);
 
       case BIGSERIAL:
-        return generateAlterOptions(bigintOptions);
+        return generateOptions(bigintOptions);
 
       case UUID:
-        return generateAlterOptions(uuidOptions);
+        return generateOptions(uuidOptions);
 
       case JSONDTYPE:
-        return generateAlterOptions(jsonOptions);
+        return generateOptions(jsonOptions);
 
       case JSONB:
-        return generateAlterOptions(jsonOptions);
+        return generateOptions(jsonOptions);
 
       case TIMESTAMP:
-        return generateAlterOptions(timestampOptions);
+        return generateOptions(timestampOptions);
 
       case TIME:
-        return generateAlterOptions(timeOptions);
+        return generateOptions(timeOptions);
 
       default:
-        return generateAlterOptions([columntype, 'text']);
+        return generateOptions([columntype, TEXT]);
     }
   };
 
@@ -154,10 +157,9 @@ const ColumnEditor = ({
               value={selectedProperties[colName].type}
               onChange={updateColumnType}
               className="input-sm form-control"
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
             >
-              {modifyAlterOptions(columnProperties.type)}
-              {additionalOptions}
+              {getAlternateTypeOptions(columnProperties.type)}
             </select>
           </div>
         </div>
@@ -168,7 +170,7 @@ const ColumnEditor = ({
               className="input-sm form-control"
               value={selectedProperties[colName].isNullable}
               onChange={toggleColumnNullable}
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-nullable"
             >
               <option value="true">True</option>
@@ -181,9 +183,11 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={selectedProperties[colName].isUnique.toString()}
+              value={
+                selectedProperties[colName].uniqueConstraint ? 'true' : 'false'
+              }
               onChange={toggleColumnUnique}
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-unique"
             >
               <option value="true">True</option>
@@ -199,7 +203,7 @@ const ColumnEditor = ({
               value={selectedProperties[colName].default || ''}
               onChange={updateColumnDef}
               type="text"
-              disabled={columnProperties.isPrimaryKey}
+              disabled={columnProperties.pkConstraint}
               data-test="edit-col-default"
             />
           </div>
