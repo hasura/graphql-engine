@@ -5,6 +5,7 @@ module Hasura.EncJSON
   ( EncJSON
   , encJFromBuilder
   , encJToLBS
+  , encJToBS
   , encJFromJValue
   , encJFromChar
   , encJFromText
@@ -36,6 +37,10 @@ instance Q.FromCol EncJSON where
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON
 {-# INLINE encJToLBS #-}
+
+encJToBS :: EncJSON -> B.ByteString
+encJToBS = BL.toStrict . encJToLBS
+{-# INLINE encJToBS #-}
 
 encJFromBuilder :: BB.Builder -> EncJSON
 encJFromBuilder = EncJSON
