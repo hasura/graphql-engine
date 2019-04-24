@@ -142,9 +142,9 @@ class TodoPrivateList extends Component {
 +
 +    let filteredTodos = todos;
     if (this.state.filter === "active") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
+      filteredTodos = todos.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
+      filteredTodos = todos.filter(todo => todo.is_completed === true);
     }
 
     const todoList = [];
