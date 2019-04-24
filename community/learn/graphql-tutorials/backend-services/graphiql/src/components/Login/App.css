@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,600');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
+body {
+  font-family: 'Open Sans';
+  font-size: 16px;
+  margin: 0;
+}
+
+.login {
+  text-align: center;
+}
+
+.loginTextbox {
+  font-size: 16px;
+  height: 43px;
+  width: 74%;
+  margin-right: 1%;
+  font-weight: 300;
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  padding: 0 0 0 10px;
+  display: inline-block;
+}
+
+.loginButton {
+  height: 45px;
+  width: 10%;
+  display: inline-block;
+  border-radius: 5px;
+  background-color: green !important;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 1%;
+}
+
+.loginButton:hover {
+  background-color: #f6f6f6;
+}
+
+.loginHeading {
+  text-align: center;
+  font-family: 'Raleway';
+  margin-top: 0;
+  padding-bottom: 20px;
+}
+
+.loginWrapper {
+  width: 600px;
+  padding: 30px;
+  margin: 0 auto;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #ececec;
+  border-radius: 5px;
+  background-color: #f6f6f6;
+}
+
+.footerWrapper {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.apiHasura {
+  font-size: 14px;
+  text-align: right;
+}
+
+.apiHasura i {
+  color: #757575;;
+  font-size: 22px;
+}
+
+.apiHasura i:hover {
+  color: #000;
+}
+
+.built {
+  text-align: right;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.built i {
+  color: #f93c18;
+}

@@ -7,7 +7,6 @@ import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector'
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 
 import { showErrorNotification } from '../Notification';
-import { setForeignKeys } from './AddActions';
 
 import TableName from './TableName';
 import TableColumns from './TableColumns';
@@ -25,6 +24,7 @@ import {
   setColNullable,
   setColDefault,
   setColUnique,
+  setForeignKeys,
   addCol,
 } from './AddActions';
 
@@ -35,8 +35,8 @@ import { validationError, resetValidation } from './AddActions';
 import {
   ATLEAST_ONE_PRIMARY_KEY_MSG,
   ATLEAST_ONE_COLUMN_MSG,
+  fieldRepeatedMsg,
 } from './AddWarning';
-import { fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDuplicate,

@@ -149,7 +149,7 @@ class App extends Component {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Github
+              GitHub
               <i className="fa fa-angle-double-right" />
             </a>
           </span>

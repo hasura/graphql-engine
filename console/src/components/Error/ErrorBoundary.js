@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component {
                 <div>
                   You can report this issue on our{' '}
                   <a href="https://github.com/hasura/graphql-engine/issues">
-                    Github
+                    GitHub
                   </a>{' '}
                   or chat with us on{' '}
                   <a href="http://discord.gg/hasura">Discord</a>
