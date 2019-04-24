@@ -1,18 +1,24 @@
 .. _pg_dump_api_reference:
 
-pg_dump API
-===========
+PG Dump API Reference
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
   :local:
 
-This is an admin-only API that can be used to execute ``pg_dump`` on the
-Postgres instance that Hasura is configured with. The primary motive of this API
-is to provide convenience methods to initialise migrations from an existing
-Hasura instance. But the functionality can be later expanded to do other things
+The PG Dump API is an admin-only endpoint that can be used to execute ``pg_dump`` on the
+Postgres instance that Hasura is configured with.
+
+The primary motive of this API is to provide convenience methods to initialise migrations from an
+existing Hasura instance. But the functionality can be later expanded to do other things
 such as taking data dump etc.
+
+Endpoint
+--------
+
+All requests are ``POST`` requests to the ``/v1alpha1/pg_dump`` endpoint.
 
 API Spec
 --------
@@ -51,13 +57,16 @@ Disabling PG Dump API
 ---------------------
 
 Since this API can be used to dump all the Postgres data and schema, it can be
-disabled, especially in production deployments. ``enabled-apis`` flag can be
-used to enable/disable this API. Like other APIs, ``pg_dump`` API is also
-enabled by default. To disable it, you need to explicitly state that this API is
-not enabled. i.e. enable only ``graphql`` API and disable ``pgdump`` API.
+disabled, especially in production deployments.
+
+The ``enabled-apis`` flag or the ``HASURA_GRAPHQL_ENABLED_APIS`` env var can be used to
+enable/disable this API. By default, The PG DumpAPI is enabled. To disable it, you need to explicitly
+state that this API is not enabled. i.e. remove it from the list of enabled APIs.
 
 .. code-block:: bash
 
-   # enable only graphql api, disable pgdump and metdata api
-   --enabled-apis="graphql"
-   HASURA_GRAPHQL_ENABLED_APIS="graphql"
+   # enable only graphql & metadata apis, disable pgdump
+   --enabled-apis="graphql,metadata"
+   HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
+
+See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
