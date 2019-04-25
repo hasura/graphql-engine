@@ -11,7 +11,14 @@ GraphQL API
 
 All GraphQL requests for queries, subscriptions and mutations are made to the GraphQL API.
 
-All requests are ``POST`` requests to the ``/v1alpha1/graphql`` endpoint.
+All requests are ``POST`` requests to the ``/v1alpha1/graphql`` and ``/v1/graphql`` endpoint.
+
+.. note::
+
+   ``/v1/graphql`` endpoint returns HTTP 200 status codes for all responses.
+   This is a **breaking** change from ``/v1alpha1/graphql`` behaviour, where
+   request errors and internal errors were responded with 4xx and 5xx status
+   codes.
 
 Request types
 ^^^^^^^^^^^^^
