@@ -62,7 +62,7 @@ In case the server is configured with admin secret or auth, configure the approp
 
 ### Multiple schemas
 
-To query schemas other than `public`, you can pass it to resource in the format
+To query schemas other than `public`, you can pass schema to resource in the format
  `<Resource name="schema.table" />`.
 
 For example to fetch data from schema `test` and table `author`, use the following snippet:
