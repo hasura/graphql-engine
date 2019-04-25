@@ -97,7 +97,7 @@ class InvokeManualTrigger extends React.Component {
       */
       return (
         <div className={styles.displayFlexContainer}>
-          <div className={`${styles.padd_left_remove} col-md-5`}>
+          <div className={`${styles.padd_left_remove} col-md-6`}>
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -105,14 +105,14 @@ class InvokeManualTrigger extends React.Component {
               name="event_payload"
               value={JSON.stringify(status[0].request, null, 2)}
               minLines={8}
-              maxLines={10}
+              maxLines={15}
               width="100%"
               showPrintMargin={false}
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
             />
           </div>
-          <div className={`${styles.padd_left_remove} col-md-5`}>
+          <div className={`${styles.padd_right_remove} col-md-6`}>
             <div> Latest Invocation Response</div>
             <AceEditor
               mode="json"
@@ -120,7 +120,7 @@ class InvokeManualTrigger extends React.Component {
               name="event_payload"
               value={JSON.stringify(status[0].response, null, 2)}
               minLines={8}
-              maxLines={10}
+              maxLines={15}
               width="100%"
               showPrintMargin={false}
               showGutter={false}
@@ -147,9 +147,9 @@ class InvokeManualTrigger extends React.Component {
       <div
         className={`${styles.remove_padding_left} container-fluid ${
           styles.clear_fix
-        }`}
+        } ${styles.padd_right_remove}`}
       >
-        <div className={`${styles.remove_padding_left} col-md-12`}>
+        <div className={`${styles.remove_padding_left} col-md-12 ${styles.padd_right_remove}`}>
           <div className={`${styles.margin_bottom_20} `}>
             Event ID - {eventInfo}
           </div>

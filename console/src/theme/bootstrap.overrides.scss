@@ -111,9 +111,32 @@ select.form-control {
 #invokeEventTrigger {
   .modal-content {
     min-height: 100px;
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
   }
 }
-
+#redeliverModal
+{
+  .modal-content
+  {
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
 .generateCodeWrapper {
   width: 65% !important;
 
