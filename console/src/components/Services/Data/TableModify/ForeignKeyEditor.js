@@ -50,26 +50,25 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
 
-    const existingFkConfig = getForeignKeyConfig(
-      existingForeignKeys[i],
-      orderedColumns
-    );
+    const getFkConfigLabel = config => {
+      let fkConfigLabel;
+      if (config) {
+        fkConfigLabel = (
+          <span>
+            <b>{config}</b> - <i>{fk.constraintName}</i>
+          </span>
+        );
+      }
 
-    let fkConfigLabel;
-    if (existingFkConfig) {
-      fkConfigLabel = (
-        <span>
-          <b>{existingFkConfig}</b> - <i>{fk.constraintName}</i>
-        </span>
-      );
-    }
+      return fkConfigLabel;
+    };
 
     const isLast = i + 1 === numFks;
 
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => {
       const collapsedLabelText =
-        isLast && numFks === 1 ? 'No foreign keys' : fkConfigLabel;
+        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
 
       return (
         <div>
@@ -111,7 +110,16 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
         return null;
       }
 
-      return <h5 className={styles.padd_bottom}>{fkConfigLabel}</h5>;
+      const existingFkConfig = getForeignKeyConfig(
+        existingForeignKeys[i],
+        orderedColumns
+      );
+
+      return (
+        <h5 className={styles.padd_bottom}>
+          {getFkConfigLabel(existingFkConfig)}
+        </h5>
+      );
     };
 
     // If the user made some changes and collapses the editor, the changes are lost
