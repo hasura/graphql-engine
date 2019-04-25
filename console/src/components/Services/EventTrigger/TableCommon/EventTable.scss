@@ -36,7 +36,21 @@
   display: flex;
   align-items: center;
 }
-
+.tabletdCenter
+{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tableArrowCenter
+{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+}
 .invocationsSection {
   margin-top: 20px;
 
@@ -52,7 +66,6 @@
   .invocationSuccess {
     color: #28a745
   }
-
   .invocationFailure {
     color: red;
   }
@@ -73,7 +86,6 @@
   .invocationSuccess {
     color: #28a745;
   }
-
   .invocationFailure {
     color: red;
   }

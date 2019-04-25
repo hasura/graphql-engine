@@ -93,7 +93,7 @@ class RedeliverEvent extends Component {
           r.status === 200 ? (
             <i
               className={
-                styles.invocationSuccess + ' fa fa-check invocationsSuccess'
+                styles.invocationSuccess + ' fa fa-check invocationsSuccess ' + styles.tabletdCenter
               }
             />
           ) : (
@@ -131,6 +131,7 @@ class RedeliverEvent extends Component {
       });
       return (
         <ReactTable
+          className="invocationClass"
           data={invocationRowsData}
           columns={invocationGridHeadings}
           minRows={0}
@@ -289,7 +290,6 @@ class RedeliverEvent extends Component {
                 </div>
                 <div
                   className={
-                    'container-fluid ' +
                     styles.redeliverEventSection +
                     ' ' +
                     styles.padd_top +

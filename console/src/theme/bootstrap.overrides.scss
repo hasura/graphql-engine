@@ -247,3 +247,30 @@ select.form-control {
     }
   }
 }
+.invocationClass
+{
+  clear: both;
+  .rt-table
+  {
+    .rt-tbody
+    {
+      .rt-tr-group
+      {
+        .rt-tr
+        {
+          .rt-td
+          {
+            .rt-expander
+            {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              width: 13px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
