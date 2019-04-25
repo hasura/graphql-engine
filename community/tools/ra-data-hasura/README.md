@@ -60,6 +60,17 @@ export default App;
 
 In case the server is configured with admin secret or auth, configure the appropriate headers and pass it to the provider.
 
+### Multiple schemas
+
+To query schemas other than `public`, you can pass it to resource in the format
+ `<Resource name="schema.table" />`.
+
+For example to fetch data from schema `test` and table `author`, use the following snippet:
+
+```
+  <Resource name="test.author" list={list} />
+```
+
 ## Known Issues
 
 Filter as you type (search) functionality inside tables is not supported right now. It is a work in progress.
