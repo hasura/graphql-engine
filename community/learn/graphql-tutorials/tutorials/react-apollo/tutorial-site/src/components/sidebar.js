@@ -35,7 +35,7 @@ const Logo = styled(props => (
 `;
 
 const Sidebar = styled('aside')`
-  width: 298px;
+  width: 100%;
   /* background-color: rgb(245, 247, 249); */
   /* border-right: 1px solid #ede7f3; */
   height: 100vh;
@@ -189,12 +189,18 @@ const SidebarLayout = ({ location }) => (
             ({ node }) => node.fields.slug === slug
           );
 
+          let isActive = false;
+          if(location && (location.pathname === node.fields.slug || location.pathname === (process.env.GATSBY_PATH_PREFIX + node.fields.slug)) ) {
+            isActive = true;
+          }
+
           return (
             <ListItem
               key={node.fields.slug}
               to={`${node.fields.slug}`}
               level={node.fields.slug.split("/").length - 2}
-              active={location? location.pathname === node.fields.slug: false}
+              // active={location? location.pathname === ('/graphql/react' + node.fields.slug): false}
+              active={isActive}
             >
               {node.fields.title}
             </ListItem>

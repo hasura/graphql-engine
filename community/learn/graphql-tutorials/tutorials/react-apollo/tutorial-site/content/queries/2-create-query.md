@@ -38,9 +38,7 @@ What does this query do?
 ------------------------
 The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
 
-[Try](https://learn.hasura.io/graphql/graphiql) out this query now!
-
-Great! The query is now ready, let's integrate it with our react code.
+The query is now ready, let's integrate it with our react code.
 
 ```javascript
 
@@ -142,9 +140,11 @@ class TodoPrivateList extends Component {
 +
 +    let filteredTodos = todos;
     if (this.state.filter === "active") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
+-     filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
++     filteredTodos = todos.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
+-     filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
++     filteredTodos = todos.filter(todo => todo.is_completed === true);
     }
 
     const todoList = [];
