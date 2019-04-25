@@ -194,8 +194,8 @@ dumpLiveQueryMap lqMap =
       , "min" J..= Metrics.min stats
       , "max" J..= Metrics.max stats
       ]
-    dumpCandidates candidateMap = STM.atomically $ do
-      candidates <- toListTMap candidateMap
+    dumpCandidates candidateMap = do
+      candidates <- STM.atomically $ toListTMap candidateMap
       forM candidates $ \((usrVars, varVals), candidate) -> do
         candidateJ <- dumpCandidate candidate
         return $ J.object
@@ -203,7 +203,8 @@ dumpLiveQueryMap lqMap =
           , "variable_values" J..= varVals
           , "candidate" J..= candidateJ
           ]
-    dumpCandidate (CandidateState respId _ respTV curOps newOps) = do
+    dumpCandidate (CandidateState respId _ respTV curOps newOps) =
+      STM.atomically $ do
       prevResHash <- STM.readTVar respTV
       curOpIds <- toListTMap curOps
       newOpIds <- toListTMap newOps
@@ -488,11 +489,14 @@ pollQuery
 pollQuery metrics batchSize pgExecCtx handler = do
 
   procInit <- Clock.getCurrentTime
+
   -- get a snapshot of all the candidates
-  candidateSnapshotMap <- STM.atomically $ do
-    candidates <- toListTMap candidateMap
-    candidateSnapshots <- mapM getCandidateSnapshot candidates
-    return $ Map.fromList candidateSnapshots
+  -- this need not be done in a transaction
+  candidates <- STM.atomically $ toListTMap candidateMap
+  candidateSnapshotMap <-
+    fmap Map.fromList $
+    mapM (STM.atomically . getCandidateSnapshot) candidates
+
   let queryVarsBatches = chunks (unBatchSize batchSize) $
                         getQueryVars candidateSnapshotMap
 
