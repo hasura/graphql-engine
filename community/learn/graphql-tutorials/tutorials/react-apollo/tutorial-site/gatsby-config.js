@@ -5,9 +5,11 @@ module.exports = {
     title: 'GraphQL for react devs | Hasura',
     description: 'Introduction to GraphQL course react developers',
     docsLocation: 'https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/content',
-    headerTitle: '/ graphql / react'
+    headerTitle: '/ graphql / react',
+    siteUrl: 'https://learn.hasura.io'
   },
   plugins: [
+    'gatsby-plugin-sitemap',
     'gatsby-plugin-sharp',
     {
       resolve: `gatsby-plugin-layout`,
