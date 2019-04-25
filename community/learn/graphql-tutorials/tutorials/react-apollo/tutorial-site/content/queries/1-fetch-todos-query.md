@@ -19,6 +19,6 @@ query getMyTodos {
 
 **Note**: You need to pass the `Authorization: Bearer <token>` header before querying to get the results. The token is auto-filled in the UI after logging in via Auth0.
 
-Don't be surprised to see results being empty. You haven't added any todos yet! This query is just to ensure if everything works as expected.
+This query is the actual graphql query that we will be using in our react app and hence test this out to make sure it works as expected.
 
 Let's now integrate this graphql query into our react app.
