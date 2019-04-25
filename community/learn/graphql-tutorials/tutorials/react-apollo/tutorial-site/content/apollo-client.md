@@ -54,17 +54,22 @@ export default App;
 These are the required apollo dependenices to get started. Now let's define a function which will return apollo client with httplink and cache.
 
 ```javascript
-const createApolloClient = (authToken) => {
-  return new ApolloClient({
-    link: new HttpLink({
-      uri: 'https://learn.hasura.io/graphql',
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    }),
-    cache: new InMemoryCache(),
-  });
-};
+import ApolloClient from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+import { ApolloProvider } from 'react-apollo';
+
++ const createApolloClient = (authToken) => {
++  return new ApolloClient({
++    link: new HttpLink({
++      uri: 'https://learn.hasura.io/graphql',
++      headers: {
++        Authorization: `Bearer ${authToken}`
++      }
++    }),
++    cache: new InMemoryCache(),
++  });
++ };
 ```
 Create the apollo client inside `App` and pass the client prop to `<ApolloProvider>` component.
 

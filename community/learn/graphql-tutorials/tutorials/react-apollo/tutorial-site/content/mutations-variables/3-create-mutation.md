@@ -10,11 +10,11 @@ import { Mutation } from "react-apollo";
 
 We are importing the `Mutation` component from `react-apollo` and the graphql query we defined above to fetch the todo data.
 
-Now, we will wrap the component with `Mutation` passing our graphql mutation constant that we imported. Replace the `return` with the following code:
+Now, we will wrap the component with `Mutation` passing our graphql mutation constant that we imported. Add the following code:
 
 ```javascript
 const TodoInput = ({isPublic=false}) => {
-  return (
++ return (
 +  <Mutation mutation={ADD_TODO}>
 +    {(addTodo, { loading, data }) => {
       return (
@@ -30,7 +30,7 @@ const TodoInput = ({isPublic=false}) => {
       );
 +    }}
 +  </Mutation>
-  );
++ );
 };
 ```
 
@@ -94,6 +94,7 @@ Now let's handle the form submit to invoke the mutation.
             placeholder="What needs to be done?"
             value={todoInput}
             onChange={e => (setTodoInput(e.target.value))}
+            ref={n => (input = n)}
           />
           <i className="inputMarker fa fa-angle-right" />
         </form>
