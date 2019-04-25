@@ -96,7 +96,7 @@ def test_forbidden_webhook(hge_ctx, conf):
     })
 
 
-def check_query(hge_ctx, conf, transport='http', add_auth=True):
+def check_query(hge_ctx, conf, transport='http', endpoint=None, add_auth=True):
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
@@ -162,14 +162,17 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
         )
     elif transport == 'http':
         print('running on http')
-        return validate_http_anyq (
-            hge_ctx,
-            conf['url'],
-            conf['query'],
-            headers,
-            conf['status'],
-            conf.get('response')
-        )
+        # TODO: fix for now to run test on both endpoints, eventually remove
+        # url form yaml files?
+        url = endpoint if endpoint else conf['url']
+        if endpoint == '/v1/graphql':
+            status = 200
+            return validate_http_anyq(hge_ctx, url, conf['query'], headers,
+                                      status, conf.get('response'))
+
+        return validate_http_anyq(hge_ctx, url, conf['query'], headers,
+                                  conf['status'], conf.get('response'))
+
 
 
 def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
@@ -235,7 +238,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
         })
     return resp
 
-def check_query_f(hge_ctx, f, transport='http', add_auth=True):
+def check_query_f(hge_ctx, f, transport='http', endpoint=None, add_auth=True):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
@@ -243,11 +246,11 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
         conf = yaml.safe_load(c)
         if isinstance(conf, list):
             for sconf in conf:
-                check_query(hge_ctx, sconf)
+                check_query(hge_ctx, sconf, transport, endpoint, add_auth)
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            check_query(hge_ctx, conf, transport, add_auth)
+            check_query(hge_ctx, conf, transport, endpoint, add_auth)
 
 
 def json_ordered(obj):
