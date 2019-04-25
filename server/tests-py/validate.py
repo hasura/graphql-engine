@@ -148,12 +148,12 @@ def check_query(hge_ctx, conf, transport='http', endpoint=None, add_auth=True):
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-    assert transport in ['websocket','http'], "Unknown transport type " + transport
+    assert transport in ['websocket', 'http'], "Unknown transport type " + transport
     if transport == 'websocket':
         assert 'response' in conf
         assert conf['url'].endswith('/graphql')
         print('running on websocket')
-        return validate_gql_ws_q (
+        return validate_gql_ws_q(
             hge_ctx,
             conf['query'],
             headers,
@@ -182,21 +182,22 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
 
     query_resp = ws_client.send_query(query, headers=headers, timeout=15)
     resp = next(query_resp)
+    print('websocket resp: ', resp)
 
     if resp.get('type') == 'complete':
         if retry:
             #Got query complete before payload. Retry once more
-            print ("Got query complete before getting query response payload. Retrying")
+            print("Got query complete before getting query response payload. Retrying")
             ws_client.recreate_conn()
             time.sleep(3)
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
-            assert resp['type'] in ['data','error'], resp
+            assert resp['type'] in ['data', 'error'], resp
 
     if 'errors' in exp_http_response:
-        assert resp['type'] in ['data','error'], resp
+        assert resp['type'] in ['data', 'error'], resp
 
-        exp_ws_response1 =  exp_http_response['errors'][0]['extensions']
+        exp_ws_response1 = exp_http_response['errors'][0]['extensions']
         exp_ws_response1['error'] = exp_http_response['errors'][0]['message']
 
         exp_ws_response2 = {'errors': []}
@@ -220,10 +221,9 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
         'expected': exp_ws_response,
         'diff': jsondiff.diff(exp_ws_response, resp['payload'])
     })
-    respDone = next(query_resp)
-    assert respDone['type'] == 'complete'
+    resp_done = next(query_resp)
+    assert resp_done['type'] == 'complete'
     return resp['payload']
-
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
