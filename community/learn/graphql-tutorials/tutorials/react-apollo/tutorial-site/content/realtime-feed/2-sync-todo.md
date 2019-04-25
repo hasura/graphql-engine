@@ -140,19 +140,19 @@ Update the `loadOlder` method to the following:
 +      query: GET_OLD_PUBLIC_TODOS,
 +      variables: {oldestTodoId: (this.oldestTodoId)}
 +    })
-+      .then(({data}) => {
-+        if (data.todos.length) {
-+          this.oldestTodoId = data.todos[data.todos.length - 1].id;
-+          this.setState({todos: [...this.state.todos, ...data.todos]});
-+        } else {
-+          this.setState({olderTodosAvailable: false});
-+        }
-+      })
-+      .catch(error => {
-+        console.error(error);
-+        this.setState({error: true});
-+      });
-+  }
++    .then(({data}) => {
++      if (data.todos.length) {
++        this.oldestTodoId = data.todos[data.todos.length - 1].id;
++        this.setState({todos: [...this.state.todos, ...data.todos]});
++      } else {
++        this.setState({olderTodosAvailable: false});
++      }
++    })
++    .catch(error => {
++      console.error(error);
++      this.setState({error: true});
++    });
+  }
 ```
 
 We are defining a query to fetch older public todos and making a `client.query` call to get the data from the database. Once we get the data, we update the `todos` state to re-render the UI with the available list of public todos.
@@ -210,5 +210,5 @@ Update `loadNew()` method with the following code
 +     console.error(error);
 +     this.setState({error: true});
 +   });
-+ }
+  }
 ```
