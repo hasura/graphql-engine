@@ -41,6 +41,7 @@ class App extends Component {
       notifMsg,
       telemetry,
       dispatch,
+      metadata,
     } = this.props;
 
     if (requestError && error) {
@@ -91,7 +92,7 @@ class App extends Component {
     }
 
     return (
-      <ErrorBoundary>
+      <ErrorBoundary metadata={metadata} dispatch={dispatch}>
         <div>
           {hasuraCliDown}
           {ongoingRequest && (
@@ -167,6 +168,7 @@ const mapStateToProps = state => {
     ...state.progressBar,
     notifications: state.notifications,
     telemetry: state.telemetry,
+    metadata: state.metadata,
   };
 };
 

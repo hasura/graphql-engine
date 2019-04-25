@@ -191,7 +191,20 @@ const ViewRows = ({
         let expandButton;
         let manualTriggersButton;
 
-        const getActionButton = (type, icon, title, handleClick) => {
+        const getActionButton = (
+          type,
+          icon,
+          title,
+          handleClick,
+          requirePK = false
+        ) => {
+          const disabled = requirePK && !_hasPrimaryKey;
+
+          const disabledOnClick = e => {
+            e.preventDefault();
+            e.stopPropagation();
+          };
+
           return (
             <Button
               className={
@@ -199,9 +212,10 @@ const ViewRows = ({
               }
               color="white"
               size="xs"
-              onClick={handleClick}
-              title={title}
+              onClick={disabled ? disabledOnClick : handleClick}
+              title={disabled ? 'No primary key to identify row' : title}
               data-test={`row-${type}-button-${rowIndex}`}
+              disabled={disabled}
             >
               {icon}
             </Button>
@@ -243,7 +257,13 @@ const ViewRows = ({
 
           const editTitle = 'Edit row';
 
-          return getActionButton('edit', editIcon, editTitle, handleEditClick);
+          return getActionButton(
+            'edit',
+            editIcon,
+            editTitle,
+            handleEditClick,
+            true
+          );
         };
 
         const getDeleteButton = pkClause => {
@@ -259,7 +279,8 @@ const ViewRows = ({
             'delete',
             deleteIcon,
             deleteTitle,
-            handleDeleteClick
+            handleDeleteClick,
+            true
           );
         };
 
@@ -279,7 +300,8 @@ const ViewRows = ({
             'clone',
             cloneIcon,
             cloneTitle,
-            handleCloneClick
+            handleCloneClick,
+            true
           );
         };
 
@@ -332,9 +354,9 @@ const ViewRows = ({
           ];
         };
 
-        const allowModify = !_isSingleRow && !isView && _hasPrimaryKey;
+        const showActionBtns = !_isSingleRow && !isView;
 
-        if (allowModify) {
+        if (showActionBtns) {
           const pkClause = getPKClause();
 
           editButton = getEditButton(pkClause);

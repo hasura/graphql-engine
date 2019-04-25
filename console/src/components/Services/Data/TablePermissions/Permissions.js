@@ -13,6 +13,7 @@ import {
   permOpenEdit,
   permAddTableSchemas,
   permSetFilter,
+  permSetFilterSameAs,
   permToggleColumn,
   permToggleAllColumns,
   permAllowAll,
@@ -156,6 +157,10 @@ class Permissions extends Component {
           </OverlayTrigger>
         </span>
       );
+    };
+
+    const getQueryFilterKey = query => {
+      return query === 'insert' ? 'check' : 'filter';
     };
 
     /********************/
@@ -613,7 +618,7 @@ class Permissions extends Component {
       };
 
       const getRowSection = () => {
-        const filterKey = query === 'insert' ? 'check' : 'filter';
+        const filterKey = getQueryFilterKey(query);
 
         let filterString = '';
         if (permissionsState[query]) {
@@ -639,11 +644,44 @@ class Permissions extends Component {
             dispatch(permAllowAll());
           };
 
+          const dispatchSetFilterSameAs = filter => () => {
+            dispatch(permSetFilterSameAs(JSON.parse(filter)));
+          };
+
           const dispatchCustomChecked = () => {
             dispatch(permCustomChecked());
           };
 
+          // return queries grouped by filterString i.e. { filterString: [query] }
+          const getFilterQueries = () => {
+            const _filterQueries = {};
+            queryTypes.forEach(queryType => {
+              if (queryType === permissionsState.query) {
+                return;
+              }
+
+              const queryFilterKey = getQueryFilterKey(queryType);
+
+              let queryFilterString = '';
+              if (permissionsState[queryType]) {
+                queryFilterString = JSON.stringify(
+                  permissionsState[queryType][queryFilterKey]
+                );
+              }
+
+              if (queryFilterString) {
+                _filterQueries[queryFilterString] =
+                  _filterQueries[queryFilterString] || [];
+                _filterQueries[queryFilterString].push(queryType);
+              }
+            });
+
+            return _filterQueries;
+          };
+
           const _filterOptionsSection = [];
+
+          const filterQueries = getFilterQueries();
 
           const selectedValue = (
             <AceEditor
@@ -674,11 +712,25 @@ class Permissions extends Component {
             </div>
           );
 
+          // TODO: add no access option
+
           const addNoChecksOption = () => {
             const isSelected = !permissionsState.custom_checked && noChecks;
 
+            // Add allow all option
+            let allowAllQueryInfo = '';
+            if (filterQueries['{}']) {
+              allowAllQueryInfo = (
+                <i className={styles.add_mar_left_small}>
+                  (Same as <b>{filterQueries['{}'].join(', ')}</b>)
+                </i>
+              );
+            }
+
             const allowAllLabel = (
-              <span data-test="without-checks">Without any checks</span>
+              <span data-test="without-checks">
+                Without any checks {allowAllQueryInfo}
+              </span>
             );
 
             _filterOptionsSection.push(
@@ -696,7 +748,37 @@ class Permissions extends Component {
             }
           };
 
-          // TODO: add no access option
+          const addSameAsOptions = () => {
+            // Add other query options
+            Object.keys(filterQueries).forEach((filter, i) => {
+              if (filter === '{}') {
+                return;
+              }
+
+              const isSelected =
+                !permissionsState.custom_checked && filterString === filter;
+
+              const queries = filterQueries[filter].join(', ');
+              const queryLabel = (
+                <span data-test="mutual-check">
+                  With same custom checks as <b>{queries}</b>
+                </span>
+              );
+              _filterOptionsSection.push(
+                getFilterRadio(
+                  i,
+                  isSelected,
+                  queries,
+                  dispatchSetFilterSameAs(filter),
+                  queryLabel
+                )
+              );
+
+              if (isSelected) {
+                _filterOptionsSection.push(selectedValue);
+              }
+            });
+          };
 
           const addCustomCheckOption = () => {
             const dispatchFuncSetFilter = filter =>
@@ -705,13 +787,13 @@ class Permissions extends Component {
             const dispatchFuncAddTableSchemas = schemaNames =>
               permAddTableSchemas(schemaNames);
 
-            const isCustomFilter = () => {
-              return filterString !== '' && filterString !== '{}';
-            };
+            const isUniqueFilter =
+              filterString !== '' &&
+              filterString !== '{}' &&
+              !filterQueries[filterString];
 
             const isSelected =
-              permissionsState.custom_checked ||
-              isCustomFilter(queryTypes, permissionsState, filterString);
+              permissionsState.custom_checked || isUniqueFilter;
 
             const customCheckToolTip = (
               <Tooltip id="tooltip-custom-check">
@@ -757,6 +839,7 @@ class Permissions extends Component {
           };
 
           addNoChecksOption();
+          addSameAsOptions();
           addCustomCheckOption();
 
           return _filterOptionsSection;
@@ -828,14 +911,17 @@ class Permissions extends Component {
               rowPermissionTooltip,
               rowSectionStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-row-permission'}
             isOpen={noAccess}
           >
             <div className={styles.editPermsSection}>
               <div>
-                Allow role <b>{permissionsState.role}</b> to{' '}
-                {permissionsState.query} <b>rows</b>:{getFilterOptions()}
+                <div>
+                  Allow role <b>{permissionsState.role}</b> to{' '}
+                  {permissionsState.query} <b>rows</b>:
+                </div>
+                {getFilterOptions()}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
             </div>
@@ -864,9 +950,17 @@ class Permissions extends Component {
 
           tableSchema.columns.forEach((colObj, i) => {
             const column = colObj.column_name;
-            const checked = permissionsState[query]
-              ? permissionsState[query].columns.includes(column)
-              : false;
+
+            let checked;
+            if (permissionsState[query]) {
+              if (permissionsState[query].columns === '*') {
+                checked = true;
+              } else {
+                checked = permissionsState[query].columns.includes(column);
+              }
+            } else {
+              checked = false;
+            }
 
             _columnList.push(
               <div key={i} className={styles.columnListElement}>
@@ -965,8 +1059,9 @@ class Permissions extends Component {
           ) {
             colSectionStatus = 'no columns';
           } else if (
+            permissionsState[query].columns === '*' ||
             permissionsState[query].columns.length ===
-            tableSchema.columns.length
+              tableSchema.columns.length
           ) {
             colSectionStatus = 'all columns';
           } else {
@@ -980,7 +1075,7 @@ class Permissions extends Component {
                 colPermissionTooltip,
                 colSectionStatus
               )}
-              defaultTitle
+              useDefaultTitleStyle
               testId={'toggle-col-permission'}
             >
               <div
@@ -1036,7 +1131,7 @@ class Permissions extends Component {
               upsertToolTip,
               upsertStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-upsert-permission'}
           >
             <div
@@ -1395,7 +1490,7 @@ class Permissions extends Component {
               presetTooltip,
               presetStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-presets-permission'}
           >
             <div
@@ -1441,7 +1536,7 @@ class Permissions extends Component {
               aggregationToolTip,
               aggregationStatus
             )}
-            defaultTitle
+            useDefaultTitleStyle
             testId={'toggle-agg-permission'}
           >
             <div
@@ -1579,7 +1674,7 @@ class Permissions extends Component {
               <hr />
               <CollapsibleToggle
                 title={getSectionHeader('Clone permissions', cloneToolTip)}
-                defaultTitle
+                useDefaultTitleStyle
                 testId={'toggle-clone-permission'}
               >
                 <div

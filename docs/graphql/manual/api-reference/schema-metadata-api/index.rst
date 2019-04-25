@@ -152,9 +152,9 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
-
+       
    * - :ref:`export_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Export the current metadata
 
    * - :ref:`replace_metadata`
@@ -162,12 +162,21 @@ The various types of queries are listed in the following table:
      - Import and replace existing metadata
 
    * - :ref:`reload_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Reload changes to the underlying Postgres DB
 
    * - :ref:`clear_metadata`
-     - ``{}``
+     - :ref:`Empty Object`
      - Clear/wipe-out the current metadata state form server
+
+   * - :ref:`get_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - List all inconsistent metadata objects
+       
+   * - :ref:`drop_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - Drop all inconsistent metadata objects
+
 
 **See:**
 

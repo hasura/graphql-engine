@@ -18,34 +18,42 @@ module Hasura.RQL.DDL.Metadata
 
   , DumpInternalState(..)
   , runDumpInternalState
+
+  , GetInconsistentMetadata
+  , runGetInconsistentMetadata
+
+  , DropInconsistentMetadata
+  , runDropInconsistentMetadata
   ) where
 
-import           Control.Lens
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.List                      as L
-import qualified Data.Text                      as T
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
+import qualified Data.List                          as L
+import qualified Data.Text                          as T
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query              as Q
-import qualified Hasura.RQL.DDL.EventTrigger    as DS
-import qualified Hasura.RQL.DDL.Permission      as DP
-import qualified Hasura.RQL.DDL.QueryTemplate   as DQ
-import qualified Hasura.RQL.DDL.Relationship    as DR
-import qualified Hasura.RQL.DDL.RemoteSchema    as DRS
-import qualified Hasura.RQL.DDL.Schema.Function as DF
-import qualified Hasura.RQL.DDL.Schema.Table    as DT
-import qualified Hasura.RQL.Types.EventTrigger  as DTS
-import qualified Hasura.RQL.Types.RemoteSchema  as TRS
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.RQL.DDL.EventTrigger        as DE
+import qualified Hasura.RQL.DDL.Permission          as DP
+import qualified Hasura.RQL.DDL.Permission.Internal as DP
+import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
+import qualified Hasura.RQL.DDL.Relationship        as DR
+import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
+import qualified Hasura.RQL.DDL.Schema.Function     as DF
+import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.Types.EventTrigger      as DTS
+import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
@@ -130,7 +138,7 @@ runClearMetadata
 runClearMetadata _ = do
   adminOnly
   liftTx clearMetadata
-  DT.buildSchemaCache
+  DT.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
@@ -208,7 +216,7 @@ applyQP2
 applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   liftTx clearMetadata
-  DT.buildSchemaCache
+  DT.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
@@ -241,7 +249,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        DS.subTableP2 (table ^. tmTable) False etc
+        DE.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
@@ -257,7 +265,16 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
       indexedForM_ schemas $ \conf ->
-        void $ DRS.addRemoteSchemaP2 conf
+        void $ DRS.addRemoteSchemaP1 conf
+               >>= DRS.addRemoteSchemaP2 conf
+
+  -- build GraphQL Context
+  sc <- GS.updateSCWithGCtx =<< askSchemaCache
+
+  -- resolve remote schemas
+  httpMgr <- askHttpManager
+  newSc <- DRS.resolveRemoteSchemas sc httpMgr
+  writeSchemaCache newSc
 
   return successMsg
 
@@ -440,3 +457,55 @@ runDumpInternalState
 runDumpInternalState _ = do
   adminOnly
   encJFromJValue <$> askSchemaCache
+
+
+data GetInconsistentMetadata
+  = GetInconsistentMetadata
+  deriving (Show, Eq, Lift)
+
+instance FromJSON GetInconsistentMetadata where
+  parseJSON _ = return GetInconsistentMetadata
+
+$(deriveToJSON defaultOptions ''GetInconsistentMetadata)
+
+runGetInconsistentMetadata
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => GetInconsistentMetadata -> m EncJSON
+runGetInconsistentMetadata _ = do
+  adminOnly
+  inconsObjs <- scInconsistentObjs <$> askSchemaCache
+  return $ encJFromJValue $ object
+                [ "is_consistent" .= null inconsObjs
+                , "inconsistent_objects" .= inconsObjs
+                ]
+
+data DropInconsistentMetadata
+ = DropInconsistentMetadata
+ deriving(Show, Eq, Lift)
+
+instance FromJSON DropInconsistentMetadata where
+  parseJSON _ = return DropInconsistentMetadata
+
+$(deriveToJSON defaultOptions ''DropInconsistentMetadata)
+
+runDropInconsistentMetadata
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropInconsistentMetadata -> m EncJSON
+runDropInconsistentMetadata _ = do
+  adminOnly
+  sc <- askSchemaCache
+  let inconsSchObjs = map _moId $ scInconsistentObjs sc
+  mapM_ purgeMetadataObj inconsSchObjs
+  writeSchemaCache sc{scInconsistentObjs = []}
+  return successMsg
+
+purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
+purgeMetadataObj = liftTx . \case
+  (MOTable qt) ->
+    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
+  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
+  (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
+  (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
+  (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
+  (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

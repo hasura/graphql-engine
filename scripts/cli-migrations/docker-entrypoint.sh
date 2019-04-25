@@ -54,9 +54,12 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     cd "$TEMP_MIGRATIONS_DIR"
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_SERVER_PORT" > config.yaml
     hasura-cli migrate apply
-    # check if metadata.yaml exist and apply
+    # check if metadata.[yaml|json] exist and apply
     if [ -f migrations/metadata.yaml ]; then
         log "applying metadata from $HASURA_GRAPHQL_MIGRATIONS_DIR/metadata.yaml"
+        hasura-cli metadata apply
+    elif [ -f migrations/metadata.json ]; then
+        log "applying metadata from $HASURA_GRAPHQL_MIGRATIONS_DIR/metadata.json"
         hasura-cli metadata apply
     fi
 else

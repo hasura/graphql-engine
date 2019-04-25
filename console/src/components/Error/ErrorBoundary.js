@@ -1,5 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Data/Metadata/Actions';
+import Spinner from '../Common/Spinner/Spinner';
 
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
@@ -13,11 +18,31 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     this.setState({ hasError: true, info: info, error: error });
     // TODO logErrorToMyService(error, info);
+    const { dispatch } = this.props;
+    dispatch(loadInconsistentObjects(null, true)).then(() => {
+      if (this.props.metadata.inconsistentObjects.length > 0) {
+        if (!window.location.pathname.includes('/metadata/status')) {
+          this.setState({ hasError: false, info: null, error: null });
+          this.props.dispatch(redirectToMetadataStatus());
+        }
+      } else {
+        console.error(error);
+      }
+    });
   }
 
   render() {
     const errorImage = require('./error-logo.png');
     const styles = require('./ErrorPage.scss');
+    const { metadata } = this.props;
+    if (this.state.hasError && metadata.ongoingRequest) {
+      return (
+        <div>
+          {' '}
+          <Spinner />{' '}
+        </div>
+      );
+    }
 
     if (this.state.hasError) {
       return (
@@ -35,7 +60,7 @@ class ErrorBoundary extends React.Component {
                 <div>
                   You can report this issue on our{' '}
                   <a href="https://github.com/hasura/graphql-engine/issues">
-                    Github
+                    GitHub
                   </a>{' '}
                   or chat with us on{' '}
                   <a href="http://discord.gg/hasura">Discord</a>

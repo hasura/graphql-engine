@@ -51,9 +51,9 @@ getParamValue params (TemplateParamConf paramName paramVal) =
 
 data QueryTProc
   = QTPInsert !(R.InsertQueryP1, DS.Seq Q.PrepArg)
-  | QTPSelect !(R.AnnSel, DS.Seq Q.PrepArg)
-  | QTPUpdate !(R.UpdateQueryP1, DS.Seq Q.PrepArg)
-  | QTPDelete !(R.DeleteQueryP1, DS.Seq Q.PrepArg)
+  | QTPSelect !(R.AnnSimpleSel, DS.Seq Q.PrepArg)
+  | QTPUpdate !(R.AnnUpd, DS.Seq Q.PrepArg)
+  | QTPDelete !(R.AnnDel, DS.Seq Q.PrepArg)
   | QTPCount !(RC.CountQueryP1, DS.Seq Q.PrepArg)
   | QTPBulk ![QueryTProc]
   deriving (Show, Eq)
@@ -95,13 +95,21 @@ convQT
   -> QueryT
   -> m QueryTProc
 convQT args qt = case qt of
-  QTInsert q -> fmap QTPInsert $ liftDMLP1 $
-                R.convInsertQuery decodeParam binRHSBuilder q
-  QTSelect q -> fmap QTPSelect $ liftDMLP1 $
-                mkSelQWithArgs q args >>= R.convSelectQuery f
-  QTUpdate q -> fmap QTPUpdate $ liftDMLP1 $ R.validateUpdateQueryWith f q
-  QTDelete q -> fmap QTPDelete $ liftDMLP1 $ R.validateDeleteQWith f q
-  QTCount q  -> fmap QTPCount $ liftDMLP1 $ RC.validateCountQWith f q
+  QTInsert q ->
+    fmap QTPInsert $ liftDMLP1 $
+    R.convInsertQuery decodeParam sessVarFromCurrentSetting binRHSBuilder q
+  QTSelect q ->
+    fmap QTPSelect $ liftDMLP1 $ mkSelQWithArgs q args
+    >>= R.convSelectQuery sessVarFromCurrentSetting f
+  QTUpdate q ->
+    fmap QTPUpdate $ liftDMLP1 $
+    R.validateUpdateQueryWith sessVarFromCurrentSetting f q
+  QTDelete q ->
+    fmap QTPDelete $ liftDMLP1 $
+    R.validateDeleteQWith sessVarFromCurrentSetting f q
+  QTCount q  ->
+    fmap QTPCount $ liftDMLP1 $
+    RC.validateCountQWith sessVarFromCurrentSetting f q
   QTBulk q   -> fmap QTPBulk $ mapM (convQT args) q
   where
     decodeParam val = do

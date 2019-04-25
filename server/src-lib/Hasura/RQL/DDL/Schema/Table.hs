@@ -286,6 +286,44 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
+handleInconsistentObj
+  :: (QErrM m, CacheRWM m)
+  => (T.Text -> InconsistentMetadataObj)
+  -> m ()
+  -> m ()
+handleInconsistentObj f action =
+  action `catchError` \err -> do
+    sc <- askSchemaCache
+    let inconsObj = f $ qeError err
+        allInconsObjs = inconsObj:scInconsistentObjs sc
+    writeSchemaCache $ sc{scInconsistentObjs = allInconsObjs}
+
+checkNewInconsistentMeta
+  :: (QErrM m)
+  => SchemaCache -- old schema cache
+  -> SchemaCache -- new schema cache
+  -> m ()
+checkNewInconsistentMeta oldSC newSC = do
+  unless (null newInconsMetaObjects) $ do
+    let err = err500 Unexpected
+          "cannot continue due to newly found inconsistent metadata"
+    throwError err{qeInternal = Just $ toJSON newInconsMetaObjects}
+  where
+    oldInconsMeta = scInconsistentObjs oldSC
+    newInconsMeta = scInconsistentObjs newSC
+    newInconsMetaObjects = getDifference _moId newInconsMeta oldInconsMeta
+
+buildSchemaCacheStrict
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => m ()
+buildSchemaCacheStrict = do
+  buildSchemaCache
+  sc <- askSchemaCache
+  let inconsObjs = scInconsistentObjs sc
+  unless (null inconsObjs) $ do
+    let err = err400 Unexpected "cannot continue due to inconsistent metadata"
+    throwError err{qeInternal = Just $ toJSON inconsObjs}
+
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
@@ -295,78 +333,100 @@ buildSchemaCache = do
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  sqlGenCtx <- askSQLGenCtx
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
-  forM_ tables $ \(sn, tn, isSystemDefined) ->
+  forM_ tables $ \(sn, tn, isSystemDefined) -> do
+    let qt = QualifiedObject sn tn
+        mkInconsObj = InconsistentMetadataObj (MOTable qt)
+                      MOTTable $ toJSON $ TrackTable qt
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
+      handleInconsistentObj mkInconsObj $
+      trackExistingTableOrViewP2Setup qt isSystemDefined
 
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
 
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef) -> do
+  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef, cmnt) -> do
     let qt = QualifiedObject sn tn
-    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $ case rt of
-      ObjRel -> do
-        using <- decodeValue rDef
-        let relDef = RelDef rn using Nothing
-        validateObjRel qt relDef
-        objRelP2Setup qt relDef
-      ArrRel -> do
-        using <- decodeValue rDef
-        let relDef = RelDef rn using Nothing
-        validateArrRel qt relDef
-        arrRelP2Setup qt relDef
+        objId = MOTableObj qt $ MTORel rn rt
+        def = toJSON $ WithTable qt $ RelDef rn rDef cmnt
+        mkInconsObj = InconsistentMetadataObj objId (MOTRel rt) def
+    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
+      case rt of
+        ObjRel -> do
+          using <- decodeValue rDef
+          let relDef = RelDef rn using Nothing
+          validateObjRel qt relDef
+          objRelP2Setup qt relDef
+        ArrRel -> do
+          using <- decodeValue rDef
+          let relDef = RelDef rn using Nothing
+          validateArrRel qt relDef
+          arrRelP2Setup qt relDef
 
   -- Fetch all the permissions
   permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
 
-  forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef) ->
-    modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $ case pt of
-    PTInsert -> permHelper strfyNum sn tn rn pDef PAInsert
-    PTSelect -> permHelper strfyNum sn tn rn pDef PASelect
-    PTUpdate -> permHelper strfyNum sn tn rn pDef PAUpdate
-    PTDelete -> permHelper strfyNum sn tn rn pDef PADelete
+  forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef, cmnt) -> do
+    let qt = QualifiedObject sn tn
+        objId = MOTableObj qt $ MTOPerm rn pt
+        def = toJSON $ WithTable qt $ PermDef rn pDef cmnt
+        mkInconsObj = InconsistentMetadataObj objId (MOTPerm pt) def
+    modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $
+      case pt of
+          PTInsert -> permHelper sqlGenCtx sn tn rn pDef PAInsert
+          PTSelect -> permHelper sqlGenCtx sn tn rn pDef PASelect
+          PTUpdate -> permHelper sqlGenCtx sn tn rn pDef PAUpdate
+          PTDelete -> permHelper sqlGenCtx sn tn rn pDef PADelete
 
   -- Fetch all the query templates
   qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
   forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
-    qtDef <- decodeValue qtDefVal
-    qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache
-    (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
-           CreateQueryTemplate qtn qtDef Nothing
-    addQTemplateToCache qti deps
+    let def = object ["name" .= qtn, "template" .= qtDefVal]
+        mkInconsObj =
+          InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
+    handleInconsistentObj mkInconsObj $ do
+      qtDef <- decodeValue qtDefVal
+      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
+      (qti, deps) <- liftP1WithQCtx qCtx $ createQueryTemplateP1 $
+             CreateQueryTemplate qtn qtDef Nothing
+      addQTemplateToCache qti deps
 
   eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
   forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
-    etc <- decodeValue configuration
-
     let qt = QualifiedObject sn tn
-    subTableP2Setup qt etc
-    allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-    liftTx $ mkAllTriggersQ trn qt allCols strfyNum (etcDefinition etc)
+        objId = MOTableObj qt $ MTOTrigger trn
+        def = object ["table" .= qt, "configuration" .= configuration]
+        mkInconsObj = InconsistentMetadataObj objId MOTEventTrigger def
+    handleInconsistentObj mkInconsObj $ do
+      etc <- decodeValue configuration
+      subTableP2Setup qt etc
+      allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
+      liftTx $ mkAllTriggersQ trn qt allCols strfyNum (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
-  forM_ functions $ \(sn, fn) ->
+  forM_ functions $ \(sn, fn) -> do
+    let qf = QualifiedObject sn fn
+        def = toJSON $ TrackFunction qf
+        mkInconsObj =
+          InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-    trackFunctionP2Setup (QualifiedObject sn fn)
+      handleInconsistentObj mkInconsObj $
+      trackFunctionP2Setup qf
+
+  -- build GraphQL context
+  postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx
+  writeSchemaCache postGCtxSc
 
   -- remote schemas
-  res <- liftTx fetchRemoteSchemas
-  sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
-
-  remoteScConf <- forM res $ \(AddRemoteSchemaQuery n def _) ->
-    (,) n <$> validateRemoteSchemaDef def
-  let rmScMap = M.fromList remoteScConf
-  (mergedGCtxMap, defGCtx) <- mergeSchemas rmScMap gCtxMap hMgr
-  writeRemoteSchemasToCache mergedGCtxMap rmScMap
-  postMergeSc <- askSchemaCache
-  writeSchemaCache postMergeSc { scDefaultRemoteGCtx = defGCtx }
+  remoteSchemas <- liftTx fetchRemoteSchemas
+  forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
 
   where
-    permHelper strfyNum sn tn rn pDef pa = do
-      qCtx <- mkAdminQCtx strfyNum <$> askSchemaCache
+    permHelper sqlGenCtx sn tn rn pDef pa = do
+      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       perm <- decodeValue pDef
       let qt = QualifiedObject sn tn
           permDef = PermDef rn perm Nothing
@@ -376,6 +436,23 @@ buildSchemaCache = do
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
+    resolveSingleRemoteSchema hMgr rs = do
+      let AddRemoteSchemaQuery name def _ = rs
+          mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
+                        MOTRemoteSchema (toJSON rs)
+      handleInconsistentObj mkInconsObj $ do
+        rsi <- validateRemoteSchemaDef def
+        addRemoteSchemaToCache name rsi
+        sc <- askSchemaCache
+        let gCtxMap = scGCtxMap sc
+            defGCtx = scDefaultRemoteGCtx sc
+        rGCtx <- convRemoteGCtx <$> fetchRemoteSchema hMgr name rsi
+        mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
+        mergedDefGCtx <- mergeGCtx defGCtx rGCtx
+        writeSchemaCache sc { scGCtxMap = mergedGCtxMap
+                            , scDefaultRemoteGCtx = mergedDefGCtx
+                            }
+
     fetchTables =
       Q.listQ [Q.sql|
                 SELECT table_schema, table_name, is_system_defined
@@ -384,13 +461,13 @@ buildSchemaCache = do
 
     fetchRelationships =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json
+                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
                     |] () False
 
     fetchPermissions =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, role_name, perm_type, perm_def::json
+                SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
                     |] () False
 
@@ -503,7 +580,11 @@ execWithMDCheck (RunSQL t cascade _) = do
   -- update the schema cache and hdb_catalog with the changes
   reloadRequired <- processSchemaChanges schemaDiff
 
-  let withReload = buildSchemaCache
+  let withReload = do -- in case of any rename
+        buildSchemaCache
+        newSC <- askSchemaCache
+        checkNewInconsistentMeta sc newSC
+
       withoutReload = do
         postSc <- askSchemaCache
         -- recreate the insert permission infra

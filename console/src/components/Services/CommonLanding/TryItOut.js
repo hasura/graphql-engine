@@ -22,7 +22,9 @@ class TryItOut extends React.Component {
     const externalLink = require('../CustomResolver/Landing/external-link.svg');
     // const { title, imgUrl, imgAlt,  description} = this.props;
     console.log(this.props.isAvailable);
-    const commonStyle = ((this.props.isAvailable) ? styles.instructionsWrapper : styles.instructionsWrapperPos);
+    const commonStyle = this.props.isAvailable
+      ? styles.instructionsWrapper
+      : styles.instructionsWrapperPos;
     return (
       <div>
         <div className={styles.subHeaderText}>
@@ -48,9 +50,7 @@ class TryItOut extends React.Component {
                 />
               </button>
             </a>
-            <div
-              className={styles.displayFlex + ' ' + commonStyle}
-            >
+            <div className={styles.displayFlex + ' ' + commonStyle}>
               <span
                 onClick={this.togglePopup.bind(this)}
                 className={styles.instructions + ' ' + styles.displayFlex}
@@ -65,7 +65,7 @@ class TryItOut extends React.Component {
                   title={this.props.title}
                   queryDefinition={this.props.queryDefinition}
                   footerDescription={this.props.footerDescription}
-                  isAvailable = {this.props.isAvailable}
+                  isAvailable={this.props.isAvailable}
                 />
               ) : null}
             </div>
@@ -75,13 +75,14 @@ class TryItOut extends React.Component {
               href={this.props.googleCloudLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'Google Cloud'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
                   <img
                     className={'img-responsive'}
                     src={googleCloud}
-                    alt={'googleCloud'}
+                    alt={'Google Cloud'}
                   />
                 </div>
               </div>
@@ -90,6 +91,7 @@ class TryItOut extends React.Component {
               href={this.props.MicrosoftAzureLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'Microsoft Azure'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>
@@ -105,6 +107,7 @@ class TryItOut extends React.Component {
               href={this.props.awsLink}
               target={'_blank'}
               rel="noopener noreferrer"
+              title={'AWS'}
             >
               <div className={styles.boxSmall}>
                 <div className={styles.logoIcon}>

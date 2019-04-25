@@ -248,6 +248,9 @@ class TestV1SelectPermissions(DefaultTestSelectQueries):
     def test_user_can_query_jsonb_values_filter_session_vars(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_jsonb_values_filter_session_vars.yaml')
 
+    def test_user_query_auction(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/permissions'

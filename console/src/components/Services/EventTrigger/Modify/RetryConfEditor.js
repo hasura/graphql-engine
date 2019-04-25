@@ -80,7 +80,7 @@ class RetryConfEditor extends React.Component {
   };
 
   render() {
-    const { styles, dispatch, modifyTrigger, save } = this.props;
+    const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
     const { supportRetryTimeout } = this.state;
     const collapsed = () => (
@@ -178,7 +178,7 @@ class RetryConfEditor extends React.Component {
             editorExpanded={expanded}
             ongoingRequest={modifyTrigger.ongoingRequest}
             property={'retry'}
-            saveFunc={save}
+            saveFunc={this.validateAndSave}
             service="modify-trigger"
             expandCallback={this.setValues}
             styles={styles}
