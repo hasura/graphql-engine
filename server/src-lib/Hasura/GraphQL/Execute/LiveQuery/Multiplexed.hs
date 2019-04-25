@@ -435,12 +435,16 @@ data CandidateSnapshot
 
 pushCandidateResult :: GQResp -> Maybe RespHash -> CandidateSnapshot -> IO ()
 pushCandidateResult resp respHashM candidateSnapshot = do
-  pushResultToSinks newSinks
-  -- write to the current websockets if needed
   prevRespHashM <- STM.readTVarIO respRef
-  when (isExecError resp || respHashM /= prevRespHashM) $ do
-    pushResultToSinks curSinks
-    STM.atomically $ STM.writeTVar respRef respHashM
+  -- write to the current websockets if needed
+  sinks <-
+    if (isExecError resp || respHashM /= prevRespHashM)
+    then do
+      STM.atomically $ STM.writeTVar respRef respHashM
+      return (newSinks <> curSinks)
+    else
+      return newSinks
+  pushResultToSinks sinks
   where
     CandidateSnapshot _ respRef curSinks newSinks = candidateSnapshot
     pushResultToSinks =
