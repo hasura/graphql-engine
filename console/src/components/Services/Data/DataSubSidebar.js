@@ -28,13 +28,18 @@ class DataSubSidebar extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     const { currentSchema, schema } = this.props;
-    if ((currentSchema !== nextProps.currentSchema) || schema.length !== nextProps.schema.length) {
+    if (
+      currentSchema !== nextProps.currentSchema ||
+      schema !== nextProps.schema
+    ) {
       this.setTrackedTables(nextProps.currentSchema, nextProps.schema);
     }
   }
 
   setTrackedTables(currentSchema, schema) {
-    this.state.trackedTables = schema.filter(table => table.is_table_tracked && table.table_schema === currentSchema);
+    this.state.trackedTables = schema.filter(
+      table => table.is_table_tracked && table.table_schema === currentSchema
+    );
     this.state.tableList = this.state.trackedTables;
   }
 
@@ -183,7 +188,9 @@ class DataSubSidebar extends React.Component {
               }
               data-test={f.function_name}
             >
-              <div className={styles.display_inline + ' ' + styles.functionIcon}>
+              <div
+                className={styles.display_inline + ' ' + styles.functionIcon}
+              >
                 <img
                   src={
                     f.function_name === currentFunction
