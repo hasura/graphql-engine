@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound, UITest } from 'components';
 
 import { dataRouterUtils } from './components/Services/Data';
 
@@ -102,6 +102,7 @@ const routes = store => {
           {dataRouter}
           {eventRouter}
           {customResolverRouter}
+          <Route path="ui-test" component={UITest} />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
