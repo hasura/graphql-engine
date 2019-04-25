@@ -2,16 +2,49 @@ import React from 'react';
 import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from './Tooltip';
 
-import { toggleQueryType, toggleColumn } from './Actions';
+import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
+
+import {
+  getValidQueryTypes,
+  queryToInternalNameMap,
+  INTERNAL_CONSOLE_QUERY_REP,
+} from './utils';
+
+const toggleOperation = upObj => {
+  if (upObj.query === INTERNAL_CONSOLE_QUERY_REP) {
+    return toggleManualType(upObj);
+  }
+  return toggleQueryType(upObj);
+};
 
 class OperationEditor extends React.Component {
   setValues = () => {
     const { dispatch, definition } = this.props;
+    /*
+     * Loop through the keys in definition,
+     * this object will have actual internal name.
+     * No need to transform from display to internal name
+     * */
+    console.log('Defini');
+    console.log(definition);
     for (const queryType in definition) {
       if (definition[queryType]) {
-        dispatch(
-          toggleQueryType(queryType, definition[queryType].columns, true)
-        );
+        if (queryType !== INTERNAL_CONSOLE_QUERY_REP) {
+          dispatch(
+            toggleOperation({
+              query: queryType,
+              columns: definition[queryType].columns,
+              value: true,
+            })
+          );
+        } else {
+          dispatch(
+            toggleOperation({
+              query: queryType,
+              value: definition[queryType] || false,
+            })
+          );
+        }
       }
     }
   };
@@ -25,7 +58,7 @@ class OperationEditor extends React.Component {
       modifyTrigger,
       dispatch,
     } = this.props;
-    const queryTypes = ['insert', 'update', 'delete'];
+    const queryTypes = getValidQueryTypes();
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent}>
@@ -41,7 +74,7 @@ class OperationEditor extends React.Component {
                 <input
                   type="checkbox"
                   className={styles.opsCheckboxDisabled}
-                  checked={Boolean(definition[qt])}
+                  checked={Boolean(definition[queryToInternalNameMap[qt]])}
                   disabled
                 />
                 {qt}
@@ -104,18 +137,22 @@ class OperationEditor extends React.Component {
                 key={i}
                 onClick={() => {
                   dispatch(
-                    toggleQueryType(
-                      qt,
-                      allTableColumns.map(c => c.name),
-                      !modifyTrigger.definition[qt]
-                    )
+                    toggleOperation({
+                      query: queryToInternalNameMap[qt],
+                      columns: allTableColumns.map(c => c.name),
+                      value: !modifyTrigger.definition[
+                        queryToInternalNameMap[qt]
+                      ],
+                    })
                   );
                 }}
               >
                 <input
                   type="checkbox"
                   className={`${styles.opsCheckbox} ${styles.cursorPointer}`}
-                  checked={Boolean(modifyTrigger.definition[qt])}
+                  checked={Boolean(
+                    modifyTrigger.definition[queryToInternalNameMap[qt]]
+                  )}
                 />
                 {qt}
               </div>

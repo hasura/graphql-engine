@@ -8,6 +8,8 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { showErrorNotification } from '../Notification';
 
+import { INTERNAL_CONSOLE_QUERY_REP } from './utils';
+
 const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
 
@@ -25,11 +27,18 @@ export const setRetryTimeout = data => ({ type: SET_RETRY_TIMEOUT, data });
 
 const TOGGLE_COLUMN = 'ModifyTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE = 'ModifyTrigger/TOGGLE_QUERY_TYPE_SELECTED';
-export const toggleQueryType = (query, columns, value) => ({
+const TOGGLE_MANUAL_QUERY_TYPE = 'ModifyTrigger/TOGGLE_MANUAL_QUERY_SELECTED';
+export const RESET_MODIFY_STATE = 'ModifyTrigger/RESET_MODIFY_STATE';
+
+export const toggleQueryType = ({ query, columns, value }) => ({
   type: TOGGLE_QUERY_TYPE,
   query,
   columns,
   value,
+});
+export const toggleManualType = ({ value }) => ({
+  type: TOGGLE_MANUAL_QUERY_TYPE,
+  data: value,
 });
 export const toggleColumn = (query, column) => ({
   type: TOGGLE_COLUMN,
@@ -113,6 +122,14 @@ export const save = (property, triggerName) => {
       upPayload.update = modifyTrigger.definition.update;
       upPayload.insert = modifyTrigger.definition.insert;
       upPayload.delete = modifyTrigger.definition.delete;
+      // Add only if the value is true
+      if (INTERNAL_CONSOLE_QUERY_REP in modifyTrigger.definition) {
+        delete upPayload[INTERNAL_CONSOLE_QUERY_REP];
+        if (modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP]) {
+          upPayload[INTERNAL_CONSOLE_QUERY_REP] =
+            modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP];
+        }
+      }
     } else if (property === 'retry') {
       upPayload.retry_conf = {
         num_retries: modifyTrigger.retryConf.numRetrys,
@@ -122,20 +139,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
     }
     const upQuery = {
       type: 'bulk',
@@ -218,6 +237,14 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         definition: newDefinition,
+      };
+    case TOGGLE_MANUAL_QUERY_TYPE:
+      return {
+        ...state,
+        definition: {
+          ...state.definition,
+          [INTERNAL_CONSOLE_QUERY_REP]: action.data,
+        },
       };
     case TOGGLE_COLUMN:
       const queryColumns = [...state.definition[action.query].columns];
@@ -303,6 +330,10 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         ongoingRequest: null,
+      };
+    case RESET_MODIFY_STATE:
+      return {
+        ...defaultState,
       };
     default:
       return {

@@ -136,7 +136,18 @@ const fetchManualTriggers = tableName => (dispatch, getState) => {
   dispatch({ type: FETCHING_MANUAL_TRIGGER });
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: data });
+      /* Filter only triggers whose configuration has `manual` key in it
+       * */
+      const manualTriggers = data.filter(d => {
+        if (
+          'manual' in d.configuration.definition &&
+          d.configuration.definition.manual
+        ) {
+          return d;
+        }
+        return false;
+      });
+      dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
     },
     error => {
       dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });

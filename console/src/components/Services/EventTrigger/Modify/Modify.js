@@ -12,11 +12,17 @@ import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
-import { save, setDefaults } from './Actions';
+import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
 
 class Modify extends React.Component {
   componentDidMount() {
     this.props.dispatch(setDefaults());
+  }
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: RESET_MODIFY_STATE,
+    });
   }
   render() {
     const {
