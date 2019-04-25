@@ -404,7 +404,7 @@ buildSchemaCache = do
       etc <- decodeValue configuration
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-      liftTx $ mkAllTriggersQ trn qt allCols strfyNum (etcDefinition etc)
+      liftTx $ mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) -> do
