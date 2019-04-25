@@ -164,7 +164,7 @@ const g2c = new graphql2chartjs(data, (datasetName, dataPoint) => {
     - Scatter: https://www.chartjs.org/docs/latest/charts/scatter.html#dataset-properties
 
 
-### Step 2: Now create your cchart with data - `g2c.data`
+### Step 2: Now create your chart with data - `g2c.data`
 
 `g2c.data` gives you access to the latest ChartJS data that can be passed to your chart.
 
