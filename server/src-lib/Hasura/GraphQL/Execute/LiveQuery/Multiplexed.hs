@@ -148,23 +148,26 @@ initLiveQueriesState lqOptions =
   lqOptions
   <$> STMMap.new
 
-dumpLiveQueriesState :: LiveQueriesState -> IO J.Value
-dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
-  lqMapJ <- dumpLiveQueryMap lqMap
+dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
+dumpLiveQueriesState extended (LiveQueriesState opts lqMap) = do
+  lqMapJ <- dumpLiveQueryMap extended lqMap
   return $ J.object
     [ "options" J..= opts
     , "live_queries_map" J..= lqMapJ
     ]
 
-dumpLiveQueryMap :: LiveQueryMap -> IO J.Value
-dumpLiveQueryMap lqMap =
+dumpLiveQueryMap :: Bool -> LiveQueryMap -> IO J.Value
+dumpLiveQueryMap extended lqMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
       ThreadState threadId metrics <-
         STM.atomically $ STM.readTMVar threadRef
       metricsJ <- dumpReftechMetrics metrics
-      candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
+      candidatesJ <-
+        if extended
+        then fmap Just $ dumpCandidates $ _mhCandidates lqHandler
+        else return Nothing
       return $ J.object
         [ "key" J..= lq
         , "thread_id" J..= show (A.asyncThreadId threadId)

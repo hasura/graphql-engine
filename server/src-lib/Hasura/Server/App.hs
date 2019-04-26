@@ -151,6 +151,9 @@ isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
 
+isDeveloperAPIEnabled :: ServerCtx -> Bool
+isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
+
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
 parseBody = do
@@ -410,14 +413,19 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         query <- parseBody
         v1Alpha1GQHandler query
 
-#ifdef InternalAPIs
-    get "internal/plan_cache" $ do
-      respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-      json respJ
-    get "internal/subscriptions" $ do
-      respJ <- liftIO $ EL.dumpLiveQueriesState $ scLQState serverCtx
-      json respJ
-#endif
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      get "dev/plan_cache" $ mkSpockAction encodeQErr serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+        return $ encJFromJValue respJ
+      get "dev/subscriptions" $ mkSpockAction encodeQErr serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+        return $ encJFromJValue respJ
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+        return $ encJFromJValue respJ
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
