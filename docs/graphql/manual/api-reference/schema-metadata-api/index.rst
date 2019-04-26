@@ -152,7 +152,7 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
-       
+
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
      - Export the current metadata
@@ -172,11 +172,26 @@ The various types of queries are listed in the following table:
    * - :ref:`get_inconsistent_metadata`
      - :ref:`Empty Object`
      - List all inconsistent metadata objects
-       
+
    * - :ref:`drop_inconsistent_metadata`
      - :ref:`Empty Object`
      - Drop all inconsistent metadata objects
 
+   * - :ref:`create_query_collection`
+     - :ref:`create_query_collection_args <create_query_collection_syntax>`
+     - Create a query collection for whitelisting
+
+   * - :ref:`drop_query_collection`
+     - :ref:`drop_query_collection_args <drop_query_collection_syntax>`
+     - Drop a query collection
+
+   * - :ref:`add_query_to_collection`
+     - :ref:`add_query_to_collection_args <add_query_to_collection_syntax>`
+     - Add a query to given collection
+
+   * - :ref:`drop_query_from_collection`
+     - :ref:`drop_query_from_collection_args <drop_query_from_collection_syntax>`
+     - Drop a query from given collection
 
 **See:**
 
@@ -187,6 +202,7 @@ The various types of queries are listed in the following table:
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Manage Metadata <manage-metadata>`
+- :doc:`Whitelist Queries <whitelist-queries>`
 
 Response structure
 ------------------
@@ -251,4 +267,4 @@ Error codes
   Event Triggers <event-triggers>
   Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
-
+  Whitelist Queries <whitelist-queries>
