@@ -1,0 +1,24 @@
+description: Whitelisted query with typename
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    user:
+    - id: 1
+      name: clarke
+      __typename: user
+      company: Symons
+    - id: 2
+      name: reckler
+      __typename: user
+      company:
+query:
+  query: |
+    query {
+      user{
+        id
+        name
+        __typename
+        company
+      }
+    }

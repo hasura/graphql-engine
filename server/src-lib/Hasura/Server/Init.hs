@@ -865,6 +865,7 @@ serveOptsToLog so =
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "enable_whitelist" J..= soEnableWhitelist so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

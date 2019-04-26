@@ -1,0 +1,11 @@
+type: bulk
+args:
+- type: drop_query_collection
+  args:
+    name: collection_1
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE "user";
+    cascade: true

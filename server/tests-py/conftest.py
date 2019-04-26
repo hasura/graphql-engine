@@ -68,6 +68,11 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
+    parser.addoption(
+        "--test-whitelisted-queries", action="store_true",
+        help="Run Test cases with Whitelisting queries enabled"
+    )
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
