@@ -35,20 +35,25 @@ const MaxWidth = styled('div')`
     position: relative;
   }
 `;
-
+const LeftSideBarWidth = styled('div')`
+  width: 298px;
+`;
+const RightSideBarWidth = styled('div')`
+  width: 224px;
+`;
 const Layout = ({ children, location }) => (
   <ThemeProvider location={location}>
     <MDXProvider components={mdxComponents}>
       <Wrapper>
-        <div className={'hidden-xs'}>
+        <LeftSideBarWidth className={'hidden-xs'}>
           <Sidebar location={location} />
-        </div>
+        </LeftSideBarWidth>
         <Content>
           <MaxWidth>{children}</MaxWidth>
         </Content>
-        <div className={'hidden-xs'}>
+        <RightSideBarWidth className={'hidden-xs'}>
           <RightSidebar location={location} />
-        </div>
+        </RightSideBarWidth>
       </Wrapper>
     </MDXProvider>
   </ThemeProvider>

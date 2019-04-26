@@ -11,7 +11,7 @@ import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';

@@ -82,11 +82,11 @@ const ColumnEditorList = ({
       propertiesList.push(columnProperties.type);
 
       if (columnProperties.pkConstraint) {
-        propertiesList.push(`primary key (${columnProperties.pkConstraint})`);
+        propertiesList.push('primary key');
       }
 
       if (columnProperties.uniqueConstraint) {
-        propertiesList.push(`unique (${columnProperties.uniqueConstraint})`);
+        propertiesList.push('unique');
       }
 
       if (columnProperties.isNullable) {
