@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import dataTypes from '../Common/DataTypes';
 import Button from '../../../Common/Button/Button';

@@ -6,7 +6,7 @@ import {
 } from './ModifyActions';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 
 import styles from './ModifyTable.scss';
 
