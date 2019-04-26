@@ -20,8 +20,8 @@ import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerG
 import generatedLoginConnector from './components/Login/Login';
 
 import metadataContainer from './components/Services/Metadata/Container';
-import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions';
-import metadataStatusContainer from './components/Services/Metadata/MetadataStatus';
+import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
+import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
 import globals from './Globals';
 
 import validateLogin from './utils/validateLogin';

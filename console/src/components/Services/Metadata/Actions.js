@@ -4,8 +4,11 @@ import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
 import semverCheck from '../../../helpers/semver';
-import { filterSchema } from './metadataFilters';
-import { setConsistentSchema, setConsistentFunctions } from '../Data/DataActions';
+import { filterSchema } from './utils';
+import {
+  setConsistentSchema,
+  setConsistentFunctions,
+} from '../Data/DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
