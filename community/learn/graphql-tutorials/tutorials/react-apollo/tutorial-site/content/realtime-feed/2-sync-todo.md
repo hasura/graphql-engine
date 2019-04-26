@@ -99,43 +99,59 @@ class _TodoPublicList extends Component {
 Let's populate initial state by fetching the existing list of todos in `componentDidMount()`
 
 ```javascript
+class _TodoPublicList extends Component {
+  constructor(props) {
+    ...
+  }
+
+  loadNew() {
+  }
+
+  loadOlder() {
+  }
+
 +  componentDidMount() {
 +    this.loadOlder();
 +  }
+
+   render() {
+     ...
+   }
+}
 ```
 
 Update the `loadOlder` method to the following:
 
 ```javascript
   loadOlder() {
-    const GET_OLD_PUBLIC_TODOS = gql`
-      query getOldPublicTodos ($oldestTodoId: Int!) {
-        todos (where: { is_public: { _eq: true}, id: {_lt: $oldestTodoId}}, limit: 7, order_by: { created_at: desc }) {
-          id
-          title
-          created_at
-          user {
-            name
-          }
-        }
-      }`;
-
-    this.client.query({
-      query: GET_OLD_PUBLIC_TODOS,
-      variables: {oldestTodoId: (this.oldestTodoId)}
-    })
-      .then(({data}) => {
-        if (data.todos.length) {
-          this.oldestTodoId = data.todos[data.todos.length - 1].id;
-          this.setState({todos: [...this.state.todos, ...data.todos]});
-        } else {
-          this.setState({olderTodosAvailable: false});
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        this.setState({error: true});
-      });
++    const GET_OLD_PUBLIC_TODOS = gql`
++      query getOldPublicTodos ($oldestTodoId: Int!) {
++        todos (where: { is_public: { _eq: true}, id: {_lt: $oldestTodoId}}, limit: 7, order_by: { created_at: desc }) {
++          id
++          title
++          created_at
++          user {
++            name
++          }
++        }
++      }`;
++
++    this.client.query({
++      query: GET_OLD_PUBLIC_TODOS,
++      variables: {oldestTodoId: (this.oldestTodoId)}
++    })
++    .then(({data}) => {
++      if (data.todos.length) {
++        this.oldestTodoId = data.todos[data.todos.length - 1].id;
++        this.setState({todos: [...this.state.todos, ...data.todos]});
++      } else {
++        this.setState({olderTodosAvailable: false});
++      }
++    })
++    .catch(error => {
++      console.error(error);
++      this.setState({error: true});
++    });
   }
 ```
 
@@ -148,13 +164,17 @@ This happens because we haven't yet implemented a way to show the newly added to
 Let's handle that in `componentDidUpdate()` lifecycle method
 
 ```javascript
-componentDidUpdate(prevProps) {
-  // Do we have a new todo available?
-  if (this.props.latestTodo.id > this.newestTodoId) {
-    this.newestTodoId = this.props.latestTodo.id;
-    this.setState({newTodosCount: this.state.newTodosCount + 1});
++ componentDidUpdate(prevProps) {
++  // Do we have a new todo available?
++  if (this.props.latestTodo.id > this.newestTodoId) {
++    this.newestTodoId = this.props.latestTodo.id;
++    this.setState({newTodosCount: this.state.newTodosCount + 1});
++  }
++ }
+
+  componentDidMount() {
+    ...
   }
-}
 ```
 
 Now try adding a new todo to the public feed and you will see the notification appearing saying that a new task has arrived.
@@ -165,30 +185,30 @@ Update `loadNew()` method with the following code
 
 ```javascript
   loadNew() {
-    const GET_NEW_PUBLIC_TODOS = gql`
-      query getNewPublicTodos ($latestVisibleId: Int!) {
-        todos(where: { is_public: { _eq: true}, id: {_gt: $latestVisibleId}}, order_by: { created_at: desc }) {
-          id
-          title
-          created_at
-          user {
-            name
-          }
-        }
-      }
-    `;
-
-    this.client.query({
-      query: GET_NEW_PUBLIC_TODOS,
-      variables: {latestVisibleId: this.state.todos[0].id}
-    })
-      .then(({data}) => {
-        this.newestTodoId = data.todos[0].id;
-        this.setState({todos: [...data.todos, ...this.state.todos], newTodosCount: 0});
-      })
-      .catch(error => {
-        console.error(error);
-        this.setState({error: true});
-      });
++   const GET_NEW_PUBLIC_TODOS = gql`
++     query getNewPublicTodos ($latestVisibleId: Int!) {
++       todos(where: { is_public: { _eq: true}, id: {_gt: $latestVisibleId}}, order_by: { created_at: desc }) {
++         id
++         title
++         created_at
++         user {
++           name
++         }
++       }
++     }
++   `;
++
++   this.client.query({
++     query: GET_NEW_PUBLIC_TODOS,
++     variables: {latestVisibleId: this.state.todos[0].id}
++   })
++   .then(({data}) => {
++     this.newestTodoId = data.todos[0].id;
++     this.setState({todos: [...data.todos, ...this.state.todos], newTodosCount: 0});
++   })
++   .catch(error => {
++     console.error(error);
++     this.setState({error: true});
++   });
   }
 ```
