@@ -7,6 +7,8 @@ module Hasura.GraphQL.Validate
   , getQueryParts
   , getAnnVarVals
 
+  , isWhitelistedQuery
+
   , VarPGTypes
   , AnnPGVarVals
   , getAnnPGVarVals
@@ -28,9 +30,11 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.QueryCollection
 
-import           Hasura.SQL.Types (PGColType)
-import           Hasura.SQL.Value (PGColValue, parsePGValue)
+import           Hasura.SQL.Types                       (PGColType)
+import           Hasura.SQL.Value                       (PGColValue,
+                                                         parsePGValue)
 
 data QueryParts
   = QueryParts
@@ -194,6 +198,13 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
+
+isWhitelistedQuery :: GQLExecDoc -> CollectionMap -> Bool
+isWhitelistedQuery q cm =
+  gqlQuery `elem` allWhitelistedQueries cm
+  where
+    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripeOffTypeNames $
+               unGQLExecDoc q
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)

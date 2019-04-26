@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "13"
+curCatalogVer = "14"
 
 migrateMetadata
   :: ( MonadTx m
@@ -91,6 +91,16 @@ setAsSystemDefinedFor9 =
             SET is_system_defined = 'true'
             WHERE table_schema = 'hdb_catalog'
              AND  table_name = 'hdb_version';
+           |]
+
+setAsSystemDefinedFor14 :: MonadTx m => m ()
+setAsSystemDefinedFor14 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_query_collection';
            |]
 
 getCatalogVersion
@@ -272,6 +282,27 @@ from12To13 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_12_to_13.sql")
   return ()
 
+from13To14
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
+  => m ()
+from13To14 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_13_to_14.sql")
+  -- Migrate metadata
+  migrateMetadata False migrateMetadataFrom13
+  -- Set as system defined
+  setAsSystemDefinedFor14
+  where
+    migrateMetadataFrom13 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_13_to_14.yaml" :: Q (TExp RQLQuery)))
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -295,13 +326,16 @@ migrateCatalog migrationTime = do
      | preVer == "7"   -> from7ToCurrent
      | preVer == "8"   -> from8ToCurrent
      | preVer == "9"   -> from9ToCurrent
-     | preVer == "10"   -> from10ToCurrent
-     | preVer == "11"   -> from11ToCurrent
-     | preVer == "12"   -> from12ToCurrent
+     | preVer == "10"  -> from10ToCurrent
+     | preVer == "11"  -> from11ToCurrent
+     | preVer == "12"  -> from12ToCurrent
+     | preVer == "13"  -> from13ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from12ToCurrent = from12To13 >> postMigrate
+    from13ToCurrent = from13To14 >> postMigrate
+
+    from12ToCurrent = from12To13 >> from13ToCurrent
 
     from11ToCurrent = from11To12 >> from12ToCurrent
 

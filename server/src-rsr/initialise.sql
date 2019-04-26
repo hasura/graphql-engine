@@ -436,4 +436,10 @@ LANGUAGE plpgsql;
 CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
   FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
 
-
+CREATE TABLE hdb_catalog.hdb_query_collection
+(
+  collection_name TEXT PRIMARY KEY,
+  collection_defn JSONB NOT NULL,
+  comment TEXT NULL,
+  is_system_defined boolean default false
+);

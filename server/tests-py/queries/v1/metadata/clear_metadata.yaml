@@ -12,6 +12,7 @@
   status: 200
   response:
     functions: []
+    query_collections: []
     query_templates: []
     tables: []
     remote_schemas: []

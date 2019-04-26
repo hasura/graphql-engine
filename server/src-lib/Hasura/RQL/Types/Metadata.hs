@@ -3,11 +3,12 @@ module Hasura.RQL.Types.Metadata where
 import           Data.Aeson
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
+import qualified Data.Text                        as T
 
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
@@ -19,16 +20,18 @@ data MetadataObjType
   | MOTEventTrigger
   | MOTFunction
   | MOTRemoteSchema
+  | MOTQueryCollection
   deriving (Eq)
 
 instance Show MetadataObjType where
-  show MOTTable        = "table"
-  show (MOTRel ty)     = T.unpack (relTypeToTxt ty) <> "_relation"
-  show (MOTPerm ty)    = show ty <> "_permission"
-  show MOTQTemplate    = "query_template"
-  show MOTEventTrigger = "event_trigger"
-  show MOTFunction     = "function"
-  show MOTRemoteSchema = "remote_schema"
+  show MOTTable           = "table"
+  show (MOTRel ty)        = T.unpack (relTypeToTxt ty) <> "_relation"
+  show (MOTPerm ty)       = show ty <> "_permission"
+  show MOTQTemplate       = "query_template"
+  show MOTEventTrigger    = "event_trigger"
+  show MOTFunction        = "function"
+  show MOTRemoteSchema    = "remote_schema"
+  show MOTQueryCollection = "query_collection"
 
 instance ToJSON MetadataObjType where
   toJSON = String . T.pack . show
@@ -46,6 +49,7 @@ data MetadataObjId
   | MOQTemplate !TQueryName
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
+  | MOQueryCollection !CollectionName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
 

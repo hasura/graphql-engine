@@ -47,6 +47,7 @@ import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.RQL.DDL.EventTrigger        as DE
 import qualified Hasura.RQL.DDL.Permission          as DP
 import qualified Hasura.RQL.DDL.Permission.Internal as DP
+import qualified Hasura.RQL.DDL.QueryCollection     as DQC
 import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
 import qualified Hasura.RQL.DDL.Relationship        as DR
 import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
@@ -143,10 +144,11 @@ runClearMetadata _ = do
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables         :: ![TableMeta]
-  , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
-  , aqFunctions      :: !(Maybe [QualifiedFunction])
-  , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  { aqTables           :: ![TableMeta]
+  , aqQueryTemplates   :: ![DQ.CreateQueryTemplate]
+  , aqFunctions        :: !(Maybe [QualifiedFunction])
+  , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
+  , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -154,7 +156,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
+applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = do
 
   adminOnly
 
@@ -190,6 +192,10 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
       withPathK "remote_schemas" $
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
+  onJust mCollections $ \collections ->
+    withPathK "query_collections" $
+        checkMultipleDecls "query collections" $ map DQC._ccName collections
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
     functions = fromMaybe [] mFunctions
@@ -213,7 +219,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
+applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = do
 
   liftTx clearMetadata
   DT.buildSchemaCacheStrict
@@ -261,6 +267,12 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
   withPathK "functions" $
     indexedMapM_ (void . DF.trackFunctionP2) functions
 
+  -- query collections
+  withPathK "query_collections" $
+    indexedForM_ collections $ \c -> do
+    DQC.addCollectionP2 c
+    liftTx $ DQC.addCollectionToCatalog c
+
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
@@ -280,6 +292,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   where
     functions = fromMaybe [] mFunctions
+    collections = fromMaybe [] mCollections
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
@@ -351,8 +364,11 @@ fetchMetadata = do
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
+  -- fetch all collections
+  collections <- DQC.fetchAllCollections
+
   return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
-                            (Just functions) (Just schemas)
+                            (Just functions) (Just schemas) (Just collections)
 
   where
 
@@ -506,6 +522,7 @@ purgeMetadataObj = liftTx . \case
   (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
   (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
+  (MOQueryCollection qcn)         -> DQC.delCollectionFromCatalog qcn
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

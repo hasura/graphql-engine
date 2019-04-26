@@ -9,6 +9,7 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
@@ -415,6 +416,15 @@ buildSchemaCache = do
     modifyErr (\e -> "function " <> fn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       trackFunctionP2Setup qf
+
+  queryCollections <- liftTx fetchAllCollections
+  forM_ queryCollections $ \c -> do
+    let name = _ccName c
+        def = object ["name" .= name, "definition" .= _ccDefinition c]
+        mkInconsObj =
+          InconsistentMetadataObj (MOQueryCollection name) MOTQueryCollection def
+    modifyErr (\e -> "query collection " <> name <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $ addCollectionP2 c
 
   -- build GraphQL context
   postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx

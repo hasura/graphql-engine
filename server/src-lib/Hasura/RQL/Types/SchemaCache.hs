@@ -99,6 +99,8 @@ module Hasura.RQL.Types.SchemaCache
        , askFunctionInfo
        , delFunctionFromCache
 
+       , addCollectionToCache
+       , delCollectionFromCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -110,6 +112,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
@@ -442,6 +445,7 @@ data SchemaCache
   { scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
+  , scQueryCollections  :: !CollectionMap
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
@@ -511,7 +515,7 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache M.empty M.empty M.empty M.empty M.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -777,6 +781,31 @@ data TemplateParamInfo
   { tpiName    :: !TemplateParam
   , tpiDefault :: !(Maybe Value)
   } deriving (Show, Eq)
+
+addCollectionToCache
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> QueryList -> m ()
+addCollectionToCache name qList = do
+  sc <- askSchemaCache
+  let collectionMap = scQueryCollections sc
+      qMap = queryListToMap qList
+  case M.lookup name collectionMap of
+    Just _ -> throw500 $ "query collection with name "
+              <> name <<> " already exists"
+    Nothing -> writeSchemaCache
+               sc {scQueryCollections = M.insert name qMap collectionMap}
+
+delCollectionFromCache
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> m ()
+delCollectionFromCache name = do
+  sc <- askSchemaCache
+  let collectionMap = scQueryCollections sc
+  case M.lookup name collectionMap of
+    Nothing -> throw500 $ "query collection with name "
+               <> name <<> " does not exists"
+    Just _  -> writeSchemaCache
+               sc {scQueryCollections = M.delete name collectionMap}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

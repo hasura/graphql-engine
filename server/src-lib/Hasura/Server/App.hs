@@ -123,16 +123,17 @@ withSCUpdate scr action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx   :: PGExecCtx
-  , scLogger      :: L.Logger
-  , scCacheRef    :: SchemaCacheRef
-  , scAuthMode    :: AuthMode
-  , scManager     :: HTTP.Manager
-  , scSQLGenCtx   :: SQLGenCtx
-  , scEnabledAPIs :: S.HashSet API
-  , scInstanceId  :: InstanceId
-  , scPlanCache   :: E.PlanCache
-  , scLQState     :: EL.LiveQueriesState
+  { scPGExecCtx       :: PGExecCtx
+  , scLogger          :: L.Logger
+  , scCacheRef        :: SchemaCacheRef
+  , scAuthMode        :: AuthMode
+  , scManager         :: HTTP.Manager
+  , scSQLGenCtx       :: SQLGenCtx
+  , scEnabledAPIs     :: S.HashSet API
+  , scInstanceId      :: InstanceId
+  , scPlanCache       :: E.PlanCache
+  , scLQState         :: EL.LiveQueriesState
+  , scEnableWhitelist :: Bool
   }
 
 data HandlerCtx
@@ -270,7 +271,8 @@ v1Alpha1GQHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx userInfo sqlGenCtx planCache
+  enableWL <- scEnableWhitelist . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx userInfo sqlGenCtx enableWL planCache
     sc scVer manager reqHeaders query reqBody
 
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
@@ -280,7 +282,8 @@ gqlExplainHandler query = do
   sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  GE.explainGQLQuery pgExecCtx sc sqlGenCtx query
+  enableWL <- scEnableWhitelist . hcServerCtx <$> ask
+  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableWL query
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -319,12 +322,12 @@ initErrExit e = do
 
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
-  -> Q.PGPool -> HTTP.Manager -> AuthMode
+  -> Bool -> Q.PGPool -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableWL pool httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -345,14 +348,14 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
         logger = L.mkLogger loggerCtx
 
     lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
-    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState
-                   cacheRef httpManager corsPolicy sqlGenCtx planCache
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
+                   httpManager corsPolicy sqlGenCtx enableWL planCache
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx logger
                     schemaCacheRef mode httpManager
-                    sqlGenCtx apis instanceId planCache lqState
+                    sqlGenCtx apis instanceId planCache lqState enableWL
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry

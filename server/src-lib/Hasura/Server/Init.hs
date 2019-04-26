@@ -59,6 +59,7 @@ data RawServeOptions
   , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
+  , rsoEnableWhitelist    :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -77,6 +78,7 @@ data ServeOptions
   , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
   , soLiveQueryOpts   :: !LQ.LQOpts
+  , soEnableWhitelist :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -266,9 +268,10 @@ mkServeOptions rso = do
   enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL] <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
+  enableWL <- withEnvBool (rsoEnableWhitelist rso) $ fst enableWhitelistEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole
-                        enableTelemetry strfyNum enabledAPIs lqOpts
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableWL
   where
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -395,6 +398,7 @@ serveCmdFooter =
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
+      , enableWhitelistEnv
       ]
 
     eventEnvs =
@@ -793,6 +797,12 @@ parseMxBatchSize =
       help (snd mxBatchSizeEnv)
     )
 
+parseEnableWhitelist :: Parser Bool
+parseEnableWhitelist =
+  switch ( long "enable-whitelist" <>
+           help (snd enableWhitelistEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -805,6 +815,12 @@ mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
   , "multiplexed live queries are split into batches of the specified \
     \size. Default 100. "
+  )
+
+enableWhitelistEnv :: (String, String)
+enableWhitelistEnv =
+  ( "HASURA_GRAPHQL_ENABLE_WHITELIST"
+  , "Only accept whitelisted GraphQL requests"
   )
 
 parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)

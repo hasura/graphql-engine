@@ -100,9 +100,15 @@ getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
+  -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc req = do
+getExecPlanPartial userInfo sc enableWL req = do
+
+  when enableWL $
+    -- check if query is whitelisted
+    unless (VQ.isWhitelistedQuery (_grQuery req) (scQueryCollections sc)) $
+      throwVE "query is not whitelisted"
 
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
@@ -143,12 +149,13 @@ getResolvedExecPlan
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
+  -> Bool
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  sc scVer reqUnparsed = do
+  enableWL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -167,7 +174,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       opNameM queryStr plan planCache
     noExistingPlan = do
       req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc req
+      partialExecPlan <- getExecPlanPartial userInfo sc enableWL req
       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation selSet ->

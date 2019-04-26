@@ -12,6 +12,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
@@ -77,6 +78,9 @@ data RQLQuery
   | RQDropQueryTemplate !DropQueryTemplate
   | RQExecuteQueryTemplate !ExecQueryTemplate
   | RQSetQueryTemplateComment !SetQueryTemplateComment
+
+  | RQCreateQueryCollection !CreateCollection
+  | RQDropQueryCollection !DropCollection
 
   | RQRunSql !RunSQL
 
@@ -214,6 +218,9 @@ queryNeedsReload qi = case qi of
   RQExecuteQueryTemplate _     -> False
   RQSetQueryTemplateComment _  -> False
 
+  RQCreateQueryCollection _    -> True
+  RQDropQueryCollection _      -> True
+
   RQRunSql _                   -> True
 
   RQReplaceMetadata _          -> True
@@ -276,6 +283,9 @@ runQueryM rq = withPathK "args" $ case rq of
   RQDropQueryTemplate q        -> runDropQueryTemplate q
   RQExecuteQueryTemplate q     -> runExecQueryTemplate q
   RQSetQueryTemplateComment q  -> runSetQueryTemplateComment q
+
+  RQCreateQueryCollection q    -> runCreateCollection q
+  RQDropQueryCollection q      -> runDropCollection q
 
   RQReplaceMetadata q          -> runReplaceMetadata q
   RQClearMetadata q            -> runClearMetadata q

@@ -43,6 +43,7 @@ module Hasura.GraphQL.Validate.Types
   , AnnGObject
   , hasNullVal
   , getAnnInpValKind
+  , stripeOffTypeNames
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -638,3 +639,30 @@ getAnnInpValKind = \case
   AGEnum _ _   -> "enum"
   AGObject _ _ -> "object"
   AGArray _ _  -> "array"
+
+stripeOffTypeNames :: [G.ExecutableDefinition] -> [G.ExecutableDefinition]
+stripeOffTypeNames = map filterExecDef
+  where
+    filterExecDef = \case
+      G.ExecutableDefinitionOperation opDef  ->
+        G.ExecutableDefinitionOperation $ filterOpDef opDef
+      G.ExecutableDefinitionFragment fragDef ->
+        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
+        in G.ExecutableDefinitionFragment fragDef{G._fdSelectionSet = newSelset}
+
+    filterOpDef  = \case
+      G.OperationDefinitionTyped typeOpDef ->
+        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
+        in G.OperationDefinitionTyped typeOpDef{G._todSelectionSet = newSelset}
+      G.OperationDefinitionUnTyped selset ->
+        G.OperationDefinitionUnTyped $ filterSelSet selset
+
+    filterSelSet = mapMaybe filterSel
+    filterSel s = case s of
+      G.SelectionField f ->
+        if G._fName f == "__typename"
+        then Nothing
+        else
+          let newSelset = filterSelSet $ G._fSelectionSet f
+          in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
+      _                  -> Just s

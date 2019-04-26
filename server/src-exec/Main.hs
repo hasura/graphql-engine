@@ -82,6 +82,7 @@ parseHGECommand =
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
+                <*> parseEnableWhitelist
 
 
 parseArgs :: IO HGEOptions
@@ -120,7 +121,7 @@ main =  do
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole
-                enableTelemetry strfyNum enabledAPIs lqOpts) -> do
+                enableTelemetry strfyNum enabledAPIs lqOpts enableWL) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
       -- log serve options
       unLogger logger $ serveOptsToLog so
@@ -144,7 +145,7 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx pool httpManager am
+        mkWaiApp isoL loggerCtx sqlGenCtx enableWL pool httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
       sc <- getSCFromRef cacheRef
