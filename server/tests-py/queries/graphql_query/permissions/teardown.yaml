@@ -10,4 +10,5 @@ args:
       DROP TABLE geom_table;
       DROP TABLE jsonb_table;
       DROP TABLE gpa cascade;
+      DROP TABLE auction;
     cascade: true

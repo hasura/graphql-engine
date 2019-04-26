@@ -1,0 +1,31 @@
+- args:
+    role: user
+    table:
+      name: todos
+      schema: public
+  type: drop_insert_permission
+- args:
+    permission:
+      check:
+        _or:
+        - is_public:
+            _eq: "true"
+        - user_id:
+            _eq: X-HASURA-USER-ID
+      columns:
+      - created_at
+      - id
+      - is_completed
+      - is_public
+      - title
+      - updated_at
+      - user_id
+      localPresets:
+      - key: ""
+        value: ""
+      set: {}
+    role: user
+    table:
+      name: todos
+      schema: public
+  type: create_insert_permission

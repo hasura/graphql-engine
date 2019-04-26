@@ -7,7 +7,7 @@ import {
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
