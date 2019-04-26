@@ -81,6 +81,8 @@ data RQLQuery
 
   | RQCreateQueryCollection !CreateCollection
   | RQDropQueryCollection !DropCollection
+  | RQAddQueryToCollection !AddQueryToCollection
+  | RQDropQueryFromCollection !DropQueryFromCollection
 
   | RQRunSql !RunSQL
 
@@ -220,6 +222,8 @@ queryNeedsReload qi = case qi of
 
   RQCreateQueryCollection _    -> True
   RQDropQueryCollection _      -> True
+  RQAddQueryToCollection _     -> True
+  RQDropQueryFromCollection _  -> True
 
   RQRunSql _                   -> True
 
@@ -286,6 +290,8 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQCreateQueryCollection q    -> runCreateCollection q
   RQDropQueryCollection q      -> runDropCollection q
+  RQAddQueryToCollection q     -> runAddQueryToCollection q
+  RQDropQueryFromCollection q  -> runDropQueryFromCollection q
 
   RQReplaceMetadata q          -> runReplaceMetadata q
   RQClearMetadata q            -> runClearMetadata q

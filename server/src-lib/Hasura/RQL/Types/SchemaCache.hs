@@ -101,6 +101,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , addCollectionToCache
        , delCollectionFromCache
+       , addQueryToCollectionInCache
+       , dropQueryFromCollectionCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -784,7 +786,7 @@ data TemplateParamInfo
 
 addCollectionToCache
   :: (QErrM m, CacheRWM m)
-  => CollectionName -> QueryList -> m ()
+  => CollectionName -> ParsedQueryList -> m ()
 addCollectionToCache name qList = do
   sc <- askSchemaCache
   let collectionMap = scQueryCollections sc
@@ -806,6 +808,46 @@ delCollectionFromCache name = do
                <> name <<> " does not exists"
     Just _  -> writeSchemaCache
                sc {scQueryCollections = M.delete name collectionMap}
+
+askQueryMap
+  :: (QErrM m, CacheRM m)
+  => CollectionName -> m QueryMap
+askQueryMap name = do
+  collectionMap <- scQueryCollections <$> askSchemaCache
+  case M.lookup name collectionMap of
+    Nothing -> throw400 NotExists $ "query collection with name "
+               <> name <<> " does not exists"
+    Just a  -> return a
+
+addQueryToCollectionInCache
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> QueryName -> GQLQueryParsed -> m ()
+addQueryToCollectionInCache collName queryName gqlQuery = do
+  sc <- askSchemaCache
+  queryMap <- askQueryMap collName
+  case M.lookup queryName queryMap of
+    Just _ -> throw400 AlreadyExists $ "query with name " <> queryName
+              <<> " already exists in collection " <>> collName
+    Nothing -> do
+      let newQueryMap = M.insert queryName gqlQuery queryMap
+          newCollectionMap =
+            M.insert collName newQueryMap $ scQueryCollections sc
+      writeSchemaCache sc{scQueryCollections = newCollectionMap}
+
+dropQueryFromCollectionCache
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> QueryName -> m ()
+dropQueryFromCollectionCache collName queryName = do
+  sc <- askSchemaCache
+  queryMap <- askQueryMap collName
+  case M.lookup queryName queryMap of
+    Nothing -> throw400 NotFound $ "query with name " <> queryName
+               <<> " not found in collection " <>> collName
+    Just _  -> do
+      let newQueryMap = M.delete queryName queryMap
+          newCollectionMap =
+            M.insert collName newQueryMap $ scQueryCollections sc
+      writeSchemaCache sc{scQueryCollections = newCollectionMap}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)
