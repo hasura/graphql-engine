@@ -433,6 +433,9 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 fi
 
 # whitelisted queries test
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+unset HASURA_GRAPHQL_JWT_SECRET
 unset HASURA_GRAPHQL_ENABLE_WHITELIST
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH WHITELISTING QUERIES ########> \n"
