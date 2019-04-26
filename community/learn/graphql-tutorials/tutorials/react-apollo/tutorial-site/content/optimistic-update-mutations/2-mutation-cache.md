@@ -96,7 +96,7 @@ import {GET_MY_TODOS} from './TodoPrivateList';
 +          data: {todos: newTodos}
 +        });
 +      }
-+    });
+    });
   };
 
 ```

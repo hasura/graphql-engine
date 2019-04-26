@@ -31,8 +31,8 @@ const createApolloClient = (authToken) => {
           headers: {
             Authorization: `Bearer ${authToken}`
           }
-        }
-      }
++       }
++     }
     }),
     cache: new InMemoryCache(),
   });
