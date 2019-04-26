@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Data/Metadata/Actions';
+} from '../Services/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
 import { Link } from 'react-router';

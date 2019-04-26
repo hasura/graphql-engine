@@ -11,7 +11,7 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../EventTrigger/EventActions';
 
-import { showSuccessNotification } from '../Data/Notification';
+import { showSuccessNotification } from '../Common/Notification';
 
 /* Action constants */
 
