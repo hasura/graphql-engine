@@ -76,7 +76,6 @@ const CodeBlock = ({ children: exampleCode, ...props }) => {
                             </React.Fragment>
                           )
                         } else {
-                          console.log('inside else');
                           return (
                               <span {...getTokenProps({ token, key })} style={diffStyle} />
                           )
