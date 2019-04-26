@@ -402,14 +402,13 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         legacyQueryHandler (TableName tableName) queryType
 
     when enableGraphQL $ do
-      post "v1alpha1/graphql/explain" $
-        mkSpockAction encodeQErr id serverCtx $ do
-          expQuery <- parseBody
-          gqlExplainHandler expQuery
+      post "v1alpha1/graphql/explain" gqlExplainAction
 
       post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $ do
         query <- parseBody
         v1Alpha1GQHandler query
+
+      post "v1/graphql/explain" gqlExplainAction
 
       post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $ do
         query <- parseBody
@@ -432,6 +431,11 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
   where
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
+
+    gqlExplainAction =
+      mkSpockAction encodeQErr id serverCtx $ do
+        expQuery <- parseBody
+        gqlExplainHandler expQuery
 
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
