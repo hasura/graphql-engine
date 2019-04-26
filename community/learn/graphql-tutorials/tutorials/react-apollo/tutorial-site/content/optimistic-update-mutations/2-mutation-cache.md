@@ -70,11 +70,12 @@ We already have the onChange handler toggleTodo for the input. Let's update the 
 ```
 
 The above code will just make a mutation, updating the todo's is_completed property in the database.
-To update the cache,we will be using the `update` function again to modify the cache. We need to fetch the current list of todos from the cache before modifying it. So let's import the query.
+To update the cache, we will be using the `update` function again to modify the cache. We need to fetch the current list of todos from the cache before modifying it. So let's import the query.
 
 ```javascript
-import {GET_MY_TODOS} from './TodoPrivateList';
++ import {GET_MY_TODOS} from './TodoPrivateList';
 ```
+Now let's add the code for `update` function.
 
 ```javascript
   const toggleTodo = () => {

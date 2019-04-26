@@ -71,7 +71,7 @@ const TodoItem = ({index, todo, client}) => {
             id={todo.id}
             onChange={toggleTodo}
           />
-          <label htmlFor={todo.id}/>)
+          <label htmlFor={todo.id}/>
         </div>
       </div>
 

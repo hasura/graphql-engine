@@ -6,7 +6,7 @@ import './styles.css';
 import { forcedNavOrder } from '../config';
 
 const Sidebar = styled('aside')`
-  width: 224px;
+  width: 100%;
   background-color: #fff;
   border-right: 1px solid #ede7f3;
   height: 100vh;
@@ -71,7 +71,7 @@ const SidebarLayout = ({ location }) => (
               fields {
                 slug
               }
-              tableOfContents 
+              tableOfContents
             }
           }
         }
@@ -84,7 +84,7 @@ const SidebarLayout = ({ location }) => (
         const navItems = allMdx.edges.map((item, index) => {
           let innerItems;
           if(item !== undefined) {
-            if (item.node.fields.slug === location.pathname) {
+            if ((item.node.fields.slug === location.pathname) || ('/graphql/react' + item.node.fields.slug) === location.pathname) {
               if (item.node.tableOfContents.items) {
                 innerItems = item.node.tableOfContents.items.map((innerItem, index) => {
                   return (
