@@ -114,11 +114,11 @@ withSCUpdate scr logger action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
   liftIO $ do
-    -- log any inconsistent objects
-    logInconsObjs logger $ scInconsistentObjs newSC
     -- update schemacache in IO reference
     modifyIORef' cacheRef $
       \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
     onChange
   releaseLock
   return res
