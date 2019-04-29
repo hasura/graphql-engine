@@ -13,7 +13,7 @@ import {
   getExistingFieldsMap,
 } from './Actions';
 import { findAllFromRel } from '../utils';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
