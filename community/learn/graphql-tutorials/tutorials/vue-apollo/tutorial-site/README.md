@@ -5,9 +5,7 @@ npm i -g gatsby-cli
 gatsby develop
 ```
 
-
 ----------------------------------------------------------------------
-
 
 ## Gatsby Tutorial Starter Kit
 
@@ -25,9 +23,13 @@ gatsby develop
 ## Environment Variables
 
 `GATSBY_SITE_TITLE` - title tag for the current tutorial
+
 `GATSBY_SITE_DESCRIPTION` - description tag for the current tutorial
+
 `GATSBY_DOCS_LOCATION` - github url for Edit on Github functionality
+
 `GATSBY_PATH_PREFIX` - url prefix at which the tutorial will be hosted
+
 `GATSBY_HEADER_TITLE` - title that appears on the top header
 
 ## Develop
