@@ -14,5 +14,6 @@ We will learn the following concepts:
 - Creating a GraphQL mutation
 - Using the `<Mutation>` component
 - Capturing loading/finished/error states
+- Use optimistic responses
 
 Let's get started!

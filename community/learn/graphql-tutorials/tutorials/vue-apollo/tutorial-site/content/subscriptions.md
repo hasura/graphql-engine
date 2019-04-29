@@ -21,75 +21,43 @@ We have to make this change to see yourself online first. Remember that you are 
 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
 
-Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports and set the client prop in the constructor
+Open `src/components/OnlineUsers.vue` and add the following imports and set the client prop in the constructor
 
 ```javascript
-+ import gql from "graphql-tag";
-+ import {withApollo} from 'react-apollo';
-class OnlineUsersWrapper extends Component {
-- constructor() {
-+ constructor(props) {
--   super();
-+   super(props);
-+   this.client = props.client;
-
-    this.state = {
-      onlineUsers: [
-        { name: "someUser1" },
-        { name: "someUser2" }
-      ]
-    };
-  }
+<script>
++ import gql from 'graphql-tag'
+  export default {
+    data() {
+      return {
+        online_list: [
+          { user: { name: "someUser1" }},
+          { user: { name: "someUser2" }}
+        ]
+      };
+    },
++   mounted() {
++     const UPDATE_LASTSEEN_MUTATION = gql`
++       mutation updateLastSeen ($now: timestamptz!) {
++         update_users(where: {}, _set: {last_seen: $now}) {
++           affected_rows
++         }
++       }
++     `;
++     setInterval(function() {
++       this.$apollo
++         .mutate({
++           mutation: UPDATE_LASTSEEN_MUTATION,
++           variables: {
++             now: new Date().toISOString()
++           }
++         })
++         .catch(error => {
++           console.error(error);
++         });
++     }.bind(this),30000);
++   },
 ```
 
-Update the export by wrapping the OnlineUsersWrapper component with `withApollo`
-
-```javascript
-- export default OnlineUsersWrapper;
-+ export default withApollo(OnlineUsersWrapper);
-```
-
-In `componentDidMount`, we will create a `setInterval` to update the last_seen of the user every 30 seconds.
-
-```javascript
-class OnlineUsersWrapper extends Component {
-  constructor(props) {
-    super(props);
-    this.client = props.client;
-  }
-+ componentDidMount() {
-+   // Every 30s, run a mutation to tell the backend that you're online
-+   this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
-+ }
-```
-
-Now let's write the definition of the `updateLastSeen`.
-
-```javascript
-class OnlineUsersWrapper extends Component {
-  constructor(props) {
-    super(props);
-    this.client = props.client;
-  }
-+  updateLastSeen() {
-+    // Use the apollo client to run a mutation to update the last_seen value
-+    const UPDATE_LASTSEEN_MUTATION=gql`
-+      mutation updateLastSeen ($now: timestamptz!) {
-+        update_users(where: {}, _set: {last_seen: $now}) {
-+          affected_rows
-+        }
-+      }`;
-+    this.client.mutate({
-+      mutation: UPDATE_LASTSEEN_MUTATION,
-+      variables: {now: (new Date()).toISOString()}
-+    });
-+  }
-  componentDidMount() {
-    // Every 30s, run a mutation to tell the backend that you're online
-    this.onlineIndicator = setInterval(() => this.updateLastSeen(), 30000);
-  }
-```
-
-Again, we are making use of `client.mutate` to update the `users` table of the database.
+In `mounted()`, we are creating a `setInterval` to update the last_seen of the user every 30 seconds.
 
 Great! Now the metadata about whether the user is online will be available in the backend. Let's now do the integration to display realtime data of online users.

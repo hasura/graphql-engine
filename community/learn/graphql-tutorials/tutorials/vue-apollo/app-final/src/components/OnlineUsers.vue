@@ -33,7 +33,6 @@
       };
     },
     mounted() {
-      const client = this.$apolloProvider.clients.defaultClient;
       const UPDATE_LASTSEEN_MUTATION = gql`
         mutation updateLastSeen ($now: timestamptz!) {
           update_users(where: {}, _set: {last_seen: $now}) {
@@ -42,7 +41,7 @@
         }
       `;
       setInterval(function() {
-        client
+        this.$apollo
           .mutate({
             mutation: UPDATE_LASTSEEN_MUTATION,
             variables: {
@@ -55,7 +54,7 @@
       }.bind(this),30000);
     },
     apollo: {
-    // Subscriptions
+      // Subscriptions
       $subscribe: {
         // When a user is added
         online_users: {

@@ -18,7 +18,7 @@ const Header = ({location}) => (
         }
         `}
     render={(data) => {
-      const logo = require('./images/react-logo.svg');
+      const logo = require('./images/vue-logo.svg');
       const twitter = require('./images/twitter.svg');
       const {
         site: {
@@ -38,7 +38,7 @@ const Header = ({location}) => (
                 <span className={'icon-bar'}></span>
               </button>
               <a className={'navbar-brand navBarBrand'} href="/">
-                <img className={'img-responsive'} src={logo} alt={'React logo'} />
+                <img className={'img-responsive'} src={logo} alt={'Vue logo'} />
                 {headerTitle}
               </a>
             </div>
@@ -53,7 +53,7 @@ const Header = ({location}) => (
                 <li><a href="https://discordapp.com/invite/vBPpJkS">Need Help?</a></li>
               </ul>
               <ul className={'nav navbar-nav navBarUL navbar-right'}>
-                <li><a href="https://twitter.com/intent/tweet?&text=Check out this GraphQL course for React developers by @HasuraHQ https://learn.hasura.io/graphql/react" target="_blank"><img className={'twitterIcon'} src={twitter} alt={'Twitter'} /></a></li>
+                <li><a href="https://twitter.com/intent/tweet?&text=Check out this GraphQL course for Vue developers by @HasuraHQ https://learn.hasura.io/graphql/vue" target="_blank"><img className={'twitterIcon'} src={twitter} alt={'Twitter'} /></a></li>
                 <li><a href="https://hasura.io/" target="_blank">hasura.io</a></li>
               </ul>
             </div>

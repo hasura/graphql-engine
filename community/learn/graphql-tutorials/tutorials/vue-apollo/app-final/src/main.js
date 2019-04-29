@@ -6,13 +6,8 @@ import AuthPlugin from "./plugins/auth";
 import VueApollo from 'vue-apollo'
 
 import ApolloClient from "apollo-client";
-import { HttpLink } from "apollo-link-http";
 import { InMemoryCache } from "apollo-cache-inmemory";
-
 import { WebSocketLink } from "apollo-link-ws";
-import { split } from "apollo-link";
-import { getMainDefinition } from "apollo-utilities";
-import { SubscriptionClient } from "subscriptions-transport-ws";
 
 Vue.use(AuthPlugin);
 Vue.use(VueApollo);
@@ -28,39 +23,17 @@ const getHeaders = () => {
   return headers;
 };
 
-// Create an http link:
-const httpLink = new HttpLink({
-  uri: 'https://learn.hasura.io/graphql',
-  fetch,
-  headers: getHeaders()
-});
-
 // Create a WebSocket link:
-const wsLink = new WebSocketLink(
-  new SubscriptionClient('wss://learn.hasura.io/graphql', {
+const link = new WebSocketLink({
+  uri: 'wss://learn.hasura.io/graphql',
+  options: {
     reconnect: true,
     timeout: 30000,
     connectionParams: () => {
       return { headers: getHeaders() };
     },
-    connectionCallback: err => {
-      if (err) {
-        wsLink.subscriptionClient.close(false, false);
-      }
-    }
-  })
-);
-
-// chose the link to use based on operation
-const link = split(
-  // split based on operation type
-  ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    return kind === "OperationDefinition" && operation === "subscription";
-  },
-  wsLink,
-  httpLink
-);
+  }
+});
 
 const client = new ApolloClient({
   link: link,

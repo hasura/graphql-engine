@@ -1,5 +1,7 @@
 <template>
   <div>
+    <div v-if="$apollo.queries.todos.loading">Loading...</div>
+    <div v-if="error">{{ error }}</div>
     <div class="todoListwrapper">
       <TodoItem 
         v-bind:todos="filteredTodos" 
@@ -20,7 +22,7 @@
 import TodoItem from "../components/TodoItem";
 import TodoFilters from "../components/TodoFilters";
 import gql from "graphql-tag";
-const GET_MY_TODOS = gql`
+export const GET_MY_TODOS = gql`
   query getMyTodos {
     todos(
       where: { is_public: { _eq: false } }
@@ -41,7 +43,8 @@ export default {
     return {
       type: "private",
       filterType: "all",
-      todos: []
+      todos: [],
+      error: null
     }
   },
   computed: {
@@ -70,7 +73,6 @@ export default {
       }
     },
     clearCompleted: function() {
-      const client = this.$apolloProvider.clients.defaultClient;
       const isOk = window.confirm("Are you sure?");
       if (isOk) {
         // Remove all the todos that are completed
@@ -81,7 +83,7 @@ export default {
             }
           }
         `;
-        client
+        this.$apollo
           .mutate({
             mutation: CLEAR_COMPLETED,
             update: (store, { data: { delete_todos } }) => {
@@ -107,6 +109,9 @@ export default {
     todos: {
       // graphql query
       query: GET_MY_TODOS,
+      error(error) {
+        this.error = JSON.stringify(error.message);
+      }
     },
   },
 }

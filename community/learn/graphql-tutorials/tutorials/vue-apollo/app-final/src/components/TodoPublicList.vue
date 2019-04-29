@@ -18,7 +18,53 @@
 <script>
 import TodoItem from "../components/TodoItem";
 import TodoFilters from "../components/TodoFilters";
-import { GET_NEW_PUBLIC_TODOS, GET_OLD_PUBLIC_TODOS, NOTIFY_NEW_PUBLIC_TODOS } from "../TodoQueries";
+import gql from "graphql-tag";
+const NOTIFY_NEW_PUBLIC_TODOS = gql`
+  subscription notifyNewPublicTodos {
+    todos(
+      where: { is_public: { _eq: true }} 
+      order_by: { created_at: desc }
+      limit: 1
+    ) {
+      id
+      title
+      created_at
+    }
+  }
+`;
+const GET_OLD_PUBLIC_TODOS = gql`
+  query getOldPublicTodos($oldestTodoId: Int) {
+    todos(
+      where: { is_public: { _eq: true }, id: { _lt: $oldestTodoId } }
+      limit: 7
+      order_by: { created_at: desc }
+    ) {
+      id
+      title
+      created_at
+      is_public
+      user {
+        name
+      }
+    }
+  }
+`;
+const GET_NEW_PUBLIC_TODOS = gql`
+  query getNewPublicTodos($latestVisibleId: Int!) {
+    todos(
+      where: { is_public: { _eq: true }, id: { _gt: $latestVisibleId } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      title
+      created_at
+      is_public
+      user {
+        name
+      }
+    }
+  }
+`;
 export default {
   components: {
     TodoItem, TodoFilters
@@ -33,16 +79,15 @@ export default {
     }
   },
   mounted() {
-    const client = this.$apolloProvider.clients.defaultClient;
     const that = this;
-    client
+    this.$apollo
       .query({
         query: GET_OLD_PUBLIC_TODOS
       })
       .then(data => {
         this.todos = data.data.todos;
         // start a subscription
-        client
+        this.$apollo
           .subscribe({
             query: NOTIFY_NEW_PUBLIC_TODOS,
           })
@@ -63,9 +108,8 @@ export default {
   },
   methods: {
     loadMoreClicked: function() {
-      const client = this.$apolloProvider.clients.defaultClient;
       this.newTodosCount = 0;
-      client
+      this.$apollo
         .query({
           query: GET_NEW_PUBLIC_TODOS,
           variables: {
@@ -81,8 +125,7 @@ export default {
         });
     },
     loadOlderClicked: function() {
-      const client = this.$apolloProvider.clients.defaultClient;
-      client
+      this.$apollo
         .query({
           query: GET_OLD_PUBLIC_TODOS,
           variables: {

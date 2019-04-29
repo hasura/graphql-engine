@@ -41,13 +41,28 @@
 </template>
 
 <script>
-  import { GET_MY_TODOS, TOGGLE_TODO, REMOVE_TODO } from "../TodoQueries"
+  import gql from 'graphql-tag';
+  import { GET_MY_TODOS } from "./TodoPrivateList.vue";
+  const TOGGLE_TODO = gql`
+    mutation update_todos($id: Int!, $isCompleted: Boolean!) {
+      update_todos(where: { id: { _eq: $id } }, _set: { is_completed: $isCompleted }) {
+        affected_rows
+      }
+    }
+  `;
+  const REMOVE_TODO = gql`
+    mutation delete_todos($id: Int!) {
+      delete_todos(where: { id: { _eq: $id } }) {
+        affected_rows
+      }
+    }
+  `;
   export default {
     props: ['todos', 'type'],
     methods: {
       handleTodoToggle: function (todo) {
-        const client = this.$apolloProvider.clients.defaultClient;
-        client.mutate({
+        // update todo data in db here
+        this.$apollo.mutate({
           mutation: TOGGLE_TODO,
           variables: {
            id: todo.id,
@@ -81,8 +96,8 @@
         });
       },
       handleTodoDelete: function(todo) {
-        const client = this.$apolloProvider.clients.defaultClient;
-        client.mutate({
+        // delete todo from db
+        this.$apollo.mutate({
           mutation: REMOVE_TODO,
           variables: {
            id: todo.id,

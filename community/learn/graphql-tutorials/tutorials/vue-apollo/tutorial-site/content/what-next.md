@@ -13,10 +13,10 @@ We have a Discord Channel for those who are new to GraphQL. Please post your que
 
 Here's the [invite link](https://discordapp.com/invite/vBPpJkS) to join discord.
 
-## More sample apps
-We have a bunch of sample apps created using React, Apollo Client and Hasura GraphQL Engine.
+## More boilerplates
+We have a bunch of sample apps created using Vue, Apollo Client and Hasura GraphQL Engine.
 
-Check out the [sample apps](https://hasura.io/sample-apps) to get a taste of how realtime GraphQL and Auth work with Hasura. We also have boilerplates to help you get started quickly with React and Apollo.
+Check out the [vue-graphql](https://hasura.io/vue-graphql) page to get a taste of how realtime GraphQL and Auth work with Hasura. We also have boilerplates to help you get started quickly with Vue and Apollo.
 
 ## Spread the word!
 Liked the course? 
