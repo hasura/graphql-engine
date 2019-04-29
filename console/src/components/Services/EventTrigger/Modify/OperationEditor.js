@@ -25,8 +25,6 @@ class OperationEditor extends React.Component {
      * this object will have actual internal name.
      * No need to transform from display to internal name
      * */
-    console.log('Defini');
-    console.log(definition);
     for (const queryType in definition) {
       if (definition[queryType]) {
         if (queryType !== INTERNAL_CONSOLE_QUERY_REP) {

@@ -790,18 +790,6 @@ const ViewRows = ({
 
   return (
     <div className={isVisible ? '' : 'hide '}>
-      {/*
-      <InvokeManualTrigger
-        invokeEventTrigger={invokeEventTrigger}
-        dispatch={dispatch}
-        args={{
-          id: '1',
-          name: 'somename',
-        }}
-        name="newTrigger"
-        onClose={() => console.log('E')}
-      />
-      */}
       {getFilterQuery()}
       <hr />
       {getPrimaryKeyMsg()}
