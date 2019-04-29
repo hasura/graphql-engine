@@ -79,12 +79,12 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 --   , _arsqForwardClientHeaders :: !Bool
 --   } deriving (Show, Eq, Lift)
 
-newtype RemoveRemoteSchemaQuery
-  = RemoveRemoteSchemaQuery
-  { _rrsqName    :: RemoteSchemaName
+newtype RemoteSchemaNameQuery
+  = RemoteSchemaNameQuery
+  { _rsnqName    :: RemoteSchemaName
   } deriving (Show, Eq, Lift)
 
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoveRemoteSchemaQuery)
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
 getUrlFromEnv urlFromEnv = do

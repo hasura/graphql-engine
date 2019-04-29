@@ -27,6 +27,8 @@ module Hasura.RQL.Types.SchemaCache
 
        , RemoteSchemaCtx(..)
        , RemoteSchemaMap
+       , addRemoteSchemaToCache
+       , delRemoteSchemaFromCache
 
        , WithDeps
 
@@ -793,6 +795,28 @@ data TemplateParamInfo
   { tpiName    :: !TemplateParam
   , tpiDefault :: !(Maybe Value)
   } deriving (Show, Eq)
+
+addRemoteSchemaToCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaCtx -> m ()
+addRemoteSchemaToCache rmCtx = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+      name = rscName rmCtx
+  onJust (M.lookup name rmSchemas) $ const $
+    throw500 $ "remote schema with name " <> name
+    <<> " already found in cache"
+  writeSchemaCache sc
+    {scRemoteSchemas = M.insert name rmCtx rmSchemas}
+
+delRemoteSchemaFromCache
+  :: (QErrM m, CacheRWM m) => RemoteSchemaName -> m ()
+delRemoteSchemaFromCache name = do
+  sc <- askSchemaCache
+  let rmSchemas = scRemoteSchemas sc
+  void $ onNothing (M.lookup name rmSchemas) $
+    throw500 $ "remote schema with name " <> name
+    <<> " not found in cache"
+  writeSchemaCache sc {scRemoteSchemas = M.delete name rmSchemas}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

@@ -1,10 +1,9 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
-  , addRemoteSchemaToCache
   , resolveRemoteSchemas
   , runRemoveRemoteSchema
-  , removeRemoteSchemaFromCache
   , removeRemoteSchemaFromCatalog
+  , runReloadRemoteSchema
   , refreshGCtxMapInSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
@@ -72,15 +71,6 @@ addRemoteSchemaP2 q = do
   liftTx $ addRemoteSchemaToCatalog q
   return successMsg
 
-addRemoteSchemaToCache
-  :: CacheRWM m => RemoteSchemaCtx -> m ()
-addRemoteSchemaToCache rmCtx = do
-  sc <- askSchemaCache
-  let rmSchemas = scRemoteSchemas sc
-      name = rscName rmCtx
-  writeSchemaCache sc
-    {scRemoteSchemas = Map.insert name rmCtx rmSchemas}
-
 refreshGCtxMapInSchema
   :: (CacheRWM m, MonadError QErr m)
   => m ()
@@ -94,8 +84,8 @@ refreshGCtxMapInSchema = do
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => RemoveRemoteSchemaQuery -> m EncJSON
-runRemoveRemoteSchema (RemoveRemoteSchemaQuery rsn)= do
+  => RemoteSchemaNameQuery -> m EncJSON
+runRemoveRemoteSchema (RemoteSchemaNameQuery rsn)= do
   removeRemoteSchemaP1 rsn
   removeRemoteSchemaP2 rsn
 
@@ -106,9 +96,8 @@ removeRemoteSchemaP1 rsn = do
   adminOnly
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
-  case Map.lookup rsn rmSchemas of
-    Just _  -> return ()
-    Nothing -> throw400 NotExists "no such remote schema"
+  void $ onNothing (Map.lookup rsn rmSchemas) $
+    throw400 NotExists "no such remote schema"
 
 removeRemoteSchemaP2
   :: ( CacheRWM m
@@ -117,16 +106,26 @@ removeRemoteSchemaP2
   => RemoteSchemaName
   -> m EncJSON
 removeRemoteSchemaP2 rsn = do
-  removeRemoteSchemaFromCache rsn
+  delRemoteSchemaFromCache rsn
   liftTx $ removeRemoteSchemaFromCatalog rsn
   return successMsg
 
-removeRemoteSchemaFromCache
-  :: CacheRWM m => RemoteSchemaName -> m ()
-removeRemoteSchemaFromCache rsn = do
-  sc <- askSchemaCache
-  let rmSchemas = scRemoteSchemas sc
-  writeSchemaCache sc {scRemoteSchemas = Map.delete rsn rmSchemas}
+runReloadRemoteSchema
+  :: ( QErrM m, UserInfoM m , CacheRWM m
+     , MonadIO m, HasHttpManager m
+     )
+  => RemoteSchemaNameQuery -> m EncJSON
+runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
+  adminOnly
+  rmSchemas <- scRemoteSchemas <$> askSchemaCache
+  rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
+         throw400 NotExists $ "remote schema with name "
+         <> name <<> " does not exist"
+  httpMgr <- askHttpManager
+  gCtx <- fetchRemoteSchema httpMgr name rsi
+  delRemoteSchemaFromCache name
+  addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi
+  return successMsg
 
 resolveRemoteSchemas
   :: ( MonadError QErr m)

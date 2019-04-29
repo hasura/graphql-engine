@@ -33,6 +33,14 @@ def mk_delete_remote_q(name):
         }
     }
 
+def mk_reload_remote_q(name):
+    return {
+        "type" : "reload_remote_schema",
+        "args" : {
+            "name" : name
+        }
+    }
+
 
 class TestRemoteSchemaBasic:
     """ basic => no hasura tables are tracked """
@@ -80,12 +88,25 @@ class TestRemoteSchemaBasic:
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
 
+    def test_remove_schema_error(self, hge_ctx):
+        """remove remote schema which is not added"""
+        q = mk_delete_remote_q('random name')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 400
+        assert resp['code'] == 'not-exists'
+
+    def test_reload_remote_schema(self, hge_ctx):
+        """reload a remote schema"""
+        q = mk_reload_remote_q('simple 1')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200
+
     def test_add_second_remote_schema(self, hge_ctx):
         """add 2 remote schemas with different node and types"""
         q = mk_add_remote_q('my remote', 'http://localhost:5000/user-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
-        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "my remote"}})
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('my remote'))
         assert st_code == 200, resp
 
     def test_add_remote_schema_with_interfaces(self, hge_ctx):
@@ -94,8 +115,7 @@ class TestRemoteSchemaBasic:
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir + '/character_interface_query.yaml')
-        hge_ctx.v1q({"type": "remove_remote_schema",
-                     "args": {"name": "my remote interface one"}})
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('my remote interface one'))
         assert st_code == 200, resp
 
     def test_add_remote_schema_with_interface_err_empty_fields_list(self, hge_ctx):
