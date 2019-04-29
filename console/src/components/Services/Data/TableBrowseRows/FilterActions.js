@@ -1,7 +1,7 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
 import { vMakeRequest } from './ViewActions';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
 
