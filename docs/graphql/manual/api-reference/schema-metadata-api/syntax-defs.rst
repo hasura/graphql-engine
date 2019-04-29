@@ -304,7 +304,7 @@ JSONB operators :
    * - ``_has_key``
      - ``?``
 
-PostGIS related operators on GEOMETRY columns: 
+PostGIS related operators on GEOMETRY columns:
 
 .. list-table::
    :header-rows: 1
@@ -391,10 +391,39 @@ E.g. where ``id`` is derived from session variable and ``city`` is a static valu
 .. code-block:: json
 
    {
-      "id" : "x-hasura-User-Id", 
+      "id" : "x-hasura-User-Id",
       "city" : "San Francisco"
    }
 
 .. note::
 
    If the value of any key begins with "x-hasura-" (*case-insensitive*), the value of the column specified in the key will be derived from a session variable of the same name.
+
+.. _RemoteSchemaName:
+
+RemoteSchemaName
+^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _RemoteSchemaDef:
+
+RemoteSchemaDef
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "url" : url-string,
+      "url_from_env" : env-var-string,
+      "headers": [
+           { "name": header-name-string,
+             "value": header-value-string,
+             "value_from_env": env-var-string
+           }
+      ],
+      "forward_client_headers": boolean
+   }

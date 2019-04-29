@@ -152,7 +152,19 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
-       
+
+   * - :ref:`add_remote_schema`
+     - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
+     - Add a remote GraphQL server as remote schema
+
+   * - :ref:`remove_remote_schema`
+     - :ref:`remove_remote_schema_args <remove_remote_schema_syntax>`
+     - Remove existing remote schema
+
+   * - :ref:`reload_remote_schema`
+     - :ref:`reload_remote_schema_args <reload_remote_schema_syntax>`
+     - Reload schema of existing remote server
+
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
      - Export the current metadata
@@ -172,7 +184,7 @@ The various types of queries are listed in the following table:
    * - :ref:`get_inconsistent_metadata`
      - :ref:`Empty Object`
      - List all inconsistent metadata objects
-       
+
    * - :ref:`drop_inconsistent_metadata`
      - :ref:`Empty Object`
      - Drop all inconsistent metadata objects
@@ -186,6 +198,7 @@ The various types of queries are listed in the following table:
 - :doc:`Relationships <relationship>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
+- :doc:`Remote Schemas <remote-schemas>`
 - :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
@@ -249,6 +262,6 @@ Error codes
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
+  Remote Schemas <remote-schemas>
   Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
-
