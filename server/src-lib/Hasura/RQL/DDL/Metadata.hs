@@ -264,16 +264,13 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
-      indexedForM_ schemas $ \conf ->
-        void $ DRS.addRemoteSchemaP1 conf
-               >>= DRS.addRemoteSchemaP2 conf
+      indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
   -- build GraphQL Context
   sc <- GS.updateSCWithGCtx =<< askSchemaCache
 
   -- resolve remote schemas
-  httpMgr <- askHttpManager
-  newSc <- DRS.resolveRemoteSchemas sc httpMgr
+  newSc <- DRS.resolveRemoteSchemas sc
   writeSchemaCache newSc
 
   return successMsg

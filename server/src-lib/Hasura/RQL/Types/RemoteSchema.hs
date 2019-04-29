@@ -7,20 +7,22 @@ import           System.Environment         (lookupEnv)
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
-import qualified Data.HashMap.Strict        as Map
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Types           (DQuote)
 
 type UrlFromEnv = Text
 
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: Text}
-  deriving (Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey, J.FromJSON, Q.ToPrepArg, Q.FromCol)
+  deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
+           , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
+           )
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
@@ -42,8 +44,6 @@ data RemoteSchemaDef
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
-
-type RemoteSchemaMap = Map.HashMap RemoteSchemaName RemoteSchemaInfo
 
 -- instance J.ToJSON RemoteSchemaDef where
 --   toJSON (RemoteSchemaDef name eUrlVal headers fwdHdrs) =
@@ -79,9 +79,9 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 --   , _arsqForwardClientHeaders :: !Bool
 --   } deriving (Show, Eq, Lift)
 
-data RemoveRemoteSchemaQuery
+newtype RemoveRemoteSchemaQuery
   = RemoveRemoteSchemaQuery
-  { _rrsqName    :: !RemoteSchemaName
+  { _rrsqName    :: RemoteSchemaName
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoveRemoteSchemaQuery)

@@ -397,10 +397,10 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
 
     -- _st_d_within has to stay with geometry type
     stDWithinGeometryInpM =
-      bool Nothing (Just $ stDWithinGeomInp) (PGGeometry `elem` colTys)
+      bool Nothing (Just stDWithinGeomInp) (PGGeometry `elem` colTys)
     -- _st_d_within_geography is created for geography type
     stDWithinGeographyInpM =
-      bool Nothing (Just $ stDWithinGeogInp) (PGGeography `elem` colTys)
+      bool Nothing (Just stDWithinGeogInp) (PGGeography `elem` colTys)
 
     stDWithinGeomInp =
       mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
@@ -417,3 +417,11 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
 
 emptyGCtx :: GCtx
 emptyGCtx = mkGCtx mempty mempty mempty
+
+data RemoteGCtx
+  = RemoteGCtx
+  { _rgTypes            :: !TypeMap
+  , _rgQueryRoot        :: !ObjTyInfo
+  , _rgMutationRoot     :: !(Maybe ObjTyInfo)
+  , _rgSubscriptionRoot :: !(Maybe ObjTyInfo)
+  } deriving (Show, Eq)

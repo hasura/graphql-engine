@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , refreshGCtxMapInSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
+  , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
   ) where
 
@@ -17,10 +18,10 @@ import           Hasura.Prelude
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
 
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Schema       as GS
 
@@ -31,20 +32,30 @@ runAddRemoteSchema
      )
   => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
-  addRemoteSchemaP1 q >>= addRemoteSchemaP2 q
+  addRemoteSchemaP1 name >> addRemoteSchemaP2 q
+  where
+    name = _arsqName q
 
 addRemoteSchemaP1
-  :: ( QErrM m, UserInfoM m
-     , MonadIO m, HasHttpManager m
-     )
-  => AddRemoteSchemaQuery -> m RemoteSchemaInfo
-addRemoteSchemaP1 q = do
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => RemoteSchemaName -> m ()
+addRemoteSchemaP1 name = do
   adminOnly
+  remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
+  onJust (Map.lookup name remoteSchemaMap) $ const $
+    throw400 AlreadyExists $ "remote schema with name "
+    <> name <<> " already exists"
+
+addRemoteSchemaP2Setup
+  :: (QErrM m, CacheRWM m, MonadIO m, HasHttpManager m)
+  => AddRemoteSchemaQuery -> m RemoteSchemaCtx
+addRemoteSchemaP2Setup q = do
   httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef def
-  -- TODO:- Maintain a cache of remote schema with it's GCtx
-  void $ fetchRemoteSchema httpMgr name rsi
-  return rsi
+  gCtx <- fetchRemoteSchema httpMgr name rsi
+  let rsCtx = RemoteSchemaCtx name gCtx rsi
+  addRemoteSchemaToCache rsCtx
+  return rsCtx
   where
     AddRemoteSchemaQuery name def _ = q
 
@@ -52,39 +63,34 @@ addRemoteSchemaP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
+     , MonadIO m, HasHttpManager m
      )
   => AddRemoteSchemaQuery
-  -> RemoteSchemaInfo
   -> m EncJSON
-addRemoteSchemaP2 q rsi = do
-  addRemoteSchemaToCache name rsi
+addRemoteSchemaP2 q = do
+  void $ addRemoteSchemaP2Setup q
   liftTx $ addRemoteSchemaToCatalog q
   return successMsg
-  where
-    name = _arsqName q
 
 addRemoteSchemaToCache
-  :: CacheRWM m
-  => RemoteSchemaName
-  -> RemoteSchemaInfo
-  -> m ()
-addRemoteSchemaToCache name rmDef = do
+  :: CacheRWM m => RemoteSchemaCtx -> m ()
+addRemoteSchemaToCache rmCtx = do
   sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
+  let rmSchemas = scRemoteSchemas sc
+      name = rscName rmCtx
   writeSchemaCache sc
-    {scRemoteResolvers = Map.insert name rmDef resolvers}
+    {scRemoteSchemas = Map.insert name rmCtx rmSchemas}
 
 refreshGCtxMapInSchema
-  :: (CacheRWM m, MonadIO m, MonadError QErr m, HasHttpManager m)
+  :: (CacheRWM m, MonadError QErr m)
   => m ()
 refreshGCtxMapInSchema = do
   sc <- askSchemaCache
   gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
-  httpMgr <- askHttpManager
-  (mergedGCtxMap, defGCtx) <-
-    mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
+  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
   writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx }
+                      , scDefaultRemoteGCtx = defGCtx
+                      }
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
@@ -99,8 +105,8 @@ removeRemoteSchemaP1
 removeRemoteSchemaP1 rsn = do
   adminOnly
   sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  case Map.lookup rsn resolvers of
+  let rmSchemas = scRemoteSchemas sc
+  case Map.lookup rsn rmSchemas of
     Just _  -> return ()
     Nothing -> throw400 NotExists "no such remote schema"
 
@@ -119,17 +125,14 @@ removeRemoteSchemaFromCache
   :: CacheRWM m => RemoteSchemaName -> m ()
 removeRemoteSchemaFromCache rsn = do
   sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc {scRemoteResolvers = Map.delete rsn resolvers}
+  let rmSchemas = scRemoteSchemas sc
+  writeSchemaCache sc {scRemoteSchemas = Map.delete rsn rmSchemas}
 
 resolveRemoteSchemas
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
-  => SchemaCache -> HTTP.Manager -> m SchemaCache
-resolveRemoteSchemas sc httpMgr = do
-  (mergedGCtxMap, defGCtx) <-
-    mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
+  :: ( MonadError QErr m)
+  => SchemaCache -> m SchemaCache
+resolveRemoteSchemas sc = do
+  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
   return $ sc { scGCtxMap = mergedGCtxMap
               , scDefaultRemoteGCtx = defGCtx
               }

@@ -23,10 +23,9 @@ import           Hasura.HTTP                   (wreqOptions)
 import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
 import           Hasura.RQL.Types
 
+import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Hasura.GraphQL.Validate.Types as VT
-
-
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
@@ -36,7 +35,7 @@ fetchRemoteSchema
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m GS.RemoteGCtx
+  -> m GC.RemoteGCtx
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   headers <- getHeadersFromConf headerConf
   let hdrs = map (\(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)) headers
@@ -55,14 +54,14 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
      VT.RemoteType name def
   let mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = maybe Nothing (\mr -> Map.lookup mr typMap) mRootN
-      mSrTyp = maybe Nothing (\sr -> Map.lookup sr typMap) sRootN
+      mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
+      mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
       mRmMR = join $ VT.getObjTyM <$> mMrTyp
       mRmSR = join $ VT.getObjTyM <$> mSrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
-  return $ GS.RemoteGCtx typMap rmQR mRmMR mRmSR
+  return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
 
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
@@ -76,21 +75,21 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
       "HTTP exception occurred while sending the request to " <> show url
 
 mergeSchemas
-  :: (MonadIO m, MonadError QErr m)
+  :: (MonadError QErr m)
   => RemoteSchemaMap
   -> GS.GCtxMap
-  -> HTTP.Manager
-  -> m (GS.GCtxMap, GS.GCtx) -- the merged GCtxMap and the default GCtx without roles
-mergeSchemas rmSchemaMap gCtxMap httpManager = do
-  remoteSchemas <- forM (Map.toList rmSchemaMap) $ \(name, def) ->
-    fetchRemoteSchema httpManager name def
+  -- the merged GCtxMap and the default GCtx without roles
+  -> m (GS.GCtxMap, GS.GCtx)
+mergeSchemas rmSchemaMap gCtxMap = do
   def <- mkDefaultRemoteGCtx remoteSchemas
   merged <- mergeRemoteSchema gCtxMap def
   return (merged, def)
+  where
+    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 
 mkDefaultRemoteGCtx
   :: (MonadError QErr m)
-  => [GS.RemoteGCtx] -> m GS.GCtx
+  => [GC.RemoteGCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
 
@@ -126,12 +125,12 @@ mergeGCtx gCtx rmMergedGCtx = do
                          }
   return updatedGCtx
 
-convRemoteGCtx :: GS.RemoteGCtx -> GS.GCtx
+convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GS._rgTypes rmGCtx
-               , GS._gQueryRoot = GS._rgQueryRoot rmGCtx
-               , GS._gMutRoot   = GS._rgMutationRoot rmGCtx
-               , GS._gSubRoot   = GS._rgSubscriptionRoot rmGCtx
+  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+               , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
+               , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
+               , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
                }
 
 
@@ -185,8 +184,8 @@ mergeTyMaps
   -> VT.TypeMap
 mergeTyMaps hTyMap rmTyMap newQR newMR =
   let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' = Map.insert (G.NamedType "query_root") (VT.TIObj newQR) $
-                  newTyMap
+      newTyMap' =
+        Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
   in maybe newTyMap' (\mr -> Map.insert
                               (G.NamedType "mutation_root")
                               (VT.TIObj mr) newTyMap') newMR

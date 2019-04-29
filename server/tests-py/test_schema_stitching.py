@@ -217,8 +217,8 @@ class TestAddRemoteSchemaTbls:
     def test_add_schema_duplicate_name(self, hge_ctx):
         q = mk_add_remote_q('simple2-graphql', 'http://localhost:5000/country-graphql')
         st_code, resp = hge_ctx.v1q(q)
-        assert st_code == 500, resp
-        assert resp['code'] == 'unexpected'
+        assert st_code == 400, resp
+        assert resp['code'] == 'already-exists'
 
     def test_add_schema_same_type_containing_same_scalar(self, hge_ctx):
         """

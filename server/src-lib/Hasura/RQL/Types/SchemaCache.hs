@@ -25,6 +25,9 @@ module Hasura.RQL.Types.SchemaCache
        , modTableInCache
        , delTableFromCache
 
+       , RemoteSchemaCtx(..)
+       , RemoteSchemaMap
+
        , WithDeps
 
        , CacheRM(..)
@@ -102,6 +105,7 @@ module Hasura.RQL.Types.SchemaCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
+
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -409,6 +413,18 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
+data RemoteSchemaCtx
+  = RemoteSchemaCtx
+  { rscName :: !RemoteSchemaName
+  , rscGCtx :: !GC.RemoteGCtx
+  , rscInfo :: !RemoteSchemaInfo
+  } deriving (Show, Eq)
+
+instance ToJSON RemoteSchemaCtx where
+  toJSON = toJSON . rscInfo
+
+type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 addToDepMap :: SchemaObjId -> [SchemaDependency] -> DepMap -> DepMap
@@ -442,7 +458,7 @@ data SchemaCache
   { scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
-  , scRemoteResolvers   :: !RemoteSchemaMap
+  , scRemoteSchemas     :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap

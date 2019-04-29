@@ -80,7 +80,7 @@ trackExistingTableOrViewP2Setup tn isSystemDefined = do
   addTableToCache ti
 
 trackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
@@ -98,9 +98,7 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   return successMsg
 
 runTrackTableQ
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => TrackTable -> m EncJSON
 runTrackTableQ q = do
   trackExistingTableOrViewP1 q
@@ -250,7 +248,7 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
       "view/table already untracked : " <>> vn
 
 unTrackExistingTableOrViewP2
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
 unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   sc <- askSchemaCache
@@ -278,9 +276,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
       _                  -> False
 
 runUntrackTableQ
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
   => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
@@ -332,7 +328,6 @@ buildSchemaCache = do
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
-  hMgr <- askHttpManager
   sqlGenCtx <- askSQLGenCtx
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) -> do
@@ -422,7 +417,7 @@ buildSchemaCache = do
 
   -- remote schemas
   remoteSchemas <- liftTx fetchRemoteSchemas
-  forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
+  forM_ remoteSchemas resolveSingleRemoteSchema
 
   where
     permHelper sqlGenCtx sn tn rn pDef pa = do
@@ -436,17 +431,16 @@ buildSchemaCache = do
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
-    resolveSingleRemoteSchema hMgr rs = do
-      let AddRemoteSchemaQuery name def _ = rs
+    resolveSingleRemoteSchema rs = do
+      let AddRemoteSchemaQuery name _ _ = rs
           mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
                         MOTRemoteSchema (toJSON rs)
       handleInconsistentObj mkInconsObj $ do
-        rsi <- validateRemoteSchemaDef def
-        addRemoteSchemaToCache name rsi
+        rsCtx <- addRemoteSchemaP2Setup rs
         sc <- askSchemaCache
         let gCtxMap = scGCtxMap sc
             defGCtx = scDefaultRemoteGCtx sc
-        rGCtx <- convRemoteGCtx <$> fetchRemoteSchema hMgr name rsi
+            rGCtx = convRemoteGCtx $ rscGCtx rsCtx
         mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
         mergedDefGCtx <- mergeGCtx defGCtx rGCtx
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap
