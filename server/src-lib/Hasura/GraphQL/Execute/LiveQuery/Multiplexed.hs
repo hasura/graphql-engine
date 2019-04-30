@@ -148,23 +148,26 @@ initLiveQueriesState lqOptions =
   lqOptions
   <$> STMMap.new
 
-dumpLiveQueriesState :: LiveQueriesState -> IO J.Value
-dumpLiveQueriesState (LiveQueriesState opts lqMap) = do
-  lqMapJ <- dumpLiveQueryMap lqMap
+dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
+dumpLiveQueriesState extended (LiveQueriesState opts lqMap) = do
+  lqMapJ <- dumpLiveQueryMap extended lqMap
   return $ J.object
     [ "options" J..= opts
     , "live_queries_map" J..= lqMapJ
     ]
 
-dumpLiveQueryMap :: LiveQueryMap -> IO J.Value
-dumpLiveQueryMap lqMap =
+dumpLiveQueryMap :: Bool -> LiveQueryMap -> IO J.Value
+dumpLiveQueryMap extended lqMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
     forM entries $ \(lq, (lqHandler, threadRef)) -> do
       ThreadState threadId metrics <-
         STM.atomically $ STM.readTMVar threadRef
       metricsJ <- dumpReftechMetrics metrics
-      candidatesJ <- dumpCandidates $ _mhCandidates lqHandler
+      candidatesJ <-
+        if extended
+        then fmap Just $ dumpCandidates $ _mhCandidates lqHandler
+        else return Nothing
       return $ J.object
         [ "key" J..= lq
         , "thread_id" J..= show (A.asyncThreadId threadId)
@@ -194,8 +197,8 @@ dumpLiveQueryMap lqMap =
       , "min" J..= Metrics.min stats
       , "max" J..= Metrics.max stats
       ]
-    dumpCandidates candidateMap = STM.atomically $ do
-      candidates <- toListTMap candidateMap
+    dumpCandidates candidateMap = do
+      candidates <- STM.atomically $ toListTMap candidateMap
       forM candidates $ \((usrVars, varVals), candidate) -> do
         candidateJ <- dumpCandidate candidate
         return $ J.object
@@ -203,7 +206,8 @@ dumpLiveQueryMap lqMap =
           , "variable_values" J..= varVals
           , "candidate" J..= candidateJ
           ]
-    dumpCandidate (CandidateState respId _ respTV curOps newOps) = do
+    dumpCandidate (CandidateState respId _ respTV curOps newOps) =
+      STM.atomically $ do
       prevResHash <- STM.readTVar respTV
       curOpIds <- toListTMap curOps
       newOpIds <- toListTMap newOps
@@ -434,12 +438,16 @@ data CandidateSnapshot
 
 pushCandidateResult :: GQResp -> Maybe RespHash -> CandidateSnapshot -> IO ()
 pushCandidateResult resp respHashM candidateSnapshot = do
-  pushResultToSinks newSinks
-  -- write to the current websockets if needed
   prevRespHashM <- STM.readTVarIO respRef
-  when (isExecError resp || respHashM /= prevRespHashM) $ do
-    pushResultToSinks curSinks
-    STM.atomically $ STM.writeTVar respRef respHashM
+  -- write to the current websockets if needed
+  sinks <-
+    if (isExecError resp || respHashM /= prevRespHashM)
+    then do
+      STM.atomically $ STM.writeTVar respRef respHashM
+      return (newSinks <> curSinks)
+    else
+      return newSinks
+  pushResultToSinks sinks
   where
     CandidateSnapshot _ respRef curSinks newSinks = candidateSnapshot
     pushResultToSinks =
@@ -488,11 +496,14 @@ pollQuery
 pollQuery metrics batchSize pgExecCtx handler = do
 
   procInit <- Clock.getCurrentTime
+
   -- get a snapshot of all the candidates
-  candidateSnapshotMap <- STM.atomically $ do
-    candidates <- toListTMap candidateMap
-    candidateSnapshots <- mapM getCandidateSnapshot candidates
-    return $ Map.fromList candidateSnapshots
+  -- this need not be done in a transaction
+  candidates <- STM.atomically $ toListTMap candidateMap
+  candidateSnapshotMap <-
+    fmap Map.fromList $
+    mapM (STM.atomically . getCandidateSnapshot) candidates
+
   let queryVarsBatches = chunks (unBatchSize batchSize) $
                         getQueryVars candidateSnapshotMap
 
