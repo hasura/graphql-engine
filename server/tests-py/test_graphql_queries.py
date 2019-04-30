@@ -252,7 +252,7 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_staff_passed_students(self, hge_ctx, transport, endpoint):
         check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml', transport, endpoint)
 
-    def test_user_query_auction(self, hge_ctx, transport):
+    def test_user_query_auction(self, hge_ctx, transport, endpoint):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
     @classmethod
