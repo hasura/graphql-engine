@@ -144,7 +144,7 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx pool httpManager am
+        mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects

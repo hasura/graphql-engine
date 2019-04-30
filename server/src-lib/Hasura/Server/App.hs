@@ -52,6 +52,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
+import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -130,16 +131,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx   :: PGExecCtx
-  , scLogger      :: L.Logger
-  , scCacheRef    :: SchemaCacheRef
-  , scAuthMode    :: AuthMode
-  , scManager     :: HTTP.Manager
-  , scSQLGenCtx   :: SQLGenCtx
-  , scEnabledAPIs :: S.HashSet API
-  , scInstanceId  :: InstanceId
-  , scPlanCache   :: E.PlanCache
-  , scLQState     :: EL.LiveQueriesState
+  { scPGExecCtx    :: PGExecCtx
+  , scConnInfo     :: Q.ConnInfo
+  , scLogger       :: L.Logger
+  , scCacheRef     :: SchemaCacheRef
+  , scAuthMode     :: AuthMode
+  , scManager      :: HTTP.Manager
+  , scSQLGenCtx    :: SQLGenCtx
+  , scEnabledAPIs  :: S.HashSet API
+  , scInstanceId   :: InstanceId
+  , scPlanCache    :: E.PlanCache
+  , scLQState      :: EL.LiveQueriesState
   }
 
 data HandlerCtx
@@ -152,11 +154,26 @@ data HandlerCtx
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
+data APIResp
+  = JSONResp !EncJSON
+  | RawResp !T.Text !BL.ByteString -- content-type, body
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp j  -> encJToLBS j
+  RawResp _ b -> b
+
+mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
+mkAPIRespHandler = fmap JSONResp
+
 isMetadataEnabled :: ServerCtx -> Bool
 isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
+
+isPGDumpEnabled :: ServerCtx -> Bool
+isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
 
 isDeveloperAPIEnabled :: ServerCtx -> Bool
 isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
@@ -205,7 +222,7 @@ mkSpockAction
   => (Bool -> QErr -> Value)
   -> (QErr -> QErr)
   -> ServerCtx
-  -> Handler EncJSON
+  -> Handler APIResp
   -> ActionT m ()
 mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   req <- request
@@ -223,11 +240,12 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  let resLBS = fmapL qErrModifier $ fmap encJToLBS result
+  -- apply the error modifier
+  let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx resLBS $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp resLBS
+  logResult (Just userInfo) req reqBody serverCtx (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
     logger = scLogger serverCtx
@@ -241,9 +259,13 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
-    resToResp resp = do
-      uncurry setHeader jsonHeader
-      lazyBytes resp
+    resToResp = \case
+      JSONResp j -> do
+        uncurry setHeader jsonHeader
+        lazyBytes $ encJToLBS j
+      RawResp ct b -> do
+        setHeader "content-type" ct
+        lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
@@ -297,6 +319,13 @@ gqlExplainHandler query = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   GE.explainGQLQuery pgExecCtx sc sqlGenCtx query
 
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
+v1Alpha1PGDumpHandler b = do
+  onlyAdmin
+  ci <- scConnInfo . hcServerCtx <$> ask
+  output <- PGD.execPGDump b ci
+  return $ RawResp "application/sql" output
+
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
 
@@ -334,12 +363,12 @@ initErrExit e = do
 
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
-  -> Q.PGPool -> HTTP.Manager -> AuthMode
+  -> Q.PGPool -> Q.ConnInfo -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -365,7 +394,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
-        serverCtx = ServerCtx pgExecCtx logger
+        serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache lqState
 
@@ -404,40 +433,50 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       put    ("v1/template" <//> var) tmpltPutOrPostH
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-      post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ do
+      post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         query <- parseBody
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr id serverCtx $
+        mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
         legacyQueryHandler (TableName tableName) queryType
+
+    when enablePGDump $
+      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr id serverCtx $ do
+        query <- parseBody
+        v1Alpha1PGDumpHandler query
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" gqlExplainAction
 
-      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $ do
-        query <- parseBody
-        v1Alpha1GQHandler query
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
+        mkAPIRespHandler $ do
+          query <- parseBody
+          v1Alpha1GQHandler query
 
       post "v1/graphql/explain" gqlExplainAction
 
-      post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $ do
-        query <- parseBody
-        v1GQHandler query
+      post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
+        mkAPIRespHandler $ do
+          query <- parseBody
+          v1GQHandler query
 
     when (isDeveloperAPIEnabled serverCtx) $ do
-      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-        return $ encJFromJValue respJ
-      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
-        return $ encJFromJValue respJ
-      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $ do
-        onlyAdmin
-        respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
-        return $ encJFromJValue respJ
+      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          return $ encJFromJValue respJ
+      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+          return $ encJFromJValue respJ
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+          return $ encJFromJValue respJ
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
@@ -448,19 +487,21 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     allMod200 qe = qe { qeStatus = N.status200 }
 
     gqlExplainAction =
-      mkSpockAction encodeQErr id serverCtx $ do
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         expQuery <- parseBody
         gqlExplainHandler expQuery
 
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
+    enablePGDump = isPGDumpEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkQTemplateAction tmpltName tmpltArgs
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
+        mkQTemplateAction tmpltName tmpltArgs
 
     tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ do
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         bodyTmpltArgs <- parseBody
         mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 
