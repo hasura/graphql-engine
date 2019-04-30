@@ -103,16 +103,23 @@ data SchemaCacheRef
 getSCFromRef :: SchemaCacheRef -> IO SchemaCache
 getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
 
+logInconsObjs :: L.Logger -> [InconsistentMetadataObj] -> IO ()
+logInconsObjs logger objs =
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+
 withSCUpdate
   :: (MonadIO m, MonadError e m)
-  => SchemaCacheRef -> m (a, SchemaCache) -> m a
-withSCUpdate scr action = do
+  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
+withSCUpdate scr logger action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
-  -- update schemacache in IO reference
-  liftIO $ modifyIORef' cacheRef $
-    \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-  liftIO onChange
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $
+      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
+    onChange
   releaseLock
   return res
   where
@@ -150,6 +157,9 @@ isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
+
+isDeveloperAPIEnabled :: ServerCtx -> Bool
+isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -238,7 +248,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
 v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef dbActionReload) $
+  logger <- scLogger . hcServerCtx <$> ask
+  bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
     queryNeedsReload query
   where
     -- Hit postgres
@@ -414,15 +425,19 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
         query <- parseBody
         v1GQHandler query
 
-
-#ifdef InternalAPIs
-    get "internal/plan_cache" $ do
-      respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-      json respJ
-    get "internal/subscriptions" $ do
-      respJ <- liftIO $ EL.dumpLiveQueriesState $ scLQState serverCtx
-      json respJ
-#endif
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+        return $ encJFromJValue respJ
+      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+        return $ encJFromJValue respJ
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $ do
+        onlyAdmin
+        respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+        return $ encJFromJValue respJ
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
