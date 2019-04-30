@@ -6,7 +6,7 @@ import {
 } from './ModifyActions';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 
 import styles from './ModifyTable.scss';
 
@@ -39,16 +39,26 @@ const PrimaryKeyEditor = ({
     : '';
 
   // label next to the button when the editor is collapsed
-  let pkConfigText = tablePrimaryKeyColumns.join(', ');
-  if (tablePrimaryKeyColumns.length > 1) {
-    pkConfigText = `( ${pkConfigText} )`;
+  let pkConfigText;
+  if (tableSchema.primary_key) {
+    let pkColumnsText = tablePrimaryKeyColumns.join(', ');
+    if (tablePrimaryKeyColumns.length > 1) {
+      pkColumnsText = `( ${pkColumnsText} )`;
+    }
+
+    pkConfigText = (
+      <span>
+        <b>{pkColumnsText}</b> - <i>{pkConstraintName}</i>
+      </span>
+    );
   }
+
   const pkEditorCollapsedLabel = () => (
     <div>
       <div className="container-fluid">
         <div className="row">
           <h5 className={styles.padd_bottom}>
-            {pkConfigText ? <b> {pkConfigText} </b> : 'No primary key'}
+            {pkConfigText ? pkConfigText : 'No primary key'}
             &nbsp;
           </h5>
         </div>
@@ -58,9 +68,7 @@ const PrimaryKeyEditor = ({
 
   // label next to the button when the editor is expanded
   const pkEditorExpandedLabel = () => (
-    <h5 className={styles.padd_bottom}>
-      <b> {pkConfigText && `${pkConfigText}`}</b>
-    </h5>
+    <h5 className={styles.padd_bottom}>{pkConfigText}</h5>
   );
 
   // expanded editor content

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="10px" viewBox="0 0 15 10" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.4 (67378) - http://www.bohemiancoding.com/sketch -->
+    <title>right-arrow copy</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Welcome" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Hasura-website-design-V3" transform="translate(-271.000000, -391.000000)" fill="#FFFFFF">
+            <g id="right-arrow-copy" transform="translate(271.000000, 391.000000)">
+                <path d="M10.1008257,0.145021743 C9.89647507,-0.0483405809 9.5563671,-0.0483405809 9.34487139,0.145021743 C9.1405208,0.331851556 9.1405208,0.642799076 9.34487139,0.829193388 L13.177993,4.33366775 L0.529215624,4.33366775 C0.234360114,4.33410326 0,4.54836961 0,4.81794457 C0,5.08751952 0.234360114,5.30875389 0.529215624,5.30875389 L13.177993,5.30875389 L9.34487139,8.80669574 C9.1405208,9.00005807 9.1405208,9.31144109 9.34487139,9.4978354 C9.5563671,9.69119772 9.89695141,9.69119772 10.1008257,9.4978354 L14.8413782,5.16373214 C15.0528739,4.97690233 15.0528739,4.66595481 14.8413782,4.4795605 L10.1008257,0.145021743 Z" id="Path"></path>
+            </g>
+        </g>
+    </g>
+</svg>

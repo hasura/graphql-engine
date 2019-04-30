@@ -8,8 +8,8 @@ export const dataTypes = [
   'text',
   'numeric',
   'date',
-  'timestamptz',
-  'timetz',
+  'timestamp with time zone',
+  'time with time zone',
   'boolean',
 ];
 export const typeDefaults = {
@@ -19,8 +19,8 @@ export const typeDefaults = {
   text: 'test-text',
   numeric: '0.55555',
   date: 'now()',
-  timestamptz: 'now()',
-  timetz: 'now()',
+  'timestamp with time zone': 'now()',
+  'time with time zone': 'now()',
   boolean: 'false',
 };
 export const queryTypes = ['insert', 'select', 'update', 'delete'];

@@ -291,7 +291,7 @@ library
   if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
   if flag(developer)
-    cpp-options: -DInternalAPIs -DLocalConsole
+    cpp-options: -DDeveloperAPIs -DLocalConsole
   if flag(local-console)
     cpp-options: -DLocalConsole
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.Init where
 
 import qualified Database.PG.Query                as Q
@@ -103,6 +104,7 @@ data API
   = METADATA
   | GRAPHQL
   | PGDUMP
+  | DEVELOPER
   deriving (Show, Eq, Read, Generic)
 
 instance Hashable API
@@ -264,13 +266,18 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
-  enabledAPIs <- Set.fromList . fromMaybe [METADATA,GRAPHQL,PGDUMP] <$>
+  enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole
                         enableTelemetry strfyNum enabledAPIs lqOpts
   where
+#ifdef DeveloperAPIs
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
+#else
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP]
+#endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
@@ -688,7 +695,8 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "METADATA" -> Right METADATA
           "GRAPHQL"  -> Right GRAPHQL
           "PGDUMP"   -> Right PGDUMP
-          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump"
+          "DEVELOPER" -> Right DEVELOPER
+          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
@@ -798,14 +806,14 @@ parseMxBatchSize =
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \
+  , "results will only be sent once in this interval (in milliseconds) for \\
     \live queries which can be multiplexed. Default: 1000 (1sec)"
   )
 
 mxBatchSizeEnv :: (String, String)
 mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
-  , "multiplexed live queries are split into batches of the specified \
+  , "multiplexed live queries are split into batches of the specified \\
     \size. Default 100. "
   )
 
@@ -821,7 +829,7 @@ parseFallbackRefetchInt =
 fallbackRefetchDelayEnv :: (String, String)
 fallbackRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \
+  , "results will only be sent once in this interval (in milliseconds) for \\
     \live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
 

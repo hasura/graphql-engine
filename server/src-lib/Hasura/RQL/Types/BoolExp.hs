@@ -7,6 +7,7 @@ module Hasura.RQL.Types.BoolExp
        , DWithinGeomOp(..)
        , DWithinGeogOp(..)
        , OpExpG(..)
+       , opExpDepCol
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
@@ -29,17 +30,17 @@ module Hasura.RQL.Types.BoolExp
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import qualified Data.Aeson.Types           as J
-import qualified Data.HashMap.Strict        as M
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import qualified Data.Aeson.Types            as J
+import qualified Data.HashMap.Strict         as M
+import           Instances.TH.Lift           ()
+import           Language.Haskell.TH.Syntax  (Lift)
 
 data GBoolExp a
   = BoolAnd ![GBoolExp a]
@@ -166,6 +167,15 @@ data OpExpG a
   | CLTE !PGCol
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
+opExpDepCol :: OpExpG a -> Maybe PGCol
+opExpDepCol = \case
+  CEQ c  -> Just c
+  CNE c  -> Just c
+  CGT c  -> Just c
+  CLT c  -> Just c
+  CGTE c -> Just c
+  CLTE c -> Just c
+  _      -> Nothing
 
 opExpToJPair :: (a -> Value) -> OpExpG a -> (Text, Value)
 opExpToJPair f = \case

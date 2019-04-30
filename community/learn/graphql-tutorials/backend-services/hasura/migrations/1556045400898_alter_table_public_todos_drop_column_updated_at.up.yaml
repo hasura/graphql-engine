@@ -1,0 +1,3 @@
+- args:
+    sql: ALTER TABLE "public"."todos" DROP COLUMN "updated_at"
+  type: run_sql
