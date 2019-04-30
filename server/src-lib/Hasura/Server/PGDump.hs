@@ -5,9 +5,9 @@ module Hasura.Server.PGDump
   , execPGDump
   ) where
 
+import           Control.Exception      (IOException, try)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Control.Exception       (try, IOException)
 import qualified Data.ByteString.Lazy   as BL
 import qualified Data.FileEmbed         as FE
 import qualified Data.List              as L
