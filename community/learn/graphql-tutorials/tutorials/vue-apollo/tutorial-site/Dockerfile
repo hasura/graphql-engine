@@ -1,5 +1,4 @@
 FROM node:carbon
-# test
 # Create app directory
 WORKDIR /app
 
