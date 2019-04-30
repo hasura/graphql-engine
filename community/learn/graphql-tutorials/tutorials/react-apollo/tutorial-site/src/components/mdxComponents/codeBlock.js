@@ -59,7 +59,7 @@ const CodeBlock = ({ children: exampleCode, ...props }) => {
               }
               const lineProps = getLineProps({line, key: i});
               lineProps.style = lineClass;
-              const diffStyle = {'userSelect': 'none'};
+              const diffStyle = {'userSelect': 'none', '-moz-user-select': '-moz-none'};
               let splitToken;
               return (
                 <div {...lineProps}>
