@@ -5,6 +5,7 @@ metadata:
   namespace: default
 data:
   Caddyfile: |
+    log stdout
     learn.hasura.io {
       redir 301 {
         /graphql/react/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-boilerplate/boilerplate.zip
