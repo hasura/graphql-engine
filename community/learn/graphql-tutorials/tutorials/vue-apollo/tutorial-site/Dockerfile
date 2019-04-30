@@ -14,7 +14,7 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-ENV GATSBY_PATH_PREFIX="/graphql/react"
+ENV GATSBY_PATH_PREFIX="/graphql/vue"
 
 # Build react/vue/angular bundle static files
 RUN npm run build
