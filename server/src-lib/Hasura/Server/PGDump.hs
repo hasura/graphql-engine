@@ -7,6 +7,7 @@ module Hasura.Server.PGDump
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Control.Exception       (try, IOException)
 import qualified Data.ByteString.Lazy   as BL
 import qualified Data.FileEmbed         as FE
 import qualified Data.List              as L
@@ -48,12 +49,16 @@ execPGDump
   -> Q.ConnInfo
   -> m BL.ByteString
 execPGDump b ci = do
-  output <- liftIO $ runScript dbUrl opts clean
+  eOutput <- liftIO $ try $ runScript dbUrl opts clean
+  output <- either throwException return eOutput
   case output of
     Left err ->
       RTE.throw500 $ "error while executing pg_dump: " <> T.pack err
     Right dump -> return dump
   where
+    throwException :: (MonadError RTE.QErr m) => IOException -> m a
+    throwException _ = RTE.throw500 "internal exception while executing pg_dump"
+
     -- FIXME(shahidhk): need to add connection options (Q.connOptions) too?
     dbUrl = "postgres://" <> Q.connUser ci <> ":" <> Q.connPassword ci
             <> "@" <>  Q.connHost ci <> ":" <> show (Q.connPort ci)
