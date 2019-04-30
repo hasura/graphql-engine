@@ -196,9 +196,8 @@ $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQue
 
 data InvokeEventTriggerQuery
   = InvokeEventTriggerQuery
-  { ietqName :: !T.Text
-  , ietqNew  :: !Value
-  , ietqOld  :: !Value
+  { ietqName    :: !T.Text
+  , ietqPayload :: !Value
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)

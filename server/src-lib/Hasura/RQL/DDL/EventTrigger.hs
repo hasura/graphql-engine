@@ -358,15 +358,12 @@ insertManualEvent qt trn rowData = do
 runInvokeEventTrigger
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
   => InvokeEventTriggerQuery -> m EncJSON
-runInvokeEventTrigger (InvokeEventTriggerQuery name new old) = do
+runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
   adminOnly
   trigInfo <- askEventTriggerInfo name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger name
-  let rowData =  object [ "new" .= new
-                        , "old" .= old
-                        ]
-  eid <-liftTx $ insertManualEvent (tiName ti) name rowData
+  eid <-liftTx $ insertManualEvent (tiName ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
