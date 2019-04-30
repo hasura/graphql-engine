@@ -5,7 +5,7 @@ where
 import           Hasura.Prelude
 
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema.Table (buildSchemaCache)
+import           Hasura.RQL.DDL.Schema.Table (buildSCWithoutSetup)
 import           Hasura.RQL.Types
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
@@ -194,7 +194,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = d
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
            peelRun emptySchemaCache adminUserInfo
-           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSchemaCache
+           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSCWithoutSetup
   case resE of
     Left e -> logError logger threadType $ TEQueryError e
     Right _ ->
