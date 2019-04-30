@@ -154,8 +154,8 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--enabled-apis <APIS>``
      - ``HASURA_GRAPHQL_ENABLED_APIS``
-     - Comma separated list of APIs (options: ``metadata`` & ``graphql``) to be enabled.
-       (default: ``metadata,graphql``)
+     - Comma separated list of APIs (options: ``metadata``, ``graphql``, ``pgdump``) to be enabled.
+       (default: ``metadata,graphql,pgdump``)
 
 .. note::
 

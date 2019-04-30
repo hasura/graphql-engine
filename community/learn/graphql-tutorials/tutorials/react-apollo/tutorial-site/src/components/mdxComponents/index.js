@@ -4,6 +4,7 @@ import Text from "./text";
 import Code from "./code";
 import CodeBlock from "./codeBlock";
 import Pre from "./pre";
+import AnchorTag from "./anchor";
 
 /* eslint-disable react/display-name */
 export default {
@@ -16,8 +17,8 @@ export default {
   p: props => <Text {...props} is="p" lineHeight={1.625} mt={3} mb={4} />,
   pre: Pre,
   code: CodeBlock,
-  inlineCode: props => <Code {...props} />
-  // TODO add `a`
+  inlineCode: props => <Code {...props} />,
+  a: props => <AnchorTag {...props} />
   // TODO add `img`
   // TODO add `blockquote`
   // TODO add `ul`
