@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Server.PGDump
   ( PGDumpReqBody
   , execPGDump
