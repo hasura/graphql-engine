@@ -43,7 +43,6 @@ module.exports = {
         path: `${__dirname}/content/`
       }
     },
-    /*
     {
       resolve: `gatsby-plugin-gtag`,
       options: {
@@ -55,6 +54,5 @@ module.exports = {
         anonymize: false,
       },
     },
-    */
   ]
 };
