@@ -103,16 +103,23 @@ data SchemaCacheRef
 getSCFromRef :: SchemaCacheRef -> IO SchemaCache
 getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
 
+logInconsObjs :: L.Logger -> [InconsistentMetadataObj] -> IO ()
+logInconsObjs logger objs =
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+
 withSCUpdate
   :: (MonadIO m, MonadError e m)
-  => SchemaCacheRef -> m (a, SchemaCache) -> m a
-withSCUpdate scr action = do
+  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
+withSCUpdate scr logger action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
-  -- update schemacache in IO reference
-  liftIO $ modifyIORef' cacheRef $
-    \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-  liftIO onChange
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $
+      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
+    onChange
   releaseLock
   return res
   where
@@ -240,7 +247,8 @@ mkSpockAction qErrEncoder serverCtx handler = do
 v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef dbActionReload) $
+  logger <- scLogger . hcServerCtx <$> ask
+  bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
     queryNeedsReload query
   where
     -- Hit postgres
