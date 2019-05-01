@@ -10,7 +10,7 @@
   url: /v1/query
   status: 400
   response:
-    error: at least one among the insert/update/delete/manual specs must be provided
+    error: atleast one amongst insert/update/delete/manual operations must be provided
     code: parse-failed
     path: $
   query:
@@ -20,3 +20,4 @@
       table:
         schema: hge_tests
         name: test_t1
+      enable_manual: false

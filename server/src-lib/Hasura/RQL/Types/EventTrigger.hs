@@ -111,7 +111,7 @@ data CreateEventTriggerQuery
   , cetqInsert         :: !(Maybe SubscribeOpSpec)
   , cetqUpdate         :: !(Maybe SubscribeOpSpec)
   , cetqDelete         :: !(Maybe SubscribeOpSpec)
-  , cetqManual         :: !(Maybe Bool)
+  , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
   , cetqWebhook        :: !(Maybe T.Text)
   , cetqWebhookFromEnv :: !(Maybe T.Text)
@@ -126,7 +126,7 @@ instance FromJSON CreateEventTriggerQuery where
     insert         <- o .:? "insert"
     update         <- o .:? "update"
     delete         <- o .:? "delete"
-    manual         <- o .:? "manual"
+    enableManual   <- o .:? "enable_manual" .!= True
     retryConf      <- o .:? "retry_conf"
     webhook        <- o .:? "webhook"
     webhookFromEnv <- o .:? "webhook_from_env"
@@ -137,17 +137,17 @@ instance FromJSON CreateEventTriggerQuery where
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
-    if any isJust [insert, update, delete] || isJust manual then
+    if any isJust [insert, update, delete] || enableManual then
       return ()
       else
-      fail "at least one among the insert/update/delete/manual specs must be provided"
+      fail "atleast one amongst insert/update/delete/manual operations must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete manual retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
