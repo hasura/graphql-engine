@@ -160,10 +160,10 @@ $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTrig
 
 data TriggerOpsDef
   = TriggerOpsDef
-  { tdInsert :: !(Maybe SubscribeOpSpec)
-  , tdUpdate :: !(Maybe SubscribeOpSpec)
-  , tdDelete :: !(Maybe SubscribeOpSpec)
-  , tdManual :: !(Maybe Bool)
+  { tdInsert       :: !(Maybe SubscribeOpSpec)
+  , tdUpdate       :: !(Maybe SubscribeOpSpec)
+  , tdDelete       :: !(Maybe SubscribeOpSpec)
+  , tdEnableManual :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
