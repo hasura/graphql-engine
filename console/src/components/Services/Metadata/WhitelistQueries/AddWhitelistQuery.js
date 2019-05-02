@@ -34,10 +34,10 @@ class AddWhitelistQuery extends React.Component {
           addSection = (
             <div>
               <AceEditor
-                data-test="whitelist_query_editor"
+                data-test="whitelist_query_add"
                 mode="graphql"
                 theme="github"
-                name="whitelist_query_editor"
+                name="whitelist_query_add"
                 value={''}
                 minLines={8}
                 maxLines={100}
