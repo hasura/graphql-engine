@@ -16,11 +16,11 @@ export default class HTML extends React.Component {
           <meta name="description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Vue" />
           <meta property="og:title" content="A GraphQL course for Vue developers | Hasura" />
           <meta property="og:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Vue" />
-          <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
+          <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-vue.png" />
           <meta property="twitter:card" content="summary_large_image" />
           <meta property="twitter:title" content="A GraphQL course for Vue developers | Hasura" />
           <meta property="twitter:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Vue" />
-          <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
+          <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-vue.png" />
           <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossOrigin="anonymous" />
