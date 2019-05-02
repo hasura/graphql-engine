@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 body {
-
+  font-family: 'Roboto';
+  font-weight: 400;
+  font-size: 14px;
 }
 
 .mb20 {
@@ -8,4 +11,55 @@ body {
 
 .p20 {
   padding: 20px;
+}
+.mainHeader
+{
+  font-size: 30px;
+  font-weight: 600;
+}
+.pageHeader
+{
+  font-size: 24px;
+  font-weight: 600;
+}
+.sectionHeader
+{
+  font-size: 20px;
+  font-weight: 600;
+}
+.subSectionHeader
+{
+  font-size: 18px;
+  font-weight: 600;
+}
+.bodyContentLabel
+{
+  font-size: 16px;
+  font-weight: 600;
+}
+.bodyContent
+{
+  font-size: 16px;
+  font-weight: 400;
+}
+.smallBodyContent
+{
+  font-size: 14px;
+  font-weight: 600;
+}
+.explainerContent
+{
+  font-size: 12px;
+  font-weight: 400;
+}
+.widHeight
+{
+  width: 300px;
+  height: 100px;
+  background-color: #fff;
+  border-radius: 2px;
+}
+.boxShadow
+{
+  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.16);
 }

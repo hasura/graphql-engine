@@ -5,10 +5,16 @@ const RadioBtn = props => {
   const { children } = props;
 
   return (
-    <span className={styles.radio}>
-      <input type="radio" />
-      <label>{children}</label>
-    </span>
+    <div>
+      <p>
+        <input type="radio" id="test1" name="radio-group" checked />
+        <label for="test1">Apple</label>
+      </p>
+      <p>
+        <input type="radio" id="test2" name="radio-group" />
+        <label for="test2">Peach</label>
+      </p>
+    </div>
   );
 };
 

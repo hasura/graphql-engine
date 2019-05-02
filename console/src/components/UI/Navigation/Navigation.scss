@@ -1,0 +1,29 @@
+.commonNavWrapper
+{
+  clear: both;
+  .commonNavTab
+  {
+    padding-inline-start: 0px;
+    border-bottom: 1px solid #ededed;
+    .commonTabList
+    {
+      list-style-type: none;
+      display: inline-block;
+      border-bottom: 4px solid transparent;
+      margin-right: 20px;
+      padding: 8px 0;
+      color: #939390;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .commonTabList:hover
+    {
+      color: #292822;
+    }
+    .tabisActive
+    {
+      border-bottom: 4px solid #454236;
+    }
+  }
+}

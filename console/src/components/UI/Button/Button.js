@@ -12,6 +12,18 @@ const Button = props => {
     case 'secondary':
       btnTypeStyle = styles.secondary;
       break;
+      case 'success':
+        btnTypeStyle = styles.success;
+      break;
+      case 'danger':
+        btnTypeStyle = styles.danger;
+      break;
+      case 'warning':
+        btnTypeStyle = styles.warning;
+      break;
+      case 'info':
+        btnTypeStyle = styles.info;
+      break;
     default:
       btnTypeStyle = styles.primary;
       break;

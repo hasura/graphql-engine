@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="baseline-error-24px" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#e53935}
+        </style>
+    </defs>
+    <path id="Path_178" d="M0 0h24v24H0z" class="cls-1" data-name="Path 178"/>
+    <path id="Path_179" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z" class="cls-2" data-name="Path 179"/>
+</svg>
