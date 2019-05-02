@@ -2,7 +2,7 @@
 title: "Run mutation, update cache"
 ---
 
-Now let's do the integration part. Open `src/components/TodoInput.js` and add the following code below to make the mutation.
+Now let's do the integration part. Open `src/components/TodoInput.vue` and add the following code below to make the mutation.
 
 ```javascript
 export default {
@@ -52,6 +52,7 @@ Let's implement `update` for the above mutation.
 
 We need to fetch the current list of todos from the cache. So let's import the `GET_MY_TODOS` query that we defined in the `TodoPrivateList.vue` component.
 
+In the same file `TodoInput.vue`, make the following updates:
 
 ```javascript
 <script>

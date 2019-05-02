@@ -8,7 +8,7 @@ GraphQL has a first-class way to factor dynamic values out of the query, and pas
 
 So let's define the graphql mutation to be used with variables.
 
-Open `src/components/TodoInput.js` and add the following code:
+Open `src/components/TodoInput.vue` and add the following code:
 
 ```javascript
 <script>

@@ -92,7 +92,7 @@ export default {
 -         is_completed: false,
 -         is_public: false
 -       }
-     ]
+     ],
    }
  },
 

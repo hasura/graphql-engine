@@ -90,7 +90,8 @@ Since we have actual data coming from the server, let's remove the mock data.
   data: function() {
     return {
       olderTodosAvailable: true,
-      newTodosCount: 1,
+-     newTodosCount: 1,
++     newTodosCount: 0,
       limit: 7,
       todos: [
 -       {

@@ -69,7 +69,7 @@ Now let's install the VueApollo plugin into Vue.
   import router from "./router";
   import AuthPlugin from "./plugins/auth";
 
-+ import VueApollo from 'vue-apollo'
++ import VueApollo from "vue-apollo";
 
   import ApolloClient from "apollo-client";
   import { HttpLink } from "apollo-link-http";

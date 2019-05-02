@@ -4,7 +4,7 @@ title: "Fetch public todos - subscription"
 
 Let's define the graphql query to be used:
 
-Open `src/components/TodoPublicList.js` and add the following imports.
+Open `src/components/TodoPublicList.vue` and add the following imports.
 
 ```javascript
   <script>
