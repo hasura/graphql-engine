@@ -12,8 +12,6 @@ import {
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 
-import styles from './ModifyTable.scss';
-
 const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -70,18 +68,7 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
       const collapsedLabelText =
         isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
 
-      return (
-        <div>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                {collapsedLabelText}
-                &nbsp;
-              </h5>
-            </div>
-          </div>
-        </div>
-      );
+      return <div>{collapsedLabelText}</div>;
     };
 
     // The content when the editor is expanded
@@ -115,11 +102,7 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
         orderedColumns
       );
 
-      return (
-        <h5 className={styles.padd_bottom}>
-          {getFkConfigLabel(existingFkConfig)}
-        </h5>
-      );
+      return <div>{getFkConfigLabel(existingFkConfig)}</div>;
     };
 
     // If the user made some changes and collapses the editor, the changes are lost
