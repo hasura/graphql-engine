@@ -208,7 +208,11 @@ const ViewRows = ({
           return (
             <Button
               className={
-                styles.tableActionBtn + ' ' + styles.add_mar_right_small
+                styles.tableActionBtn +
+                ' ' +
+                styles.add_mar_right_small +
+                ' ' +
+                styles.remove_margin_right
               }
               color="white"
               size="xs"

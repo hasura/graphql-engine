@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
 
 import { getMeParentNode } from '../../../utils/domFunctions';
+import Button from '../Button/Button';
 
 const styles = require('./DataDropdown.scss');
 
 const ComponentData = ({ options }) => {
   const generateOptions = () => {
     return options.map((o, i) => (
-      <li
-        key={i}
-        onClick={() => o.onChange.call(undefined, o.displayName, o.rowIndex)}
-        data-test={o.itemIdentifier}
-      >
-        {`${o.prefixLabel} ${o.displayName}`}
+      <li key={i} data-test={o.itemIdentifier}>
+        <Button
+          color="white"
+          size="xs"
+          data-test={`run_manual_trigger_${o.itemIdentifier}`}
+          onClick={() => o.onChange.call(undefined, o.displayName, o.rowIndex)}
+        >
+          Run
+        </Button>
+        {`${o.displayName}`}
       </li>
     ));
   };

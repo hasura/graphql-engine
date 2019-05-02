@@ -34,7 +34,6 @@ class EventTrigger extends Component {
 }`;
     const showIntroSection = !listingTrigger.length;
     const getIntroSection = () => {
-
       if (!showIntroSection) {
         return null;
       }

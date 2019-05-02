@@ -125,10 +125,8 @@ export const save = (property, triggerName) => {
       // Add only if the value is true
       if (INTERNAL_CONSOLE_QUERY_REP in modifyTrigger.definition) {
         delete upPayload[INTERNAL_CONSOLE_QUERY_REP];
-        if (modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP]) {
-          upPayload[INTERNAL_CONSOLE_QUERY_REP] =
-            modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP];
-        }
+        upPayload[INTERNAL_CONSOLE_QUERY_REP] =
+          modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP];
       }
     } else if (property === 'retry') {
       upPayload.retry_conf = {

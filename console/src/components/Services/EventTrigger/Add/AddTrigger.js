@@ -22,6 +22,7 @@ import {
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
+  TOGGLE_ENABLE_MANUAL_CONFIG,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
   loadTableList,
@@ -45,6 +46,9 @@ class AddTrigger extends Component {
       supportRetryTimeout: false,
     };
     this.handleOperationSelection = this.handleOperationSelection.bind(this);
+    this.handleToggleEnableManualOperation = this.handleToggleEnableManualOperation.bind(
+      this
+    );
   }
   componentDidMount() {
     // set defaults
@@ -72,6 +76,11 @@ class AddTrigger extends Component {
   handleOperationSelection = e => {
     const { dispatch } = this.props;
     dispatch(setOperationSelection(e.target.value));
+  };
+
+  handleToggleEnableManualOperation = () => {
+    const { dispatch } = this.props;
+    dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
   };
 
   checkSemVer(version) {
@@ -235,6 +244,7 @@ class AddTrigger extends Component {
       headers,
       webhookURL,
       webhookUrlType,
+      enableManual,
     } = this.props;
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
@@ -261,14 +271,15 @@ class AddTrigger extends Component {
         onChange: this.handleOperationSelection,
         displayName: 'Delete',
       },
-      {
-        name: 'manual',
-        testIdentifier: 'manual-operation',
-        isChecked: selectedOperations.manual,
-        onChange: this.handleOperationSelection,
-        displayName: 'Console',
-      },
     ];
+
+    const manualInvocation = {
+      name: 'enable_manual',
+      testIdentifier: 'enable-manual-operation',
+      isChecked: enableManual,
+      onChange: this.handleToggleEnableManualOperation,
+      displayName: 'Enable running trigger via Data browser',
+    };
 
     const styles = require('../TableCommon/EventTable.scss');
     let createBtnText = 'Add Event Trigger';
@@ -502,6 +513,36 @@ class AddTrigger extends Component {
       );
     });
 
+    const getManualInvocationOption = () => {
+      return (
+        this.props.tableName && (
+          <div className={styles.manualInvocationCheckbox}>
+            <label>
+              <input
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+                type="checkbox"
+                value={manualInvocation.name}
+                checked={manualInvocation.isChecked}
+                onChange={manualInvocation.onChange}
+                data-test={manualInvocation.testIdentifier}
+              />
+              Invoke this trigger via Data browser
+              <div className={styles.display_inline}>
+                <span className={styles.manualInvocationInfo}>
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.manualTriggerInfo}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>
+                </span>
+              </div>
+            </label>
+          </div>
+        )
+      );
+    };
+
     return (
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${
@@ -594,6 +635,7 @@ class AddTrigger extends Component {
                   }
                 })}
               </select>
+              {getManualInvocationOption()}
               <hr />
               <div
                 className={

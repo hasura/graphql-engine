@@ -60,7 +60,6 @@ class OperationEditor extends React.Component {
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent}>
-          <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
           <div className={'col-md-12 ' + styles.padd_remove}>
             {queryTypes.map((qt, i) => (
               <div
@@ -125,7 +124,6 @@ class OperationEditor extends React.Component {
     const expanded = () => (
       <div className={styles.modifyOpsPadLeft}>
         <div className={styles.modifyOpsCollapsedContent}>
-          <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
           <div className={'col-md-12 ' + styles.padd_remove}>
             {queryTypes.map((qt, i) => (
               <div

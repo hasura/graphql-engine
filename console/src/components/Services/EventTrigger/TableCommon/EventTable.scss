@@ -9,6 +9,17 @@
   display: inline-block;
 }
 
+.manualInvocationCheckbox {
+  margin-top: 20px;
+  label {
+    cursor: pointer;
+  }
+  .manualInvocationInfo {
+    margin-left: 10px;
+    position: relative;
+  }
+}
+
 .settingsSection {
   table {
     width: 80%;

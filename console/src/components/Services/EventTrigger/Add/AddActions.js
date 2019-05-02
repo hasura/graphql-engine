@@ -26,6 +26,7 @@ const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_OPERATION = 'AddTrigger/TOGGLE_OPERATION';
+const TOGGLE_ENABLE_MANUAL_CONFIG = 'AddTrigger/TOGGLE_ENABLE_MANUAL_CONFIG';
 // const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 // const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
@@ -104,8 +105,8 @@ const createTrigger = () => {
     if (currentState.selectedOperations.insert) {
       payload.args.insert = { columns: currentState.operations.insert };
     }
-    if (currentState.selectedOperations.manual) {
-      payload.args.manual = currentState.selectedOperations.manual;
+    if ('enableManual' in currentState) {
+      payload.args.enable_manual = currentState.enableManual;
     }
     if (currentState.selectedOperations.update) {
       payload.args.update = { columns: currentState.operations.update };
@@ -403,6 +404,12 @@ const addTriggerReducer = (state = defaultState, action) => {
           [action.data]: !state.selectedOperations[action.data],
         },
       };
+
+    case TOGGLE_ENABLE_MANUAL_CONFIG:
+      return {
+        ...state,
+        enableManual: !state.enableManual,
+      };
     /*
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
@@ -444,5 +451,6 @@ export {
   setOperationSelection,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
+  TOGGLE_ENABLE_MANUAL_CONFIG,
 };
 export { validationError };

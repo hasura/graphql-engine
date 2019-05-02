@@ -24,8 +24,10 @@ const invokeManualTrigger = (name, args) => (dispatch, getState) => {
     type: 'invoke_event_trigger',
     args: {
       name: name,
-      new: args,
-      old: null,
+      payload: {
+        new: args,
+        old: null,
+      },
     },
   };
   dispatch({ type: INVOKING_EVENT_TRIGGER });
