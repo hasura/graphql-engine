@@ -91,10 +91,6 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   trackExistingTableOrViewP2Setup vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
-
-  -- refresh the gCtx in schema cache
-  refreshGCtxMapInSchema
-
   return successMsg
 
 runTrackTableQ
@@ -266,9 +262,6 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
   -- delete the table and its direct dependencies
   delTableAndDirectDeps qtn
 
-  -- refresh the gctxmap in schema cache
-  refreshGCtxMapInSchema
-
   return successMsg
   where
     isDirectDep = \case
@@ -412,8 +405,7 @@ buildSchemaCache = do
       trackFunctionP2Setup qf
 
   -- build GraphQL context
-  postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx
-  writeSchemaCache postGCtxSc
+  GS.buildGCtxMap
 
   -- remote schemas
   remoteSchemas <- liftTx fetchRemoteSchemas
@@ -597,9 +589,6 @@ execWithMDCheck (RunSQL t cascade _) = do
             liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
 
   bool withoutReload withReload reloadRequired
-
-  -- refresh the gCtxMap in schema cache
-  refreshGCtxMapInSchema
 
   return res
   where

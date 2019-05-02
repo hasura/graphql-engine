@@ -1,10 +1,9 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
-  , resolveRemoteSchemas
   , runRemoveRemoteSchema
   , removeRemoteSchemaFromCatalog
   , runReloadRemoteSchema
-  , refreshGCtxMapInSchema
+  , buildGCtxMapWithRS
   , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
@@ -71,17 +70,6 @@ addRemoteSchemaP2 q = do
   liftTx $ addRemoteSchemaToCatalog q
   return successMsg
 
-refreshGCtxMapInSchema
-  :: (CacheRWM m, MonadError QErr m)
-  => m ()
-refreshGCtxMapInSchema = do
-  sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
-  (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx
-                      }
-
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
   => RemoteSchemaNameQuery -> m EncJSON
@@ -127,16 +115,18 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi
   return successMsg
 
-resolveRemoteSchemas
-  :: ( MonadError QErr m)
-  => SchemaCache -> m SchemaCache
-resolveRemoteSchemas sc = do
+buildGCtxMapWithRS
+  :: (QErrM m, CacheRWM m) => m ()
+buildGCtxMapWithRS = do
+  -- build GraphQL Context with Hasura schema
+  GS.buildGCtxMap
+  sc <- askSchemaCache
+  let gCtxMap = scGCtxMap sc
+  -- Stitch remote schemas
   (mergedGCtxMap, defGCtx) <- mergeSchemas (scRemoteSchemas sc) gCtxMap
-  return $ sc { scGCtxMap = mergedGCtxMap
-              , scDefaultRemoteGCtx = defGCtx
-              }
-  where
-    gCtxMap = scGCtxMap sc
+  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
+                      , scDefaultRemoteGCtx = defGCtx
+                      }
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

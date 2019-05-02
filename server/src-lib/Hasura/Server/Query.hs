@@ -233,7 +233,18 @@ runQueryM
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq = withPathK "args" $ case rq of
+runQueryM rq = runQueryM' rq <* rebuildGCtx
+  where
+    rebuildGCtx = when (queryNeedsReload rq) $
+                  withPathK "args" $ buildGCtxMapWithRS
+
+runQueryM'
+  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => RQLQuery
+  -> m EncJSON
+runQueryM' rq = withPathK "args" $ case rq of
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
@@ -289,4 +300,4 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQRunSql q                   -> runRunSQL q
 
-  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
+  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM' qs

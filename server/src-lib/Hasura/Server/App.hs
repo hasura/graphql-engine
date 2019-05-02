@@ -34,7 +34,6 @@ import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Explain                 as GE
-import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
@@ -42,7 +41,6 @@ import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
-import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
@@ -131,17 +129,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx    :: PGExecCtx
-  , scConnInfo     :: Q.ConnInfo
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scSQLGenCtx    :: SQLGenCtx
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
-  , scPlanCache    :: E.PlanCache
-  , scLQState      :: EL.LiveQueriesState
+  { scPGExecCtx   :: PGExecCtx
+  , scConnInfo    :: Q.ConnInfo
+  , scLogger      :: L.Logger
+  , scCacheRef    :: SchemaCacheRef
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
+  , scInstanceId  :: InstanceId
+  , scPlanCache   :: E.PlanCache
+  , scLQState     :: EL.LiveQueriesState
   }
 
 data HandlerCtx
@@ -256,7 +254,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
       logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
-    resToResp eResult = do
+    resToResp eResult =
       case eResult of
         JSONResp j -> do
           uncurry setHeader jsonHeader
@@ -269,7 +267,7 @@ v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
+  bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
     queryNeedsReload query
   where
     -- Hit postgres
@@ -282,12 +280,6 @@ v1QueryHandler query = do
       pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx query
-
-    -- Also update the schema cache
-    dbActionReload = do
-      (resp, newSc) <- dbAction
-      newSc' <- GS.updateSCWithGCtx newSc >>= resolveRemoteSchemas
-      return (resp, newSc')
 
 v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
 v1Alpha1GQHandler query = do
