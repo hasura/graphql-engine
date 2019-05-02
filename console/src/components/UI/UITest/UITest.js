@@ -6,11 +6,24 @@ import Button from '../Button/Button';
 import RadioBtn from '../RadioBtn/RadioBtn';
 import SwitchButton from '../SwitchButton/SwitchButton';
 import Alert from '../Alert/Alert';
-import Navigation from '../Navigation/Navigation';
+import ReusableTabs from '../ReusableTabs/ReusableTabs';
 class UITest extends Component {
   render() {
     const styles = require('./UITest.scss');
-
+    const tabs = [
+      {
+        title: 'Title 1',
+        tabContent: 'Content 1',
+      },
+      {
+        title: 'Title 2',
+        tabContent: 'Content 2',
+      },
+      {
+        title: 'Title 3',
+        tabContent: 'Content 3',
+      }
+    ]
     return (
       <div className={styles.p20}>
         <h1 className={styles.mb20 + ' ' + styles.mainHeader}>Heading 1</h1>
@@ -43,7 +56,7 @@ class UITest extends Component {
           <Alert type="alertWarning">You did something wrong.</Alert>
         </div>
         <div className={styles.mb20}>
-          <Navigation
+          <ReusableTabs tabs={tabs}
           />
         </div>
       </div>
