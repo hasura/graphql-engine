@@ -4,9 +4,9 @@ title: "Course introduction"
 
 This course is a super fast introduction to GraphQL and to setting up a GraphQL backend with Hasura.
 
-In 30mins, you will setup a powerful, scalable realtime GraphQL backend complete with queries, mutations, subscriptions.
+In 30mins, you will setup a powerful, scalable realtime GraphQL backend complete with queries, mutations, subscriptions. You will also learn how Hasura helps you integrate custom business logic (in any programming language), both as custom GraphQL APIs that you write yourself, and as event triggers that run asynchronously and are triggered by database events.
 
-You will also learn how Hasura helps you integrate custom business logic (in any programming language), both as custom GraphQL APIs that you write yourself, and as event triggers that run asynchronously and are triggered by database events.
+## What will I learn?
 
 This course will help you understand the different Hasura features, when and how to use them, and
 is an ideal starting point before diving into advanced topics.
@@ -20,18 +20,23 @@ is an ideal starting point before diving into advanced topics.
 
 
 ## What will be building?
+
 We will be building the backend of a realtime todo app. If you're interested in building the frontend and are new to GraphQL, head to the GraphQL tutorials for different frontend frameworks:
 
 Try this deployed version of the app, to see what features our backend will need to have:
 https://final-graphql-tutorial.netlify.com/
 
 ## What do I need to take this tutorial?
-Just your browser.
-However, be assured that every thing you do via the browser in this tutorial can be done via code
-and can be version controlled!
 
-We've kept this course light on developer workflows and environment choices
-so that you can focus on the key concepts and go on to set up your favourite tools and workflows.
+Just your browser!
+
+However, be assured that every thing you do via the browser
+in this tutorial can be done via code and can be version controlled and
+can work with any programming language you choose on the server side.
+
+We've kept this course light on developer workflows and
+environment choices so that you can focus on the key concepts and
+go on to set up your favourite tools and workflows.
 
 ## How long will this tutorial take?
 Less than 30 mins.
