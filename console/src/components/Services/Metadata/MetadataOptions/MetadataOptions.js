@@ -107,7 +107,7 @@ const MetadataOptions = props => {
     >
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata
+          Hasura Metadata Actions
         </h2>
         <div className="clearfix" />
         <div className={styles.content_width}>

@@ -5,15 +5,12 @@ import styles from '../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 
-const Sidebar = ({
-  location,
-  supportMetadata,
-  supportInconsistentMetadata,
-  metadata,
-}) => {
+const Sidebar = ({ location, semverChecks, metadata }) => {
   const currentLocation = location.pathname;
+
   const sections = [];
-  if (supportMetadata) {
+
+  if (semverChecks.supportMetadata) {
     sections.push(
       <li
         role="presentation"
@@ -26,16 +23,16 @@ const Sidebar = ({
           to={'/metadata/actions'}
           data-test="metadata-actions-link"
         >
-          Actions
+          Metadata Actions
         </Link>
       </li>
     );
   }
-  if (supportInconsistentMetadata) {
-    let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
-    if (metadata.inconsistentObjects.length > 0) {
-      consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
-    }
+
+  if (semverChecks.supportInconsistentMetadata) {
+    const consistentIcon =
+      metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+
     sections.push(
       <li
         role="presentation"
@@ -49,14 +46,37 @@ const Sidebar = ({
           data-test="metadata-status-link"
         >
           <div className={styles.display_flex}>
-            Status
-            {consistentIcon}
+            Metadata Status
+            <span className={styles.add_mar_left}>{consistentIcon}</span>
           </div>
         </Link>
       </li>
     );
   }
+
+  if (semverChecks.supportQueryWhitelist) {
+    sections.push(
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('metadata/whitelist-queries')
+            ? styles.active
+            : ''
+        }
+      >
+        <Link
+          className={styles.linkBorder}
+          to={'/metadata/whitelist-queries'}
+          data-test="metadata-whitelist-query-link"
+        >
+          Whitelist Queries
+        </Link>
+      </li>
+    );
+  }
+
   const content = <ul>{sections}</ul>;
+
   return <LeftContainer>{content}</LeftContainer>;
 };
 

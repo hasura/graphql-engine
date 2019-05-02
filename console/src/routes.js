@@ -5,15 +5,19 @@ import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound } from 'components';
 
+import globals from './Globals';
+
+import validateLogin from './utils/validateLogin';
+
+import { composeOnEnterHooks } from 'utils/router';
+
+import { loadMigrationStatus } from './components/Main/Actions';
+
 import { dataRouterUtils } from './components/Services/Data';
 
 import { eventRouterUtils } from './components/Services/EventTrigger';
 
 import { getCustomResolverRouter } from './components/Services/CustomResolver';
-
-import { loadMigrationStatus } from './components/Main/Actions';
-
-import { composeOnEnterHooks } from 'utils/router';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
@@ -22,9 +26,7 @@ import generatedLoginConnector from './components/Login/Login';
 import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
-import globals from './Globals';
-
-import validateLogin from './utils/validateLogin';
+import whitelistQueriesContainer from './components/Services/Metadata/WhitelistQueries/WhitelistQueries';
 
 const routes = store => {
   // load hasuractl migration status
@@ -97,6 +99,10 @@ const routes = store => {
             <Route
               path="actions"
               component={metadataOptionsContainer(connect)}
+            />
+            <Route
+              path="whitelist-queries"
+              component={whitelistQueriesContainer(connect)}
             />
           </Route>
           {dataRouter}
