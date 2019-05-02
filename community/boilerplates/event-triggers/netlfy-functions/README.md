@@ -36,3 +36,11 @@ ntl functions:create # and pick the hasura template
 The code is located [here](https://github.com/netlify/netlify-dev-plugin/tree/master/src/functions-templates/js/hasura-event-triggered)
 
 and you can write and host your own in your own git repo.
+
+When you are ready to deploy your functions to production, use:
+
+```
+ntl deploy --prod
+```
+
+For built in authentication, check [netlify-identity-widget and its alternatives](https://github.com/netlify/netlify-identity-widget#list-of-alternatives).
