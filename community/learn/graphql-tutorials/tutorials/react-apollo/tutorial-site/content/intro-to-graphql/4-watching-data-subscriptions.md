@@ -14,8 +14,8 @@ they allow you to build great experiences without having to deal with websocket 
 
 ## Make your first GraphQL subscription
 
-1. Step 1: Head to https://learn.hasura.io/graphql/graphiql
-2. Step 2: Write this GraphQL query in the textarea:
+Step 1: Head to https://learn.hasura.io/graphql/graphiql
+Step 2: Write this GraphQL query in the textarea:
 
 ```graphql
 subscription {
@@ -29,8 +29,10 @@ subscription {
 }
 ```
 
-3. Every time the set of online users change, you'll see the latest set on
-the response window on the right
+Step 3: Click on the play button.
+
+Every time the set of online users change, you'll see the latest set on
+the response window on the right.
 
 ## How do GraphQL subscriptions work?
 

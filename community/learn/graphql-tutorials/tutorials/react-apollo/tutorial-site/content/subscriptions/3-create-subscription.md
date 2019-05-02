@@ -2,9 +2,13 @@
 title: "Create Subscription and Render Result"
 ---
 
+import GithubLink from '../../src/GithubLink.js'
+
 So let's define the graphql subscription to be used.
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following code, below the other imports
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/OnlineUsers/OnlineUsersWrapper.js" text="src/OnlineUsers/OnlineUsersWrapper.js" />
 
 ```javascript
 - import React, { Component } from "react";

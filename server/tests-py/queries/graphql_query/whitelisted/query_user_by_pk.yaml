@@ -1,0 +1,20 @@
+description: Query user with id = 1
+url: /v1alpha1/graphql
+status: 200
+response:
+  data:
+    user_by_pk:
+      id: 1
+      name: clarke
+      company: Symons
+query:
+  variables:
+    id: 1
+  query: |
+    query ($id: Int!){
+      user_by_pk(id: $id){
+        id
+        name
+        company
+      }
+    }

@@ -1,0 +1,19 @@
+description: GraphQL query which is not whitelisted
+url: /v1alpha1/graphql
+status: 400
+response:
+  errors:
+  - extensions:
+      path: "$"
+      code: validation-failed
+    message: query is not whitelisted
+query:
+  query: |
+    query {
+      user{
+        id
+        name
+        account_id
+        company
+      }
+    }
