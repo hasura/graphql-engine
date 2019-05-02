@@ -41,14 +41,13 @@ addCollectionP2
   => CreateCollection -> m ()
 addCollectionP2 (CreateCollection name defn _) =
   withPathK "queries" $ do
-    queryList <- indexedForM unparsedQueries toParsedWhitelistedQuery
-    let duplicateNames = duplicates $ map _wlqName queryList
     unless (null duplicateNames) $ throw400 NotSupported $
       "found duplicate query names "
       <> T.intercalate ", " (map (T.dquote . unQueryName) duplicateNames)
     addCollectionToCache name queryList
   where
-    CollectionDef unparsedQueries = defn
+    CollectionDef queryList = defn
+    duplicateNames = duplicates $ map _wlqName queryList
 
 runCreateCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -74,14 +73,13 @@ dropCollectionP1 name = do
 runAddQueryToCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
   => AddQueryToCollection -> m EncJSON
-runAddQueryToCollection (AddQueryToCollection collName queryName qText) = do
+runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   adminOnly
-  WhitelistedQuery _ gqlQuery <- toParsedWhitelistedQuery unparsedQuery
-  addQueryToCollectionInCache collName queryName gqlQuery
-  liftTx $ addQueryToCollectionCatalog collName unparsedQuery
+  addQueryToCollectionInCache collName queryName query
+  liftTx $ addQueryToCollectionCatalog collName whitelistQuery
   return successMsg
   where
-    unparsedQuery = WhitelistedQuery queryName $ GQLQuery qText
+    whitelistQuery = WhitelistedQuery queryName query
 
 runDropCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -126,7 +124,7 @@ delCollectionFromCatalog name =
      WHERE collection_name = $1
   |] (Identity name) True
 
-fetchCollectionDef :: CollectionName -> Q.TxE QErr (CollectionDef T.Text)
+fetchCollectionDef :: CollectionName -> Q.TxE QErr CollectionDef
 fetchCollectionDef collName =
   (Q.getAltJ . runIdentity . Q.getRow) <$>
      Q.withQE defaultTxErrorHandler [Q.sql|
@@ -136,12 +134,12 @@ fetchCollectionDef collName =
      |] (Identity collName) True
 
 addQueryToCollectionCatalog
-  :: CollectionName -> WhitelistedQuery T.Text -> Q.TxE QErr ()
-addQueryToCollectionCatalog collName query = do
+  :: CollectionName -> WhitelistedQuery -> Q.TxE QErr ()
+addQueryToCollectionCatalog collName q = do
   -- Fetch definition from catalog
-  CollectionDef unparsedQueries <- fetchCollectionDef collName
+  CollectionDef queries <- fetchCollectionDef collName
 
-  let newDef = J.toJSON $ CollectionDef $ unparsedQueries <> pure query
+  let newDef = J.toJSON $ CollectionDef $ queries <> pure q
 
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -154,10 +152,10 @@ delQueryFromCollectionCatalog
   :: CollectionName -> QueryName -> Q.TxE QErr ()
 delQueryFromCollectionCatalog collName queryName = do
   -- Fetch definition from catalog
-  CollectionDef unparsedQueries <- fetchCollectionDef collName
+  CollectionDef queries <- fetchCollectionDef collName
 
   let newDef = J.toJSON $ CollectionDef $
-               flip filter unparsedQueries $ \q -> _wlqName q /= queryName
+               flip filter queries $ \q -> _wlqName q /= queryName
 
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|

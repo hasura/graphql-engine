@@ -43,6 +43,7 @@ args:
           query ($id: Int!){
             user_by_pk(id: $id){
               id
+              __typename
               name
               company
             }

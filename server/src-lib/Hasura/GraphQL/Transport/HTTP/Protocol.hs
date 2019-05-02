@@ -14,6 +14,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Instances      ()
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -31,14 +32,10 @@ newtype GQLExecDoc
   deriving (Ord, Show, Eq, Hashable)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON = J.withText "GQLExecDoc" $ \t ->
-    case G.parseExecutableDoc t of
-      Left _  -> fail "parsing the graphql query failed"
-      Right q -> return $ GQLExecDoc $ G.getExecutableDefinitions q
+  parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
-  -- TODO, add pretty printer in graphql-parser
-  toJSON _ = J.String "toJSON not implemented for GQLExecDoc"
+  toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }

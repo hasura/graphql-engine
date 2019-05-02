@@ -786,7 +786,7 @@ data TemplateParamInfo
 
 addCollectionToCache
   :: (QErrM m, CacheRWM m)
-  => CollectionName -> ParsedQueryList -> m ()
+  => CollectionName -> QueryList -> m ()
 addCollectionToCache name qList = do
   sc <- askSchemaCache
   let collectionMap = scQueryCollections sc
@@ -821,7 +821,7 @@ askQueryMap name = do
 
 addQueryToCollectionInCache
   :: (QErrM m, CacheRWM m)
-  => CollectionName -> QueryName -> GQLQueryParsed -> m ()
+  => CollectionName -> QueryName -> GQLQuery -> m ()
 addQueryToCollectionInCache collName queryName gqlQuery = do
   sc <- askSchemaCache
   queryMap <- askQueryMap collName
