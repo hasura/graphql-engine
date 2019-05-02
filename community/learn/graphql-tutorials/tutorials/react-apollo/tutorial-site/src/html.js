@@ -12,14 +12,14 @@ export default class HTML extends React.Component {
             name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=no"
           />
-          <meta name="title" content="GraphQL for react devs | Hasura" />
-          <meta name="description" content="Introduction to GraphQL course react developers" />
-          <meta property="og:title" content="GraphQL for react devs | Hasura" />
-          <meta property="og:description" content="Introduction to GraphQL course react developers" />
+          <meta name="title" content="A GraphQL course for React developers | Hasura" />
+          <meta name="description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
+          <meta property="og:title" content="A GraphQL course for React developers | Hasura" />
+          <meta property="og:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
           <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:title" content="GraphQL for react devs | Hasura" />
-          <meta property="twitter:description" content="Introduction to GraphQL course react developers" />
+          <meta property="twitter:title" content="A GraphQL course for React developers | Hasura" />
+          <meta property="twitter:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
           <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
@@ -39,7 +39,18 @@ export default class HTML extends React.Component {
             dangerouslySetInnerHTML={{ __html: this.props.body }}
           />
           {this.props.postBodyComponents}
-        </body>
+          <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            $(document).on('click','.navbar-collapse.in',function(e) {
+              if( $(e.target).is('a') ) {
+                $(this).collapse('hide');
+              }
+            });
+            `
+          }}
+          />
+          </body>
 
       </html>
     )

@@ -2,12 +2,14 @@ require("dotenv").config();
 module.exports = {
   pathPrefix: process.env.GATSBY_PATH_PREFIX,
   siteMetadata: {
-    title: 'GraphQL for react devs | Hasura',
-    description: 'Introduction to GraphQL course react developers',
+    title: 'A GraphQL course for React developers | Hasura',
+    description: 'A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React',
     docsLocation: 'https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/content',
-    headerTitle: '/ graphql / react'
+    headerTitle: '/ graphql / react',
+    siteUrl: 'https://learn.hasura.io'
   },
   plugins: [
+    'gatsby-plugin-sitemap',
     'gatsby-plugin-sharp',
     {
       resolve: `gatsby-plugin-layout`,

@@ -1,11 +1,11 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';

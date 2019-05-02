@@ -2,9 +2,13 @@
 title: "Fetch public todos - subscription"
 ---
 
+import GithubLink from '../../src/GithubLink.js'
+
 Let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPublicList.js` and add the following imports.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPublicList.js" text="src/components/Todo/TodoPublicList.js" />
 
 ```javascript
 import React, { Component, Fragment } from 'react';
@@ -90,21 +94,22 @@ We sort the todos by its latest created_at time according to the schema. We spec
 Right now we don't return anything when new data comes in. We already have the TodoPublicList component which renders the list of public todos. So let's return that component.
 
 ```javascript
-+ const TodoPublicListSubscription = () => {
-+  return (
-+    <Subscription subscription={NOTIFY_NEW_PUBLIC_TODOS}>
-+      {({loading, error, data}) => {
-+        if (loading) {
-+          return (<span>Loading...</span>);
-+        }
-+        if (error) {
-+          return (<span>Error</span>);
-+        }
-+        return (<TodoPublicList latestTodo={data.todos.length ? data.todos[0] : null} />);
-+      }}
-+    </Subscription>
-+  );
-+ };
+ const TodoPublicListSubscription = () => {
+  return (
+    <Subscription subscription={NOTIFY_NEW_PUBLIC_TODOS}>
+      {({loading, error, data}) => {
+        if (loading) {
+          return (<span>Loading...</span>);
+        }
+        if (error) {
+          return (<span>Error</span>);
+        }
+-       return {};
++       return (<TodoPublicList latestTodo={data.todos.length ? data.todos[0] : null} />);
+      }}
+    </Subscription>
+  );
+ };
 ```
 
 We would like to now return the new TodoPublicListSubscription component which has the Subscription component integrated.
