@@ -285,7 +285,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     postExecErr qErr = do
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ encodeGQErr False qErr
+        GQExecError $ pure $ encodeGQLErr False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
