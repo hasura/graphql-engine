@@ -451,14 +451,14 @@ CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_
       BEGIN
         session_variables := current_setting('hasura.user');
       EXCEPTION WHEN OTHERS THEN
-                  session_variables := NULL;
+        session_variables := NULL;
       END;
     END IF;
     payload := json_build_object(
       'op', op,
       'data', row_data,
       'session_variables', session_variables
-    )::text;
+    );
     INSERT INTO hdb_catalog.event_log
     (id, schema_name, table_name, trigger_name, payload)
      VALUES
