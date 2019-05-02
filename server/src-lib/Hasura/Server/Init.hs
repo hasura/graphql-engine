@@ -103,6 +103,7 @@ data HGECommandG a
 data API
   = METADATA
   | GRAPHQL
+  | PGDUMP
   | DEVELOPER
   deriving (Show, Eq, Read, Generic)
 
@@ -273,9 +274,9 @@ mkServeOptions rso = do
                         enableTelemetry strfyNum enabledAPIs lqOpts
   where
 #ifdef DeveloperAPIs
-    defaultAPIs = [METADATA,GRAPHQL,DEVELOPER]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
 #else
-    defaultAPIs = [METADATA,GRAPHQL]
+    defaultAPIs = [METADATA,GRAPHQL,PGDUMP]
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
@@ -535,7 +536,7 @@ stringifyNumEnv =
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
-  , "List of comma separated list of allowed APIs. (default: metadata,graphql)"
+  , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -693,8 +694,9 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
           "METADATA" -> Right METADATA
           "GRAPHQL"  -> Right GRAPHQL
+          "PGDUMP"   -> Right PGDUMP
           "DEVELOPER" -> Right DEVELOPER
-          _          -> Left "Only expecting list of comma separated API types metadata / graphql"
+          _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer"
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =

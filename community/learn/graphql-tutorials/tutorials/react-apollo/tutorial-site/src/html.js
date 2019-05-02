@@ -39,7 +39,18 @@ export default class HTML extends React.Component {
             dangerouslySetInnerHTML={{ __html: this.props.body }}
           />
           {this.props.postBodyComponents}
-        </body>
+          <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            $(document).on('click','.navbar-collapse.in',function(e) {
+              if( $(e.target).is('a') ) {
+                $(this).collapse('hide');
+              }
+            });
+            `
+          }}
+          />
+          </body>
 
       </html>
     )
