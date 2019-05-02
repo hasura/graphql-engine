@@ -252,6 +252,24 @@ Error codes
    :widths: 10, 20, 70
    :header-rows: 1
 
+Disabling Schema/Metadata API
+-----------------------------
+
+Since this API can be used to make changes to the GraphQL schema, it can be
+disabled, especially in production deployments.
+
+The ``enabled-apis`` flag or the ``HASURA_GRAPHQL_ENABLED_APIS`` env var can be used to
+enable/disable this API. By default, The schema/metadata API is enabled. To disable it, you need
+to explicitly state that this API is not enabled. i.e. remove it from the list of enabled APIs.
+
+.. code-block:: bash
+
+   # enable only graphql api, disable metadata and pgdump
+   --enabled-apis="graphql"
+   HASURA_GRAPHQL_ENABLED_APIS="graphql"
+
+See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+
 .. toctree::
   :maxdepth: 1
   :hidden:

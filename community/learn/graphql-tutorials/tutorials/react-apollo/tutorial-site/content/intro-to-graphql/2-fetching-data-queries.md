@@ -103,7 +103,7 @@ and their profile information (which is just their name for now):
 
 In most API calls, you usually use paramters. For example, to specify what data you're fetching.
 If you're familiar with making `GET` calls, you would have used a query parameter. For example,
-to fetch only 10 todos you might have made this API calls: `GET /api/todos?limit=10`.
+to fetch only 10 todos you might have made this API call: `GET /api/todos?limit=10`.
 
 The GraphQL query analog of this is *arguments* that you can attach to a "field".
 

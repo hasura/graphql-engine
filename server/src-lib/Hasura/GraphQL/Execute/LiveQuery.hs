@@ -69,9 +69,9 @@ data LiveQueriesState
   }
 
 dumpLiveQueriesState
-  :: LiveQueriesState -> IO J.Value
-dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
-  mxJ <- LQM.dumpLiveQueriesState mx
+  :: Bool -> LiveQueriesState -> IO J.Value
+dumpLiveQueriesState extended (LiveQueriesState mx fallback _) = do
+  mxJ <- LQM.dumpLiveQueriesState extended mx
   fallbackJ <- LQF.dumpLiveQueriesState fallback
   return $ J.object
     [ "fallback" J..= fallbackJ
