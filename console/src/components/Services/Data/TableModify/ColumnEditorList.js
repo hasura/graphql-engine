@@ -50,7 +50,8 @@ const ColumnEditorList = ({
       type: col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
       isNullable: col.is_nullable === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      uniqueConstraint: columnUniqueConstraints[colName],
+      isUnique: columnUniqueConstraints[colName] ? true : false,
+      // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
     };
 
@@ -85,7 +86,7 @@ const ColumnEditorList = ({
         propertiesList.push('primary key');
       }
 
-      if (columnProperties.uniqueConstraint) {
+      if (columnProperties.isUnique) {
         propertiesList.push('unique');
       }
 
