@@ -61,8 +61,7 @@ getTriggerSql
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
-                   [ (T.pack "OP", T.pack $ show op)
-                   , (T.pack "SKIP_DIFF", T.pack $ show $ shouldSkipDiff (sosColumns spec) )
+                   [ (T.pack "OPERATION", T.pack $ show op)
                    , (T.pack "NAME", trn)
                    , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
@@ -72,17 +71,17 @@ getTriggerSql op trn qt allCols strfyNum spec =
   in
       renderGingerTmplt context <$> triggerTmplt
   where
-    shouldSkipDiff sc =
-      if op == UPDATE then
+    shouldDiff op2 sc =
+      if op2 == UPDATE then
       case sc of
-        SubCStar    -> True
-        SubCArray _ -> False
+        SubCArray [] -> False
+        _            -> True
       else
         False
 
     createOpCtx op1 (SubscribeOpSpec columns payload) =
       HashMap.fromList
-      [ (T.pack "OPERATION", T.pack $ show op1)
+      [ (T.pack "SHOULD_DIFF", T.pack $ show $ shouldDiff op1 columns )
       , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD columns )
       , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW columns )
       , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ fromMaybePayload payload )

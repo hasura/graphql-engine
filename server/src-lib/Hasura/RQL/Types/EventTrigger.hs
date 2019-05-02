@@ -151,7 +151,6 @@ instance FromJSON CreateEventTriggerQuery where
     where
       checkEmptyCols spec
         = case spec of
-        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
         Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
         _ -> return ()
   parseJSON _ = fail "expecting an object"

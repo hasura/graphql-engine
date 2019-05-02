@@ -6,7 +6,7 @@ CREATE OR REPLACE function hdb_views.{{QUALIFIED_TRIGGER_NAME}}() RETURNS trigge
     _new record;
     _data json;
   BEGIN
-{% if (OP == "UPDATE") && (SKIP_DIFF == "False") %}
+{% if (OPERATION == "UPDATE") && (SHOULD_DIFF == "True") %}
     _old := {{OLD_ROW}};
     _new := {{NEW_ROW}};
     IF (_old <> _new) THEN

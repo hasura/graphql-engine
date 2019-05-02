@@ -570,10 +570,10 @@ class TestUpdateEvent:
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx, evts_webhook):
         print("In setup method")
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/setup.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/listen_cols/setup.yaml')
         assert st_code == 200, resp
         yield
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/basic/teardown.yaml')
+        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/listen_cols/teardown.yaml')
         assert st_code == 200, resp
 
     def test_row_skip_diff(self, hge_ctx, evts_webhook):
