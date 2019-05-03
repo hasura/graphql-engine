@@ -28,11 +28,16 @@ class AddWhitelistQuery extends React.Component {
 
     const getOpenAddSection = () => {
       let addSection;
+      let queryInput;
+      let submitBtn;
 
       switch (openOption) {
         case 'manual':
-          addSection = (
+          queryInput = (
             <div>
+              <div className={styles.add_mar_bottom_mid}>
+                <b>Query:</b>
+              </div>
               <AceEditor
                 data-test="whitelist_query_add"
                 mode="graphql"
@@ -45,40 +50,60 @@ class AddWhitelistQuery extends React.Component {
                 showPrintMargin={false}
                 onChange={() => {}}
               />
-              <Button
-                className={styles.add_mar_top_small}
-                size={'sm'}
-                color={'yellow'}
-              >
-                Add To Whitelist
-              </Button>
             </div>
+          );
+
+          submitBtn = (
+            <Button size={'sm'} color={'yellow'}>
+              Add To Whitelist
+            </Button>
           );
           break;
         case 'upload':
-          addSection = (
+          queryInput = (
             <div>
+              <div className={styles.add_mar_bottom_mid}>
+                <b>Query file:</b>
+              </div>
               <input
                 type="text"
                 className={'form-control input-sm ' + styles.inline_block}
-                placeholder={'Enter GraphQL file url'}
+                placeholder={'https://xyz.com/query.graphql'}
               />
-              <Button
-                className={styles.add_mar_top_small}
-                size={'sm'}
-                color={'yellow'}
-              >
-                Upload File To Whitelist
-              </Button>
             </div>
+          );
+
+          submitBtn = (
+            <Button size={'sm'} color={'yellow'}>
+              Upload File To Whitelist
+            </Button>
           );
           break;
         default:
-          addSection = '';
+          queryInput = '';
       }
 
-      if (addSection) {
-        addSection = <div className={styles.add_mar_top}>{addSection}</div>;
+      if (queryInput) {
+        const nameInput = (
+          <div>
+            <div className={styles.add_mar_bottom_mid}>
+              <b>Query name:</b>
+            </div>
+            <input
+              type="text"
+              className={'form-control input-sm ' + styles.inline_block}
+              placeholder={'query_name'}
+            />
+          </div>
+        );
+
+        addSection = (
+          <div className={styles.add_mar_top}>
+            <div>{nameInput}</div>
+            <div className={styles.add_mar_top}>{queryInput}</div>
+            <div className={styles.add_mar_top}>{submitBtn}</div>
+          </div>
+        );
       }
       return addSection;
     };
