@@ -105,14 +105,7 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <b>{colName}</b> {keyProperties()}
-                &nbsp;
-              </h5>
-            </div>
-          </div>
+          <b>{colName}</b> {keyProperties()}
         </div>
       );
     };
@@ -120,14 +113,7 @@ const ColumnEditorList = ({
     const expandedLabel = () => {
       return (
         <div key={colName}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <b>{colName}</b>
-                &nbsp;
-              </h5>
-            </div>
-          </div>
+          <b>{colName}</b>
         </div>
       );
     };
