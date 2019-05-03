@@ -283,6 +283,6 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Relationships <relationship>
   Permissions <permission>
   Event Triggers <event-triggers>
-  Query collections <query-collections>
+  Query Collections <query-collections>
   Manage Metadata <manage-metadata>
   Syntax definitions <syntax-defs>
