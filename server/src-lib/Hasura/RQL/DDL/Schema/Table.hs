@@ -182,8 +182,10 @@ processTableChanges ti tableDiff = do
             " as a relationship with the name already exists"
           _ -> addColToCache colName pci tn
 
-    procAlteredCols sc tn = fmap or $
-      forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
+    procAlteredCols sc tn = fmap or $ forM alteredCols $
+      \( PGColInfo oColName oColTy oNullable
+       , npci@(PGColInfo nColName nColTy nNullable)
+       ) ->
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True
@@ -194,6 +196,10 @@ processTableChanges ti tableDiff = do
                  "cannot change type of column " <> oColName <<> " in table "
                  <> tn <<> " because of the following dependencies : " <>
                  reportSchemaObjs depObjs
+               updColInCache nColName npci tn
+               return False
+           | oNullable /= nNullable -> do
+               updColInCache nColName npci tn
                return False
            | otherwise -> return False
 

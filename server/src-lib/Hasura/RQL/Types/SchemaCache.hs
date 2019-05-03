@@ -47,6 +47,7 @@ module Hasura.RQL.Types.SchemaCache
        , addRelToCache
 
        , delColFromCache
+       , updColInCache
        , delRelFromCache
 
        , RolePermInfo(..)
@@ -627,6 +628,14 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+updColInCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColInfo
+  -> QualifiedTable -> m ()
+updColInCache cn ci tn = do
+  delColFromCache cn tn
+  addColToCache cn ci tn
 
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
