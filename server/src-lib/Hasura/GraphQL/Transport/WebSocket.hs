@@ -49,6 +49,11 @@ newtype WsHeaders
   = WsHeaders { unWsHeaders :: [H.Header] }
   deriving (Show, Eq)
 
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
 data WSConnState
   -- headers from the client for websockets
   = CSNotInitialised !WsHeaders
@@ -59,11 +64,12 @@ data WSConnState
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef WSConnState)
+  { _wscUser      :: !(IORef.IORef WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
-  , _wscOpMap :: !OperationMap
+  , _wscOpMap     :: !OperationMap
+  , _wscErrRespTy :: !ErrRespType
   }
 
 type WSServer = WS.WSServer WSConnData
@@ -144,6 +150,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       connData <- WSConnData
                   <$> IORef.newIORef (CSNotInitialised hdrs)
                   <*> STMMap.newIO
+                  <*> pure (errType $ WS.requestPath requestHead)
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
@@ -162,6 +169,11 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
     allowedPaths :: (IsString a) => [a]
     allowedPaths = ["/v1alpha1/graphql", "/v1/graphql"]
+
+    errType reqPath = case reqPath of
+      "/v1alpha1/graphql" -> ERTLegacy
+      "/v1/graphql"       -> ERTGraphqlCompliant
+      _                   -> ERTGraphqlCompliant
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
@@ -270,13 +282,19 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ = serverEnv
 
-    WSConnData userInfoR opMap = WS.getData wsConn
+    WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
     logOpEv opDet =
       logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
 
+    getErrFn errTy =
+      case errTy of
+        ERTLegacy           -> encodeQErr
+        ERTGraphqlCompliant -> encodeGQLErr
+
     sendStartErr e = do
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeGQLErr False $
+      let errFn = getErrFn errRespTy
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False $
         err400 StartFailed e
       logOpEv $ ODProtoErr e
 
@@ -285,14 +303,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       logOpEv ODCompleted
 
     postExecErr qErr = do
+      let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ encodeGQLErr False qErr
+        GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
+      let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeGQLErr False qErr
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False qErr
 
     sendSuccResp encJson =
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
@@ -356,7 +376,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         _                        -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
   where
-    WSConnData userInfoR _ = WS.getData wsConn
+    WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
 
 onConnInit
