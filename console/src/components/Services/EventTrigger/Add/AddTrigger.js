@@ -635,7 +635,6 @@ class AddTrigger extends Component {
                   }
                 })}
               </select>
-              {getManualInvocationOption()}
               <hr />
               <div
                 className={
@@ -734,6 +733,7 @@ class AddTrigger extends Component {
                     styles.wd100
                   }
                 >
+                  {getManualInvocationOption()}
                   {tableName ? advancedColumnSection : null}
                   <div
                     className={
