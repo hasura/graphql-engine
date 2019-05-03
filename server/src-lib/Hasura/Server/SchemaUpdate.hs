@@ -80,17 +80,18 @@ startSchemaSync
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
 startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
-  -- Init events queue
-  eventsQueue <- STM.newTQueueIO
+  -- only the latest event is recorded here
+  -- we don't want to store and process all the events, only the latest event
+  updateEventRef <- STM.newTVarIO Nothing
 
   -- Start listener thread
   lTId <- C.forkIO $ listener sqlGenCtx pool
-    logger httpMgr eventsQueue cacheRef instanceId cacheInitTime
+    logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
   pTId <- C.forkIO $ processor sqlGenCtx pool
-    logger httpMgr eventsQueue cacheRef instanceId
+    logger httpMgr updateEventRef cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
   where
@@ -109,11 +110,11 @@ listener
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
-  -> STM.TQueue EventPayload
+  -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
-listener sqlGenCtx pool logger httpMgr eventsQueue
+listener sqlGenCtx pool logger httpMgr updateEventRef
   cacheRef instanceId cacheInitTime =
   -- Never exits
   forever $ do
@@ -150,7 +151,7 @@ listener sqlGenCtx pool logger httpMgr eventsQueue
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
             -- Push a notify event to Queue
-            STM.atomically $ STM.writeTQueue eventsQueue payload
+            STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
     onError = logError logger threadType . TEQueryError
     logWarn = unLogger logger $
@@ -164,19 +165,28 @@ processor
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
-  -> STM.TQueue EventPayload
+  -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
   -> InstanceId -> IO ()
-processor sqlGenCtx pool logger httpMgr eventsQueue
+processor sqlGenCtx pool logger httpMgr updateEventRef
   cacheRef instanceId =
   -- Never exits
   forever $ do
-    event <- STM.atomically $ STM.readTQueue eventsQueue
+    event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
       refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
         threadType "schema cache reloaded"
   where
+    -- checks if there is an event
+    -- and replaces it with Nothing
+    getLatestEvent = do
+      eventM <- STM.readTVar updateEventRef
+      case eventM of
+        Just event -> do
+          STM.writeTVar updateEventRef Nothing
+          return event
+        Nothing -> STM.retry
     threadType = TTProcessor
 
       -- If event is from another server
