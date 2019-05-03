@@ -2,7 +2,7 @@ require("dotenv").config();
 module.exports = {
   pathPrefix: process.env.GATSBY_PATH_PREFIX,
   siteMetadata: {
-    title: 'A GraphQL course for React developers | Hasura',
+    title: '2 hour GraphQL course for React developers | Hasura',
     description: 'A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React',
     docsLocation: 'https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/content',
     headerTitle: '/ graphql / react',

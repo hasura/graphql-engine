@@ -12,13 +12,13 @@ export default class HTML extends React.Component {
             name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=no"
           />
-          <meta name="title" content="A GraphQL course for React developers | Hasura" />
+          <meta name="title" content="2 hour GraphQL course for React developers | Hasura" />
           <meta name="description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
-          <meta property="og:title" content="A GraphQL course for React developers | Hasura" />
+          <meta property="og:title" content="2 hour GraphQL course for React developers | Hasura" />
           <meta property="og:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
           <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:title" content="A GraphQL course for React developers | Hasura" />
+          <meta property="twitter:title" content="2 hour GraphQL course for React developers | Hasura" />
           <meta property="twitter:description" content="A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in React" />
           <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
           <link rel="stylesheet"
