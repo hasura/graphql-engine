@@ -36,6 +36,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
 import           Hasura.Server.Cors
@@ -203,18 +204,18 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
-  when (isJust opM) $ withComplete $ sendConnErr $
+  when (isJust opM) $ withComplete $ sendStartErr $
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
   (userInfo, reqHdrs) <- case userInfoM of
     CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
     CSInitError initErr -> do
-      let connErr = "cannot start as connection_init failed with : " <> initErr
-      withComplete $ sendConnErr connErr
+      let e = "cannot start as connection_init failed with : " <> initErr
+      withComplete $ sendStartErr e
     CSNotInitialised _ -> do
-      let connErr = "start received before the connection is initialised"
-      withComplete $ sendConnErr connErr
+      let e = "start received before the connection is initialised"
+      withComplete $ sendStartErr e
 
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
@@ -274,9 +275,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     logOpEv opDet =
       logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
 
-    sendConnErr connErr = do
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
-      logOpEv $ ODProtoErr connErr
+    sendStartErr e = do
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeGQLErr False $
+        err400 StartFailed e
+      logOpEv $ ODProtoErr e
 
     sendCompleted = do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
