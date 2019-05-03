@@ -17,7 +17,7 @@ Events can be of the following types:
 - INSERT: When a row is inserted into a table
 - UPDATE: When a row is updated in a table
 - DELETE: When a row is deleted from a table
-- MANUAL: Using the console, an event can be triggered on a row. See :doc:`Manual Triggers <./manual-trigger>`
+- MANUAL: Using the console or API, an event can be triggered manually on a row.
 
 **See:**
 
@@ -26,7 +26,7 @@ Events can be of the following types:
    :titlesonly:
 
    create-trigger
-   manual-trigger
+   invoke-trigger-console
    payload
    serverless
    samples

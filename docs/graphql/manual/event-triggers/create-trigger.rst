@@ -27,8 +27,7 @@ The postgres schema and table name on which event trigger needs to be created.
 
 **Operations**
 
-The operation on which event trigger needs to be invoked. Can be ``INSERT``, ``UPDATE``, ``DELETE`` and/or ``MANUAL``.
-The ``MANUAL`` operation allows you to invoke an event trigger on any row via the Hasura console. See :doc:`Manual Triggers <./manual-trigger>`
+The operation on which event trigger needs to be invoked. Can be ``INSERT``, ``UPDATE``, ``DELETE``.
 
 **Webhook URL**
 
@@ -40,6 +39,11 @@ Advanced Settings
 -----------------
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+
+Invoke trigger via Data Browser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checking this box allows you to invoke an event trigger on any row via the Hasura console. Enabled by default.
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
