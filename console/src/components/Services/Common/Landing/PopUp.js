@@ -16,7 +16,12 @@ class PopUp extends React.Component {
     const close = require('./images/cancel.svg');
     const { onClose, title, queryDefinition, footerDescription } = this.props;
     // const queryDefinition = 'query { hello }';
-    const commonPopupStyle = ((this.props.isAvailable) ? styles.popupWrapper : styles.popupWrapperPos);
+    const commonPopupStyle = this.props.isAvailable
+      ? styles.popupWrapper
+      : styles.popupWrapperPos;
+    const isAvailableText = this.props.isAvailable ? (
+      <div className={styles.arrowLeft} />
+    ) : null;
     return (
       <div className={commonPopupStyle}>
         <div className={styles.wd100}>
@@ -36,9 +41,7 @@ class PopUp extends React.Component {
           <div className={styles.close} onClick={onClose}>
             <img className={'img-responsive'} src={close} alt={'Close'} />
           </div>
-          {this.props.isAvailable ? (
-            <div className={styles.arrowLeft} />
-          ) : null}
+          {isAvailableText}
           {ContentMap[this.props.service]}
           <div
             className={styles.addPaddLeft + ' text-left ' + styles.addPaddTop}

@@ -79,16 +79,6 @@ class ViewTable extends Component {
       dispatch: props.dispatch,
       tableName: props.tableName,
     };
-    // this.state.dispatch = props.dispatch;
-    // this.state.tableName = props.tablename;
-    // const dispatch = this.props.dispatch;
-    /*
-    Promise.all([
-      dispatch(setTable(this.props.tableName)),
-      dispatch(vSetDefaults(this.props.tableName)),
-      dispatch(vMakeRequest()),
-    ]);
-    */
     this.getInitialData(this.props.tableName);
   }
 
@@ -96,11 +86,6 @@ class ViewTable extends Component {
     // const dispatch = this.props.dispatch;
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
-      /*
-      dispatch(setTable(nextProps.tableName));
-      dispatch(vSetDefaults(nextProps.tableName));
-      dispatch(vMakeRequest());
-      */
     }
   }
 

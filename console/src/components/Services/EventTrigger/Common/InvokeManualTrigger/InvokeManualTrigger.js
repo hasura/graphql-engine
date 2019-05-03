@@ -89,12 +89,6 @@ class InvokeManualTrigger extends React.Component {
       if (status.length === 0) {
         return <div>Fetching invocation info {loader()}</div>;
       }
-      /*
-      if (status.length > 0 && !status[0].event.delivered) {
-        console.log('Not Delivered');
-        console.log(status);
-      }
-      */
       return (
         <div className={styles.displayFlexContainer}>
           <div className={`${styles.padd_left_remove} col-md-6`}>
@@ -149,7 +143,11 @@ class InvokeManualTrigger extends React.Component {
           styles.clear_fix
         } ${styles.padd_right_remove}`}
       >
-        <div className={`${styles.remove_padding_left} col-md-12 ${styles.padd_right_remove}`}>
+        <div
+          className={`${styles.remove_padding_left} col-md-12 ${
+            styles.padd_right_remove
+          }`}
+        >
           <div className={`${styles.margin_bottom_20} `}>
             Event ID - {eventInfo}
           </div>

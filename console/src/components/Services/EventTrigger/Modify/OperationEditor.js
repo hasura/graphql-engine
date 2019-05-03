@@ -10,14 +10,13 @@ import {
   INTERNAL_CONSOLE_QUERY_REP,
 } from './utils';
 
-const toggleOperation = upObj => {
-  if (upObj.query === INTERNAL_CONSOLE_QUERY_REP) {
-    return toggleManualType(upObj);
-  }
-  return toggleQueryType(upObj);
-};
-
 class OperationEditor extends React.Component {
+  toggleOperation = upObj => {
+    if (upObj.query === INTERNAL_CONSOLE_QUERY_REP) {
+      return toggleManualType(upObj);
+    }
+    return toggleQueryType(upObj);
+  };
   setValues = () => {
     const { dispatch, definition } = this.props;
     /*
@@ -29,7 +28,7 @@ class OperationEditor extends React.Component {
       if (definition[queryType]) {
         if (queryType !== INTERNAL_CONSOLE_QUERY_REP) {
           dispatch(
-            toggleOperation({
+            this.toggleOperation({
               query: queryType,
               columns: definition[queryType].columns,
               value: true,
@@ -37,7 +36,7 @@ class OperationEditor extends React.Component {
           );
         } else {
           dispatch(
-            toggleOperation({
+            this.toggleOperation({
               query: queryType,
               value: definition[queryType] || false,
             })
@@ -133,7 +132,7 @@ class OperationEditor extends React.Component {
                 key={i}
                 onClick={() => {
                   dispatch(
-                    toggleOperation({
+                    this.toggleOperation({
                       query: queryToInternalNameMap[qt],
                       columns: allTableColumns.map(c => c.name),
                       value: !modifyTrigger.definition[

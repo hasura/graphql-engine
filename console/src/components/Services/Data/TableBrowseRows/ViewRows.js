@@ -4,7 +4,7 @@ import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
-import DataDropdown from '../../../Common/DataDropdown/DataDropdown';
+import Dropdown from '../../../Common/Dropdown/Dropdown';
 
 import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
 
@@ -312,11 +312,11 @@ const ViewRows = ({
         const getManualTriggersButton = () => {
           const triggerOptions = manualTriggers.map(m => {
             return {
-              displayName: m.name,
-              prefixLabel: 'Run:',
-              itemIdentifier: m.name,
-              onChange: invokeTrigger,
-              rowIndex: rowIndex,
+              callbackArguments: [m.name, rowIndex],
+              buttonText: 'Invoke',
+              displayText: m.name,
+              testId: m.name,
+              onClick: invokeTrigger,
             };
           });
 
@@ -325,7 +325,7 @@ const ViewRows = ({
           }
 
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
-          const triggerTitle = 'Run manual trigger';
+          const triggerTitle = 'Invoke manual trigger';
 
           const triggerBtn = getActionButton(
             'trigger',
@@ -344,18 +344,34 @@ const ViewRows = ({
                 identifier={`invoke_function_${triggeredFunction}`}
               />
             );
+          return (
+            <div className={styles.display_inline}>
+              <Dropdown
+                testId={`data_browse_rows_trigger_${rowIndex}`}
+                options={triggerOptions}
+                position="right"
+                key={`invoke_data_dropdown_${rowIndex}`}
+                keyPrefix={`invoke_data_dropdown_${rowIndex}`}
+              >
+                {triggerBtn}
+              </Dropdown>
+              {invokeManualTrigger(row)}
+            </div>
+          );
+          /*
           return [
-            <DataDropdown
-              elementId={`data_browse_rows_trigger_${rowIndex}`}
+            <Dropdown
+              testId={`data_browse_rows_trigger_${rowIndex}`}
               options={triggerOptions}
               position="right"
               key={`invoke_data_dropdown_${rowIndex}`}
-              identifier={`invoke_data_dropdown_${rowIndex}`}
+              keyPrefix={`invoke_data_dropdown_${rowIndex}`}
             >
               {triggerBtn}
-            </DataDropdown>,
+            </Dropdown>,
             invokeManualTrigger(row),
           ];
+          */
         };
 
         const showActionBtns = !_isSingleRow && !isView;
