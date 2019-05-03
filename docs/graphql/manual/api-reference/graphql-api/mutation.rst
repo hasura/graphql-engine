@@ -227,7 +227,7 @@ Delete syntax
 
 .. note::
     
-    For more examples and details of usage, please see :doc:`this <../mutations/index>`.
+    For more examples and details of usage, please see :doc:`this <../../mutations/index>`.
 
 Syntax definitions
 ------------------
