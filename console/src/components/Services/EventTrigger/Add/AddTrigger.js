@@ -525,7 +525,7 @@ class AddTrigger extends Component {
               onChange={manualInvocation.onChange}
               data-test={manualInvocation.testIdentifier}
             />
-            Allow invoking this trigger via Data browser.{' '}
+            Allow invoking this trigger via data browser.{' '}
             <a
               href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
               target="_blank"

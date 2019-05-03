@@ -1,6 +1,6 @@
 import semverCheck from '../../../../helpers/semver';
 
-const CONSOLE_QUERY = 'Allow invoking this trigger via Data browser';
+const CONSOLE_QUERY = 'Allow invoking this trigger via data browser';
 export const INTERNAL_CONSOLE_QUERY_REP = 'enable_manual';
 export const getValidQueryTypes = () => {
   const defaultQueryTypes = ['insert', 'update', 'delete'];
