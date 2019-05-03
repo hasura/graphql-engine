@@ -141,10 +141,10 @@ class ViewTable extends Component {
   };
 
   retrieveManualTriggers = tableName => {
-    const { dispatch } = this.props;
-    return !semverCheck('manualTriggers')
-      ? Promise.resolve()
-      : dispatch(fetchManualTriggers(tableName));
+    const { dispatch, serverVersion } = this.props;
+    return semverCheck('manualTriggers', serverVersion)
+      ? dispatch(fetchManualTriggers(tableName))
+      : Promise.resolve();
   };
 
   render() {
@@ -270,6 +270,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     ...state.tables.view,
   };
 };

@@ -4,10 +4,14 @@ import Tooltip from './Tooltip';
 
 import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
 
+import semverCheck from '../../../../helpers/semver';
+
 import {
   getValidQueryTypes,
   queryToInternalNameMap,
   INTERNAL_CONSOLE_QUERY_REP,
+  getManualOperationValue,
+  CONSOLE_QUERY,
 } from './utils';
 
 class OperationEditor extends React.Component {
@@ -18,14 +22,17 @@ class OperationEditor extends React.Component {
     return toggleQueryType(upObj);
   };
   setValues = () => {
-    const { dispatch, definition } = this.props;
+    const { dispatch, definition, serverVersion } = this.props;
     /*
      * Loop through the keys in definition,
      * this object will have actual internal name.
      * No need to transform from display to internal name
      * */
     for (const queryType in definition) {
-      if (definition[queryType]) {
+      /* If the definition[queryType] holds true
+       * This will be false or undefined if `queryType` doesn't exist in the object or definition[queryType] is false.
+       * */
+      if (queryType in definition) {
         if (queryType !== INTERNAL_CONSOLE_QUERY_REP) {
           dispatch(
             this.toggleOperation({
@@ -38,11 +45,30 @@ class OperationEditor extends React.Component {
           dispatch(
             this.toggleOperation({
               query: queryType,
-              value: definition[queryType] || false,
+              value: definition[queryType],
             })
           );
         }
       }
+    }
+    /* To be done only for versions supporting manualTriggers and definition doesn't contain event_manual key
+     * */
+    if (
+      semverCheck('manualTriggers', serverVersion) &&
+      !(INTERNAL_CONSOLE_QUERY_REP in definition)
+    ) {
+      /* If the enable_manual key is not available
+       * By default set it to true
+       * */
+      dispatch(
+        this.toggleOperation({
+          query: INTERNAL_CONSOLE_QUERY_REP,
+          value: getManualOperationValue(
+            INTERNAL_CONSOLE_QUERY_REP,
+            definition
+          ),
+        })
+      );
     }
   };
 
@@ -54,28 +80,41 @@ class OperationEditor extends React.Component {
       save,
       modifyTrigger,
       dispatch,
+      serverVersion,
     } = this.props;
-    const queryTypes = getValidQueryTypes();
+    const queryTypes = getValidQueryTypes(serverVersion);
+    const renderOperation = (qt, i) => {
+      let isChecked = false;
+      if (qt === CONSOLE_QUERY) {
+        isChecked = getManualOperationValue(
+          queryToInternalNameMap[qt],
+          definition
+        );
+      } else {
+        isChecked = Boolean(definition[queryToInternalNameMap[qt]]);
+      }
+      return (
+        <div
+          className={
+            styles.opsCheckboxWrapper + ' col-md-4 ' + styles.padd_remove
+          }
+          key={i}
+        >
+          <input
+            type="checkbox"
+            className={styles.opsCheckboxDisabled}
+            checked={isChecked}
+            disabled
+          />
+          {qt}
+        </div>
+      );
+    };
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent}>
           <div className={'col-md-12 ' + styles.padd_remove}>
-            {queryTypes.map((qt, i) => (
-              <div
-                className={
-                  styles.opsCheckboxWrapper + ' col-md-4 ' + styles.padd_remove
-                }
-                key={i}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.opsCheckboxDisabled}
-                  checked={Boolean(definition[queryToInternalNameMap[qt]])}
-                  disabled
-                />
-                {qt}
-              </div>
-            ))}
+            {queryTypes.map((qt, i) => renderOperation(qt, i))}
           </div>
         </div>
         <div className={styles.modifyOpsCollapsedContent}>

@@ -245,6 +245,7 @@ class AddTrigger extends Component {
       webhookURL,
       webhookUrlType,
       enableManual,
+      serverVersion,
     } = this.props;
 
     const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
@@ -515,26 +516,28 @@ class AddTrigger extends Component {
 
     const getManualInvocationOption = () => {
       return (
-        <div className={styles.manualInvocationCheckbox}>
-          <label>
-            <input
-              className={`${styles.display_inline} ${styles.add_mar_right}`}
-              type="checkbox"
-              value={manualInvocation.name}
-              checked={manualInvocation.isChecked}
-              onChange={manualInvocation.onChange}
-              data-test={manualInvocation.testIdentifier}
-            />
-            Allow invoking this trigger via data browser.{' '}
-            <a
-              href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Read more.
-            </a>
-          </label>
-        </div>
+        semverCheck('manualTriggers', serverVersion) && (
+          <div className={styles.manualInvocationCheckbox}>
+            <label>
+              <input
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+                type="checkbox"
+                value={manualInvocation.name}
+                checked={manualInvocation.isChecked}
+                onChange={manualInvocation.onChange}
+                data-test={manualInvocation.testIdentifier}
+              />
+              Allow invoking this trigger via data browser.{' '}
+              <a
+                href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read more.
+              </a>
+            </label>
+          </div>
+        )
       );
     };
 

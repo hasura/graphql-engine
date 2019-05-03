@@ -139,9 +139,13 @@ const fetchManualTriggers = tableName => (dispatch, getState) => {
       /* Filter only triggers whose configuration has `enable_manual` key in it
        * */
       const manualTriggers = data.filter(d => {
+        /*
+         * If enable_manual is present in the definition, filter by value of `enable_manual` otherwise return true
+         * */
         if (
-          'enable_manual' in d.configuration.definition &&
-          d.configuration.definition.enable_manual
+          'enable_manual' in d.configuration.definition
+            ? d.configuration.definition.enable_manual
+            : true
         ) {
           return d;
         }

@@ -1,10 +1,10 @@
 import semverCheck from '../../../../helpers/semver';
 
-const CONSOLE_QUERY = 'Allow invoking this trigger via data browser';
+export const CONSOLE_QUERY = 'Allow invoking this trigger via data browser';
 export const INTERNAL_CONSOLE_QUERY_REP = 'enable_manual';
-export const getValidQueryTypes = () => {
+export const getValidQueryTypes = version => {
   const defaultQueryTypes = ['insert', 'update', 'delete'];
-  if (semverCheck('manualTriggers')) {
+  if (semverCheck('manualTriggers', version)) {
     defaultQueryTypes.push(CONSOLE_QUERY);
   }
   return defaultQueryTypes;
@@ -15,4 +15,11 @@ export const queryToInternalNameMap = {
   insert: 'insert',
   update: 'update',
   delete: 'delete',
+};
+
+export const getManualOperationValue = (queryType, definition) => {
+  if (queryType in definition) {
+    return definition[queryType];
+  }
+  return true;
 };

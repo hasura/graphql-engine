@@ -90,6 +90,7 @@ class Modify extends React.Component {
             newDefinition={null}
             styles={styles}
             save={() => dispatch(save('ops', modifyTriggerName))}
+            serverVersion={this.props.serverVersion}
           />
           <RetryConfEditor
             retryConf={retry_conf}
