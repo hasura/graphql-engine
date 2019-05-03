@@ -104,39 +104,49 @@ class AddWhitelistQuery extends React.Component {
       }
 
       if (queryInput) {
-        const handleNameChange = e => {
-          this.setState({
-            newQuery: {
-              ...newQuery,
-              name: e.target.value,
-            },
-          });
+        const getNameInput = () => {
+          const handleNameChange = e => {
+            this.setState({
+              newQuery: {
+                ...newQuery,
+                name: e.target.value,
+              },
+            });
+          };
+
+          return (
+            <div>
+              <div className={styles.add_mar_bottom_mid}>
+                <b>Query name:</b>
+              </div>
+              <input
+                type="text"
+                className={'form-control input-sm ' + styles.inline_block}
+                placeholder={'query_name'}
+                value={newQuery.name}
+                onChange={handleNameChange}
+              />
+            </div>
+          );
         };
 
-        const nameInput = (
-          <div>
-            <div className={styles.add_mar_bottom_mid}>
-              <b>Query name:</b>
-            </div>
-            <input
-              type="text"
-              className={'form-control input-sm ' + styles.inline_block}
-              placeholder={'query_name'}
-              value={newQuery.name}
-              onChange={handleNameChange}
-            />
-          </div>
-        );
+        const getSubmitBtn = () => {
+          const handleSubmit = () => {
+            // dispatch(); // TODO
+          };
+
+          return (
+            <Button size={'sm'} color={'yellow'} onClick={handleSubmit}>
+              {submitBtnTxt}
+            </Button>
+          );
+        };
 
         addSection = (
           <div key={openOption} className={styles.add_mar_top}>
-            <div>{nameInput}</div>
+            <div>{getNameInput()}</div>
             <div className={styles.add_mar_top}>{queryInput}</div>
-            <div className={styles.add_mar_top}>
-              <Button size={'sm'} color={'yellow'}>
-                {submitBtnTxt}
-              </Button>
-            </div>
+            <div className={styles.add_mar_top}>{getSubmitBtn()}</div>
           </div>
         );
       }
@@ -150,6 +160,7 @@ class AddWhitelistQuery extends React.Component {
           <Button onClick={handleAddClick('manual')}>Add query manually</Button>
           <span>&nbsp;&nbsp;OR&nbsp;&nbsp;</span>
           <Button onClick={handleAddClick('upload')}>Upload query</Button>
+
           <div>{getOpenAddSection()}</div>
         </div>
       </div>

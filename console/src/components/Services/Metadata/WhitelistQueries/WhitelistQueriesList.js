@@ -98,11 +98,11 @@ class WhitelistQueriesList extends React.Component {
         };
 
         const onSubmit = () => {
-          // dispatch();
+          // dispatch(); // TODO
         };
 
         const onDelete = () => {
-          // dispatch();
+          // dispatch(); // TODO
         };
 
         return (
