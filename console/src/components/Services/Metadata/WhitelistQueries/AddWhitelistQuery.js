@@ -8,82 +8,111 @@ class AddWhitelistQuery extends React.Component {
 
     this.state = {
       openOption: null,
+      newQuery: {},
     };
   }
 
   render() {
-    const { openOption } = this.state;
+    const { openOption, newQuery } = this.state;
 
     const styles = require('./WhitelistQueries.scss');
 
-    const handleManualClick = () => {
-      const newOpenOption = openOption === 'manual' ? null : 'manual';
-      this.setState({ openOption: newOpenOption });
-    };
+    const handleAddClick = option => {
+      return () => {
+        const newOpenOption = openOption === option ? null : option;
 
-    const handleUploadClick = () => {
-      const newOpenOption = openOption === 'upload' ? null : 'upload';
-      this.setState({ openOption: newOpenOption });
+        this.setState({
+          openOption: newOpenOption,
+          newQuery: {},
+        });
+      };
     };
 
     const getOpenAddSection = () => {
       let addSection;
       let queryInput;
-      let submitBtn;
+      let submitBtnTxt;
+
+      const getManualQueryInput = () => {
+        const handleQueryChange = val => {
+          this.setState({
+            newQuery: {
+              ...newQuery,
+              query: val,
+            },
+          });
+        };
+
+        return (
+          <div>
+            <div className={styles.add_mar_bottom_mid}>
+              <b>Query:</b>
+            </div>
+            <AceEditor
+              data-test="whitelist_query_add"
+              mode="graphql"
+              theme="github"
+              name="whitelist_query_add"
+              value={newQuery.query}
+              minLines={8}
+              maxLines={100}
+              width="100%"
+              showPrintMargin={false}
+              onChange={handleQueryChange}
+            />
+          </div>
+        );
+      };
+
+      const getUploadQueryInput = () => {
+        const handleQueryFileChange = e => {
+          this.setState({
+            newQuery: {
+              ...newQuery,
+              queryFile: e.target.value,
+            },
+          });
+        };
+
+        return (
+          <div>
+            <div className={styles.add_mar_bottom_mid}>
+              <b>Query file:</b>
+            </div>
+            <input
+              type="text"
+              className={'form-control input-sm ' + styles.inline_block}
+              placeholder={'https://xyz.com/query.graphql'}
+              value={newQuery.queryFile}
+              onChange={handleQueryFileChange}
+            />
+          </div>
+        );
+      };
 
       switch (openOption) {
         case 'manual':
-          queryInput = (
-            <div>
-              <div className={styles.add_mar_bottom_mid}>
-                <b>Query:</b>
-              </div>
-              <AceEditor
-                data-test="whitelist_query_add"
-                mode="graphql"
-                theme="github"
-                name="whitelist_query_add"
-                value={''}
-                minLines={8}
-                maxLines={100}
-                width="100%"
-                showPrintMargin={false}
-                onChange={() => {}}
-              />
-            </div>
-          );
-
-          submitBtn = (
-            <Button size={'sm'} color={'yellow'}>
-              Add To Whitelist
-            </Button>
-          );
+          queryInput = getManualQueryInput();
+          submitBtnTxt = 'Add To Whitelist';
           break;
         case 'upload':
-          queryInput = (
-            <div>
-              <div className={styles.add_mar_bottom_mid}>
-                <b>Query file:</b>
-              </div>
-              <input
-                type="text"
-                className={'form-control input-sm ' + styles.inline_block}
-                placeholder={'https://xyz.com/query.graphql'}
-              />
-            </div>
-          );
-
-          submitBtn = (
-            <Button size={'sm'} color={'yellow'}>
-              Upload File To Whitelist
-            </Button>
-          );
+          queryInput = getUploadQueryInput();
+          submitBtnTxt = 'Upload File To Whitelist';
           break;
         default:
           queryInput = '';
       }
 
       if (queryInput) {
+        const handleNameChange = e => {
+          this.setState({
+            newQuery: {
+              ...newQuery,
+              name: e.target.value,
+            },
+          });
+        };
+
         const nameInput = (
           <div>
             <div className={styles.add_mar_bottom_mid}>
@@ -93,15 +122,21 @@ class AddWhitelistQuery extends React.Component {
               type="text"
               className={'form-control input-sm ' + styles.inline_block}
               placeholder={'query_name'}
+              value={newQuery.name}
+              onChange={handleNameChange}
             />
           </div>
         );
 
         addSection = (
-          <div className={styles.add_mar_top}>
+          <div key={openOption} className={styles.add_mar_top}>
             <div>{nameInput}</div>
             <div className={styles.add_mar_top}>{queryInput}</div>
-            <div className={styles.add_mar_top}>{submitBtn}</div>
+            <div className={styles.add_mar_top}>
+              <Button size={'sm'} color={'yellow'}>
+                {submitBtnTxt}
+              </Button>
+            </div>
           </div>
         );
       }
@@ -112,9 +147,9 @@ class AddWhitelistQuery extends React.Component {
       <div>
         <h4 className={styles.subheading_text}>Add a new query to whitelist</h4>
         <div className={styles.subsection}>
-          <Button onClick={handleManualClick}>Add query manually</Button>
+          <Button onClick={handleAddClick('manual')}>Add query manually</Button>
           <span>&nbsp;&nbsp;OR&nbsp;&nbsp;</span>
-          <Button onClick={handleUploadClick}>Upload query</Button>
+          <Button onClick={handleAddClick('upload')}>Upload query</Button>
           <div>{getOpenAddSection()}</div>
         </div>
       </div>

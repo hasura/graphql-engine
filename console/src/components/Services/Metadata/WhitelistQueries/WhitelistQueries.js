@@ -5,8 +5,8 @@ import AddWhitelistQuery from './AddWhitelistQuery';
 import WhitelistQueriesList from './WhitelistQueriesList';
 
 const WhitelistQueries = props => {
-  // const { dispatch, supportQueryWhitelist, metadata } = props;
-  const { dispatch, metadata } = props;
+  // const { dispatch, supportQueryWhitelist, whitelistQueries } = props;
+  const { dispatch, whitelistQueries } = props;
 
   const styles = require('./WhitelistQueries.scss');
 
@@ -27,7 +27,7 @@ const WhitelistQueries = props => {
           <hr />
           <WhitelistQueriesList
             dispatch={dispatch}
-            whitelistQueries={metadata.whitelistQueries}
+            whitelistQueries={whitelistQueries}
           />
         </div>
       </div>
@@ -38,7 +38,7 @@ const WhitelistQueries = props => {
 const mapStateToProps = state => {
   return {
     supportQueryWhitelist: state.main.supportQueryWhitelist,
-    metadata: state.metadata,
+    whitelistQueries: state.metadata.whitelistQueries,
   };
 };
 
