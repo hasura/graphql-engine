@@ -1,4 +1,4 @@
-# Event trigger boilerplates on Zeit Now
+# Event trigger boilerplates on Netlify
 
 Contributions are welcome for boilerplates in other languages.
 
@@ -13,7 +13,7 @@ Checkout [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html)
 
 ###  Setup `netlify-cli`
 
-1. Create a Zeit account @ https://app.netlify.com
+1. Create a Netlify account @ https://app.netlify.com
 2. Download [netlify-cli](https://www.netlify.com/docs/cli/):
    ```bash
    npm install netlify-cli -g
