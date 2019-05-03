@@ -40,7 +40,10 @@ class UITest extends Component {
           <Button size="small" type="secondary">Socondary Btn</Button>
         </div>
         <div className={styles.mb20}>
-          <RadioBtn>Radio Btn</RadioBtn>
+          <RadioBtn>checkbox1</RadioBtn>
+        </div>
+        <div className={styles.mb20}>
+          <RadioBtn>checkbox2</RadioBtn>
         </div>
         <div className={styles.mb20}>
           <SwitchButton />

@@ -3,7 +3,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import PropTypes from 'prop-types';
 import styles from './ReusableTabs.scss';
 
-class ReusableTabs extends Component {
+class ReusableTabs extends React.Component {
   constructor() {
     super();
 
