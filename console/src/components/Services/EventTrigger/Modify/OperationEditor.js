@@ -82,6 +82,10 @@ class OperationEditor extends React.Component {
       dispatch,
       serverVersion,
     } = this.props;
+    /*
+     * Query types will have `CONSOLE_QUERY` only for version > 45
+     *
+     * */
     const queryTypes = getValidQueryTypes(serverVersion);
     const renderOperation = (qt, i) => {
       let isChecked = false;
