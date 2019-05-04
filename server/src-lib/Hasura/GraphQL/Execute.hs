@@ -322,7 +322,14 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
-      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      finalHdrs  = foldr Map.union Map.empty hdrMaps
+      options    = wreqOptions manager (Map.toList finalHdrs)
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
