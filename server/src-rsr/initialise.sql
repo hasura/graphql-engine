@@ -443,7 +443,8 @@ select
   coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
-  coalesce(views.view_info, 'null') as view_info
+  coalesce(views.view_info, 'null') as view_info,
+  coalesce(fkeys.fkey_info, '[]') as foreign_keys
 from
   information_schema.tables as tables
   left outer join (
@@ -509,6 +510,30 @@ from
   ) views on (
     tables.table_schema = views.table_schema
     AND tables.table_name = views.table_name
+  )
+  left outer join (
+    select
+      table_schema,
+      table_name,
+      json_agg(
+        json_build_object(
+          'constraint', constraint_name,
+          'column_mapping', column_mapping,
+          'ref_table',
+          json_build_object(
+            'schema', ref_table_table_schema,
+            'name', ref_table
+          )
+        )
+      ) as fkey_info
+      from
+          hdb_catalog.hdb_foreign_key_constraint
+     group by
+    table_schema,
+    table_name
+  ) fkeys on (
+    tables.table_schema = fkeys.table_schema
+    AND tables.table_name = fkeys.table_name
   )
 );
 

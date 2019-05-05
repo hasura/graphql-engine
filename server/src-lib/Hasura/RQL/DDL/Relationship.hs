@@ -23,7 +23,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission         (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
@@ -82,9 +81,14 @@ checkForFldConfilct tabInfo f =
       ]
     Nothing -> return ()
 
-onlyOneColMapping :: [CatalogFKey] -> [CatalogFKey]
-onlyOneColMapping =
-  filter (\k -> length (HM.toList $ _cfkColumnMapping k) == 1)
+filterFkeys :: PGCol -> [ForeignKeyInfo] -> [ForeignKeyInfo]
+filterFkeys col = filter filterFn
+  where
+    filterFn fk =
+      let colMapping = fkiColumnMapping fk
+          hasCol = isJust $ HM.lookup col colMapping
+          hasOnlyOneCol = length (HM.toList colMapping) == 1
+      in hasCol && hasOnlyOneCol
 
 validateObjRel
   :: (QErrM m, CacheRM m)
@@ -109,8 +113,8 @@ createObjRelP1 (WithTable qt rd) = do
 
 objRelP2Setup
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> [CatalogFKey] -> RelDef ObjRelUsing -> m ()
-objRelP2Setup qt fkeys (RelDef rn ru _) = do
+  => QualifiedTable -> RelDef ObjRelUsing -> m ()
+objRelP2Setup qt (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
     RUManual (ObjRelManualConfig rm) -> do
       let refqt = rmTable rm
@@ -120,11 +124,11 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
       return (RelInfo rn ObjRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn cn -> do
       -- TODO: validation should account for this too
-      let fkeyDetails = onlyOneColMapping $ getFkeyDetails cn
-      case fkeyDetails of
+      fkeys <- (filterFkeys cn . tiForeignKeys) <$> askTabInfo qt
+      case fkeys of
         [] -> throw400 ConstraintError
                 "no foreign constraint exists on the given column"
-        [CatalogFKey _ refqt consName colMap] -> do
+        [ForeignKeyInfo consName refqt colMap] -> do
           let deps = [ SchemaDependency (SOTableObj qt $ TOCons consName) "fkey"
                      , SchemaDependency (SOTableObj qt $ TOCol cn) "using_col"
                      -- this needs to be added explicitly to handle the remote table
@@ -138,10 +142,6 @@ objRelP2Setup qt fkeys (RelDef rn ru _) = do
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
-  where
-    getFkeyDetails cn = filterCol cn $ filterTables fkeys
-    filterTables = filter (\k -> _cfkTable k == qt)
-    filterCol col = filter (\k -> isJust (HM.lookup col $ _cfkColumnMapping k))
 
 objRelP2
   :: ( QErrM m
@@ -152,8 +152,7 @@ objRelP2
   -> ObjRelDef
   -> m ()
 objRelP2 qt rd@(RelDef rn ru comment) = do
-  fkeys <- catMaybes <$> liftTx fetchFkeyCatalog
-  objRelP2Setup qt fkeys rd
+  objRelP2Setup qt rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
 createObjRelP2
@@ -192,8 +191,8 @@ validateArrRel qt (RelDef rn ru _) = do
 
 arrRelP2Setup
   :: (QErrM m, CacheRWM m)
-  => QualifiedTable -> [CatalogFKey] -> ArrRelDef -> m ()
-arrRelP2Setup qt fkeys (RelDef rn ru _) = do
+  => QualifiedTable -> ArrRelDef -> m ()
+arrRelP2Setup qt (RelDef rn ru _) = do
   (relInfo, deps) <- case ru of
     RUManual (ArrRelManualConfig rm) -> do
       let refqt = rmTable rm
@@ -203,11 +202,11 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
       return (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
     RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
       -- TODO: validation should account for this too
-      let fkeyDetails = onlyOneColMapping $ getFkeyDetails refqt refCol
-      case fkeyDetails of
+      fkeys <- (filterFkeys refCol . tiForeignKeys) <$> askTabInfo refqt
+      case fkeys of
         [] -> throw400 ConstraintError
                 "no foreign constraint exists on the given column"
-        [CatalogFKey _ _ consName colMap] -> do
+        [ForeignKeyInfo consName _ colMap] -> do
           let deps = [ SchemaDependency (SOTableObj refqt $ TOCons consName) "remote_fkey"
                      , SchemaDependency (SOTableObj refqt $ TOCol refCol) "using_col"
                      -- we don't need to necessarily track the remote table like we did in
@@ -220,17 +219,12 @@ arrRelP2Setup qt fkeys (RelDef rn ru _) = do
         _  -> throw400 ConstraintError
                 "more than one foreign key constraint exists on the given column"
   addRelToCache rn relInfo deps qt
-  where
-    getFkeyDetails refqt refCol = filterCol refCol $ filterTables refqt fkeys
-    filterTables refqt = filter (\k -> _cfkTable k == refqt && _cfkRefTable k == qt)
-    filterCol refCol = filter (\k -> isJust (HM.lookup refCol $ _cfkColumnMapping k))
 
 arrRelP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2 qt rd@(RelDef rn u comment) = do
-  fkeys <- catMaybes <$> liftTx fetchFkeyCatalog
-  arrRelP2Setup qt fkeys rd
+  arrRelP2Setup qt rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
 createArrRelP2
@@ -328,36 +322,3 @@ setRelComment (SetRelComment (QualifiedObject sn tn) rn comment) =
              AND table_name = $3
              AND rel_name = $4
                 |] (comment, sn, tn, rn) True
-
-fetchFkeyCatalog :: Q.TxE QErr [Maybe CatalogFKey]
-fetchFkeyCatalog = (Q.getAltJ . runIdentity . Q.getRow)
-  <$> Q.withQE defaultTxErrorHandler [Q.sql|
-    SELECT
-      coalesce(json_agg(foreign_key.info), '[]')
-    FROM
-      hdb_catalog.hdb_table ht
-      LEFT OUTER JOIN (
-        SELECT
-          table_schema,
-          table_name,
-          json_build_object(
-            'table',
-            json_build_object(
-              'schema', table_schema,
-              'name', table_name
-            ),
-            'ref_table',
-            json_build_object(
-              'schema', ref_table_table_schema,
-              'name', ref_table
-            ),
-            'constraint', constraint_name,
-            'column_mapping', column_mapping
-          ) as info
-        FROM
-          hdb_catalog.hdb_foreign_key_constraint
-      ) AS foreign_key ON (
-        foreign_key.table_schema = ht.table_schema
-        and foreign_key.table_name = ht.table_name
-      )
-   |] () True

@@ -1646,7 +1646,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
+    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ _ = tabInfo
     validConstraints = mkValidConstraints constraints
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
