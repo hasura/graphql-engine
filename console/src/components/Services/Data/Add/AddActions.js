@@ -4,7 +4,7 @@ import { loadSchema, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
@@ -156,7 +156,7 @@ const createTableSql = () => {
         if (lCols.length === 0) return;
         tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
           ', '
-        )}) REFERENCES "${refTableName}"(${rCols.join(
+        )}) REFERENCES "${currentSchema}"."${refTableName}"(${rCols.join(
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });

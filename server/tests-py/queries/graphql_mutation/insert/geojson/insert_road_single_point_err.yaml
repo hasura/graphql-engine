@@ -4,7 +4,7 @@ status: 400
 response:
   errors:
   - extensions:
-      path: $.variableValues[0].path.coordinates
+      path: $.variableValues.roads[0].path.coordinates
       code: parse-failed
     message: A LineString needs at least 2 Positions
 query:

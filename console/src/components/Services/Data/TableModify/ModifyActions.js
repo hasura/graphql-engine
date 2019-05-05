@@ -11,7 +11,7 @@ import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
@@ -25,8 +25,8 @@ import {
   generateFKConstraintName,
 } from '../Common/ReusableComponents/utils';
 
-const DELETE_PK_WARNING = `Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
-        Also, this will delete everything associated with the column (included related entities in other tables) permanently?`;
+const DELETE_PK_WARNING =
+  'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
@@ -253,7 +253,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName};`,
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`,
         },
       });
     }
@@ -267,10 +267,10 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     migrationUp.push({
       type: 'run_sql',
       args: {
-        sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName ||
-          generatedConstraintName} foreign key (${lcols.join(
+        sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName ||
+          generatedConstraintName}" foreign key (${lcols.join(
           ', '
-        )}) references "${refTableName}"(${rcols.join(
+        )}) references "${schemaName}"."${refTableName}"(${rcols.join(
           ', '
         )}) on update ${onUpdate} on delete ${onDelete};`,
       },
@@ -279,8 +279,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${constraintName ||
-            generatedConstraintName};`,
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName ||
+            generatedConstraintName}";`,
         },
       },
     ];
@@ -289,7 +289,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       migrationDown.push({
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" add constraint ${constraintName} foreign key (${Object.keys(
+          sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" foreign key (${Object.keys(
             oldConstraint.column_mapping
           )
             .map(lc => `"${lc}"`)
@@ -363,9 +363,9 @@ const removeForeignKey = (index, tableSchema) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${schemaName}"."${tableName}" drop constraint ${
+          sql: `alter table "${schemaName}"."${tableName}" drop constraint "${
             oldConstraint.constraint_name
-          };`,
+          }";`,
         },
       },
     ];

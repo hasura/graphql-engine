@@ -9,13 +9,18 @@ Nested object queries
 You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
+The **name of the nested object** is the same as the name of the object/array relationship configured in
+the console.
+
+You can also filter, sort, aggregate and paginate nested objects in case of array relationships. These are not exposed
+for object relationships as they have only one nested object.
 
 Fetch nested object using an object relationship
 ------------------------------------------------
 The following is an example of a nested object query using the **object relationship** between an article and an
 author.
 
-Fetch a list of articles and the name of each article’s author:
+**Example:** Fetch a list of articles and the name of each article’s author:
 
 .. graphiql::
   :view_only:
@@ -63,7 +68,7 @@ Fetch nested objects using an array relationship
 The following is an example of a nested object query using the **array relationship** between an author and
 articles.
 
-Fetch a list of authors and a nested list of each author’s articles:
+**Example:** Fetch a list of authors and a nested list of each author’s articles:
 
 .. graphiql::
   :view_only:
@@ -135,76 +140,5 @@ Fetch a list of authors and a nested list of each author’s articles:
 
 .. note::
 
-    The name of the nested object is the same as the name of the object or array relationship configured in the
-    console.
-
-Fetch aggregated data on nested objects
----------------------------------------
-The following is an example of a nested object query with aggregations on the **array relationship** between an author
-and articles.
-
-Fetch an author whose id is ``1`` and a nested list of articles with aggregated rating data:
-
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author (where: {id: {_eq: 1}}) {
-        id
-        name
-        articles_aggregate {
-          aggregate {
-            count
-            avg {
-              rating
-            }
-            max {
-              rating
-            }
-          }
-          nodes {
-            id
-            title
-            rating
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 2,
-                "avg": {
-                  "rating": 2.5
-                },
-                "max": {
-                  "rating": 4
-                }
-              },
-              "nodes": [
-                {
-                  "id": 15,
-                  "title": "vel dapibus at",
-                  "rating": 4
-                },
-                {
-                  "id": 16,
-                  "title": "sem duis aliquam",
-                  "rating": 1
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-
-.. note::
-
-    The name of the :ref:`aggregate field <AggregateObject>` is of the form ``<field-name> + _aggregate``
+    You can also :ref:`filter <nested_filter>`, :ref:`sort <nested_sort>`, :ref:`aggregate <nested_aggregate>`
+    and :ref:`paginate <nested_paginate>` nested objects in case of array relationships

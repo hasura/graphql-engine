@@ -1,0 +1,27 @@
+- args:
+    role: user
+    table:
+      name: todos
+      schema: public
+  type: drop_select_permission
+- args:
+    permission:
+      columns:
+      - id
+      - title
+      - is_completed
+      - created_at
+      - updated_at
+      - is_public
+      - user_id
+      filter:
+        _or:
+        - is_public:
+            _eq: "true"
+        - user_id:
+            _eq: X-HASURA-USER-ID
+    role: user
+    table:
+      name: todos
+      schema: public
+  type: create_select_permission

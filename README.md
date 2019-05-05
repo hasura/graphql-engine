@@ -12,7 +12,7 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant,
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io). 
+Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
 ------------------
 
@@ -28,7 +28,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
 * **Realtime**: Convert any GraphQL query to a live query by using subscriptions
-* **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md). 
+* **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly get a ready-to-use GraphQL API
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
@@ -61,7 +61,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 
 <!-- markdown-toc end -->
 
-## Quickstart: 
+## Quickstart:
 
 ### One-click deployment on Heroku
 
@@ -138,7 +138,7 @@ Check out all the example applications in the
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map. 
+  coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/examples/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
@@ -181,14 +181,14 @@ application/website etc. We'd be thrilled if you add the "Powered by Hasura"
 badge to your applications built using Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
   <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- For light backgrounds -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- For dark backgrounds -->
@@ -199,7 +199,7 @@ badge to your applications built using Hasura. ❤️
 
 ## License
 
-The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0). 
+The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
 All **other contents** (except those in [`server`](server), [`cli`](cli) and
 [`console`](console) directories) are available under the [MIT License](LICENSE-community).
@@ -210,4 +210,7 @@ directories.
 
 This readme is available in the following translations:
 
-- [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+
+Translations for other files can be found [here](translations).

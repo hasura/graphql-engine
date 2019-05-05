@@ -94,13 +94,13 @@ mkPayload dbId instanceId version metrics =
 runTelemetry
   :: Logger
   -> HTTP.Manager
-  -> IORef SchemaCache
+  -> IORef (SchemaCache, SchemaCacheVer)
   -> (Text, Text)
   -> IO ()
 runTelemetry (Logger logger) manager cacheRef (dbId, instanceId) = do
   let options = wreqOptions manager []
   forever $ do
-    schemaCache <- readIORef cacheRef
+    schemaCache <- fmap fst $ readIORef cacheRef
     let metrics = computeMetrics schemaCache
         payload = A.encode $ mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload

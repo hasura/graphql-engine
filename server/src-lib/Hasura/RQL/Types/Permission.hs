@@ -1,6 +1,8 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
-       , UserId(..)
+
+       , SessVar
+       , SessVarVal
 
        , UserVars
        , mkUserVars
@@ -51,11 +53,11 @@ adminRole = RoleName "admin"
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRole ==)
 
-newtype UserId = UserId { getUserId :: Word64 }
-  deriving (Show, Eq, FromJSON, ToJSON)
+type SessVar = Text
+type SessVarVal = Text
 
 newtype UserVars
-  = UserVars { unUserVars :: Map.HashMap T.Text T.Text }
+  = UserVars { unUserVars :: Map.HashMap SessVar SessVarVal}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable)
 
 isUserVar :: T.Text -> Bool
@@ -65,9 +67,9 @@ roleFromVars :: UserVars -> Maybe RoleName
 roleFromVars =
   fmap RoleName . getVarVal userRoleHeader
 
-getVarVal :: Text -> UserVars -> Maybe Text
+getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =
-  Map.lookup k . unUserVars
+  Map.lookup (T.toLower k) . unUserVars
 
 getVarNames :: UserVars -> [T.Text]
 getVarNames =
