@@ -2,5 +2,13 @@
 title: "Basic Data Modelling"
 ---
 
-For this tutorial, the GraphQL backend and the basic app UI is already ready.
-Our task will be to convert the "static" UI into a working realtime app.
+In this part of the course, we will build the data model for a realtime todo app. Our todo app will have the following features:
+
+- Users can maintain personal todos
+- Users can view public todos
+- A list of current online users using the app
+
+Broadly this means that we have two models in this app: `users` and `todos`, each with its own set of properties.
+
+We will go over them in the subsequent steps.
+

@@ -6,7 +6,7 @@ const config = {
 	},
 	"header": {
 		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
-		"title": "/ graphql / react",
+		"title": "/ graphql / hasura",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
 		"tweetText": "Check out this GraphQL backend course for frontend developers by @HasuraHQ https://learn.hasura.io/graphql/hasura",
