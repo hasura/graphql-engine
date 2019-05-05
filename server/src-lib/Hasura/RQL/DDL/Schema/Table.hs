@@ -332,9 +332,19 @@ buildSchemaCacheStrict = do
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
-buildSchemaCache = do
+buildSchemaCache = buildSchemaCacheG True
+
+buildSCWithoutSetup
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => m ()
+buildSCWithoutSetup = buildSchemaCacheG False
+
+buildSchemaCacheG
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => Bool -> m ()
+buildSchemaCacheG withSetup = do
   -- clean hdb_views
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  when withSetup $ liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
@@ -384,10 +394,10 @@ buildSchemaCache = do
     modifyErr (\e -> "table " <> qt <<> "; role " <> rn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       case pt of
-          PTInsert -> permHelper sqlGenCtx qt rn pDef PAInsert
-          PTSelect -> permHelper sqlGenCtx qt rn pDef PASelect
-          PTUpdate -> permHelper sqlGenCtx qt rn pDef PAUpdate
-          PTDelete -> permHelper sqlGenCtx qt rn pDef PADelete
+          PTInsert -> permHelper withSetup sqlGenCtx qt rn pDef PAInsert
+          PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
+          PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
+          PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
 
   -- query templates
   forM_ qTemplates $ \(CatalogQueryTemplate qtn qtDefVal) -> do
@@ -410,7 +420,8 @@ buildSchemaCache = do
       etc <- decodeValue configuration
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-      liftTx $ mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
+      when withSetup $ liftTx $
+        mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
   forM_ functions $ \(CatalogFunction qf rawfiM) -> do
@@ -431,13 +442,13 @@ buildSchemaCache = do
   forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
 
   where
-    permHelper sqlGenCtx qt rn pDef pa = do
+    permHelper setup sqlGenCtx qt rn pDef pa = do
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       perm <- decodeValue pDef
       let permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
       (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
-      addPermP2Setup qt permDef permInfo
+      when setup $ addPermP2Setup qt permDef permInfo
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
