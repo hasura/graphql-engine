@@ -141,6 +141,8 @@ processTableChanges ti tableDiff = do
       withOldTabName = do
         -- replace constraints
         replaceConstraints tn
+        -- replace foreign keys
+        replaceFkeys tn
         -- for all the dropped columns
         procDroppedCols tn
         -- for all added columns
@@ -161,9 +163,12 @@ processTableChanges ti tableDiff = do
   maybe withOldTabName withNewTabName mNewName
 
   where
-    TableDiff mNewName droppedCols addedCols alteredCols _ constraints = tableDiff
+    TableDiff mNewName droppedCols addedCols alteredCols _ constraints fkeys = tableDiff
     replaceConstraints tn = flip modTableInCache tn $ \tInfo ->
       return $ tInfo {tiUniqOrPrimConstraints = constraints}
+
+    replaceFkeys tn = flip modTableInCache tn $ \tInfo ->
+      return $ tInfo {tiForeignKeys = fkeys}
 
     procDroppedCols tn =
       forM_ droppedCols $ \droppedCol ->
