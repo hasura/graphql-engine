@@ -1,30 +1,24 @@
 ---
-title: "Tutorial & boilerplate setup"
+title: "Deploy Hasura"
 ---
+Let's start by deploying Hasura.
 
-For this tutorial, the GraphQL backend and the basic app UI is already ready.
-Our task will be to convert the "static" UI into a working realtime app.
+## One-click deployment on Heroku
 
-### Download and run the boilerplate
+The fastest way to try Hasura out is via Heroku.
 
-<!-- FIXME: Add the zip URL here -->
+## Deploy
+- Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
 
-1. Download the boilerplate at: https://learn.hasura.io/graphql/react/boilerplate.zip
-2. Unzip and make sure you're in the `app-boilerplate` directory
-3. Install dependencies and run the "static" app
-    - `npm install`
-    - `npm start`
-4. Signup/login as a user to load the todo app page
+    [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-This is what you should see after the steps above:
+    This will deploy Hasura GraphQL Engine on Heroku. A PostgreSQL database will be automatically provisioned along with Hasura. If you don’t have an account on Heroku, you would be required to sign up. 
+    *Note*: It is free to signup and no credit-card is required.
 
-![Boilerplate after login](./assets/boilerplate-after-login.png)
+## Hasura Console
+- Open the Hasura console
 
-### Load GraphiQL to play with your GraphQL APIs
+   Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
 
-1. Head to https://learn.hasura.io/graphql/graphiql
-2. Log in (so that you can test the GraphQL APIs with a valid user token)
+It should look something like this:
 
-This is what you should see after the steps above:
-
-![GraphiQL after login](./assets/graphiql-after-login.png)
