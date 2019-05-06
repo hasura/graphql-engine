@@ -5,7 +5,7 @@ const RadioBtn = props => {
   const { children, name } = props;
 
   return (
-    <div>
+    <div className={styles.commonRadioBtn}>
         <input type="radio" id={children} name="radio-group" checked />
         <label for={children}>{children}</label>
     </div>

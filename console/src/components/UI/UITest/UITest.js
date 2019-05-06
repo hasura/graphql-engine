@@ -4,9 +4,11 @@ import { connect } from 'react-redux';
 
 import Button from '../Button/Button';
 import RadioBtn from '../RadioBtn/RadioBtn';
+import CheckBox from '../CheckBox/CheckBox';
 import SwitchButton from '../SwitchButton/SwitchButton';
 import Alert from '../Alert/Alert';
 import ReusableTabs from '../ReusableTabs/ReusableTabs';
+import SelectOption from '../SelectOption/SelectOption';
 class UITest extends Component {
   render() {
     const styles = require('./UITest.scss');
@@ -40,10 +42,16 @@ class UITest extends Component {
           <Button size="small" type="secondary">Socondary Btn</Button>
         </div>
         <div className={styles.mb20}>
-          <RadioBtn>checkbox1</RadioBtn>
+          <RadioBtn>Radio1</RadioBtn>
         </div>
         <div className={styles.mb20}>
-          <RadioBtn>checkbox2</RadioBtn>
+          <RadioBtn>Radio2</RadioBtn>
+        </div>
+        <div className={styles.mb20}>
+          <CheckBox>checkbox1</CheckBox>
+        </div>
+        <div className={styles.mb20}>
+          <CheckBox>checkbox2</CheckBox>
         </div>
         <div className={styles.mb20}>
           <SwitchButton />
@@ -61,6 +69,9 @@ class UITest extends Component {
         <div className={styles.mb20}>
           <ReusableTabs tabs={tabs}
           />
+        </div>
+        <div className={styles.mb20}>
+          <SelectOption />
         </div>
       </div>
     );

@@ -1,0 +1,26 @@
+.commonSelectBtn
+{
+  select
+  {
+    font-size: 16px;
+    color: #303030;
+    padding: 10px 40px 10px 15px;
+    border-radius: 2px;
+    border: solid 1px #dddddd;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: url('./images/expand_more.svg') 92% / 22% no-repeat #fff;
+    transition: all .2s ease-out;
+    cursor: pointer;
+    &:hover
+    {
+      transition: all .2s ease-out;
+      box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
+    }
+    &:focus
+    {
+      outline: none;
+    }
+  }
+}

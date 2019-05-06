@@ -28,7 +28,12 @@
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
-  font-weight: bold;
+
+  /* font-weight: bold; */
+  /* Newly added */
+  font-size: 16px;
+  font-weight: 600;
+  color: #454236;
 }
 
 .ReactTable .rt-thead .rt-resizable-header .rt-resizer {
@@ -53,6 +58,9 @@
 .ReactTable .rt-table .rt-thead .rt-td {
   padding-left: 20px !important;
   padding-right: 20px !important;
+  /* Newly added */
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
   border-right: 1px solid rgba(0,0,0,0.1);
 }
 
@@ -64,9 +72,17 @@
 
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
-  padding: 8px;
   border-right: 1px solid rgba(0,0,0,0.1);
   word-wrap: break-word;
+  /* padding: 8px; */
+  /* Newly added */
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  font-size: 16px;
+  font-weight: 400;
+  color: #303030;
 }
 
 .ReactTable .rt-th .ellipsis,
@@ -76,7 +92,9 @@
 }
 
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th {
-  background-color: #f2f2f2 !important;
+  /* background-color: #f2f2f2 !important; */
+  /* Newly added */
+  background-color: #ededed !important;
   color: #4d4d4d;
   font-weight: 600 !important;
   border-bottom: 2px solid #ddd;
