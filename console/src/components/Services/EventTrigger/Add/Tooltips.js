@@ -15,7 +15,19 @@ export const triggerNameDescription = (
 
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
-    Trigger on these operations on the table
+    Trigger event on these operations
+  </Tooltip>
+);
+
+export const dbOperationsDescription = (
+  <Tooltip id="tooltip-db-operations-description">
+    Trigger on database operations on the table
+  </Tooltip>
+);
+
+export const manualOperationsDescription = (
+  <Tooltip id="tooltip-manual-operations-description">
+    Trigger manually from console data browser
   </Tooltip>
 );
 

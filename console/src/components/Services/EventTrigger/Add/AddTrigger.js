@@ -22,7 +22,6 @@ import {
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,
-  TOGGLE_ENABLE_MANUAL_CONFIG,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
   loadTableList,
@@ -32,6 +31,7 @@ import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
+import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 import semverCheck from '../../../../helpers/semver';
 
@@ -40,16 +40,12 @@ class AddTrigger extends Component {
     super(props);
     this.props.dispatch(loadTableList('public'));
     this.state = {
-      advancedExpanded: false,
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
       supportRetryTimeout: false,
       supportManualTriggerInvocations: false,
     };
     this.handleOperationSelection = this.handleOperationSelection.bind(this);
-    this.handleToggleEnableManualOperation = this.handleToggleEnableManualOperation.bind(
-      this
-    );
   }
   componentDidMount() {
     // set defaults
@@ -77,11 +73,6 @@ class AddTrigger extends Component {
   handleOperationSelection = e => {
     const { dispatch } = this.props;
     dispatch(setOperationSelection(e.target.value));
-  };
-
-  handleToggleEnableManualOperation = () => {
-    const { dispatch } = this.props;
-    dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
   };
 
   checkSemVer(version) {
@@ -233,9 +224,7 @@ class AddTrigger extends Component {
       );
     }
   }
-  toggleAdvanced() {
-    this.setState({ advancedExpanded: !this.state.advancedExpanded });
-  }
+
   render() {
     const {
       tableName,
@@ -285,14 +274,6 @@ class AddTrigger extends Component {
       },
     ];
 
-    const manualInvocation = {
-      name: 'enable_manual',
-      testIdentifier: 'enable-manual-operation',
-      isChecked: enableManual,
-      onChange: this.handleToggleEnableManualOperation,
-      displayName: 'Enable running trigger via Data browser',
-    };
-
     const styles = require('../TableCommon/EventTable.scss');
     let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
@@ -335,38 +316,39 @@ class AddTrigger extends Component {
         t => t.table_name === tableName
       );
 
-      if (tableSchema) {
-        return tableSchema.columns.map((colObj, i) => {
-          const column = colObj.column_name;
-          const columnDataType = colObj.udt_name;
-          const checked = operations[type]
-            ? operations[type].includes(column)
-            : false;
-
-          const isDisabled = false;
-          const inputHtml = (
-            <input
-              type="checkbox"
-              checked={checked}
-              value={column}
-              onChange={dispatchToggleColumn}
-              disabled={isDisabled}
-            />
-          );
-          return (
-            <div key={i} className={styles.padd_remove + ' col-md-4'}>
-              <div className={'checkbox '}>
-                <label>
-                  {inputHtml}
-                  {column}
-                  <small> ({columnDataType})</small>
-                </label>
-              </div>
-            </div>
-          );
-        });
+      if (!tableSchema) {
+        return <i>Select a table first to get column list</i>;
       }
-      return null;
+
+      return tableSchema.columns.map((colObj, i) => {
+        const column = colObj.column_name;
+        const columnDataType = colObj.udt_name;
+        const checked = operations[type]
+          ? operations[type].includes(column)
+          : false;
+
+        const isDisabled = false;
+        const inputHtml = (
+          <input
+            type="checkbox"
+            checked={checked}
+            value={column}
+            onChange={dispatchToggleColumn}
+            disabled={isDisabled}
+          />
+        );
+        return (
+          <div key={i} className={styles.padd_remove + ' col-md-4'}>
+            <div className={'checkbox '}>
+              <label>
+                {inputHtml}
+                {column}
+                <small> ({columnDataType})</small>
+              </label>
+            </div>
+          </div>
+        );
+      });
     };
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
@@ -385,16 +367,8 @@ class AddTrigger extends Component {
             {getColumnList('update')}{' '}
           </div>
         ) : (
-          <div>
-            <div
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-              style={{
-                marginTop: '10px',
-                marginBottom: '10px',
-              }}
-            >
-              Applicable to update operation only.
-            </div>
+          <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
+            <i>Applicable only if update operation is selected.</i>
           </div>
         )}
       </div>
@@ -525,33 +499,6 @@ class AddTrigger extends Component {
       );
     });
 
-    const getManualInvocationOption = () => {
-      return (
-        supportManualTriggerInvocations && (
-          <div className={styles.manualInvocationCheckbox}>
-            <label>
-              <input
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-                type="checkbox"
-                value={manualInvocation.name}
-                checked={manualInvocation.isChecked}
-                onChange={manualInvocation.onChange}
-                data-test={manualInvocation.testIdentifier}
-              />
-              Allow invoking this trigger via data browser.{' '}
-              <a
-                href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Read more.
-              </a>
-            </label>
-          </div>
-        )
-      );
-    };
-
     return (
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${
@@ -650,7 +597,14 @@ class AddTrigger extends Component {
                   styles.add_mar_bottom + ' ' + styles.selectOperations
                 }
               >
-                <Operations operations={triggerOnOperations} />
+                <Operations
+                  dispatch={dispatch}
+                  operations={triggerOnOperations}
+                  supportManualTriggerInvocations={
+                    supportManualTriggerInvocations
+                  }
+                  enableManual={enableManual}
+                />
               </div>
               <hr />
               <div className={styles.add_mar_bottom}>
@@ -662,13 +616,6 @@ class AddTrigger extends Component {
                   >
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
-                  <br />
-                  <br />
-                  <small>
-                    Note: Specifying the webhook URL via an environmental
-                    variable is recommended if you have different URLs for
-                    multiple environments.
-                  </small>
                 </h4>
                 <div>
                   {this.state.supportWebhookEnv ? (
@@ -716,43 +663,24 @@ class AddTrigger extends Component {
                     />
                   )}
                 </div>
+                <br />
+                <small>
+                  Note: Specifying the webhook URL via an environmental variable
+                  is recommended if you have different URLs for multiple
+                  environments.
+                </small>
               </div>
               <hr />
-              <div
-                onClick={this.toggleAdvanced.bind(this)}
-                className={styles.toggleAdvanced}
-                data-test="advanced-settings"
+              <CollapsibleToggle
+                title={
+                  <h4 className={styles.subheading_text}>Advanced Settings</h4>
+                }
+                testId="advanced-settings"
               >
-                {this.state.advancedExpanded ? (
-                  <i className={'fa fa-chevron-down'} />
-                ) : (
-                  <i className={'fa fa-chevron-right'} />
-                )}{' '}
-                <b>Advanced Settings</b>
-              </div>
-              {this.state.advancedExpanded ? (
-                <div
-                  className={
-                    styles.advancedOperations +
-                    ' ' +
-                    styles.add_mar_bottom +
-                    ' ' +
-                    styles.add_mar_top +
-                    ' ' +
-                    styles.wd100
-                  }
-                >
-                  {getManualInvocationOption()}
-                  {tableName ? advancedColumnSection : null}
-                  <div
-                    className={
-                      styles.add_mar_bottom +
-                      ' ' +
-                      styles.add_mar_top +
-                      ' ' +
-                      styles.wd100
-                    }
-                  >
+                <div>
+                  {advancedColumnSection}
+                  <hr />
+                  <div className={styles.add_mar_top}>
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
@@ -829,20 +757,13 @@ class AddTrigger extends Component {
                       </div>
                     )}
                   </div>
-                  <div
-                    className={
-                      styles.add_mar_bottom +
-                      ' ' +
-                      styles.add_mar_top +
-                      ' ' +
-                      styles.wd100
-                    }
-                  >
+                  <hr />
+                  <div className={styles.add_mar_top}>
                     <h4 className={styles.subheading_text}>Headers</h4>
                     {heads}
                   </div>
                 </div>
-              ) : null}
+              </CollapsibleToggle>
               <hr />
               <Button
                 type="submit"
