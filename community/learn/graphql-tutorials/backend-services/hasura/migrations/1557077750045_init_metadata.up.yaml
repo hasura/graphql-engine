@@ -112,6 +112,4 @@
         role: user
       table: online_users
       update_permissions: []
-
-    sql: 
   type: replace_metadata
