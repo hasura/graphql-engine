@@ -9,7 +9,7 @@ const useMetadataSemver = serverVersion => {
     supportInconsistentMetadata,
     setSupportInconsistentMetadata,
   ] = useState(false);
-  const [supportQueryWhitelist, setSupportQueryWhitelist] = useState(false);
+  const [supportAllowedQueries, setSupportAllowedQueries] = useState(false);
 
   useEffect(() => {
     if (serverVersion) {
@@ -27,8 +27,8 @@ const useMetadataSemver = serverVersion => {
 
   useEffect(() => {
     if (serverVersion) {
-      setSupportQueryWhitelist(
-        semverCheck('queryWhitelist', serverVersion) // TODO: use actual variable
+      setSupportAllowedQueries(
+        true || semverCheck('allowedQueries', serverVersion) // TODO: use actual variable and remove true
       );
     }
   }, [serverVersion]);
@@ -36,7 +36,7 @@ const useMetadataSemver = serverVersion => {
   return {
     supportMetadata,
     supportInconsistentMetadata,
-    supportQueryWhitelist,
+    supportAllowedQueries,
   };
 };
 
@@ -44,7 +44,7 @@ const Container = ({ location, serverVersion, children, metadata }) => {
   const {
     supportMetadata,
     supportInconsistentMetadata,
-    // supportQueryWhitelist,
+    supportAllowedQueries,
   } = useMetadataSemver(serverVersion);
 
   if (!supportMetadata) {
@@ -56,7 +56,7 @@ const Container = ({ location, serverVersion, children, metadata }) => {
       semverChecks={{
         supportMetadata,
         supportInconsistentMetadata,
-        supportQueryWhitelist: true, // TODO: remove true
+        supportAllowedQueries,
       }}
       location={location}
       metadata={metadata}

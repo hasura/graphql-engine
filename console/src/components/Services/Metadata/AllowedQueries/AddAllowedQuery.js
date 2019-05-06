@@ -1,8 +1,13 @@
 import React from 'react';
 import Button from '../../../Common/Button/Button';
 import AceEditor from 'react-ace';
+import styles from './AllowedQueries.scss';
 
-class AddWhitelistQuery extends React.Component {
+import {
+  addAllowedQuery,
+} from '../Actions';
+
+class AddAllowedQuery extends React.Component {
   constructor(props) {
     super(props);
 
@@ -13,9 +18,8 @@ class AddWhitelistQuery extends React.Component {
   }
 
   render() {
+    const { dispatch } = this.props;
     const { openOption, newQuery } = this.state;
-
-    const styles = require('./WhitelistQueries.scss');
 
     const handleAddClick = option => {
       return () => {
@@ -49,10 +53,10 @@ class AddWhitelistQuery extends React.Component {
               <b>Query:</b>
             </div>
             <AceEditor
-              data-test="whitelist_query_add"
+              data-test="allowed_query_add"
               mode="graphql"
               theme="github"
-              name="whitelist_query_add"
+              name="allowed_query_add"
               value={newQuery.query}
               minLines={8}
               maxLines={100}
@@ -93,11 +97,11 @@ class AddWhitelistQuery extends React.Component {
       switch (openOption) {
         case 'manual':
           queryInput = getManualQueryInput();
-          submitBtnTxt = 'Add To Whitelist';
+          submitBtnTxt = 'Add To Allowed List';
           break;
         case 'upload':
           queryInput = getUploadQueryInput();
-          submitBtnTxt = 'Upload File To Whitelist';
+          submitBtnTxt = 'Upload File To Allowed List';
           break;
         default:
           queryInput = '';
@@ -132,7 +136,7 @@ class AddWhitelistQuery extends React.Component {
 
         const getSubmitBtn = () => {
           const handleSubmit = () => {
-            // dispatch(); // TODO
+            dispatch(addAllowedQuery(newQuery));
           };
 
           return (
@@ -155,11 +159,12 @@ class AddWhitelistQuery extends React.Component {
 
     return (
       <div>
-        <h4 className={styles.subheading_text}>Add a new query to whitelist</h4>
+        <h4 className={styles.subheading_text}>Add a new query to allowed list</h4>
         <div className={styles.subsection}>
-          <Button onClick={handleAddClick('manual')}>Add query manually</Button>
-          <span>&nbsp;&nbsp;OR&nbsp;&nbsp;</span>
-          <Button onClick={handleAddClick('upload')}>Upload query</Button>
+          <Button onClick={handleAddClick('manual')}>Add query</Button>
+          {/*<Button onClick={handleAddClick('manual')}>Add query manually</Button>*/}
+          {/*<span>&nbsp;&nbsp;OR&nbsp;&nbsp;</span>*/}
+          {/*<Button onClick={handleAddClick('upload')}>Upload query</Button>*/}
 
           <div>{getOpenAddSection()}</div>
         </div>
@@ -168,4 +173,4 @@ class AddWhitelistQuery extends React.Component {
   }
 }
 
-export default AddWhitelistQuery;
+export default AddAllowedQuery;

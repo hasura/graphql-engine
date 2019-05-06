@@ -34,12 +34,12 @@ const Sidebar = ({ location, semverChecks, metadata }) => {
     });
   }
 
-  if (semverChecks.supportQueryWhitelist) {
+  if (semverChecks.supportAllowedQueries) {
     sectionsData.push({
-      key: 'whitelist-queries',
-      link: '/metadata/whitelist-queries',
-      dataTestVal: 'metadata-whitelist-queries-link',
-      title: 'Whitelist Queries',
+      key: 'allowed-queries',
+      link: '/metadata/allowed-queries',
+      dataTestVal: 'metadata-allowed-queries-link',
+      title: 'Allowed Queries',
     });
   }
 

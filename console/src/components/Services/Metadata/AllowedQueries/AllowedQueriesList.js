@@ -2,7 +2,14 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
-class WhitelistQueriesList extends React.Component {
+import styles from './AllowedQueries.scss';
+
+import {
+  updateAllowedQuery,
+  deleteAllowedQuery,
+} from '../Actions';
+
+class AllowedQueriesList extends React.Component {
   constructor(props) {
     super(props);
 
@@ -12,17 +19,15 @@ class WhitelistQueriesList extends React.Component {
   }
 
   render() {
-    const { whitelistQueries } = this.props;
+    const { allowedQueries, dispatch } = this.props;
     const { modifiedQueries } = this.state;
 
-    const styles = require('../Metadata.scss');
-
     const getQueryList = () => {
-      if (whitelistQueries.length === 0) {
-        return <b>No queries whitelisted yet</b>;
+      if (allowedQueries.length === 0) {
+        return <b>No queries in allowed list yet</b>;
       }
 
-      return whitelistQueries.map((query, i) => {
+      return allowedQueries.map((query, i) => {
         const collapsedLabel = () => (
           <div>
             <b>{query.name}</b>
@@ -67,10 +72,10 @@ class WhitelistQueriesList extends React.Component {
                   <b>Query:</b>
                 </div>
                 <AceEditor
-                  data-test="whitelist_query_editor"
+                  data-test="allowed_query_editor"
                   mode="graphql"
                   theme="github"
-                  name="whitelist_query_editor"
+                  name="allowed_query_editor"
                   value={modifiedQuery.query}
                   minLines={8}
                   maxLines={100}
@@ -98,11 +103,11 @@ class WhitelistQueriesList extends React.Component {
         };
 
         const onSubmit = () => {
-          // dispatch(); // TODO
+          dispatch(updateAllowedQuery(query.name, modifiedQueries[query.name]));
         };
 
         const onDelete = () => {
-          // dispatch(); // TODO
+          dispatch(deleteAllowedQuery(query.name));
         };
 
         return (
@@ -110,7 +115,7 @@ class WhitelistQueriesList extends React.Component {
             <ExpandableEditor
               editorExpanded={queryEditorExpanded}
               property={`query-${i}`}
-              service="modify-whitelist-query"
+              service="modify-allowed-query"
               saveFunc={onSubmit}
               removeFunc={onDelete}
               collapsedClass={styles.display_flex}
@@ -126,11 +131,11 @@ class WhitelistQueriesList extends React.Component {
 
     return (
       <div>
-        <h4 className={styles.subheading_text}>Whitelisted Queries</h4>
+        <h4 className={styles.subheading_text}>Allowed Queries</h4>
         <div className={styles.subsection}>{getQueryList()}</div>
       </div>
     );
   }
 }
 
-export default WhitelistQueriesList;
+export default AllowedQueriesList;
