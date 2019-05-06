@@ -2,12 +2,19 @@
 title: "Mutation and update cache"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/lXIQxuSZ588" />
+
 Now let's do the integration part. Open `src/components/Todo/TodoItem.js` and add the following code below the other imports:
 
 ```javascript
-import gql from 'graphql-tag';
++ import gql from 'graphql-tag';
 ```
 Let's define the graphql mutation to update the completed status of the todo
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoItem.js" text="src/components/Todo/TodoItem.js" />
 
 ```javascript
 const TodoItem = ({index, todo}) => {
@@ -97,7 +104,7 @@ Now let's add the code for `update` function.
 +          data: {todos: newTodos}
 +        });
 +      }
-+    });
+    });
   };
 
 ```

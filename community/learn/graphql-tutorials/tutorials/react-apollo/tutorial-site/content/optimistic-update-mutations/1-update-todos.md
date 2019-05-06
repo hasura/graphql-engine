@@ -2,6 +2,10 @@
 title: "Update todos - mutation"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/SD_CZ-7Bam4" />
+
 In this part of the tutorial, you will learn how to mark an existing todo as completed by using GraphQL Mutations.
 
 Let's define a graphql query to do a mutation into todos.

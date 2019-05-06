@@ -3,6 +3,16 @@ body {
   font-family: 'Roboto';
 }
 
+.video-responsive {
+  position: relative;
+  padding-bottom: 56.2%;
+}
+.video-responsive iframe{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
 .diffNewLine {
   color: #22863a;
   background-color: #f0fff4;
@@ -11,6 +21,23 @@ body {
 .diffRemoveLine {
   color: red;
   background-color: #ffcccc;
+}
+
+.githubIcon {
+  width: 15px;
+  margin-right: 5px;
+}
+
+.githubSection {
+  display: flex;
+  align-items: center;
+  color: #000;
+  opacity: 0.7;
+}
+
+.githubSection:hover {
+  text-decoration: none;
+  opacity: 1;
 }
 
 .navbar-default .navbar-toggle .icon-bar {

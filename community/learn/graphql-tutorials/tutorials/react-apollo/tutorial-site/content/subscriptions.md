@@ -2,6 +2,11 @@
 title: "Subscriptions to show online users"
 ---
 
+import GithubLink from "../src/GithubLink.js";
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/Zegh4VJqrHM" />
+
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
 Now let's get to the exciting part.
@@ -22,6 +27,8 @@ We have to make this change to see yourself online first. Remember that you are 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's update some code to handle this. 
 
 Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following imports and set the client prop in the constructor
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/OnlineUsers/OnlineUsersWrapper.js" text="src/components/OnlineUsers/OnlineUsersWrapper.js" />
 
 ```javascript
 + import gql from "graphql-tag";

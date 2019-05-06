@@ -2,9 +2,16 @@
 title: "Fetch public todos - subscription"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/Kero00_8bfk" />
+
 Let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPublicList.js` and add the following imports.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPublicList.js" text="src/components/Todo/TodoPublicList.js" />
 
 ```javascript
 import React, { Component, Fragment } from 'react';

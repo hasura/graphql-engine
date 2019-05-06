@@ -2,6 +2,10 @@
 title: "Run mutation, update cache"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/ZgMblvlIg28" />
+
 Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
 
 ```javscript
@@ -40,7 +44,7 @@ The mutate function optionally takes variables, optimisticResponse, refetchQueri
 
 We'll get back to what the render props do a little later below. 
 
-We need to handle the change event so that when user types something on the input box, we update the state.
+We need to handle the change event so that when the user types something on the input box, we update the state.
 
 We are going to make use of `useState` hook for this.
 
