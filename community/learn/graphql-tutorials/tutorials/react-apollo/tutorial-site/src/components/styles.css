@@ -3,6 +3,16 @@ body {
   font-family: 'Roboto';
 }
 
+.video-responsive {
+  position: relative;
+  padding-bottom: 56.2%;
+}
+.video-responsive iframe{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
 .diffNewLine {
   color: #22863a;
   background-color: #f0fff4;

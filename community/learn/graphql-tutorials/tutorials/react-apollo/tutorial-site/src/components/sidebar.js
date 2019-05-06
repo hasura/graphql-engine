@@ -199,7 +199,6 @@ const SidebarLayout = ({ location }) => (
               key={node.fields.slug}
               to={`${node.fields.slug}`}
               level={node.fields.slug.split("/").length - 2}
-              // active={location? location.pathname === ('/graphql/react' + node.fields.slug): false}
               active={isActive}
             >
               {node.fields.title}

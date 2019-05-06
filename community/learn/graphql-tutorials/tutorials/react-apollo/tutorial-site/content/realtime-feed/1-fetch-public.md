@@ -2,7 +2,10 @@
 title: "Fetch public todos - subscription"
 ---
 
-import GithubLink from '../../src/GithubLink.js'
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/Kero00_8bfk" />
 
 Let's define the graphql query to be used:
 

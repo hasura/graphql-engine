@@ -54,22 +54,11 @@ const PrimaryKeyEditor = ({
   }
 
   const pkEditorCollapsedLabel = () => (
-    <div>
-      <div className="container-fluid">
-        <div className="row">
-          <h5 className={styles.padd_bottom}>
-            {pkConfigText ? pkConfigText : 'No primary key'}
-            &nbsp;
-          </h5>
-        </div>
-      </div>
-    </div>
+    <div>{pkConfigText ? pkConfigText : 'No primary key'}</div>
   );
 
   // label next to the button when the editor is expanded
-  const pkEditorExpandedLabel = () => (
-    <h5 className={styles.padd_bottom}>{pkConfigText}</h5>
-  );
+  const pkEditorExpandedLabel = () => <div>{pkConfigText}</div>;
 
   // expanded editor content
   const pkEditorExpanded = () => (
