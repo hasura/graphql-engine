@@ -137,10 +137,10 @@ instance FromJSON CreateEventTriggerQuery where
         isMatch = TDFA.match compiledRegex (T.unpack name)
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
-    if any isJust [insert, update, delete] then
+    if any isJust [insert, update, delete] || enableManual then
       return ()
       else
-      fail "atleast one amongst insert/update/delete operations must be provided"
+      fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
