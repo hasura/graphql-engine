@@ -141,6 +141,26 @@ community tooling to write your own client-facing GraphQL gateway that interacts
   it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
+
+Authorization in your remote schema server
+------------------------------------------
+
+Hasura will forward the resolved ``x-hasura-*`` values as headers to your remote
+schema. You can use this information to apply authorization rules in your
+server. You don't have to redo authorization in your remote schema server.
+
+You can also configure Hasura to have:
+1. static header values that are sent to the remote server
+2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
+
+In case there are multiple headers with same name, the order of precedence is:
+configuration headers > resolved user (``x-hasura-*``) variables > client headers
+
+So for example, if client sends an ``Authorization`` header, and the
+configuration also has ``Authorization`` header, the configuration header value
+will selected.
+
+
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------
 
