@@ -1,10 +1,8 @@
-import semverCheck from '../../../../helpers/semver';
-
 export const CONSOLE_QUERY = 'Allow invoking this trigger via data browser';
 export const INTERNAL_CONSOLE_QUERY_REP = 'enable_manual';
-export const getValidQueryTypes = version => {
+export const getValidQueryTypes = supportManualTriggerInvocations => {
   const defaultQueryTypes = ['insert', 'update', 'delete'];
-  if (semverCheck('manualTriggers', version)) {
+  if (supportManualTriggerInvocations) {
     defaultQueryTypes.push(CONSOLE_QUERY);
   }
   return defaultQueryTypes;

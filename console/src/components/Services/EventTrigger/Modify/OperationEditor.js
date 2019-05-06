@@ -4,8 +4,6 @@ import Tooltip from './Tooltip';
 
 import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
 
-import semverCheck from '../../../../helpers/semver';
-
 import {
   getValidQueryTypes,
   queryToInternalNameMap,
@@ -22,7 +20,11 @@ class OperationEditor extends React.Component {
     return toggleQueryType(upObj);
   };
   setValues = () => {
-    const { dispatch, definition, serverVersion } = this.props;
+    const {
+      dispatch,
+      definition,
+      supportManualTriggerInvocations,
+    } = this.props;
     /*
      * Loop through the keys in definition,
      * this object will have actual internal name.
@@ -54,7 +56,7 @@ class OperationEditor extends React.Component {
     /* To be done only for versions supporting manualTriggers and definition doesn't contain event_manual key
      * */
     if (
-      semverCheck('manualTriggers', serverVersion) &&
+      supportManualTriggerInvocations &&
       !(INTERNAL_CONSOLE_QUERY_REP in definition)
     ) {
       /* If the enable_manual key is not available
@@ -80,13 +82,13 @@ class OperationEditor extends React.Component {
       save,
       modifyTrigger,
       dispatch,
-      serverVersion,
+      supportManualTriggerInvocations,
     } = this.props;
     /*
      * Query types will have `CONSOLE_QUERY` only for version > 45
      *
      * */
-    const queryTypes = getValidQueryTypes(serverVersion);
+    const queryTypes = getValidQueryTypes(supportManualTriggerInvocations);
     const renderOperation = (qt, i) => {
       let isChecked = false;
       if (qt === CONSOLE_QUERY) {

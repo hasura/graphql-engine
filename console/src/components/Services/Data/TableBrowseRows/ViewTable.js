@@ -78,14 +78,32 @@ class ViewTable extends Component {
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
+      supportManualTriggerInvocations: false,
     };
     this.getInitialData(this.props.tableName);
+  }
+
+  componentDidMount() {
+    const { serverVersion } = this.props;
+    if (serverVersion) {
+      this.checkSupportedFeatures(serverVersion);
+    }
+  }
+
+  checkSupportedFeatures(version) {
+    if (semverCheck('manualTriggers', version)) {
+      this.setState({ supportManualTriggerInvocations: true });
+    }
   }
 
   componentWillReceiveProps(nextProps) {
     // const dispatch = this.props.dispatch;
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
+    }
+    const { serverVersion } = nextProps;
+    if (serverVersion && serverVersion !== this.props.serverVersion) {
+      this.checkSupportedFeatures(serverVersion);
     }
   }
 
@@ -141,8 +159,8 @@ class ViewTable extends Component {
   };
 
   retrieveManualTriggers = tableName => {
-    const { dispatch, serverVersion } = this.props;
-    return semverCheck('manualTriggers', serverVersion)
+    const { dispatch } = this.props;
+    return this.state.supportManualTriggerInvocations
       ? dispatch(fetchManualTriggers(tableName))
       : Promise.resolve();
   };
@@ -270,7 +288,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };
 };

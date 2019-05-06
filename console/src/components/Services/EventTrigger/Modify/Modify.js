@@ -11,19 +11,50 @@ import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
+import semverCheck from '../../../../helpers/semver';
 
 import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
 
 class Modify extends React.Component {
-  componentDidMount() {
-    this.props.dispatch(setDefaults());
+  constructor(props) {
+    super(props);
+    this.state = {
+      supportManualTriggerInvocations: false,
+    };
   }
+
+  componentDidMount() {
+    const { serverVersion, dispatch } = this.props;
+    dispatch(setDefaults());
+    if (serverVersion) {
+      this.checkSemver(serverVersion);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { serverVersion } = nextProps;
+    if (serverVersion && serverVersion !== this.props.serverVersion) {
+      this.checkSemver(serverVersion);
+    }
+  }
+
   componentWillUnmount() {
     const { dispatch } = this.props;
     dispatch({
       type: RESET_MODIFY_STATE,
     });
   }
+
+  checkSemver(version) {
+    this.checkManualTriggerInvocationSupport(version);
+  }
+
+  checkManualTriggerInvocationSupport(version) {
+    this.setState({
+      supportManualTriggerInvocations: semverCheck('manualTriggers', version),
+    });
+  }
+
   render() {
     const {
       modifyTriggerName,
@@ -33,6 +64,8 @@ class Modify extends React.Component {
       dispatch,
       tableSchemas,
     } = this.props;
+
+    const { supportManualTriggerInvocations } = this.state;
 
     const currentTrigger = triggerList.find(
       tr => tr.name === modifyTriggerName
@@ -90,7 +123,7 @@ class Modify extends React.Component {
             newDefinition={null}
             styles={styles}
             save={() => dispatch(save('ops', modifyTriggerName))}
-            serverVersion={this.props.serverVersion}
+            supportManualTriggerInvocations={supportManualTriggerInvocations}
           />
           <RetryConfEditor
             retryConf={retry_conf}

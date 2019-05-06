@@ -44,6 +44,7 @@ class AddTrigger extends Component {
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
       supportRetryTimeout: false,
+      supportManualTriggerInvocations: false,
     };
     this.handleOperationSelection = this.handleOperationSelection.bind(this);
     this.handleToggleEnableManualOperation = this.handleToggleEnableManualOperation.bind(
@@ -94,6 +95,7 @@ class AddTrigger extends Component {
       } else {
         this.updateSupportColumnChangeFeature(false);
       }
+      this.checkManualTriggerInvocationSupport(version);
     } catch (e) {
       this.updateSupportColumnChangeFeature(false);
       console.error(e);
@@ -111,6 +113,12 @@ class AddTrigger extends Component {
     const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
     this.setState({ supportRetryTimeout });
     return Promise.resolve();
+  }
+
+  checkManualTriggerInvocationSupport(version) {
+    this.setState({
+      supportManualTriggerInvocations: semverCheck('manualTriggers', version),
+    });
   }
 
   updateSupportColumnChangeFeature(val) {
@@ -245,10 +253,13 @@ class AddTrigger extends Component {
       webhookURL,
       webhookUrlType,
       enableManual,
-      serverVersion,
     } = this.props;
 
-    const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
+    const {
+      supportColumnChangeFeature,
+      supportRetryTimeout,
+      supportManualTriggerInvocations,
+    } = this.state;
 
     const triggerOnOperations = [
       {
@@ -516,7 +527,7 @@ class AddTrigger extends Component {
 
     const getManualInvocationOption = () => {
       return (
-        semverCheck('manualTriggers', serverVersion) && (
+        supportManualTriggerInvocations && (
           <div className={styles.manualInvocationCheckbox}>
             <label>
               <input
@@ -868,7 +879,7 @@ const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    serverVersion: state.main.serverVersion,
   };
 };
 
