@@ -7,9 +7,9 @@ Invoke trigger via console
   :local:
 
 
-If you checked the box called ``Invoke trigger via Data Browser`` in the Advanced Settings of your Event Trigger, then you can use the Hasura console or API (:ref:`invoke_event_trigger`) to invoke triggers on rows manually.
+If you checked the box called ``Allow invoking this trigger via data browser`` in the Advanced Settings of your Event Trigger, then you can use the Hasura console or API (:ref:`invoke_event_trigger`) to invoke triggers on rows manually.
 
-In the Data tab, go to your table and browse rows. Choose the run icon next to any row to see the list of event triggers setup on its table:
+In the Data tab, go to your table and browse rows. Choose the ``RUN`` icon next to any row to see the list of event triggers setup on its table:
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/select-manual-trigger.png
 

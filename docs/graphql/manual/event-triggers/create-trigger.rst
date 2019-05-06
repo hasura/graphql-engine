@@ -40,7 +40,7 @@ Advanced Settings
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
 
-Invoke trigger via Data Browser
+Allow trigger via data browser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Checking this box allows you to invoke an event trigger on any row via the Hasura console. Enabled by default.
