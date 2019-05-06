@@ -580,9 +580,9 @@ class EchoGraphQL(RequestHandler):
 
 
 class HeaderTest(graphene.ObjectType):
-    hello = graphene.String(arg=graphene.String(default_value="world"))
+    wassup = graphene.String(arg=graphene.String(default_value='world'))
 
-    def resolve_hello(self, info, arg):
+    def resolve_wassup(self, info, arg):
         headers = info.context
         if not (headers.get_all('x-hasura-test') == ['abcd'] and
                 headers.get_all('x-hasura-role') == ['user'] and

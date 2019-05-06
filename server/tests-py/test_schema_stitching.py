@@ -250,20 +250,26 @@ class TestAddRemoteSchemaTbls:
                                      headers=conf_hdrs, client_hdrs=True)
         st_code, resp = hge_ctx.v1q(add_remote)
         assert st_code == 200, resp
-        q = {'query': '{ hello }'}
+        q = {'query': '{ wassup }'}
         hdrs = {
             'x-hasura-test': 'xyzz',
             'x-hasura-role': 'user',
             'x-hasura-user-id': 'abcd1234',
             'Authorization': 'Bearer abcdef'
         }
-        resp = hge_ctx.post(hge_ctx.hge_url+'/v1alpha1/graphql', json=q, headers=hdrs)
+        if hge_ctx.hge_key:
+            hdrs['x-hasura-admin-secret'] = hge_ctx.hge_key
+
+        resp = hge_ctx.http.post(hge_ctx.hge_url+'/v1alpha1/graphql', json=q,
+                                 headers=hdrs)
+        print(resp.status_code, resp.json())
         assert resp.status_code == 200
         res = resp.json()
         assert 'data' in res
-        assert res['data']['hello'] == 'Hello world'
+        assert res['data']['wassup'] == 'Hello world'
 
-        hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "header-graphql"}})
+        hge_ctx.v1q({'type': 'remove_remote_schema',
+                     'args': {'name': 'header-graphql'}})
         assert st_code == 200, resp
 
 
