@@ -1,6 +1,6 @@
 import { defaultViewState } from '../EventState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from 'utils/requestAction';
+import requestAction from '../../../../utils/requestAction';
 import pendingFilterReducer from './FilterActions';
 import { findTableFromRel } from '../utils';
 import dataHeaders from '../Common/Headers';

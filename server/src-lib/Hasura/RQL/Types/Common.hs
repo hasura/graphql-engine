@@ -15,12 +15,10 @@ module Hasura.RQL.Types.Common
        , ToAesonPairs(..)
        , WithTable(..)
        , ColVals
-       , PreSetCols
        , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
-import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -59,7 +57,9 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable RelType
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -140,7 +140,6 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
     object $ ("table" .= tn):toAesonPairs rel
 
 type ColVals = HM.HashMap PGCol Value
-type PreSetCols = HM.HashMap PGCol S.SQLExp
 
 data MutateResp
   = MutateResp

@@ -3,6 +3,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
+  , mkInconsMetadataLog
   , mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
@@ -35,6 +36,7 @@ import           Hasura.HTTP
 import qualified Hasura.Logging              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
 
@@ -68,6 +70,28 @@ instance ToJSON PGLog where
 instance L.ToEngineLog PGLog where
   toEngineLog pgLog =
     (plLogLevel pgLog, "pg-client", toJSON pgLog)
+
+data MetadataLog
+  = MetadataLog
+  { mlLogLevel :: !L.LogLevel
+  , mlMessage  :: !T.Text
+  , mlInfo     :: !Value
+  } deriving (Show, Eq)
+
+instance ToJSON MetadataLog where
+  toJSON (MetadataLog _ msg infoVal) =
+    object [ "message" .= msg
+           , "info" .= infoVal
+           ]
+
+instance L.ToEngineLog MetadataLog where
+  toEngineLog ml =
+    (mlLogLevel ml, "metadata", toJSON ml)
+
+mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog objs =
+  MetadataLog L.LevelWarn "Inconsistent Metadata!" $
+    object [ "objects" .= objs]
 
 data WebHookLog
   = WebHookLog

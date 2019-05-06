@@ -10,7 +10,7 @@ fett==0.3.2
 future==0.16.0
 idna==2.6
 imagesize==0.7.1
-Jinja2==2.9.6
+Jinja2==2.10.1
 livereload==2.5.1
 MarkupSafe==1.0
 pathtools==0.1.2
@@ -31,5 +31,5 @@ sphinxcontrib-swaggerdoc==0.1.7
 sphinxcontrib-websupport==1.0.1
 sphinxcontrib-images==0.7.0
 tornado==4.5.2
-urllib3==1.23
+urllib3==1.24.2
 watchdog==0.8.3

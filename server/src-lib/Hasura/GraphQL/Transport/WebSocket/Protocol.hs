@@ -29,7 +29,7 @@ newtype OperationId
 data StartMsg
   = StartMsg
   { _smId      :: !OperationId
-  , _smPayload :: !GraphQLRequest
+  , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 

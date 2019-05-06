@@ -33,7 +33,7 @@ migrateMetadata
 migrateMetadata buildSC rqlQuery = do
   -- Build schema cache from 'hdb_catalog' only if current
   -- metadata migration depends on metadata added in previous versions
-  when buildSC $ buildSchemaCache
+  when buildSC $ buildSchemaCacheStrict
   -- run the RQL query to Migrate metadata
   void $ runQueryM rqlQuery
 
@@ -331,7 +331,7 @@ migrateCatalog migrationTime = do
        -- update the catalog version
        updateVersion
        -- try building the schema cache
-       buildSchemaCache
+       buildSchemaCacheStrict
        return $ "successfully migrated to " ++ show curCatalogVer
 
     updateVersion =

@@ -322,6 +322,10 @@ func (m *Migrate) ApplyMetadata(data interface{}) error {
 	return m.databaseDrv.ApplyMetadata(data)
 }
 
+func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName)
+}
+
 func (m *Migrate) Query(data []interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {

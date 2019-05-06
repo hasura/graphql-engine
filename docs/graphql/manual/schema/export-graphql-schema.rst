@@ -7,7 +7,7 @@ Exporting the Hasura GraphQL schema
   :local:
 
 If you need to share, introspect or export the GraphQL schema, you can use community tooling such as
-`graphqurl <https://github.com/hasura/graphqurl>`__, `apollo <https://github.com/apollographql/apollo-cli>`__,
+`graphqurl <https://github.com/hasura/graphqurl>`__, `Apollo CLI <https://github.com/apollographql/apollo-tooling>`__,
 `get-graphql-schema <https://github.com/prismagraphql/get-graphql-schema>`__, etc.
 
 Using **graphqurl**
@@ -21,7 +21,7 @@ GraphQL schema:
 .. code-block:: bash
 
   # If the GraphQL engine is running at https://my-graphql-engine.com/v1alpha1/graphql,
-  # without an admin secret key
+  # without an admin secret
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect > schema.graphql
 
   # If Hasura GraphQL Engine is running with an admin secret
@@ -34,3 +34,23 @@ flag ``--format json``:
 
   # Getting the schema in .json format
   gq https://my-graphql-engine.com/v1alpha1/graphql --introspect --format json > schema.json
+
+Using **Apollo CLI**
+--------------------
+
+Using Apollo CLI, you can get the schema as follows:
+
+Run ``npm install -g apollo`` to install the Apollo CLI. You can then run the following command to download the GraphQL schema:
+
+.. code-block:: bash
+
+  # If the GraphQL engine is running at https://my-graphql-engine.com/v1alpha1/graphql,
+  # without an admin secret
+  apollo schema:download --endpoint https://my-graphql-engine.com/v1alpha1/graphql
+
+  # If Hasura GraphQL Engine is running with an admin secret
+  apollo schema:download --endpoint https://my-graphql-engine.com/v1alpha1/graphql --header 'X-Hasura-Admin-Secret: adminsecretkey'
+
+Note that ``apollo schema:download`` is an alias of the command `apollo service:download <https://github.com/apollographql/apollo-tooling#apollo-servicedownload-output>`__.
+
+By default, this downloads the schema to a file called ``schema.json``. This command has no other output types.

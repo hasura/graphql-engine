@@ -48,33 +48,71 @@ data AnnAggOrdBy
   | AAOOp !T.Text !PGCol
   deriving (Show, Eq)
 
-data AnnObCol
+data AnnObColG v
   = AOCPG !PGColInfo
-  | AOCObj !RelInfo !AnnBoolExpSQL !AnnObCol
-  | AOCAgg !RelInfo !AnnBoolExpSQL !AnnAggOrdBy
+  | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
+  | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
 
-type AnnOrderByItem = OrderByItemG AnnObCol
+traverseAnnObCol
+  :: (Applicative f)
+  => (a -> f b) -> AnnObColG a -> f (AnnObColG b)
+traverseAnnObCol f = \case
+  AOCPG pgColInfo -> pure $ AOCPG pgColInfo
+  AOCObj relInfo annBoolExp annObCol ->
+    AOCObj relInfo
+    <$> traverseAnnBoolExp f annBoolExp
+    <*> traverseAnnObCol f annObCol
+  AOCAgg relInfo annBoolExp annAggOb ->
+    AOCAgg relInfo
+    <$> traverseAnnBoolExp f annBoolExp
+    <*> pure annAggOb
+
+type AnnObCol = AnnObColG S.SQLExp
+
+type AnnOrderByItemG v = OrderByItemG (AnnObColG v)
+
+traverseAnnOrderByItem
+  :: (Applicative f)
+  => (a -> f b) -> AnnOrderByItemG a -> f (AnnOrderByItemG b)
+traverseAnnOrderByItem f =
+  traverse (traverseAnnObCol f)
+
+type AnnOrderByItem = AnnOrderByItemG S.SQLExp
 
 data AnnRelG a
   = AnnRelG
   { aarName    :: !RelName -- Relationship name
   , aarMapping :: ![(PGCol, PGCol)] -- Column of left table to join with
   , aarAnnSel  :: !a -- Current table. Almost ~ to SQL Select
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-type ObjSel = AnnRelG AnnSel
-type ArrRel = AnnRelG AnnSel
-type ArrRelAgg = AnnRelG AnnAggSel
+type ObjSelG v = AnnRelG (AnnSimpleSelG v)
+type ObjSel = ObjSelG S.SQLExp
+type ArrRelG v = AnnRelG (AnnSimpleSelG v)
+type ArrRelAggG v = AnnRelG (AnnAggSelG v)
+
+type ArrRelAgg = ArrRelAggG S.SQLExp
 
 type Fields a = [(FieldName, a)]
 
-data ArrSel
-  = ASSimple !ArrRel
-  | ASAgg !ArrRelAgg
+data ArrSelG v
+  = ASSimple !(ArrRelG v)
+  | ASAgg !(ArrRelAggG v)
   deriving (Show, Eq)
 
-type ArrSelFlds = Fields ArrSel
+traverseArrSel
+  :: (Applicative f)
+  => (a -> f b)
+  -> ArrSelG a
+  -> f (ArrSelG b)
+traverseArrSel f = \case
+  ASSimple arrRel -> ASSimple <$> traverse (traverseAnnSimpleSel f) arrRel
+  ASAgg arrRelAgg -> ASAgg <$> traverse (traverseAnnAggSel f) arrRelAgg
+
+type ArrSel = ArrSelG S.SQLExp
+
+type ArrSelFldsG v = Fields (ArrSelG v)
 
 data ColOp
   = ColOp
@@ -82,23 +120,48 @@ data ColOp
   , _colExp :: S.SQLExp
   } deriving (Show, Eq)
 
-data AnnFld
+data AnnFldG v
   = FCol !PGColInfo !(Maybe ColOp)
-  | FObj !ObjSel
-  | FArr !ArrSel
+  | FObj !(ObjSelG v)
+  | FArr !(ArrSelG v)
   | FExp !T.Text
   deriving (Show, Eq)
 
-data TableArgs
+traverseAnnFld
+  :: (Applicative f)
+  => (a -> f b) -> AnnFldG a -> f (AnnFldG b)
+traverseAnnFld f = \case
+  FCol pgColInfo colOpM -> pure $ FCol pgColInfo colOpM
+  FObj sel -> FObj <$> traverse (traverseAnnSimpleSel f) sel
+  FArr sel -> FArr <$> traverseArrSel f sel
+  FExp t -> FExp <$> pure t
+
+type AnnFld = AnnFldG S.SQLExp
+
+data TableArgsG v
   = TableArgs
-  { _taWhere    :: !(Maybe AnnBoolExpSQL)
-  , _taOrderBy  :: !(Maybe (NE.NonEmpty AnnOrderByItem))
+  { _taWhere    :: !(Maybe (AnnBoolExp v))
+  , _taOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG v)))
   , _taLimit    :: !(Maybe Int)
   , _taOffset   :: !(Maybe S.SQLExp)
   , _taDistCols :: !(Maybe (NE.NonEmpty PGCol))
   } deriving (Show, Eq)
 
-noTableArgs :: TableArgs
+traverseTableArgs
+  :: (Applicative f)
+  => (a -> f b) -> TableArgsG a -> f (TableArgsG b)
+traverseTableArgs f (TableArgs wh ordBy lmt ofst distCols) =
+  TableArgs
+  <$> traverse (traverseAnnBoolExp f) wh
+  -- traversing through maybe -> nonempty -> annorderbyitem
+  <*> traverse (traverse (traverseAnnOrderByItem f)) ordBy
+  <*> pure lmt
+  <*> pure ofst
+  <*> pure distCols
+
+type TableArgs = TableArgsG S.SQLExp
+
+noTableArgs :: TableArgsG v
 noTableArgs = TableArgs Nothing Nothing Nothing Nothing Nothing
 
 data PGColFld
@@ -121,15 +184,28 @@ data AggFld
   deriving (Show, Eq)
 
 type AggFlds = Fields AggFld
-type AnnFlds = Fields AnnFld
+type AnnFldsG v = Fields (AnnFldG v)
 
-data TableAggFld
+type AnnFlds = AnnFldsG S.SQLExp
+
+data TableAggFldG v
   = TAFAgg !AggFlds
-  | TAFNodes !AnnFlds
+  | TAFNodes !(AnnFldsG v)
   | TAFExp !T.Text
   deriving (Show, Eq)
 
-type TableAggFlds = Fields TableAggFld
+traverseTableAggFld
+  :: (Applicative f)
+  => (a -> f b) -> TableAggFldG a -> f (TableAggFldG b)
+traverseTableAggFld f = \case
+  TAFAgg aggFlds -> pure $ TAFAgg aggFlds
+  TAFNodes annFlds ->
+    TAFNodes <$> traverse (traverse (traverseAnnFld f)) annFlds
+  TAFExp t -> pure $ TAFExp t
+
+type TableAggFld = TableAggFldG S.SQLExp
+type TableAggFldsG v = Fields (TableAggFldG v)
+type TableAggFlds = TableAggFldsG S.SQLExp
 
 data TableFrom
   = TableFrom
@@ -137,23 +213,101 @@ data TableFrom
   , _tfIden  :: !(Maybe Iden)
   } deriving (Show, Eq)
 
-data TablePerm
+data TablePermG v
   = TablePerm
-  { _tpFilter :: !AnnBoolExpSQL
+  { _tpFilter :: !(AnnBoolExp v)
   , _tpLimit  :: !(Maybe Int)
   } deriving (Eq, Show)
 
-data AnnSelG a
+traverseTablePerm
+  :: (Applicative f)
+  => (a -> f b)
+  -> TablePermG a
+  -> f (TablePermG b)
+traverseTablePerm f (TablePerm boolExp limit) =
+  TablePerm
+  <$> traverseAnnBoolExp f boolExp
+  <*> pure limit
+
+type TablePerm = TablePermG S.SQLExp
+
+data AnnSelG a v
   = AnnSelG
   { _asnFields   :: !a
   , _asnFrom     :: !TableFrom
-  , _asnPerm     :: !TablePerm
-  , _asnArgs     :: !TableArgs
+  , _asnPerm     :: !(TablePermG v)
+  , _asnArgs     :: !(TableArgsG v)
   , _asnStrfyNum :: !Bool
   } deriving (Show, Eq)
 
-type AnnSel = AnnSelG AnnFlds
-type AnnAggSel = AnnSelG TableAggFlds
+getPermLimit :: AnnSelG a v -> Maybe Int
+getPermLimit = _tpLimit . _asnPerm
+
+traverseAnnSimpleSel
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnSimpleSelG a -> f (AnnSimpleSelG b)
+traverseAnnSimpleSel f =
+  traverseAnnSel (traverse (traverse (traverseAnnFld f))) f
+
+traverseAnnAggSel
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnAggSelG a -> f (AnnAggSelG b)
+traverseAnnAggSel f =
+  traverseAnnSel (traverse (traverse (traverseTableAggFld f))) f
+
+traverseAnnSel
+  :: (Applicative f)
+  => (a -> f b) -> (v -> f w)
+  -> AnnSelG a v -> f (AnnSelG b w)
+traverseAnnSel f1 f2 (AnnSelG flds tabFrom perm args strfyNum) =
+  AnnSelG
+  <$> f1 flds
+  <*> pure tabFrom
+  <*> traverseTablePerm f2 perm
+  <*> traverseTableArgs f2 args
+  <*> pure strfyNum
+
+type AnnSimpleSelG v = AnnSelG (AnnFldsG v) v
+type AnnSimpleSel = AnnSimpleSelG S.SQLExp
+
+type AnnAggSelG v = AnnSelG (TableAggFldsG v) v
+type AnnAggSel = AnnAggSelG S.SQLExp
+
+data AnnFnSelG s v
+  = AnnFnSel
+  { _afFn     :: !QualifiedFunction
+  , _afFnArgs :: ![v]
+  , _afSelect :: !s
+  } deriving (Show, Eq)
+
+traverseAnnFnSel
+  :: (Applicative f)
+  => (a -> f b) -> (v -> f w)
+  -> AnnFnSelG a v -> f (AnnFnSelG b w)
+traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
+  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
+
+type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
+type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
+
+traverseAnnFnSimple
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnFnSelSimpleG a -> f (AnnFnSelSimpleG b)
+traverseAnnFnSimple f =
+  traverseAnnFnSel (traverseAnnSimpleSel f) f
+
+type AnnFnSelAggG v = AnnFnSelG (AnnAggSelG v) v
+type AnnFnSelAgg = AnnFnSelAggG S.SQLExp
+
+traverseAnnFnAgg
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnFnSelAggG a -> f (AnnFnSelAggG b)
+traverseAnnFnAgg f =
+  traverseAnnFnSel (traverseAnnAggSel f) f
 
 data BaseNode
   = BaseNode
@@ -188,19 +342,23 @@ data OrderByNode
   | OBNArrNode !S.Alias !ArrNode
   deriving (Show, Eq)
 
-data ArrRelCtx
+data ArrRelCtxG v
   = ArrRelCtx
-  { aacFields    :: !ArrSelFlds
+  { aacFields    :: !(ArrSelFldsG v)
   , aacAggOrdBys :: ![RelName]
   } deriving (Show, Eq)
 
-emptyArrRelCtx :: ArrRelCtx
+type ArrRelCtx = ArrRelCtxG S.SQLExp
+
+emptyArrRelCtx :: ArrRelCtxG a
 emptyArrRelCtx = ArrRelCtx [] []
 
-data ArrNodeItem
-  = ANIField !(FieldName, ArrSel)
+data ArrNodeItemG v
+  = ANIField !(FieldName, ArrSelG v)
   | ANIAggOrdBy !RelName
   deriving (Show, Eq)
+
+type ArrNodeItem = ArrNodeItemG S.SQLExp
 
 data ObjNode
   = ObjNode
