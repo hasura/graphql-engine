@@ -353,4 +353,4 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
       in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (\(n, _) -> isUserVar n) txHdrs
+         filter (\(n, _) -> not $ isUserVar n) txHdrs

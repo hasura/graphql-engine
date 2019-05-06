@@ -584,6 +584,7 @@ class HeaderTest(graphene.ObjectType):
 
     def resolve_wassup(self, info, arg):
         headers = info.context
+        print('recvd headers: ', headers)
         if not (headers.get_all('x-hasura-test') == ['abcd'] and
                 headers.get_all('x-hasura-role') == ['user'] and
                 headers.get_all('x-hasura-user-id') == ['abcd1234'] and
