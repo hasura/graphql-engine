@@ -2,6 +2,8 @@
 title: "Create table users"
 ---
 
+Let's get started by creating the table users.
+
 The `users` table will have the following columns:
 
 - `id` (type text), 

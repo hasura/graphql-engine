@@ -2,7 +2,7 @@
 title: "Create table todos"
 ---
 
-Now let's move on to creating the other model `todos`.
+Now let's move on to creating the other model `todos`
 
 The `todos` table will have the following columns:
 

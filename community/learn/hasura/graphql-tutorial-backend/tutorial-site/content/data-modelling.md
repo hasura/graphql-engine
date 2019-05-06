@@ -12,3 +12,5 @@ Broadly this means that we have two models in this app: `users` and `todos`, eac
 
 We will go over them in the subsequent steps.
 
+As we create tables using the console or directly on postgres, Hasura GraphQL engine creates GraphQL schema object types and corresponding query/mutation fields with resolvers automatically.
+
