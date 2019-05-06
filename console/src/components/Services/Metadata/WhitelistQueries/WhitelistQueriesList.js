@@ -14,18 +14,37 @@ const WhitelistQueriesList = props => {
 
     return whitelistQueries.map((query, i) => {
       const queryEditorExpanded = () => (
-        <AceEditor
-          data-test="whitelist_query_editor"
-          mode="graphql"
-          theme="github"
-          name="whitelist_query_editor"
-          value={query.query}
-          minLines={8}
-          maxLines={100}
-          width="100%"
-          showPrintMargin={false}
-          onChange={() => {}}
-        />
+        <div>
+          <div>
+            <div className={styles.add_mar_bottom_mid}>
+              <b>Query name:</b>
+            </div>
+            <input
+              type="text"
+              className={'form-control input-sm ' + styles.inline_block}
+              value={query.name}
+              placeholder={'query_name'}
+              onChange={() => {}}
+            />
+          </div>
+          <div className={styles.add_mar_top}>
+            <div className={styles.add_mar_bottom_mid}>
+              <b>Query:</b>
+            </div>
+            <AceEditor
+              data-test="whitelist_query_editor"
+              mode="graphql"
+              theme="github"
+              name="whitelist_query_editor"
+              value={query.query}
+              minLines={8}
+              maxLines={100}
+              width="100%"
+              showPrintMargin={false}
+              onChange={() => {}}
+            />
+          </div>
+        </div>
       );
 
       const collapsedLabel = () => (

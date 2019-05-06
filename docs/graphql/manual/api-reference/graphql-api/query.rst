@@ -61,7 +61,7 @@ Query/Subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../queries/index>`.
+    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
 
 Syntax definitions
 ------------------

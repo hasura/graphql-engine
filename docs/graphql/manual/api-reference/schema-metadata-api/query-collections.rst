@@ -1,4 +1,4 @@
-Schema/Metadata API Reference: Whitelist Queries
+Schema/Metadata API Reference: Query collections
 ================================================
 
 .. contents:: Table of contents
@@ -6,7 +6,8 @@ Schema/Metadata API Reference: Whitelist Queries
   :depth: 1
   :local:
 
-Define whitelisted queries using Query collections.
+Group queries using Query collections.
+
 Create/Drop query collections and Add/Drop a query to a collection using following query types.
 
 .. _create_query_collection:
@@ -53,7 +54,7 @@ Args Syntax
      - Name of the query collection
    * - definition
      - true
-     - :ref:`WhitelistQuery` array
+     - :ref:`CollectionQuery` array
      - List of queries
    * - comment
      - false

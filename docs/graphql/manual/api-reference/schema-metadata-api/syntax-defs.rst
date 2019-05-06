@@ -417,15 +417,15 @@ QueryName
 
   String
 
-.. _WhitelistQuery:
+.. _CollectionQuery:
 
-WhitelistQuery
-^^^^^^^^^^^^^^
+CollectionQuery
+^^^^^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
 
    {
-           "name": String,
-           "query": String
+       "name": String,
+       "query": String
    }
