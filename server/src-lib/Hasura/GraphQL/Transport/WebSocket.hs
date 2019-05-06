@@ -122,7 +122,7 @@ data WSServerEnv
   , _wseSQLCtx          :: !SQLGenCtx
   , _wseQueryCache      :: !E.PlanCache
   , _wseServer          :: !WSServer
-  , _wseEnableWhitelist :: !Bool
+  , _wseEnableAllowlist :: !Bool
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData

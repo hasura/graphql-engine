@@ -106,9 +106,9 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc enableWL req = do
 
   when enableWL $
-    -- check if query is whitelisted
-    unless (VQ.isWhitelistedQuery (_grQuery req) (scQueryCollections sc)) $
-      throwVE "query is not whitelisted"
+    -- check if query is in allowlist
+    unless (VQ.isQueryInAllowlist (_grQuery req) (scQueryCollections sc)) $
+      throwVE "query is not in allowlist"
 
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req

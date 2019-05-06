@@ -47,7 +47,7 @@ addCollectionP2 (CreateCollection name defn _) =
     addCollectionToCache name queryList
   where
     CollectionDef queryList = defn
-    duplicateNames = duplicates $ map _wlqName queryList
+    duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -76,10 +76,10 @@ runAddQueryToCollection
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   adminOnly
   addQueryToCollectionInCache collName queryName query
-  liftTx $ addQueryToCollectionCatalog collName whitelistQuery
+  liftTx $ addQueryToCollectionCatalog collName listedQuery
   return successMsg
   where
-    whitelistQuery = WhitelistedQuery queryName query
+    listedQuery = ListedQuery queryName query
 
 runDropCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -134,7 +134,7 @@ fetchCollectionDef collName =
      |] (Identity collName) True
 
 addQueryToCollectionCatalog
-  :: CollectionName -> WhitelistedQuery -> Q.TxE QErr ()
+  :: CollectionName -> ListedQuery -> Q.TxE QErr ()
 addQueryToCollectionCatalog collName q = do
   -- Fetch definition from catalog
   CollectionDef queries <- fetchCollectionDef collName
@@ -155,7 +155,7 @@ delQueryFromCollectionCatalog collName queryName = do
   CollectionDef queries <- fetchCollectionDef collName
 
   let newDef = J.toJSON $ CollectionDef $
-               flip filter queries $ \q -> _wlqName q /= queryName
+               flip filter queries $ \q -> _lqName q /= queryName
 
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|

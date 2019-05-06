@@ -69,8 +69,8 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "--test-whitelisted-queries", action="store_true",
-        help="Run Test cases with Whitelisting queries enabled"
+        "--test-allowlist-queries", action="store_true",
+        help="Run Test cases with allowlist queries enabled"
     )
 
 #By default,
