@@ -150,6 +150,7 @@ schema. You can use this information to apply authorization rules in your
 server. You don't have to redo authorization in your remote schema server.
 
 You can also configure Hasura to have:
+
 1. static header values that are sent to the remote server
 2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
 
@@ -159,6 +160,12 @@ configuration headers > resolved user (``x-hasura-*``) variables > client header
 So for example, if client sends an ``Authorization`` header, and the
 configuration also has ``Authorization`` header, the configuration header value
 will selected.
+
+.. note::
+
+   The headers from client behave similar to the authorization system. If
+   ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
+   client are respected, otherwise they are ignored.
 
 
 Bypassing Hasura's authorization system for remote schema queries
