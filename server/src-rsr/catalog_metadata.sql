@@ -6,7 +6,8 @@ select
     'query_templates', query_templates.items,
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
-    'functions', functions.items
+    'functions', functions.items,
+    'foreign_keys', foreign_keys.items
   )
 from
   (
@@ -37,8 +38,7 @@ from
             'columns', columns,
             'primary_key_columns', primary_key_columns,
             'constraints', constraints,
-            'view_info', view_info,
-            'foreign_keys', foreign_keys
+            'view_info', view_info
           ) as info
         from
           hdb_catalog.hdb_table_info_agg
@@ -160,4 +160,34 @@ from
               and hf_agg.function_schema = hf.function_schema
             )
       ) as q
-   ) as functions
+   ) as functions,
+  (
+    select
+      coalesce(json_agg(foreign_key.info), '[]') as items
+    from
+      hdb_catalog.hdb_table ht
+      left outer join (
+        select
+          table_schema,
+          table_name,
+          json_build_object(
+            'table',
+            json_build_object(
+              'schema', table_schema,
+              'name', table_name
+            ),
+            'ref_table',
+            json_build_object(
+              'schema', ref_table_table_schema,
+              'name', ref_table
+            ),
+            'constraint', constraint_name,
+            'column_mapping', column_mapping
+          ) as info
+        from
+          hdb_catalog.hdb_foreign_key_constraint
+      ) as foreign_key on (
+        foreign_key.table_schema = ht.table_schema
+        and foreign_key.table_name = ht.table_name
+      )
+  ) as foreign_keys

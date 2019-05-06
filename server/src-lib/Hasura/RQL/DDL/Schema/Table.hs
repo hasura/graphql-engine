@@ -83,15 +83,15 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
   return successMsg
   where
     QualifiedObject sn tn = vn
-    mkTableInfo (cols, pCols, constraints, viewInfoM, fkeys) =
+    mkTableInfo (cols, pCols, constraints, viewInfoM) =
       let colMap = M.fromList $ flip map (Q.getAltJ cols) $
             \c -> (fromPGCol $ pgiName c, FIColumn c)
       in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
-                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty (Q.getAltJ fkeys)
+                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty
     fetchTableCatalog = map mkTableInfo <$>
       Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT columns, primary_key_columns,
-                  constraints, view_info, foreign_keys
+                  constraints, view_info
            FROM hdb_catalog.hdb_table_info_agg
            WHERE table_schema = $1 AND table_name = $2
            |] (sn, tn) True
@@ -352,7 +352,9 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions <- liftTx fetchCatalogData
+    eventTriggers remoteSchemas functions fkeyMs <- liftTx fetchCatalogData
+
+  let fkeys = catMaybes fkeyMs
 
   -- tables
   forM_ tables $ \ct -> do
@@ -379,12 +381,12 @@ buildSchemaCacheG withSetup = do
           using <- decodeValue rDef
           let relDef = RelDef rn using Nothing
           validateObjRel qt relDef
-          objRelP2Setup qt relDef
+          objRelP2Setup qt fkeys relDef
         ArrRel -> do
           using <- decodeValue rDef
           let relDef = RelDef rn using Nothing
           validateArrRel qt relDef
-          arrRelP2Setup qt relDef
+          arrRelP2Setup qt fkeys relDef
 
   -- permissions
   forM_ permissions $ \(CatalogPermission qt rn pt pDef cmnt) -> do

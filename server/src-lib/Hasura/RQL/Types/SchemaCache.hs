@@ -12,7 +12,6 @@ module Hasura.RQL.Types.SchemaCache
        , TableConstraint(..)
        , ConstraintType(..)
        , ViewInfo(..)
-       , ForeignKeyInfo(..)
        , isMutable
        , mutableView
        , onlyIntCols
@@ -339,16 +338,6 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
-type ColMapping = M.HashMap PGCol PGCol
-
-data ForeignKeyInfo
-  = ForeignKeyInfo
-  { fkiConstraint    :: !ConstraintName
-  , fkiRefTable      :: !QualifiedTable
-  , fkiColumnMapping :: !ColMapping
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKeyInfo)
-
 data TableInfo
   = TableInfo
   { tiName                  :: !QualifiedTable
@@ -359,7 +348,6 @@ data TableInfo
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  , tiForeignKeys           :: ![ForeignKeyInfo]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
@@ -371,12 +359,11 @@ instance FromJSON TableInfo where
     pkeyCols <- o .: "primary_key_columns"
     constraints <- o .: "constraints"
     viewInfoM <- o .:? "view_info"
-    fkeys <- o .: "foreign_keys"
     isSystemDefined <- o .:? "is_system_defined" .!= False
     let colMap = M.fromList $ flip map columns $
                  \c -> (fromPGCol $ pgiName c, FIColumn c)
     return $ TableInfo name isSystemDefined colMap mempty
-                       constraints pkeyCols viewInfoM mempty fkeys
+                       constraints pkeyCols viewInfoM mempty
 
 data FunctionType
   = FTVOLATILE

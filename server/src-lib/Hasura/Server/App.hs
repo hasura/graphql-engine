@@ -131,17 +131,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx   :: PGExecCtx
-  , scConnInfo    :: Q.ConnInfo
-  , scLogger      :: L.Logger
-  , scCacheRef    :: SchemaCacheRef
-  , scAuthMode    :: AuthMode
-  , scManager     :: HTTP.Manager
-  , scSQLGenCtx   :: SQLGenCtx
-  , scEnabledAPIs :: S.HashSet API
-  , scInstanceId  :: InstanceId
-  , scPlanCache   :: E.PlanCache
-  , scLQState     :: EL.LiveQueriesState
+  { scPGExecCtx    :: PGExecCtx
+  , scConnInfo     :: Q.ConnInfo
+  , scLogger       :: L.Logger
+  , scCacheRef     :: SchemaCacheRef
+  , scAuthMode     :: AuthMode
+  , scManager      :: HTTP.Manager
+  , scSQLGenCtx    :: SQLGenCtx
+  , scEnabledAPIs  :: S.HashSet API
+  , scInstanceId   :: InstanceId
+  , scPlanCache    :: E.PlanCache
+  , scLQState      :: EL.LiveQueriesState
   }
 
 data HandlerCtx
