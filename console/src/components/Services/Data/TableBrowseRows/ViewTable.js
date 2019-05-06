@@ -96,14 +96,20 @@ class ViewTable extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    // const dispatch = this.props.dispatch;
-    if (nextProps.tableName !== this.props.tableName) {
-      this.getInitialData(nextProps.tableName);
-    }
-    const { serverVersion } = nextProps;
-    if (serverVersion && serverVersion !== this.props.serverVersion) {
+  componentDidUpdate(prevProps, prevState) {
+    const { serverVersion } = this.props;
+    if (serverVersion && serverVersion !== prevProps.serverVersion) {
       this.checkSupportedFeatures(serverVersion);
+    }
+    if (
+      this.props.tableName !== prevProps.tableName ||
+      this.state.supportManualTriggerInvocations !==
+        prevState.supportManualTriggerInvocations
+    ) {
+      this.getInitialData(this.props.tableName);
+    }
+    if (this.shouldScrollBottom) {
+      document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
     }
   }
 
@@ -118,12 +124,6 @@ class ViewTable extends Component {
     this.shouldScrollBottom =
       window.innerHeight ===
       document.body.offsetHeight - document.body.scrollTop;
-  }
-
-  componentDidUpdate() {
-    if (this.shouldScrollBottom) {
-      document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
-    }
   }
 
   componentWillUnmount() {
