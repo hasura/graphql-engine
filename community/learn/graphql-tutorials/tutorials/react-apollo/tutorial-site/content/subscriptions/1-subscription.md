@@ -2,7 +2,10 @@
 title: "Subscription"
 ---
 
-import GithubLink from '../../src/GithubLink.js'
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/yZmVWeyoW_4" />
 
 When we had initially set up Apollo, we used Apollo Boost to install the required dependenices. But subscriptions is an advanced use case which Apollo Boost does not support. So we have to install more dependenices to set up subscriptions.
 

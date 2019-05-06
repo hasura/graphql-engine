@@ -2,7 +2,7 @@
 title: "What next?"
 ---
 
-import TwitterShare from './twitter-share';
+import TwitterShare from "./twitter-share";
 
 Congratulations! You have successfully completed the course.
 

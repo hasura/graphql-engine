@@ -7,9 +7,9 @@ WORKDIR /app
 #RUN npm -g install serve
 RUN npm -g install gatsby-cli
 
-COPY package.json ./
+COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 # Bundle app source
 COPY . .
