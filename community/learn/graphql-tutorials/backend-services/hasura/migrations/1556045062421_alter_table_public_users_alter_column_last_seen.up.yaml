@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE "public"."users" ALTER COLUMN "last_seen" DROP NOT NULL;
-  type: run_sql
