@@ -61,7 +61,6 @@ data TableMeta
   , tmTable       :: !QualifiedTable
   , tmColumns     :: ![PGColMeta]
   , tmConstraints :: ![ConstraintMeta]
-  , tmForeignKeys :: ![ForeignKeyInfo]
   } deriving (Show, Eq)
 
 fetchTableMeta :: Q.Tx [TableMeta]
@@ -72,8 +71,7 @@ fetchTableMeta = do
         t.table_name,
         t.table_oid,
         coalesce(c.columns, '[]') as columns,
-        coalesce(f.constraints, '[]') as constraints,
-        coalesce(htia.foreign_keys, '[]') as foreign_keys
+        coalesce(f.constraints, '[]') as constraints
     FROM
         (SELECT
              c.oid as table_oid,
@@ -114,16 +112,13 @@ fetchTableMeta = do
          GROUP BY
              table_schema, table_name) f
         ON (t.table_schema = f.table_schema AND t.table_name = f.table_name)
-        LEFT OUTER JOIN
-            hdb_catalog.hdb_table_info_agg htia
-        ON (t.table_schema = htia.table_schema AND t.table_name = htia.table_name)
     WHERE
         t.table_schema NOT LIKE 'pg_%'
         AND t.table_schema <> 'information_schema'
         AND t.table_schema <> 'hdb_catalog'
                 |] () False
-  forM res $ \(ts, tn, toid, cols, constrnts, fkeys) ->
-    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts) (Q.getAltJ fkeys)
+  forM res $ \(ts, tn, toid, cols, constrnts) ->
+    return $ TableMeta toid (QualifiedObject ts tn) (Q.getAltJ cols) (Q.getAltJ constrnts)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -146,16 +141,14 @@ data TableDiff
   , _tdDroppedFKeyCons :: ![ConstraintName]
   -- The final list of uniq/primary constraint names
   -- used for generating types on_conflict clauses
-  -- and foreign keys used to defined relationships
-  -- TODO: these ideally should't be part of TableDiff
+  -- TODO: this ideally should't be part of TableDiff
   , _tdUniqOrPriCons   :: ![ConstraintName]
-  , _tdForeignKeys     :: ![ForeignKeyInfo]
   } deriving (Show, Eq)
 
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
-  droppedFKeyConstraints uniqueOrPrimaryCons $ tmForeignKeys newtm
+  droppedFKeyConstraints uniqueOrPrimaryCons
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
@@ -198,7 +191,7 @@ getTableChangeDeps ti tableDiff = do
   return $ droppedConsDeps <> droppedColDeps
   where
     tn = tiName ti
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ _ = tableDiff
+    TableDiff _ droppedCols _ _ droppedFKeyConstraints _ = tableDiff
 
 data SchemaDiff
   = SchemaDiff
