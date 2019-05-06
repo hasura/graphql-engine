@@ -1,3 +1,0 @@
-- args:
-    sql: alter table "public"."todos" rename column "text" to "title";
-  type: run_sql
