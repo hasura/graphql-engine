@@ -18,7 +18,6 @@ RUN npm install
 RUN rm -R content
 
 # Bundle app source
-COPY config.js .
 COPY . .
 
 # Build static files
