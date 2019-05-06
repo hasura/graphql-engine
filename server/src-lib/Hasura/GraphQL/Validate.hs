@@ -7,7 +7,7 @@ module Hasura.GraphQL.Validate
   , getQueryParts
   , getAnnVarVals
 
-  , isWhitelistedQuery
+  , isQueryInAllowlist
 
   , VarPGTypes
   , AnnPGVarVals
@@ -199,9 +199,10 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
 
-isWhitelistedQuery :: GQLExecDoc -> CollectionMap -> Bool
-isWhitelistedQuery q cm =
-  gqlQuery `elem` allWhitelistedQueries cm
+isQueryInAllowlist :: GQLExecDoc -> CollectionMap -> Bool
+isQueryInAllowlist q cm =
+  -- consider all listed queries as allowed list
+  gqlQuery `elem` allListedQueries cm
   where
     gqlQuery = GQLQuery $ G.ExecutableDocument $ stripeOffTypeNames $
                unGQLExecDoc q

@@ -30,14 +30,14 @@ newtype GQLQuery
   = GQLQuery {unGQLQuery :: G.ExecutableDocument}
   deriving (Show, Eq, Hashable, Lift, ToJSON, FromJSON)
 
-data WhitelistedQuery
-  = WhitelistedQuery
-  { _wlqName  :: !QueryName
-  , _wlqQuery :: !GQLQuery
+data ListedQuery
+  = ListedQuery
+  { _lqName  :: !QueryName
+  , _lqQuery :: !GQLQuery
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''WhitelistedQuery)
+$(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
 
-type QueryList = [WhitelistedQuery]
+type QueryList = [ListedQuery]
 
 newtype CollectionDef
   = CollectionDef
@@ -56,13 +56,13 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 type QueryMap = HM.HashMap QueryName GQLQuery
 type CollectionMap = HM.HashMap CollectionName QueryMap
 
-allWhitelistedQueries :: CollectionMap -> [GQLQuery]
-allWhitelistedQueries =
+allListedQueries :: CollectionMap -> [GQLQuery]
+allListedQueries =
   HS.toList . HS.fromList . concatMap HM.elems . HM.elems
 
 queryListToMap :: QueryList  -> QueryMap
 queryListToMap ql =
-  HM.fromList $ flip map ql $ \(WhitelistedQuery queryName query) ->
+  HM.fromList $ flip map ql $ \(ListedQuery queryName query) ->
     ( queryName
     -- remove __typename field
     , GQLQuery $ G.ExecutableDocument $

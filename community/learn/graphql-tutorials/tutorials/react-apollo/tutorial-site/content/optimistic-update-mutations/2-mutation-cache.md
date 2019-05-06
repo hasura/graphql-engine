@@ -2,7 +2,10 @@
 title: "Mutation and update cache"
 ---
 
-import GithubLink from '../../src/GithubLink.js'
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/lXIQxuSZ588" />
 
 Now let's do the integration part. Open `src/components/Todo/TodoItem.js` and add the following code below the other imports:
 

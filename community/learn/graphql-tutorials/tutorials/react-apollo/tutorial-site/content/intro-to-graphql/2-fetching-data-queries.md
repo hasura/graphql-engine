@@ -2,6 +2,10 @@
 title: Fetching data - Queries
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/mE1Jgvn4k1g" />
+
 <a name="graphiql"></a>
 ## Try out GraphQL queries
 For this tutorial we've set up a GraphQL API for you. The most common

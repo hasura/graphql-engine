@@ -1,4 +1,4 @@
-description: GraphQL query which is not whitelisted
+description: GraphQL query which is not in allowlist
 url: /v1alpha1/graphql
 status: 400
 response:
@@ -6,7 +6,7 @@ response:
   - extensions:
       path: "$"
       code: validation-failed
-    message: query is not whitelisted
+    message: query is not in allowlist
 query:
   query: |
     query {

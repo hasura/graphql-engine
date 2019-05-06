@@ -142,7 +142,7 @@ data ServerCtx
   , scInstanceId      :: InstanceId
   , scPlanCache       :: E.PlanCache
   , scLQState         :: EL.LiveQueriesState
-  , scEnableWhitelist :: Bool
+  , scEnableAllowlist :: Bool
   }
 
 data HandlerCtx
@@ -303,7 +303,7 @@ v1Alpha1GQHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
-  enableWL <- scEnableWhitelist . hcServerCtx <$> ask
+  enableWL <- scEnableAllowlist . hcServerCtx <$> ask
   GH.runGQ pgExecCtx userInfo sqlGenCtx enableWL planCache
     sc scVer manager reqHeaders query reqBody
 
@@ -314,7 +314,7 @@ gqlExplainHandler query = do
   sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  enableWL <- scEnableWhitelist . hcServerCtx <$> ask
+  enableWL <- scEnableAllowlist . hcServerCtx <$> ask
   GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableWL query
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp

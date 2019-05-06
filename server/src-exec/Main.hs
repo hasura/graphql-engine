@@ -82,7 +82,7 @@ parseHGECommand =
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
-                <*> parseEnableWhitelist
+                <*> parseEnableAllowlist
 
 
 parseArgs :: IO HGEOptions
