@@ -32,6 +32,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
@@ -352,9 +353,9 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeyMs <- liftTx fetchCatalogData
+    eventTriggers remoteSchemas functions fkeys' <- liftTx fetchCatalogData
 
-  let fkeys = catMaybes fkeyMs
+  let fkeys = HS.fromList fkeys'
 
   -- tables
   forM_ tables $ \ct -> do

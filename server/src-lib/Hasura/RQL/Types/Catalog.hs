@@ -74,8 +74,10 @@ data CatalogFKey
   , _cfkRefTable      :: !QualifiedTable
   , _cfkConstraint    :: !ConstraintName
   , _cfkColumnMapping :: !ColMapping
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogFKey)
+
+instance Hashable CatalogFKey
 
 data CatalogMetadata
   = CatalogMetadata
@@ -86,6 +88,6 @@ data CatalogMetadata
   , _cmEventTriggers  :: ![CatalogEventTrigger]
   , _cmRemoteSchemas  :: ![AddRemoteSchemaQuery]
   , _cmFunctions      :: ![CatalogFunction]
-  , _cmForeignKeys    :: ![Maybe CatalogFKey]
+  , _cmForeignKeys    :: ![CatalogFKey]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

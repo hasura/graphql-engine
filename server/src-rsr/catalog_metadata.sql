@@ -165,29 +165,27 @@ from
     select
       coalesce(json_agg(foreign_key.info), '[]') as items
     from
-      hdb_catalog.hdb_table ht
-      left outer join (
+      (
         select
-          table_schema,
-          table_name,
           json_build_object(
             'table',
             json_build_object(
-              'schema', table_schema,
-              'name', table_name
+              'schema', f.table_schema,
+              'name', f.table_name
             ),
             'ref_table',
             json_build_object(
-              'schema', ref_table_table_schema,
-              'name', ref_table
+              'schema', f.ref_table_table_schema,
+              'name', f.ref_table
             ),
-            'constraint', constraint_name,
-            'column_mapping', column_mapping
+            'constraint', f.constraint_name,
+            'column_mapping', f.column_mapping
           ) as info
         from
-          hdb_catalog.hdb_foreign_key_constraint
-      ) as foreign_key on (
-        foreign_key.table_schema = ht.table_schema
-        and foreign_key.table_name = ht.table_name
-      )
+         hdb_catalog.hdb_foreign_key_constraint f
+         left outer join hdb_catalog.hdb_table ht
+         on ( ht.table_schema = f.table_schema
+              and ht.table_name = f.table_name
+            )
+      ) as foreign_key
   ) as foreign_keys
