@@ -27,6 +27,10 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: probe
 ---
 apiVersion: v1
 kind: Service
