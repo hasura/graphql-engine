@@ -18,7 +18,7 @@ The following are examples of different pagination scenarios:
 
 Limit results
 -------------
-Fetch the first 5 authors from the list of all authors:
+**Example:** Fetch the first 5 authors from the list of all authors:
 
 .. graphiql::
   :view_only:
@@ -61,7 +61,7 @@ Fetch the first 5 authors from the list of all authors:
 
 Limit results from an offset
 ----------------------------
-Fetch 5 authors from the list of all authors, starting with the 6th one:
+**Example:** Fetch 5 authors from the list of all authors, starting with the 6th one:
 
 .. graphiql::
   :view_only:
@@ -103,9 +103,11 @@ Fetch 5 authors from the list of all authors, starting with the 6th one:
       }
     }
 
+.. _nested_paginate:
+
 Limit results in a nested object
 --------------------------------
-Fetch a list of authors and a list of 2 of each of their articles:
+**Example:** Fetch a list of authors and a list of their first 2 articles:
 
 .. graphiql::
   :view_only:
@@ -115,7 +117,8 @@ Fetch a list of authors and a list of 2 of each of their articles:
         id
         name
         articles (
-          limit:2
+          limit: 2
+          offset: 0
         ) {
           id
           title

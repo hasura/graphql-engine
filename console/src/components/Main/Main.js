@@ -13,7 +13,7 @@ import semverCheck from '../../helpers/semver';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Data/Metadata/Actions';
+} from '../Services/Metadata/Actions';
 
 const semver = require('semver');
 
@@ -141,12 +141,12 @@ class Main extends React.Component {
 
     const appPrefix = '';
 
-    const logo = require('./white-logo.svg');
-    const github = require('./Github.svg');
-    const discord = require('./Discord.svg');
-    const mail = require('./mail.svg');
-    const docs = require('./logo.svg');
-    const pixHeart = require('./pix-heart.svg');
+    const logo = require('./images/white-logo.svg');
+    const github = require('./images/Github.svg');
+    const discord = require('./images/Discord.svg');
+    const mail = require('./images/mail.svg');
+    const docs = require('./images/logo.svg');
+    const pixHeart = require('./images/pix-heart.svg');
 
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -322,7 +322,7 @@ class Main extends React.Component {
                   Roses are red, <br />
                   Violets are blue;
                   <br />
-                  Star us on Github,
+                  Star us on GitHub,
                   <br />
                   To make our <i className={'fa fa-heart'} /> go wooooo!
                 </li>
@@ -338,7 +338,7 @@ class Main extends React.Component {
                         src={
                           'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
                         }
-                        alt={'Github'}
+                        alt={'GitHub'}
                       />
                     </div>
                     <div className={styles.pixelText}>

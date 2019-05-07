@@ -40,6 +40,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (bsToTxt)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -323,7 +324,14 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
-      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      finalHdrs  = foldr Map.union Map.empty hdrMaps
+      options    = wreqOptions manager (Map.toList finalHdrs)
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
@@ -335,10 +343,15 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
     httpThrow err = throw500 $ T.pack . show $ err
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                 userInfoToList userInfo
-    filteredHeaders = flip filter reqHdrs $ \(n, _) ->
+                     userInfoToList userInfo
+    filteredHeaders = filterUserVars $ flip filter reqHdrs $ \(n, _) ->
       n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
                   , "Origin", "Referer" , "Accept", "Accept-Encoding"
                   , "Accept-Language", "Accept-Datetime"
                   , "Cache-Control", "Connection", "DNT"
                   ]
+
+    filterUserVars hdrs =
+      let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
+      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+         filter (not . isUserVar . fst) txHdrs

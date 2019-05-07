@@ -26,10 +26,10 @@ import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (SQLGenCtx (..), adminUserInfo,
-                                             emptySchemaCache)
+import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
+                                             adminUserInfo, emptySchemaCache)
 import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
-                                             mkWaiApp)
+                                             logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -144,12 +144,12 @@ main =  do
       prepareEvents logger ci
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx pool httpManager am
+        mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
-      sc <- getSCFromRef cacheRef
       -- log inconsistent schema objects
-      unLogger logger $ inconsistentMetadataLog sc
+      inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
+      logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
       startSchemaSync sqlGenCtx pool logger httpManager

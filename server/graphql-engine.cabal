@@ -165,6 +165,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.PGDump
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
@@ -292,7 +293,7 @@ library
   if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
   if flag(developer)
-    cpp-options: -DInternalAPIs -DLocalConsole
+    cpp-options: -DDeveloperAPIs -DLocalConsole
   if flag(local-console)
     cpp-options: -DLocalConsole
 
