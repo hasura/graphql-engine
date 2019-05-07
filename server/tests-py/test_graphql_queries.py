@@ -43,6 +43,9 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_col_not_present_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
+    def test_select_query_user_col_change(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'

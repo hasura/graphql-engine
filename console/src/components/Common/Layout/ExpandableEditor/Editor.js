@@ -32,9 +32,10 @@ class Editor extends React.Component {
     if (this.props.isCollapsable === false && this.state.isEditing) {
       return null;
     }
+
     return (
       <Button
-        className={`${styles.add_mar_small} ${styles.add_mar_bottom_mid}`}
+        className={`${styles.add_mar_small}`}
         color="white"
         size="xs"
         data-test={`${this.props.service}-${
@@ -133,7 +134,7 @@ class Editor extends React.Component {
 
     return (
       <div className={editorClass}>
-        <div className={styles.display_flex}>
+        <div className={styles.display_flex + ' ' + styles.add_mar_bottom_mid}>
           {this.toggleButton()}
           {editorLabel}
         </div>

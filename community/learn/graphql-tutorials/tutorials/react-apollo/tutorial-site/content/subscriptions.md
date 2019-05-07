@@ -2,7 +2,10 @@
 title: "Subscriptions to show online users"
 ---
 
-import GithubLink from '../src/GithubLink.js'
+import GithubLink from "../src/GithubLink.js";
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/Zegh4VJqrHM" />
 
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
