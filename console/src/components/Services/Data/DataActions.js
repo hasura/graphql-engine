@@ -1,3 +1,5 @@
+import sanitize from 'sanitize-filename';
+
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -551,7 +553,7 @@ const makeMigrationCall = (
   };
 
   const migrationBody = {
-    name: migrationName,
+    name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
   };
