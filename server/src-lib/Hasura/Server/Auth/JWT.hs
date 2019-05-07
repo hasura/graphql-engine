@@ -7,7 +7,6 @@ module Hasura.Server.Auth.JWT
   , JWTClaimsFormat (..)
   , updateJwkRef
   , jwkRefreshCtrl
-  , defaultClaimNs
   ) where
 
 import           Control.Arrow                   (first)

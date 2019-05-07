@@ -24,9 +24,7 @@ import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
-import           Hasura.RQL.Misc.Config
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                 (AuthMode)
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
@@ -88,12 +86,6 @@ data RQLQuery
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
-<<<<<<< HEAD
-
-  | RQGetConfig !GetConfig
-
-=======
->>>>>>> master
   deriving (Show, Eq, Lift)
 
 $(deriveJSON
@@ -163,17 +155,10 @@ runQuery
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-<<<<<<< HEAD
-  -> Bool -> AuthMode -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr strfyNum authMode query = do
-  resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM authMode query
-=======
   -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
   resE <- liftIO $ runExceptT $
     peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
->>>>>>> master
   either throwError withReload resE
   where
     withReload r = do
@@ -238,18 +223,15 @@ queryNeedsReload qi = case qi of
 
   RQDumpInternalState _        -> False
 
-  RQGetConfig _                -> False
-
   RQBulk qs                    -> any queryNeedsReload qs
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      )
-  => AuthMode
-  -> RQLQuery
+  => RQLQuery
   -> m EncJSON
-runQueryM am rq = withPathK "args" $ case rq of
+runQueryM rq = withPathK "args" $ case rq of
   RQAddExistingTableOrView q   -> runTrackTableQ q
   RQTrackTable q               -> runTrackTableQ q
   RQUntrackTable q             -> runUntrackTableQ q
@@ -302,8 +284,6 @@ runQueryM am rq = withPathK "args" $ case rq of
 
   RQDumpInternalState q        -> runDumpInternalState q
 
-  RQGetConfig _                -> runGetConfig am
-
   RQRunSql q                   -> runRunSQL q
 
-  RQBulk qs                    -> encJFromList <$> indexedMapM (runQueryM am) qs
+  RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs

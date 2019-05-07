@@ -12,7 +12,6 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth           (AuthMode (AMNoAuth))
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
 
@@ -85,7 +84,7 @@ initCatalogStrict createSchema initTime =  do
     return ()
 
   -- add default metadata
-  void $ runQueryM AMNoAuth metadataQuery
+  void $ runQueryM metadataQuery
 
   setAllAsSystemDefined >> addVersion initTime
   return "successfully initialised"
@@ -141,13 +140,8 @@ execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-<<<<<<< HEAD
-  buildSchemaCache
-  encJToLBS <$> runQueryM AMNoAuth query
-=======
   buildSchemaCacheStrict
   encJToLBS <$> runQueryM query
->>>>>>> master
 
 -- error messages
 pgcryptoReqdMsg :: T.Text
