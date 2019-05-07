@@ -60,6 +60,9 @@ Query
      - JSON Value
      - The arguments to the query
 
+Request types
+-------------
+
 The various types of queries are listed in the following table:
 
 .. list-table::

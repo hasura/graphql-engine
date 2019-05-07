@@ -26,7 +26,7 @@ Events can be of the following types:
    :titlesonly:
 
    create-trigger
-   invoke-trigger-console
    payload
    serverless
    samples
+   Invoke trigger via console <invoke-trigger-console>

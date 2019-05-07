@@ -8,11 +8,10 @@ Creating an event trigger
 
 Event triggers can be created using the Hasura console or metadata APIs.
 
-Open the Hasura console, head to the ``Events`` tab and click on the ``Add`` button to open the
+Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` button to open the
 page below:
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
-   :width: 75 %
 
 Parameters
 ----------
@@ -25,9 +24,9 @@ Unique name for event trigger.
 
 The postgres schema and table name on which event trigger needs to be created.
 
-**Operations**
+**Trigger Operations**
 
-The operation on which event trigger needs to be invoked. Can be ``INSERT``, ``UPDATE``, ``DELETE``.
+The table operation on which event trigger will be invoked.
 
 **Webhook URL**
 
@@ -40,18 +39,13 @@ Advanced Settings
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
 
-Allow trigger via data browser
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Checking this box allows you to invoke an event trigger on any row via the Hasura console. Enabled by default.
-
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Update operations are special because you may want to trigger webhook only if specific columns have changed in a row.
 Choose the columns here which you want the update operation to listen on.
 
-If a column is not selected here, then an update to that column will not trigger webhook.
+If a column is not selected here, then an update to that column will not trigger the webhook.
 
 
 Retry Logic
