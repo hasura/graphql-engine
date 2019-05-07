@@ -10,7 +10,7 @@ GraphQL is actually used in an HTTP client (typically a web/mobile app).
 Check out the diagram below, to get a sense of how GraphQL is typically used in
 your stack:
 
-![GraphQL over HTTP](./graphql-on-http.png)
+![GraphQL over HTTP](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphql-on-http.png)
 
 ### GraphQL client-server flow:
 
