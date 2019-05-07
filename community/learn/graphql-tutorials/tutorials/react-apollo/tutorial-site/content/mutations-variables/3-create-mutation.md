@@ -2,6 +2,10 @@
 title: "Run mutation, update cache"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/ZgMblvlIg28" />
+
 Now let's do the integration part. Open `src/components/Todo/TodoInput.js` and add the following code below the other imports:
 
 ```javscript

@@ -60,6 +60,8 @@ started is to use one of our boilerplates:
 
 - `Boilerplates <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas>`__
 
+.. _merge_remote_schema:
+
 Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -140,6 +142,33 @@ community tooling to write your own client-facing GraphQL gateway that interacts
   **Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by
   it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
+
+
+Authorization in your remote schema server
+------------------------------------------
+
+Hasura will forward the resolved ``x-hasura-*`` values as headers to your remote
+schema. You can use this information to apply authorization rules in your
+server. You don't have to redo authentication in your remote schema server.
+
+You can also configure Hasura to have (as shown :ref:`above <merge_remote_schema>`):
+
+1. static header values that are sent to the remote server
+2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
+
+In case there are multiple headers with same name, the order of precedence is:
+configuration headers > resolved user (``x-hasura-*``) variables > client headers
+
+So for example, if client sends an ``Authorization`` header, and the
+configuration also has ``Authorization`` header, the configuration header value
+will selected.
+
+.. note::
+
+   The headers from client behave similar to the authorization system. If
+   ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
+   client are respected, otherwise they are ignored.
+
 
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------

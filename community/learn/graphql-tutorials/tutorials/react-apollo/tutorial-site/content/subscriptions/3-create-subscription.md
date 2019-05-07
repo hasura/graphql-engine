@@ -2,7 +2,10 @@
 title: "Create Subscription and Render Result"
 ---
 
-import GithubLink from '../../src/GithubLink.js'
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/yqL_PpEAU7E" />
 
 So let's define the graphql subscription to be used.
 
