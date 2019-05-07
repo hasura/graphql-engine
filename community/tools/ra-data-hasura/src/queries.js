@@ -16,7 +16,7 @@ const countQuery = {
   type: 'count',
   args: {
     table: {'schema': '', 'name': ''},
-    where: { id: { '$ne': null }}
+    where: {}
   }
 };
 
@@ -50,4 +50,5 @@ const deleteQuery = {
 };
 
 export { bulkQuery, selectQuery, countQuery, insertQuery, updateQuery, deleteQuery };
+
 
