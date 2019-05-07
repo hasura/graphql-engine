@@ -141,7 +141,7 @@ objRelP2
   -> ObjRelDef
   -> m ()
 objRelP2 qt rd@(RelDef rn ru comment) = do
-  fkeys <- liftTx fetchAllFkeys
+  fkeys <- liftTx $ fetchTableFkeys qt
   objRelP2Setup qt fkeys rd
   liftTx $ persistRel qt rn ObjRel (toJSON ru) comment
 
@@ -209,7 +209,7 @@ arrRelP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => QualifiedTable -> ArrRelDef -> m ()
 arrRelP2 qt rd@(RelDef rn u comment) = do
-  fkeys <- liftTx fetchAllFkeys
+  fkeys <- liftTx $ fetchFkeysAsRemoteTable qt
   arrRelP2Setup qt fkeys rd
   liftTx $ persistRel qt rn ArrRel (toJSON u) comment
 
@@ -327,22 +327,30 @@ getRequiredFkey col fkeySet preCondition =
     filterFn k =
       preCondition k && isJust (HM.lookup col $ _cfkColumnMapping k)
 
-fetchAllFkeys :: Q.TxE QErr (HS.HashSet CatalogFKey)
-fetchAllFkeys = do
+fetchTableFkeys :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
+fetchTableFkeys qt@(QualifiedObject sn tn) = do
   r <- Q.listQE defaultTxErrorHandler [Q.sql|
-          SELECT f.table_schema,
-                 f.table_name,
-                 f.constraint_name,
+          SELECT f.constraint_name,
                  f.ref_table_table_schema,
                  f.ref_table,
                  f.column_mapping
             FROM hdb_catalog.hdb_foreign_key_constraint f
-            LEFT OUTER JOIN hdb_catalog.hdb_table ht
-              ON ( ht.table_name = f.table_name
-                   AND ht.table_schema = f.table_schema
-                 )
-          |] () True
+           WHERE f.table_schema = $1 AND f.table_name = $2
+          |] (sn, tn) True
   fmap HS.fromList $
-    forM r $ \(sn, tn, constr, refsn, reftn, Q.AltJ colMapping) ->
-    return $ CatalogFKey (QualifiedObject sn tn) (QualifiedObject refsn reftn)
-                         constr colMapping
+    forM r $ \(constr, refsn, reftn, Q.AltJ colMapping) ->
+    return $ CatalogFKey qt (QualifiedObject refsn reftn) constr colMapping
+
+fetchFkeysAsRemoteTable :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
+fetchFkeysAsRemoteTable rqt@(QualifiedObject rsn rtn) = do
+  r <- Q.listQE defaultTxErrorHandler [Q.sql|
+          SELECT f.table_schema,
+                 f.table_name,
+                 f.constraint_name,
+                 f.column_mapping
+            FROM hdb_catalog.hdb_foreign_key_constraint f
+           WHERE f.ref_table_table_schema = $1 AND f.ref_table = $2
+          |] (rsn, rtn) True
+  fmap HS.fromList $
+    forM r $ \(sn, tn, constr, Q.AltJ colMapping) ->
+    return $ CatalogFKey (QualifiedObject sn tn) rqt constr colMapping
