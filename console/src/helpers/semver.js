@@ -17,11 +17,8 @@ const componentsSemver = {
   tableColumnRename: '1.0.0-alpha39',
   triggerRetryTimeout: '1.0.0-alpha38',
   permUpdatePresets: '1.0.0-alpha38',
-<<<<<<< HEAD
-  JWTAnalyzer: '1.0.0-alpha42',
-=======
   inconsistentState: '1.0.0-alpha43',
->>>>>>> master
+  JWTAnalyzer: '1.0.0-alpha46',
 };
 
 const getPreRelease = version => {

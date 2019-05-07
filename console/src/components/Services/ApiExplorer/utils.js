@@ -10,7 +10,6 @@ export const getHeadersAsJSON = (headers = []) => {
 
   return headerJSON;
 };
-<<<<<<< HEAD:console/src/components/ApiExplorer/utils.js
 
 const parseJWTHeader = header => {
   let isJWTHeader;
@@ -26,5 +25,3 @@ const parseJWTHeader = header => {
 };
 
 export { getHeadersAsJSON, parseJWTHeader };
-=======
->>>>>>> master:console/src/components/Services/ApiExplorer/utils.js
