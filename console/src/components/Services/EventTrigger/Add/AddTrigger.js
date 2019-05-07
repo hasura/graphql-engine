@@ -38,15 +38,17 @@ import semverCheck from '../../../../helpers/semver';
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
+
     this.props.dispatch(loadTableList('public'));
+
     this.state = {
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
       supportRetryTimeout: false,
       supportManualTriggerInvocations: false,
     };
-    this.handleOperationSelection = this.handleOperationSelection.bind(this);
   }
+
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
@@ -57,6 +59,7 @@ class AddTrigger extends Component {
       });
     }
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion).then(() => {
@@ -65,15 +68,11 @@ class AddTrigger extends Component {
       });
     }
   }
+
   componentWillUnmount() {
     // set defaults
     this.props.dispatch(setDefaults());
   }
-
-  handleOperationSelection = e => {
-    const { dispatch } = this.props;
-    dispatch(setOperationSelection(e.target.value));
-  };
 
   checkSemVer(version) {
     try {
@@ -250,31 +249,8 @@ class AddTrigger extends Component {
       supportManualTriggerInvocations,
     } = this.state;
 
-    const triggerOnOperations = [
-      {
-        name: 'insert',
-        testIdentifier: 'insert-operation',
-        isChecked: selectedOperations.insert,
-        onChange: this.handleOperationSelection,
-        displayName: 'Insert',
-      },
-      {
-        name: 'update',
-        testIdentifier: 'update-operation',
-        isChecked: selectedOperations.update,
-        onChange: this.handleOperationSelection,
-        displayName: 'Update',
-      },
-      {
-        name: 'delete',
-        testIdentifier: 'delete-operation',
-        isChecked: selectedOperations.delete,
-        onChange: this.handleOperationSelection,
-        displayName: 'Delete',
-      },
-    ];
-
     const styles = require('../TableCommon/EventTable.scss');
+
     let createBtnText = 'Add Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
@@ -285,6 +261,11 @@ class AddTrigger extends Component {
     } else if (lastSuccess) {
       createBtnText = 'Created! Redirecting...';
     }
+
+    const handleOperationSelection = e => {
+      dispatch(setOperationSelection(e.target.value));
+    };
+
     const updateTableList = e => {
       dispatch(setSchemaName(e.target.value));
       dispatch(loadTableList(e.target.value));
@@ -350,6 +331,7 @@ class AddTrigger extends Component {
         );
       });
     };
+
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
@@ -387,7 +369,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={this.handleOperationSelection}
+                onChange={handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="insert"
@@ -403,7 +385,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={this.handleOperationSelection}
+                onChange={handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="update"
@@ -419,7 +401,7 @@ class AddTrigger extends Component {
           <div>
             <label>
               <input
-                onChange={this.handleOperationSelection}
+                onChange={handleOperationSelection}
                 className={styles.display_inline + ' ' + styles.add_mar_right}
                 type="checkbox"
                 value="delete"
@@ -433,7 +415,7 @@ class AddTrigger extends Component {
       </div>
     );
 
-    const heads = headers.map((header, i) => {
+    const headersList = headers.map((header, i) => {
       let removeIcon;
       if (i + 1 === headers.length) {
         removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
@@ -599,11 +581,12 @@ class AddTrigger extends Component {
               >
                 <Operations
                   dispatch={dispatch}
-                  operations={triggerOnOperations}
                   supportManualTriggerInvocations={
                     supportManualTriggerInvocations
                   }
                   enableManual={enableManual}
+                  selectedOperations={selectedOperations}
+                  handleOperationSelection={handleOperationSelection}
                 />
               </div>
               <hr />
@@ -760,7 +743,7 @@ class AddTrigger extends Component {
                   <hr />
                   <div className={styles.add_mar_top}>
                     <h4 className={styles.subheading_text}>Headers</h4>
-                    {heads}
+                    {headersList}
                   </div>
                 </div>
               </CollapsibleToggle>

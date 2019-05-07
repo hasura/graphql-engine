@@ -16,107 +16,88 @@ import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
  * */
 
 const Operations = ({
-  operations,
   supportManualTriggerInvocations,
   enableManual,
+  selectedOperations,
+  handleOperationSelection,
   dispatch,
 }) => {
   const styles = require('../TableCommon/EventTable.scss');
 
-  const getManualInvocationOption2 = () => {
-    const handleToggleEnableManualOperation = () => {
+  const databaseOperations = [
+    {
+      name: 'insert',
+      testIdentifier: 'insert-operation',
+      isChecked: selectedOperations.insert,
+      onChange: handleOperationSelection,
+      displayName: 'Insert',
+    },
+    {
+      name: 'update',
+      testIdentifier: 'update-operation',
+      isChecked: selectedOperations.update,
+      onChange: handleOperationSelection,
+      displayName: 'Update',
+    },
+    {
+      name: 'delete',
+      testIdentifier: 'delete-operation',
+      isChecked: selectedOperations.delete,
+      onChange: handleOperationSelection,
+      displayName: 'Delete',
+    },
+  ];
+
+  const getManualInvokeOperation = () => {
+    if (!supportManualTriggerInvocations) {
+      return null;
+    }
+
+    const handleManualOperationSelection = () => {
       dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
     };
 
-    const manualInvocation = {
+    return {
       name: 'enable_manual',
       testIdentifier: 'enable-manual-operation',
       isChecked: enableManual,
-      onChange: handleToggleEnableManualOperation,
-      displayName: 'Enable running trigger via Data browser',
+      onChange: handleManualOperationSelection,
+      displayName: (
+        <span>
+          Via console &nbsp;&nbsp;
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltip.manualOperationsDescription}
+          >
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          &nbsp;&nbsp;
+          <a
+            href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <small>
+              <i>(Know more)</i>
+            </small>
+          </a>
+        </span>
+      ),
     };
-
-    return (
-      supportManualTriggerInvocations && (
-        <div className={styles.display_inline}>
-          <label>
-            <input
-              className={`${styles.display_inline} ${styles.add_mar_right}`}
-              type="checkbox"
-              value={manualInvocation.name}
-              checked={manualInvocation.isChecked}
-              onChange={manualInvocation.onChange}
-              data-test={manualInvocation.testIdentifier}
-            />
-            Via console data browser&nbsp;&nbsp;
-            <a
-              href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <small>
-                <i>(See docs)</i>
-              </small>
-            </a>
-          </label>
-        </div>
-      )
-    );
   };
 
-  const getManualInvocationOption = () => {
-    const handleToggleEnableManualOperation = () => {
-      dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
-    };
+  const getOperationsList = () => {
+    const manualOperation = getManualInvokeOperation();
 
-    const manualInvocation = {
-      name: 'enable_manual',
-      testIdentifier: 'enable-manual-operation',
-      isChecked: enableManual,
-      onChange: handleToggleEnableManualOperation,
-      displayName: 'Enable running trigger via Data browser',
-    };
+    const allOperations = databaseOperations;
+    if (manualOperation) {
+      allOperations.push(manualOperation);
+    }
 
-    return (
-      supportManualTriggerInvocations && (
-        <div className={styles.display_inline}>
-          <label>
-            <input
-              className={`${styles.display_inline} ${styles.add_mar_right}`}
-              type="checkbox"
-              value={manualInvocation.name}
-              checked={manualInvocation.isChecked}
-              onChange={manualInvocation.onChange}
-              data-test={manualInvocation.testIdentifier}
-            />
-            Via console&nbsp;&nbsp;
-            <OverlayTrigger
-              placement="right"
-              overlay={tooltip.manualOperationsDescription}
-            >
-              <i className="fa fa-question-circle" aria-hidden="true" />
-            </OverlayTrigger>
-            &nbsp;&nbsp;
-            <a
-              href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <small>
-                <i>(See docs)</i>
-              </small>
-            </a>
-          </label>
-        </div>
-      )
-    );
-  };
-
-  const operationsList = () =>
-    operations.map((o, i) => (
+    return allOperations.map((o, i) => (
       <div
         key={i}
-        className={`${styles.display_inline} ${i !== 0 && styles.add_mar_left}`}
+        className={`${styles.display_inline} ${styles.add_mar_right}`}
       >
         <label>
           <input
@@ -131,6 +112,7 @@ const Operations = ({
         </label>
       </div>
     ));
+  };
 
   return (
     <div>
@@ -144,69 +126,17 @@ const Operations = ({
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>{' '}
         </h4>
-        <div className={styles.add_mar_left_small}>
-          {operationsList()}
-          <div className={styles.manualInvocationCheckbox}>
-            {getManualInvocationOption()}&nbsp;&nbsp;
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.add_mar_bottom}>OR</div>
-
-      <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
-        <h4 className={styles.subheading_text}>
-          Trigger Operations &nbsp; &nbsp;
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltip.operationsDescription}
-          >
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>{' '}
-        </h4>
-        <div className={styles.add_mar_left_small}>
-          <div>
-            <h5
-              className={
-                styles.fontWeightBold + ' ' + styles.add_mar_bottom_mid
-              }
-            >
-              Database operations &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.dbOperationsDescription}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-            </h5>
-            {operationsList()}
-          </div>
-          <div className={styles.add_mar_top}>
-            <h5
-              className={
-                styles.fontWeightBold + ' ' + styles.add_mar_bottom_mid
-              }
-            >
-              Manual operation &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.manualOperationsDescription}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-            </h5>
-            {getManualInvocationOption2()}
-          </div>
-        </div>
+        <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
       </div>
     </div>
   );
 };
 
 Operations.propTypes = {
-  operations: PropTypes.array.isRequired,
   supportManualTriggerInvocations: PropTypes.bool.isRequired,
   enableManual: PropTypes.bool.isRequired,
+  selectedOperations: PropTypes.object.isRequired,
+  handleOperationSelection: PropTypes.func.isRequired,
 };
 
 export default Operations;
