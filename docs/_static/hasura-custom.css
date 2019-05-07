@@ -159,6 +159,7 @@ ul {
 
 #docs-content .docutils {
   color: #6f6f6f;
+  word-break: break-word;
 }
 
 #docs-content .docutils.literal {

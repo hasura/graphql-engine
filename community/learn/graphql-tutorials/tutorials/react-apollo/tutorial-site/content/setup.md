@@ -13,7 +13,7 @@ Our task will be to convert the "static" UI into a working realtime app.
 
 <!-- FIXME: Add the zip URL here -->
 
-1. Download the boilerplate at: https://learn.hasura.io/graphql/react/boilerplate.zip
+1. Download the boilerplate from https://learn.hasura.io/graphql/react/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
 3. Install dependencies and run the "static" app
     - `npm install`
