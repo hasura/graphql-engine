@@ -48,6 +48,7 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
@@ -56,7 +57,6 @@ import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
-import           Hasura.Server.Config (runGetConfig)
 import           Hasura.SQL.Types
 
 consoleTmplt :: M.Template
@@ -132,17 +132,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx    :: PGExecCtx
-  , scConnInfo     :: Q.ConnInfo
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scSQLGenCtx    :: SQLGenCtx
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
-  , scPlanCache    :: E.PlanCache
-  , scLQState      :: EL.LiveQueriesState
+  { scPGExecCtx   :: PGExecCtx
+  , scConnInfo    :: Q.ConnInfo
+  , scLogger      :: L.Logger
+  , scCacheRef    :: SchemaCacheRef
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
+  , scInstanceId  :: InstanceId
+  , scPlanCache   :: E.PlanCache
+  , scLQState     :: EL.LiveQueriesState
   }
 
 data HandlerCtx

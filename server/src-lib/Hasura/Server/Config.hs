@@ -9,12 +9,12 @@ import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
-import qualified Hasura.Server.Version      as V
+import qualified Hasura.Server.Version  as V
 
 data JWTInfo
   = JWTInfo
   { jwtiClaimsNamespace :: !Text
-  , jwtiClaimsFormat   :: !JWTClaimsFormat
+  , jwtiClaimsFormat    :: !JWTClaimsFormat
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
