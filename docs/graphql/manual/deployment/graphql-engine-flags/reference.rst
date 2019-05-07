@@ -22,6 +22,7 @@ For ``graphql-engine`` command these are the flags and ENV variables available:
 
 .. list-table::
    :header-rows: 1
+   :widths: 15 20 30
 
    * - Flag
      - ENV variable
@@ -53,6 +54,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
 .. list-table::
    :header-rows: 1
+   :widths: 15 20 30
 
    * - Flag
      - ENV variable
