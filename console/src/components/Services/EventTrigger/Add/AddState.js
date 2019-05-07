@@ -4,7 +4,7 @@ const defaultState = {
   schemaName: 'public',
   tableListBySchema: [],
   operations: { insert: [], update: [], delete: [] },
-  enableManual: true,
+  enableManual: false,
   selectedOperations: {
     insert: false,
     update: false,
