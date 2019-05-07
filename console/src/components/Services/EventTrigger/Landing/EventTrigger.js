@@ -69,7 +69,7 @@ class EventTrigger extends Component {
             className={styles.add_mar_left}
             onClick={handleClick}
           >
-            Add
+            Create
           </Button>
         );
       }

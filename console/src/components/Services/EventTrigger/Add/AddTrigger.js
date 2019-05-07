@@ -251,7 +251,7 @@ class AddTrigger extends Component {
 
     const styles = require('../TableCommon/EventTable.scss');
 
-    let createBtnText = 'Add Event Trigger';
+    let createBtnText = 'Create Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -487,9 +487,9 @@ class AddTrigger extends Component {
           styles.padd_left
         }`}
       >
-        <Helmet title="Add Trigger - Events | Hasura" />
+        <Helmet title="Create Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new event trigger</h2>
+          <h2 className={styles.heading_text}>Create a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />

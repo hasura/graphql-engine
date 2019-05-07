@@ -325,7 +325,7 @@ const ViewRows = ({
           }
 
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
-          const triggerTitle = 'Invoke manual trigger';
+          const triggerTitle = 'Invoke event trigger';
 
           const triggerBtn = getActionButton(
             'trigger',
