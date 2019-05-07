@@ -4,6 +4,7 @@ import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
 import           Data.List.Split
+import           Data.Time.Clock
 import           Network.URI
 import           System.Environment
 import           System.Exit
@@ -143,3 +144,10 @@ matchRegex regex caseSensitive src =
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
 fmapL _ (Right x) = pure x
+
+-- diff time to micro seconds
+diffTimeToMicro :: NominalDiffTime -> Int
+diffTimeToMicro diff =
+  (floor (realToFrac diff :: Double) - 10) * aSecond
+  where
+    aSecond = 1000 * 1000

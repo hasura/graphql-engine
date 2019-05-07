@@ -11,9 +11,7 @@ module Hasura.RQL.Types.Permission
        , getVarVal
        , roleFromVars
 
-       , UserInfo
-       , userRole
-       , userVars
+       , UserInfo(..)
        , mkUserInfo
        , userInfoToList
        , adminUserInfo
@@ -25,13 +23,17 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader, userRoleHeader)
+import           Hasura.Server.Utils        (adminSecretHeader,
+                                             deprecatedAccessKeyHeader,
+                                             userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
 import           Data.Hashable
+import           Data.Hashable.Time         ()
+import           Data.Time.Clock
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -84,11 +86,12 @@ mkUserVars l =
 
 data UserInfo
   = UserInfo
-  { userRole :: !RoleName
-  , userVars :: !UserVars
+  { userRole      :: !RoleName
+  , userVars      :: !UserVars
+  , userJWTExpiry :: !(Maybe UTCTime)
   } deriving (Show, Eq, Generic)
 
-mkUserInfo :: RoleName -> UserVars -> UserInfo
+mkUserInfo :: RoleName -> UserVars -> Maybe UTCTime -> UserInfo
 mkUserInfo rn (UserVars v) =
   UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
@@ -107,7 +110,7 @@ userInfoToList userInfo =
 
 adminUserInfo :: UserInfo
 adminUserInfo =
-  mkUserInfo adminRole $ mkUserVars []
+  mkUserInfo adminRole (mkUserVars []) Nothing
 
 data PermType
   = PTInsert

@@ -146,6 +146,9 @@ library
                      -- metrics in multiplexed subs
                      , ekg-core
 
+                     -- hashable time
+                     , hashable-time
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON

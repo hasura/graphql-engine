@@ -167,7 +167,7 @@ mkUserInfoFromResp logger url method statusCode respBody
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
           logWebHookResp L.LevelInfo Nothing
-          return $ mkUserInfo rn usrVars
+          return $ mkUserInfo rn usrVars Nothing
 
     logError =
       logWebHookResp L.LevelError $ Just respBody
@@ -234,7 +234,7 @@ getUserInfo logger manager rawHeaders = \case
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
       Just givenAdminScrt -> userInfoWhenAdminSecret adminScrt givenAdminScrt
-      Nothing          -> userInfoWhenNoAdminSecret unAuthRole
+      Nothing             -> userInfoWhenNoAdminSecret unAuthRole
 
   AMAdminSecretAndHook accKey hook ->
     whenAdminSecretAbsent accKey (userInfoFromAuthHook logger manager hook rawHeaders)
@@ -246,16 +246,16 @@ getUserInfo logger manager rawHeaders = \case
     -- when admin secret is absent, run the action to retrieve UserInfo, otherwise
     -- adminsecret override
     whenAdminSecretAbsent ak action =
-      maybe action (userInfoWhenAdminSecret ak) $ adminSecretM
+      maybe action (userInfoWhenAdminSecret ak) adminSecretM
 
-    adminSecretM= foldl1 (<|>) $ map (flip getVarVal usrVars) [adminSecretHeader, deprecatedAccessKeyHeader]
+    adminSecretM= foldl1 (<|>) $ map (`getVarVal` usrVars) [adminSecretHeader, deprecatedAccessKeyHeader]
 
     usrVars = mkUserVars $ hdrsToText rawHeaders
 
     userInfoFromHeaders =
       case roleFromVars usrVars of
-        Just rn -> mkUserInfo rn usrVars
-        Nothing -> mkUserInfo adminRole usrVars
+        Just rn -> mkUserInfo rn usrVars Nothing
+        Nothing -> mkUserInfo adminRole usrVars Nothing
 
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $ "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
@@ -263,4 +263,4 @@ getUserInfo logger manager rawHeaders = \case
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/" <>  deprecatedAccessKeyHeader <> " required, but not found"
-      Just role -> return $ mkUserInfo role usrVars
+      Just role -> return $ mkUserInfo role usrVars Nothing

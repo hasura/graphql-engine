@@ -16,6 +16,7 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
+import qualified Data.Time.Clock                             as TC
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
@@ -39,7 +40,8 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode,
                                                               getUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (bsToTxt)
+import           Hasura.Server.Utils                         (bsToTxt,
+                                                              diffTimeToMicro)
 
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -58,7 +60,7 @@ data WSConnState
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser  :: !(IORef.IORef WSConnState)
+  { _wscUser  :: !(STM.TVar WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -138,14 +140,26 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
+    jwtExpiryHandler wsConn = do
+      currTime <- TC.getCurrentTime
+      expTime <- STM.atomically $ do
+        connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
+        case connState of
+          CSNotInitialised _       -> STM.retry
+          CSInitError _            -> STM.retry
+          CSInitialised userInfo _ ->
+            maybe STM.retry return $ userJWTExpiry userInfo
+      threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
+
     accept hdrs = do
       logger $ WSLog wsId Nothing EAccepted Nothing
       connData <- WSConnData
-                  <$> IORef.newIORef (CSNotInitialised hdrs)
+                  <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return $ Right (connData, acceptRequest, Just keepAliveAction)
+      return $ Right $ WS.AcceptWith connData acceptRequest
+                       (Just keepAliveAction) (Just jwtExpiryHandler)
 
     reject qErr = do
       logger $ WSLog wsId Nothing (ERejected qErr) Nothing
@@ -202,7 +216,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   when (isJust opM) $ withComplete $ sendConnErr $
     "an operation already exists with this id: " <> unOperationId opId
 
-  userInfoM <- liftIO $ IORef.readIORef userInfoR
+  userInfoM <- liftIO $ STM.readTVarIO userInfoR
   (userInfo, reqHdrs) <- case userInfoM of
     CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
     CSInitError initErr -> do
@@ -344,7 +358,7 @@ logWSEvent
   :: (MonadIO m)
   => L.Logger -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
-  userInfoME <- liftIO $ IORef.readIORef userInfoR
+  userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let userInfoM = case userInfoME of
         CSInitialised userInfo _ -> return $ userVars userInfo
         _                        -> Nothing
@@ -357,17 +371,17 @@ onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
-  headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscUser $ WS.getData wsConn))
+  headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
   res <- runExceptT $ getUserInfo logger manager headers authMode
   case res of
     Left e  -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
         CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right userInfo -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
         CSInitialised userInfo paramHeaders
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
@@ -389,10 +403,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
 onClose
   :: L.Logger
   -> LQ.LiveQueriesState
-  -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose logger lqMap _ wsConn = do
+onClose logger lqMap wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
   void $ A.forConcurrently operations $ \(_, (lqId, _)) ->
