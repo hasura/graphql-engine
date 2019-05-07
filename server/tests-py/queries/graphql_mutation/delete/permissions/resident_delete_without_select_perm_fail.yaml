@@ -1,6 +1,6 @@
 description: Delete a row in resident table where id = 1 (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '1'

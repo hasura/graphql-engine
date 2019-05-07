@@ -1,6 +1,6 @@
 description: Nested select on article with negative offset. Expecting error. Currently 500. Idealy should be 400
-url: /v1alpha1/graphql
-status: 500
+url: /v1/graphql
+status: 200
 query:
   query: |
     query {

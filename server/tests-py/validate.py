@@ -9,6 +9,7 @@ import jwt
 import random
 import time
 
+from context import GQLWsClient
 
 def check_keys(keys, obj):
     for k in keys:
@@ -96,7 +97,7 @@ def test_forbidden_webhook(hge_ctx, conf):
     })
 
 
-def check_query(hge_ctx, conf, transport='http', endpoint=None, add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True):
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
@@ -155,6 +156,7 @@ def check_query(hge_ctx, conf, transport='http', endpoint=None, add_auth=True):
         print('running on websocket')
         return validate_gql_ws_q(
             hge_ctx,
+            conf['url'],
             conf['query'],
             headers,
             conf['response'],
@@ -162,21 +164,17 @@ def check_query(hge_ctx, conf, transport='http', endpoint=None, add_auth=True):
         )
     elif transport == 'http':
         print('running on http')
-        # TODO: fix for now to run test on both endpoints, eventually remove
-        # url form yaml files?
-        url = endpoint if endpoint else conf['url']
-        if endpoint == '/v1/graphql':
-            status = 200
-            return validate_http_anyq(hge_ctx, url, conf['query'], headers,
-                                      status, conf.get('response'))
-
-        return validate_http_anyq(hge_ctx, url, conf['query'], headers,
+        return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
                                   conf['status'], conf.get('response'))
 
 
 
-def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
-    ws_client = hge_ctx.ws_client
+def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retry=False):
+    if endpoint == '/v1alpha1/graphql':
+        ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    else:
+        ws_client = hge_ctx.ws_client
+    print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
 
@@ -194,26 +192,12 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
         else:
             assert resp['type'] in ['data', 'error'], resp
 
-    if 'errors' in exp_http_response:
+    if 'errors' in exp_http_response or 'error' in exp_http_response:
         assert resp['type'] in ['data', 'error'], resp
-
-        exp_ws_response1 = exp_http_response['errors'][0]['extensions']
-        exp_ws_response1['error'] = exp_http_response['errors'][0]['message']
-
-        exp_ws_response2 = {'errors': []}
-        for err in exp_http_response['errors']:
-            ws_err = err['extensions']
-            ws_err['error'] = err['message']
-            exp_ws_response2['errors'].append(ws_err)
-        exp_ws_response2['data'] = None
-
-        if resp['type'] == 'error':
-            exp_ws_response = exp_ws_response1
-        elif resp['type'] == 'data':
-            exp_ws_response = exp_ws_response2
     else:
         assert resp['type'] == 'data', resp
-        exp_ws_response = exp_http_response
+
+    exp_ws_response = exp_http_response
 
     assert 'payload' in resp, resp
     assert resp['payload'] == exp_ws_response, yaml.dump({
@@ -230,6 +214,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp = hge_ctx.anyq(url, query, headers)
     print(headers)
     assert code == exp_code, resp
+    print('http resp: ', resp)
     if exp_response:
         assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
             'response': resp,
@@ -238,7 +223,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
         })
     return resp
 
-def check_query_f(hge_ctx, f, transport='http', endpoint=None, add_auth=True):
+def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
@@ -246,11 +231,11 @@ def check_query_f(hge_ctx, f, transport='http', endpoint=None, add_auth=True):
         conf = yaml.safe_load(c)
         if isinstance(conf, list):
             for sconf in conf:
-                check_query(hge_ctx, sconf, transport, endpoint, add_auth)
+                check_query(hge_ctx, sconf, transport, add_auth)
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            check_query(hge_ctx, conf, transport, endpoint, add_auth)
+            check_query(hge_ctx, conf, transport, add_auth)
 
 
 def json_ordered(obj):

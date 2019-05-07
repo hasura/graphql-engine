@@ -68,14 +68,11 @@ class TestRemoteSchemaBasic:
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
 
-    @pytest.mark.parametrize('endpoint', ['/v1alpha1/graphql', '/v1/graphql'])
-    def test_remote_query(self, hge_ctx, endpoint):
-        check_query_f(hge_ctx, self.dir + '/basic_query.yaml', endpoint=endpoint)
+    def test_remote_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 
-    @pytest.mark.parametrize('endpoint', ['/v1alpha1/graphql', '/v1/graphql'])
-    def test_remote_subscription(self, hge_ctx, endpoint):
-        check_query_f(hge_ctx, self.dir + '/basic_subscription_not_supported.yaml',
-                      endpoint=endpoint)
+    def test_remote_subscription(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_subscription_not_supported.yaml')
 
     def test_add_schema_conflicts(self, hge_ctx):
         """add 2 remote schemas with same node or types"""

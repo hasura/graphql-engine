@@ -312,7 +312,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
     preExecErr qErr = do
       let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False qErr
+      let err = case errRespTy of
+            ERTLegacy           -> errFn False qErr
+            ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
+      sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson

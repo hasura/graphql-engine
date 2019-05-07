@@ -27,14 +27,13 @@ class TestMetadataDisabled:
 
 @pytest.mark.skipif(not pytest.config.getoption("--test-graphql-disabled"),
                     reason="--test-graphql-disabled is not set. Cannot run GraphQL disabled tests")
-@pytest.mark.parametrize('endpoint', ['/v1alpha1/graphql', '/v1/graphql'])
 class TestGraphQLDisabled:
 
-    def test_graphql_endpoint_disabled(self, hge_ctx, endpoint):
-        check_post_404(hge_ctx, endpoint)
+    def test_graphql_endpoint_disabled(self, hge_ctx):
+        check_post_404(hge_ctx, '/v1/graphql')
 
-    def test_graphql_explain_disabled(self, hge_ctx, endpoint):
-        check_post_404(hge_ctx, endpoint + '/explain')
+    def test_graphql_explain_disabled(self, hge_ctx):
+        check_post_404(hge_ctx, '/v1/graphql/explain')
 
 
 @pytest.mark.skipif(pytest.config.getoption("--test-graphql-disabled"),
