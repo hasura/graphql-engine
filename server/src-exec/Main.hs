@@ -144,9 +144,6 @@ main =  do
       -- safe init catalog
       initRes <- initialise pool sqlGenCtx logger httpManager
 
-      -- prepare event triggers data
-      prepareEvents pool logger
-
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
@@ -165,8 +162,9 @@ main =  do
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
+      -- prepare event triggers data
+      prepareEvents pool logger
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-
       let scRef = _scrCache cacheRef
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
