@@ -1,4 +1,7 @@
 import defaultState from './state';
+import requestAction from '../../utils/requestAction.js';
+
+import Endpoints from '../../Endpoints';
 // import fetch from 'isomorphic-fetch';
 
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -25,6 +28,7 @@ const REQUEST_PARAMS_CHANGED = 'ApiExplorer/REQUEST_PARAMS_CHANGED';
 const REQUEST_HEADER_CHANGED = 'ApiExplorer/REQUEST_HEADER_CHANGED';
 const REQUEST_HEADER_ADDED = 'ApiExplorer/REQUEST_HEADER_ADDED';
 const REQUEST_HEADER_REMOVED = 'ApiExplorer/REQUEST_HEADER_REMOVED';
+const SET_INITIAL_HEADER_DATA = 'ApiExplorer/SET_INITIAL_HEADER_DATA';
 
 const MAKING_API_REQUEST = 'ApiExplorer/MAKING_API_REQUEST';
 const RESET_MAKING_REQUEST = 'ApiExplorer/RESET_MAKING_REQUEST';
@@ -43,6 +47,22 @@ const clearHistory = () => {
   return {
     type: CLEAR_HISTORY,
   };
+};
+
+const verifyJWTToken = token => dispatch => {
+  const url = Endpoints.graphQLUrl;
+  const body = {
+    query: '{ __type(name: "dummy") {name}}',
+    variables: null,
+  };
+  const options = {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options));
 };
 
 const updateFileObject = fileObj => {
@@ -186,15 +206,42 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
 };
 /* End of it */
 
-const changeRequestHeader = (index, key, newValue, isDisabled) => ({
-  type: REQUEST_HEADER_CHANGED,
-  data: {
-    index: index,
-    keyName: key,
-    newValue: newValue,
-    isDisabled: isDisabled,
-  },
-});
+const setInitialHeaderState = headerObj => {
+  return {
+    type: SET_INITIAL_HEADER_DATA,
+    data: headerObj,
+  };
+};
+
+const changeRequestHeader = (index, key, newValue, isDisabled) => {
+  return (dispatch, getState) => {
+    dispatch({
+      type: REQUEST_HEADER_CHANGED,
+      data: {
+        index: index,
+        keyName: key,
+        newValue: newValue,
+        isDisabled: isDisabled,
+      },
+    });
+    // TODO:
+    // May go out of sync
+    //  dispatch -> Event -> State gets updated -> getState() below gets called. Too many events and very less time.
+    const { headers } = getState().apiexplorer.displayedApi.request;
+    return Promise.resolve(headers);
+  };
+};
+
+const removeRequestHeader = index => {
+  return (dispatch, getState) => {
+    dispatch({
+      type: REQUEST_HEADER_REMOVED,
+      data: index,
+    });
+    const { headers } = getState().apiexplorer.displayedApi.request;
+    return Promise.resolve(headers);
+  };
+};
 
 const addRequestHeader = (key, value) => ({
   type: REQUEST_HEADER_ADDED,
@@ -203,13 +250,6 @@ const addRequestHeader = (key, value) => ({
     value: value,
   },
 });
-
-const removeRequestHeader = index => {
-  return {
-    type: REQUEST_HEADER_REMOVED,
-    data: index,
-  };
-};
 
 const generateApiCodeClicked = () => {
   return {
@@ -464,6 +504,18 @@ const apiExplorerReducer = (state = defaultState, action) => {
           },
         },
       };
+
+    case SET_INITIAL_HEADER_DATA:
+      return {
+        ...state,
+        displayedApi: {
+          ...state.displayedApi,
+          request: {
+            ...state.displayedApi.request,
+            headers: [...action.data],
+          },
+        },
+      };
     case REQUEST_HEADER_ADDED:
       return {
         ...state,
@@ -592,4 +644,6 @@ export {
   unfocusTypingHeader,
   getRemoteQueries,
   analyzeFetcher,
+  setInitialHeaderState,
+  verifyJWTToken,
 };

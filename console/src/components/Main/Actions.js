@@ -30,6 +30,12 @@ const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
+/* Server config constants*/
+const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
+const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
+const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
+/* End */
+
 const loadMigrationStatus = () => dispatch => {
   const url = Endpoints.hasuractlMigrateSettings;
   const options = {
@@ -70,6 +76,37 @@ const loadServerVersion = () => dispatch => {
     error => {
       console.error(error);
       dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
+    }
+  );
+};
+
+const fetchServerConfig = () => (dispatch, getState) => {
+  const url = Endpoints.query;
+  const body = {
+    type: 'get_config',
+    args: {},
+  };
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: getState().tables.dataHeaders,
+    body: JSON.stringify(body),
+  };
+  dispatch({
+    type: FETCHING_SERVER_CONFIG,
+  });
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      return dispatch({
+        type: SERVER_CONFIG_FETCH_SUCCESS,
+        data: data,
+      });
+    },
+    error => {
+      return dispatch({
+        type: SERVER_CONFIG_FETCH_FAIL,
+        data: error,
+      });
     }
   );
 };
@@ -285,7 +322,34 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
-
+    case FETCHING_SERVER_CONFIG:
+      return {
+        ...state,
+        serverConfig: {
+          ...defaultState.serverConfig,
+          isFetching: true,
+        },
+      };
+    case SERVER_CONFIG_FETCH_SUCCESS:
+      return {
+        ...state,
+        serverConfig: {
+          ...state.serverConfig,
+          data: {
+            ...action.data,
+          },
+          isFetching: false,
+        },
+      };
+    case SERVER_CONFIG_FETCH_FAIL:
+      return {
+        ...state,
+        serverConfig: {
+          ...state.serverConfig,
+          error: action.data,
+          isFetching: false,
+        },
+      };
     default:
       return state;
   }
@@ -305,4 +369,5 @@ export {
   validateLogin,
   loadServerVersion,
   checkServerUpdates,
+  fetchServerConfig,
 };
