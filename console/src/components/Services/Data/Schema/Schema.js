@@ -45,6 +45,7 @@ class Schema extends Component {
 
     this.state = {
       isExporting: false,
+      createSchemaOpen: false,
     };
 
     // Initialize this table
@@ -182,6 +183,46 @@ class Schema extends Component {
         return <option key={s.schema_name}>{s.schema_name}</option>;
       });
 
+      const getCreateSchemaSection = () => {
+        const { createSchemaOpen } = this.state;
+
+        const handleCreateNewClick = () => {
+          this.setState({ createSchemaOpen: true });
+        };
+
+        const handleCreateClick = () => {}; // TODO
+
+        const closedCreateSection = (
+          <Button
+            color="white"
+            className={styles.add_mar_left}
+            size="xs"
+            onClick={handleCreateNewClick}
+          >
+            + Create new schema
+          </Button>
+        );
+
+        const openCreateSection = (
+          <div className={styles.inline_block + ' ' + styles.add_mar_left}>
+            <div className={styles.inline_block}>
+              <input
+                type="text"
+                placeholder="schema_name"
+                className={'form-control input-sm ' + styles.inline_block}
+              />
+            </div>
+            <Button color="white" size="xs" onClick={handleCreateClick}>
+              Create
+            </Button>
+          </div>
+        );
+
+        return createSchemaOpen ? openCreateSection : closedCreateSection;
+      };
+
+      const handleDelete = () => {}; // TODO
+
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
@@ -193,6 +234,18 @@ class Schema extends Component {
             >
               {schemaOptions}
             </select>
+          </div>
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div
+              className={styles.display_inline + ' ' + styles.cursorPointer}
+              title="Delete current schema"
+              onClick={handleDelete}
+            >
+              <i className="fa fa-trash" aria-hidden="true" />
+            </div>
+            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+              {getCreateSchemaSection()}
+            </div>
           </div>
         </div>
       );
