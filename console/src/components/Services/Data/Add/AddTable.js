@@ -7,6 +7,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
+import UniqueKeyWrapper from './UniqueKeyWrapper';
 
 import dataTypes from '../Common/DataTypes';
 import { TIMESTAMP, DATE, UUID } from '../utils';
@@ -20,7 +21,6 @@ import {
   setColType,
   setColNullable,
   setColDefault,
-  setColUnique,
   removeColDefault,
   setForeignKeys,
   validationError,
@@ -29,6 +29,7 @@ import {
   setPk,
   createTableSql,
   addCol,
+  setUniqueKeys,
 } from './AddActions';
 
 import {
@@ -48,6 +49,7 @@ import gqlPattern, {
 } from '../Common/GraphQLValidation';
 
 import styles from '../../../Common/TableCommon/Table.scss';
+
 /*
 const typeDescriptionDict = convertListToDictUsingKV(
   'value',
@@ -55,6 +57,7 @@ const typeDescriptionDict = convertListToDictUsingKV(
   dataTypes
 );
 */
+
 class AddTable extends Component {
   constructor(props) {
     super(props);
@@ -220,6 +223,7 @@ class AddTable extends Component {
       primaryKeys,
       allSchemas,
       foreignKeys,
+      uniqueKeys,
       fkToggled,
       tableName,
       currentSchema,
@@ -229,6 +233,7 @@ class AddTable extends Component {
       lastSuccess,
       internalError,
     } = this.props;
+
     const cols = columns.map((column, i) => {
       let removeIcon;
       if (i + 1 === columns.length) {
@@ -259,6 +264,32 @@ class AddTable extends Component {
       } else if (column.type === UUID) {
         defPlaceholder = 'example: gen_random_uuid()';
       }
+
+      let isColumnUnique = false;
+      let _uindex;
+      for (let _i = uniqueKeys.length - 1; _i >= 0; _i--) {
+        const key = uniqueKeys[_i];
+        if (key.length === 1) {
+          if (key[0] === i) {
+            isColumnUnique = true;
+            _uindex = _i;
+          }
+        }
+      }
+
+      const toggleUnique = () => {
+        if (isColumnUnique) {
+          dispatch(
+            setUniqueKeys([
+              ...uniqueKeys.slice(0, _uindex),
+              ...uniqueKeys.slice(_uindex + 1),
+            ])
+          );
+        } else {
+          dispatch(setUniqueKeys([...uniqueKeys, [i]]));
+        }
+      };
+
       return (
         <div key={i} className={`${styles.display_flex} form-group`}>
           <input
@@ -351,12 +382,10 @@ class AddTable extends Component {
           <label>Nullable</label>
           <input
             className={`${styles.inputCheckbox} form-control `}
-            checked={columns[i].unique}
+            checked={isColumnUnique}
             type="checkbox"
             ref={`unique${i}`}
-            onChange={e => {
-              dispatch(setColUnique(e.target.checked, i));
-            }}
+            onChange={toggleUnique}
             data-test={`unique-${i.toString()}`}
           />{' '}
           <label>Unique</label>
@@ -448,6 +477,29 @@ class AddTable extends Component {
               dispatch={dispatch}
               setForeignKeys={setForeignKeys}
               fkToggled={fkToggled}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Unique Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.uniqueKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <UniqueKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              uniqueKeys={uniqueKeys}
+              dispatch={dispatch}
+              setForeignKeys={setForeignKeys}
             />
             <hr />
             <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>
