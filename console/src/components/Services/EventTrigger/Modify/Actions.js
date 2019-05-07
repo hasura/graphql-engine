@@ -8,7 +8,7 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { showErrorNotification } from '../Notification';
 
-import { INTERNAL_CONSOLE_QUERY_REP } from './utils';
+import { MANUAL_TRIGGER_VAR } from './utils';
 
 const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
@@ -123,10 +123,10 @@ export const save = (property, triggerName) => {
       upPayload.insert = modifyTrigger.definition.insert;
       upPayload.delete = modifyTrigger.definition.delete;
       // Add only if the value is true
-      if (INTERNAL_CONSOLE_QUERY_REP in modifyTrigger.definition) {
-        delete upPayload[INTERNAL_CONSOLE_QUERY_REP];
-        upPayload[INTERNAL_CONSOLE_QUERY_REP] =
-          modifyTrigger.definition[INTERNAL_CONSOLE_QUERY_REP];
+      if (MANUAL_TRIGGER_VAR in modifyTrigger.definition) {
+        delete upPayload[MANUAL_TRIGGER_VAR];
+        upPayload[MANUAL_TRIGGER_VAR] =
+          modifyTrigger.definition[MANUAL_TRIGGER_VAR];
       }
     } else if (property === 'retry') {
       upPayload.retry_conf = {
@@ -241,7 +241,7 @@ const reducer = (state = defaultState, action) => {
         ...state,
         definition: {
           ...state.definition,
-          [INTERNAL_CONSOLE_QUERY_REP]: action.data,
+          [MANUAL_TRIGGER_VAR]: action.data,
         },
       };
     case TOGGLE_COLUMN:

@@ -4,17 +4,6 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
 
-/*
- * Generates a list of operations on the UI
- * Accepts an array of objects of the form
- *  {
- *    name: <name of the operation>
- *    onChange: <event when operation is interacted with>
- *    value: <current state of operation>
- *    testIdentifier: <for cypress>
- *  }
- * */
-
 const Operations = ({
   supportManualTriggerInvocations,
   enableManual,

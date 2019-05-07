@@ -7,14 +7,14 @@ import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
 import {
   getValidQueryTypes,
   queryToInternalNameMap,
-  INTERNAL_CONSOLE_QUERY_REP,
+  MANUAL_TRIGGER_VAR,
   getManualOperationValue,
-  CONSOLE_QUERY,
+  MANUAL_TRIGGER_TEXT,
 } from './utils';
 
 class OperationEditor extends React.Component {
   toggleOperation = upObj => {
-    if (upObj.query === INTERNAL_CONSOLE_QUERY_REP) {
+    if (upObj.query === MANUAL_TRIGGER_VAR) {
       return toggleManualType(upObj);
     }
     return toggleQueryType(upObj);
@@ -35,7 +35,7 @@ class OperationEditor extends React.Component {
        * This will be false or undefined if `queryType` doesn't exist in the object or definition[queryType] is false.
        * */
       if (queryType in definition) {
-        if (queryType !== INTERNAL_CONSOLE_QUERY_REP) {
+        if (queryType !== MANUAL_TRIGGER_VAR) {
           dispatch(
             this.toggleOperation({
               query: queryType,
@@ -57,18 +57,15 @@ class OperationEditor extends React.Component {
      * */
     if (
       supportManualTriggerInvocations &&
-      !(INTERNAL_CONSOLE_QUERY_REP in definition)
+      !(MANUAL_TRIGGER_VAR in definition)
     ) {
       /* If the enable_manual key is not available
        * By default set it to true
        * */
       dispatch(
         this.toggleOperation({
-          query: INTERNAL_CONSOLE_QUERY_REP,
-          value: getManualOperationValue(
-            INTERNAL_CONSOLE_QUERY_REP,
-            definition
-          ),
+          query: MANUAL_TRIGGER_VAR,
+          value: getManualOperationValue(MANUAL_TRIGGER_VAR, definition),
         })
       );
     }
@@ -91,7 +88,7 @@ class OperationEditor extends React.Component {
     const queryTypes = getValidQueryTypes(supportManualTriggerInvocations);
     const renderOperation = (qt, i) => {
       let isChecked = false;
-      if (qt === CONSOLE_QUERY) {
+      if (qt === MANUAL_TRIGGER_TEXT) {
         isChecked = getManualOperationValue(
           queryToInternalNameMap[qt],
           definition
@@ -102,7 +99,7 @@ class OperationEditor extends React.Component {
       return (
         <div
           className={
-            styles.opsCheckboxWrapper + ' col-md-4 ' + styles.padd_remove
+            styles.opsCheckboxWrapper + ' col-md-2 ' + styles.padd_remove
           }
           key={i}
         >
@@ -157,7 +154,7 @@ class OperationEditor extends React.Component {
                   styles.modifyOpsCollapsedtitle
                 }
               >
-                <i>(Applicable only for update operation)</i>
+                <i>Applicable only if update operation is selected.</i>
               </div>
             )}
           </div>
@@ -171,7 +168,7 @@ class OperationEditor extends React.Component {
           <div className={'col-md-12 ' + styles.padd_remove}>
             {queryTypes.map((qt, i) => (
               <div
-                className={`${styles.opsCheckboxWrapper} col-md-4 ${
+                className={`${styles.opsCheckboxWrapper} col-md-2 ${
                   styles.padd_remove
                 } ${styles.cursorPointer}`}
                 key={i}
@@ -235,7 +232,7 @@ class OperationEditor extends React.Component {
                   styles.modifyOpsCollapsedtitle
                 }
               >
-                <i>(Applicable only for update operation)</i>
+                <i>Applicable only if update operation is selected.</i>
               </div>
             )}
           </div>
@@ -247,7 +244,8 @@ class OperationEditor extends React.Component {
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
           <h4 className={styles.modifySectionHeading}>
-            Operations <Tooltip message="Edit operations and related columns" />
+            Trigger Operations{' '}
+            <Tooltip message="Edit operations and related columns" />
           </h4>
           <Editor
             editorCollapsed={collapsed}

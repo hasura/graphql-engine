@@ -1,18 +1,22 @@
-export const CONSOLE_QUERY = 'Allow invoking this trigger via data browser';
-export const INTERNAL_CONSOLE_QUERY_REP = 'enable_manual';
+export const MANUAL_TRIGGER_TEXT = 'Via console';
+
+export const MANUAL_TRIGGER_VAR = 'enable_manual';
+
 export const getValidQueryTypes = supportManualTriggerInvocations => {
   const defaultQueryTypes = ['insert', 'update', 'delete'];
+
   if (supportManualTriggerInvocations) {
-    defaultQueryTypes.push(CONSOLE_QUERY);
+    defaultQueryTypes.push(MANUAL_TRIGGER_TEXT);
   }
+
   return defaultQueryTypes;
 };
 
 export const queryToInternalNameMap = {
-  [CONSOLE_QUERY]: INTERNAL_CONSOLE_QUERY_REP,
   insert: 'insert',
   update: 'update',
   delete: 'delete',
+  [MANUAL_TRIGGER_TEXT]: MANUAL_TRIGGER_VAR,
 };
 
 export const getManualOperationValue = (queryType, definition) => {
