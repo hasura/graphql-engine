@@ -30,7 +30,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /graphql/hasura/introduction
-            port: probe
+            port: 8080
 ---
 apiVersion: v1
 kind: Service
