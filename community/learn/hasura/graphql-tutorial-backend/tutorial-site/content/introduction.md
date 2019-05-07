@@ -2,9 +2,9 @@
 title: "Course introduction"
 ---
 
-This course is a super fast introduction to GraphQL and to setting up a GraphQL backend with Hasura.
+This course is a super fast introduction to setting up a GraphQL backend with Hasura.
 
-In 30mins, you will setup a powerful, scalable realtime GraphQL backend complete with queries, mutations, subscriptions. You will also learn how Hasura helps you integrate custom business logic (in any programming language), both as custom GraphQL APIs that you write yourself, and as event triggers that run asynchronously and are triggered by database events.
+In 30 mins, you will setup a powerful, scalable realtime GraphQL backend complete with queries, mutations, subscriptions. You will also learn how Hasura helps you integrate custom business logic (in any programming language), both as custom GraphQL APIs that you write yourself, and as event triggers that run asynchronously and are triggered by database events.
 
 ## What will I learn?
 
