@@ -18,7 +18,6 @@ const config = {
 	"sidebar": {
 		"forcedNavOrder": [
 			"/introduction",
-    		"/intro-to-graphql",
     		"/setup",
     		"/data-modelling",
     		"/relationships",
