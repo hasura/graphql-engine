@@ -56,6 +56,7 @@ import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
+import           Hasura.Server.Config (runGetConfig)
 import           Hasura.SQL.Types
 
 consoleTmplt :: M.Template
@@ -444,6 +445,11 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr serverCtx $ do
         query <- parseBody
         v1Alpha1PGDumpHandler query
+
+    get "v1alpha1/config" $ mkSpockAction encodeQErr serverCtx $
+      mkAPIRespHandler $ do
+        onlyAdmin
+        return $ encJFromJValue $ runGetConfig (scAuthMode serverCtx)
 
     when enableGraphQL $ do
       post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $
