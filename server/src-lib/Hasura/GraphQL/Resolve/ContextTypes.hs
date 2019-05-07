@@ -13,13 +13,13 @@ import           Hasura.SQL.Types
 
 type FieldMap
   = Map.HashMap (G.NamedType, G.Name)
-    (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+    (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
 
 -- order by context
 data OrdByItem
   = OBIPGCol !PGColInfo
-  | OBIRel !RelInfo !AnnBoolExpSQL
-  | OBIAgg !RelInfo !AnnBoolExpSQL
+  | OBIRel !RelInfo !AnnBoolExpPartialSQL
+  | OBIAgg !RelInfo !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 
 type OrdByItemMap = Map.HashMap G.Name OrdByItem
@@ -38,15 +38,15 @@ type RelationInfoMap = Map.HashMap RelName RelInfo
 data UpdPermForIns
   = UpdPermForIns
   { upfiCols   :: ![PGCol]
-  , upfiFilter :: !AnnBoolExpSQL
-  , upfiSet    :: !PreSetCols
+  , upfiFilter :: !AnnBoolExpPartialSQL
+  , upfiSet    :: !PreSetColsPartial
   } deriving (Show, Eq)
 
 data InsCtx
   = InsCtx
   { icView      :: !QualifiedTable
-  , icColumns   :: ![PGColInfo]
-  , icSet       :: !PreSetCols
+  , icAllCols   :: ![PGColInfo]
+  , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
   } deriving (Show, Eq)

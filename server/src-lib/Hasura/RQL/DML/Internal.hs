@@ -45,12 +45,10 @@ mkAdminRolePermInfo :: TableInfo -> RolePermInfo
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    pgCols = map pgiName
-      . fst . partitionEithers
-      . map fieldInfoToEither . M.elems $ tiFieldInfoMap ti
+    pgCols = map pgiName $ getCols $ tiFieldInfoMap ti
 
     tn = tiName ti
-    i = InsPermInfo tn annBoolExpTrue M.empty []
+    i = InsPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
@@ -160,6 +158,8 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
+type SessVarBldr m = PGColType -> SessVar -> m S.SQLExp
+
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
@@ -185,36 +185,68 @@ fetchRelDet relName refTabName = do
 checkOnColExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SelPermInfo
+  -> SessVarBldr m
   -> AnnBoolExpFldSQL
   -> m AnnBoolExpFldSQL
-checkOnColExp spi annFld = case annFld of
+checkOnColExp spi sessVarBldr annFld = case annFld of
   AVCol (PGColInfo cn _ _) _ -> do
     checkSelOnCol spi cn
     return annFld
   AVRel relInfo nesAnn -> do
     relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
-    modAnn <- checkSelPerm relSPI nesAnn
-    return $ AVRel relInfo $
-      andAnnBoolExps modAnn $ spiFilter relSPI
+    modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
+    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
+    return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
+
+convAnnBoolExpPartialSQL
+  :: (Applicative f)
+  => SessVarBldr f
+  -> AnnBoolExpPartialSQL
+  -> f AnnBoolExpSQL
+convAnnBoolExpPartialSQL f =
+  traverseAnnBoolExp (convPartialSQLExp f)
+
+convPartialSQLExp
+  :: (Applicative f)
+  => SessVarBldr f
+  -> PartialSQLExp
+  -> f S.SQLExp
+convPartialSQLExp f = \case
+  PSESQLExp sqlExp -> pure sqlExp
+  PSESessVar colTy sessVar -> f colTy sessVar
+
+sessVarFromCurrentSetting
+  :: (Applicative f) => PGColType -> SessVar -> f S.SQLExp
+sessVarFromCurrentSetting columnType sessVar =
+  pure $ sessVarFromCurrentSetting' columnType sessVar
+
+sessVarFromCurrentSetting' :: PGColType -> SessVar -> S.SQLExp
+sessVarFromCurrentSetting' columnType sessVar =
+  S.withTyAnn columnType $ withGeoVal columnType $
+    S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower sessVar]
+  where
+    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SelPermInfo
+  -> (PGColType -> SessVar -> m S.SQLExp)
   -> AnnBoolExpSQL
   -> m AnnBoolExpSQL
-checkSelPerm spi =
-  traverse (checkOnColExp spi)
+checkSelPerm spi sessVarBldr =
+  traverse (checkOnColExp spi sessVarBldr)
 
-convBoolExp'
+convBoolExp
   :: ( UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap
   -> SelPermInfo
   -> BoolExp
+  -> (PGColType -> SessVar -> m S.SQLExp)
   -> (PGColType -> Value -> m S.SQLExp)
   -> m AnnBoolExpSQL
-convBoolExp' cim spi be prepValBuilder = do
-  abe <- annBoolExp prepValBuilder cim be
-  checkSelPerm spi abe
+convBoolExp cim spi be sessVarBldr prepValBldr = do
+  abe <- annBoolExp prepValBldr cim be
+  checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler p2Res =

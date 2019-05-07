@@ -22,6 +22,11 @@ flag developer
   default: False
   manual: True
 
+flag profile
+  description: compile with profile options set
+  default: False
+  manual: True
+
 flag local-console
   description: embeds resources needed by console and serves them at /static/
   default: False
@@ -138,9 +143,14 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
+                     -- metrics in multiplexed subs
+                     , ekg-core
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
+                     , Hasura.Db
+                     , Hasura.Cache
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
@@ -155,6 +165,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.PGDump
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
@@ -166,6 +177,7 @@ library
                      , Hasura.RQL.Types.DML
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -211,8 +223,13 @@ library
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.LiveQuery
+                     , Hasura.GraphQL.Execute.LiveQuery.Types
+                     , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
+                     , Hasura.GraphQL.Execute.LiveQuery.Fallback
                      , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Resolve.LiveQuery
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
@@ -230,6 +247,7 @@ library
                      , Hasura.HTTP
 
                      , Data.Text.Extended
+                     , Data.Aeson.Extended
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
@@ -271,8 +289,10 @@ library
                       NoImplicitPrelude
 
 
-  if flag(developer)
+  if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(developer)
+    cpp-options: -DDeveloperAPIs -DLocalConsole
   if flag(local-console)
     cpp-options: -DLocalConsole
 

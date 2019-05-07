@@ -3,7 +3,7 @@ import React from 'react';
 import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import styles from '../TableModify/ModifyTable.scss';
 
@@ -107,7 +107,7 @@ class RelationshipEditor extends React.Component {
 
     const expanded = () => (
       <div className={styles.activeEdit}>
-        <div className={tableStyles.add_mar_top}>
+        <div>
           <Button
             color="white"
             size="xs"

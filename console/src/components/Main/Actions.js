@@ -10,7 +10,7 @@ import {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
 } from '../Services/Data/DataActions';
-import { changeRequestHeader } from '../ApiExplorer/Actions';
+import { changeRequestHeader } from '../Services/ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';

@@ -141,8 +141,13 @@ execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
+<<<<<<< HEAD
   buildSchemaCache
   encJToLBS <$> runQueryM AMNoAuth query
+=======
+  buildSchemaCacheStrict
+  encJToLBS <$> runQueryM query
+>>>>>>> master
 
 -- error messages
 pgcryptoReqdMsg :: T.Text

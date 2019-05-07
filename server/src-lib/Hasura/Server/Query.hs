@@ -57,6 +57,9 @@ data RQLQuery
   | RQDropDeletePermission !DropDelPerm
   | RQSetPermissionComment !SetPermComment
 
+  | RQGetInconsistentMetadata !GetInconsistentMetadata
+  | RQDropInconsistentMetadata !DropInconsistentMetadata
+
   | RQInsert !InsertQuery
   | RQSelect !SelectQuery
   | RQUpdate !UpdateQuery
@@ -85,9 +88,12 @@ data RQLQuery
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
+<<<<<<< HEAD
 
   | RQGetConfig !GetConfig
 
+=======
+>>>>>>> master
   deriving (Show, Eq, Lift)
 
 $(deriveJSON
@@ -145,29 +151,35 @@ peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
-  -> Bool
-  -> Q.PGPool -> Q.TxIsolation
+  -> SQLGenCtx
+  -> PGExecCtx
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
-  runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
+peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
+  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
-    sqlGenCtx = SQLGenCtx strfyNum
     lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation -> InstanceId
+  => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
+<<<<<<< HEAD
   -> Bool -> AuthMode -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pool isoL instanceId userInfo sc hMgr strfyNum authMode query = do
   resE <- liftIO $ runExceptT $
     peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM authMode query
+=======
+  -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
+  resE <- liftIO $ runExceptT $
+    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
+>>>>>>> master
   either throwError withReload resE
   where
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing)
-             $ recordSchemaUpdate instanceId
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+             $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
 
@@ -195,6 +207,9 @@ queryNeedsReload qi = case qi of
   RQDropUpdatePermission _     -> True
   RQDropDeletePermission _     -> True
   RQSetPermissionComment _     -> False
+
+  RQGetInconsistentMetadata _  -> False
+  RQDropInconsistentMetadata _ -> True
 
   RQInsert _                   -> False
   RQSelect _                   -> False
@@ -258,6 +273,9 @@ runQueryM am rq = withPathK "args" $ case rq of
   RQDropUpdatePermission q     -> runDropPerm q
   RQDropDeletePermission q     -> runDropPerm q
   RQSetPermissionComment q     -> runSetPermComment q
+
+  RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
+  RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
   RQInsert q                   -> runInsert q
   RQSelect q                   -> runSelect q

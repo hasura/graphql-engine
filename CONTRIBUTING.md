@@ -80,5 +80,10 @@ aforementioned sections).
 
 - Don't add a period/dot (.) at the end of the summary line.
 
+## Translations
+
+This document is available in the following translations:
+
+- [French :fr:](translations/CONTRIBUTING.french.md)
 
 (Credits: Some sections are adapted from https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)

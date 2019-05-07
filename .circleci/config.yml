@@ -110,15 +110,24 @@ refs:
           apt-get update
           apt install --yes pgbouncer jq curl postgresql-client
     - run:
+        name: Ensure databases are present
+        environment:
+          DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+        command: |
+          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
+    - run:
         name: Run Python tests
         environment:
           HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
+          HASURA_GRAPHQL_DATABASE_URL_2: 'postgres://gql_test:@localhost:5432/gql_test2'
           GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
         name: Generate coverage report
         working_directory: ./server
+        environment:
+          LC_ALL: 'C.UTF-8'
         command: |
           stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
@@ -148,7 +157,7 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -162,6 +171,11 @@ jobs:
     - restore_cache:
         keys:
         - server-app-cache-{{ .Branch }}-{{ .Revision }}
+    - run:
+        name: Install latest postgresql client tools
+        command: |
+          apt-get -y update
+          apt-get -y install postgresql-client-11
     - run:
         name: Build the server
         working_directory: ./server
@@ -209,7 +223,7 @@ jobs:
     environment:
       PG_VERSION: "11_1"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
       # TODO: change this to circleci postgis when they have one for pg 11
     - image: mdillon/postgis:11-alpine
       <<: *test_pg_env
@@ -219,7 +233,7 @@ jobs:
     environment:
       PG_VERSION: "10_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
     - image: circleci/postgres:10.6-alpine-postgis
       <<: *test_pg_env
 
@@ -228,7 +242,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -237,7 +251,7 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190314
+    - image: hasura/graphql-engine-server-builder:20190415-1
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 

@@ -23,11 +23,11 @@ import {
   setOperationSelection,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
+  loadTableList,
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
-import { fetchTableListBySchema } from './AddActions';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
@@ -36,7 +36,7 @@ import semverCheck from '../../../../helpers/semver';
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
-    this.props.dispatch(fetchTableListBySchema('public'));
+    this.props.dispatch(loadTableList('public'));
     this.state = {
       advancedExpanded: false,
       supportColumnChangeFeature: false,
@@ -245,7 +245,7 @@ class AddTrigger extends Component {
     }
     const updateTableList = e => {
       dispatch(setSchemaName(e.target.value));
-      dispatch(fetchTableListBySchema(e.target.value));
+      dispatch(loadTableList(e.target.value));
     };
 
     const updateTableSelection = e => {

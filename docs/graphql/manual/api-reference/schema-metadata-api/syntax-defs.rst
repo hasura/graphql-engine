@@ -203,7 +203,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -234,6 +234,15 @@ NotExp
    {
        "$not" : BoolExp_
    }
+
+
+TrueExp
+^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+    {}
 
 ColumnExp
 ^^^^^^^^^
@@ -350,6 +359,17 @@ A JSONObject_
    }
 
 .. _JSONObject: https://tools.ietf.org/html/rfc7159
+
+.. _Empty Object:
+
+Empty Object
+^^^^^^^^^^^^
+
+An empty JSONObject_
+
+.. code-block:: json
+
+   {}
 
 .. _ColumnPresetExp:
 

@@ -387,9 +387,11 @@ mkColCompExp qual lhsCol = \case
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case
-  AVCol colInfo _ ->
+  AVCol colInfo opExps ->
     let cn = pgiName colInfo
-    in [SchemaDependency (SOTableObj tn (TOCol cn)) "on_type"]
+        depColsInOpExp = mapMaybe opExpDepCol opExps
+        allDepCols = cn:depColsInOpExp
+    in map (mkColDep "on_type" tn) allDepCols
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
