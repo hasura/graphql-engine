@@ -370,9 +370,10 @@ kill_hge_servers
 echo -e "\n<########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA SUBSCRIPTIONS ########>\n"
 
 HASURA_RM_SUBS_TEST_DB='postgres://gql_test:@localhost:5432/rem_hge_test'
-echo "Installing psql"
-apt-get update && apt-get install -y postgresql-client
 psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database rem_hge_test;"
+
+EXISTING_ADMIN_SECRET="$HASURA_GRAPHQL_ADMIN_SECRET"
+unset HASURA_GRAPHQL_ADMIN_SECRET
 
 # start another hasura instance as a remote graphql server for subscriptions
 "$GRAPHQL_ENGINE" --database-url "$HASURA_RM_SUBS_TEST_DB" serve \
@@ -391,8 +392,9 @@ kill -INT $PID
 kill -INT $RM_PID
 psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database rem_hge_test;"
 sleep 4
-combine_hpc_reports
+combine_all_hpc_reports || true
 unset HASURA_RM_SUBS_TEST_DB
+HASURA_GRAPHQL_ADMIN_SECRET="$EXISTING_ADMIN_SECRET"
 
 
 # webhook tests

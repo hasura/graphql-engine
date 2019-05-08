@@ -137,9 +137,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             headers = headers_new
 
         #The case as admin with admin-secret and jwt/webhook
-        elif (
-                hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(
-                headers) == 0:
+        elif (hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(headers) == 0:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
         #The case as admin with only admin-secret
