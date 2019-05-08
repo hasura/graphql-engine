@@ -7,7 +7,7 @@ title: "Create Auth0 App"
 3. Click on the `Applications` menu option on the left and then click the `+ Create Application` button.
 4. In the Create Application window, set a name for your application and select `Single Page Web Applications`. (Assuming the frontend app will be an SPA built on react/vue etc)
 
-![Create Auth0 App](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-auth0-app.png)
+![Create Auth0 App](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-auth0-app.png)
 
 5. In the settings of the application, we will add appropriate (e.g: http://localhost:3000/callback) URLs as Allowed Callback URLs and Allowed Web Origins. We can also add domain specific URLs as well for the app to work. (e.g: https://myapp.com/callback). 
 

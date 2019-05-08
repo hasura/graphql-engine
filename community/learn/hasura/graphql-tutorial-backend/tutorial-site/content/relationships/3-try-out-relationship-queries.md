@@ -19,6 +19,6 @@ query {
 
 You can see the response in the following format:
 
-![relationship query](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphiql-relationship-query.png)
+![relationship query](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphiql-relationship-query.png)
 
 As you can see, in the same response, you are getting the results for the user's information, exactly like you queried. This is a simple example of a one-to-one query/object relationship.
