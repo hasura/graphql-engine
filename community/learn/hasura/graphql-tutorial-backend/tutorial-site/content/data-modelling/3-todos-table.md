@@ -13,7 +13,7 @@ The `todos` table will have the following columns:
 - `created_at` (type timestamp and default now())
 - `user_id` (type text) 
 
-The columns are mostly self-explanatory. The `last_seen` column is used to store the latest timestamp of when the user was online.
+The columns are mostly self-explanatory.
 
 In the Hasura Console, head over to the `Data` tab section and click on `Create Table`. Enter the values for creating the table as mentioned above.
 

@@ -1,5 +1,5 @@
 ---
-title: "Create Event Triggers"
+title: "Create Event Trigger"
 ---
 
 Event triggers can be created using the Hasura console.
@@ -24,5 +24,5 @@ Now head to Events tab and click on `send_email` event to browse the processed e
 
 ![Test event trigger](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/test-event-trigger.png)
 
-Now everytime a new row is inserted into `users` table this event would be triggered.
+Now everytime a new row is inserted into `users` table this event would be invoked.
 
