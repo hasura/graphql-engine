@@ -10,9 +10,9 @@ Hasura is configured to be used with Auth0. Now let's test this setup by getting
 
 To get a JWT token,
 
-1. Login to Auth0 using this URL - https://<auth0-domain>.auth0.com/login?client=<client_id>&protocol=oauth2&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile
+1. Login to Auth0 using this URL - https://auth0-domain.auth0.com/login?client=client_id&protocol=oauth2&response_type=token%20id_token&redirect_uri=callback_uri&scope=openid%20profile
 
-- Replace <auth0-domain> with the one we created in the previous steps.
+- Replace auth0-domain with the one we created in the previous steps.
 - Replace client_id with Auth0 application's client_id.
 - Replace callback_uri with `http://localhost:3000/callback` for testing.
 
