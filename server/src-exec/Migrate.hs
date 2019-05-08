@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "14"
+curCatalogVer = "15"
 
 migrateMetadata
   :: ( MonadTx m
@@ -282,7 +282,14 @@ from12To13 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_12_to_13.sql")
   return ()
 
-from13To14
+from13To14 :: MonadTx m => m ()
+from13To14 = liftTx $ do
+  -- Migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_13_to_14.sql")
+  return ()
+
+from14To15
   :: ( MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
@@ -291,17 +298,17 @@ from13To14
      , MonadIO m
      )
   => m ()
-from13To14 = do
+from14To15 = do
   -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_13_to_14.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_14_to_15.sql")
   -- Migrate metadata
   migrateMetadata False migrateMetadataFrom13
   -- Set as system defined
   setAsSystemDefinedFor14
   where
     migrateMetadataFrom13 =
-      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_13_to_14.yaml" :: Q (TExp RQLQuery)))
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_14_to_15.yaml" :: Q (TExp RQLQuery)))
 
 migrateCatalog
   :: ( MonadTx m
@@ -330,10 +337,13 @@ migrateCatalog migrationTime = do
      | preVer == "11"  -> from11ToCurrent
      | preVer == "12"  -> from12ToCurrent
      | preVer == "13"  -> from13ToCurrent
+     | preVer == "14"  -> from14ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from13ToCurrent = from13To14 >> postMigrate
+    from14ToCurrent = from14To15 >> postMigrate
+
+    from13ToCurrent = from13To14 >> from14ToCurrent
 
     from12ToCurrent = from12To13 >> from13ToCurrent
 
