@@ -26,7 +26,7 @@ import generatedLoginConnector from './components/Login/Login';
 import metadataContainer from './components/Services/Metadata/Container';
 import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Metadata/MetadataStatus/MetadataStatus';
-import whitelistQueriesContainer from './components/Services/Metadata/WhitelistQueries/WhitelistQueries';
+import allowedQueriesContainer from './components/Services/Metadata/AllowedQueries/AllowedQueries';
 
 const routes = store => {
   // load hasuractl migration status
@@ -101,8 +101,8 @@ const routes = store => {
               component={metadataOptionsContainer(connect)}
             />
             <Route
-              path="whitelist-queries"
-              component={whitelistQueriesContainer(connect)}
+              path="allowed-queries"
+              component={allowedQueriesContainer(connect)}
             />
           </Route>
           {dataRouter}

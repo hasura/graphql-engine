@@ -1,7 +1,7 @@
 const defaultState = {
   inconsistentObjects: [],
   ongoingRequest: false,
-  whitelistQueries: [
+  allowedQueries: [
     { name: 'get_album', query: '{\n  Album {\n    Title\n  }\n}' },
     {
       name: 'get_article',

@@ -29,6 +29,7 @@ var ravenVersions = []mt.Version{
 
 var testMetadata = map[string][]byte{
 	"metadata": []byte(`functions: []
+query_collections: []
 query_templates: []
 remote_schemas: []
 tables:
@@ -42,6 +43,7 @@ tables:
   update_permissions: []
 `),
 	"empty-metadata": []byte(`functions: []
+query_collections: []
 query_templates: []
 remote_schemas: []
 tables: []

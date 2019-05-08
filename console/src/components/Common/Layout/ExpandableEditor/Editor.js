@@ -139,7 +139,7 @@ class Editor extends React.Component {
           {editorLabel}
         </div>
         {editorContent}
-        {actionButtons}
+        <div className={styles.add_mar_top_small}>{actionButtons}</div>
       </div>
     );
   }

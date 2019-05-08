@@ -6,74 +6,64 @@ import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 
 const Sidebar = ({ location, semverChecks, metadata }) => {
-  const currentLocation = location.pathname;
-
-  const sections = [];
+  const sectionsData = [];
 
   if (semverChecks.supportMetadata) {
-    sections.push(
-      <li
-        role="presentation"
-        className={
-          currentLocation.includes('metadata/actions') ? styles.active : ''
-        }
-      >
-        <Link
-          className={styles.linkBorder}
-          to={'/metadata/actions'}
-          data-test="metadata-actions-link"
-        >
-          Metadata Actions
-        </Link>
-      </li>
-    );
+    sectionsData.push({
+      key: 'actions',
+      link: '/metadata/actions',
+      dataTestVal: 'metadata-actions-link',
+      title: 'Metadata Actions',
+    });
   }
 
   if (semverChecks.supportInconsistentMetadata) {
     const consistentIcon =
       metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
 
-    sections.push(
-      <li
-        role="presentation"
-        className={
-          currentLocation.includes('metadata/status') ? styles.active : ''
-        }
-      >
-        <Link
-          className={styles.linkBorder}
-          to={'/metadata/status'}
-          data-test="metadata-status-link"
-        >
-          <div className={styles.display_flex}>
-            Metadata Status
-            <span className={styles.add_mar_left}>{consistentIcon}</span>
-          </div>
-        </Link>
-      </li>
-    );
+    sectionsData.push({
+      key: 'status',
+      link: '/metadata/status',
+      dataTestVal: 'metadata-status-link',
+      title: (
+        <div className={styles.display_flex}>
+          Metadata Status
+          <span className={styles.add_mar_left}>{consistentIcon}</span>
+        </div>
+      ),
+    });
   }
 
-  if (semverChecks.supportQueryWhitelist) {
+  if (semverChecks.supportAllowedQueries) {
+    sectionsData.push({
+      key: 'allowed-queries',
+      link: '/metadata/allowed-queries',
+      dataTestVal: 'metadata-allowed-queries-link',
+      title: 'Allowed Queries',
+    });
+  }
+
+  const currentLocation = location.pathname;
+
+  const sections = [];
+
+  sectionsData.forEach(section => {
     sections.push(
       <li
         role="presentation"
-        className={
-          currentLocation.includes('metadata/whitelist-queries')
-            ? styles.active
-            : ''
-        }
+        key={section.key}
+        className={currentLocation.includes(section.link) ? styles.active : ''}
       >
         <Link
           className={styles.linkBorder}
-          to={'/metadata/whitelist-queries'}
-          data-test="metadata-whitelist-query-link"
+          to={section.link}
+          data-test={section.dataTestVal}
         >
-          Whitelist Queries
+          {section.title}
         </Link>
       </li>
     );
-  }
+  });
 
   const content = <ul>{sections}</ul>;
 
