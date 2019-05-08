@@ -22,7 +22,7 @@ Our task will be to convert the "static" UI into a working realtime app.
 
 This is what you should see after the steps above:
 
-![Boilerplate after login](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/boilerplate-after-login.png)
+![Boilerplate after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/boilerplate-after-login.png)
 
 ### Load GraphiQL to play with your GraphQL APIs
 
@@ -31,4 +31,4 @@ This is what you should see after the steps above:
 
 This is what you should see after the steps above:
 
-![GraphiQL after login](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql-after-login.png)
+![GraphiQL after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql-after-login.png)
