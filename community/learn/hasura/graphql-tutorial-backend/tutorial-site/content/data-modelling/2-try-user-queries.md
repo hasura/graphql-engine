@@ -22,7 +22,7 @@ Click on the `Play` button on the GraphiQL interface to execute the query.
 
 You should get a response looking something like this:
 
-![User Mutation](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-mutation-user.png)
+![User Mutation](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-mutation-user.png)
 
 Great! You have now consumed the mutation query for the `users` table that you just created. Easy isn't it?
 
@@ -44,7 +44,7 @@ query {
 
 You should get a response looking something like this:
 
-![User Query](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-query-user.png)
+![User Query](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-query-user.png)
 
 Note that some columns like `created_at` have default values, even though you did not insert them during the mutation.
 
@@ -68,11 +68,11 @@ Now let's insert new data into the users table and see the changes appearing in 
 
 In a new tab, Head over to Console -> DATA tab -> users -> Insert Row and insert another row.
 
-![Insert new user](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/user-insert-new-row.png)
+![Insert new user](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/user-insert-new-row.png)
 
 And switch to the previous `GRAPHIQL` tab and see the subscription response returning 2 results.
 
-![User Subscription](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-subscription-user.png)
+![User Subscription](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/graphql-subscription-user.png)
 
 An active subscription query will keep returning the latest set of results depending on the query.
 

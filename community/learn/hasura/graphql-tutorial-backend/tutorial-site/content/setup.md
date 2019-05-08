@@ -14,7 +14,7 @@ The fastest way to try Hasura out is via Heroku.
     This will deploy Hasura GraphQL Engine on Heroku. A PostgreSQL database will be automatically provisioned along with Hasura. If you don’t have an account on Heroku, you would be required to sign up. 
     *Note*: It is free to signup and no credit-card is required.
 
-![Deploy on Heroku](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/deploy-on-heroku.png)
+![Deploy on Heroku](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/deploy-on-heroku.png)
 
 Type in the app name, select the region of choice and click on Deploy app button.
 
@@ -22,7 +22,7 @@ Type in the app name, select the region of choice and click on Deploy app button
 
 Once the app is deployed, you should see the following on your Heroku dashboard.
 
-![Hasura GraphQL on Heroku](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/app-deployed-heroku.png)
+![Hasura GraphQL on Heroku](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/app-deployed-heroku.png)
 
 - Open the Hasura console
 
@@ -31,6 +31,6 @@ Once the app is deployed, you should see the following on your Heroku dashboard.
 
 It should look something like this:
 
-![Hasura Console](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/hasura-console-initial-load.png)
+![Hasura Console](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/hasura-console-initial-load.png)
 
 Great! You have now deployed Hasura GraphQL Engine and have the admin console ready to get started!

@@ -12,7 +12,7 @@ Give a name for the event trigger (say send_email) and select the table `users` 
 
 Click on `Create`.
 
-![Create event trigger](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/add-event-trigger.png)
+![Create event trigger](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/add-event-trigger.png)
 
 ## Try it out
 
@@ -22,7 +22,7 @@ Head to Console -> Data -> users -> Insert Row and insert a new row.
 
 Now head to Events tab and click on `send_email` event to browse the processed events.
 
-![Test event trigger](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/test-event-trigger.png)
+![Test event trigger](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/test-event-trigger.png)
 
 Now everytime a new row is inserted into `users` table this event would be invoked.
 

@@ -11,7 +11,7 @@ Select the configuration for current column as `id` and the remote table would b
 
 We are just mapping current view's id column to users table's id column to create the relationship.
 
-![create relationship from view](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-relationship-view.png)
+![create relationship from view](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-relationship-view.png)
 
 Great! We are completely done with data modelling for the app.
 

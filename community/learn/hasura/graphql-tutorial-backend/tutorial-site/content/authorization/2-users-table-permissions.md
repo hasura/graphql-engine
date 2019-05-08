@@ -11,7 +11,7 @@ Click on the Edit icon (pencil icon) to modify the select permission for role us
 
 Here the users should be able to access every other user's `id` and `name` data.
 
-![users select permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/users-select-permission.png)
+![users select permission](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/users-select-permission.png)
 
 Click on `Save Permissions`
 
@@ -27,7 +27,7 @@ In the Row update permission, under custom check, choose the following condition
 
 Under column update permissions, select `last_seen` column, as this will be updated from the frontend app.
 
-![users update permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/users-update-permission.png)
+![users update permission](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/users-update-permission.png)
 
 Click on `Save Permissions` and you are done with access control rules for `users` table.
 

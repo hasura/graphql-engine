@@ -21,6 +21,6 @@ function (user, context, callback) {
 }
 ```
 
-![Custom JWT Claims Rule](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/custom-jwt-claims-rule.png)
+![Custom JWT Claims Rule](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/custom-jwt-claims-rule.png)
 
 
