@@ -11,13 +11,6 @@ import ModalWrapper from '../../../Common/ModalWrapper';
 import { parseJWTHeader } from './utils';
 
 import {
-  // generateApiCodeClicked,
-  // changeRequestMethod,
-  // changeRequestUrl,
-  // changeRequestParams,
-  // addRequestHeader,
-  // editGeneratedJson,
-  // updateFileObject,
   changeRequestHeader,
   removeRequestHeader,
   focusHeaderTextbox,
@@ -54,6 +47,7 @@ const jwtValidityStatus = message => (
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
  * */
+
 class ApiRequest extends Component {
   constructor(props) {
     super(props);
@@ -107,13 +101,6 @@ class ApiRequest extends Component {
       isAnalyzingBearer: false,
     });
   }
-
-  setLocalStorageHeader = headers => {
-    localStorage.setItem(
-      'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-      JSON.stringify(headers)
-    );
-  };
 
   analyzeBearerToken(e) {
     const { dispatch } = this.props;
