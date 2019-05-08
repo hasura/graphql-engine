@@ -15,7 +15,7 @@ The columns are mostly self-explanatory. The `last_seen` column is used to store
 
 In the Hasura Console, head over to the `Data` tab section and click on `Create Table`. Enter the values for creating the table as mentioned above.
 
-![Create table users](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-table-users.png)
+![Create table users](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-table-users.png)
 
 Once you are done, click on `Create` button to create the table.
 

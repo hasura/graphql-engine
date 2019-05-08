@@ -12,11 +12,11 @@ Head over to Console -> Data -> todos -> Modify page.
 
 It should look something like this:
 
-![Todos Modify Page](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-modify-page.png)
+![Todos Modify Page](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-modify-page.png)
 
 Scroll down to `Foreign Keys` section at the bottom and click on `Add`.
 
-![user_id foreign key](/https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/user-id-foreign-key.png)
+![user_id foreign key](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/user-id-foreign-key.png)
 
 - Select the Reference table as `users`
 - Choose the From column as `user_id` and To column as `id`
