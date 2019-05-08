@@ -134,23 +134,23 @@ data WSServerEnv
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
-    checkPath
+    errType <- checkPath
     let reqHdrs = WS.requestHeaders requestHead
     headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
-    return $ WsHeaders $ filterWsHeaders headers
-  either reject accept res
+    return (WsHeaders $ filterWsHeaders headers, errType)
+  either reject (uncurry accept) res
 
   where
     keepAliveAction wsConn = forever $ do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
-    accept hdrs = do
+    accept hdrs errType = do
       logger $ WSLog wsId Nothing EAccepted Nothing
       connData <- WSConnData
                   <$> IORef.newIORef (CSNotInitialised hdrs)
                   <*> STMMap.newIO
-                  <*> pure (errType $ WS.requestPath requestHead)
+                  <*> pure errType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
@@ -162,18 +162,11 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
-    checkPath =
-      when (WS.requestPath requestHead `notElem` allowedPaths) $
-        throw404 $ "only [" <> T.intercalate ", " allowedPaths
-                   <> "] is supported on websockets"
-
-    allowedPaths :: (IsString a) => [a]
-    allowedPaths = ["/v1alpha1/graphql", "/v1/graphql"]
-
-    errType reqPath = case reqPath of
-      "/v1alpha1/graphql" -> ERTLegacy
-      "/v1/graphql"       -> ERTGraphqlCompliant
-      _                   -> ERTGraphqlCompliant
+    checkPath = case WS.requestPath requestHead of
+      "/v1alpha1/graphql" -> return ERTLegacy
+      "/v1/graphql"       -> return ERTGraphqlCompliant
+      _                   ->
+        throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
