@@ -54,8 +54,6 @@ Now switch back to the tab where your subscription query is running to see the u
 
 ![Subscription online users](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/online-users-subscription.png)
 
-Great! We are completely done with data modelling for the app.
-
 
 
 

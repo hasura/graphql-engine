@@ -6,7 +6,7 @@ Hasura gives you CRUD + realtime GraphQL APIs with authorization & access contro
 
 Custom business logic can be handled in two ways using Hasura:
 - Writing custom GraphQL resolvers and adding it as a remote schema.
-- After a mutation operation, trigger a webhook asynchronously.
+- After a mutation operation, trigger a webhook asynchronously. This can be done via event triggers.
 
 In the todo app backend that you have built, there are certain custom functionalities you may want to add:
 
