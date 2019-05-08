@@ -9,13 +9,15 @@ const UniqueKeySelector = ({
   dispatch,
   index,
   columns,
+  service,
 }) => {
   const numCols = uniqueKey.length;
+
   const dispatchSelectUniqueCol = (e, _i) => {
     const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
     newUniqueKeys[index] = newUniqueKeys[index] || [];
     newUniqueKeys[index][_i] = parseInt(e.target.value, 10);
-    if (newUniqueKeys[numUniqueKeys - 1].length) {
+    if (newUniqueKeys[numUniqueKeys - 1].length && service === 'add-table') {
       newUniqueKeys.push([]);
     }
     dispatch(setUniqueKeys(newUniqueKeys));

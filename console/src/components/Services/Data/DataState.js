@@ -98,6 +98,7 @@ const defaultModifyState = {
       onUpdate: 'restrict',
     },
   ],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',

@@ -1,24 +1,47 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { ordinalColSort } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
 import { getUniqueKeyConfig } from '../Common/ReusableComponents/utils';
+import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
-const UniqueKeyWrapper = ({
-  // allSchemas,
-  columns,
+const UniqueKeyEditor = ({
   uniqueKeys,
-  dispatch,
+  tableSchema,
   setUniqueKeys,
+  dispatch,
 }) => {
-  const orderedColumns = columns.map(({ name, type }, i) => ({
+  const columns = tableSchema.columns.sort(ordinalColSort);
+  // columns in the right order with their indices
+  const orderedColumns = columns.map((c, i) => ({
+    name: c.column_name,
     index: i,
-    name,
-    type,
+    type: c.data_type,
   }));
+
+  const initialiseState = () => {
+    const existingConstraints = tableSchema.unique_constraints;
+    dispatch(
+      setUniqueKeys([
+        ...existingConstraints.map(ec => {
+          const cols = [];
+          ec.columns.forEach(c => {
+            cols.push(orderedColumns.find(oc => oc.name === c).index);
+          });
+          return cols;
+        }),
+        [],
+      ])
+    );
+  };
+
+  useEffect(() => {
+    initialiseState();
+  }, []);
 
   const numUniqueKeys = uniqueKeys.length;
 
-  const uniqueKeyEditors = uniqueKeys.map((uniqueKey, i) => {
+  return uniqueKeys.map((uniqueKey, i) => {
     const isLast = numUniqueKeys === i + 1;
 
     const uniqueKeyConfig = getUniqueKeyConfig(
@@ -35,19 +58,11 @@ const UniqueKeyWrapper = ({
           index={i}
           numUniqueKeys={numUniqueKeys}
           columns={orderedColumns}
-          service="add-table"
         />
       );
     };
 
     const collapsedLabel = () => {
-      if (isLast && numUniqueKeys === 1) {
-        return (
-          <div>
-            <i>(You can add unique keys later as well)</i>
-          </div>
-        );
-      }
       if (!uniqueKeyConfig) return null;
       return (
         <div>
@@ -65,15 +80,22 @@ const UniqueKeyWrapper = ({
       );
     };
 
-    const saveFunc = toggle => toggle();
+    const saveFunc = toggle => {
+      toggle();
+      saveUniqueKey();
+    };
 
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
-        toggle();
-        dispatch(
-          setUniqueKeys([...uniqueKeys.slice(0, i), ...uniqueKeys.slice(i + 1)])
+        const isOk = window.confirm(
+          'Are you sure you want to remove this unique key constraint?'
         );
+        if (!isOk) {
+          return;
+        }
+        toggle();
+        dispatch(removeUniqueKey(i, tableSchema.table_name));
       };
     }
 
@@ -101,8 +123,6 @@ const UniqueKeyWrapper = ({
       </div>
     );
   });
-
-  return <div>{uniqueKeyEditors}</div>;
 };
 
-export default UniqueKeyWrapper;
+export default UniqueKeyEditor;
