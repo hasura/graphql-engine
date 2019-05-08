@@ -177,6 +177,9 @@ const createTableSql = () => {
     const numUniqueConstraints = uniqueKeys.length;
     if (numUniqueConstraints > 0) {
       uniqueKeys.forEach(uk => {
+        if (!uk.length) {
+          return;
+        }
         const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
         tableColumns = `${tableColumns}, UNIQUE (${uniqueColumns.join(', ')})`;
       });

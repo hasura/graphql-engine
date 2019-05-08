@@ -16,7 +16,7 @@ const defaultState = {
       onDelete: 'restrict',
     },
   ],
-  uniqueKeys: [],
+  uniqueKeys: [[]],
   fkToggled: null,
   ongoingRequest: false,
   lastError: null,

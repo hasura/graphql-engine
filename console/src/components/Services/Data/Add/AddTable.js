@@ -499,7 +499,7 @@ class AddTable extends Component {
               tableName={tableName}
               uniqueKeys={uniqueKeys}
               dispatch={dispatch}
-              setForeignKeys={setForeignKeys}
+              setUniqueKeys={setUniqueKeys}
             />
             <hr />
             <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>

@@ -1,3 +1,8 @@
+export const getUniqueKeyConfig = columns => {
+  if (!columns.length) return null;
+  return `( ${columns.join(', ')} )`;
+};
+
 export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   const { refTableName, colMappings } = foreignKey;
   const filteredColMap = {};
