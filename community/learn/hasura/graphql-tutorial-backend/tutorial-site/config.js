@@ -39,7 +39,7 @@ const config = {
 		]
 	},
 	"siteMetadata": {
-		"title": "30 mins Hasura backend course for frontend developers | Hasura",
+		"title": "Introduction to Hasura backend course for frontend developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and developing GraphQL backends instantly using Hasura",
 		"ogImage": "https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-hasura.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/hasura/graphql-tutorial-backend/tutorial-site/content",
