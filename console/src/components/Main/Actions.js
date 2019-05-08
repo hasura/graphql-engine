@@ -81,16 +81,11 @@ const loadServerVersion = () => dispatch => {
 };
 
 const fetchServerConfig = () => (dispatch, getState) => {
-  const url = Endpoints.query;
-  const body = {
-    type: 'get_config',
-    args: {},
-  };
+  const url = Endpoints.serverConfig;
   const options = {
-    method: 'POST',
+    method: 'GET',
     credentials: globalCookiePolicy,
     headers: getState().tables.dataHeaders,
-    body: JSON.stringify(body),
   };
   dispatch({
     type: FETCHING_SERVER_CONFIG,

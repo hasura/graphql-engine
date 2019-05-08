@@ -11,7 +11,7 @@ export const getHeadersAsJSON = (headers = []) => {
   return headerJSON;
 };
 
-const parseJWTHeader = header => {
+export const parseJWTHeader = header => {
   let isJWTHeader;
   let matches = [];
   const parseBearer = /^(bearer) (.*)/gim;
@@ -23,5 +23,3 @@ const parseJWTHeader = header => {
   }
   return { isJWTHeader, matches };
 };
-
-export { getHeadersAsJSON, parseJWTHeader };

@@ -33,3 +33,16 @@ export const setGraphiQLHeadersInLocalStorage = headers => {
 export const getGraphiQLHeadersFromLocalStorage = () => {
   return window.localStorage.getItem('HASURA_CONSOLE_GRAPHIQL_HEADERS');
 };
+
+export const parseJWTHeader = header => {
+  let isJWTHeader;
+  let matches = [];
+  const parseBearer = /^(bearer) (.*)/gim;
+  if (header.key.toLowerCase() === 'authorization') {
+    matches = parseBearer.exec(header.value);
+    if (matches && matches[1] === 'Bearer') {
+      isJWTHeader = true;
+    }
+  }
+  return { isJWTHeader, matches };
+};
