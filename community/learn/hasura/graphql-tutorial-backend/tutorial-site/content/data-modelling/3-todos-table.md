@@ -17,6 +17,6 @@ The columns are mostly self-explanatory.
 
 In the Hasura Console, head over to the `Data` tab section and click on `Create Table`. Enter the values for creating the table as mentioned above.
 
-![Create table users](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-table-todos.png)
+![Create table users](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-table-todos.png)
 
 Once you are done, click on `Create` button to create the table.

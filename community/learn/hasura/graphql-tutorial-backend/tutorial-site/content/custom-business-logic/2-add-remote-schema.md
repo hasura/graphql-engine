@@ -8,7 +8,7 @@ We have written the custom resolver and deployed it to Glitch. We have the Graph
 
 Head to the `Remote Schemas` tab of the console and click on the `Add` button.
 
-![Add remote schema](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/add-remote-schema.png)
+![Add remote schema](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/add-remote-schema.png)
 
 Give a name for the remote schema (let's say auth0).
 Under GraphQL Server URL, enter the glitch app url that you just deployed in the previous step.
@@ -30,6 +30,6 @@ query {
 
 You also need to pass in the `Authorization` header with the token to get the right data.
 
-![remote schema query](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/query-remote-schema.png)
+![remote schema query](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/query-remote-schema.png)
 
 As you can see, Hasura has merged the custom GraphQL schema with the already existing auto-generated APIs over Postgres.

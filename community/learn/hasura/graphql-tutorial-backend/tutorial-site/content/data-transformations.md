@@ -27,7 +27,7 @@ Let's add this view and track the view with Hasura to be able to query it.
 
 Head to Console -> Data -> SQL page.
 
-![Create view online_users](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-view.png)
+![Create view online_users](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/create-view.png)
 
 Click on `Run` to create the view.
 
@@ -46,13 +46,13 @@ subscription {
 
 In another tab, update an existing user's `last_seen` value to see the subscription response getting updated.
 
-![Update users last_seen](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/update-users-last-seen.png)
+![Update users last_seen](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/update-users-last-seen.png)
 
 Enter the value as `now()` for the `last_seen` column and click on `Save`.
 
 Now switch back to the tab where your subscription query is running to see the updated response.
 
-![Subscription online users](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/online-users-subscription.png)
+![Subscription online users](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/online-users-subscription.png)
 
 
 

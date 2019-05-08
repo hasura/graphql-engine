@@ -6,12 +6,12 @@ Now that the foreign key constraint is created, Hasura Console automatically sug
 
 Head over to `Relationships` tab under `todos` table and you should see a suggested relationship like below:
 
-![Todos Relationships Page](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-relationship-page.png)
+![Todos Relationships Page](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-relationship-page.png)
 
 Click on `Add` in the suggested object relationship.
 
 Enter the relationship name as `user` (already pre-filled) and click on `Save`.
 
-![User Object Relationship](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-relationship-user.png)
+![User Object Relationship](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-relationship-user.png)
 
 A relationship has now been established between todos and users table.

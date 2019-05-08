@@ -13,11 +13,11 @@ Head over to the Permissions tab under `todos` table to add relevant permissions
 {"user_id":{"_eq":"X-Hasura-User-Id"}}
 ```
 
-![Todos row permission insert](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-table-row-permission-insert.png)
+![Todos row permission insert](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-table-row-permission-insert.png)
 
 Now under column insert permissions, select the `title` and `is_public` columns.
 
-![Todos insert column permission](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-insert-column-permission.png)
+![Todos insert column permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-insert-column-permission.png)
 
 Click on `Save Permissions`.
 
@@ -29,11 +29,11 @@ Now click on edit icon for "select" permissions. In the custom check, choose the
 {"_or":[{"is_public":{"_eq":true}},{"user_id":{"_eq":"X-Hasura-User-Id"}}]}
 ```
 
-![Todos select permission row](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-select-permission-row.png)
+![Todos select permission row](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-select-permission-row.png)
 
 Under column select permissions, select all the columns.
 
-![Todos select column permission](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-select-permission-column.png)
+![Todos select column permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-select-permission-column.png)
 
 Click on `Save Permissions`
 
@@ -43,7 +43,7 @@ Now click on edit icon for "update" permissions. In the custom check, choose `Wi
 
 And under column update permissions, select `id` and `is_completed` columns.
 
-![Todos update permission](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-update-permission.png)
+![Todos update permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-update-permission.png)
 
 Click on `Save Permissions` once done.
 
@@ -51,6 +51,6 @@ Click on `Save Permissions` once done.
 
 Finally for delete permission, under custom check, choose `With same custom checks as insert, update`.
 
-![Todos delete permission](https://graphql-engine-cdn.hasura.io/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-delete-permission.png)
+![Todos delete permission](/graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-hasura/todos-delete-permission.png)
 
 Click on `Save Permissions` and you are done with access control for `todos` table.
