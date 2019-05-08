@@ -2,6 +2,10 @@
 title: "Create Relationship"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/D0QthrXu_Jc" />
+
 Now that the foreign key constraint is created, Hasura Console automatically suggests relationships based on that.
 
 Head over to `Relationships` tab under `todos` table and you should see a suggested relationship like below:

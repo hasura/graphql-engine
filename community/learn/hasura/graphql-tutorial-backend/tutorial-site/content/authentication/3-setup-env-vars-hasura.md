@@ -2,6 +2,10 @@
 title: "Connect Hasura with Auth0"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/86qWv1YU7jA" />
+
 In this part, you will learn how to connect Hasura with the Auth0 application that you just created in the previous step.
 
 We need to configure Hasura to use the Auth0 public keys. An easier way to generate the config for JWT is to use the following link - [https://hasura.io/jwt-config](https://hasura.io/jwt-config)

@@ -2,6 +2,10 @@
 title: "Create table todos"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/u-5n4gKQQnw" />
+
 Now let's move on to creating the other model `todos`
 
 The `todos` table will have the following columns:

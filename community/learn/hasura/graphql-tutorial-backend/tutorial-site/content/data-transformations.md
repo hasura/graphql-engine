@@ -2,6 +2,10 @@
 title: "Data Transformations"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/vunIhyeTaac" />
+
 One of the realtime features of the todo app is to display the list of online users. We need a way to fetch this information based on the value of `last_seen` which tells when the user was last online.
 
 So far we were building tables and relationships. 

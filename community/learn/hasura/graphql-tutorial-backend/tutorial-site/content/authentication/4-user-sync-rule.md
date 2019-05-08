@@ -2,6 +2,10 @@
 title: "Sync Users with Rules"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/i5rMmXXcVsk" />
+
 We need to set up a rule in Auth0 which allows the users of Auth0 to be in sync with the users in our database. The following code snippet allows us to do the same. Again using the Rules feature, create a new blank rule and paste in the following code snippet:
 
 ```javascript

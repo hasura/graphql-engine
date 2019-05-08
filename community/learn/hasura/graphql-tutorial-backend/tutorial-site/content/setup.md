@@ -1,6 +1,11 @@
 ---
 title: "Deploy Hasura"
 ---
+
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/yOVHEzUiH84" />
+
 Let's start by deploying Hasura.
 
 ## One-click deployment on Heroku

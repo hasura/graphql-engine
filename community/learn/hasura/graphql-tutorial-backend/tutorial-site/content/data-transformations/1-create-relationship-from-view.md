@@ -2,6 +2,10 @@
 title: "Create relationship to user"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/QuaNRk2c5KI" />
+
 Now that the view has been created, we need a way to be able to fetch user information based on the `id` column of the view. Let's create a manual relationship from the view `online_users` to the table `users` using the `id column` of the view.
 
 Head to Console -> Data -> online_users -> Relationships page.

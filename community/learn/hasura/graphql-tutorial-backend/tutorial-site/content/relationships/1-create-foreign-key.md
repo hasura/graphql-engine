@@ -2,6 +2,10 @@
 title: "Create Foreign Key"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/5V7ghxVTQuY" />
+
 In the `todos` table, the value of `user_id` column must be ideally present in the `id` column of `users` table. Otherwise it would result in inconsistent data.
 
 Postgres allows you to define foreign key constraint to enforce this condition.

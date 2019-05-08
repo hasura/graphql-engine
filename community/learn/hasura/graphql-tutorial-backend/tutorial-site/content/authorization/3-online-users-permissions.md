@@ -2,6 +2,10 @@
 title: "Setup online_users view permissions"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/mmX5JRhT1-c" />
+
 Head over to the Permissions tab under `online_users` view to add relevant permissions. 
 
 ## Select permission

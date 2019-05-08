@@ -35,3 +35,6 @@ You need to have npm/yarn & node 8+ running.
 
 ## How long will this tutorial take?
 Less than 2 hours
+
+## Will this course teach setting up the GraphQL backend?
+No, you can take the [Introduction to Hasura][https://learn.hasura.io/graphql/hasura] backend course to know how the backend for the realtime todo app was setup.

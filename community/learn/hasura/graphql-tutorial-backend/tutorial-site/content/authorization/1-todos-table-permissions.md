@@ -2,6 +2,10 @@
 title: "Setup todos table permissions"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/AM1KbJL0kTo" />
+
 Head over to the Permissions tab under `todos` table to add relevant permissions.
 
 ## Insert permission

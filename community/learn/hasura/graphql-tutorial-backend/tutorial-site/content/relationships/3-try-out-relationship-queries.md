@@ -2,6 +2,10 @@
 title: "Try out Relationship Queries"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/0-UZahHSoGg" />
+
 Let's explore the GraphQL APIs for the relationship created.
 
 ```graphql

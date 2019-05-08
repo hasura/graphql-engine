@@ -2,6 +2,10 @@
 title: "Try out GraphQL APIs"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/ixSMUiWvKrM" />
+
 As you are aware that Hasura gives you Instant GraphQL APIs over Postgres, it can be tested on the table that we just created.
 
 Let's go ahead and start exploring the GraphQL APIs for `users` table.

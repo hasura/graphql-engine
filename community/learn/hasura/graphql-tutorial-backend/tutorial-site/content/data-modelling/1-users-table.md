@@ -2,6 +2,10 @@
 title: "Create table users"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/YLRYrEgJRA0" />
+
 Let's get started by creating the table users.
 
 The `users` table will have the following columns:

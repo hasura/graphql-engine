@@ -2,6 +2,10 @@
 title: "Create Auth0 App"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/BXJk0wao42U" />
+
 1. Navigate to the [Auth0 Dashboard](https://manage.auth0.com/)
 2. Signup / Login to the account
 3. Click on the `Applications` menu option on the left and then click the `+ Create Application` button.

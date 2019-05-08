@@ -2,6 +2,10 @@
 title: "Authorization"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/URMEgibHof0" />
+
 In this part of the tutorial, we are going to define access control rules for each of the models that we created.
 
 Access control rules helps in restricting querying on a table based on certain conditions.

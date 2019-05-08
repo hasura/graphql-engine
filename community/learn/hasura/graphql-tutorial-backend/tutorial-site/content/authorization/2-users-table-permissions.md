@@ -2,6 +2,10 @@
 title: "Setup users table permissions"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/vt7B3Fpa0qc" />
+
 We also need to allow select and update operations into `users` table. 
 On the left sidebar, click on the `users` table to navigate to the users table page and switch to the Permissions tab.
 

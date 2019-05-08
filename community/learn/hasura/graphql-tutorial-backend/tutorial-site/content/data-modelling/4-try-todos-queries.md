@@ -2,6 +2,10 @@
 title: "Try out GraphQL APIs"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/AflCqgGu-ms" />
+
 Similar to the `users` table, the `todos` table created in the previous step would have auto-generated GraphQL APIs for us to explore.
 
 Let's go ahead and start exploring the GraphQL APIs for `todos` table.

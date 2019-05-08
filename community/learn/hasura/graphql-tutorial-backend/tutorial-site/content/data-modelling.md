@@ -2,6 +2,10 @@
 title: "Basic Data Modelling"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/XURdIpvfp4M" />
+
 In this part of the course, we will build the data model for a realtime todo app. Our todo app will have the following features:
 
 - Users can maintain personal todos
