@@ -267,7 +267,8 @@ class AddTable extends Component {
 
       let isColumnUnique = false;
       let _uindex;
-      for (let _i = uniqueKeys.length - 1; _i >= 0; _i--) {
+      const numUniqueKeys = uniqueKeys.length;
+      for (let _i = numUniqueKeys - 1; _i >= 0; _i--) {
         const key = uniqueKeys[_i];
         if (key.length === 1) {
           if (key[0] === i) {
@@ -286,7 +287,9 @@ class AddTable extends Component {
             ])
           );
         } else {
-          dispatch(setUniqueKeys([...uniqueKeys, [i]]));
+          const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
+          newUniqueKeys[numUniqueKeys - 1] = [i];
+          dispatch(setUniqueKeys([...newUniqueKeys, []]));
         }
       };
 

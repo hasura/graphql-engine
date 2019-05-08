@@ -40,7 +40,7 @@ const UniqueKeyWrapper = ({
     };
 
     const collapsedLabel = () => {
-      if (isLast) {
+      if (isLast && numUniqueKeys === 1) {
         return (
           <div>
             <i>(You can add unique keys later as well)</i>
@@ -66,12 +66,24 @@ const UniqueKeyWrapper = ({
 
     const saveFunc = toggle => toggle();
 
+    let removeFunc;
+    if (!isLast) {
+      removeFunc = (toggle) => {
+        toggle();
+        dispatch(
+          setUniqueKeys(
+            [...uniqueKeys.slice(0, i), ...uniqueKeys.slice(i + 1)]
+          )
+        );
+      };
+    }
+
     let expandButtonText;
-    if (isLast) {
+    if (!isLast) {
       expandButtonText = 'Edit';
     } else {
       expandButtonText =
-        numUniqueKeys === 1 ? 'Add a unique key' : 'Add a new unique key';
+      numUniqueKeys === 1 ? 'Add a unique key' : 'Add a new unique key';
     }
 
     return (
@@ -83,6 +95,7 @@ const UniqueKeyWrapper = ({
           property={`unique-key-${i}`}
           service="add-table"
           saveFunc={saveFunc}
+          removeFunc={removeFunc}
           expandButtonText={expandButtonText}
           isCollapsable
         />
