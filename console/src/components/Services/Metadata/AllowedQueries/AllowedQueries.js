@@ -6,7 +6,17 @@ import AllowedQueriesList from './AllowedQueriesList';
 
 import styles from './AllowedQueries.scss';
 
+import { loadAllowedQueries } from '../Actions';
+
 class AllowedQueries extends React.Component {
+  constructor(props) {
+    super(props);
+
+    const { dispatch } = this.props;
+
+    dispatch(loadAllowedQueries());
+  }
+
   render() {
     const { dispatch, allowedQueries } = this.props;
 
@@ -20,15 +30,20 @@ class AllowedQueries extends React.Component {
           <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
             Allowed Queries
           </h2>
-          <div className={styles.add_mar_top + ' ' + styles.wd60}>
+          <div className={styles.add_mar_top}>
             <AllowedQueriesNotes />
             <hr />
-            <AddAllowedQuery dispatch={dispatch} />
-            <hr />
-            <AllowedQueriesList
-              dispatch={dispatch}
-              allowedQueries={allowedQueries}
-            />
+            <div className={styles.wd60}>
+              <AddAllowedQuery
+                dispatch={dispatch}
+                isFirstQuery={allowedQueries.length === 0}
+              />
+              <hr />
+              <AllowedQueriesList
+                dispatch={dispatch}
+                allowedQueries={allowedQueries}
+              />
+            </div>
           </div>
         </div>
       </div>

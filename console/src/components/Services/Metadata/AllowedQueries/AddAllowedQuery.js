@@ -3,9 +3,7 @@ import Button from '../../../Common/Button/Button';
 import AceEditor from 'react-ace';
 import styles from './AllowedQueries.scss';
 
-import {
-  addAllowedQuery,
-} from '../Actions';
+import { addAllowedQuery } from '../Actions';
 
 class AddAllowedQuery extends React.Component {
   constructor(props) {
@@ -18,7 +16,7 @@ class AddAllowedQuery extends React.Component {
   }
 
   render() {
-    const { dispatch } = this.props;
+    const { dispatch, isFirstQuery } = this.props;
     const { openOption, newQuery } = this.state;
 
     const handleAddClick = option => {
@@ -97,7 +95,7 @@ class AddAllowedQuery extends React.Component {
       switch (openOption) {
         case 'manual':
           queryInput = getManualQueryInput();
-          submitBtnTxt = 'Add To Allowed List';
+          submitBtnTxt = 'Add To Allow-List';
           break;
         case 'upload':
           queryInput = getUploadQueryInput();
@@ -136,7 +134,7 @@ class AddAllowedQuery extends React.Component {
 
         const getSubmitBtn = () => {
           const handleSubmit = () => {
-            dispatch(addAllowedQuery(newQuery));
+            dispatch(addAllowedQuery(newQuery, isFirstQuery));
           };
 
           return (
@@ -159,7 +157,9 @@ class AddAllowedQuery extends React.Component {
 
     return (
       <div>
-        <h4 className={styles.subheading_text}>Add a new query to allowed list</h4>
+        <h4 className={styles.subheading_text}>
+          Add a new query to allow-list
+        </h4>
         <div className={styles.subsection}>
           <Button onClick={handleAddClick('manual')}>Add query</Button>
           {/*<Button onClick={handleAddClick('manual')}>Add query manually</Button>*/}

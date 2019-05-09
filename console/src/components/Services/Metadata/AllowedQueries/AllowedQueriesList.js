@@ -4,10 +4,7 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 import styles from './AllowedQueries.scss';
 
-import {
-  updateAllowedQuery,
-  deleteAllowedQuery,
-} from '../Actions';
+import { updateAllowedQuery, deleteAllowedQuery } from '../Actions';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {
@@ -24,7 +21,7 @@ class AllowedQueriesList extends React.Component {
 
     const getQueryList = () => {
       if (allowedQueries.length === 0) {
-        return <b>No queries in allowed list yet</b>;
+        return <b>No queries in allow-list yet</b>;
       }
 
       return allowedQueries.map((query, i) => {
@@ -107,11 +104,13 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          dispatch(deleteAllowedQuery(query.name));
+          const isLastQuery = allowedQueries.length === 1;
+
+          dispatch(deleteAllowedQuery(query.name, isLastQuery));
         };
 
         return (
-          <div key={i}>
+          <div key={query.name}>
             <ExpandableEditor
               editorExpanded={queryEditorExpanded}
               property={`query-${i}`}

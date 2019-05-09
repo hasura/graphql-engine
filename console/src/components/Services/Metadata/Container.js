@@ -27,9 +27,7 @@ const useMetadataSemver = serverVersion => {
 
   useEffect(() => {
     if (serverVersion) {
-      setSupportAllowedQueries(
-        true || semverCheck('allowedQueries', serverVersion) // TODO: use actual variable and remove true
-      );
+      setSupportAllowedQueries(semverCheck('allowedQueries', serverVersion));
     }
   }, [serverVersion]);
 

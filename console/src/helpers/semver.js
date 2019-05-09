@@ -18,6 +18,7 @@ const componentsSemver = {
   triggerRetryTimeout: '1.0.0-alpha38',
   permUpdatePresets: '1.0.0-alpha38',
   inconsistentState: '1.0.0-alpha43',
+  allowedQueries: '1.0.0-alpha46',
 };
 
 const getPreRelease = version => {
