@@ -4,7 +4,7 @@ const { User } = require('../db/schema');
 
 passport.use(
   new LocalStrategy({
-    usernameField: 'id',
+    usernameField: 'username',
     passwordField: 'password'
   },
   function (username, password, done) {

@@ -3,12 +3,9 @@ const { User } = require('../db/schema');
 const { errorHandler } = require('../db/errors');
 const jwt = require('jsonwebtoken');
 
-/**
- * POST /login
- * Sign in using username and password.
- */
+ // Sign in using username and password.
 exports.postLogin = async (req, res, next) => {
-  req.assert('id', 'email is not valid').notEmpty();
+  req.assert('username', 'email is not valid').notEmpty();
   req.assert('password', 'Password cannot be blank').notEmpty();
 
   const errors = req.validationErrors();
@@ -22,11 +19,12 @@ exports.postLogin = async (req, res, next) => {
     if (user) {
 
       const tokenContents = {
-        sub: '' + user.id,
+        sub: user.id,
         name: user.id.split('@')[0],
         iat: Date.now() / 1000,
+        iss: 'https://learn.hasura.io/',
         "https://hasura.io/jwt/claims": {
-          "x-hasura-allowed-roles": ["mine","user"],
+          "x-hasura-allowed-roles": ["user"],
           "x-hasura-user-id": '' + user.id,
           "x-hasura-default-role": "user",
           "x-hasura-role": "user"
@@ -40,15 +38,10 @@ exports.postLogin = async (req, res, next) => {
   })(req, res, next);
 };
 
-
-/**
- * POST /signup
- * Create a new local account.
- */
+ // Signup using username and password.
 exports.postSignup = async (req, res, next) => {
   req.assert('username', 'email is not valid').notEmpty();
   req.assert('password', 'Password must be at least 4 characters long').len(4);
-  req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
 
   const errors = req.validationErrors();
 
@@ -61,6 +54,7 @@ exports.postSignup = async (req, res, next) => {
     .allowInsert('[id, name, password]')
     .insert({
       id: req.body.username,
+      name: req.body.username.split('@')[0],
       password: req.body.password
     });
   } catch (err) {

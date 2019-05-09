@@ -21,10 +21,6 @@ if(!process.env.ENCRYPTION_KEY) {
 }
 
 /**
- * Controllers (route handlers).
- */
-
-/**
  * Create Express server.
  */
 const app = express();

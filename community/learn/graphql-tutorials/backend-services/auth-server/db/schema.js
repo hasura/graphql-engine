@@ -20,8 +20,7 @@ class User extends Model {
 
   getUser() {
     return {
-      'id': this.id,
-      'email': this.email,
+      'id': this.id
     }
   }
 
@@ -37,10 +36,9 @@ class User extends Model {
   static get jsonSchema () {
     return {
       type: 'object',
-      required: ['email'],
+      required: ['id'],
       properties: {
-        id: {type: 'integer'},
-        email: {type: 'string', minLength: 1, maxLength: 255},
+        id: {type: 'string', minLength: 1, maxLength: 255},
       }
     }
   }

@@ -25,7 +25,7 @@ Set environment variables. Open `.env` file and add the following env
 ```bash
 ENCRYPTION_KEY=<replace_it_with_your_JWT_SECRET>
 DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>
-PORT=8010
+PORT=8080
 ```
 
 ##### User Schema
@@ -53,7 +53,7 @@ Once deployed or started locally, we can create an user using `/signup` API like
 
 ```bash
 curl -H "Content-Type: application/json" \
-     -d'{"username": "test123", "password": "test123", "confirmPassword": "test123"}' \
+     -d'{"username": "test123", "password": "test123"}' \
      http://localhost:8080/signup
 ```
 
@@ -61,8 +61,7 @@ On success, we get the response:
 
 ```json
 {
-  "id": 1,
-  "username": "test123"
+  "id": 1
 }
 ```
 
