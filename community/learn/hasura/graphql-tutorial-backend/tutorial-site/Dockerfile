@@ -20,9 +20,6 @@ RUN rm -R content
 # Bundle app source
 COPY . .
 
-# remove cache
-RUN rm -R .cache
-
 # Build static files
 RUN npm run build
 
