@@ -35,8 +35,14 @@ const UniqueKeyEditor = ({
       ])
     );
   };
+
+  const clearState = () => {
+    dispatch(setUniqueKeys([[]]));
+  };
+
   useEffect(() => {
     initialiseState();
+    return clearState;
   }, [tableSchema]);
 
   // number of unique keys
@@ -46,7 +52,6 @@ const UniqueKeyEditor = ({
   return uniqueKeys.map((uniqueKey, i) => {
     // Is this the last placeholder unique key
     const isLast = numUniqueKeys === i + 1;
-
     // unique key config text
     const uniqueKeyConfig = getUniqueKeyConfig(
       uniqueKey.map(uk => orderedColumns[uk].name)
