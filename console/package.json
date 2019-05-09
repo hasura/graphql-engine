@@ -94,6 +94,7 @@
     "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
+    "sanitize-filename": "^1.6.1",
     "semver": "5.5.1",
     "subscriptions-transport-ws": "^0.9.12",
     "uuid": "^3.0.1",
