@@ -187,3 +187,77 @@ Args Syntax
      - true
      - :ref:`QueryName`
      - Name of the query
+
+.. _add_collections_to_allowlist:
+
+add_collections_to_allowlist
+---------------------------
+
+`add_collections_to_allowlist` is used to add collections to allowlist
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "add_collections_to_allowlist",
+       "args": {
+            "collections": ["my_collection_1", "my_collection_2"]
+        }
+   }
+
+.. _add_collections_to_allowlist_syntax:
+
+Args Syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - collections
+     - true
+     - :ref:`CollectionName` array
+     - Names of query collections
+
+.. _drop_collections_from_allowlist:
+
+drop_collections_from_allowlist
+---------------------------
+
+`drop_collections_from_allowlist` is used to remove collections from allowlist
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_collections_from_allowlist",
+       "args": {
+            "collections": ["my_collection_1", "my_collection_2"]
+        }
+   }
+
+.. _drop_collections_from_allowlist_syntax:
+
+Args Syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - collections
+     - true
+     - :ref:`CollectionName` array
+     - Names of query collections
