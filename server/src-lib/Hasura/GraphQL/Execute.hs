@@ -108,7 +108,7 @@ getExecPlanPartial userInfo sc enableWL req = do
 
   when enableWL $
     -- check if query is in allowlist
-    unless (VQ.isQueryInAllowlist (_grQuery req) (scQueryCollections sc)) $
+    unless (VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)) $
       throwVE "query is not in allowlist"
 
   (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap

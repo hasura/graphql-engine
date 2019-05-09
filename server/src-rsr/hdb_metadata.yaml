@@ -284,3 +284,8 @@ args:
   args:
     name: hdb_query_collection
     schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_allowlist
+    schema: hdb_catalog

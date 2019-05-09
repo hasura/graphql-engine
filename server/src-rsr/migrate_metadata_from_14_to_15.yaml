@@ -4,3 +4,7 @@ args:
   args:
     schema: hdb_catalog
     name: hdb_query_collection
+- type: track_table
+  args:
+    schema: hdb_catalog
+    name: hdb_allowlist

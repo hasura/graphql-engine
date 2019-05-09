@@ -21,6 +21,7 @@ data MetadataObjType
   | MOTFunction
   | MOTRemoteSchema
   | MOTQueryCollection
+  | MOTAllowlist
   deriving (Eq)
 
 instance Show MetadataObjType where
@@ -32,6 +33,7 @@ instance Show MetadataObjType where
   show MOTFunction        = "function"
   show MOTRemoteSchema    = "remote_schema"
   show MOTQueryCollection = "query_collection"
+  show MOTAllowlist       = "allowlist"
 
 instance ToJSON MetadataObjType where
   toJSON = String . T.pack . show
@@ -50,6 +52,7 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOQueryCollection !CollectionName
+  | MOAllowlist ![CollectionName]
   | MOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
 

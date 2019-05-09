@@ -354,7 +354,8 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeys' <- liftTx fetchCatalogData
+    eventTriggers remoteSchemas functions fkeys' qCollections allowlist
+    <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
 
@@ -438,14 +439,23 @@ buildSchemaCacheG withSetup = do
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
       trackFunctionP2Setup qf rawfi
 
-  queryCollections <- liftTx fetchAllCollections
-  forM_ queryCollections $ \c -> do
+  -- query collections
+  forM_ qCollections $ \c -> do
     let name = _ccName c
         def = object ["name" .= name, "definition" .= _ccDefinition c]
         mkInconsObj =
           InconsistentMetadataObj (MOQueryCollection name) MOTQueryCollection def
     modifyErr (\e -> "query collection " <> name <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $ addCollectionP2 c
+
+  -- allow list
+  let allowlistDef = object [ "name" .= ("allowlist" :: Text)
+                            , "definition" .= CollectionsReq allowlist
+                            ]
+      mkAllowlistInconsObj =
+        InconsistentMetadataObj (MOAllowlist allowlist) MOTAllowlist allowlistDef
+  modifyErr(\e -> "allow list" <> "; " <> e) $
+     handleInconsistentObj mkAllowlistInconsObj $ addToAllowlistSetup allowlist
 
   -- build GraphQL context
   postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx

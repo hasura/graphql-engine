@@ -48,3 +48,8 @@ args:
               company
             }
           }
+
+- type: add_collections_to_allowlist
+  args:
+    collections:
+    - collection_1

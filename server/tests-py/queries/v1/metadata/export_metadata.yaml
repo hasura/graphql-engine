@@ -32,6 +32,7 @@ response:
     event_triggers: []
   query_templates: []
   query_collections: []
+  allowlist: []
   functions:
   - search_articles
 

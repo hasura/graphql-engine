@@ -11,14 +11,13 @@ import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as HM
-import qualified Data.HashSet                  as HS
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype CollectionName
   = CollectionName {unCollectionName :: T.Text}
-  deriving ( Show, Eq, Hashable, ToJSON, ToJSONKey, Lift
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
            , FromJSON, Q.FromCol, Q.ToPrepArg, DQuote
            )
 
@@ -29,6 +28,11 @@ newtype QueryName
 newtype GQLQuery
   = GQLQuery {unGQLQuery :: G.ExecutableDocument}
   deriving (Show, Eq, Hashable, Lift, ToJSON, FromJSON)
+
+queryWithoutTypeNames :: GQLQuery -> GQLQuery
+queryWithoutTypeNames =
+  GQLQuery . G.ExecutableDocument . stripeOffTypeNames
+  . G.getExecutableDefinitions . unGQLQuery
 
 data ListedQuery
   = ListedQuery
@@ -56,18 +60,10 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 type QueryMap = HM.HashMap QueryName GQLQuery
 type CollectionMap = HM.HashMap CollectionName QueryMap
 
-allListedQueries :: CollectionMap -> [GQLQuery]
-allListedQueries =
-  HS.toList . HS.fromList . concatMap HM.elems . HM.elems
-
 queryListToMap :: QueryList  -> QueryMap
 queryListToMap ql =
-  HM.fromList $ flip map ql $ \(ListedQuery queryName query) ->
-    ( queryName
-    -- remove __typename field
-    , GQLQuery $ G.ExecutableDocument $
-      stripeOffTypeNames $ G.getExecutableDefinitions $ unGQLQuery query
-    )
+  HM.fromList $ flip map ql $
+    \(ListedQuery queryName query) -> (queryName, query)
 
 newtype DropCollection
   = DropCollection
@@ -89,3 +85,9 @@ data DropQueryFromCollection
   , _dqfcQueryName      :: !QueryName
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
+
+newtype CollectionsReq
+  = CollectionsReq
+  {_crCollections :: [CollectionName]}
+  deriving (Show, Eq, Lift)
+$(deriveJSON (aesonDrop 3 snakeCase) ''CollectionsReq)

@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -130,6 +128,8 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
   :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
@@ -149,6 +149,7 @@ data ReplaceMetadata
   , aqFunctions        :: !(Maybe [QualifiedFunction])
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
+  , aqAllowlist        :: !(Maybe [DQC.CollectionName])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -156,7 +157,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 applyQP1
   :: (QErrM m, UserInfoM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = do
+applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
 
   adminOnly
 
@@ -196,6 +197,10 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = d
     withPathK "query_collections" $
         checkMultipleDecls "query collections" $ map DQC._ccName collections
 
+  onJust mAllowlist $ \allowlist ->
+    withPathK "allowlist" $
+        checkMultipleDecls "allow list" allowlist
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
     functions = fromMaybe [] mFunctions
@@ -219,7 +224,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = do
+applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
   DT.buildSchemaCacheStrict
@@ -273,6 +278,11 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = d
     DQC.addCollectionP2 c
     liftTx $ DQC.addCollectionToCatalog c
 
+  -- allow list
+  withPathK "allowlist" $ do
+    DQC.addToAllowlistSetup allowlist
+    liftTx $ DQC.addCollectionsToAllowlistCatalog allowlist
+
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
@@ -293,6 +303,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections) = d
   where
     functions = fromMaybe [] mFunctions
     collections = fromMaybe [] mCollections
+    allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
@@ -367,8 +378,11 @@ fetchMetadata = do
   -- fetch all collections
   collections <- DQC.fetchAllCollections
 
+  -- fetch allow list
+  allowlist <- DQC.fetchAllowlist
+
   return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
-                            (Just functions) (Just schemas) (Just collections)
+                            (Just functions) (Just schemas) (Just collections) (Just allowlist)
 
   where
 
@@ -523,6 +537,7 @@ purgeMetadataObj = liftTx . \case
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
   (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
   (MOQueryCollection qcn)         -> DQC.delCollectionFromCatalog qcn
+  (MOAllowlist l)                 -> DQC.delCollectionsFromAllowlistCatalog l
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

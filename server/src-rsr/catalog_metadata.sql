@@ -7,7 +7,9 @@ select
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
-    'foreign_keys', foreign_keys.items
+    'foreign_keys', foreign_keys.items,
+    'query_collections', query_collections.items,
+    'allowlist', allowlist.item
   )
 from
   (
@@ -188,4 +190,24 @@ from
               and ht.table_name = f.table_name
             )
       ) as foreign_key
-  ) as foreign_keys
+  ) as foreign_keys,
+  (
+    select
+      coalesce(json_agg(collection.info), '[]') as items
+    from
+       (
+         select
+           json_build_object(
+             'name', collection_name,
+             'definition', collection_defn,
+             'comment', comment
+           ) as info
+           from
+             hdb_catalog.hdb_query_collection
+       ) as collection
+  ) as query_collections,
+  (
+    select
+      coalesce(json_agg(collection_name), '[]') as item
+    from hdb_catalog.hdb_allowlist
+  ) as allowlist

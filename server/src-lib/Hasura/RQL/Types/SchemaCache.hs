@@ -103,6 +103,10 @@ module Hasura.RQL.Types.SchemaCache
        , delCollectionFromCache
        , addQueryToCollectionInCache
        , dropQueryFromCollectionCache
+       , askQueryMap
+       , QueryCollection(..)
+       , addCollectionsToAllowlist
+       , delCollectionsFromAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -430,6 +434,13 @@ removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
 
+data QueryCollection
+  = QueryCollection
+  { _qcName    :: !CollectionName
+  , _qcQueries :: !QueryList
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''QueryCollection)
+
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
   deriving (Show, Eq, Hashable, ToJSON, FromJSON)
@@ -447,6 +458,7 @@ data SchemaCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
   , scQueryCollections  :: !CollectionMap
+  , scAllowlist         :: ![QueryCollection]
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
@@ -516,7 +528,7 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache M.empty M.empty M.empty M.empty M.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache M.empty M.empty M.empty M.empty [] M.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -828,7 +840,7 @@ askQueryMap name = do
 
 addQueryToCollectionInCache
   :: (QErrM m, CacheRWM m)
-  => CollectionName -> QueryName -> GQLQuery -> m ()
+  => CollectionName -> QueryName -> GQLQuery -> m QueryMap
 addQueryToCollectionInCache collName queryName gqlQuery = do
   sc <- askSchemaCache
   queryMap <- askQueryMap collName
@@ -840,10 +852,11 @@ addQueryToCollectionInCache collName queryName gqlQuery = do
           newCollectionMap =
             M.insert collName newQueryMap $ scQueryCollections sc
       writeSchemaCache sc{scQueryCollections = newCollectionMap}
+      return newQueryMap
 
 dropQueryFromCollectionCache
   :: (QErrM m, CacheRWM m)
-  => CollectionName -> QueryName -> m ()
+  => CollectionName -> QueryName -> m QueryMap
 dropQueryFromCollectionCache collName queryName = do
   sc <- askSchemaCache
   queryMap <- askQueryMap collName
@@ -855,6 +868,24 @@ dropQueryFromCollectionCache collName queryName = do
           newCollectionMap =
             M.insert collName newQueryMap $ scQueryCollections sc
       writeSchemaCache sc{scQueryCollections = newCollectionMap}
+      return newQueryMap
+
+addCollectionsToAllowlist
+  :: (CacheRWM m)
+  => [QueryCollection] -> m ()
+addCollectionsToAllowlist qc = do
+  sc <- askSchemaCache
+  let newAllowlist = scAllowlist sc <> qc
+  writeSchemaCache sc{scAllowlist = newAllowlist}
+
+delCollectionsFromAllowlist
+  :: (CacheRWM m)
+  => [CollectionName] -> m ()
+delCollectionsFromAllowlist collNames = do
+  sc <- askSchemaCache
+  let newAllowlist =
+        filter (not . flip elem collNames . _qcName) $ scAllowlist sc
+  writeSchemaCache sc{scAllowlist = newAllowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

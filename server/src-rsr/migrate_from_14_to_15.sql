@@ -5,3 +5,9 @@ CREATE TABLE hdb_catalog.hdb_query_collection
   comment TEXT NULL,
   is_system_defined boolean default false
 );
+
+CREATE TABLE hdb_catalog.hdb_allowlist
+(
+  collection_name TEXT UNIQUE
+    REFERENCES hdb_catalog.hdb_query_collection(collection_name)
+);
