@@ -47,7 +47,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: oldName,
           new_name: newName,
         },
@@ -57,7 +60,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: newName,
           new_name: oldName,
         },

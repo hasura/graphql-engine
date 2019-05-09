@@ -83,7 +83,7 @@ The following object type and query/mutation fields are generated for the ``arti
     where: article_bool_exp!
   ): article_mutation_response
 
-See the :doc:`query <../api-reference/query>` and :doc:`mutation <../api-reference/mutation>`
+See the :doc:`query <../api-reference/graphql-api/query>` and :doc:`mutation <../api-reference/graphql-api/mutation>`
 API references for the full specifications
 
 You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
