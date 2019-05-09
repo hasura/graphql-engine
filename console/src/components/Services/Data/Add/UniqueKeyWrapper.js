@@ -15,9 +15,7 @@ const UniqueKeyWrapper = ({
     name,
     type,
   }));
-
   const numUniqueKeys = uniqueKeys.length;
-
   const uniqueKeyEditors = uniqueKeys.map((uniqueKey, i) => {
     const isLast = numUniqueKeys === i + 1;
 

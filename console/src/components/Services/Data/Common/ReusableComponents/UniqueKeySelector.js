@@ -13,6 +13,7 @@ const UniqueKeySelector = ({
 }) => {
   const numCols = uniqueKey.length;
 
+  // dispatch unique col select
   const dispatchSelectUniqueCol = (e, _i) => {
     const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
     newUniqueKeys[index] = newUniqueKeys[index] || [];
@@ -23,6 +24,7 @@ const UniqueKeySelector = ({
     dispatch(setUniqueKeys(newUniqueKeys));
   };
 
+  // dispatch unique col remove
   const dispatchRemoveUniqueCol = (e, _i) => {
     const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
     newUniqueKeys[index] = [
@@ -32,6 +34,7 @@ const UniqueKeySelector = ({
     dispatch(setUniqueKeys(newUniqueKeys));
   };
 
+  // select options
   const getColumnOptions = () => {
     return columns.map(c => {
       if (uniqueKey.includes(c.index) || !c.name || !c.type) {
@@ -45,6 +48,7 @@ const UniqueKeySelector = ({
     });
   };
 
+  // selected columns
   const existingSelects = uniqueKey.map((uk, i) => {
     const removeUniqueCol = e => dispatchRemoveUniqueCol(e, i);
     const setUniqueCol = e => dispatchSelectUniqueCol(e, i);
@@ -77,9 +81,9 @@ const UniqueKeySelector = ({
     );
   });
 
+  // placeholder dropdown to add more columns
   const newSelect = () => {
     const selectUniqueCol = e => dispatchSelectUniqueCol(e, numCols);
-
     return (
       <div key={numCols} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
