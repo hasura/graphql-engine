@@ -2,6 +2,10 @@
 title: "Write custom resolvers"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/_d3sn_S6u-E" />
+
 Let's take the first use-case of fetching profile information from Auth0.
 
 Ideally you would want to maintain a single GraphQL endpoint for all your data requirements.

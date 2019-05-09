@@ -2,6 +2,10 @@
 title: "Custom Business Logic"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/9t-qdjttcyQ" />
+
 Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, there are cases where you would want to add custom/business logic in your app. For example, in the todo app that we are building, before inserting todos into the public feed we want to validate the text for profanity. 
 
 Custom business logic can be handled in two ways using Hasura:

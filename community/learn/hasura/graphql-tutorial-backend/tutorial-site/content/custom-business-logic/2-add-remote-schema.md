@@ -2,6 +2,10 @@
 title: "Add Remote Schema"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/01t4t2t4q1c" />
+
 We have written the custom resolver and deployed it to Glitch. We have the GraphQL endpoint ready. Let's add it to Hasura as a remote schema.
 
 ## Add
