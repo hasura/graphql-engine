@@ -1,10 +1,10 @@
 import requestAction from '../../../../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  loadSchema,
   loadUntrackedRelations,
   handleMigrationErrors,
   makeMigrationCall,
+  LOAD_SCHEMA
 } from '../DataActions';
 import _push from '../push';
 import { SET_SQL } from '../RawSQL/Actions';
@@ -156,8 +156,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -182,8 +182,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -1006,9 +1006,18 @@ const saveTableCommentSql = isTable => {
     const errorMsg = 'Updating comment failed';
 
     const customOnSuccess = () => {
-      dispatch(loadSchema()).then(() => {
-        dispatch(activateCommentEdit(false, null));
-      });
+      // Instead of calling loadSchema, update only the table comment in the state.
+      // get existing state and filter out with table name and table schema.
+      // update the comment and set in the state.
+      const existingSchemas = getState().tables.allSchemas.filter(
+        schemaInfo => !(schemaInfo.table_name !== tableName && schemaInfo.table_schema !== currentSchema)
+      );
+      const currentSchemaInfo = getState().tables.allSchemas.find(
+        schemaInfo => (schemaInfo.table_name === tableName && schemaInfo.table_schema === currentSchema)
+      );
+      currentSchemaInfo.comment = updatedComment;
+      dispatch({ type: LOAD_SCHEMA, allSchemas: existingSchemas.concat(currentSchemaInfo) });
+      dispatch(activateCommentEdit(false, null));
     };
     const customOnError = () => {};
 
@@ -1022,7 +1031,8 @@ const saveTableCommentSql = isTable => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -1102,24 +1112,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */

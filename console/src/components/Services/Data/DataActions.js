@@ -595,4 +595,5 @@ export {
   fetchTrackedFunctions,
   UPDATE_TRACKED_FUNCTIONS,
   initQueries,
+  LOAD_SCHEMA,
 };
