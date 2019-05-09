@@ -2,6 +2,10 @@
 title: "Create Event Trigger"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/BKOwSlEdLUY" />
+
 Event triggers can be created using the Hasura console.
 
 Open the Hasura console, head to the Events tab and click on the Create trigger button to open up the interface below to create an event trigger:

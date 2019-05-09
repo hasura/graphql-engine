@@ -3,7 +3,7 @@ FROM node:carbon
 # Install global dependencies
 RUN npm -g install gatsby-cli
 
-# clone gatsby-gitbook-boilerplate
+# clone gatsby-gitbook-boilerplate repo
 RUN git clone https://github.com/hasura/gatsby-gitbook-boilerplate.git
 
 # Create app directory

@@ -2,6 +2,10 @@
 title: "Write event webhook"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/_6Sc5emXq5U" />
+
 Now let's move to the second use-case of sending an email when a user registers on the app.
 
 When the user registers on the app using Auth0, we insert a new row into the `users` table to keep the user data in sync. Remember the Auth0 rule we wrote during signup to make a mutation?
