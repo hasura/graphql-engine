@@ -287,7 +287,7 @@ export const loadAllowedQueries = () => {
   };
 };
 
-export const addAllowedQuery = (query, isFirstQuery) => {
+export const addAllowedQuery = (query, isFirstQuery, callback) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
 
@@ -305,6 +305,7 @@ export const addAllowedQuery = (query, isFirstQuery) => {
       () => {
         dispatch(showSuccessNotification('Query added to allow-list'));
         dispatch({ type: ADD_ALLOWED_QUERY, data: query });
+        callback();
       },
       error => {
         console.error(error);
