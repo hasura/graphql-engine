@@ -539,6 +539,12 @@ enabledAPIsEnv =
   , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
   )
 
+consoleAssetsDirEnv :: (String, String)
+consoleAssetsDirEnv =
+  ( "HASURA_GRAPHQL_ASSETS_DIR"
+  , "Directory to serve the console assets from"
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password

@@ -43,7 +43,7 @@ class EventTrigger extends Component {
         <div>
           <TopicDescription
             title="What are Event Triggers?"
-            imgUrl="https://storage.googleapis.com/hasura-graphql-engine/console/assets/event-trigger.png"
+            imgUrl={`${globals.staticAssetsPath}/common/img/event-trigger.png`}
             imgAlt="Event Triggers"
             description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
           />

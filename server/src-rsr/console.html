@@ -1,11 +1,12 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/svg+xml" href="https://graphql-engine-cdn.hasura.io/img/hasura_icon_green.svg" />
+    <link rel="icon" type="image/svg+xml" href="http://localhost:8000/common/img/hasura_icon_green.svg" />
     <script>
      window.__env = {
        consoleMode: "server",
        urlPrefix: "/console",
        consolePath: "{{consolePath}}",
+       staticAssetsPath: "http://localhost:8000",
        isAccessKeySet: {{isAdminSecretSet}},
        isAdminSecretSet: {{isAdminSecretSet}},
        enableTelemetry: {{enableTelemetry}}
@@ -45,9 +46,9 @@
       </div>
     </div>
     <div id="content" class="mainContent"></div>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="{{consoleAssetsLoc}}/main.css" charset="UTF-8"/>
-    <script src="{{consoleAssetsLoc}}/vendor.js" charset="UTF-8"></script>
-    <script src="{{consoleAssetsLoc}}/main.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="http://localhost:8000/common/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="http://localhost:8000/versioned/alpha/v1.0/main.css" charset="UTF-8"/>
+    <script src="http://localhost:8000/versioned/alpha/v1.0/vendor.js" charset="UTF-8"></script>
+    <script src="http://localhost:8000/versioned/alpha/v1.0/main.js" charset="UTF-8"></script>
   </body>
 </html>
