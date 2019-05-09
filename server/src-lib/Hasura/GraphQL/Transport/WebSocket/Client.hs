@@ -1,12 +1,10 @@
 module Hasura.GraphQL.Transport.WebSocket.Client
   ( runGqlClient
-  , WebsocketPayload (..)
   , sendStopMsg
   , updateState
   , stopRemote
   , closeRemote
-  )
-  where
+  ) where
 
 import           Control.Concurrent                            (forkIO,
                                                                 killThread)
@@ -15,19 +13,17 @@ import           Control.Exception                             (SomeException,
 
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..))
-import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 --import qualified Control.Concurrent.Async                      as A
 import qualified Data.Aeson                                    as J
-import qualified Data.Aeson.Casing                             as J
-import qualified Data.Aeson.TH                                 as J
+-- import qualified Data.Aeson.Casing                             as J
+-- import qualified Data.Aeson.TH                                 as J
 import qualified Data.ByteString.Lazy                          as BL
 import qualified Data.HashMap.Strict                           as Map
 import qualified Data.IORef                                    as IORef
 import qualified Data.Text                                     as T
-import qualified Network.HTTP.Types                            as HTTP
 import qualified Network.URI                                   as URI
 import qualified Network.WebSockets                            as WS
 
@@ -36,44 +32,29 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.Logging                                as L
 
 
--- | TODO:
--- | The following ADT is required so that we can parse the incoming websocket
--- | frame, and only pick the payload, for remote schema queries.
--- | Ideally we should use `tartMsg` from Websocket.Protocol, but as
--- | `GraphQLRequest` doesn't have a ToJSON instance we are using our own type to
--- | get only the payload
-data WebsocketPayload
-  = WebsocketPayload
-  { _wpId      :: !Text
-  , _wpType    :: !Text
-  , _wpPayload :: !J.Value
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''WebsocketPayload)
-
-
-sendInit :: WS.Connection -> [HTTP.Header] -> IO ()
+sendInit :: WS.Connection -> Maybe WS.ConnParams -> IO ()
 sendInit conn reqHdrs =
-  WS.sendTextData conn $ J.encode $
-    J.object [ "type" J..= ("connection_init" :: Text)
-             , "payload" J..= connParams
-             ]
-  where
-    connParams = (WS.ConnParams . Just . Map.fromList . hdrsToText) reqHdrs
+  WS.sendTextData conn $ J.encode (WS.CMConnInit reqHdrs)
+  --   J.object [ "type" J..= ("connection_init" :: Text)
+  --            , "payload" J..= connParams
+  --            ]
+  -- where
+  --   connParams = (WS.ConnParams . Just . Map.fromList . hdrsToText) reqHdrs
 
-sendStopMsg :: WS.Connection -> OperationId -> IO ()
-sendStopMsg conn opId =
-  WS.sendTextData conn $ J.encode $
-    J.object [ "type" J..= ("stop" :: Text)
-             , "id" J..= unOperationId opId
-             ]
+sendStopMsg :: WS.Connection -> WS.StopMsg -> IO ()
+sendStopMsg conn msg =
+  WS.sendTextData conn $ J.encode $ WS.CMStop msg
+    -- J.object [ "type" J..= ("stop" :: Text)
+    --          , "id" J..= unOperationId opId
+    --          ]
 
 
 mkGraphqlProxy
   :: WS.WSConn a
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
-  -> [HTTP.Header]    -- connection params in conn_init from the client
-  -> WebsocketPayload -- the start msg
+  -> Maybe WS.ConnParams -- connection params in conn_init from the client
+  -> WS.StartMsg -- the start msg
   -> WS.ClientApp ()
 mkGraphqlProxy wsconn stRef rn hdrs payload destConn = do
   -- setup initial connection protocol
@@ -101,7 +82,7 @@ mkGraphqlProxy wsconn stRef rn hdrs payload destConn = do
     -- payload as it is (assuming this is the start msg)
     setupInitialGraphqlProto conn = do
       sendInit conn hdrs
-      WS.sendTextData conn $ J.encode payload
+      WS.sendTextData conn $ J.encode $ WS.CMStart payload
 
 
 runGqlClient'
@@ -111,8 +92,8 @@ runGqlClient'
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
-  -> [HTTP.Header]
-  -> WebsocketPayload
+  -> Maybe WS.ConnParams
+  -> WS.StartMsg
   -> ExceptT QErr IO ()
 runGqlClient' (L.Logger logger) url wsConn stRef rn opId hdrs payload = do
   host <- maybe (throw500 "empty hostname for websocket conn") return mHost
@@ -144,8 +125,8 @@ runGqlClient
   -> IORef.IORef WSConnState
   -> RemoteSchemaName
   -> OperationId
-  -> [HTTP.Header]
-  -> WebsocketPayload
+  -> Maybe WS.ConnParams
+  -> WS.StartMsg
   -> ExceptT QErr IO ()
 runGqlClient logger url wsConn stRef rn opId hdrs startMsg = do
   mState <- getWsProxyState stRef rn
@@ -186,10 +167,7 @@ getWsProxyState
   -> m (Maybe WebsocketProxyState)
 getWsProxyState ref rn = do
   st <- liftIO $ IORef.readIORef ref
-  let mCurState = getStateData st
-  case mCurState of
-    Nothing                            -> return Nothing
-    Just (ConnInitState _ _ rmConnMap) -> return $ Map.lookup rn rmConnMap
+  return $ getStateData st >>= (Map.lookup rn . _cisRemoteConn)
 
 
 -- given a websocket id (WSId), close connections to that remote from
@@ -214,13 +192,13 @@ closeRemote (L.Logger logger) stRef wsId = do
 stopRemote
   :: L.Logger -> WebsocketProxyState -> OperationId
   -> ExceptT QErr IO WebsocketProxyState
-stopRemote (L.Logger logger) wsState aOpId = do
+stopRemote (L.Logger logger) wsState opId = do
   liftIO $ logger $ L.debugT "stopping the remote.."
   let (WebsocketProxyState thrId wsConn ops) = wsState
   remoteConn <- maybe (throwError wsConnErr) return wsConn
-  liftIO $ sendStopMsg remoteConn aOpId
+  liftIO $ sendStopMsg remoteConn $ WS.StopMsg opId
   -- remaing operations
-  let remOps = filter (\(_, opId) -> opId /= aOpId) ops
+  let remOps = filter (\(_, oId) -> oId /= opId) ops
   when (null remOps) $ do
     -- close the client connection to remote
     liftIO $ logger $ L.debugT "no remaining ops; closing remote"

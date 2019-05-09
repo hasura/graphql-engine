@@ -14,7 +14,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 
---import qualified Control.Concurrent.Async                    as A
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J

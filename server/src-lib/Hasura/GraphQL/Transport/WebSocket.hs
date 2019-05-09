@@ -29,6 +29,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Connection
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                            (AuthMode,
@@ -147,8 +148,8 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
 
 
-onStart :: WSServerEnv -> WSConn -> StartMsg -> BL.ByteString -> IO ()
-onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
+onStart :: WSServerEnv -> WSConn -> StartMsg -> IO ()
+onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -195,23 +196,21 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendSuccResp resp
       sendCompleted
 
+    hdrsToConnParams = ConnParams . Just . Map.fromList . hdrsToText
+
     runRemoteGQ
       :: UserInfo -> [H.Header]
       -> G.TypedOperationDefinition
       -> (RemoteSchemaName, RemoteSchemaInfo)
       -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs opDef (rn, rsi) = do
-      -- try to parse the (apollo protocol) websocket frame and get only the
-      -- payload
-      sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr $
-        err500 Unexpected "invalid websocket payload"
-
+    runRemoteGQ userInfo reqHdrs opDef (rn, rsi) =
       case G._todType opDef of
         -- TODO: this should go into execRemoteGQ?
         G.OperationTypeSubscription -> do
+          let connParams =
+                bool (Just $ hdrsToConnParams reqHdrs) Nothing $ null reqHdrs
           res <- liftIO $ runExceptT $ WS.runGqlClient logger (rsUrl rsi)
-                 wsConn userInfoR rn opId reqHdrs sockPayload
+                 wsConn userInfoR rn opId connParams msg
           onLeft res $ \e -> do
             logOpEv $ ODQueryErr $ err500 Unexpected $ T.pack $ show e
             withComplete $ preExecErr e
@@ -220,7 +219,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         _ -> do
           -- if it's not a subscription, use HTTP to execute the query on the
           -- remote server
-          let payload = J.encode $ WS._wpPayload sockPayload
+          let payload = J.encode q
           resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs payload
                   rsi opDef
           either postExecErr sendSuccResp resp
@@ -283,7 +282,7 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart serverEnv wsConn startMsg msgRaw
+      CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
       CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where

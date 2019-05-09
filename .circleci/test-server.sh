@@ -129,7 +129,7 @@ if [ -z "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ] ; then
 	exit 1
 fi
 
-if ! stack --allow-different-user exec which hpc ; then
+if !stack --allow-different-user exec which hpc ; then
 	echo "hpc not found; Install it with 'stack install hpc'"
 	exit 1
 fi
@@ -365,37 +365,6 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 
 kill_hge_servers
 
-# test remote schema graphql subscriptions
-
-echo -e "\n<########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA SUBSCRIPTIONS ########>\n"
-
-HASURA_RM_SUBS_TEST_DB='postgres://gql_test:@localhost:5432/rem_hge_test'
-psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database rem_hge_test;"
-
-EXISTING_ADMIN_SECRET="$HASURA_GRAPHQL_ADMIN_SECRET"
-unset HASURA_GRAPHQL_ADMIN_SECRET
-
-# start another hasura instance as a remote graphql server for subscriptions
-"$GRAPHQL_ENGINE" --database-url "$HASURA_RM_SUBS_TEST_DB" serve \
-                  --server-port 8081 --server-host 0.0.0.0 \
-                  >> "$OUTPUT_FOLDER/remote-graphql-engine.log" 2>&1 & RM_PID=$!
-
-wait_for_port 8081
-
-"$GRAPHQL_ENGINE" serve >> "$OUTPUT_FOLDER/graphql-engine.log" 2>&1 & PID=$!
-
-wait_for_port 8080
-
-pytest -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-remote-subs="http://localhost:8081" test_remote_subscriptions.py
-
-kill -INT $PID
-kill -INT $RM_PID
-psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database rem_hge_test;"
-sleep 4
-combine_all_hpc_reports || true
-unset HASURA_RM_SUBS_TEST_DB
-HASURA_GRAPHQL_ADMIN_SECRET="$EXISTING_ADMIN_SECRET"
-
 
 # webhook tests
 
@@ -406,7 +375,7 @@ fi
 
 if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
-	TEST_TYPE="post-webhook"
+	TEST_TYPE="get-webhook"
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
@@ -423,7 +392,7 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 	kill_hge_servers
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
-	TEST_TYPE="get-webhook"
+	TEST_TYPE="post-webhook"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 
 	start_multiple_hge_servers
@@ -552,6 +521,34 @@ sleep 4
 unset HASURA_HS_TEST_DB
 
 # end horizontal scale test
+
+# test remote schema graphql subscriptions
+
+echo -e "\n<########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA SUBSCRIPTIONS ########>\n"
+TEST_TYPE="remote-schema-subscriptions"
+
+HASURA_RM_SUBS_TEST_DB='postgres://gql_test:@localhost:5432/rem_hge_test'
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "create database rem_hge_test;"
+
+# start another hasura instance as a remote graphql server for subscriptions
+run_hge_with_args --database-url "$HASURA_RM_SUBS_TEST_DB" serve \
+                  --server-port 8081 --server-host 0.0.0.0
+wait_for_port 8081
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-url="$HGE_URL" --pg-url="$HASURA_GRAPHQL_DATABASE_URL" --test-remote-subs="http://localhost:8081" test_remote_subscriptions.py
+
+kill_hge_servers
+psql "$HASURA_GRAPHQL_DATABASE_URL" -c "drop database rem_hge_test;"
+sleep 4
+unset HASURA_RM_SUBS_TEST_DB
+
+# end remote subscription tests
+
+## end all tests
+
 
 echo -e "\n$(time_elapsed): <########## COMBINE ALL HPC REPORTS ########>\n"
 combine_all_hpc_reports || true
