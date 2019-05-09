@@ -18,9 +18,8 @@ const UniqueKeyEditor = ({
     index: i,
     type: c.data_type,
   }));
-
+  const existingConstraints = tableSchema.unique_constraints;
   const initialiseState = () => {
-    const existingConstraints = tableSchema.unique_constraints;
     dispatch(
       setUniqueKeys([
         ...existingConstraints.map(ec => {
@@ -37,7 +36,7 @@ const UniqueKeyEditor = ({
 
   useEffect(() => {
     initialiseState();
-  }, []);
+  }, [tableSchema]);
 
   const numUniqueKeys = uniqueKeys.length;
 
@@ -80,11 +79,6 @@ const UniqueKeyEditor = ({
       );
     };
 
-    const saveFunc = toggle => {
-      toggle();
-      saveUniqueKey();
-    };
-
     let removeFunc;
     if (!isLast) {
       removeFunc = toggle => {
@@ -94,9 +88,47 @@ const UniqueKeyEditor = ({
         if (!isOk) {
           return;
         }
-        toggle();
-        dispatch(removeUniqueKey(i, tableSchema.table_name));
+        dispatch(
+          removeUniqueKey(
+            i,
+            tableSchema.table_name,
+            existingConstraints,
+            toggle
+          )
+        );
       };
+    }
+
+    let saveFunc;
+    if (isLast) {
+      if (uniqueKey.length > 0) {
+        saveFunc = toggle => {
+          dispatch(
+            saveUniqueKey(
+              i,
+              tableSchema.table_name,
+              orderedColumns,
+              existingConstraints,
+              toggle
+            )
+          );
+        };
+      }
+    } else {
+      if (uniqueKey.length > 0) {
+        saveFunc = toggle =>
+          dispatch(
+            saveUniqueKey(
+              i,
+              tableSchema.table_name,
+              orderedColumns,
+              existingConstraints,
+              toggle
+            )
+          );
+      } else {
+        saveFunc = removeFunc;
+      }
     }
 
     let expandButtonText;

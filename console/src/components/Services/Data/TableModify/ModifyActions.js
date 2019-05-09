@@ -23,6 +23,7 @@ import gqlPattern, {
 import {
   pgConfTypes,
   generateFKConstraintName,
+  getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING =
@@ -1615,14 +1616,11 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
   };
 };
 
-const removeUniqueKey = (index, tableName) => {
+const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
   return (dispatch, getState) => {
     dispatch({ type: REMOVE_UNIQUE_KEY });
     const { currentSchema } = getState().tables;
-    const tableSchema = getState().tables.allSchemas.find(
-      s => s.table_name === tableName && s.table_schema === currentSchema
-    );
-    const existingConstraint = tableSchema.unique_constraints[index];
+    const existingConstraint = existingConstraints[index];
     const sqlUp = [
       {
         type: 'run_sql',
@@ -1638,8 +1636,9 @@ const removeUniqueKey = (index, tableName) => {
       {
         type: 'run_sql',
         args: {
-          sql: `alter table "${currentSchema}"."${tableName}" add constraint "${tableName}_${existingConstraint.columns.join(
-            '_'
+          sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+            tableName,
+            existingConstraint.columns
           )}" unique (${existingConstraint.columns
             .map(c => `"${c}"`)
             .join(', ')});`,
@@ -1661,6 +1660,7 @@ const removeUniqueKey = (index, tableName) => {
 
     const customOnSuccess = () => {
       const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      callback();
       dispatch(
         setUniqueKeys([
           ...uniqueKeysInState.slice(0, index),
@@ -1685,15 +1685,98 @@ const removeUniqueKey = (index, tableName) => {
   };
 };
 
-const saveUniqueKey = (index, columns) => {
-  console.log(columns);
+const saveUniqueKey = (
+  index,
+  tableName,
+  allColumns,
+  existingConstraints,
+  callback
+) => {
   return (dispatch, getState) => {
     dispatch({ type: SAVE_UNIQUE_KEY });
+    const { currentSchema } = getState().tables;
     const uniqueKeys = getState().tables.modify.uniqueKeyModify;
+    const numUniqueKeys = uniqueKeys.length;
     const uniqueKey = uniqueKeys[index];
-    if (!uniqueKey.length) {
-      dispatch(removeUniqueKey(index));
+    const columns = uniqueKey.map(c => allColumns[c].name);
+    const existingConstraint = existingConstraints[index];
+
+    const downMigration = [];
+    downMigration.push({
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${getUniqueConstraintName(
+          tableName,
+          columns
+        )}";`,
+      },
+    });
+    if (index < numUniqueKeys - 1) {
+      downMigration.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+            tableName,
+            existingConstraint.columns
+          )}" unique (${existingConstraint.columns
+            .map(c => `"${c}"`)
+            .join(', ')});`,
+        },
+      });
     }
+
+    const upMigration = [];
+    if (index < numUniqueKeys - 1) {
+      upMigration.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${
+            existingConstraint.constraint_name
+          }";`,
+        },
+      });
+    }
+    upMigration.push({
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+          tableName,
+          columns
+        )}" unique (${columns.map(c => `"${c}"`).join(', ')});`,
+      },
+    });
+
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      tableName +
+      '_add_unique_' +
+      columns.join('_');
+    const requestMsg = 'Saving unique key...';
+    const successMsg = 'Unique key saved';
+    const errorMsg = 'Saving unique key failed';
+
+    const customOnSuccess = () => {
+      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      callback();
+      dispatch(setUniqueKeys([...uniqueKeysInState, []]));
+    };
+
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upMigration,
+      downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
 };
 

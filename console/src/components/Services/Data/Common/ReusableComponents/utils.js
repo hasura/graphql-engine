@@ -83,3 +83,7 @@ export const generateFKConstraintName = (
   }
   return `${expectedNamePrefix}${suffix + 1}`;
 };
+
+export const getUniqueConstraintName = (tableName, columns) => {
+  return `${tableName}_${columns.join('_')}_key`;
+};
