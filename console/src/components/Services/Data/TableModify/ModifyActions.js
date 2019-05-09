@@ -1621,6 +1621,8 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     dispatch({ type: REMOVE_UNIQUE_KEY });
     const { currentSchema } = getState().tables;
     const existingConstraint = existingConstraints[index];
+
+    // Up migration: Drop the constraint
     const sqlUp = [
       {
         type: 'run_sql',
@@ -1632,6 +1634,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
       },
     ];
 
+    // Down Migration: Create the constraint that is being dropped
     const sqlDown = [
       {
         type: 'run_sql',
@@ -1659,8 +1662,11 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     const errorMsg = 'Deleting constraint failed';
 
     const customOnSuccess = () => {
-      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      // success callback
       callback();
+
+      // remove the removed unique constraint from state
+      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
       dispatch(
         setUniqueKeys([
           ...uniqueKeysInState.slice(0, index),
@@ -1668,6 +1674,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
         ])
       );
     };
+
     const customOnError = () => {};
 
     makeMigrationCall(
@@ -1701,7 +1708,9 @@ const saveUniqueKey = (
     const columns = uniqueKey.map(c => allColumns[c].name);
     const existingConstraint = existingConstraints[index];
 
+    // Down migration
     const downMigration = [];
+    // drop the newly created constraint
     downMigration.push({
       type: 'run_sql',
       args: {
@@ -1711,6 +1720,7 @@ const saveUniqueKey = (
         )}";`,
       },
     });
+    // if any constraint is being dropped, create it back
     if (index < numUniqueKeys - 1) {
       downMigration.push({
         type: 'run_sql',
@@ -1725,7 +1735,9 @@ const saveUniqueKey = (
       });
     }
 
+    // up migration
     const upMigration = [];
+    // drop the old constraint if there is any
     if (index < numUniqueKeys - 1) {
       upMigration.push({
         type: 'run_sql',
@@ -1736,6 +1748,8 @@ const saveUniqueKey = (
         },
       });
     }
+
+    // create the new constraint
     upMigration.push({
       type: 'run_sql',
       args: {
@@ -1758,8 +1772,11 @@ const saveUniqueKey = (
     const errorMsg = 'Saving unique key failed';
 
     const customOnSuccess = () => {
-      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      // success callback
       callback();
+
+      // add an empty unique key to state
+      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
       dispatch(setUniqueKeys([...uniqueKeysInState, []]));
     };
 
