@@ -1,4 +1,7 @@
+CREATE OR REPLACE VIEW hdb_catalog.hdb_table_info_agg AS (
 select
+  tables.table_name as table_name,
+  tables.table_schema as table_schema,
   coalesce(columns.columns, '[]') as columns,
   coalesce(pk.columns, '[]') as primary_key_columns,
   coalesce(constraints.constraints, '[]') as constraints,
@@ -7,8 +10,8 @@ from
   information_schema.tables as tables
   left outer join (
     select
-      c.table_schema,
       c.table_name,
+      c.table_schema,
       json_agg(
         json_build_object(
           'name',
@@ -69,6 +72,39 @@ from
     tables.table_schema = views.table_schema
     AND tables.table_name = views.table_name
   )
-where
-  tables.table_schema = $1 AND
-  tables.table_name = $2
+);
+
+CREATE OR REPLACE VIEW hdb_catalog.hdb_function_info_agg AS (
+  SELECT
+    function_name,
+    function_schema,
+    row_to_json (
+      (
+        SELECT
+          e
+          FROM
+              (
+                SELECT
+                  has_variadic,
+                  function_type,
+                  return_type_schema,
+                  return_type_name,
+                  return_type_type,
+                  returns_set,
+                  input_arg_types,
+                  input_arg_names,
+                  exists(
+                    SELECT
+                      1
+                      FROM
+                          information_schema.tables
+                     WHERE
+                table_schema = return_type_schema
+            AND table_name = return_type_name
+                  ) AS returns_table
+              ) AS e
+      )
+    ) AS "function_info"
+    FROM
+        hdb_catalog.hdb_function_agg
+);
