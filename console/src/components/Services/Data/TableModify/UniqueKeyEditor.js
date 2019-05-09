@@ -74,6 +74,9 @@ const UniqueKeyEditor = ({
 
     // label text when unique key is collapsed
     const collapsedLabel = () => {
+      if (isLast && numUniqueKeys === 1) {
+        return (<div> No unique keys </div>);
+      }
       if (!uniqueKeyConfig) return null;
       return (
         <div>
