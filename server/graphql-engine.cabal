@@ -165,11 +165,13 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.PGDump
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
@@ -290,7 +292,7 @@ library
   if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
   if flag(developer)
-    cpp-options: -DInternalAPIs -DLocalConsole
+    cpp-options: -DDeveloperAPIs -DLocalConsole
   if flag(local-console)
     cpp-options: -DLocalConsole
 

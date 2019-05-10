@@ -10,7 +10,7 @@ import ForeignKeyWrapper from './ForeignKeyWrapper';
 
 import dataTypes from '../Common/DataTypes';
 import { TIMESTAMP, DATE, UUID } from '../utils';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 
 import {
   setTableName,

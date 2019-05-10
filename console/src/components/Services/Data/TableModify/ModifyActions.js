@@ -11,7 +11,7 @@ import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
@@ -157,8 +157,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -183,8 +183,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -1110,24 +1110,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */

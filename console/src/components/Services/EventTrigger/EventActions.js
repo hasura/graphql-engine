@@ -15,7 +15,7 @@ import { initQueries } from '../Data/DataActions';
 import {
   filterInconsistentMetadata,
   loadInconsistentObjects,
-} from '../Data/Metadata/Actions';
+} from '../Metadata/Actions';
 import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';

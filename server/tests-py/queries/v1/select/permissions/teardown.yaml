@@ -8,4 +8,5 @@ args:
       DROP TABLE geom_table;
       DROP TABLE geog_table;
       DROP TABLE jsonb_table;
+      DROP TABLE auction;
     cascade: true

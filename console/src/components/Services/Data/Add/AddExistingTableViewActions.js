@@ -6,7 +6,7 @@ import {
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';

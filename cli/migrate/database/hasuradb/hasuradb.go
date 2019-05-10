@@ -39,7 +39,8 @@ var (
 type Config struct {
 	MigrationsTable string
 	SettingsTable   string
-	URL             *nurl.URL
+	v1URL           *nurl.URL
+	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
 }
@@ -117,10 +118,15 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 	hx, err := WithInstance(&Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
-		URL: &nurl.URL{
+		v1URL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
 			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		schemDumpURL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1alpha1/pg_dump"),
 		},
 		isCMD:   isCMD,
 		Headers: headers,
@@ -162,7 +168,7 @@ func (h *HasuraDB) UnLock() error {
 		return nil
 	}
 
-	resp, body, err := h.sendQuery(h.migrationQuery)
+	resp, body, err := h.sendv1Query(h.migrationQuery)
 	if err != nil {
 		return err
 	}
@@ -283,7 +289,7 @@ func (h *HasuraDB) getVersions() (err error) {
 	}
 
 	// Send Query
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -368,7 +374,7 @@ func (h *HasuraDB) Reset() error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -401,7 +407,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -443,7 +449,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 		},
 	}
 
-	resp, body, err = h.sendQuery(query)
+	resp, body, err = h.sendv1Query(query)
 	if err != nil {
 		return err
 	}
@@ -469,10 +475,30 @@ func (h *HasuraDB) ensureVersionTable() error {
 	return nil
 }
 
-func (h *HasuraDB) sendQuery(m interface{}) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 
-	request = request.Post(h.config.URL.String()).Send(m)
+	request = request.Post(h.config.v1URL.String()).Send(m)
+
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
+	request := gorequest.New()
+
+	request = request.Post(h.config.schemDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
