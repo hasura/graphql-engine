@@ -33,7 +33,7 @@ exports.postLogin = async (req, res, next) => {
       }
 
       handleResponse(res, 200, {
-        token: jwt.sign(tokenContents, process.env.ENCRYPTION_KEY, {expiresIn : '24h'})
+        token: jwt.sign(tokenContents, process.env.ENCRYPTION_KEY)
       });
     }
   })(req, res, next);
