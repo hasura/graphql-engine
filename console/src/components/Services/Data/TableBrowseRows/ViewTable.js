@@ -7,7 +7,7 @@ import {
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
-} from './ViewActions'; // eslint-disable-line no-unused-vars
+} from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewHeader from './ViewHeader';
