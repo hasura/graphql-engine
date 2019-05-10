@@ -9,7 +9,8 @@ For running a custom subscription, we need access to our `ApolloClient` instance
 ```js
 + import { withApollo } from 'react-apollo'
 
-class Todos extends React.Component {
+- export class Todos extends React.Component {
++ class Todos extends React.Component {
 }
 
 - export default Todos;

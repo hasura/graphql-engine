@@ -2,7 +2,7 @@
 title: "Update mutation and automatic cache updates"
 ---
 
-Now let's do the integration part. Open `src/screens/components/TodoItem.js` and add the following code below the other imports:
+Now let's do the integration part. Open `src/screens/components/Todo/TodoItem.js` and add the following code below the other imports:
 
 ```javascript
 +import gql from 'graphql-tag';
