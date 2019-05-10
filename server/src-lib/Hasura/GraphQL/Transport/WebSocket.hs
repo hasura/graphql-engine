@@ -32,6 +32,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error                        (Code (StartFailed))
 import           Hasura.Server.Auth                            (AuthMode,
                                                                 getUserInfo)
 import           Hasura.Server.Cors
@@ -46,14 +47,20 @@ import qualified Hasura.Logging                                as L
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
 
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscState :: !(IORef.IORef WSConnState)
+  { _wscState     :: !(IORef.IORef WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
-  , _wscOpMap :: !OperationMap
+  , _wscOpMap     :: !OperationMap
+  , _wscErrRespTy :: !ErrRespType
   }
 
 type WSServer = WS.WSServer WSConnData
@@ -80,22 +87,23 @@ data WSServerEnv
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
-    checkPath
+    errType <- checkPath
     let reqHdrs = WS.requestHeaders requestHead
     headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
-    return $ WsHeaders $ filterWsHeaders headers
-  either reject accept res
+    return (WsHeaders $ filterWsHeaders headers, errType)
+  either reject (uncurry accept) res
 
   where
     keepAliveAction wsConn = forever $ do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
-    accept hdrs = do
+    accept hdrs errType = do
       logger $ WSLog wsId Nothing EAccepted Nothing
       connData <- WSConnData
                   <$> IORef.newIORef (CSNotInitialised hdrs)
                   <*> STMMap.newIO
+                  <*> pure errType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right (connData, acceptRequest, Just keepAliveAction)
@@ -107,9 +115,11 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
-    checkPath =
-      when (WS.requestPath requestHead /= "/v1alpha1/graphql") $
-      throw404 "only /v1alpha1/graphql is supported on websockets"
+    checkPath = case WS.requestPath requestHead of
+      "/v1alpha1/graphql" -> return ERTLegacy
+      "/v1/graphql"       -> return ERTGraphqlCompliant
+      _                   ->
+        throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
 
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
@@ -153,7 +163,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
-  when (isJust opM) $ withComplete $ sendConnErr $
+  when (isJust opM) $ withComplete $ sendStartErr $
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ IORef.readIORef userInfoR
@@ -161,11 +171,11 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
     CSInitialised (ConnInitState userInfo reqHdrs st) ->
       return (userInfo, reqHdrs, st)
     CSInitError initErr -> do
-      let connErr = "cannot start as connection_init failed with : " <> initErr
-      withComplete $ sendConnErr connErr
+      let e = "cannot start as connection_init failed with : " <> initErr
+      withComplete $ sendStartErr e
     CSNotInitialised _ -> do
-      let connErr = "start received before the connection is initialised"
-      withComplete $ sendConnErr connErr
+      let e = "start received before the connection is initialised"
+      withComplete $ sendStartErr e
 
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
@@ -228,28 +238,40 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ = serverEnv
 
-    WSConnData userInfoR opMap = WS.getData wsConn
+    WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
     logOpEv opDet =
       logWSEvent logger wsConn $ EOperation opId (_grOperationName q) opDet
 
-    sendConnErr connErr = do
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ J.toJSON connErr
-      logOpEv $ ODProtoErr connErr
+    getErrFn errTy =
+      case errTy of
+        ERTLegacy           -> encodeQErr
+        ERTGraphqlCompliant -> encodeGQLErr
+
+    sendStartErr e = do
+      let errFn = getErrFn errRespTy
+      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False $
+        err400 StartFailed e
+      logOpEv $ ODProtoErr e
 
     sendCompleted = do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
       logOpEv ODCompleted
 
     postExecErr qErr = do
+      let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ encodeQErr False qErr
+        GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
+      let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
+      let err = case errRespTy of
+            ERTLegacy           -> errFn False qErr
+            ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
+      sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
       sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
@@ -330,7 +352,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         _                        -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
   where
-    WSConnData userInfoR _ = WS.getData wsConn
+    WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
 
 onConnInit

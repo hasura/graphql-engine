@@ -9,6 +9,7 @@ import jwt
 import random
 import time
 
+from context import GQLWsClient
 
 def check_keys(keys, obj):
     for k in keys:
@@ -146,13 +147,14 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-    assert transport in ['websocket','http'], "Unknown transport type " + transport
+    assert transport in ['websocket', 'http'], "Unknown transport type " + transport
     if transport == 'websocket':
         assert 'response' in conf
         assert conf['url'].endswith('/graphql')
         print('running on websocket')
-        return validate_gql_ws_q (
+        return validate_gql_ws_q(
             hge_ctx,
+            conf['url'],
             conf['query'],
             headers,
             conf['response'],
@@ -160,54 +162,40 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
         )
     elif transport == 'http':
         print('running on http')
-        return validate_http_anyq (
-            hge_ctx,
-            conf['url'],
-            conf['query'],
-            headers,
-            conf['status'],
-            conf.get('response')
-        )
+        return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
+                                  conf['status'], conf.get('response'))
 
 
-def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
-    ws_client = hge_ctx.ws_client
+
+def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retry=False):
+    if endpoint == '/v1alpha1/graphql':
+        ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    else:
+        ws_client = hge_ctx.ws_client
+    print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
 
     query_resp = ws_client.send_query(query, headers=headers, timeout=15)
     resp = next(query_resp)
+    print('websocket resp: ', resp)
 
     if resp.get('type') == 'complete':
         if retry:
             #Got query complete before payload. Retry once more
-            print ("Got query complete before getting query response payload. Retrying")
+            print("Got query complete before getting query response payload. Retrying")
             ws_client.recreate_conn()
             time.sleep(3)
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
-            assert resp['type'] in ['data','error'], resp
+            assert resp['type'] in ['data', 'error'], resp
 
-    if 'errors' in exp_http_response:
-        assert resp['type'] in ['data','error'], resp
-
-        exp_ws_response1 =  exp_http_response['errors'][0]['extensions']
-        exp_ws_response1['error'] = exp_http_response['errors'][0]['message']
-
-        exp_ws_response2 = {'errors': []}
-        for err in exp_http_response['errors']:
-            ws_err = err['extensions']
-            ws_err['error'] = err['message']
-            exp_ws_response2['errors'].append(ws_err)
-        exp_ws_response2['data'] = None
-
-        if resp['type'] == 'error':
-            exp_ws_response = exp_ws_response1
-        elif resp['type'] == 'data':
-            exp_ws_response = exp_ws_response2
+    if 'errors' in exp_http_response or 'error' in exp_http_response:
+        assert resp['type'] in ['data', 'error'], resp
     else:
         assert resp['type'] == 'data', resp
-        exp_ws_response = exp_http_response
+
+    exp_ws_response = exp_http_response
 
     assert 'payload' in resp, resp
     assert resp['payload'] == exp_ws_response, yaml.dump({
@@ -215,16 +203,16 @@ def validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, retry=False):
         'expected': exp_ws_response,
         'diff': jsondiff.diff(exp_ws_response, resp['payload'])
     })
-    respDone = next(query_resp)
-    assert respDone['type'] == 'complete'
+    resp_done = next(query_resp)
+    assert resp_done['type'] == 'complete'
     return resp['payload']
-
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp = hge_ctx.anyq(url, query, headers)
     print(headers)
     assert code == exp_code, resp
+    print('http resp: ', resp)
     if exp_response:
         assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
             'response': resp,
@@ -241,7 +229,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
         conf = yaml.safe_load(c)
         if isinstance(conf, list):
             for sconf in conf:
-                check_query(hge_ctx, sconf)
+                check_query(hge_ctx, sconf, transport, add_auth)
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True

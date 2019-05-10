@@ -26,14 +26,13 @@ import graphql
 class HGECtxError(Exception):
     pass
 
-class GQLWsClient:
+class GQLWsClient():
 
-    def __init__(self, hge_ctx):
+    def __init__(self, hge_ctx, endpoint):
         self.hge_ctx = hge_ctx
         self.ws_queue = queue.Queue(maxsize=-1)
-        self.ws_url = urlparse(hge_ctx.hge_url)
-        self.ws_url = self.ws_url._replace(scheme='ws')
-        self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
+        self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
+                                                         path=endpoint)
         self.create_conn()
 
     def create_conn(self):
@@ -94,11 +93,10 @@ class GQLWsClient:
         self.ws_active_query_ids.discard(query_id)
 
     def gen_id(self, size=6, chars=string.ascii_letters + string.digits):
-        newId = ''.join(random.choice(chars) for _ in range(size))
-        if newId in self.ws_active_query_ids:
-            return gen_id(self,size,chars)
-        else:
-            return newId
+        new_id = ''.join(random.choice(chars) for _ in range(size))
+        if new_id in self.ws_active_query_ids:
+            return self.gen_id(size, chars)
+        return new_id
 
     def send_query(self, query, query_id=None, headers={}, timeout=60):
         graphql.parse(query['query'])
@@ -253,7 +251,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
-        self.ws_client = GQLWsClient(self)
+        self.ws_client = GQLWsClient(self, '/v1/graphql')
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False,
                                 stdout=subprocess.PIPE, check=True)

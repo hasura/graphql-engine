@@ -34,7 +34,7 @@ class Permission extends React.Component {
     } = this.props.functions;
 
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${prefixUrl}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
+    const permissionTableUrl = `${appPrefix}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {

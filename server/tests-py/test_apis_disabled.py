@@ -30,10 +30,10 @@ class TestMetadataDisabled:
 class TestGraphQLDisabled:
 
     def test_graphql_endpoint_disabled(self, hge_ctx):
-        check_post_404(hge_ctx,'/v1alpha1/graphql')
+        check_post_404(hge_ctx, '/v1/graphql')
 
     def test_graphql_explain_disabled(self, hge_ctx):
-        check_post_404(hge_ctx,'/v1alpha1/graphql/explain')
+        check_post_404(hge_ctx, '/v1/graphql/explain')
 
 
 @pytest.mark.skipif(pytest.config.getoption("--test-graphql-disabled"),

@@ -167,7 +167,7 @@ def evts_webhook(request):
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
-    client = GQLWsClient(hge_ctx)
+    client = GQLWsClient(hge_ctx, '/v1/graphql')
     time.sleep(0.1)
     yield client
     client.teardown()
