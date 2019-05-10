@@ -1,5 +1,5 @@
 description: Select aggregations and nodes of author table along with aggregations and nodes of it's articles
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

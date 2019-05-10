@@ -82,6 +82,8 @@ You don't need to integrate your UI with auth0 for testing. You call follow the 
 
 **Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
 
+**Note**: In case the above method gives an error, try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+
 Configure Hasura to use Auth0 Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
