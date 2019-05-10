@@ -35,7 +35,7 @@ Example
 Let's see access control in action using a simple example.
 
 Create a table
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 Head to your console and :ref:`create a table <create-tables>` called ``author`` with the following schema:
 
