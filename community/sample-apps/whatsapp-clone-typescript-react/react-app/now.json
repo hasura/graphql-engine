@@ -2,7 +2,7 @@
   "name":"whatsapp-clone",
   "version": 1,
   "env": {
-    "REACT_APP_SERVER_URL": "https://whatsapp-clone-hasura.herokuapp.com/v1alpha1/graphql",
+    "REACT_APP_SERVER_URL": "https://whatsapp-clone-hasura.herokuapp.com/v1/graphql",
     "REACT_APP_AUTH_URL": "https://warm-hamlet-82072.herokuapp.com"
   },
   "public": true,

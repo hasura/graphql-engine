@@ -108,7 +108,7 @@ Step 3: Make queries to the remote server from Hasura
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Now you can head to the ``GraphiQL`` tab and make queries to your remote server from Hasura.
 
-You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1alpha1/graphql``).
+You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1/graphql``).
 
 Points to remember
 ------------------

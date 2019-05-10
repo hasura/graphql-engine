@@ -85,7 +85,7 @@ Use the `TRIGGER_URL` from previous step.
 ### Step 5: Add configuration variables
 
 Edit `index.js` and add the following values:
-- `HGE_URL`, your GraphQL Engine URL (ending with `v1alpha1/graphql`)
+- `HGE_URL`, your GraphQL Engine URL (ending with `v1/graphql`)
 - `APP_ID`, the algolia application id
 - `SEARCH_KEY`, algolia search api key created in Step 2
 

@@ -41,7 +41,7 @@ Edit `.env.yaml` and add values for the following as shown:
 ```yaml
 # .env.yaml
 GMAPS_API_KEY: '[GMAPS_API_KEY]'
-HASURA_GRAPHQL_ENGINE_URL: 'http://[HGE_IP]/v1alpha1/graphql'
+HASURA_GRAPHQL_ENGINE_URL: 'http://[HGE_IP]/v1/graphql'
 ```
 
 ```bash

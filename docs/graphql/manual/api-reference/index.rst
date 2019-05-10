@@ -12,7 +12,9 @@ Available APIs
 +-----------------+----------------------------------------+------------------+
 | API             | Endpoint                               | Access           |
 +=================+========================================+==================+
-| GraphQL         | :ref:`/v1alpha1/graphql <graphql_api>` | Permission rules |
+| GraphQL         | :ref:`/v1/graphql <graphql_api>`       | Permission rules |
++-----------------+----------------------------------------+------------------+
+| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>` | Permission rules |
 +-----------------+----------------------------------------+------------------+
 | Schema/Metadata | :ref:`/v1/query <schema_metadata_api>` | Admin only       |
 +-----------------+----------------------------------------+------------------+

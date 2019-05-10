@@ -1,5 +1,5 @@
 description: Fetch data from uuid_test table using _in operator in where filter
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
