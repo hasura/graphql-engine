@@ -2,11 +2,14 @@
 title: "Mutation and update cache"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/h4svDfN32s8" />
 
 Now let's do the integration part. Open `src/components/TodoItem.vue` and add the following code below:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/components/TodoItem.vue" text="src/components/TodoItem.vue" />
 
 ```javascript
 <script>

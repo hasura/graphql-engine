@@ -2,6 +2,7 @@
 title: "Set up a GraphQL client with Apollo"
 ---
 
+import GithubLink from "../src/GithubLink.js";
 import YoutubeEmbed from "../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/iph-ERuYx_Y" />
@@ -16,7 +17,9 @@ $ npm install --save vue-apollo graphql apollo-client apollo-link-http apollo-ca
 
 ## Create Apollo Client Instance
 
-Open `src/components/main.js` and add the following code to create an ApolloClient instance.
+Open `src/main.js` and add the following code to create an ApolloClient instance.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/main.js" text="src/main.js" />
 
 ```javascript
   import Vue from "vue";

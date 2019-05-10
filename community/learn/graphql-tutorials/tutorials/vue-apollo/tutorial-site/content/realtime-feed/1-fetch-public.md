@@ -2,6 +2,7 @@
 title: "Fetch public todos - subscription"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/ooy-5LzrvxM" />
@@ -9,6 +10,8 @@ import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 Let's define the graphql query to be used:
 
 Open `src/components/TodoPublicList.vue` and add the following imports.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/components/TodoPublicList.vue" text="src/components/TodoPublicList.vue" />
 
 ```javascript
   <script>

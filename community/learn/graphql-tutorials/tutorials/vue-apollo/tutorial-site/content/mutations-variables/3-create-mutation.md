@@ -2,11 +2,14 @@
 title: "Run mutation, update cache"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/qHPGWfpqQ3o" />
 
 Now let's do the integration part. Open `src/components/TodoInput.vue` and add the following code below to make the mutation.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/components/TodoInput.vue" text="src/components/TodoInput.vue" />
 
 ```javascript
 export default {

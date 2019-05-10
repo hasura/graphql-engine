@@ -2,6 +2,7 @@
 title: "Subscription"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/ZujdsxSRt48" />
@@ -15,6 +16,8 @@ When we had initially set up Apollo, we used Apollo Boost to install the require
 Now we need to update our `ApolloClient` instance to point to the subscription server.
 
 Open `src/main.js` and update the following imports:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/main.js" text="src/main.js" />
 
 ```javascript
 - import { HttpLink } from 'apollo-link-http';

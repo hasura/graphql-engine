@@ -2,6 +2,8 @@
 title: "Query Variables"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 What is a variable in GraphQL context?
 -------------------------------------
 GraphQL has a first-class way to factor dynamic values out of the query, and pass them as a separate dictionary. These values are called variables. In our case, we are defining the object to be inserted as a mutation.
@@ -9,6 +11,8 @@ GraphQL has a first-class way to factor dynamic values out of the query, and pas
 So let's define the graphql mutation to be used with variables.
 
 Open `src/components/TodoInput.vue` and add the following code:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/components/TodoInput.vue" text="src/components/TodoInput.vue" />
 
 ```javascript
 <script>

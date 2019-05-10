@@ -2,6 +2,7 @@
 title: "Create Subscription and Render Result"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
 import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 
 <YoutubeEmbed link="https://www.youtube.com/embed/E5Is7bshZXM" />
@@ -11,6 +12,8 @@ import YoutubeEmbed from "../../src/YoutubeEmbed.js";
 So let's define the graphql subscription to be used.
 
 Open `src/components/OnlineUsers.vue` and add the following code, below the other import.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/vue-apollo/app-final/src/components/OnlineUsers.vue" text="src/components/OnlineUsers.vue" />
 
 ```javascript
 <script>
