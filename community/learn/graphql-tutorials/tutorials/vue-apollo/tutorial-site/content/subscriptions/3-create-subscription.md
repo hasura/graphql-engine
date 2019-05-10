@@ -2,6 +2,10 @@
 title: "Create Subscription and Render Result"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/E5Is7bshZXM" />
+
 ## Add subscription query
 
 So let's define the graphql subscription to be used.

@@ -2,6 +2,10 @@
 title: "Smart Query"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/kH2P4VPux24" />
+
 In this section, we will implement GraphQL Queries and integrate with the Vue UI.
 With Apollo Client, you can send queries in 3 different ways.
 

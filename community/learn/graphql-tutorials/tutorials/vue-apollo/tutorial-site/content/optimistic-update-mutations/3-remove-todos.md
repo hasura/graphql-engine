@@ -2,6 +2,10 @@
 title: "Remove todos - mutation"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/f6kDan28Q1k" />
+
 In this part of the tutorial, you will learn how to remove existing todos by using GraphQL Mutations.
 
 Let's define a graphql query to do a mutation into todos.

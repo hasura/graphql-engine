@@ -2,6 +2,10 @@
 title: "Fetch todos - query"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/cNNLyGj1K_I" />
+
 The first graphql query you will write will be to fetch personal todos. You will need to load the todo data from the database which belongs to the logged in user. Let's define a graphql query to fetch the required data.
 
 ```graphql

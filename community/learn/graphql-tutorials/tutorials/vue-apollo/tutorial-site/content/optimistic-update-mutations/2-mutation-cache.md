@@ -2,6 +2,10 @@
 title: "Mutation and update cache"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/h4svDfN32s8" />
+
 Now let's do the integration part. Open `src/components/TodoItem.vue` and add the following code below:
 
 ```javascript

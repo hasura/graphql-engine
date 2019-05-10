@@ -2,6 +2,10 @@
 title: "Handle loading/errors"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/zF0SesqsGFg" />
+
 As we saw in the previous step, Apollo gives access to properties and hooks to handle `loading` and `error` states. These are common ones that you will need to handle in your app.
 
 Now let's go back to the template that exists and add a loading state.

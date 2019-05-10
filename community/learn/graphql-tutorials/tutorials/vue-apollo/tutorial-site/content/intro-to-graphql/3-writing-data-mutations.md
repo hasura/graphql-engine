@@ -2,6 +2,10 @@
 title: Writing data - Mutations
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/9w4f8p8AqNs" />
+
 import {Link} from 'gatsby';
 
 These are the concepts you should know before you attack mutations (haha):

@@ -2,6 +2,10 @@
 title: "Subscriptions to show online users"
 ---
 
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/gbyHMbDtF-c" />
+
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
 Now let's get to the exciting part.

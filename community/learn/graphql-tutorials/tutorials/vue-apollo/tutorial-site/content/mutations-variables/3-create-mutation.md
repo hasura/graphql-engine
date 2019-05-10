@@ -2,6 +2,10 @@
 title: "Run mutation, update cache"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/qHPGWfpqQ3o" />
+
 Now let's do the integration part. Open `src/components/TodoInput.vue` and add the following code below to make the mutation.
 
 ```javascript
