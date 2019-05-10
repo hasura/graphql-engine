@@ -1,6 +1,6 @@
 description: Insert landmark using only one co-ordinate. Error as minimum 2 are required
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:

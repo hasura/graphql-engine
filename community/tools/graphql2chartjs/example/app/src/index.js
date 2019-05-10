@@ -8,7 +8,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const link = new WebSocketLink({
-  uri: 'wss://graphql2chartjs.hasura.app/v1alpha1/graphql',
+  uri: 'wss://graphql2chartjs.hasura.app/v1/graphql',
   options: {
     reconnect: true
   }

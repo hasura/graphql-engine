@@ -43,7 +43,7 @@ dataApisContent.push({
   },
   request: {
     method: 'POST',
-    url: getUrl('/v1alpha1/graphql'),
+    url: getUrl('/v1/graphql'),
     headers: defaultHeader,
     bodyType: 'graphql',
     params: JSON.stringify({}, null, 4),
