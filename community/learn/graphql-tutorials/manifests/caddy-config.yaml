@@ -25,8 +25,8 @@ data:
         without /graphql/console
       }
 
-      proxy /graphql/v1alpha1/graphql hasura/v1alpha1/graphql {
-        without /graphql/v1alpha1/graphql
+      proxy /graphql/v1/graphql hasura/v1/graphql {
+        without /graphql/v1/graphql
         websocket
       }
 
@@ -44,7 +44,7 @@ data:
 
       proxy /graphql/react react-apollo
 
-      proxy /graphql hasura/v1alpha1/graphql {
+      proxy /graphql hasura/v1/graphql {
         without /graphql
         websocket
       }
