@@ -72,9 +72,8 @@ class Schema extends Component {
 
       Promise.all([
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-        dispatch(fetchDataInit()),
         dispatch(fetchFunctionInit()),
-        dispatch(loadUntrackedRelations()),
+        dispatch(loadUntrackedRelations({ schemas: [updatedSchema] })),
       ]);
     };
 
@@ -103,7 +102,9 @@ class Schema extends Component {
           : +(a.table_name > b.table_name) || -1;
       };
 
-      const _untrackedTables = schema.filter(table => !table.is_table_tracked);
+      const _untrackedTables = schema.filter(
+        table => !table.is_table_tracked && table.table_schema === currentSchema
+      );
 
       return _untrackedTables.sort(tableSortFunc);
     };

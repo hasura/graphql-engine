@@ -441,7 +441,9 @@ const getExistingFieldsMap = tableSchema => {
 };
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
-  const trackedTables = allSchemas.filter(table => table.is_table_tracked);
+  const trackedTables = allSchemas.filter(
+    table => table.is_table_tracked && table.table_schema === currentSchema
+  );
   const tableRelMapping = trackedTables.map(table => ({
     table_name: table.table_name,
     existingFields: getExistingFieldsMap(table),

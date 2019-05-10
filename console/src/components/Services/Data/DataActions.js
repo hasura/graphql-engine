@@ -179,12 +179,64 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
+const loadSchema = configOptions => (dispatch, getState) => {
+  const url = Endpoints.getSchema;
+  let allSchemas = getState().tables.allSchemas;
+  if (!configOptions || (!configOptions.schemas && !configOptions.tables)) {
+    configOptions = {
+      schemas: [getState().tables.currentSchema],
+    };
+  }
+  if (configOptions) {
+    if (configOptions.schemas) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
+      );
+    }
+
+    if (configOptions.tables) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.tables.some(
+            item =>
+              item.table_schema === schemaInfo.table_schema &&
+              item.table_name === schemaInfo.table_name
+          )
+      );
+    }
+  }
+  const body = getSchemaQuery(configOptions);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(body),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => {
+      dispatch({
+        type: LOAD_SCHEMA,
+        allSchemas: allSchemas.concat(JSON.parse(data.result[1])),
+      });
+    },
+    error => {
+      console.error('Failed to load schema ' + JSON.stringify(error));
+    }
+  );
+};
+
+const loadUntrackedRelations = options => dispatch => {
+  return dispatch(loadSchema(options)).then(() => {
+    dispatch(setUntrackedRelations());
+  });
+};
+
 const fetchDataInit = () => (dispatch, getState) => {
-  const currentSchema = getState().tables.currentSchema;
   const url = Endpoints.getSchema;
   const body = {
     type: 'bulk',
-    args: [initQueries.schemaList, getSchemaQuery(currentSchema)],
+    args: [initQueries.schemaList],
   };
 
   const options = {
@@ -196,16 +248,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      if (data[1].result_type !== 'TuplesOk') {
-        // show error
-        console.error('Failed to fetch schema ' + JSON.stringify(data[1]));
-        return;
-      }
-      dispatch({
-        type: LOAD_SCHEMA,
-        allSchemas: JSON.parse(data[1].result[1]),
-      });
-      dispatch(setUntrackedRelations());
+      dispatch(loadUntrackedRelations());
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -267,26 +310,6 @@ const fetchSchemaList = () => (dispatch, getState) => {
   );
 };
 
-const loadSchema = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const currentSchema = getState().tables.currentSchema;
-  const body = getSchemaQuery(currentSchema);
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_SCHEMA, allSchemas: JSON.parse(data.result[1]) });
-    },
-    error => {
-      console.error('Failed to load schema ' + JSON.stringify(error));
-    }
-  );
-};
-
 const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
   dispatch,
   getState
@@ -318,12 +341,6 @@ const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
     }),
   };
   return dispatch(requestAction(url, options));
-};
-
-const loadUntrackedRelations = () => dispatch => {
-  return dispatch(loadSchema()).then(() => {
-    dispatch(setUntrackedRelations());
-  });
 };
 
 const setTable = tableName => ({ type: SET_TABLE, tableName });
@@ -522,9 +539,22 @@ const dataReducer = (state = defaultState, action) => {
         listedFunctions: [...action.data],
       };
     case LOAD_SCHEMA:
+      // remove duplicates
+      const result = action.allSchemas.reduce((unique, o) => {
+        if (
+          !unique.some(
+            obj =>
+              obj.table_name === o.table_name &&
+              obj.table_schema === o.table_schema
+          )
+        ) {
+          unique.push(o);
+        }
+        return unique;
+      }, []);
       return {
         ...state,
-        allSchemas: action.allSchemas,
+        allSchemas: result,
       };
     case LOAD_UNTRACKED_RELATIONS:
       return {

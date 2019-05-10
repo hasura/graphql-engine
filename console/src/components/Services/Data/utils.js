@@ -137,7 +137,35 @@ const getTableName = t => {
   return '';
 };
 
-const getSchemaQuery = schemaName => {
+const getSchemaQuery = options => {
+  let whereQuery = '';
+  const whereCondtions = [];
+  if (
+    (options.schemas && options.schemas.length !== 0) ||
+    (options.tables && options.tables.length !== 0)
+  ) {
+    whereQuery = 'where';
+  }
+  if (options.schemas) {
+    options.schemas.forEach(schemaName => {
+      whereCondtions.push(`(ist.table_schema='${schemaName}')`);
+    });
+  }
+  if (options.tables) {
+    options.tables.forEach(tableInfo => {
+      whereCondtions.push(
+        `(ist.table_schema='${tableInfo.table_schema}' and ist.table_name='${
+          tableInfo.table_name
+        }')`
+      );
+    });
+  }
+  whereCondtions.forEach((whereInfo, index) => {
+    whereQuery = whereQuery + ` ${whereInfo}`;
+    if (index + 1 !== whereCondtions.length) {
+      whereQuery = whereQuery + ' and';
+    }
+  });
   const runSql = `select 
   COALESCE(
     json_agg(
@@ -172,7 +200,7 @@ FROM
                 WHERE 
                   c.oid = (
                     SELECT 
-                      ('"' || isc.table_name || '"'):: regclass :: oid
+                    ((ist.table_schema || '.' || ist.table_name)::text):: regclass :: oid
                   ) 
                   AND c.relname = isc.table_name
               )
@@ -235,8 +263,7 @@ FROM
       and hdb_rel.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_permission_agg AS hdb_perm ON hdb_perm.table_schema = ist.table_schema 
       and hdb_perm.table_name = ist.table_name 
-    where 
-      ist.table_schema = '${schemaName}' 
+    ${whereQuery}
     GROUP BY 
       ist.table_schema, 
       ist.table_name, 
