@@ -15,6 +15,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
+      maxSurge: 100%
   template:
     metadata:
       labels:
@@ -27,6 +28,10 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /graphql/react/introduction
+            port: 8080
 ---
 apiVersion: v1
 kind: Service
