@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native'
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 class LoadOlderButton extends React.Component {
 
@@ -19,6 +19,7 @@ class LoadOlderButton extends React.Component {
     return (
       <TouchableOpacity
         style={styles.pagination}
+        onPress={this.fetchOlderTodos}
         disabled={disabled}
       > 
         {

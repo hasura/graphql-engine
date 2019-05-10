@@ -20,6 +20,7 @@
     "rules": {
         "react/prop-types": "off",
         "react/display-name": "off",
-        "no-console": "off"
+        "no-console": "off",
+        "no-useless-escape": "off"
     }
 }

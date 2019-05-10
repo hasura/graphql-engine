@@ -34,6 +34,24 @@ We are importing the `Subscription` component from `react-apollo` and the graphq
 Now, we will wrap the component with `Subscription` passing our graphql subscription constant that we imported. Replace the `return` with the following code:
 
 ```javascript
+-   const data = {
+-      "online_users": [
+-        {
+-          user: {
+-            name: "User 1",
+-            id: 1
+-          },
+-          id: 1
+-        },
+-        {
+-          user: {
+-            name: "User   2",
+-            id: 2
+-          },
+-          id: 2
+-        },
+-      ]
+-   }
 +  return (
 +    <View style={styles.container}>
 +      <Subscription

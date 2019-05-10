@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native'
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 class LoadNewerButton extends React.Component {
 
@@ -20,7 +20,8 @@ class LoadNewerButton extends React.Component {
     }
     return (
       <TouchableOpacity
-        style={styles.pagination}
+        style={styles.banner}
+        onPress={this.fetchNewerTodos}
         disabled={disabled}
       > 
         {

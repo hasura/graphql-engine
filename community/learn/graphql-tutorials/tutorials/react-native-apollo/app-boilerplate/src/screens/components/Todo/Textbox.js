@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 
+
 export default class Textbox extends React.Component {
 
   state = {
@@ -14,15 +15,13 @@ export default class Textbox extends React.Component {
   }
 
   render() {
-
-    const { text } = this.state
-
+    const { text } = this.state;
+    const { isPublic } = this.props;
     const submit = () => {
       this.setState({
         text: ''
       });
     }
-
     return (
       <View style={styles.inputContainer}>
         <View style={styles.textboxContainer}>
@@ -76,11 +75,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#66BDE7',
+    backgroundColor: '#39235A',
     borderColor: '#d6d7da',
     borderRadius: 5,
   },
   buttonText: {
     fontWeight: 'bold',
+    color: 'white'
   }
 });

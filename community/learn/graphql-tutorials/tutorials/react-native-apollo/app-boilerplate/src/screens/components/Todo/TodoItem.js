@@ -7,7 +7,8 @@ import {
   Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
+
 
 export default class TodoItem extends React.Component {
 
@@ -27,8 +28,6 @@ export default class TodoItem extends React.Component {
       );
     }
 
-    const loading = false
-
     const updateCheckbox = () => {
       if (isPublic) return null;
       const update = () => {
@@ -37,9 +36,8 @@ export default class TodoItem extends React.Component {
         <TouchableOpacity
           style={item.is_completed ? styles.completedCheckBox : styles.checkBox}
           onPress={update}
-          disabled={loading}
         >
-          { loading && <CenterSpinner />}
+          {null}
         </TouchableOpacity>
       )
     }
@@ -55,7 +53,6 @@ export default class TodoItem extends React.Component {
     const deleteButton = () => {
       if (isPublic) return null;
       const remove = () => {
-        if (loading) { return; }
       };
       return (
         <View style={styles.deleteButton}>
@@ -63,8 +60,7 @@ export default class TodoItem extends React.Component {
             name="delete"
             size={26}
             onPress={remove}
-            disabled={loading}
-            color={loading ? "lightgray" : "#BC0000"}
+            color={"#BC0000"}
           />
         </View>
       );

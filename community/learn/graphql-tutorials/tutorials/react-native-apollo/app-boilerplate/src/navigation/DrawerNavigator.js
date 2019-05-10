@@ -3,10 +3,6 @@ import OnlineUsers from '../screens/UsersScreen';
 import LogoutScreen from '../screens/LogoutScreen';
 import TodosTabs from './TodosTabNavigator';
 
-const LogoutStack = createStackNavigator({
-  Logout: LogoutScreen
-});
-
 const UsersStack = createStackNavigator({
   Users: {
     screen: OnlineUsers,
@@ -22,8 +18,20 @@ const Drawer = createDrawerNavigator({
     screen: UsersStack
   },
   Logout: {
-    screen: LogoutStack
-  }
+    screen: LogoutScreen
+  }, 
+}, {
+  contentOptions: {
+    activeTintColor: '#39235A',
+    inactiveTintColor: 'black',
+    inactiveBackgroundColor: 'transparent',
+    labelStyle: {
+      fontSize: 15,
+      marginLeft: 10,
+    },
+  },
 });
 
-export default createAppContainer(Drawer);
+const DrawerContainer = createAppContainer(Drawer);
+
+export default DrawerContainer

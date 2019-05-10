@@ -84,9 +84,9 @@ export default class App extends React.Component {
 
   render() {
 
-    if (!this.state.client) {
-      return <CenterSpinner />
-    }
++    if (!this.state.client) {
++      return <CenterSpinner />
++    }
 
 -   return <Drawer/>
 +   return (

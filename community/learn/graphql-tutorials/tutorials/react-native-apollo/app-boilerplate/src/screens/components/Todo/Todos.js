@@ -6,19 +6,22 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import handleError from '../../utils';
 import TodoItem from './TodoItem';
 import LoadOlder from './LoadOlder';
 import LoadNewer from './LoadNewer';
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 export default class Todos extends React.Component {
 
   constructor (props) {
     super(props);
+    this.state={
+      newTodosExist: true
+    }
   }
 
   render() {
+
     const { isPublic } = this.props;
     const data = {
       todos: [
@@ -46,7 +49,7 @@ export default class Todos extends React.Component {
     }
     return (
       <View style={styles.container}>
-        <LoadNewer show={isPublic} toggleShow={this.dismissNewTodoBanner} styles={styles} isPublic={this.props.isPublic}/>
+        <LoadNewer show={this.state.newTodosExist && isPublic} toggleShow={this.dismissNewTodoBanner} styles={styles} isPublic={this.props.isPublic}/>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContainer}>
           <FlatList
             data={data.todos}
@@ -69,7 +72,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 0.8,
-    paddingTop: 10,
     paddingHorizontal: 10,
     backgroundColor: '#F7F7F7'
   },
@@ -78,20 +80,24 @@ const styles = StyleSheet.create({
   },
   banner: {
     flexDirection: 'column',
-    backgroundColor: '#66BDE7',
+    backgroundColor: '#39235A',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 5,
   },
   pagination: {
-    flexDirection: 'column',
-    backgroundColor: '#66BDE7',
+    flexDirection: 'row',
+    backgroundColor: '#39235A',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 5,
+    borderRadius: 5,
     marginBottom: 20,
     paddingVertical: 5,
   },
+  buttonText: {
+    color: 'white'
+  }
 });

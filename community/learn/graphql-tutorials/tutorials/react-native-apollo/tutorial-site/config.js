@@ -27,6 +27,7 @@ const config = {
         "/load-older"
     		"/subscriptions",
     		"/realtime-feed",
+        "/logout",
     		"/what-next"
     		],
 		"links": [

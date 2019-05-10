@@ -12,7 +12,8 @@ The recommended method is to use the render prop method, where you will just pas
 
 Great! Now let's define the graphql query to be used:
 
-Open `src/screens/components/Todos.js` and add the following code:
+// GHLINK
+Open `src/screens/components/Todo/Todos.js` and add the following code:
 
 ```javascript
 import React from 'react';
@@ -27,7 +28,7 @@ import {
 import TodoItem from './TodoItem';
 import LoadOlder from './LoadOlder';
 import LoadNewer from './LoadNewer';
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 + export const FETCH_TODOS = gql`
 + query {

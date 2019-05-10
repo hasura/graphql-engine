@@ -5,8 +5,8 @@ import {
   AsyncStorage,
   ActivityIndicator,
 } from 'react-native';
-import Textbox from './components/Textbox';
-import Todos from './components/Todos';
+import Textbox from './components/Todo/Textbox';
+import Todos from './components/Todo/Todos';
 
 export default class TodoScreen extends React.Component {
 
@@ -17,18 +17,14 @@ export default class TodoScreen extends React.Component {
   }
 
   async componentDidMount() {
-    const session = await AsyncStorage.getItem('@todo-graphql:auth0');
+    const session = await AsyncStorage.getItem('@todo-graphql:session');
+    const {id, name, token} = JSON.parse(session);
     // set session details in state
-    if (session) {
-      const {id, name, token} = JSON.parse(session);
-      this.setState({
-        id,
-        name,
-        token
-      })
-    } else {
-      this.props.navigate
-    }
+    this.setState({
+      id,
+      name,
+      token
+    })
   }
 
   render() {
@@ -45,17 +41,17 @@ export default class TodoScreen extends React.Component {
           username={this.state.name}
           token={this.state.token}
         />
-          <View
-            style={styles.todoListContainer}
-          >
-            <Todos
-              isPublic={this.props.isPublic}
-              navigate={this.props.navigate}
-              userId={this.state.id}
-              username={this.state.name}
-              token={this.state.token}
-            />
-          </View>
+        <View
+          style={styles.todoListContainer}
+        >
+          <Todos
+            isPublic={this.props.isPublic}
+            navigate={this.props.navigate}
+            userId={this.state.id}
+            username={this.state.name}
+            token={this.state.token}
+          />
+        </View>
       </View>
     );
   }

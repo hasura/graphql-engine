@@ -2,7 +2,10 @@
 title: "Run mutation, update cache"
 ---
 
-Firstly, let us define the mutation that we looked at in the previous section. Import `gql` from `graphql-tag` and define the following mutation in `src/screens/components/Textbox.js`.
+Firstly, let us define the mutation that we looked at in the previous section. Import `gql` from `graphql-tag` and define the following mutation in `src/screens/components/Todo/Textbox.js`.
+
+//GHLINK
+
 
 ```js
 + import gql from 'graphql-tag';

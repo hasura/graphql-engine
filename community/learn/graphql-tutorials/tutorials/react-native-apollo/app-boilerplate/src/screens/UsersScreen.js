@@ -6,8 +6,9 @@ import {
   View,
   ScrollView
 } from 'react-native';
-import CenterSpinner from './components/CenterSpinner';
-import MenuButton from '../components/MenuButton';
+import CenterSpinner from './components/Util/CenterSpinner';
+import MenuButton from './components/Util/MenuButton';
+
 
 export default class OnlineUsers extends React.Component {
 
@@ -19,36 +20,33 @@ export default class OnlineUsers extends React.Component {
   }); 
 
   render() {
-
-    const data = {
-      online_users: [
+    
+   const data = {
+      "online_users": [
         {
-          id: 1,
-          last_seen: "now",
-          user : {
-            id: 1,
-            name: "user1"
-          }
+          user: {
+            name: "User 1",
+            id: 1
+          },
+          id: 1
         },
         {
-          id: 2,
-          last_seen: "now",
-          user : {
-            id: 2,
-            name: "user2"
-          }
+          user: {
+            name: "User   2",
+            id: 2
+          },
+          id: 2
         },
       ]
-    };
-
+   }
     return (
       <View style={styles.container}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContainer}>
-        <FlatList
-          data={data.online_users}
-          renderItem={({item}) => <UserItem item={item} />}
-          keyExtractor={(item) => item.user.name}
-        />
+          <FlatList
+            data={data.online_users}
+            renderItem={({item}) => <UserItem item={item} />}
+            keyExtractor={(item) => item.user.name}
+          />
         </ScrollView>
       </View>
     );

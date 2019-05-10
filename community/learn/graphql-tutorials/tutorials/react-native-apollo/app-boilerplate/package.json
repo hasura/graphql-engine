@@ -15,18 +15,14 @@
   },
   "dependencies": {
     "@expo/samples": "2.1.1",
-    "apollo-boost": "^0.3.1",
-    "apollo-link-ws": "^1.0.17",
-    "apollo-utilities": "^1.2.1",
-    "expo": "^32.0.0",
+    "@expo/vector-icons": "^10.0.1",
+    "expo": "32.0.0",
     "graphql": "^14.2.1",
     "jwt-decode": "^2.2.0",
     "react": "16.5.0",
-    "react-apollo": "^2.5.5",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
     "react-native-vector-icons": "^6.4.2",
-    "react-navigation": "^3.9.0",
-    "subscriptions-transport-ws": "^0.9.16"
+    "react-navigation": "^3.9.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
