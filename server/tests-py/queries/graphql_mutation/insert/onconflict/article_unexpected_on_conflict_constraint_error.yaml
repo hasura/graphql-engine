@@ -1,6 +1,6 @@
 description: Upserts article data via GraphQL mutation (Error 03)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
     mutation insert_article {
