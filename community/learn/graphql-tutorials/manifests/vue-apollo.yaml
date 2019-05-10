@@ -3,14 +3,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: react-apollo
-  name: react-apollo
+    app: vue-apollo
+  name: vue-apollo
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: react-apollo
+      app: vue-apollo
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,26 +19,22 @@ spec:
   template:
     metadata:
       labels:
-        app: react-apollo
+        app: vue-apollo
     spec:
       containers:
       - image: hasura/base-git-image:0.7
         imagePullPolicy: IfNotPresent
-        name: react-apollo
+        name: vue-apollo
         ports:
         - containerPort: 8080
           protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /graphql/react/introduction
-            port: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: react-apollo
-  name: react-apollo
+    app: vue-apollo
+  name: vue-apollo
   namespace: default
 spec:
   ports:
@@ -46,5 +42,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: react-apollo
+    app: vue-apollo
   type: ClusterIP
