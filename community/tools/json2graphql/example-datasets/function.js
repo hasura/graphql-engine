@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 const db = async () => {
   const response = await fetch(
-    'https://bazookaand.herokuapp.com/v1alpha1/graphql',
+    'https://bazookaand.herokuapp.com/v1/graphql',
     {
       method: 'POST',
       headers: {
