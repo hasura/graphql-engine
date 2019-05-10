@@ -104,9 +104,13 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          const isLastQuery = allowedQueries.length === 1;
+          const isOk = window.confirm('Are you sure?');
 
-          dispatch(deleteAllowedQuery(query.name, isLastQuery));
+          if (isOk) {
+            const isLastQuery = allowedQueries.length === 1;
+
+            dispatch(deleteAllowedQuery(query.name, isLastQuery));
+          }
         };
 
         return (
