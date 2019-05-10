@@ -142,7 +142,8 @@ runGqlClient logger url wsConn stRef rn opId hdrs startMsg = do
       conn <- maybe (throwError wsConnErr) return wsconn
       liftIO $ do
         updateState stRef rn newState
-        sendInit conn hdrs
+        -- sendInit conn hdrs
+        -- send only start message on existing connection
         WS.sendTextData conn $ J.encode startMsg
 
 updateState
