@@ -244,7 +244,7 @@ const createAllowListQuery = query => {
 
 const deleteAllowListQuery = () => {
   const removeCollectionFromAllowListQuery = () => ({
-    type: 'remove_collections_from_allowlist',
+    type: 'drop_collections_from_allowlist',
     args: {
       collections: [allowedQueriesCollection],
     },
@@ -474,7 +474,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
