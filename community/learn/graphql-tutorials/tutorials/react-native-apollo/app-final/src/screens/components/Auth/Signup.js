@@ -1,5 +1,5 @@
 import React from 'react';
-import LoginForm from './LoginForm';
+import LoginForm from '../Util/LoginForm';
 
 class Signup extends React.Component {
 

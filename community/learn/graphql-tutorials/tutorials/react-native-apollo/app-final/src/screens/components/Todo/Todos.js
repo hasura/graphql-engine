@@ -11,7 +11,7 @@ import { Query } from 'react-apollo';
 import TodoItem from './TodoItem';
 import LoadOlder from './LoadOlder';
 import LoadNewer from './LoadNewer';
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 export const FETCH_TODOS = gql`
 query (
@@ -145,7 +145,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 0.8,
-    paddingTop: 10,
     paddingHorizontal: 10,
     backgroundColor: '#F7F7F7'
   },

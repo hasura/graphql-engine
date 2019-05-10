@@ -1,7 +1,7 @@
 import React from 'react';
 import { withApollo } from 'react-apollo';
 import { TouchableOpacity, Text } from 'react-native'
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 import { FETCH_TODOS } from './Todos';
 import gql from 'graphql-tag';
 
@@ -78,7 +78,7 @@ class LoadNewerButton extends React.Component {
     }
     return (
       <TouchableOpacity
-        style={styles.pagination}
+        style={styles.banner}
         onPress={this.fetchNewerTodos}
         disabled={disabled}
       > 

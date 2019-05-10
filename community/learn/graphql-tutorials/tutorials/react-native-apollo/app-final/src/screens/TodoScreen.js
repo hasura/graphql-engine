@@ -5,8 +5,8 @@ import {
   AsyncStorage,
   ActivityIndicator,
 } from 'react-native';
-import Textbox from './components/Textbox';
-import Todos from './components/Todos';
+import Textbox from './components/Todo/Textbox';
+import Todos from './components/Todo/Todos';
 import {ApolloConsumer} from 'react-apollo';
 
 export default class TodoScreen extends React.Component {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AsyncStorage } from 'react-native';
 import Drawer from './DrawerNavigator';
-import CenterSpinner from '../screens/components/CenterSpinner';
+import CenterSpinner from '../screens/components/Util/CenterSpinner';
 import { ApolloProvider} from 'react-apollo';
 import gql from 'graphql-tag';
 import makeApolloClient from '../apollo';

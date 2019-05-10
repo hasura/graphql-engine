@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
-import CenterSpinner from './src/screens/components/CenterSpinner';
+import CenterSpinner from './src/screens/components/Util/CenterSpinner';
 
 export default class App extends React.Component {
   state = {

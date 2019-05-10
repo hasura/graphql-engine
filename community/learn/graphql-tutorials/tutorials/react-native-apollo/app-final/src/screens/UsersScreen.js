@@ -9,8 +9,8 @@ import {
 
 import { Subscription } from 'react-apollo';
 import gql from 'graphql-tag';
-import CenterSpinner from './components/CenterSpinner';
-import MenuButton from '../components/MenuButton';
+import CenterSpinner from './components/Util/CenterSpinner';
+import MenuButton from './components/Util/MenuButton';
 
 // GraphQL subscription to subscribe to online users
 const SUBSCRIBE_TO_ONLINE_USERS = gql`

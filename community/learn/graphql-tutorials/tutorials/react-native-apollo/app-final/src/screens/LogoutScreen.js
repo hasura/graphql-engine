@@ -4,7 +4,7 @@ import {
   View
 } from 'react-native';
 import { withApollo } from 'react-apollo';
-import CenterSpinner from './components/CenterSpinner';
+import CenterSpinner from './components/Util/CenterSpinner';
 
 class LogoutScreen extends React.Component {
 

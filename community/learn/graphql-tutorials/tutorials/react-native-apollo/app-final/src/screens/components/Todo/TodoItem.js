@@ -10,7 +10,7 @@ import {Mutation} from 'react-apollo';
 import gql from 'graphql-tag';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FETCH_TODOS } from './Todos';
-import CenterSpinner from './CenterSpinner';
+import CenterSpinner from '../Util/CenterSpinner';
 
 const UPDATE_TODO = gql`
   mutation ($id: Int, $isCompleted: Boolean) {

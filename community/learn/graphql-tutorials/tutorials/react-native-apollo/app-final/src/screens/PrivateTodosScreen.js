@@ -1,6 +1,6 @@
 import React from 'react';
 import TodoScreen from './TodoScreen';
-import MenuButton from '../components/MenuButton';
+import MenuButton from './components/Util/MenuButton';
 
 export default class PrivateTodos extends React.Component {
 

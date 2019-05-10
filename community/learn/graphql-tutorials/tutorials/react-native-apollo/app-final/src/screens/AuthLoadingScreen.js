@@ -3,7 +3,7 @@ import {
   AsyncStorage,
   View,
 } from 'react-native';
-import CenterSpinner from './components/CenterSpinner';
+import CenterSpinner from './components/Util/CenterSpinner';
 
 export default class AuthLoadingScreen extends React.Component {
   constructor(props) {

@@ -12,8 +12,8 @@ import {
   Platform
 } from 'react-native';
 import jwtDecoder from 'jwt-decode';
-import Login from './components/Login';
-import Signup from './components/Signup';
+import Login from './components/Auth/Login';
+import Signup from './components/Auth/Signup';
 import { signup, login } from '../authActions';
 
 export default class Auth extends React.Component {
