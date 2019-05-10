@@ -21,6 +21,10 @@ data:
       redir 301 {
         /graphql/vue/ /graphql/vue/introduction
       }
+      
+      redir 301 {
+        /graphql/hasura/ /graphql/hasura/introduction
+      }
 
       redir 302 {
         if {path} is /
@@ -33,8 +37,8 @@ data:
         without /graphql/console
       }
 
-      proxy /graphql/v1/graphql hasura/v1/graphql {
-        without /graphql/v1/graphql
+      proxy /graphql/v1alpha1/graphql hasura/v1alpha1/graphql {
+        without /graphql/v1alpha1/graphql
         websocket
       }
 
@@ -50,11 +54,13 @@ data:
         without /graphql/graphiql
       }
 
+      proxy /graphql/hasura hasura-backend
+
       proxy /graphql/react react-apollo
 
       proxy /graphql/vue vue-apollo
-
-      proxy /graphql hasura/v1/graphql {
+      
+      proxy /graphql hasura/v1alpha1/graphql {
         without /graphql
         websocket
       }

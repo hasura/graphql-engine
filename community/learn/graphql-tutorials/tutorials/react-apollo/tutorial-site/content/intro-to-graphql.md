@@ -10,11 +10,11 @@ GraphQL is designed for developers of web/mobile apps (HTTP clients) to be able 
 ## GraphQL vs REST: an example
 Let's say you have an API to fetch a user's profile and their address. In a typical REST scenario, this is what the request/response would look like:
 
-![GraphQL API example](./intro-to-graphql/rest-api.png)
+![GraphQL API example](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/rest-api.png)
 
 If your API server was a GraphQL server instead, this is what your API calls would look like:
 
-![GraphQL API example](./intro-to-graphql/graphql-api.gif)
+![GraphQL API example](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphql-api.gif)
 
 You can see that the response JSON is different for different "queries" sent by the client.
 
