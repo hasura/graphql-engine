@@ -9,7 +9,9 @@ import {
   TouchableOpacity,
   Image,
   KeyboardAvoidingView,
+  Keyboard,
   ScrollView,
+  Platform
 } from 'react-native';
 import jwtDecoder from 'jwt-decode';
 import Icon from 'react-native-vector-icons/Entypo';
@@ -27,7 +29,26 @@ export default class Auth extends React.Component {
     loginProps: {
       email: '',
       password: ''
-    }
+    },
+    isKeyboardOpen: false
+  }
+
+  componentWillMount () {
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardShowCallback);
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardHideCallback);
+  }
+
+  componentWillUnmount () {
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
+  }
+
+  keyboardShowCallback = () => {
+    this.setState({ isKeyboardOpen: true});
+  }
+
+  keyboardHideCallback = () => {
+    this.setState({ isKeyboardOpen: false});
   }
 
   switchTabs = (tabIndex) => {
@@ -69,7 +90,7 @@ export default class Auth extends React.Component {
 
   render() {
 
-    const { tabIndex, loginProps } = this.state;
+    const { tabIndex, loginProps, isKeyboardOpen } = this.state;
 
     const logo = () => {
       return (
@@ -104,7 +125,7 @@ export default class Auth extends React.Component {
 
       return (
         <View
-          style={styles.tabContainer}
+          style={isKeyboardOpen ? styles.koTabContainer : styles.tabContainer}
         >
           <View style={styles.tabHeader}>
             <TouchableOpacity style={loginTabStyle} onPress={() => this.switchTabs(0)}>
@@ -125,17 +146,12 @@ export default class Auth extends React.Component {
 
     return (
       <KeyboardAvoidingView
-        style={{flex: 1}}
-        behaviour="height"
-        keyboardVerticalOffset={50}
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         enabled
       >
-        <View
-          style={styles.container}
-        >
-          {logo()}
-          {tabs()}
-        </View>
+        {!isKeyboardOpen && logo()}
+        {tabs()}
       </KeyboardAvoidingView>
     );
   }
@@ -151,7 +167,8 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flex: 0.5,
-    width: 400
+    width: 400,
+    marginTop: 40
   },
   tabHeader: {
     flex: 0.3,
@@ -215,5 +232,11 @@ const styles = StyleSheet.create({
   logo: {
     height: 40,
     width: 134
+  },
+  koTabContainer: {
+    width: 400,
+    marginTop: 40,
+    maxHeight: 400,
+    flex: 1
   },
 });
