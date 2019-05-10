@@ -107,11 +107,12 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc enableWL req = do
 
   when enableWL $
-    -- check if query is in allowlist
-    unless (VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)) $
-      throwVE "query is not in allowlist"
+    -- check if query is in allowlist for non admin role
+    unless (role == adminRole) $
+      unless (VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)) $
+        throwVE "query is not in allowlist"
 
-  (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
+  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -130,6 +131,7 @@ getExecPlanPartial userInfo sc enableWL req = do
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
+    role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
 
 -- An execution operation, in case of

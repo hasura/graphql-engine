@@ -1,6 +1,8 @@
 description: GraphQL query which is not in allowlist
 url: /v1alpha1/graphql
 status: 400
+headers:
+  X-Hasura-Role: user
 response:
   errors:
   - extensions:

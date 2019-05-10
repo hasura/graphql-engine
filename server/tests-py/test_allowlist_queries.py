@@ -21,6 +21,9 @@ class TestAllowlistQueries(DefaultTestSelectQueries):
     def test_query_non_allowlist(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_non_allowlist.yaml', transport)
 
+    def test_query_as_admin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_as_admin.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/allowlist'

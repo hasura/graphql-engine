@@ -1,6 +1,8 @@
 description: Query user with id = 1
 url: /v1alpha1/graphql
 status: 200
+headers:
+  X-Hasura-Role: user
 response:
   data:
     user_by_pk:

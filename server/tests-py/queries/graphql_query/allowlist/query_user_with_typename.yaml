@@ -1,6 +1,8 @@
 description: Allowlist query with typename
 url: /v1alpha1/graphql
 status: 200
+headers:
+  X-Hasura-Role: user
 response:
   data:
     user:

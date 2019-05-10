@@ -23,6 +23,14 @@ args:
     schema: public
     name: user
 
+- type: create_select_permission
+  args:
+    table: user
+    role: user
+    permission:
+      filter: {}
+      columns: '*'
+
 - type: create_query_collection
   args:
     name: collection_1
