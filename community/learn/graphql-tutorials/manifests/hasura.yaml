@@ -17,7 +17,7 @@ spec:
         app: hasura
     spec:
       containers:
-      - image: hasura/graphql-engine:v1.0.0-alpha44
+      - image: hasura/graphql-engine:v1.0.0-alpha45
         imagePullPolicy: IfNotPresent
         name: hasura
         env:
@@ -30,11 +30,8 @@ spec:
             secretKeyRef:
               name: hasura-secret
               key: adminSecret
-        - name: HASURA_GRAPHQL_JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: hasura-secret
-              key: jwtSecret
+        - name: HASURA_GRAPHQL_AUTH_HOOK
+          value: "auth-webhook.default/webhook"
         ports:
         - containerPort: 8080
           protocol: TCP
