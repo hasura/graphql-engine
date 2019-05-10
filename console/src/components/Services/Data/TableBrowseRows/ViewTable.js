@@ -116,7 +116,7 @@ class ViewTable extends Component {
   shouldComponentUpdate(nextProps) {
     return (
       this.props.tableName === null ||
-      nextProps.tableName === this.props.tableName
+      nextProps.tableName !== this.props.tableName
     );
   }
 
