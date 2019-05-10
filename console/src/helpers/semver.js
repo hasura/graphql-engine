@@ -18,7 +18,7 @@ const componentsSemver = {
   permUpdatePresets: '1.0.0-alpha38',
   tableColumnRename: '1.0.0-alpha39',
   inconsistentState: '1.0.0-alpha43',
-  manualTriggers: '1.0.0-beta01',
+  manualTriggers: '1.0.0-alpha46',
 };
 
 const getPreRelease = version => {
