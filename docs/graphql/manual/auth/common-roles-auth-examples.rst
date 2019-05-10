@@ -112,6 +112,8 @@ fields for data that they own.
   - This reads: Allow users to that are owned by them.
 
 
+.. _nested-object-permissions-example:
+
 Multiple roles per user
 -----------------------
 
@@ -220,9 +222,9 @@ Permissions for role ``author``
   
   For this permission rule, we'll make use of two features of the GraphQL Engine's permissions system:
 
-  a) **Column-level permissions**: Restrict access to certain columns only.
+  a) :ref:`Column-level permissions<col-level-permissions>`: Restrict access to certain columns only.
   
-  b) **Column presets**: Session-variable-based :doc:`column preset <../schema/default-values/column-presets>` for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
+  b) :doc:`Column presets <../schema/default-values/column-presets>`: Session-variable-based column preset for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
 
 
   .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-author-insert.png
@@ -243,7 +245,7 @@ Permissions for role ``reviewer``
 
 * **Allow users with the role** ``reviewer`` **to update articles assigned to them for reviews**
   
-  For this use-case, we'll define :ref:`row-level permissions using relationships/nested objects <using-relationships-in-permissions>` based on the array relationship ``revewiers`` to restrict access to assigned articles only.    
+  For this use-case, we'll use :ref:`relationship or nested-object permissions<relationships-in-permissions>` based on the array relationship ``reviewers`` to restrict access to assigned articles only.
 
   .. thumbnail:: ../../../img/graphql/manual/auth/multirole-example-reviewer-update.png
 
