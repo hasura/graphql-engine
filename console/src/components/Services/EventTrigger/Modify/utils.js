@@ -1,5 +1,4 @@
 export const MANUAL_TRIGGER_TEXT = 'Via console';
-
 export const MANUAL_TRIGGER_VAR = 'enable_manual';
 
 export const getValidQueryTypes = supportManualTriggerInvocations => {
@@ -17,11 +16,4 @@ export const queryToInternalNameMap = {
   update: 'update',
   delete: 'delete',
   [MANUAL_TRIGGER_TEXT]: MANUAL_TRIGGER_VAR,
-};
-
-export const getManualOperationValue = (queryType, definition) => {
-  if (queryType in definition) {
-    return definition[queryType];
-  }
-  return true;
 };

@@ -8,8 +8,6 @@ import {
   getValidQueryTypes,
   queryToInternalNameMap,
   MANUAL_TRIGGER_VAR,
-  getManualOperationValue,
-  MANUAL_TRIGGER_TEXT,
 } from './utils';
 
 class OperationEditor extends React.Component {
@@ -19,12 +17,9 @@ class OperationEditor extends React.Component {
     }
     return toggleQueryType(upObj);
   };
+
   setValues = () => {
-    const {
-      dispatch,
-      definition,
-      supportManualTriggerInvocations,
-    } = this.props;
+    const { dispatch, definition } = this.props;
     /*
      * Loop through the keys in definition,
      * this object will have actual internal name.
@@ -53,22 +48,6 @@ class OperationEditor extends React.Component {
         }
       }
     }
-    /* To be done only for versions supporting manualTriggers and definition doesn't contain event_manual key
-     * */
-    if (
-      supportManualTriggerInvocations &&
-      !(MANUAL_TRIGGER_VAR in definition)
-    ) {
-      /* If the enable_manual key is not available
-       * By default set it to true
-       * */
-      dispatch(
-        this.toggleOperation({
-          query: MANUAL_TRIGGER_VAR,
-          value: getManualOperationValue(MANUAL_TRIGGER_VAR, definition),
-        })
-      );
-    }
   };
 
   render() {
@@ -87,15 +66,8 @@ class OperationEditor extends React.Component {
      * */
     const queryTypes = getValidQueryTypes(supportManualTriggerInvocations);
     const renderOperation = (qt, i) => {
-      let isChecked = false;
-      if (qt === MANUAL_TRIGGER_TEXT) {
-        isChecked = getManualOperationValue(
-          queryToInternalNameMap[qt],
-          definition
-        );
-      } else {
-        isChecked = Boolean(definition[queryToInternalNameMap[qt]]);
-      }
+      const isChecked = Boolean(definition[queryToInternalNameMap[qt]]);
+
       return (
         <div
           className={
