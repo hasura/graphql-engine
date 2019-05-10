@@ -118,7 +118,7 @@ const MetadataStatus = ({
           <div className={metaDataStyles.content_width}>
             <div className={styles.display_flex}>
               <CheckIcon className={metaDataStyles.add_mar_right_small} />
-              <h4>GraphQL Engine metadata is consistent with Postgres</h4>
+              <h4>GraphQL Engine metadata is consistent with database</h4>
             </div>
           </div>
         </div>
@@ -130,12 +130,12 @@ const MetadataStatus = ({
         <div className={metaDataStyles.content_width}>
           <div className={styles.display_flex}>
             <CrossIcon className={metaDataStyles.add_mar_right_small} />
-            <h4> GraphQL Engine metadata is inconsistent with Postgres </h4>
+            <h4> GraphQL Engine metadata is inconsistent with database </h4>
           </div>
           <div className={styles.add_mar_top}>
             <div className={styles.add_mar_top_small}>
               The following objects in your metadata are inconsistent because
-              they reference Postgres or Remote-Schema entities which do not
+              they reference database or Remote-Schema entities which do not
               seem to exist
             </div>
             <div className={styles.add_mar_top_small}>

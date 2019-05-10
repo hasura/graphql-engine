@@ -114,7 +114,7 @@ const MetadataOptions = props => {
           Hasura metadata stores information about your tables, relationships,
           permissions, etc. that is used to generate the GraphQL schema and API.{' '}
           <a
-            href="https://docs.hasura.io/1.0/graphql/manual/engine-internals/index.html"
+            href="https://docs.hasura.io/1.0/graphql/manual/how-it-works/metadata-schema.html"
             target="_blank"
             rel="noopener noreferrer"
           >
