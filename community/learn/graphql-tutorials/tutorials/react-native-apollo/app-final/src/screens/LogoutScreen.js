@@ -22,7 +22,6 @@ class LogoutScreen extends React.Component {
     AsyncStorage.removeItem('@todo-graphql:session').then(() => {
       client.resetStore();
       client.logout();
-      this.props.navigation.actions.goBack();
     });
   } 
 
@@ -33,7 +32,6 @@ class LogoutScreen extends React.Component {
       </View>
     );
   }
-
 }
 
 export default withApollo(LogoutScreen)

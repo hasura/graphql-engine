@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@expo/samples": "2.1.1",
+    "@expo/vector-icons": "^10.0.1",
     "apollo-boost": "^0.3.1",
     "apollo-link-ws": "^1.0.17",
     "apollo-utilities": "^1.2.1",
