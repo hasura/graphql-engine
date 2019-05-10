@@ -102,7 +102,7 @@ const ForeignKeyWrapper = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}`}>
+      <div key={`foreign-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

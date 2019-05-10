@@ -56,7 +56,7 @@ const UniqueKeySelector = ({
     const removeIcon = (
       <i
         className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-        data-test={`remove-pk-column-${i}`}
+        data-test={`remove-uk-${index}-column-${i}`}
         onClick={removeUniqueCol}
       />
     );

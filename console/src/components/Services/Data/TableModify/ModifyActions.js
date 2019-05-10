@@ -1663,7 +1663,9 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
 
     const customOnSuccess = () => {
       // success callback
-      callback();
+      if (callback) {
+        callback();
+      }
 
       // remove the removed unique constraint from state
       const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
@@ -1773,7 +1775,9 @@ const saveUniqueKey = (
 
     const customOnSuccess = () => {
       // success callback
-      callback();
+      if (callback) {
+        callback();
+      }
 
       // add an empty unique key to state
       const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;

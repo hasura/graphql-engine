@@ -2,7 +2,10 @@ import React, { useEffect } from 'react';
 import { ordinalColSort } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import { getUniqueKeyConfig } from '../Common/ReusableComponents/utils';
+import {
+  getUkeyPkeyConfig,
+  getKeyDef,
+} from '../Common/ReusableComponents/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
 const UniqueKeyEditor = ({
@@ -52,8 +55,15 @@ const UniqueKeyEditor = ({
   return uniqueKeys.map((uniqueKey, i) => {
     // Is this the last placeholder unique key
     const isLast = numUniqueKeys === i + 1;
+
+    // get constraint name
+    let constraintName = '';
+    if (!isLast && existingConstraints[i]) {
+      constraintName = existingConstraints[i].constraint_name;
+    }
+
     // unique key config text
-    const uniqueKeyConfig = getUniqueKeyConfig(
+    const uniqueKeyConfig = getUkeyPkeyConfig(
       uniqueKey.map(uk => orderedColumns[uk].name)
     );
 
@@ -74,25 +84,15 @@ const UniqueKeyEditor = ({
 
     // label text when unique key is collapsed
     const collapsedLabel = () => {
-      if (isLast && numUniqueKeys === 1) {
-        return (<div> No unique keys </div>);
+      if (isLast) {
+        return null;
       }
-      if (!uniqueKeyConfig) return null;
-      return (
-        <div>
-          <b>{uniqueKeyConfig}</b>
-        </div>
-      );
+      return getKeyDef(uniqueKeyConfig, constraintName);
     };
 
     // label text when unique key is expanded
     const expandedLabel = () => {
-      if (!uniqueKeyConfig) return null;
-      return (
-        <div>
-          <b>{uniqueKeyConfig}</b>
-        </div>
-      );
+      return getKeyDef(uniqueKeyConfig, constraintName);
     };
 
     // remove unique key function (disabled if it is not an existing constraint)
@@ -120,28 +120,26 @@ const UniqueKeyEditor = ({
     let saveFunc;
     if (isLast) {
       if (uniqueKey.length > 0) {
-        saveFunc = toggle => {
+        saveFunc = () => {
           dispatch(
             saveUniqueKey(
               i,
               tableSchema.table_name,
               orderedColumns,
-              existingConstraints,
-              toggle
+              existingConstraints
             )
           );
         };
       }
     } else {
       if (uniqueKey.length > 0) {
-        saveFunc = toggle =>
+        saveFunc = () =>
           dispatch(
             saveUniqueKey(
               i,
               tableSchema.table_name,
               orderedColumns,
-              existingConstraints,
-              toggle
+              existingConstraints
             )
           );
       } else {
@@ -162,13 +160,13 @@ const UniqueKeyEditor = ({
     }
 
     return (
-      <div key={i}>
+      <div key={`unique-key-${constraintName || i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
           property={`unique-key-${i}`}
-          service="add-table"
+          service="modify-table"
           saveFunc={saveFunc}
           removeFunc={removeFunc}
           expandButtonText={expandButtonText}

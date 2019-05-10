@@ -1,7 +1,10 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import { getUniqueKeyConfig } from '../Common/ReusableComponents/utils';
+import {
+  getUkeyPkeyConfig,
+  getKeyDef,
+} from '../Common/ReusableComponents/utils';
 
 const UniqueKeyWrapper = ({
   // allSchemas,
@@ -19,7 +22,7 @@ const UniqueKeyWrapper = ({
   const uniqueKeyEditors = uniqueKeys.map((uniqueKey, i) => {
     const isLast = numUniqueKeys === i + 1;
 
-    const uniqueKeyConfig = getUniqueKeyConfig(
+    const uniqueKeyConfig = getUkeyPkeyConfig(
       uniqueKey.map(uk => orderedColumns[uk].name)
     );
 
@@ -46,21 +49,11 @@ const UniqueKeyWrapper = ({
           </div>
         );
       }
-      if (!uniqueKeyConfig) return null;
-      return (
-        <div>
-          <b>{uniqueKeyConfig}</b>
-        </div>
-      );
+      return getKeyDef(uniqueKeyConfig, '');
     };
 
     const expandedLabel = () => {
-      if (!uniqueKeyConfig) return null;
-      return (
-        <div>
-          <b>{uniqueKeyConfig}</b>
-        </div>
-      );
+      return getKeyDef(uniqueKeyConfig, '');
     };
 
     const saveFunc = toggle => toggle();
@@ -84,7 +77,7 @@ const UniqueKeyWrapper = ({
     }
 
     return (
-      <div key={i}>
+      <div key={`uniquey-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

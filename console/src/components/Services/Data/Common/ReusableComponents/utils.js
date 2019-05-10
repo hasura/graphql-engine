@@ -1,5 +1,11 @@
-export const getUniqueKeyConfig = columns => {
-  if (!columns.length) return null;
+import React from 'react';
+
+export const getUkeyPkeyConfig = columns => {
+  const colLength = columns.length;
+  if (!colLength) return null;
+  if (colLength === 1) {
+    return columns[0];
+  }
   return `( ${columns.join(', ')} )`;
 };
 
@@ -86,4 +92,22 @@ export const generateFKConstraintName = (
 
 export const getUniqueConstraintName = (tableName, columns) => {
   return `${tableName}_${columns.join('_')}_key`;
+};
+
+export const getKeyDef = (config, constraintName) => {
+  if (!config) {
+    return null;
+  }
+  if (constraintName) {
+    return (
+      <div>
+        <b>{config}</b> - <i>{constraintName}</i>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <b>{config}</b>
+    </div>
+  );
 };
