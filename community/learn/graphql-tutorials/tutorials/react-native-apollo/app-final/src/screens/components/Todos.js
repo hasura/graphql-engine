@@ -112,7 +112,6 @@ export default class Todos extends React.Component {
         {
           ({data, error, loading }) => {
             if (error) {
-              handleError(error, this.props.navigate);
               return <Text>Error</Text>;
             }
             if (loading) {
@@ -156,15 +155,15 @@ const styles = StyleSheet.create({
   },
   banner: {
     flexDirection: 'column',
-    backgroundColor: '#66BDE7',
+    backgroundColor: '#39235A',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 5,
   },
   pagination: {
-    flexDirection: 'column',
-    backgroundColor: '#66BDE7',
+    flexDirection: 'row',
+    backgroundColor: '#39235A',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -172,4 +171,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 5,
   },
+  buttonText: {
+    color: 'white'
+  }
 });

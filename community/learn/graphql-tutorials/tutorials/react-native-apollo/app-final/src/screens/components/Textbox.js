@@ -142,11 +142,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#66BDE7',
+    backgroundColor: '#39235A',
     borderColor: '#d6d7da',
     borderRadius: 5,
   },
   buttonText: {
     fontWeight: 'bold',
+    color: 'white'
   }
 });

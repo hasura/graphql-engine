@@ -8,10 +8,16 @@ import { getMainDefinition } from "apollo-utilities";
 const GRAPHQL_ENGINE_ENDPOINT = 'learn.hasura.io/graphql'
 
 const makeApolloClient = (token) => {
-  const link = new HttpLink({
-    uri: `https://learn.hasura.io/graphql`,
-    headers: {
-      Authorization: `Bearer ${token}`
+
+  const link = new WebSocketLink({
+    uri: `wss://learn.hasura.io/graphql`,
+    options: {
+      reconnect: true,
+      connectionParams: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
     }
   });
 

@@ -16,8 +16,7 @@ const UPDATE_TODO = gql`
   mutation ($id: Int, $isCompleted: Boolean) {
     update_todos (
       _set: {
-        is_completed: $isCompleted,
-        updated_at: "now()"
+        is_completed: $isCompleted
       },
       where: {
         id: {
@@ -27,10 +26,14 @@ const UPDATE_TODO = gql`
     ) {
       returning {
         id
-        text
+        title
         is_completed
         created_at
         is_public
+        user {
+          id
+          name
+        }
       }
     }
   }
@@ -81,6 +84,7 @@ export default class TodoItem extends React.Component {
           {
             (updateTodo, {loading, error}) => {
               if (error) {
+                console.log(error);
                 return (<Text> Error </Text>);
               }
               const update = () => {

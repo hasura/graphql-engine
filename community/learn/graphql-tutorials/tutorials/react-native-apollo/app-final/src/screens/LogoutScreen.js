@@ -3,39 +3,38 @@ import {
   AsyncStorage,
   View
 } from 'react-native';
-import { ApolloConsumer } from 'react-apollo';
+import { withApollo } from 'react-apollo';
 import CenterSpinner from './components/CenterSpinner';
 
-export default class LogoutScreen extends React.Component {
+class LogoutScreen extends React.Component {
+
   static navigationOptions = {
     drawerLabel: 'Logout',
     title: 'Logging out'
   };
 
-  logout = (client) => {
-    AsyncStorage.removeItem('@todo-graphql:auth0').then(() => {
-      console.log('trying to log out');
+  componentDidMount() {
+    this.logout()
+  }
+
+  logout = () => {
+    const { client } = this.props;
+    AsyncStorage.removeItem('@todo-graphql:session').then(() => {
       client.resetStore();
-      this.props.navigation.navigate('Auth');
-      console.log('reached here');
+      client.logout();
+      this.props.navigation.actions.goBack();
     });
   } 
 
   render() {
-    console.log(this.props);
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <CenterSpinner />
-        <ApolloConsumer>
-          {
-            (client) => {
-              this.logout(client);
-              return null;
-            }
-          }
-        </ApolloConsumer>
       </View>
     );
   }
+
 }
+
+export default withApollo(LogoutScreen)
 

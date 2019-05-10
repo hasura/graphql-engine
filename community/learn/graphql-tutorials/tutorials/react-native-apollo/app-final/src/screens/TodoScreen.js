@@ -18,7 +18,7 @@ export default class TodoScreen extends React.Component {
   }
 
   async componentDidMount() {
-    const session = await AsyncStorage.getItem('@todo-graphql:auth0');
+    const session = await AsyncStorage.getItem('@todo-graphql:session');
     const {id, name, token} = JSON.parse(session);
     // set session details in state
     this.setState({

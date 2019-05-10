@@ -1,8 +1,13 @@
 import React from 'react';
-import { Text } from 'react-native';
+import LoginForm from './LoginForm';
 
-const Signup = () => {
-  return <Text>Signup screen</Text>
+class Signup extends React.Component {
+
+  render(){
+    return (
+      <LoginForm type="signup" submit={this.props.submit}/>
+    )
+  }
 }
 
 export default Signup;

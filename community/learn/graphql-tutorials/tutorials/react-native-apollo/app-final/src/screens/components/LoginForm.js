@@ -1,0 +1,135 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Alert
+} from 'react-native';
+import { LinearGradient } from 'expo';
+import CenterSpinner from './CenterSpinner';
+
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/; 
+
+class LoginForm extends React.Component {
+
+  state = {
+    email: this.props.email || 'rishichandrawawhal@gmail.com',
+    password: this.props.password || 'abcd1234',
+    loading: false
+  }
+
+  handleEmailChange = (text) => {
+    this.setState({ email: text });
+  }
+
+  handlePasswordChange = (text) => {
+    this.setState({ password: text });
+  }
+
+  handleSubmit = () => {
+    const { email, password } = this.state;
+    if (!emailRegex.test(email.toLowerCase())) {
+      Alert.alert('Invalid email', 'Please enter a valid email address');
+      return;
+    }
+    if (!email || !password) {
+      Alert.alert('Email or password cannot be empty');
+      return;
+    }
+    const successCallback = (resp) => {
+      if (this.props.type === 'login') {
+        this.setState({
+          email: '',
+          password: '',
+        })
+      }
+      this.setState({
+        loading: false
+      })
+    };
+    const errorCallback = (e) => {
+      this.setState({
+        loading: false
+      });
+      Alert.alert(e.title, e.message);
+    }
+    this.setState({loading: true})
+    this.props.submit(email.toLowerCase(), password, successCallback, errorCallback)
+  }
+
+  render(){
+    const { email, password, loading } = this.state;
+    const buttonText = this.props.type === 'signup' ? 'SIGN UP' : 'LOGIN';
+    return (
+      <View style={styles.container}>
+        <View style={styles.textboxWrapper}>
+          <TextInput
+            style={styles.textbox}
+            placeholder="Email"
+            placeholderTextColor="#808389"
+            type="email"
+            value={email}
+            onChangeText={this.handleEmailChange}
+          />
+        </View>
+        <View style={styles.textboxWrapper}>
+          <TextInput
+            style={styles.textbox}
+            placeholder="Password"
+            placeholderTextColor="#808389"
+            secureTextEntry
+            value={password}
+            onChangeText={this.handlePasswordChange}
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.buttonWrapper}
+          onPress={this.handleSubmit}
+          disabled={loading}
+        >
+          {
+            loading ?
+            <CenterSpinner />
+            :
+            <Text style={{color: 'white', fontWeight: 'bold'}} >{buttonText}</Text>
+          }
+        </TouchableOpacity>
+      </View>
+    )
+  }
+}
+
+export default LoginForm;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 20
+  },
+  textboxWrapper: {
+    height: 60,
+    width: 300,
+    fontSize: 50
+  },
+  textbox: {
+    borderBottomColor: '#bbb',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    padding: 5,
+    color: 'white'
+  },
+  buttonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+    width: 300,
+    backgroundColor: '#4767a1',
+    marginBottom: 30,
+    borderRadius: 15
+  }
+})

@@ -16,6 +16,10 @@ PrivateTodosStack.navigationOptions = {
       name="lock-outline"
     />
   ),
+  tabBarOptions: {
+    activeTintColor: '#392F76',
+    inactiveTitColor: 'gray'
+  }
 };
 
 const PublicTodosStack = createStackNavigator({
@@ -30,6 +34,10 @@ PublicTodosStack.navigationOptions = {
       name="public"
     />
   ),
+  tabBarOptions: {
+    activeTintColor: '#392F76',
+    inactiveTitColor: 'gray'
+  }
 };
 
 const TodosTabNavigator = createBottomTabNavigator({
