@@ -74,62 +74,30 @@ const genRow = (row, headings) => {
 class ViewTable extends Component {
   constructor(props) {
     super(props);
-    // Initialize this table
+
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
-      supportManualTriggerInvocations: false,
+      supportManualTriggers: false,
     };
+
     this.getInitialData(this.props.tableName);
   }
 
-  componentDidMount() {
-    const { serverVersion } = this.props;
-    if (serverVersion) {
-      this.checkSupportedFeatures(serverVersion);
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.serverVersion !== this.props.serverVersion) {
+      this.checkSupportedFeatures(nextProps.serverVersion);
+    }
+
+    if (nextProps.tableName !== this.props.tableName) {
+      this.getInitialData(nextProps.tableName);
     }
   }
 
   checkSupportedFeatures(version) {
     if (semverCheck('manualTriggers', version)) {
-      this.setState({ supportManualTriggerInvocations: true });
+      this.setState({ supportManualTriggers: true });
     }
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { serverVersion } = this.props;
-    if (serverVersion && serverVersion !== prevProps.serverVersion) {
-      this.checkSupportedFeatures(serverVersion);
-    }
-    if (
-      this.props.tableName !== prevProps.tableName ||
-      this.state.supportManualTriggerInvocations !==
-        prevState.supportManualTriggerInvocations
-    ) {
-      this.getInitialData(this.props.tableName);
-    }
-    if (this.shouldScrollBottom) {
-      document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
-    }
-  }
-
-  shouldComponentUpdate(nextProps) {
-    return (
-      this.props.tableName === null ||
-      nextProps.tableName !== this.props.tableName
-    );
-  }
-
-  componentWillUpdate() {
-    this.shouldScrollBottom =
-      window.innerHeight ===
-      document.body.offsetHeight - document.body.scrollTop;
-  }
-
-  componentWillUnmount() {
-    // Remove state data beloging to this table
-    const dispatch = this.props.dispatch;
-    dispatch(vSetDefaults(this.props.tableName));
   }
 
   getInitialData(tableName) {
@@ -140,6 +108,35 @@ class ViewTable extends Component {
       dispatch(vMakeRequest()),
       this.retrieveManualTriggers(tableName),
     ]);
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return (
+      this.props.tableName === null ||
+      nextProps.tableName === this.props.tableName
+    );
+  }
+
+  componentWillUpdate() {
+    this.shouldScrollBottom =
+      window.innerHeight ===
+      document.body.offsetHeight - document.body.scrollTop;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.supportManualTriggers !== prevState.supportManualTriggers) {
+      this.retrieveManualTriggers(this.state.tableName);
+    }
+
+    if (this.shouldScrollBottom) {
+      document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
+    }
+  }
+
+  componentWillUnmount() {
+    // Remove state data beloging to this table
+    const dispatch = this.props.dispatch;
+    dispatch(vSetDefaults(this.props.tableName));
   }
 
   updateInvocationRow = row => {
@@ -160,7 +157,7 @@ class ViewTable extends Component {
 
   retrieveManualTriggers = tableName => {
     const { dispatch } = this.props;
-    return this.state.supportManualTriggerInvocations
+    return this.state.supportManualTriggers
       ? dispatch(fetchManualTriggers(tableName))
       : Promise.resolve();
   };
