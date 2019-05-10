@@ -6,6 +6,7 @@
        consoleMode: "server",
        urlPrefix: "/console",
        consolePath: "{{consolePath}}",
+       consoleAssetsLoc: "{{consoleAssetsLoc}}",
        staticAssetsPath: "http://localhost:8000",
        isAccessKeySet: {{isAdminSecretSet}},
        isAdminSecretSet: {{isAdminSecretSet}},
@@ -46,9 +47,47 @@
       </div>
     </div>
     <div id="content" class="mainContent"></div>
-    <link rel="stylesheet" href="http://localhost:8000/common/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="http://localhost:8000/versioned/alpha/v1.0/main.css" charset="UTF-8"/>
-    <script src="http://localhost:8000/versioned/alpha/v1.0/vendor.js" charset="UTF-8"></script>
-    <script src="http://localhost:8000/versioned/alpha/v1.0/main.js" charset="UTF-8"></script>
+
+    <script>
+     loadResource = (url) => {
+       if (url.endsWith('svg')) {
+         linkElem = document.createElement('link');
+         linkElem.rel = 'icon';
+         linkElem.type = 'image/svg+xml';
+         linkElem.href = url;
+         document.head.append(linkElem);
+       }
+       if (url.endsWith('css')) {
+         linkElem = document.createElement('link');
+         linkElem.rel = 'stylesheet';
+         linkElem.charset = 'UTF-8';
+         linkElem.href = url;
+         document.body.append(linkElem);
+       }
+       if (url.endsWith('js')) {
+         scriptElem = document.createElement('script');
+         scriptElem.charset = 'UTF-8';
+         scriptElem.src = url;
+         document.body.append(scriptElem);
+       }
+     };
+     if (navigator.onLine === true) {
+       console.log('offline, loading assets from static-dir');
+       if (window.__env.consoleMode === 'server') {
+         window.__env.staticAssetsPath =
+           window.location.pathname.slice(
+             0, window.location.pathname.lastIndexOf(window.__env.consolePath)
+           ) + '/console/assets';
+       } else {
+         window.__env.staticAssetsPath = '/assets';
+       }
+     }
+     loadResource(window.__env.staticAssetsPath + '/common/css/font-awesome.min.css');
+     loadResource(window.__env.staticAssetsPath + '/common/img/hasura_icon_green.svg');
+     loadResource(window.__env.staticAssetsPath + '/main.css');
+     loadResource(window.__env.staticAssetsPath + '/main.js');
+     loadResource(window.__env.staticAssetsPath + '/vendor.js');
+    </script>
+
   </body>
 </html>

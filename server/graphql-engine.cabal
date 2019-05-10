@@ -111,6 +111,7 @@ library
                      , insert-ordered-containers
 
                      -- Parsing SemVer
+                     , salve
                      , semver
 
                      -- Templating
