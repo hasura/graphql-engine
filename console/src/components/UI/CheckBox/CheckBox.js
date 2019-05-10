@@ -7,7 +7,7 @@ const CheckBox = props => {
   return (
     <div className={styles.commonCheckBox}>
       <input id={children} type="checkbox" value="value1" />
-      <label for={children}></label>
+      <label for={children}>{children}</label>
     </div>
   );
 };
