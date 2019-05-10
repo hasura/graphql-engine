@@ -68,6 +68,7 @@ class TestRemoteSchemaBasic:
     def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
+
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 

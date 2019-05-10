@@ -14,7 +14,7 @@ See [this blog post for a tutorial](https://blog.hasura.io/graphql-and-geo-locat
 - Clone this repo on a machine where you'd like to deploy graphql engine
 - `docker-compose up -d`
 
-GraphQL endpoint will be `https://<your-domain.com>/v1alpha1/graphql`
+GraphQL endpoint will be `https://<your-domain.com>/v1/graphql`
 Console will be available on `https://<your-domain.com>/console`
 
 ## Connecting to External Postgres
