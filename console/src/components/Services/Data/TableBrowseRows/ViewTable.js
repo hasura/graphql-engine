@@ -81,6 +81,7 @@ class ViewTable extends Component {
       supportManualTriggers: false,
     };
 
+    this.checkSupportedFeatures(this.props.serverVersion);
     this.getInitialData(this.props.tableName);
   }
 
