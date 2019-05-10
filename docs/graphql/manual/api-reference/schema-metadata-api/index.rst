@@ -195,11 +195,11 @@ The various types of queries are listed in the following table:
 
    * - :ref:`add_collections_to_allowlist`
      - :ref:`add_collections_to_allowlist_args <add_collections_to_allowlist_syntax>`
-     - Add collections to allowlist
+     - Add collections to allow-list
 
    * - :ref:`drop_collections_from_allowlist`
      - :ref:`drop_collections_from_allowlist_args <drop_collections_from_allowlist_syntax>`
-     - Drop collections from allowlist
+     - Drop collections from allow-list
 
 **See:**
 

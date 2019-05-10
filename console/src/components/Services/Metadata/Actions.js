@@ -199,7 +199,7 @@ export const redirectToMetadataStatus = () => {
   };
 };
 
-const allowedQueriesCollection = 'allow-list';
+const allowedQueriesCollection = 'allowed-queries';
 
 const loadAllowedQueriesQuery = () => ({
   type: 'select',
@@ -213,27 +213,58 @@ const loadAllowedQueriesQuery = () => ({
   },
 });
 
-const createAllowListQuery = query => ({
-  type: 'create_query_collection',
-  args: {
-    name: allowedQueriesCollection,
-    definition: {
-      queries: [
-        {
-          name: query.name,
-          query: query.query,
-        },
-      ],
+const createAllowListQuery = query => {
+  const createAllowListCollectionQuery = () => ({
+    type: 'create_query_collection',
+    args: {
+      name: allowedQueriesCollection,
+      definition: {
+        queries: [
+          {
+            name: query.name,
+            query: query.query,
+          },
+        ],
+      },
     },
-  },
-});
+  });
 
-const deleteAllowListQuery = () => ({
-  type: 'drop_query_collection',
-  args: {
-    name: allowedQueriesCollection,
-  },
-});
+  const addCollectionToAllowListQuery = () => ({
+    type: 'add_collections_to_allowlist',
+    args: {
+      collections: [allowedQueriesCollection],
+    },
+  });
+
+  return {
+    type: 'bulk',
+    args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
+  };
+};
+
+const deleteAllowListQuery = () => {
+  const removeCollectionFromAllowListQuery = () => ({
+    type: 'remove_collections_from_allowlist',
+    args: {
+      collections: [allowedQueriesCollection],
+    },
+  });
+
+  const deleteAllowListCollectionQuery = () => ({
+    type: 'drop_query_collection',
+    args: {
+      name: allowedQueriesCollection,
+    },
+  });
+
+  return {
+    type: 'bulk',
+    args: [
+      removeCollectionFromAllowListQuery(),
+      deleteAllowListCollectionQuery(),
+    ],
+  };
+};
 
 const addAllowedQueryQuery = query => ({
   type: 'add_query_to_collection',

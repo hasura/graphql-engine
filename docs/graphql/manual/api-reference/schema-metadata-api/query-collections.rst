@@ -191,9 +191,9 @@ Args Syntax
 .. _add_collections_to_allowlist:
 
 add_collections_to_allowlist
----------------------------
+----------------------------
 
-`add_collections_to_allowlist` is used to add collections to allowlist
+``add_collections_to_allowlist`` is used to add collections to allow-list
 
 .. code-block:: http
 
@@ -228,9 +228,9 @@ Args Syntax
 .. _drop_collections_from_allowlist:
 
 drop_collections_from_allowlist
----------------------------
+-------------------------------
 
-`drop_collections_from_allowlist` is used to remove collections from allowlist
+``drop_collections_from_allowlist`` is used to remove collections from allow-list
 
 .. code-block:: http
 
