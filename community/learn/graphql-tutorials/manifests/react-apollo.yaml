@@ -27,6 +27,10 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /graphql/react/introduction
+            port: 8080
 ---
 apiVersion: v1
 kind: Service

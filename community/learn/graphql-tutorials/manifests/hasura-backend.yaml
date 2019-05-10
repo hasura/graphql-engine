@@ -3,14 +3,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: homepage
-  name: homepage
+    app: hasura-backend
+  name: hasura-backend
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: homepage
+      app: hasura-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,26 +18,26 @@ spec:
   template:
     metadata:
       labels:
-        app: homepage
+        app: hasura-backend
     spec:
       containers:
       - image: hasura/base-git-image:0.7
         imagePullPolicy: IfNotPresent
-        name: homepage
+        name: hasura-backend
         ports:
         - containerPort: 8080
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /
+            path: /graphql/hasura/introduction
             port: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: homepage
-  name: homepage
+    app: hasura-backend
+  name: hasura-backend
   namespace: default
 spec:
   ports:
@@ -45,5 +45,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: homepage
+    app: hasura-backend
   type: ClusterIP
