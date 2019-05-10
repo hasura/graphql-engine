@@ -79,7 +79,7 @@ const QUERY_FEED_PUBLIC_OLD_TODO = gql`
 `;
 
 const MUTATION_TODO_ADD = gql`
-  mutation insert_todos($objects: [todos_insert_input!]) {
+  mutation insert_todos($objects: [todos_insert_input!]!) {
     insert_todos(objects: $objects) {
       affected_rows
       returning {
