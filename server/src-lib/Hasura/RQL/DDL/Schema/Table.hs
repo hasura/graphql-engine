@@ -17,6 +17,7 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
@@ -31,6 +32,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
 import qualified Database.PostgreSQL.LibPQ          as PQ
@@ -48,17 +50,6 @@ saveTableToCatalog (QualifiedObject sn tn) =
             INSERT INTO "hdb_catalog"."hdb_table" VALUES ($1, $2)
                 |] (sn, tn) False
 
--- Build the TableInfo with all its columns
-getTableInfo :: QualifiedTable -> Bool -> Q.TxE QErr TableInfo
-getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
-  tableData <- Q.catchE defaultTxErrorHandler $
-               Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
-  case tableData of
-    [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
-    [(Q.AltJ cols, Q.AltJ pkeyCols, Q.AltJ cons, Q.AltJ viewInfoM)] ->
-      return $ mkTableInfo qt isSystemDefined cons cols pkeyCols viewInfoM
-    _ -> throw500 $ "more than one row found for: " <>> qt
-
 newtype TrackTable
   = TrackTable
   { tName :: QualifiedTable }
@@ -72,30 +63,39 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
   when (M.member vn $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> vn
 
-trackExistingTableOrViewP2Setup
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => QualifiedTable -> Bool -> m ()
-trackExistingTableOrViewP2Setup tn isSystemDefined = do
-  ti <- liftTx $ getTableInfo tn isSystemDefined
-  addTableToCache ti
-
 trackExistingTableOrViewP2
   :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
   => QualifiedTable -> Bool -> m EncJSON
 trackExistingTableOrViewP2 vn isSystemDefined = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
-      tn = GS.qualObjectToName vn
-  GS.checkConflictingNode defGCtx tn
+  GS.checkConflictingNode defGCtx $ GS.qualObjectToName vn
 
-  trackExistingTableOrViewP2Setup vn isSystemDefined
-  liftTx $ Q.catchE defaultTxErrorHandler $
-    saveTableToCatalog vn
+  tables <- liftTx fetchTableCatalog
+  case tables of
+    []   -> throw400 NotExists $ "no such table/view exists in postgres : " <>> vn
+    [ti] -> addTableToCache ti
+    _    -> throw500 $ "more than one row found for: " <>> vn
+  liftTx $ Q.catchE defaultTxErrorHandler $ saveTableToCatalog vn
 
   -- refresh the gCtx in schema cache
   refreshGCtxMapInSchema
 
   return successMsg
+  where
+    QualifiedObject sn tn = vn
+    mkTableInfo (cols, pCols, constraints, viewInfoM) =
+      let colMap = M.fromList $ flip map (Q.getAltJ cols) $
+            \c -> (fromPGCol $ pgiName c, FIColumn c)
+      in TableInfo vn isSystemDefined colMap mempty (Q.getAltJ constraints)
+                  (Q.getAltJ pCols) (Q.getAltJ viewInfoM) mempty
+    fetchTableCatalog = map mkTableInfo <$>
+      Q.listQE defaultTxErrorHandler [Q.sql|
+           SELECT columns, primary_key_columns,
+                  constraints, view_info
+           FROM hdb_catalog.hdb_table_info_agg
+           WHERE table_schema = $1 AND table_name = $2
+           |] (sn, tn) True
 
 runTrackTableQ
   :: ( QErrM m, CacheRWM m, MonadTx m
@@ -181,8 +181,10 @@ processTableChanges ti tableDiff = do
             " as a relationship with the name already exists"
           _ -> addColToCache colName pci tn
 
-    procAlteredCols sc tn = fmap or $
-      forM alteredCols $ \(PGColInfo oColName oColTy _, PGColInfo nColName nColTy _) ->
+    procAlteredCols sc tn = fmap or $ forM alteredCols $
+      \( PGColInfo oColName oColTy oNullable
+       , npci@(PGColInfo nColName nColTy nNullable)
+       ) ->
         if | oColName /= nColName -> do
                renameColInCatalog oColName nColName tn ti
                return True
@@ -193,6 +195,10 @@ processTableChanges ti tableDiff = do
                  "cannot change type of column " <> oColName <<> " in table "
                  <> tn <<> " because of the following dependencies : " <>
                  reportSchemaObjs depObjs
+               updColInCache nColName npci tn
+               return False
+           | oNullable /= nNullable -> do
+               updColInCache nColName npci tn
                return False
            | otherwise -> return False
 
@@ -303,7 +309,7 @@ checkNewInconsistentMeta
   => SchemaCache -- old schema cache
   -> SchemaCache -- new schema cache
   -> m ()
-checkNewInconsistentMeta oldSC newSC = do
+checkNewInconsistentMeta oldSC newSC =
   unless (null newInconsMetaObjects) $ do
     let err = err500 Unexpected
           "cannot continue due to newly found inconsistent metadata"
@@ -327,63 +333,77 @@ buildSchemaCacheStrict = do
 buildSchemaCache
   :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => m ()
-buildSchemaCache = do
+buildSchemaCache = buildSchemaCacheG True
+
+buildSCWithoutSetup
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => m ()
+buildSCWithoutSetup = buildSchemaCacheG False
+
+buildSchemaCacheG
+  :: (MonadTx m, CacheRWM m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  => Bool -> m ()
+buildSchemaCacheG withSetup = do
   -- clean hdb_views
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  when withSetup $ liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
   sqlGenCtx <- askSQLGenCtx
-  tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
-  forM_ tables $ \(sn, tn, isSystemDefined) -> do
-    let qt = QualifiedObject sn tn
+
+  -- fetch all catalog metadata
+  CatalogMetadata tables relationships permissions qTemplates
+    eventTriggers remoteSchemas functions fkeys' <- liftTx fetchCatalogData
+
+  let fkeys = HS.fromList fkeys'
+
+  -- tables
+  forM_ tables $ \ct -> do
+    let qt = _ctTable ct
+        isSysDef = _ctSystemDefined ct
+        tableInfoM = _ctInfo ct
         mkInconsObj = InconsistentMetadataObj (MOTable qt)
                       MOTTable $ toJSON $ TrackTable qt
-    modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-      handleInconsistentObj mkInconsObj $
-      trackExistingTableOrViewP2Setup qt isSystemDefined
+    modifyErr (\e -> "table " <> qt <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $ do
+      ti <- onNothing tableInfoM $ throw400 NotExists $
+            "no such table/view exists in postgres : " <>> qt
+      addTableToCache $ ti{tiSystemDefined = isSysDef}
 
-  -- Fetch all the relationships
-  relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
-
-  forM_ relationships $ \(sn, tn, rn, rt, Q.AltJ rDef, cmnt) -> do
-    let qt = QualifiedObject sn tn
-        objId = MOTableObj qt $ MTORel rn rt
+  -- relationships
+  forM_ relationships $ \(CatalogRelation qt rn rt rDef cmnt) -> do
+    let objId = MOTableObj qt $ MTORel rn rt
         def = toJSON $ WithTable qt $ RelDef rn rDef cmnt
         mkInconsObj = InconsistentMetadataObj objId (MOTRel rt) def
-    modifyErr (\e -> "table " <> tn <<> "; rel " <> rn <<> "; " <> e) $
+    modifyErr (\e -> "table " <> qt <<> "; rel " <> rn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       case rt of
         ObjRel -> do
           using <- decodeValue rDef
           let relDef = RelDef rn using Nothing
           validateObjRel qt relDef
-          objRelP2Setup qt relDef
+          objRelP2Setup qt fkeys relDef
         ArrRel -> do
           using <- decodeValue rDef
           let relDef = RelDef rn using Nothing
           validateArrRel qt relDef
-          arrRelP2Setup qt relDef
+          arrRelP2Setup qt fkeys relDef
 
-  -- Fetch all the permissions
-  permissions <- liftTx $ Q.catchE defaultTxErrorHandler fetchPermissions
-
-  forM_ permissions $ \(sn, tn, rn, pt, Q.AltJ pDef, cmnt) -> do
-    let qt = QualifiedObject sn tn
-        objId = MOTableObj qt $ MTOPerm rn pt
+  -- permissions
+  forM_ permissions $ \(CatalogPermission qt rn pt pDef cmnt) -> do
+    let objId = MOTableObj qt $ MTOPerm rn pt
         def = toJSON $ WithTable qt $ PermDef rn pDef cmnt
         mkInconsObj = InconsistentMetadataObj objId (MOTPerm pt) def
-    modifyErr (\e -> "table " <> tn <<> "; role " <> rn <<> "; " <> e) $
+    modifyErr (\e -> "table " <> qt <<> "; role " <> rn <<> "; " <> e) $
       handleInconsistentObj mkInconsObj $
       case pt of
-          PTInsert -> permHelper sqlGenCtx sn tn rn pDef PAInsert
-          PTSelect -> permHelper sqlGenCtx sn tn rn pDef PASelect
-          PTUpdate -> permHelper sqlGenCtx sn tn rn pDef PAUpdate
-          PTDelete -> permHelper sqlGenCtx sn tn rn pDef PADelete
+          PTInsert -> permHelper withSetup sqlGenCtx qt rn pDef PAInsert
+          PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
+          PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
+          PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
 
-  -- Fetch all the query templates
-  qtemplates <- liftTx $ Q.catchE defaultTxErrorHandler fetchQTemplates
-  forM_ qtemplates $ \(qtn, Q.AltJ qtDefVal) -> do
+  -- query templates
+  forM_ qTemplates $ \(CatalogQueryTemplate qtn qtDefVal) -> do
     let def = object ["name" .= qtn, "template" .= qtDefVal]
         mkInconsObj =
           InconsistentMetadataObj (MOQTemplate qtn) MOTQTemplate def
@@ -394,45 +414,44 @@ buildSchemaCache = do
              CreateQueryTemplate qtn qtDef Nothing
       addQTemplateToCache qti deps
 
-  eventTriggers <- liftTx $ Q.catchE defaultTxErrorHandler fetchEventTriggers
-  forM_ eventTriggers $ \(sn, tn, trn, Q.AltJ configuration) -> do
-    let qt = QualifiedObject sn tn
-        objId = MOTableObj qt $ MTOTrigger trn
+  -- event triggers
+  forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do
+    let objId = MOTableObj qt $ MTOTrigger trn
         def = object ["table" .= qt, "configuration" .= configuration]
         mkInconsObj = InconsistentMetadataObj objId MOTEventTrigger def
     handleInconsistentObj mkInconsObj $ do
       etc <- decodeValue configuration
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
-      liftTx $ mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
+      when withSetup $ liftTx $
+        mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
-  functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
-  forM_ functions $ \(sn, fn) -> do
-    let qf = QualifiedObject sn fn
-        def = toJSON $ TrackFunction qf
+  -- sql functions
+  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+    let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
-    modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-      handleInconsistentObj mkInconsObj $
-      trackFunctionP2Setup qf
+    modifyErr (\e -> "function " <> qf <<> "; " <> e) $
+      handleInconsistentObj mkInconsObj $ do
+      rawfi <- onNothing rawfiM $
+        throw400 NotExists $ "no such function exists in postgres : " <>> qf
+      trackFunctionP2Setup qf rawfi
 
   -- build GraphQL context
   postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx
   writeSchemaCache postGCtxSc
 
   -- remote schemas
-  remoteSchemas <- liftTx fetchRemoteSchemas
   forM_ remoteSchemas $ resolveSingleRemoteSchema hMgr
 
   where
-    permHelper sqlGenCtx sn tn rn pDef pa = do
+    permHelper setup sqlGenCtx qt rn pDef pa = do
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       perm <- decodeValue pDef
-      let qt = QualifiedObject sn tn
-          permDef = PermDef rn perm Nothing
+      let permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
       (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
-      addPermP2Setup qt permDef permInfo
+      when setup $ addPermP2Setup qt permDef permInfo
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
@@ -453,39 +472,10 @@ buildSchemaCache = do
                             , scDefaultRemoteGCtx = mergedDefGCtx
                             }
 
-    fetchTables =
-      Q.listQ [Q.sql|
-                SELECT table_schema, table_name, is_system_defined
-                  FROM hdb_catalog.hdb_table
-                    |] () False
-
-    fetchRelationships =
-      Q.listQ [Q.sql|
-                SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
-                  FROM hdb_catalog.hdb_relationship
-                    |] () False
-
-    fetchPermissions =
-      Q.listQ [Q.sql|
-                SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
-                  FROM hdb_catalog.hdb_permission
-                    |] () False
-
-    fetchQTemplates =
-      Q.listQ [Q.sql|
-                SELECT template_name, template_defn :: json FROM hdb_catalog.hdb_query_template
-                  |] () False
-
-    fetchEventTriggers =
-      Q.listQ [Q.sql|
-               SELECT e.schema_name, e.table_name, e.name, e.configuration::json
-                 FROM hdb_catalog.event_triggers e
-               |] () False
-    fetchFunctions =
-      Q.listQ [Q.sql|
-               SELECT function_schema, function_name
-                 FROM hdb_catalog.hdb_function
-                    |] () False
+fetchCatalogData :: Q.TxE QErr CatalogMetadata
+fetchCatalogData =
+  (Q.getAltJ . runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 data RunSQL
   = RunSQL

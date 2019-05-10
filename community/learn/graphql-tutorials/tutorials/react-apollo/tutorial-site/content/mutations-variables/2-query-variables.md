@@ -2,7 +2,7 @@
 title: "Query Variables"
 ---
 
-import GithubLink from '../../src/GithubLink.js'
+import GithubLink from "../../src/GithubLink.js";
 
 What is a variable in GraphQL context?
 -------------------------------------
