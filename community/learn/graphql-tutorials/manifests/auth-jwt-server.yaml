@@ -28,7 +28,7 @@ spec:
         - name: DATABASE_URL
           value: postgres://postgres:@postgres.default:5432/postgres
         - name: PORT
-          value: 8080
+          value: "8080"
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
