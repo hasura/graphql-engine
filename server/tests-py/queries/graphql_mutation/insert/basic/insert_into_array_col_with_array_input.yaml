@@ -1,6 +1,6 @@
   #Inserting data into test_types table
 - description: Inserts Array into an Array column
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   response:
     data:
       insert_test_types:

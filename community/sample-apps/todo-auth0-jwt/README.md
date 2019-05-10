@@ -66,7 +66,7 @@ Save changes.
 
 Setup values in `todo-app/src/constants.js`:
 1. Auth0 domain
-2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.herokuapp.com/v1alpha1/graphql`
+2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.herokuapp.com/v1/graphql`
 3. Auth0 application's client id
 
 ## Create the initial tables

@@ -1,0 +1,45 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE public.authors (
+        id serial NOT NULL PRIMARY KEY,
+        name text NOT NULL
+      );
+      CREATE TABLE public.articles (
+          id serial NOT NULL PRIMARY KEY,
+          author_id integer NOT NULL REFERENCES public.authors(id),
+          title text NOT NULL,
+          body text NOT NULL
+      );
+- args:
+    name: authors
+    schema: public
+  type: track_table
+- args:
+    name: articles
+    schema: public
+  type: track_table
+- args:
+    delete:
+      columns: '*'
+    headers: []
+    insert:
+      columns: '*'
+    name: articles
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    table:
+      name: articles
+      schema: public
+    update:
+      columns:
+      - author_id
+      - body
+      - id
+      - title
+    webhook: https://httpbin.org/post
+  type: create_event_trigger

@@ -31,7 +31,7 @@ Create a file called `apollo.config.js` in the root of your project and add the 
       client: {
         service: {
           name: "your-service-name",
-          url: "http://localhost:8080/v1alpha1/graphql",
+          url: "http://localhost:8080/v1/graphql",
           headers: {
             "x-hasura-admin-secret": "<your-admin-secret>"
           }
@@ -41,7 +41,7 @@ Create a file called `apollo.config.js` in the root of your project and add the 
 
 Notes:
 
-- Replace ``http://localhost:8080/v1alpha1/graphql`` with your GraphQL Endpoint
+- Replace ``http://localhost:8080/v1/graphql`` with your GraphQL Endpoint
 - You can also add custom headers in the headers object if you wish to emulate the schema for some specific roles or tokens.
 
 For advanced configuration, check out the `docs for the plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`_.

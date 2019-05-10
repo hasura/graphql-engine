@@ -15,16 +15,16 @@ import { loadMigrationStatus } from './components/Main/Actions';
 
 import { composeOnEnterHooks } from 'utils/router';
 
-import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator';
+import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
 import generatedLoginConnector from './components/Login/Login';
 
-import metadataContainer from './components/Services/Data/Metadata/Container';
-import metadataOptionsContainer from './components/Services/Data/Metadata/MetadataOptions';
-import metadataStatusContainer from './components/Services/Data/Metadata/MetadataStatus';
+import metadataContainer from './components/Services/Metadata/Container';
+import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions';
+import metadataStatusContainer from './components/Services/Metadata/MetadataStatus';
 import globals from './Globals';
 
-import validateLogin from './components/Common/validateLogin';
+import validateLogin from './utils/validateLogin';
 
 const routes = store => {
   // load hasuractl migration status

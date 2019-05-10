@@ -4,7 +4,7 @@ from botocore.vendored import requests
 
 ADMIN_SECRET = os.environ['ADMIN_SECRET']
 HGE_ENDPOINT = os.environ['HGE_ENDPOINT']
-HGE_URL = HGE_ENDPOINT + '/v1alpha1/graphql'
+HGE_URL = HGE_ENDPOINT + '/v1/graphql'
 
 HEADERS = {
     'Content-Type': 'application/json',

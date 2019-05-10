@@ -9,7 +9,7 @@ import {
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,

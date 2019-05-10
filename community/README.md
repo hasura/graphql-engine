@@ -1,10 +1,11 @@
 # Community
 
-This directory contains community-contributed code and content that supplements Hasura GraphQL Engine. It includes several example applications built using GraphQL Engine to demonstrate its features, several boilerplates for users to get started with auth webhooks, triggers, etc. and some community tooling around the Engine.
+This directory contains community-contributed code and content that supplements Hasura GraphQL Engine. It includes several example applications built using GraphQL Engine to demonstrate its features, several boilerplates for users to get started with auth webhooks, triggers, etc. and some community tooling around the Engine. There are also graphql tutorials built using GraphQL Engine as the backend. These tutorials help in learning how to integrate GraphQL APIs with your favourite web/mobile framework.
 
 The following categories of community content can be found in their respective sub-folders:
 
 - [Boilerplates](boilerplates)
+- [Learn](learn)
 - [Sample Apps](sample-apps)
 - [Tools](tools)
 
