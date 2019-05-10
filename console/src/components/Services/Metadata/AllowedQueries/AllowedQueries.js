@@ -30,20 +30,18 @@ class AllowedQueries extends React.Component {
           <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
             Allowed Queries
           </h2>
-          <div className={styles.add_mar_top}>
+          <div className={styles.add_mar_top + ' ' + styles.wd60}>
             <AllowedQueriesNotes />
             <hr />
-            <div className={styles.wd60}>
-              <AddAllowedQuery
-                dispatch={dispatch}
-                isFirstQuery={allowedQueries.length === 0}
-              />
-              <hr />
-              <AllowedQueriesList
-                dispatch={dispatch}
-                allowedQueries={allowedQueries}
-              />
-            </div>
+            <AddAllowedQuery
+              dispatch={dispatch}
+              isFirstQuery={allowedQueries.length === 0}
+            />
+            <hr />
+            <AllowedQueriesList
+              dispatch={dispatch}
+              allowedQueries={allowedQueries}
+            />
           </div>
         </div>
       </div>
