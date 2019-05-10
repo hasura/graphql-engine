@@ -126,7 +126,7 @@ instance FromJSON CreateEventTriggerQuery where
     insert         <- o .:? "insert"
     update         <- o .:? "update"
     delete         <- o .:? "delete"
-    enableManual   <- o .:? "enable_manual" .!= True
+    enableManual   <- o .:? "enable_manual" .!= False
     retryConf      <- o .:? "retry_conf"
     webhook        <- o .:? "webhook"
     webhookFromEnv <- o .:? "webhook_from_env"

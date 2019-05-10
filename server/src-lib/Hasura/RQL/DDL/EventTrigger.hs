@@ -367,9 +367,8 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
-      Nothing -> return ()
-      Just m  -> unless m (throw400 NotSupported errMsg)
-    errMsg = "manual is disabled for event trigger"
+      Just True -> return ()
+      _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)

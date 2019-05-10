@@ -20,4 +20,3 @@
       table:
         schema: hge_tests
         name: test_t1
-      enable_manual: false
