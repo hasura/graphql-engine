@@ -1,4 +1,3 @@
-import { AuthSession } from 'expo';
 import React from 'react';
 import {
   Alert,
@@ -10,15 +9,11 @@ import {
   Image,
   KeyboardAvoidingView,
   Keyboard,
-  ScrollView,
   Platform
 } from 'react-native';
 import jwtDecoder from 'jwt-decode';
-import Icon from 'react-native-vector-icons/Entypo';
-import CenterSpinner from './components/CenterSpinner';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import { LinearGradient } from 'expo';
 import { signup, login } from '../authActions';
 
 export default class Auth extends React.Component {
@@ -58,7 +53,7 @@ export default class Auth extends React.Component {
   }
 
   performSignup = (email, password, successCb, errorCb) => {
-    const successcallback = () => {
+    const successCallback = () => {
       successCb();
       this.setState({
         loginProps: { email, password },

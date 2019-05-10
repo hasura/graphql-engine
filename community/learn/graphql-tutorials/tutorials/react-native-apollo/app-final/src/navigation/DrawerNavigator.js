@@ -1,4 +1,3 @@
-import React from 'react';
 import { createStackNavigator, createDrawerNavigator, createAppContainer } from 'react-navigation';
 import OnlineUsers from '../screens/UsersScreen';
 import LogoutScreen from '../screens/LogoutScreen';

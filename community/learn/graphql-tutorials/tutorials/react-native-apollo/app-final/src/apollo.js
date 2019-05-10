@@ -1,11 +1,6 @@
-import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from "apollo-cache-inmemory";
-import { split } from "apollo-link";
-import { getMainDefinition } from "apollo-utilities";
-
-const GRAPHQL_ENGINE_ENDPOINT = 'learn.hasura.io/graphql'
 
 const makeApolloClient = (token) => {
 

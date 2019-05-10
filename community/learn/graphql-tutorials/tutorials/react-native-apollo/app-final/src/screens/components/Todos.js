@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import gql from 'graphql-tag';
 import { Query } from 'react-apollo';
-import handleError from '../../utils';
 import TodoItem from './TodoItem';
 import LoadOlder from './LoadOlder';
 import LoadNewer from './LoadNewer';

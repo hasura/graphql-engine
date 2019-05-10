@@ -5,10 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
   Alert
 } from 'react-native';
-import { LinearGradient } from 'expo';
 import CenterSpinner from './CenterSpinner';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -40,7 +38,7 @@ class LoginForm extends React.Component {
       Alert.alert('Email or password cannot be empty');
       return;
     }
-    const successCallback = (resp) => {
+    const successCallback = () => {
       if (this.props.type === 'login') {
         this.setState({
           email: '',
