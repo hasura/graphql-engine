@@ -33,6 +33,14 @@ data:
 
       # proxy / homepage
 
+      proxy /auth/webhook auth-webhook {
+        without /auth
+      }
+
+      proxy /auth auth-jwt-server {
+        without /auth
+      }
+
       proxy /graphql/console hasura/console {
         without /graphql/console
       }

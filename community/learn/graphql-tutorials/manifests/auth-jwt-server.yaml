@@ -3,35 +3,37 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: hasura
-  name: hasura
+    app: auth-jwt-server
+  name: auth-jwt-server
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hasura
+      app: auth-jwt-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        app: hasura
+        app: auth-jwt-server
     spec:
       containers:
-      - image: hasura/graphql-engine:v1.0.0-alpha45
+      - image: hasura/base-git-image:0.7
         imagePullPolicy: IfNotPresent
-        name: hasura
+        name: auth-jwt-server
         env:
-        - name: HASURA_GRAPHQL_DATABASE_URL
+        - name: DATABASE_URL
           value: postgres://postgres:@postgres.default:5432/postgres
-        - name: HASURA_GRAPHQL_ENABLE_CONSOLE
-          value: "false"
-        - name: HASURA_GRAPHQL_ADMIN_SECRET
+        - name: PORT
+          value: 8080
+        - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
               name: hasura-secret
-              key: adminSecret
-        - name: HASURA_GRAPHQL_AUTH_HOOK
-          value: "auth-webhook.default/webhook"
+              key: customJwtSecret
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -40,9 +42,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: hasura
-    hasuraService: custom
-  name: hasura
+    app: auth-jwt-server
+  name: auth-jwt-server
   namespace: default
 spec:
   ports:
@@ -50,5 +51,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: hasura
+    app: auth-jwt-server
   type: ClusterIP
