@@ -310,6 +310,10 @@ const ViewRows = ({
         };
 
         const getManualTriggersButton = () => {
+          if (!manualTriggers.length) {
+            return;
+          }
+
           const triggerOptions = manualTriggers.map(m => {
             return {
               callbackArguments: [m.name, rowIndex],
@@ -319,10 +323,6 @@ const ViewRows = ({
               onClick: invokeTrigger,
             };
           });
-
-          if (!triggerOptions.length) {
-            return;
-          }
 
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
           const triggerTitle = 'Invoke event trigger';
@@ -344,6 +344,7 @@ const ViewRows = ({
                 identifier={`invoke_function_${triggeredFunction}`}
               />
             );
+
           return (
             <div className={styles.display_inline}>
               <Dropdown
@@ -358,20 +359,6 @@ const ViewRows = ({
               {invokeManualTrigger(row)}
             </div>
           );
-          /*
-          return [
-            <Dropdown
-              testId={`data_browse_rows_trigger_${rowIndex}`}
-              options={triggerOptions}
-              position="right"
-              key={`invoke_data_dropdown_${rowIndex}`}
-              keyPrefix={`invoke_data_dropdown_${rowIndex}`}
-            >
-              {triggerBtn}
-            </Dropdown>,
-            invokeManualTrigger(row),
-          ];
-          */
         };
 
         const showActionBtns = !_isSingleRow && !isView;

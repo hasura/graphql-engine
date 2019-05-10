@@ -107,57 +107,57 @@ const vMakeRequest = () => {
   };
 };
 
-const fetchManualTriggers = tableName => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const body = {
-    type: 'select',
-    args: {
-      table: {
-        name: 'event_triggers',
-        schema: 'hdb_catalog',
+const fetchManualTriggers = tableName => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const body = {
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: ['*'],
+        order_by: {
+          column: 'name',
+          type: 'asc',
+          nulls: 'last',
+        },
+        where: {
+          table_name: tableName,
+        },
       },
-      columns: ['*'],
-      order_by: {
-        column: 'name',
-        type: 'asc',
-        nulls: 'last',
+    };
+
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
+
+    dispatch({ type: FETCHING_MANUAL_TRIGGER });
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        // Filter only triggers whose configuration has `enable_manual` key as true
+        const manualTriggers = data.filter(trigger => {
+          const triggerDef = trigger.configuration.definition;
+
+          return (
+            Object.keys(triggerDef).includes('enable_manual') &&
+            triggerDef.enable_manual
+          );
+        });
+
+        dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
       },
-      where: {
-        table_name: tableName,
-      },
-    },
+      error => {
+        dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
+        console.error('Failed to load triggers' + JSON.stringify(error));
+      }
+    );
   };
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-  dispatch({ type: FETCHING_MANUAL_TRIGGER });
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      /* Filter only triggers whose configuration has `enable_manual` key in it
-       * */
-      const manualTriggers = data.filter(d => {
-        /*
-         * If enable_manual is present in the definition, filter by value of `enable_manual` otherwise return true
-         * */
-        if (
-          'enable_manual' in d.configuration.definition
-            ? d.configuration.definition.enable_manual
-            : true
-        ) {
-          return d;
-        }
-        return false;
-      });
-      dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
-    },
-    error => {
-      dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
 };
 
 const deleteItem = pkClause => {
