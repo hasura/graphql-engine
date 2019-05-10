@@ -16,7 +16,6 @@ import Icon from 'react-native-vector-icons/Entypo';
 import CenterSpinner from './components/CenterSpinner';
 import Login from './components/Login';
 import Signup from './components/Signup';
-import logo from '../images/learn-hasura.png';
 import { LinearGradient } from 'expo';
 import { signup, login } from '../authActions';
 
@@ -38,7 +37,7 @@ export default class Auth extends React.Component {
   }
 
   performSignup = (email, password, successCb, errorCb) => {
-    const successCallback = () => {
+    const successcallback = () => {
       successCb();
       this.setState({
         loginProps: { email, password },
@@ -75,7 +74,15 @@ export default class Auth extends React.Component {
     const logo = () => {
       return (
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>React Native Todo App with GraphQL</Text>
+          <View className={styles.logoWrapper}>
+            <Image
+              source={require('../images/hasura_logo_horizontal_blue.png')}
+              style={styles.logo}
+            />
+          </View>
+          <View style={styles.titleTextWrapper}>
+            <Text style={styles.title}>React Native Todo App with GraphQL</Text>
+          </View>
         </View>
       )
     }
@@ -101,10 +108,10 @@ export default class Auth extends React.Component {
         >
           <View style={styles.tabHeader}>
             <TouchableOpacity style={loginTabStyle} onPress={() => this.switchTabs(0)}>
-              <Text style={loginTabTextStyle}>Login</Text>
+              <Text style={loginTabTextStyle}>LOG IN</Text>
             </TouchableOpacity>
             <TouchableOpacity style={signupTabStyle} onPress={() => this.switchTabs(1)}>
-              <Text style={signupTabTextStyle}>Signup</Text>
+              <Text style={signupTabTextStyle}>SIGN UP</Text>
             </TouchableOpacity>
           </View>
           <View
@@ -123,13 +130,12 @@ export default class Auth extends React.Component {
         keyboardVerticalOffset={50}
         enabled
       >
-        <LinearGradient
-          colors={['#392F76', '#391E4C']}
+        <View
           style={styles.container}
         >
           {logo()}
           {tabs()}
-        </LinearGradient>
+        </View>
       </KeyboardAvoidingView>
     );
   }
@@ -140,14 +146,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     paddingBottom: 20
   },
   tabContainer: {
     flex: 0.5,
-    borderColor: '#bbb',
-    borderWidth: 1,
-    borderRadius: 20,
     width: 400
   },
   tabHeader: {
@@ -155,6 +158,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 30,
+    marginBottom: 40
   },
   tabContent: {
     flex: 1,
@@ -163,13 +168,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    borderBottomColor: '#D5CEE7',
+    borderBottomWidth: 1,
   },
   activeTab: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderBottomColor: '#bbb',
-    borderBottomWidth: 1,
+    borderBottomColor: '#39235A',
+    borderBottomWidth: 3,
   },
   tabHeaderText: {
     fontSize: 18,
@@ -179,17 +186,34 @@ const styles = StyleSheet.create({
   },
   tabHeaderTextActive: {
     fontSize: 18,
-    color: 'white',
+    color: '#39235A',
     alignSelf: 'center',
+    fontWeight: 'bold',
     marginBottom: 15
   },
   titleContainer: {
+    flex: 0.5,
+    marginTop: 40,
+    paddingHorizontal: 30,
+    justifyContent: 'space-between'
+  },
+  titleTextWrapper: {
+    flex: 1,
     fontSize: 30,
-    marginBottom: 40
+    marginTop: 30
   },
   title: {
-    fontSize: 30,
-    textAlign: 'center',
-    color: 'white'
-  }
+    fontSize: 50,
+    textAlign: 'left',
+    fontWeight: '900',
+    color: '#39235A'
+  },
+  logoWrapper: {
+    paddingHorizontal: 20,
+    marginBottom: 40
+  },
+  logo: {
+    height: 40,
+    width: 134
+  },
 });

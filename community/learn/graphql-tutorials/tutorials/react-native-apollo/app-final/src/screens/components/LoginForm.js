@@ -10,14 +10,15 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo';
 import CenterSpinner from './CenterSpinner';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/; 
 
 class LoginForm extends React.Component {
 
   state = {
-    email: this.props.email || 'rishichandrawawhal@gmail.com',
-    password: this.props.password || 'abcd1234',
+    email: this.props.email || '',
+    password: this.props.password || '',
     loading: false
   }
 
@@ -62,10 +63,18 @@ class LoginForm extends React.Component {
 
   render(){
     const { email, password, loading } = this.state;
-    const buttonText = this.props.type === 'signup' ? 'SIGN UP' : 'LOGIN';
+    const buttonText = this.props.type === 'signup' ? 'SIGN UP' : 'LOG IN';
     return (
       <View style={styles.container}>
         <View style={styles.textboxWrapper}>
+          <View style={styles.labelWrapper}>
+            <Icon
+              name="mail-outline"
+              size={14}
+              style={styles.labelIcon}
+            />
+            <Text style={styles.labelText}> Email </Text>
+          </View>
           <TextInput
             style={styles.textbox}
             placeholder="Email"
@@ -76,6 +85,14 @@ class LoginForm extends React.Component {
           />
         </View>
         <View style={styles.textboxWrapper}>
+          <View style={styles.labelWrapper}>
+            <Icon
+              name="lock-outline"
+              size={13}
+              style={styles.labelIcon}
+            />
+            <Text style={styles.labelText}> Password </Text>
+          </View>
           <TextInput
             style={styles.textbox}
             placeholder="Password"
@@ -113,23 +130,37 @@ const styles = StyleSheet.create({
   },
   textboxWrapper: {
     height: 60,
-    width: 300,
-    fontSize: 50
+    width: 340,
+    fontSize: 50,
+    marginBottom: 20
   },
   textbox: {
-    borderBottomColor: '#bbb',
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: '#D5CEE7',
+    borderRadius: 7,
     padding: 5,
-    color: 'white'
+    paddingHorizontal: 10,
+    fontSize: 13,
+    height:40,
   },
   buttonWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 40,
-    width: 300,
-    backgroundColor: '#4767a1',
+    height: 50,
+    width: 340,
+    backgroundColor: '#39235A',
     marginBottom: 30,
-    borderRadius: 15
+    borderRadius: 20
+  },
+  labelWrapper: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    alignItems: 'center'
+  },
+  labelText: {
+    fontSize: 13,
+  },
+  labelIcon: {
+    marginRight: 5
   }
 })
