@@ -21,7 +21,7 @@ Our task will be convert the "static" UI into a working realtime app.
 
 After you login, you should get something like this:
 
-![UI after logging in](./assets/after-login.jpg)
+![UI after logging in](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react-native/ui-after-login.png)
 
 ### Load GraphiQL to play with your GraphQL APIs
 
@@ -30,4 +30,4 @@ After you login, you should get something like this:
 
 This is what you should see after the steps above:
 
-![GraphiQL after login](./assets/graphiql-after-login.png)
+![GraphiQL after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql-after-login.png)

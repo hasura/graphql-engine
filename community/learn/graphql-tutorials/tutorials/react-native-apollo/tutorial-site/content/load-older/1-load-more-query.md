@@ -2,7 +2,11 @@
 title: "GraphQL Query to load older todos"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 Firstly, we need to modify our first `FETCH_TODOS` query such that it fetches only 10 items on first load. To do that, just add the `limit` argument to it. Go to `src/screens/components/Todos` and add the `limit` argument and set it to `10`.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" text="Todos.js" />
 
 ```graphql
  query ($is_public: Boolean) {

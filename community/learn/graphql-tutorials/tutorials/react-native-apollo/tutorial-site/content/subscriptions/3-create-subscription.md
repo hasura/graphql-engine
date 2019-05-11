@@ -2,9 +2,13 @@
 title: "Create Subscription and Render Result"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 So let's define the graphql subscription to be used.
 
 Open `src/screens/UsersScreen.js` and add the following code, below the other imports
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/UserScreen.js" text="UserScreen.js" />
 
 ```javascript
 import {Subscription} from 'react-apollo';

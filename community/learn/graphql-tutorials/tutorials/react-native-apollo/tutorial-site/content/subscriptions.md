@@ -2,6 +2,8 @@
 title: "Subscriptions to show online users"
 ---
 
+import GithubLink from "../src/GithubLink.js";
+
 We cruised through our GraphQL queries and mutations. We queried for todos, added a new todo, updated an existing todo, removed an existing todo.
 
 Now let's get to the exciting part.
@@ -20,6 +22,8 @@ We need to tell the server that the user who is logged in is online. We have to 
 We have to make this change to see yourself online first. Remember that you are already logged in, registered your data in the server, but not updated your `last_seen` value.?
 
 The goal is to update every few seconds from the client that you are online. Ideally you should do this after you have successfully authenticated with Auth0. So let's do in the entrypoint of the app i.e. `src/navigation/Main.js`. We instantiate `client` in `componentDidMount`. Thats where we want to start polling. Firstly, lets define the mutation that sets `last_seen` to the current timestamp.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/navigation/Main.js" text="Main.js"/>
 
 ```javascript
 + import gql from "graphql-tag";
@@ -42,6 +46,8 @@ The goal is to update every few seconds from the client that you are online. Ide
 
 
 In `componentDidMount`, we will create a `setInterval` to update the last_seen of the user every 30 seconds.
+
+
 
 ```javascript
 // bootstrap session in componentDidMount

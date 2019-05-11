@@ -17,7 +17,7 @@ Great! Now let's define the graphql query to be used:
 Open `src/screens/components/Todo/Todos.js` and add the following code:
 
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" text="Todos.js" />
 
 ```javascript
 import React from 'react';

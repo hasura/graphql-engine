@@ -14,7 +14,7 @@ $ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-lin
 
 Create a file called `apollo.js` inside `src` and that exports a function called `makeApolloClient` that takes the authorization token as an argument and creates an instance of apollo client with our GraphQL endpoint.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/apollo.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/apollo.js" text="apollo.js"/>
 
 ```javascript
 

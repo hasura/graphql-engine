@@ -12,17 +12,15 @@ We’ve structured this course to cover fundamental concepts of both GraphQL and
 - GraphQL queries, mutations, subscriptions
 - Setting up a GraphQL client with Apollo
 - Integrating GraphQL queries in your react native app
-- Integrating GraphQL mutations with query variables to handle form input
-- Updating local state after a GraphQL mutation (form input) using Apollo cache
-- Optimistic updates to local state and UI after GraphQL mutations for a slick UX
+- Integrating GraphQL mutations in your app to change data on the server
+- Updating local state after a GraphQL mutation (TextInput) using Apollo cache
+- Automatic updates to local state and UI after GraphQL update mutations
 - Using subscriptions with a subscriptions components
 - Building a real-time feed with notifications using mutations and subscriptions
 
 ## What will be building?
-We will be building a realtime todo app using authenticated GraphQL APIs.
 
-Try this deployed version of the app to see what we'll be building:
-https://final-graphql-tutorial.netlify.com/
+We will be building a realtime todo app using authenticated GraphQL APIs. 
 
 ## Will this course teach React Native concepts as well?
 No, we will be simulating a scenario where we already have a
