@@ -21,7 +21,6 @@ class TryItOut extends React.Component {
     const AWS = require('./images/AWS.png');
     const externalLink = require('./images/external-link.svg');
     // const { title, imgUrl, imgAlt,  description} = this.props;
-    console.log(this.props.isAvailable);
     const commonStyle = this.props.isAvailable
       ? styles.instructionsWrapper
       : styles.instructionsWrapperPos;
