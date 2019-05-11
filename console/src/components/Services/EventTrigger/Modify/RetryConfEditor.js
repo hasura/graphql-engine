@@ -6,7 +6,7 @@ import {
   setRetryTimeout,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import semverCheck from '../../../../helpers/semver';
 
@@ -80,7 +80,7 @@ class RetryConfEditor extends React.Component {
   };
 
   render() {
-    const { styles, dispatch, modifyTrigger, save } = this.props;
+    const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
     const { supportRetryTimeout } = this.state;
     const collapsed = () => (

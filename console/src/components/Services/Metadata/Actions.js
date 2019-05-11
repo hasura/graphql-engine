@@ -23,9 +23,10 @@ const DROPPING_INCONSISTENT_METADATA_FAILED =
   'Metadata/DROPPING_INCONSISTENT_METADATA_FAILED';
 
 const LOAD_ALLOWED_QUERIES = 'Metadata/LOAD_ALLOWED_QUERIES';
-const ADD_ALLOWED_QUERY = 'Metadata/ADD_ALLOWED_QUERY';
+const ADD_ALLOWED_QUERIES = 'Metadata/ADD_ALLOWED_QUERIES';
 const UPDATE_ALLOWED_QUERY = 'Metadata/UPDATE_ALLOWED_QUERY';
 const DELETE_ALLOWED_QUERY = 'Metadata/DELETE_ALLOWED_QUERY';
+const DELETE_ALLOW_LIST = 'Metadata/DELETE_ALLOW_LIST';
 
 const getInconsistentObjectsQuery = {
   type: 'get_inconsistent_metadata',
@@ -213,18 +214,13 @@ const loadAllowedQueriesQuery = () => ({
   },
 });
 
-const createAllowListQuery = query => {
+const createAllowListQuery = queries => {
   const createAllowListCollectionQuery = () => ({
     type: 'create_query_collection',
     args: {
       name: allowedQueriesCollection,
       definition: {
-        queries: [
-          {
-            name: query.name,
-            query: query.query,
-          },
-        ],
+        queries: queries,
       },
     },
   });
@@ -275,6 +271,15 @@ const addAllowedQueryQuery = query => ({
   },
 });
 
+const addAllowedQueriesQuery = queries => {
+  const addQueries = queries.map(query => addAllowedQueryQuery(query));
+
+  return {
+    type: 'bulk',
+    args: addQueries,
+  };
+};
+
 const deleteAllowedQueryQuery = queryName => ({
   type: 'drop_query_from_collection',
   args: {
@@ -318,13 +323,19 @@ export const loadAllowedQueries = () => {
   };
 };
 
-export const addAllowedQuery = (query, isFirstQuery, callback) => {
+export const addAllowedQueries = (queries, isEmptyList, callback) => {
   return (dispatch, getState) => {
+    if (queries.length === 0) {
+      dispatch(showErrorNotification('No queries found'));
+
+      return;
+    }
+
     const headers = getState().tables.dataHeaders;
 
-    const addQuery = isFirstQuery
-      ? createAllowListQuery(query)
-      : addAllowedQueryQuery(query);
+    const addQuery = isEmptyList
+      ? createAllowListQuery(queries)
+      : addAllowedQueriesQuery(queries);
 
     return dispatch(
       requestAction(endpoints.query, {
@@ -334,8 +345,12 @@ export const addAllowedQuery = (query, isFirstQuery, callback) => {
       })
     ).then(
       () => {
-        dispatch(showSuccessNotification('Query added to allow-list'));
-        dispatch({ type: ADD_ALLOWED_QUERY, data: query });
+        dispatch(
+          showSuccessNotification(
+            `${queries.length > 1 ? 'Queries' : 'Query'} added to allow-list`
+          )
+        );
+        dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
         callback();
       },
       error => {
@@ -343,6 +358,38 @@ export const addAllowedQuery = (query, isFirstQuery, callback) => {
         dispatch(
           showErrorNotification(
             'Adding query to allow-list failed',
+            null,
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
+export const deleteAllowList = () => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(deleteAllowListQuery()),
+      })
+    ).then(
+      () => {
+        dispatch(
+          showSuccessNotification('Deleted all queries from allow-list')
+        );
+        dispatch({ type: DELETE_ALLOW_LIST });
+      },
+      error => {
+        console.error(error);
+        dispatch(
+          showErrorNotification(
+            'Deleting queries from allow-list failed',
             null,
             null,
             error
@@ -457,10 +504,15 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: action.data,
       };
-    case ADD_ALLOWED_QUERY:
+    case ADD_ALLOWED_QUERIES:
       return {
         ...state,
-        allowedQueries: [...state.allowedQueries, action.data],
+        allowedQueries: [...state.allowedQueries, ...action.data],
+      };
+    case DELETE_ALLOW_LIST:
+      return {
+        ...state,
+        allowedQueries: [],
       };
     case DELETE_ALLOWED_QUERY:
       return {
@@ -474,7 +526,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            q.name === action.data.queryName ? action.data.newQuery : q
+            (q.name === action.data.queryName ? action.data.newQuery : q)
           ),
         ],
       };

@@ -64,7 +64,7 @@ class Editor extends React.Component {
         data-test={`${service}-${property}-save`}
         disabled={isProcessing}
       >
-        Save
+        {this.props.saveButtonText || 'Save'}
       </Button>
     );
   };
@@ -82,7 +82,7 @@ class Editor extends React.Component {
         data-test={`${service}-${property}-remove`}
         disabled={isProcessing}
       >
-        Remove
+        {this.props.removeButtonText || 'Remove'}
       </Button>
     );
   };

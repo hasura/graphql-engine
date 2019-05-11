@@ -4,7 +4,12 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
 import styles from './AllowedQueries.scss';
 
-import { updateAllowedQuery, deleteAllowedQuery } from '../Actions';
+import {
+  updateAllowedQuery,
+  deleteAllowedQuery,
+  deleteAllowList,
+} from '../Actions';
+import Button from '../../../Common/Button/Button';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {
@@ -132,9 +137,33 @@ class AllowedQueriesList extends React.Component {
       });
     };
 
+    const getDeleteAllBtn = () => {
+      const handleDeleteAll = () => {
+        const isOk = window.confirm('Are you sure?');
+
+        if (isOk) {
+          dispatch(deleteAllowList());
+        }
+      };
+
+      return (
+        <Button
+          size="xs"
+          onClick={handleDeleteAll}
+          disabled={allowedQueries.length === 0}
+        >
+          Delete all
+        </Button>
+      );
+    };
+
     return (
       <div>
-        <h4 className={styles.subheading_text}>Allowed Queries</h4>
+        <h4 className={styles.subheading_text}>
+          Allowed Queries
+          <span className={styles.add_mar_left}>{getDeleteAllBtn()}</span>
+        </h4>
+
         <div className={styles.subsection}>{getQueryList()}</div>
       </div>
     );

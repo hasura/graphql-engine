@@ -35,7 +35,7 @@ class AllowedQueries extends React.Component {
             <hr />
             <AddAllowedQuery
               dispatch={dispatch}
-              isFirstQuery={allowedQueries.length === 0}
+              isEmptyList={allowedQueries.length === 0}
             />
             <hr />
             <AllowedQueriesList

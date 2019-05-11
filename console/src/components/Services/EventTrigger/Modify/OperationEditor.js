@@ -1,6 +1,6 @@
 import React from 'react';
 import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import { toggleQueryType, toggleColumn } from './Actions';
 
