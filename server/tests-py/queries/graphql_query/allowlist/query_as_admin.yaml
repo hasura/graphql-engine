@@ -1,5 +1,5 @@
 description: Query as admin. Allowlist is not enforced.
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
