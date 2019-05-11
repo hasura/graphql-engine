@@ -2,7 +2,12 @@
 title: "Remove todos - Integration"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 Let us integrate the remove todos feature in our React Native app. Firstly import `gql` and define the mutation in `src/screens/components/Todo/TodoItem/js`.
+
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/TodoItem.js" />
 
 ```js
 + import gql from 'graphql-tag';

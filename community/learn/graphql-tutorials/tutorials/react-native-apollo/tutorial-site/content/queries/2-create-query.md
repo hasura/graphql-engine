@@ -2,6 +2,8 @@
 title: "<Query> component"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 In this section, we will implement GraphQL Queries and integrate with the react native UI.
 With Apollo Client, you can send queries in 2 different ways.
 
@@ -12,8 +14,10 @@ The recommended method is to use the render prop method, where you will just pas
 
 Great! Now let's define the graphql query to be used:
 
-// GHLINK
 Open `src/screens/components/Todo/Todos.js` and add the following code:
+
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" />
 
 ```javascript
 import React from 'react';

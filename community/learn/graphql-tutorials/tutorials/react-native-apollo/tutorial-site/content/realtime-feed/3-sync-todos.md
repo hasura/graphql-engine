@@ -2,9 +2,13 @@
 title: "Sync new todos"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 In the previous section we made a button that shows up only when there are new public todos in the database. Now lets make this button functional i.e. on pressing this button, newer todos should be fetched from the backend, synced with the local todos and the button must be dismissed.
 
 Go to `src/screens/components/Todo/LoadNewer.js`, import `gql` and define the query to fetch newer todos.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/LoadNewer.js" />
 
 ```js
 + import gql from 'graphql-tag';

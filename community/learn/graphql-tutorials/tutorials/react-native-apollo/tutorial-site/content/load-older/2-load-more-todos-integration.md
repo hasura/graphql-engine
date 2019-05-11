@@ -2,7 +2,11 @@
 title: "Load more todos integration"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 In the last section, we modified the query that fetches all the todos to fetch only 10 todos on first load. We also wrote another query that fetches older todos. Now let us implement a button that loads older todos on press. Go to `src/screens/components/Todo/LoadOlder.js`, import `gql` from `graphql-tag` and define the query that we wrote in the last section:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/LoadOlder.js" />
 
 ```js
 + import gql from 'graphql-tag';

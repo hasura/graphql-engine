@@ -7,7 +7,7 @@ class LoadNewerButton extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      buttonText: 'New tasks have arrived!',
+      buttonText: 'New todos have arrived!',
       loading: false,
     };
   }

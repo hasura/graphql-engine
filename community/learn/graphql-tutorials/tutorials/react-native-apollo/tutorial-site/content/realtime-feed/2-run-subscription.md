@@ -2,9 +2,13 @@
 title: "Detect new todos - integration"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+
 Go to `src/screens/components/Todos`.
 
 For running a custom subscription, we need access to our `ApolloClient` instance. To do that, we convert our `Todos` component into an Apollo HOC by wrapping it in `withApollo`.
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-native-apollo/app-final/src/screens/components/Todo/Todos.js" />
 
 ```js
 + import { withApollo } from 'react-apollo'

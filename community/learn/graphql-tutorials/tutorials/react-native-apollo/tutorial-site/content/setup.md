@@ -9,16 +9,19 @@ Our task will be convert the "static" UI into a working realtime app.
 
 <!-- FIXME: Add the zip URL here -->
 
-1. Download the boilerplate at: https://learn.hasura.io/graphql/react/boilerplate.zip
+1. Download the boilerplate at: https://learn.hasura.io/graphql/react-native/boilerplate.zip
 2. Unzip and make sure you're in the `app-boilerplate` directory
-3. Install dependencies and run the "static" app
+3. Make sure you have `expo-cli` installed
+    - `npm install -g expo-cli`
+4. Install dependencies and run the app. This will start the development server
     - `npm install`
     - `npm start`
-4. Signup/login as a user to load the todo app page
+5. Open this app from your phone using `Expo`
+6. Signup/login as a user to load the todo app screen
 
-This is what you should see after the steps above:
+After you login, you should get something like this:
 
-![Boilerplate after login](./assets/boilerplate-after-login.png)
+![UI after logging in](./assets/after-login.jpg)
 
 ### Load GraphiQL to play with your GraphQL APIs
 
