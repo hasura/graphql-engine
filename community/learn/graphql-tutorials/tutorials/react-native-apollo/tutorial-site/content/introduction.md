@@ -2,9 +2,13 @@
 title: "Course introduction"
 ---
 
-This course is a concise and powerful introduction to GraphQL for React Native developers.
+GraphQL is becoming the new way to use APIs in modern web and mobile apps.
 
-We’ve structured this course to cover fundamental concepts of both GraphQL and using GraphQL in react native, in the shortest amount of time possible. The course is light on opinions so that once you grok the fundamentals you can go on to choose your favourite tools and tailor your workflow.
+However, learning new things always takes time and without getting your hands dirty, it’s very hard to understand the nuances of a new technology.
+
+So, we put together a powerful and concise course that will introduce you to GraphQL and integrating GraphQL into your frontend stack, in the shortest amount of time possible.
+
+We will explore the fundamentals of GraphQL and the especially things that make GraphQL suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
 
 ## Key topics and takeways:
 
@@ -14,7 +18,7 @@ We’ve structured this course to cover fundamental concepts of both GraphQL and
 - Integrating GraphQL queries in your react native app
 - Integrating GraphQL mutations in your app to change data on the server
 - Updating local state after a GraphQL mutation (TextInput) using Apollo cache
-- Automatic updates to local state and UI after GraphQL update mutations
+- Automatic updates to local state and UI after mutations
 - Using subscriptions with a subscriptions components
 - Building a real-time feed with notifications using mutations and subscriptions
 
@@ -22,14 +26,23 @@ We’ve structured this course to cover fundamental concepts of both GraphQL and
 
 We will be building a realtime todo app using authenticated GraphQL APIs. 
 
-## Will this course teach React Native concepts as well?
-No, we will be simulating a scenario where we already have a
-GraphQL API and the basic UI of a react native app built. Our task in this
-scenario is to integrate the GraphQL APIs into our react native app to build
-a complete and working app.
+## Will this course teach React Native as well?
+
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a React Native app built. Our task in this scenario is to integrate the GraphQL APIs into our react native app to build a complete and working app.
+
+If you're new to React Native, we recommend going through [this tutorial](http://www.reactnativeexpress.com) and then coming back here!
 
 ## What do I need to take this tutorial?
 You need to have npm/yarn & node 8+ running.
 
 ## How long will this tutorial take?
 Less than 2 hours
+
+## Other courses
+
+- GraphQL
+  - Frontent
+    - [React](https://learn.hasura.io/graphql/react)
+    - [Vue](https://learn.hasura.io/graphql/vue)
+  - Backend
+    - [Realtime GraphQL with Hasura](https://learn.hasura.io/backend/hasura): Building a realtime GraphQL backend with Hasura in 30 mins (ideal for frontend, backend or fullstack developers) 
