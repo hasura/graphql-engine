@@ -39,7 +39,7 @@ class SubscribeNewsletter extends React.Component {
         <div className={'container noPadd'}>
           <div className={'topBannerWrapper'}>
             <div className={'col-md-12'}>
-              <div className={'col-md-6 col-sm-6 col-xs-12 noPadd'}>
+              <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
                 <div className={'sectionHeader'}>
                   Subscribe to the Hasura newsletter
                 </div>
@@ -55,7 +55,7 @@ class SubscribeNewsletter extends React.Component {
                 </div>
                 */}
               </div>
-              <div className={'col-md-6 col-sm-6 col-xs-12 noPadd'}>
+              <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
                 <div className={'notifyWrapper'}>
                   <SubscribeFrom className={"notifyForm"} {...formProps}/>
                 </div>

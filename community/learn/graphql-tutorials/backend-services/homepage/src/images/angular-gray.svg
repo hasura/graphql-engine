@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="angular" width="19.056" height="20.468" viewBox="0 0 19.056 20.468">
+    <defs>
+        <style>
+            .cls-1{fill:#606060}.cls-2{fill:#505050}.cls-3{fill:#ededed}
+        </style>
+    </defs>
+    <path id="Path_500" d="M41.428 30L31.9 33.4 33.353 46l8.075 4.472L49.5 46l1.453-12.6z" class="cls-1" data-name="Path 500" transform="translate(-31.9 -30)"/>
+    <path id="Path_501" d="M125 30v20.468L133.075 46l1.453-12.6z" class="cls-2" data-name="Path 501" transform="translate(-115.472 -30)"/>
+    <path id="Path_502" d="M72.756 52.1L66.8 65.455h2.221l1.2-2.988h5.056l1.2 2.988h2.221L72.756 52.1zm1.74 8.525h-3.48l1.74-4.186z" class="cls-3" data-name="Path 502" transform="translate(-63.228 -49.838)"/>
+</svg>

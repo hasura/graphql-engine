@@ -4,10 +4,9 @@ import '../styles/styles.scss';
 class CommonTutorialsList extends React.Component {
   render() {
     const path = require('../images/tutorial-path.svg');
-    console.log(this.props.frontendTutorial);
-    const listTutorial = this.props.frontendTutorial.map((list) => {
+    const listTutorial = this.props.frontendTutorial.map((list, key) => {
       return (
-        <a href={list.url} target={'_blank'}>
+        <a key={key} href={list.url} target={'_blank'}>
           <div className={'listTutorial'}>
             <div className={'tutorialIconWrapper'}>
               <img className={'img-responsive'} src={list.imgSrc} alt={list.imgAlt} />
@@ -22,7 +21,7 @@ class CommonTutorialsList extends React.Component {
       )
     });
     return (
-      <div className={'col-md-4 col-sm-4 col-xs-12'}>
+      <div className={'col-md-4 col-sm-12 col-xs-12'}>
         <div className={'tutorailsHeaderWrapper'}>
           <div className={'tutorialBgImg'}>
             <img className={'img-responsive'} src={path} alt={'path'} />

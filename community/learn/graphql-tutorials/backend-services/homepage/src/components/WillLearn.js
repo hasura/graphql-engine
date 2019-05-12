@@ -4,9 +4,9 @@ import { learnFrontend, learnBackend} from './AllState.js';
 const tick = require('../images/tick.svg');
 class WillLearn extends React.Component {
   render() {
-    const frontend = learnFrontend.map((list) => {
+    const frontend = learnFrontend.map((list, key) => {
       return (
-        <div className={'col-md-6 col-sm-6 col-xs-12'}>
+        <div key={key} className={'col-md-6 col-sm-6 col-xs-12'}>
           <div className={'listWrapper'}>
             <div className={'tick'}>
               <img src={tick} alt={'tick'} />
@@ -18,9 +18,9 @@ class WillLearn extends React.Component {
         </div>
       )
     })
-    const backend = learnBackend.map((list) => {
+    const backend = learnBackend.map((list, key) => {
       return (
-        <div className={'col-md-12 col-sm-12 col-xs-12'}>
+        <div key={key} className={'col-md-12 col-sm-12 col-xs-12'}>
           <div className={'listWrapper'}>
             <div className={'tick'}>
               <img src={tick} alt={'tick'} />
@@ -47,7 +47,7 @@ class WillLearn extends React.Component {
               </div>
             </div>
             <div className={'willLearnTutorial wd100'}>
-              <div className={'col-md-8 col-sm-8 col-xs-12'}>
+              <div className={'col-md-8 col-sm-12 col-xs-12'}>
                 <div className={'willLearnList wd100'}>
                   <div className={'willLearnHeader'}>
                     Frontend Tutorials (Mobile & Web)
@@ -55,7 +55,7 @@ class WillLearn extends React.Component {
                   {frontend}
                 </div>
               </div>
-              <div className={'col-md-4 col-sm-4 col-xs-12'}>
+              <div className={'col-md-4 col-sm-12 col-xs-12'}>
                 <div className={'willLearnList wd100'}>
                   <div className={'willLearnHeader'}>
                     Backend Tutorials

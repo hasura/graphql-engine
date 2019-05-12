@@ -46,31 +46,31 @@ class Footer extends React.Component {
                     RESOURCES
                   </div>
                   <div className={'footer_links'}>
-                    <a href="https://blog.hasura.io/" target="_blank">Blog</a>
+                    <a href="https://blog.hasura.io/" target="_blank" rel="noopener noreferrer">Blog</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/community">Community & Events</a>
+                    <a href="https://hasura.io/community" target="_blank" rel="noopener noreferrer">Community & Events</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a href="https://3factor.app/" target="_blank">3factor apps</a>
+                    <a href="https://3factor.app/" target="_blank" rel="noopener noreferrer">3factor apps</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to="https://hasura.io/diy-graphql-baas">DIY GraphQL BaaS</a>
+                    <a href="https://hasura.io/diy-graphql-baas" target="_blank" rel="noopener noreferrer">DIY GraphQL BaaS</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a href="https://firebase2graphql.com/" target="_blank">Firebase to GraphQL</a>
+                    <a href="https://firebase2graphql.com/" target="_blank" rel="noopener noreferrer">Firebase to GraphQL</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/sample-apps">Sample Apps</a>
+                    <a href="https://hasura.io/sample-apps" target="_blank" rel="noopener noreferrer">Sample Apps</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/3factor-radio">3factor Radio</a>
+                    <a href="https://hasura.io/3factor-radio" target="_blank" rel="noopener noreferrer">3factor Radio</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/vue-graphql">Vue GraphQL</a>
+                    <a href="https://hasura.io/vue-graphql" target="_blank" rel="noopener noreferrer">Vue GraphQL</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/react-graphql">React GraphQL</a>
+                    <a href="https://hasura.io/react-graphql" target="_blank" rel="noopener noreferrer">React GraphQL</a>
                   </div>
                 </div>
               </div>
@@ -80,22 +80,22 @@ class Footer extends React.Component {
                     INFO
                   </div>
                   <div className={'footer_links'}>
-                    <a to="https://hasura.io/about">About Us</a>
+                    <a href="https://hasura.io/about"target="_blank" rel="noopener noreferrer">About Us</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to="https://hasura.io/careers">Careers</a>
+                    <a href="https://hasura.io/careers"target="_blank" rel="noopener noreferrer">Careers</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/getintouch">Get In Touch</a>
+                    <a href="https://hasura.io/getintouch"target="_blank" rel="noopener noreferrer">Get In Touch</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to ="https://hasura.io/legal">Legal Stuff</a>
+                    <a href="https://hasura.io/legal" target="_blank" rel="noopener noreferrer">Legal Stuff</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a href={'https://github.com/hasura/graphql-engine/blob/master/assets/brand'} target={'_blank'}>Brand Assets</a>
+                    <a href={'https://github.com/hasura/graphql-engine/blob/master/assets/brand'} target={'_blank'} rel="noopener noreferrer">Brand Assets</a>
                   </div>
                   <div className={'footer_links'}>
-                    <a to="https://hasura.io/enterprise">Enterprise</a>
+                    <a href="https://hasura.io/enterprise" target="_blank" rel="noopener noreferrer">Enterprise</a>
                   </div>
                 </div>
               </div>
