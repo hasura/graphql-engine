@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css?family=Raleway:300,400,600');
+@import url('https://fonts.googleapis.com/css?family=Raleway:300,400,600,700,800');
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,600,700');
 body
 {
   font-size: 16px;
-  font-family: 'Open Sans'
+  font-family: 'Roboto'
 }
 .wd100
 {
@@ -37,6 +38,14 @@ body
 {
   background-color: #222;
 }
+.lightGrayBgColor
+{
+  background-color: #f7f7f7;
+}
+.whiteBgColor
+{
+  background-color: #fff;
+}
 .gradientBgColor
 {
   background-color: #372476;
@@ -61,14 +70,14 @@ body
   font-family: 'Raleway';
   font-size: 40px;
   color: #7a4fa1;
-  line-height: 1.4;
+  line-height: normal;
   font-weight: 600;
 }
 .sectionHeader
 {
   font-family: 'Raleway';
-  font-size: 26px;
-  color: #7a4fa1;
+  font-size: 28px;
+  color: #2b0785;
   line-height: 1.4;
   font-weight: 600;
 }
@@ -82,19 +91,38 @@ body
 }
 .sectionDescription
 {
-  font-family: 'Open Sans';
+  font-family: 'Roboto';
   font-size: 16px;
   color: #7a4fa1;
   font-weight: 300;
-  color: #8a8a8a;
+  color: #505050;
 }
 .sectionDescriptionSmall
 {
-  font-family: 'Open Sans';
+  font-family: 'Roboto';
   font-size: 14px;
   color: #7a4fa1;
   font-weight: 300;
   color: #8a8a8a;
+}
+.displayFlex
+{
+  display: flex;
+  align-items: center;
+}
+.whiteLineSeperator
+{
+  width: 16px;
+  height: 4px;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+.purpleLineSeperator
+{
+  width: 16px;
+  height: 4px;
+  background-color: #2b0785;
+  margin-bottom: 20px;
 }
 .commonBtn
 {
@@ -169,46 +197,143 @@ body
 .notifyWrapper input {
   width: 63%;
   border: 0;
-  border-bottom: 1px solid #314975;
+  border-bottom: 2px solid #fff;
   height: 45px;
   background-color: transparent;
-  color: #4767a1;
+  color: #fff;
+  opacity: 0.6;
 }
 .notifyWrapper button {
     border-radius: 25px;
-    background-color: #4767a1;
+    background-color: transparent;
     padding: 10px 15px;
     border: 0;
     width: 32%;
     color: #fff;
-    font-family: raleway;
+    font-family: 'Raleway';
     font-size: 12px;
     font-weight: 600;
     height: 45px;
     letter-spacing: 2px;
     margin-left: 4%;
+    border: 2px solid #fff;
 }
 .notifyWrapper button:hover {
-  background-color: #3b5f93;
+  background-color: #fff;
+  color: #2b0785;
 }
 .notifyWrapper button:focus, .notifyWrapper input:focus {
   outline: none;
 }
 
+.subscribe_form {
+  input {
+    background-color: #353535;
+    color: #7F7F7F;
+    width: 60%;
+    border: 0;
+    border-radius: 5px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 14px;
+    position: relative;
+    display: inline-block;
+  }
+  input:focus
+  {
+    outline: none;
+  }
+  button {
+    display: inline-block;
+    width: 30%;
+    margin-left: 2%;
+    text-align: center;
+    line-height: 32px;
+    height: 40px;
+    font-size: 14px;
+    font-family: 'Raleway';
+    font-weight: 600;
+    -webkit-letter-spacing: 1px;
+    -moz-letter-spacing: 1px;
+    -ms-letter-spacing: 1px;
+    letter-spacing: 1px;
+    border: 1px solid #FFCA27;
+    border-radius: 5px;
+    background-color: #4767a1 !important;
+    border-color: #4767a1 !important;
+    color: #fff !important;
+    &:hover
+    {
+      background-color: #3b5f93 !important;
+      border-color: #3b5f93 !important;
+    }
+    &:focus
+    {
+      outline: none;
+    }
+  }
+}
 .headerWrapper
 {
   padding: 30px 0;
+  padding-bottom: 0;
   .logoWrapper
   {
+    display: inline-block;
+    flex: 1;
     img
     {
       width: 140px;
+      display: inline-block;
+    }
+  }
+  .navBarWrapper
+  {
+    li
+    {
+      padding: 20px;
+      a
+      {
+        font-family: 'Raleway';
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0;
+        color: #ffffff;
+        opacity: 0.5;
+        &:hover
+        {
+          background-color: transparent;
+          opacity: 1;
+          outline: none;
+        }
+        &:focus
+        {
+          background-color: transparent;
+          outline: none;
+        }
+      }
+    }
+    .active
+    {
+      a
+      {
+          opacity: 1;
+          border-bottom: 1px solid #fff;
+      }
     }
   }
 }
 .topBannerWrapper
 {
+  display: flex;
+  align-items: center;
   .pageHeader
+  {
+    color: #fff;
+    padding-bottom: 20px;
+  }
+  .sectionHeader
   {
     color: #fff;
     padding-bottom: 20px;
@@ -219,6 +344,15 @@ body
     width: 90%;
     letter-spacing: 1px;
     padding-bottom: 20px;
+  }
+  .topBannerImg
+  {
+    text-align: center;
+    img
+    {
+      width: 70%;
+      display: inline-block;
+    }
   }
 }
 .commonSectionWrapperBot
@@ -517,6 +651,267 @@ body
     text-align: center;
   }
 }
+
+/* Tutorial section */
+.tutorialWrapper
+{
+  .sectionHeader
+  {
+    padding-bottom: 40px;
+  }
+  .tutorailsHeaderWrapper
+  {
+    background-color: #fff;
+    height: 60px;
+    width: calc(100% - 8px);
+    display: flex;
+    align-items: center;
+    padding: 25px 0;
+    position: relative;
+    margin-bottom: 8px;
+    .tutorialBgImg
+    {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .tutorialHeader
+    {
+      padding: 0 25px;
+      font-family: 'Roboto';
+      font-size: 20px;
+      font-weight: 500;
+      color: #2b0785;
+      span
+      {
+        font-size: 16px;
+        font-weight: 400;
+      }
+    }
+  }
+  .tutorialListWrapper
+  {
+    text-align: left;
+    .listTutorial
+    {
+      width: calc(33.33% - 8px);
+      background-color: #fff;
+      border-radius: 2px;
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 15px 20px;
+      text-align: center;
+      margin-right: 8px;
+      border-radius: 2px;
+      .tutorialIconWrapper
+      {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        min-height: 70px;
+        position: relative;
+        img
+        {
+          max-height: 50px;
+          min-height: 50px;
+          display: inline-block;
+          flex: 1;
+        }
+        .comingSoon
+        {
+          font-size: 12px;
+          color: #909090;
+          position: absolute;
+          left: 0px;
+          bottom: -7px;
+        }
+      }
+      &:hover
+      {
+        box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
+      }
+
+    }
+  }
+}
+/* What will learn section */
+.willLearnWrapper
+{
+  .sectionHeader
+  {
+    padding-bottom: 20px;
+  }
+  .sectionDescription
+  {
+    width: 50%;
+    padding-bottom: 40px;
+  }
+  .willLearnTutorial
+  {
+    .willLearnList
+    {
+      border-radius: 2px;
+      box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
+      background-color: #ffffff;
+      padding-bottom: 8px;
+      .willLearnHeader
+      {
+        border-radius: 2px;
+        height: 60px;
+        box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
+        background-color: #ffffff;
+        margin-bottom: 8px;
+        font-family: 'Roboto';
+        font-size: 20px;
+        font-weight: 500;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        color: #2b0785;
+      }
+      .listWrapper
+      {
+        display: flex;
+        padding: 8px 0;
+        .tick
+        {
+          padding-right: 8px;
+          img
+          {
+            width: 20px;
+          }
+        }
+        .sectionDescription
+        {
+          width: 100%;
+          padding-bottom: 0;
+        }
+
+      }
+    }
+  }
+}
+/* Footer section update */
+.footer_wrapper
+{
+  width: 100%;
+  float: left;
+  .logo_icon
+  {
+    padding-top: 10px;
+    text-align: left;
+    padding-left: 15px;
+    img
+    {
+      max-width: 120px;
+      display: inline-block;
+    }
+  }
+  .footer_section
+  {
+    .footer_header
+    {
+      font-size: 15px;
+      font-family: 'Raleway';
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #7D7D7D;
+      padding-bottom: 20px;
+      padding-top: 10px;
+    }
+    .footer_social_wrapper
+    {
+      padding-bottom: 35px;
+      display: flex;
+      align-items: center;
+      .social_icons
+      {
+        display: inline-block;
+        padding-right: 25px;
+				i
+				{
+					font-size: 25px;
+					color: #6A6A6A;
+				}
+				i:hover
+				{
+					color: #fff;
+				}
+        img
+        {
+          width: 30px;
+        }
+        .discordIcon
+        {
+          background-image: url('../images/discord-gray.svg');
+          width: 27px;
+          height: 20px;
+          background-repeat: no-repeat;
+        }
+        .discordIcon:hover
+        {
+          background-image: url('../images/discord-white.svg');
+        }
+      }
+    }
+    .footer_email
+    {
+      position: relative;
+      .email_input
+      {
+        background-color: #353535;
+        border: 0;
+        border-radius: 5px;
+        width: 90%;
+        height: 40px;
+        color: #7F7F7F;
+        padding-left: 10px;
+        font-size: 14px;
+        position: relative;
+      }
+      .footer_arrow
+      {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        width: 30px;
+        cursor: pointer;
+      }
+      .email_input:focus
+      {
+        outline: none;
+      }
+    }
+    .footer_links
+    {
+      font-size: 14px;
+      font-family: 'Open Sans';
+      font-weight: 400;
+      padding-bottom: 15px;
+      color: #CECECE;
+      a
+      {
+        color: #7D7D7D;
+        cursor: pointer;
+      }
+      a:hover, a:focus
+      {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+  }
+}
+.copy_text
+{
+  padding-top: 50px;
+	text-align: center;
+	color: #FFF;
+  clear: both;
+  font-size: 12px;
+}
 @media (max-width: 767px)
 {
   .commonSectionWrapper
@@ -545,6 +940,7 @@ body
   }
   .topBannerWrapper
   {
+    display: block;
     .pageHeader
     {
       text-align: center;
@@ -567,6 +963,12 @@ body
     .topBannerImg
     {
       padding: 30px 0px;
+      text-align: center;
+      img
+      {
+        width: 70%;
+        display: inline-block;
+      }
     }
   }
   .iconWrapper
