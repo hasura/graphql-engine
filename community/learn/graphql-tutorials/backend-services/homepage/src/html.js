@@ -6,22 +6,22 @@ export default class HTML extends React.Component {
     return (
       <html {...this.props.htmlAttributes}>
         <head>
-          <title>GraphQL Tutorials for frontend developers | learn.hasura.io</title>
+          <title>GraphQL Tutorials for Frontend Developers | learn.hasura.io</title>
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=no"
           />
-          <meta name="title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
-          <meta name="description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
-          <meta property="og:title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
-          <meta property="og:description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
-          <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
+          <meta name="title" content="GraphQL Tutorials for Frontend Developers | learn.hasura.io" />
+          <meta name="description" content="Learn how to integrate GraphQL APIs with your favorite frontend / mobile framework and Hasura GraphQL Engine" />
+          <meta property="og:title" content="GraphQL Tutorials for Frontend Developers | learn.hasura.io" />
+          <meta property="og:description" content="Learn how to integrate GraphQL APIs with your favorite frontend / mobile framework and Hasura GraphQL Engine" />
+          <meta property="og:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-homepage.png" />
           <meta property="twitter:card" content="summary_large_image" />
-          <meta property="twitter:title" content="GraphQL Tutorials for frontend developers | learn.hasura.io" />
-          <meta property="twitter:description" content="Learn how to integrate GraphQL APIs with React, Apollo and Hasura GraphQL Engine" />
-          <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card.png" />
+          <meta property="twitter:title" content="GraphQL Tutorials for Frontend Developers | learn.hasura.io" />
+          <meta property="twitter:description" content="Learn how to integrate GraphQL APIs with your favorite frontend / mobile framework and Hasura GraphQL Engine" />
+          <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-homepage.png" />
           {this.props.headComponents}
           <link rel="shortcut icon" href="./images/favicon.png" type="image/png" />
           <link rel="stylesheet"
@@ -46,6 +46,15 @@ export default class HTML extends React.Component {
             dangerouslySetInnerHTML={{ __html: this.props.body }}
           />
           {this.props.postBodyComponents}
+          <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            $(document).on('click', '.dropdown-menu', function (e) {
+              e.stopPropagation();
+            });
+            `
+          }}
+          />
         </body>
       </html>
     )

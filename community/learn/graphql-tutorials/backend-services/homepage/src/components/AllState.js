@@ -1,30 +1,35 @@
 const frontendTutorial = [
   {
-    url: 'https://www.google.com/',
+    name: 'React',
+    url: 'https://learn.hasura.io/graphql/react',
     comingSoon: false,
     bgClassName: 'reactBg',
     disableBgClassName: 'reactDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Vue',
+    url: 'https://learn.hasura.io/graphql/vue',
     comingSoon: false,
     bgClassName: 'vueBg',
     disableBgClassName: 'vueDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Angular',
+    url: 'https://learn.hasura.io/graphql/angular',
     comingSoon: true,
     bgClassName: 'angularBg',
     disableBgClassName: 'angularDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Elm',
+    url: 'https://learn.hasura.io/graphql/elm',
     comingSoon: true,
     bgClassName: 'elmBg',
     disableBgClassName: 'elmDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'ReasonML',
+    url: 'https://learn.hasura.io/graphql/reasonml',
     comingSoon: true,
     bgClassName: 'reBg',
     disableBgClassName: 'reDisableBg',
@@ -32,13 +37,15 @@ const frontendTutorial = [
 ]
 const backendTutorial = [
   {
-    url: 'https://www.google.com/',
+    name: 'Hasura',
+    url: 'https://learn.hasura.io/graphql/hasura',
     comingSoon: false,
     bgClassName: 'hasuraBg',
     disableBgClassName: 'hasuraDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Postgres',
+    url: '',
     comingSoon: true,
     bgClassName: 'postgresBg',
     disableBgClassName: 'postgresDisableBg',
@@ -46,25 +53,29 @@ const backendTutorial = [
 ]
 const mobileTutorial = [
   {
-    url: 'https://www.google.com/',
+    name: 'React Native',
+    url: 'https://learn.hasura.io/graphql/react-native',
     comingSoon: false,
     bgClassName: 'reactBg',
     disableBgClassName: 'reactDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'iOS',
+    url: 'https://learn.hasura.io/graphql/ios',
     comingSoon: false,
     bgClassName: 'iosBg',
     disableBgClassName: 'iosDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Android',
+    url: 'https://learn.hasura.io/graphql/android',
     comingSoon: true,
     bgClassName: 'androidBg',
     disableBgClassName: 'androidDisableBg',
   },
   {
-    url: 'https://www.google.com/',
+    name: 'Flutter',
+    url: 'https://learn.hasura.io/graphql/flutter',
     comingSoon: true,
     bgClassName: 'flutterBg',
     disableBgClassName: 'flutterDisableBg',
@@ -72,51 +83,54 @@ const mobileTutorial = [
 ]
 const learnFrontend = [
   {
-    list: 'GraphQL queries, mutations and subscriptions.',
+    list: 'GraphQL vs REST',
   },
   {
-    list: 'GraphQL queries, mutations and subscriptions.',
+    list: 'GraphQL Queries, Mutations, Subscriptions',
   },
   {
-    list: 'Using an existing auth system with your GraphQL APIs.',
+    list: 'Setting up a GraphQL Client with Apollo',
   },
   {
-    list: 'Using an existing auth system with your GraphQL APIs.',
+    list: 'Integrating GraphQL Queries in the app',
   },
   {
-    list: 'GraphQL query variables and fragments.',
+    list: 'Integrating GraphQL Mutations with Query Variables',
   },
   {
-    list: 'GraphQL query variables and fragments.',
+    list: 'Integrating Mutations to update, delete and bulk delete',
   },
   {
-    list: 'Building a realtime feed with your GraphQL client.',
+    list: 'Managing Local Cache after a GraphQL Mutation',
   },
   {
-    list: 'Building a realtime feed with your GraphQL client.',
+    list: 'Optismistic UI updates for responsive user experience',
   },
   {
-    list: 'GraphQL & UI modularisation techniques.',
+    list: 'Using Subscriptions',
   },
   {
-    list: 'GraphQL & UI modularisation techniques.',
+    list: 'Realtime feed with notifications',
   },
 ]
 const learnBackend = [
   {
-    list: 'GraphQL queries, mutations and subscriptions.',
+    list: 'Hasura Basics',
   },
   {
-    list: 'Using an existing auth system with your GraphQL APIs.',
+    list: 'Postgres Data Modelling',
   },
   {
-    list: 'GraphQL query variables and fragments.',
+    list: 'Authorization',
   },
   {
-    list: 'Building a realtime feed with your GraphQL client.',
+    list: 'Authentication',
   },
   {
-    list: 'GraphQL & UI modularisation techniques.',
+    list: 'Custom business logic',
+  },
+  {
+    list: 'Remote Schemas, Event Triggers',
   },
 ]
 

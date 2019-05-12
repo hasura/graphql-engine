@@ -19,14 +19,14 @@ class Tutorials extends React.Component {
             tutorial={frontendTutorial}
             />
             <CommonTutorialsList
-            title="Backend Tutorials"
-            subText=""
-            tutorial={backendTutorial}
-            />
-            <CommonTutorialsList
             title="Mobile Tutorials"
             subText="(2-hour Series)"
             tutorial={mobileTutorial}
+            />
+            <CommonTutorialsList
+            title="Backend Tutorials"
+            subText=""
+            tutorial={backendTutorial}
             />
           </div>
         </div>

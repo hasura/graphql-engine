@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/styles.scss';
+import {frontendTutorial, backendTutorial, mobileTutorial} from './AllState.js'
 class TopBanner extends React.Component {
   render() {
     const logo = require('../images/logo.svg');
@@ -22,6 +23,7 @@ class TopBanner extends React.Component {
             <div id="navbar" className="navbar-collapse collapse">
               <ul className="nav navbar-nav navbar-right navBarWrapper">
                 <li className="dropdown">
+                  {/* eslint-disable-next-line */}
                   <a id="frontend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">FRONTEND</a>
                   <div aria-labelledby="frontend" className="dropdown-menu dropdownMenu">
                     <div className={'dropdownMenuBgImg'}>
@@ -39,23 +41,29 @@ class TopBanner extends React.Component {
                     </div>
                     <div className={'col-md-6 col-sm-6 col-xs-12'}>
                       <ul className={'dropdownUl'}>
-                        <li className={'reactBg'}>
-                          React
-                        </li>
-                        <li className={'vueBg'}>
-                          Vue
-                        </li>
-                        <li className={'angularDisableBg displayFlex comingSoonHover'}>
-                          Angular <div className={'circle'}></div> <span>Coming soon</span>
-                        </li>
-                        <li className={'elmDisableBg displayFlex comingSoonHover'}>
-                          Elm <div className={'circle'}></div> <span>Coming soon</span>
-                        </li>
+                        {frontendTutorial.map((item, key) => {
+                          if(!item.comingSoon) {
+                            return (
+                              <a href={item.url} target={'_blank'}>
+                                <li key={'frontend'+key} className={item.bgClassName}>
+                                  {item.name}
+                                </li>
+                              </a>
+                            );
+                          } else {
+                            return (
+                              <li key={'frontend'+key} className={item.disableBgClassName + ' displayFlex comingSoonHover'}>
+                                {item.name} <div className={'circle'}></div> <span>Coming soon</span>
+                              </li>
+                            );
+                          }
+                        })}
                       </ul>
                     </div>
                   </div>
                 </li>
                 <li className="dropdown">
+                  {/* eslint-disable-next-line */}
                   <a id="mobile" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">MOBILE</a>
                   <div aria-labelledby="mobile" className="dropdown-menu dropdownMenu">
                     <div className={'dropdownMenuBgImg'}>
@@ -73,23 +81,27 @@ class TopBanner extends React.Component {
                     </div>
                     <div className={'col-md-6 col-sm-6 col-xs-12'}>
                       <ul className={'dropdownUl'}>
-                        <li className={'reactBg'}>
-                          React
-                        </li>
-                        <li className={'iosBg'}>
-                          IOS
-                        </li>
-                        <li className={'androidDisableBg displayFlex comingSoonHover'}>
-                          Android <div className={'circle'}></div> <span>Coming soon</span>
-                        </li>
-                        <li className={'flutterDisableBg displayFlex comingSoonHover'}>
-                          Flutter <div className={'circle'}></div> <span>Coming soon</span>
-                        </li>
+                        {mobileTutorial.map((item, key) => {
+                          if(!item.comingSoon) {
+                            return (
+                              <li key={'mobile'+ key} className={item.bgClassName}>
+                                {item.name}
+                              </li>
+                            );
+                          } else {
+                            return (
+                              <li key={'mobile'+key} className={item.disableBgClassName + ' displayFlex comingSoonHover'}>
+                                {item.name} <div className={'circle'}></div> <span>Coming soon</span>
+                              </li>
+                            );
+                          }
+                        })}
                       </ul>
                     </div>
                   </div>
                 </li>
                 <li className="dropdown">
+                  {/* eslint-disable-next-line */}
                   <a id="backend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">BACKEND</a>
                   <div aria-labelledby="backend" className="dropdown-menu dropdownMenu">
                     <div className={'dropdownMenuBgImg'}>
@@ -107,12 +119,21 @@ class TopBanner extends React.Component {
                     </div>
                     <div className={'col-md-6 col-sm-6 col-xs-12'}>
                       <ul className={'dropdownUl'}>
-                        <li className={'hasuraBg'}>
-                          Hasura
-                        </li>
-                        <li className={'postgresDisableBg displayFlex comingSoonHover'}>
-                          Vue <div className={'circle'}></div> <span>Coming soon</span>
-                        </li>
+                        {backendTutorial.map((item, key) => {
+                          if(!item.comingSoon) {
+                            return (
+                              <li key={'backend'+key} className={item.bgClassName}>
+                                {item.name}
+                              </li>
+                            );
+                          } else {
+                            return (
+                              <li key={'backend'+key} className={item.disableBgClassName + ' displayFlex comingSoonHover'}>
+                                {item.name} <div className={'circle'}></div> <span>Coming soon</span>
+                              </li>
+                            );
+                          }
+                        })}
                       </ul>
                     </div>
                   </div>

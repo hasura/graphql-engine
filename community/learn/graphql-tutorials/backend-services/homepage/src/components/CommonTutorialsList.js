@@ -4,11 +4,11 @@ import '../styles/styles.scss';
 class CommonTutorialsList extends React.Component {
   render() {
     const path = require('../images/tutorial-path.svg');
-    console.log(this.props)
+    let anchorClass;
     const listTutorial = this.props.tutorial.map((list, key) => {
-      console.log(list);
+      anchorClass = list.comingSoon ? 'noClick' : '';
       return (
-        <a key={key} href={list.url} target={'_blank'}>
+        <a className={anchorClass} key={key} href={list.url} target={'_blank'} data-toggle="tooltip" title={list.name}>
           <div className= {(list.comingSoon) ? list.disableBgClassName + ' disabledList' : list.bgClassName + ' listTutorial'}>
             <div className={'tutorialIconWrapper'}>
               {(list.comingSoon) ?
@@ -42,8 +42,6 @@ class CommonTutorialsList extends React.Component {
 CommonTutorialsList.propTypes = {
   title: PropTypes.string.isRequired,
   tutorial: PropTypes.array.isRequired,
-  bgClassName: PropTypes.string.isRequired,
   subText: PropTypes.string.isRequired,
-  disableBgClassName: PropTypes.string.isRequired,
 }
 export default CommonTutorialsList;

@@ -65,6 +65,9 @@ body
 {
   padding: 70px 0;
 }
+.noClick {
+  pointer-events: none;
+}
 .pageHeader
 {
   font-family: 'Raleway';
@@ -375,6 +378,12 @@ ul
               text-transform: inherit;
             }
           }
+          a:hover
+          {
+            color: #505050;
+            font-weight: 500;
+            text-decoration: none;
+          }
           li:hover
           {
             color: #505050;
@@ -388,7 +397,8 @@ ul
           {
             color: #909090 !important;
             font-weight: normal;
-            cursor: not-allowed;
+            // cursor: not-allowed;
+            pointer-events: none;
             opacity: 0.5 !important;
             span
             {
@@ -1046,7 +1056,7 @@ ul
     .sectionDescription
     {
       width: 100%;
-      text-align: center;
+      text-align: left;
       padding-bottom: 0;
     }
     .willLearnTutorial
