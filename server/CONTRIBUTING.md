@@ -8,28 +8,74 @@ own machine and how to contribute.
 - [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 - A Postgres server (Recommended: Use docker to run a local postgres instance)
 - GNU Make (optional)
+- [Node.js](https://nodejs.org/en/) (v8.9+)
+- libpq-dev
+- psql
+- python >= 3.7 with pip3
+
+## Upgrading npm
+
+If your npm is too old  (< 5.7),
+
+npm install -g npm@latest
+
+or
+
+sudo npm install -g npm@latest
+
+or update your nodejs
+
+## Getting pip3
+
+sudo apt install python3-pip
 
 ## Development workflow
 
 ### Fork and clone
 - Fork the repo on GitHub
 - Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
+- `cd graphql-engine`
 
 ### Compile
-- `cd graphql-engine/server`
-- `stack build --fast --flag graphql-engine:local-console`
-- To enable console for local development, if the folder `../console/node_modules/` is not present
-
-```
-  cd ../console
-  npm install
-  cd ../server
-```
+- compile console assets
+  ```
+  cd console
+  npm ci
+  cd ..
+  ```
+- compile the server
+  ```
+  cd server
+  stack build --fast --flag graphql-engine:local-console
+  ```
 
 ### Run
-- Make sure postgres is running
+- Make sure postgres is running (Postgres >= 9.5)
 - Create a database on postgres
 - Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+
+database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
+
+### Running Postgres
+
+The easiest way is to run docker in a container
+
+````
+docker run -p 5432:5432 -d postgres:11.1
+````
+
+Test if it's running by
+
+telnet localhost 5432
+
+### psql
+
+You will need psql or another client
+
+````
+sudo apt install postgresql-client
+````
+
 
 ### Work
 - Work on the feature/fix
@@ -46,7 +92,7 @@ pip3 install -r tests-py/requirements.txt
 - Run the graphql-engine:
 
 ```
-stack exec graphql-engine -- --database-url=<database-url> serve`
+stack exec graphql-engine -- --database-url=<database-url> serve --enable-console
 ```
 
 - Set the environmental variables for event-trigger tests
@@ -60,7 +106,7 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
 ```
 cd tests-py
-pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url>
+pytest --hge-urls http://127.0.0.1:8080 --pg-urls <database_url> -vv
 ```
 
 ### Create Pull Request

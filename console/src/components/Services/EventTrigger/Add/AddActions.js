@@ -1,6 +1,3 @@
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import dataHeaders from '../Common/Headers';
-import requestAction from '../../../../utils/requestAction';
 import defaultState from './AddState';
 import _push from '../push';
 import {
@@ -11,6 +8,7 @@ import {
 } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
+import { fetchTableListBySchema } from '../../Data/DataActions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
@@ -19,12 +17,14 @@ const SET_SCHEMANAME = 'AddTrigger/SET_SCHEMANAME';
 const SET_WEBHOOK_URL = 'AddTrigger/SET_WEBHOOK_URL';
 const SET_RETRY_NUM = 'AddTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'AddTrigger/SET_RETRY_INTERVAL';
+const SET_RETRY_TIMEOUT = 'AddTrigger/SET_RETRY_TIMEOUT';
 const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
+const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
 const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
@@ -40,6 +40,7 @@ const setSchemaName = value => ({ type: SET_SCHEMANAME, value });
 const setWebhookURL = value => ({ type: SET_WEBHOOK_URL, value });
 const setRetryNum = value => ({ type: SET_RETRY_NUM, value });
 const setRetryInterval = value => ({ type: SET_RETRY_INTERVAL, value });
+const setRetryTimeout = value => ({ type: SET_RETRY_TIMEOUT, value });
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const addHeader = () => ({ type: ADD_HEADER });
 const removeHeader = i => ({ type: REMOVE_HEADER, index: i });
@@ -113,6 +114,21 @@ const createTrigger = () => {
       payload.args.retry_conf = currentState.retryConf;
     }
 
+    payload.args.retry_conf = {
+      num_retries:
+        currentState.retryConf.num_retries === ''
+          ? 0
+          : parseInt(currentState.retryConf.num_retries, 10),
+      interval_sec:
+        currentState.retryConf.interval_sec === ''
+          ? 10
+          : parseInt(currentState.retryConf.interval_sec, 10),
+      timeout_sec:
+        currentState.retryConf.timeout_sec === ''
+          ? 60
+          : parseInt(currentState.retryConf.timeout_sec, 10),
+    };
+
     // create header payload
     const headers = [];
     currentState.headers.map(header => {
@@ -175,37 +191,33 @@ const createTrigger = () => {
   };
 };
 
-const fetchTableListBySchema = schemaName => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*.*'],
-        where: { table_schema: schemaName },
-        order_by: ['+table_name'],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: UPDATE_TABLE_LIST, data: data });
-    },
-    error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
+const loadTableList = schemaName => {
+  return dispatch =>
+    dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
 };
 
-const operationToggleColumn = (column, operation) => {
+const operationToggleColumn = (
+  column,
+  operation,
+  supportColumnChangeFeature
+) => {
   return (dispatch, getState) => {
+    if (supportColumnChangeFeature) {
+      if (operation === 'update') {
+        const currentOperations = getState().addTrigger.operations;
+        const currentCols = currentOperations[operation];
+        // check if column is in currentCols. if not, push
+        const isExists = currentCols.includes(column);
+        let finalCols = currentCols;
+        if (isExists) {
+          finalCols = currentCols.filter(col => col !== column);
+        } else {
+          finalCols.push(column);
+        }
+        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+      }
+      return;
+    }
     const currentOperations = getState().addTrigger.operations;
     const currentCols = currentOperations[operation];
     // check if column is in currentCols. if not, push
@@ -220,11 +232,18 @@ const operationToggleColumn = (column, operation) => {
   };
 };
 
-const operationToggleAllColumns = columns => {
+const operationToggleAllColumns = (
+  columns,
+  supportListeningToColumnsUpdate
+) => {
   return dispatch => {
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-    dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    if (supportListeningToColumnsUpdate) {
+      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
+    } else {
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
+      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
+    }
   };
 };
 
@@ -331,7 +350,7 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          num_retries: parseInt(action.value, 10),
+          num_retries: action.value,
         },
       };
     case SET_RETRY_INTERVAL:
@@ -339,7 +358,15 @@ const addTriggerReducer = (state = defaultState, action) => {
         ...state,
         retryConf: {
           ...state.retryConf,
-          interval_sec: parseInt(action.value, 10),
+          interval_sec: action.value,
+        },
+      };
+    case SET_RETRY_TIMEOUT:
+      return {
+        ...state,
+        retryConf: {
+          ...state.retryConf,
+          timeout_sec: action.value,
         },
       };
     case SET_TABLENAME:
@@ -352,6 +379,15 @@ const addTriggerReducer = (state = defaultState, action) => {
       const operations = state.operations;
       operations[action.op] = action.cols;
       return { ...state, operations: { ...operations } };
+    case TOGGLE_ALL_COLUMNS:
+      return {
+        ...state,
+        operations: {
+          insert: '*',
+          delete: '*',
+          update: action.cols,
+        },
+      };
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
       selectedOperations[action.data] = true;
@@ -383,8 +419,9 @@ export {
   setWebhookURL,
   setRetryNum,
   setRetryInterval,
+  setRetryTimeout,
   createTrigger,
-  fetchTableListBySchema,
+  loadTableList,
   operationToggleColumn,
   operationToggleAllColumns,
   setOperationSelection,

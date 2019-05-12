@@ -85,7 +85,7 @@ ul {
 
 [role="main"] {
   width: 90% !important;
-  max-width: 800px !important;
+  /*max-width: 800px !important;*/
   border: none !important;
   padding-bottom: 0 !important;
   padding-left: 15px !important;
@@ -131,9 +131,12 @@ ul {
   -webkit-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
   -moz-box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
   box-shadow: -1px 2px 20px 2px rgba(217,217,217,1);
+  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
-#docs-content img.no-shadow {
+#docs-content img.no-shadow,
+#docs-content a.no-shadow img {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
@@ -156,6 +159,7 @@ ul {
 
 #docs-content .docutils {
   color: #6f6f6f;
+  word-break: break-word;
 }
 
 #docs-content .docutils.literal {
@@ -186,6 +190,10 @@ article ol ol {
 .schema {
   display: inline-block;
   width: 60%;
+}
+
+.highlight pre {
+  white-space: pre;
 }
 
 /*** random overrides END ***/
@@ -828,7 +836,7 @@ article ol ol {
     position: absolute;
     z-index: 10;
     width: 90% !important;
-    max-width: 800px !important;
+    /*max-width: 800px !important;*/
     left: 0;
     right: 0;
     margin: 0 auto;
@@ -912,5 +920,13 @@ article ol ol {
 
   .api-tabs .ui.tab {
     padding: 10px
+  }
+
+  .footer-hasura-custom {
+    display: block;
+  }
+
+  .footer-hasura-custom .footer_logo {
+    margin-right: 0;
   }
 }

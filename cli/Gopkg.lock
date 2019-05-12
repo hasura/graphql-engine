@@ -236,6 +236,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:caf6db28595425c0e0f2301a00257d11712f65c1878e12cffc42f6b9a9cf3f23"
+  name = "github.com/kardianos/osext"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
+
+[[projects]]
+  branch = "master"
   digest = "1:37ce7d7d80531b227023331002c0d42b4b4b291a96798c82a049d03a54ba79e4"
   name = "github.com/lib/pq"
   packages = [
@@ -315,11 +323,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:4f971e961cc101712d18dbbd532813bbcd08c9984acceb55dff3fb86ed62ed5f"
   name = "github.com/oliveagle/jsonpath"
   packages = ["."]
+  pruneopts = "UT"
   revision = "2e52cf6e685269ed8aefec6390f3cac3ef74e730"
 
 [[projects]]
+  digest = "1:d776f3e95774a8719f2e57fabbbb33103035fe072dcf6f1864f33abd17b753e5"
   name = "github.com/parnurzeal/gorequest"
   packages = ["."]
   pruneopts = "UT"
@@ -522,6 +533,37 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "81fcfffa8a80b8583e2e0904bb40d9d8cac3a889a2965d0c68896871578acf73"
+  input-imports = [
+    "github.com/Masterminds/semver",
+    "github.com/briandowns/spinner",
+    "github.com/docker/docker/api/types",
+    "github.com/docker/docker/api/types/container",
+    "github.com/docker/docker/api/types/network",
+    "github.com/docker/docker/client",
+    "github.com/docker/go-connections/nat",
+    "github.com/elazarl/go-bindata-assetfs",
+    "github.com/fatih/color",
+    "github.com/ghodss/yaml",
+    "github.com/gin-contrib/cors",
+    "github.com/gin-contrib/static",
+    "github.com/gin-gonic/contrib/renders/multitemplate",
+    "github.com/gin-gonic/gin",
+    "github.com/gofrs/uuid",
+    "github.com/kardianos/osext",
+    "github.com/lib/pq",
+    "github.com/manifoldco/promptui",
+    "github.com/mattn/go-colorable",
+    "github.com/mitchellh/go-homedir",
+    "github.com/oliveagle/jsonpath",
+    "github.com/parnurzeal/gorequest",
+    "github.com/pkg/errors",
+    "github.com/sirupsen/logrus",
+    "github.com/sirupsen/logrus/hooks/test",
+    "github.com/skratchdot/open-golang/open",
+    "github.com/spf13/cobra",
+    "github.com/spf13/cobra/doc",
+    "github.com/spf13/viper",
+    "github.com/stretchr/testify/assert",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

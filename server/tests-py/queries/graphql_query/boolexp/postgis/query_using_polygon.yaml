@@ -1,5 +1,5 @@
 description: Query data from geom_table using postgis ops in bool exp and polygon value as input argument
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
@@ -134,7 +134,7 @@ query:
         - - 2
           - 0
   query: |
-    query geom_table($polygon: geometry){
+    query geom_table($polygon: geometry!){
       st_d_within_2: geom_table(where: {geom_col: {_st_d_within: {distance: 2 from: $polygon}}}){
         id
         geom_col

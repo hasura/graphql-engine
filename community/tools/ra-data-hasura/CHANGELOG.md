@@ -1,3 +1,8 @@
+## 0.0.4 (April 25, 2019)
+
+- Feature: Support multiple schemas using "." separator. 
+Example:  `<Resource name="schema.table" />`
+
 ## 0.0.3 (January 24, 2019)
 
 - Bug Fix: Fix count query to support UUID

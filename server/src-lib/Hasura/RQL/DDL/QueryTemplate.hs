@@ -14,7 +14,9 @@ module Hasura.RQL.DDL.QueryTemplate
   , runSetQueryTemplateComment
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal    (sessVarFromCurrentSetting)
 import           Hasura.RQL.GBoolExp        (txtRHSBuilder)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -87,23 +89,28 @@ mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
 
 data QueryTP1
   = QTP1Insert R.InsertQueryP1
-  | QTP1Select R.AnnSel
-  | QTP1Update R.UpdateQueryP1
-  | QTP1Delete R.DeleteQueryP1
+  | QTP1Select R.AnnSimpleSel
+  | QTP1Update R.AnnUpd
+  | QTP1Delete R.AnnDel
   | QTP1Count R.CountQueryP1
   | QTP1Bulk [QueryTP1]
   deriving (Show, Eq)
 
 validateTQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => QueryT
   -> m QueryTP1
 validateTQuery qt = withPathK "args" $ case qt of
-  QTInsert q -> QTP1Insert <$> R.convInsertQuery decodeInsObjs validateParam q
-  QTSelect q -> QTP1Select <$> (mkSelQ q >>= R.convSelectQuery validateParam)
-  QTUpdate q -> QTP1Update <$> R.validateUpdateQueryWith validateParam q
-  QTDelete q -> QTP1Delete <$> R.validateDeleteQWith validateParam q
-  QTCount q  -> QTP1Count  <$> R.validateCountQWith validateParam q
+  QTInsert q -> QTP1Insert <$>
+    R.convInsertQuery decodeInsObjs sessVarFromCurrentSetting validateParam q
+  QTSelect q -> QTP1Select <$>
+    (mkSelQ q >>= R.convSelectQuery sessVarFromCurrentSetting validateParam)
+  QTUpdate q -> QTP1Update <$>
+    R.validateUpdateQueryWith sessVarFromCurrentSetting validateParam q
+  QTDelete q -> QTP1Delete <$>
+    R.validateDeleteQWith sessVarFromCurrentSetting validateParam q
+  QTCount q  -> QTP1Count  <$>
+    R.validateCountQWith sessVarFromCurrentSetting validateParam q
   QTBulk q   -> QTP1Bulk   <$> mapM validateTQuery q
   where
     decodeInsObjs val = do
@@ -122,7 +129,7 @@ collectDeps qt = case qt of
   QTP1Bulk qp1   -> concatMap collectDeps qp1
 
 createQueryTemplateP1
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => CreateQueryTemplate
   -> m (WithDeps QueryTemplateInfo)
 createQueryTemplateP1 (CreateQueryTemplate qtn qt _) = do
@@ -149,15 +156,15 @@ createQueryTemplateP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => CreateQueryTemplate
   -> WithDeps QueryTemplateInfo
-  -> m RespBody
+  -> m EncJSON
 createQueryTemplateP2 cqt (qti, deps) = do
   addQTemplateToCache qti deps
   liftTx $ addQTemplateToCatalog cqt
   return successMsg
 
 runCreateQueryTemplate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => CreateQueryTemplate -> m RespBody
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  => CreateQueryTemplate -> m EncJSON
 runCreateQueryTemplate q =
   createQueryTemplateP1 q >>= createQueryTemplateP2 q
 
@@ -180,7 +187,7 @@ delQTemplateFromCatalog qtn =
 
 runDropQueryTemplate
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropQueryTemplate -> m RespBody
+  => DropQueryTemplate -> m EncJSON
 runDropQueryTemplate q = do
   withPathK "name" $ void $ askQTemplateInfo qtn
   delQTemplateFromCache qtn
@@ -205,7 +212,7 @@ setQueryTemplateCommentP1 (SetQueryTemplateComment qtn _) = do
   void $ askQTemplateInfo qtn
 
 setQueryTemplateCommentP2
-  :: (QErrM m, MonadTx m) => SetQueryTemplateComment -> m RespBody
+  :: (QErrM m, MonadTx m) => SetQueryTemplateComment -> m EncJSON
 setQueryTemplateCommentP2 apc = do
   liftTx $ setQueryTemplateCommentTx apc
   return successMsg
@@ -223,7 +230,7 @@ setQueryTemplateCommentTx (SetQueryTemplateComment qtn comment) =
 
 runSetQueryTemplateComment
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => SetQueryTemplateComment -> m RespBody
+  => SetQueryTemplateComment -> m EncJSON
 runSetQueryTemplateComment q = do
   setQueryTemplateCommentP1 q
   setQueryTemplateCommentP2 q

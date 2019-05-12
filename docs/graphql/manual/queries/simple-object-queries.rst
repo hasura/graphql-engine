@@ -6,11 +6,11 @@ Simple object queries
   :depth: 1
   :local:
 
-You can fetch a single node or multiple nodes of the same type using a simple object query. 
+You can fetch a single node or multiple nodes of the same type using a simple object query.
 
 Fetch list of objects
 ---------------------
-For example, fetch a list of authors:
+**Example:** Fetch a list of authors:
 
 .. graphiql::
   :view_only:

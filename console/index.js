@@ -1,5 +1,5 @@
 // import GraphiQL parts
-import GraphiQLWrapper from './src/components/ApiExplorer/GraphiQLWrapper';
+import GraphiQLWrapper from './src/components/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 // import Data Tab parts
 import dataRouter from './src/components/Services/Data/DataRouter';
@@ -16,7 +16,7 @@ import {
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
-import eventRouter from './src/components/Services/EventTrigger/EventRouter';
+import eventRouterUtils from './src/components/Services/EventTrigger/EventRouter';
 import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
@@ -31,8 +31,8 @@ import mainState from './src/components/Main/State';
 import { changeRequestHeader } from './src/components/ApiExplorer/Actions';
 import { validateLogin } from './src/components/Main/Actions';
 
-const filterQueryScss = require('./src/components/Services/Data/TableBrowseRows/FilterQuery.scss');
-const tableScss = require('./src/components/Services/Data/TableCommon/Table.scss');
+const filterQueryScss = require('./src/components/Common/FilterQuery/FilterQuery.scss');
+const tableScss = require('./src/components/Common/TableCommon/Table.scss');
 
 // export GraphiQL parts
 export { GraphiQLWrapper };
@@ -44,7 +44,7 @@ export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ACCESS_KEY_ERROR };
 export { dataHeaders };
 
 // export Event Tab parts
-export { eventRouter, eventReducer };
+export { eventRouterUtils, eventReducer };
 
 // export Remote Schema parts
 export { getCustomResolverRouter, customResolverReducer };

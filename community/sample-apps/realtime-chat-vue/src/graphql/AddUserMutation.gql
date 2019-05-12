@@ -1,0 +1,12 @@
+mutation ($username: String!) {
+    insert_user (
+      objects: [{
+        username: $username
+      }]
+    ) {
+      returning {
+        id
+        username
+      }
+    }
+  }

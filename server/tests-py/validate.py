@@ -6,7 +6,10 @@ import os
 import base64
 import jsondiff
 import jwt
+import random
+import time
 
+from context import GQLWsClient
 
 def check_keys(keys, obj):
     for k in keys:
@@ -20,7 +23,7 @@ def check_ev_payload_shape(ev_payload):
     event_keys = ["data", "op"]
     check_keys(event_keys, ev_payload['event'])
 
-    trigger_keys = ["id", "name"]
+    trigger_keys = ["name"]
     check_keys(trigger_keys, ev_payload['trigger'])
 
 
@@ -40,12 +43,12 @@ def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
 
 
-def check_event(hge_ctx, trig_name, table, operation, exp_ev_data,
+def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
                 headers = {},
                 webhook_path = '/',
                 session_variables = {'x-hasura-role': 'admin'}
 ):
-    ev_full = hge_ctx.get_event(3)
+    ev_full = evts_webhook.get_event(3)
     validate_event_webhook(ev_full['path'], webhook_path)
     validate_event_headers(ev_full['headers'], headers)
     validate_event_payload(ev_full['body'], trig_name, table)
@@ -55,26 +58,26 @@ def check_event(hge_ctx, trig_name, table, operation, exp_ev_data,
     assert ev['data'] == exp_ev_data, ev
 
 
-def test_forbidden_when_access_key_reqd(hge_ctx, conf):
+def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
 
-    # Test without access key
+    # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code == 401, "\n" + yaml.dump({
-        "expected": "Should be access denied as access key is not provided",
+    assert code in [401,404], "\n" + yaml.dump({
+        "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
             "response": resp
         }
     })
 
-    # Test with random access key
-    headers['X-Hasura-Access-Key'] = base64.b64encode(os.urandom(30))
+    # Test with random admin secret
+    headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code == 401, "\n" + yaml.dump({
-        "expected": "Should be access denied as an incorrect access key is provided",
+    assert code in [401,404], "\n" + yaml.dump({
+        "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
             "response": resp
@@ -85,7 +88,7 @@ def test_forbidden_when_access_key_reqd(hge_ctx, conf):
 def test_forbidden_webhook(hge_ctx, conf):
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)
-    assert code == 401, "\n" + yaml.dump({
+    assert code in [401,404], "\n" + yaml.dump({
         "expected": "Should be access denied as it is denied from webhook",
         "actual": {
             "code": code,
@@ -94,12 +97,20 @@ def test_forbidden_webhook(hge_ctx, conf):
     })
 
 
-def check_query(hge_ctx, conf, add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True):
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
 
+    # No headers in conf => Admin role
+    # Set the X-Hasura-Role header randomly
+    # If header is set, jwt/webhook auth will happen
+    # Otherwise admin-secret will be set
+    if len(headers) == 0 and random.choice([True, False]):
+        headers['X-Hasura-Role'] = 'admin'
+
     if add_auth:
+        #Use the hasura role specified in the test case, and create a JWT token
         if hge_ctx.hge_jwt_key is not None and len(headers) > 0 and 'X-Hasura-Role' in headers:
             hClaims = dict()
             hClaims['X-Hasura-Allowed-Roles'] = [headers['X-Hasura-Role']]
@@ -115,8 +126,10 @@ def check_query(hge_ctx, conf, add_auth=True):
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
+        #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
         if hge_ctx.hge_webhook is not None and len(headers) > 0:
             if not hge_ctx.webhook_insecure:
+            #Check whether the output is also forbidden when webhook returns forbidden
                 test_forbidden_webhook(hge_ctx, conf)
             headers['X-Hasura-Auth-Mode'] = 'webhook'
             headers_new = dict()
@@ -124,38 +137,105 @@ def check_query(hge_ctx, conf, add_auth=True):
                 'utf-8')
             headers = headers_new
 
+        #The case as admin with admin-secret and jwt/webhook
         elif (
                 hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(
                 headers) == 0:
-            headers['X-Hasura-Access-Key'] = hge_ctx.hge_key
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
+        #The case as admin with only admin-secret
         elif hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
-            test_forbidden_when_access_key_reqd(hge_ctx, conf)
-            headers['X-Hasura-Access-Key'] = hge_ctx.hge_key
+            #Test whether it is forbidden when incorrect/no admin_secret is specified
+            test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-    code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
+    assert transport in ['websocket', 'http'], "Unknown transport type " + transport
+    if transport == 'websocket':
+        assert 'response' in conf
+        assert conf['url'].endswith('/graphql')
+        print('running on websocket')
+        return validate_gql_ws_q(
+            hge_ctx,
+            conf['url'],
+            conf['query'],
+            headers,
+            conf['response'],
+            True
+        )
+    elif transport == 'http':
+        print('running on http')
+        return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
+                                  conf['status'], conf.get('response'))
+
+
+
+def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retry=False):
+    if endpoint == '/v1alpha1/graphql':
+        ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    else:
+        ws_client = hge_ctx.ws_client
+    print(ws_client.ws_url)
+    if not headers or len(headers) == 0:
+        ws_client.init({})
+
+    query_resp = ws_client.send_query(query, headers=headers, timeout=15)
+    resp = next(query_resp)
+    print('websocket resp: ', resp)
+
+    if resp.get('type') == 'complete':
+        if retry:
+            #Got query complete before payload. Retry once more
+            print("Got query complete before getting query response payload. Retrying")
+            ws_client.recreate_conn()
+            time.sleep(3)
+            return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
+        else:
+            assert resp['type'] in ['data', 'error'], resp
+
+    if 'errors' in exp_http_response or 'error' in exp_http_response:
+        assert resp['type'] in ['data', 'error'], resp
+    else:
+        assert resp['type'] == 'data', resp
+
+    exp_ws_response = exp_http_response
+
+    assert 'payload' in resp, resp
+    assert resp['payload'] == exp_ws_response, yaml.dump({
+        'response': resp['payload'],
+        'expected': exp_ws_response,
+        'diff': jsondiff.diff(exp_ws_response, resp['payload'])
+    })
+    resp_done = next(query_resp)
+    assert resp_done['type'] == 'complete'
+    return resp['payload']
+
+
+def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
+    code, resp = hge_ctx.anyq(url, query, headers)
     print(headers)
-    assert code == conf['status'], resp
-    if 'response' in conf:
-        assert json_ordered(resp) == json_ordered(conf['response']), yaml.dump({
+    assert code == exp_code, resp
+    print('http resp: ', resp)
+    if exp_response:
+        assert json_ordered(resp) == json_ordered(exp_response), yaml.dump({
             'response': resp,
-            'expected': conf['response'],
-            'diff': jsondiff.diff(conf['response'], resp)
+            'expected': exp_response,
+            'diff': jsondiff.diff(exp_response, resp)
         })
-    return code, resp
+    return resp
 
-
-def check_query_f(hge_ctx, f, add_auth=True):
+def check_query_f(hge_ctx, f, transport='http', add_auth=True):
+    print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
+    print ("transport="+transport)
     with open(f) as c:
         conf = yaml.safe_load(c)
         if isinstance(conf, list):
             for sconf in conf:
-                check_query(hge_ctx, sconf)
+                check_query(hge_ctx, sconf, transport, add_auth)
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            check_query(hge_ctx, conf, add_auth)
+            check_query(hge_ctx, conf, transport, add_auth)
 
 
 def json_ordered(obj):

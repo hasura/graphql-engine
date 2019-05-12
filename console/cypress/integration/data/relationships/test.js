@@ -7,11 +7,10 @@ import {
   passRTDeleteTables,
   passRTAddManualObjRel,
   passRTAddManualArrayRel,
-  passRTAddForeignKey,
   passRTDeleteRelationships,
   passRTAddSuggestedRel,
   failRTAddSuggestedRel,
-  checkAddManualRelationshipsButton,
+  passRTRenameRelationship,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
@@ -34,14 +33,10 @@ export const runRelationshipsTests = () => {
     it('Moving to the table', passRTMoveToTable);
     it('Adding Manual Relationship Object', passRTAddManualObjRel);
     it('Adding Manual Relationship Array', passRTAddManualArrayRel);
-    it('Adding a Foreign Key', passRTAddForeignKey);
-    it(
-      'Check Add manual relationships button',
-      checkAddManualRelationshipsButton
-    );
     it('Deleting the relationships', passRTDeleteRelationships);
     it('Adding Suggested Relationships Error', failRTAddSuggestedRel);
     it('Adding Suggested Relationships', passRTAddSuggestedRel);
+    it('Rename relationships', passRTRenameRelationship);
     it('Deleting the relationships', passRTDeleteRelationships);
     it('Deleting testing tables', passRTDeleteTables);
   });

@@ -1,0 +1,18 @@
+@import "../../Common.scss";
+
+.editorExpanded {
+  margin: 10px 0;
+  padding: 15px;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
+
+.editorCollapsed {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.editorContent {
+  padding: 10px 15px;
+}

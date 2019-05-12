@@ -134,7 +134,7 @@
                   <div>
                     <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">check this page on github</a>
                     | <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
-                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/issues/new">report an issue</a>
+                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
                   </div>
                   <br/>
                   <div>
@@ -517,6 +517,16 @@
           .catch(function (err) {
             console.log(err);
           });
+      }
+    });
+  </script>
+
+  <!-- open external links in new tab -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const externalLinks = $('a.reference.external');
+      for (let i = 0; i < externalLinks.length; i++) {
+        externalLinks[i].setAttribute('target', '_blank');
       }
     });
   </script>

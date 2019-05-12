@@ -16,10 +16,10 @@ All tables of the database tracked by the GraphQL engine can be queried over the
 If you have a tracked table in your database, its query field is added as a nested
 field under the ``query_root`` root level type.
 
-Auto-generated query schema
----------------------------
+Auto-generated query field schema
+---------------------------------
 
-**For example**, the auto-generated query schema for an ``author`` table may look like this:
+**For example**, the auto-generated schema for the query field for a table ``author`` looks like this:
 
 .. code-block:: graphql
 
@@ -31,6 +31,7 @@ Auto-generated query schema
       order_by:  [author_order_by!]
     ): [author]
 
+See the :doc:`Query API reference <../api-reference/graphql-api/query>` for the full specifications
 
 .. note::
 

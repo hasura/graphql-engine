@@ -1,3 +1,5 @@
+.. _auto_apply_migrations:
+
 Auto-apply migrations/metadata when server starts
 =================================================
 
@@ -45,8 +47,10 @@ Example:
    docker run -p 8080:8080 \
           -v /home/me/my-project/migrations:/hasura-migrations \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
-          hasura/graphql-engine:v1.0.0-alpha27.cli-migrations
+          hasura/graphql-engine:v1.0.0-alpha42.cli-migrations
 
+
+.. _auto_apply_metadata:
 
 Applying only metadata
 ----------------------

@@ -143,7 +143,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -159,10 +159,13 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
+
+hdbViewsSchema :: SchemaName
+hdbViewsSchema = SchemaName "hdb_views"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
@@ -174,7 +177,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -396,3 +399,17 @@ isComparableType PGGeography   = False
 isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
+
+isBigNum :: PGColType -> Bool
+isBigNum = \case
+  PGBigInt    -> True
+  PGBigSerial -> True
+  PGNumeric   -> True
+  PGDouble    -> True
+  _           -> False
+
+isGeoType :: PGColType -> Bool
+isGeoType = \case
+  PGGeometry  -> True
+  PGGeography -> True
+  _           -> False

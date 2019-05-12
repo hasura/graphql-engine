@@ -6,15 +6,12 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.Text                   as T
+import qualified Data.Text                     as T
 
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.Subscribe
 import           Hasura.SQL.Types
-
-import qualified Hasura.SQL.DML              as S
 
 data TableObjId
   = TOCol !PGCol
@@ -52,21 +49,11 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> trn
 
-
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
 
 instance ToJSON SchemaObjId where
   toJSON = String . reportSchemaObj
-
--- data PGColInfo
---   = PGColInfo
---   { pgiName       :: !PGCol
---   , pgiType       :: !PGColType
---   , pgiIsNullable :: !Bool
---   } deriving (Show, Eq)
-
--- $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 instance ToJSONKey SchemaObjId where
   toJSONKey = toJSONKeyText reportSchemaObj
@@ -79,17 +66,3 @@ data SchemaDependency
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaDependency)
 instance Hashable SchemaDependency
-
--- data RelInfo
---   = RelInfo
---   { riName     :: !RelName
---   , riType     :: !RelType
---   , riMapping  :: ![(PGCol, PGCol)]
---   , riRTable   :: !QualifiedTable
---   , riDeps     :: ![SchemaDependency]
---   , riIsManual :: !Bool
---   } deriving (Show, Eq)
-
--- $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
-
-type InsSetCols = M.HashMap PGCol S.SQLExp

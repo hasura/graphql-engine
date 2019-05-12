@@ -14,6 +14,8 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+       , ColVals
+       , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
@@ -22,6 +24,7 @@ import           Hasura.SQL.Types
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
@@ -54,7 +57,9 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable RelType
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -133,3 +138,12 @@ instance (FromJSON a) => FromJSON (WithTable a) where
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
+
+type ColVals = HM.HashMap PGCol Value
+
+data MutateResp
+  = MutateResp
+  { _mrAffectedRows     :: !Int
+  , _mrReturningColumns :: ![ColVals]
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)

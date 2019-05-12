@@ -47,11 +47,11 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' yourauth0subdomain.pem
 After deploying, add the following environment variables to configure JWT mode:
 
 ```
-HASURA_GRAPHQL_ACCESS_KEY: yoursecretaccesskey
+HASURA_GRAPHQL_ADMIN_SECRET: youradminsecretkey
 ```
 
 ```
-HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line"}
+HASURA_GRAPHQL_JWT_SECRET: {"type":"RS256", "key": "<the-certificate-data-in-one-line>"}
 ```
 
 For example, (copy the certificate from above step or use generated config from https://hasura.io/jwt-config):
@@ -66,15 +66,15 @@ Save changes.
 
 Setup values in `todo-app/src/constants.js`:
 1. Auth0 domain
-2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.herokuapp.com/v1alpha1/graphql`
+2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.herokuapp.com/v1/graphql`
 3. Auth0 application's client id
 
 ## Create the initial tables
-1. Add your database URL and access key in `hasura/config.yaml`
+1. Add your database URL and admin secret in `hasura/config.yaml`
 
 ```yaml
 endpoint: https://<hge-heroku-url>
-access_key: <your-access-key>
+admin_secret: <your-admin-secret>
 ```
 
 2. Run `hasura migrate apply` to create the required tables and permissions for the todo app

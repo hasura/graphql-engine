@@ -1,29 +1,30 @@
 import React from 'react';
-import { Route, IndexRoute } from 'react-router';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound, VoyagerView } from 'components';
 
-import { dataRouter } from './components/Services/Data';
+import { dataRouterUtils } from './components/Services/Data';
 
-import { eventRouter } from './components/Services/EventTrigger';
+import { eventRouterUtils } from './components/Services/EventTrigger';
+
+import { getCustomResolverRouter } from './components/Services/CustomResolver';
 
 import { loadMigrationStatus } from './components/Main/Actions';
 
 import { composeOnEnterHooks } from 'utils/router';
 
-import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator';
+import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorerGenerator';
 
 import generatedLoginConnector from './components/Login/Login';
 
-import { metadataConnector } from './components/Services/Data';
-
+import metadataContainer from './components/Services/Metadata/Container';
+import metadataOptionsContainer from './components/Services/Metadata/MetadataOptions';
+import metadataStatusContainer from './components/Services/Metadata/MetadataStatus';
 import globals from './Globals';
 
-import validateLogin from './components/Common/validateLogin';
-
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
+import validateLogin from './utils/validateLogin';
 
 const routes = store => {
   // load hasuractl migration status
@@ -35,16 +36,19 @@ const routes = store => {
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.accessKey) {
+            if (globals.adminSecret) {
               alert('Hasura CLI: ' + r.message);
             } else {
               alert(
-                'Looks like CLI is not configured with the access key. Please configure and try again'
+                `Looks like CLI is not configured with the ${
+                  globals.adminSecretLabel
+                }. Please configure and try again`
               );
             }
           } else {
             alert(
-              'Not able to reach the graphql server. Check if hasura console server is running or if graphql server is running and try again'
+              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                'instance is running and the endpoint is configured correctly.'
             );
           }
         }
@@ -52,21 +56,27 @@ const routes = store => {
     } else {
       cb();
     }
+
     return;
   };
 
-  // loads schema
-  const dataRouterUtils = dataRouter(connect, store, composeOnEnterHooks);
-  const eventRouterUtils = eventRouter(connect, store, composeOnEnterHooks);
-  const requireSchema = dataRouterUtils.requireSchema;
-  const makeDataRouter = dataRouterUtils.makeDataRouter;
-  const makeEventRouter = eventRouterUtils.makeEventRouter;
+  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+  const requireSchema = _dataRouterUtils.requireSchema;
+  const dataRouter = _dataRouterUtils.makeDataRouter;
+
+  const _eventRouterUtils = eventRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks
+  );
+  const eventRouter = _eventRouterUtils.makeEventRouter;
 
   const customResolverRouter = getCustomResolverRouter(
     connect,
     store,
     composeOnEnterHooks
   );
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="voyager-view(/:root)" component={VoyagerView} />
@@ -82,9 +92,16 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
-          <Route path="metadata" component={metadataConnector(connect)} />
-          {makeDataRouter}
-          {makeEventRouter}
+          <Route path="metadata" component={metadataContainer(connect)}>
+            <IndexRedirect to="actions" />
+            <Route path="status" component={metadataStatusContainer(connect)} />
+            <Route
+              path="actions"
+              component={metadataOptionsContainer(connect)}
+            />
+          </Route>
+          {dataRouter}
+          {eventRouter}
           {customResolverRouter}
         </Route>
       </Route>

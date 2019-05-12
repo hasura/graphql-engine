@@ -1,5 +1,5 @@
 description: Artist can only select his/her tracks.
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: Artist

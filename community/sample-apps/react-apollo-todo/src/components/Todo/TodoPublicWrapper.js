@@ -5,12 +5,12 @@ import "../../styles/App.css";
 
 class TodoPublicWrapper extends Component {
   render() {
-    const userId = localStorage.getItem("auth0:id_token:sub");
+    // const userId = localStorage.getItem("auth0:id_token:sub");
     return (
       <div className="todoWrapper">
-        <TodoInput userId={userId} type="public" />
+        <TodoInput userId={this.props.userId} type="public" />
         <TodoPublicList
-          userId={userId}
+          userId={this.props.userId}
           type="public"
           client={this.props.client}
         />

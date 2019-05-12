@@ -11,19 +11,21 @@ import {
   getTableRelationship,
   getTableDef,
   getTableSchema,
+  getColumnType,
+  isJsonString,
   getAllJsonPaths,
-  isNotOperator,
-  isAndOrOperator,
-  isColumnOperator,
-  isBoolColumnOperator,
+  isArrayBoolOperator,
+  isBoolOperator,
   isArrayColumnOperator,
+  isColumnOperator,
+  getRootPGType,
+  getOperatorInputType,
   boolOperators,
-  columnOperators,
+  PGTypes,
+  PGTypesOperators,
 } from './utils';
 
-import QueryBuilderJson from '../../../../QueryBuilderJson/QueryBuilderJson';
-
-const styles = require('./Styles.scss');
+import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
@@ -41,6 +43,8 @@ class PermissionBuilder extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
+    // check for and fetch any missing schemas if
+    // either permission filter or available table schemas have changed
     if (
       this.props.filter !== prevProps.filter ||
       this.props.allTableSchemas.length !== prevProps.allTableSchemas.length
@@ -65,16 +69,13 @@ class PermissionBuilder extends React.Component {
 
       const operator = pathSplit[0];
 
-      if (isAndOrOperator(operator)) {
+      if (isArrayBoolOperator(operator)) {
         const newPath = pathSplit.slice(2).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
-      } else if (isNotOperator(operator)) {
+      } else if (isBoolOperator(operator)) {
         const newPath = pathSplit.slice(1).join('.');
         _missingSchemas = findMissingSchemas(newPath, currTable);
-      } else if (
-        isColumnOperator(operator) ||
-        isArrayColumnOperator(operator)
-      ) {
+      } else if (isColumnOperator(operator)) {
         // no missing schemas
       } else {
         const { allTableSchemas } = this.props;
@@ -120,6 +121,8 @@ class PermissionBuilder extends React.Component {
   }
 
   render() {
+    const styles = require('./PermissionBuilder.scss');
+
     const wrapDoubleQuotes = value => {
       return (
         <span>
@@ -130,10 +133,12 @@ class PermissionBuilder extends React.Component {
       );
     };
 
+    /********************************/
+
     const getFilter = (conditions, prefix, value = '') => {
       let _where = {};
 
-      const getAndOrOperatorFilter = (
+      const getArrayBoolOperatorFilter = (
         operator,
         opValue,
         opConditions,
@@ -164,7 +169,7 @@ class PermissionBuilder extends React.Component {
         return _filter;
       };
 
-      const getNotOperatorFilter = (
+      const getBoolOperatorFilter = (
         operator,
         opValue,
         opConditions,
@@ -198,7 +203,7 @@ class PermissionBuilder extends React.Component {
           const position = parseInt(opPrefixSplit[0], 10);
 
           _filter[operator] = opConditions || [];
-          if (opValue) {
+          if (opValue !== '') {
             _filter[operator][position] = opValue;
           } else {
             _filter[operator].splice(position, 1);
@@ -243,18 +248,18 @@ class PermissionBuilder extends React.Component {
 
       const opConditions = isLast ? null : conditions[operator];
 
-      if (operator === '--') {
+      if (operator === '') {
         // blank where
-      } else if (isAndOrOperator(operator)) {
-        _where = getAndOrOperatorFilter(
+      } else if (isArrayBoolOperator(operator)) {
+        _where = getArrayBoolOperatorFilter(
           operator,
           value,
           opConditions,
           newPrefix,
           isLast
         );
-      } else if (isNotOperator(operator)) {
-        _where = getNotOperatorFilter(
+      } else if (isBoolOperator(operator)) {
+        _where = getBoolOperatorFilter(
           operator,
           value,
           opConditions,
@@ -297,56 +302,53 @@ class PermissionBuilder extends React.Component {
       dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter)));
     };
 
-    const renderBoolSelect = (dispatchFunc, value) => {
-      const boolDispatchFunc = val => {
-        let boolVal = '';
-        if (val === 'true') {
-          boolVal = true;
-        } else if (val === 'false') {
-          boolVal = false;
-        }
+    /********************************/
 
-        dispatchFunc(boolVal);
-      };
+    const renderBoolSelect = (
+      selectDispatchFunc,
+      value,
+      prefix = '',
+      disabledValues = []
+    ) => {
+      const _value = typeof value === 'boolean' ? value.toString() : '';
 
-      let selectValue = '';
-      if (value === true) {
-        selectValue = 'true';
-      } else if (value === false) {
-        selectValue = 'false';
-      }
+      const values = ['true', 'false'];
 
-      const selectValues = ['true', 'false'];
-
-      return renderSelect(boolDispatchFunc, selectValue, selectValues);
+      return renderSelect(
+        selectDispatchFunc,
+        _value,
+        values,
+        prefix,
+        disabledValues
+      );
     };
 
     const renderSelect = (
-      dispatchFunc,
+      selectDispatchFunc,
       value,
       values,
       prefix = '',
       disabledValues = []
     ) => {
       const dispatchSelect = e => {
-        dispatchFunc(e.target.value);
+        selectDispatchFunc(e.target.value);
       };
 
       const _selectOptions = [];
-      ['--'].concat(values).forEach((val, i) => {
+      [''].concat(values).forEach((val, i) => {
         const optionVal = addToPrefix(prefix, val);
         _selectOptions.push(
           <option
             value={optionVal}
             key={i}
-            disabled={disabledValues.indexOf(val) !== -1}
+            disabled={disabledValues.includes(val)}
           >
-            {val}
+            {val || '--'}
           </option>
         );
       });
 
-      const selectedValue = addToPrefix(prefix, value || '--');
+      const selectedValue = addToPrefix(prefix, value);
 
       return (
         <select
@@ -361,33 +363,94 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderInput = (dispatchFunc, value, prefix) => {
+    const renderInput = (inputDispatchFunc, value) => {
       const dispatchInput = e => {
-        dispatchFunc({ prefix: prefix, value: e.target.value });
+        inputDispatchFunc(e.target.value);
       };
 
-      const dispatchSuggestion = () => {
-        dispatchFunc({ prefix: prefix, value: 'X-HASURA-USER-ID' });
-      };
+      let _value = value;
 
-      const input = wrapDoubleQuotes(
+      if (typeof value === 'object') {
+        _value = JSON.stringify(value);
+      }
+
+      return (
         <input
-          value={value}
+          value={_value}
           onChange={dispatchInput}
           type="text"
           className={styles.qb_input}
           data-test="perm-check-textbox"
         />
       );
+    };
 
-      const suggestion = (
+    const renderSuggestion = (
+      suggestionDispatchFunc,
+      inputValue,
+      displayValue = null
+    ) => {
+      const dispatchSuggestion = () => {
+        suggestionDispatchFunc(inputValue);
+      };
+
+      return (
         <span
           onClick={dispatchSuggestion}
           className={styles.qb_input_suggestion}
         >
-          [X-Hasura-User-Id]
+          [{displayValue || inputValue}]
         </span>
       );
+    };
+
+    /********************************/
+
+    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+      const dispatchInput = val => {
+        let _val = val;
+
+        if (val !== '') {
+          if (PGTypes.boolean.includes(valueType)) {
+            _val = val === 'true';
+          } else if (
+            PGTypes.numeric.includes(valueType) &&
+            !isNaN(val) &&
+            val.substr(-1) !== '.'
+          ) {
+            _val = Number(val);
+          } else if (PGTypes.json.includes(valueType) && isJsonString(val)) {
+            _val = JSON.parse(val);
+          }
+        }
+
+        dispatchFunc({ prefix: prefix, value: _val });
+      };
+
+      const inputBox = () => {
+        return renderInput(dispatchInput, value);
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
+      };
+
+      const jsonSuggestion = () => {
+        return renderSuggestion(dispatchInput, '{}', 'JSON');
+      };
+
+      let input;
+      let suggestion;
+
+      if (PGTypes.boolean.includes(valueType)) {
+        input = renderBoolSelect(dispatchInput, value);
+      } else if (PGTypes.json.includes(valueType)) {
+        input = inputBox();
+        suggestion = jsonSuggestion();
+      } else {
+        input = wrapDoubleQuotes(inputBox());
+        suggestion = sessionVariableSuggestion();
+      }
 
       return (
         <span>
@@ -396,10 +459,15 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderInputArray = (dispatchFunc, values, prefix) => {
+    const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
       const _inputArray = [];
       (values || []).concat(['']).map((val, i) => {
-        const input = renderInput(dispatchFunc, val, addToPrefix(prefix, i));
+        const input = renderValue(
+          dispatchFunc,
+          val,
+          addToPrefix(prefix, i),
+          valueType
+        );
         _inputArray.push(input);
       });
 
@@ -413,54 +481,52 @@ class PermissionBuilder extends React.Component {
       );
     };
 
-    const renderOperatorExp = (dispatchFunc, condition, prefix) => {
-      const dispatchColumnOperator = val => {
+    const renderOperatorExp = (dispatchFunc, expression, prefix, valueType) => {
+      const dispatchColumnOperatorSelect = val => {
         dispatchFunc({ prefix: val });
       };
 
-      let _condition = condition;
-      if (typeof _condition === 'string') {
-        _condition = { $eq: _condition };
+      // handle shorthand notation for eq
+      let _expression = expression;
+      if (typeof _expression !== 'object') {
+        _expression = { _eq: _expression };
       }
 
-      const operator = Object.keys(_condition)[0];
-      const operationValue = _condition[operator];
+      const operator = Object.keys(_expression)[0];
+      const operationValue = _expression[operator];
 
-      const operatorSelect = renderSelect(
-        dispatchColumnOperator,
+      const rootValueType = getRootPGType(valueType);
+      const operators = PGTypesOperators[rootValueType];
+
+      const _operatorSelect = renderSelect(
+        dispatchColumnOperatorSelect,
         operator,
-        columnOperators,
+        operators,
         prefix
       );
 
-      let valueInput = '';
+      let _valueInput = '';
       if (operator) {
+        const operatorInputType = getOperatorInputType(operator) || valueType;
+
         if (isArrayColumnOperator(operator)) {
-          valueInput = renderInputArray(
+          _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
-            addToPrefix(prefix, operator)
-          );
-        } else if (isBoolColumnOperator(operator)) {
-          const boolOperatorDispatchFunc = val => {
-            dispatchFunc({ prefix: addToPrefix(prefix, operator), value: val });
-          };
-
-          valueInput = renderBoolSelect(
-            boolOperatorDispatchFunc,
-            operationValue
+            addToPrefix(prefix, operator),
+            operatorInputType
           );
         } else {
-          // normal column operator
-          valueInput = renderInput(
+          _valueInput = renderValue(
             dispatchFunc,
             operationValue,
-            addToPrefix(prefix, operator)
+            addToPrefix(prefix, operator),
+            operatorInputType
           );
         }
       }
 
-      const _operatorExp = [{ key: operatorSelect, value: valueInput }];
+      const _operatorExp = [{ key: _operatorSelect, value: _valueInput }];
 
       const unselectedElements = [];
       if (!operator) {
@@ -478,7 +544,7 @@ class PermissionBuilder extends React.Component {
     const renderColumnExp = (
       dispatchFunc,
       column,
-      condition,
+      expression,
       table,
       tableSchemas,
       prefix
@@ -491,19 +557,26 @@ class PermissionBuilder extends React.Component {
       }
 
       let _columnExp = '';
-      if (tableRelationships.indexOf(column) !== -1) {
+      if (tableRelationships.includes(column)) {
         const rel = getTableRelationship(tableSchema, column);
         const refTable = getRefTable(rel, tableSchema);
 
         _columnExp = renderBoolExp(
           dispatchFunc,
-          condition,
+          expression,
           refTable,
           tableSchemas,
           prefix
         ); // eslint-disable-line no-use-before-define
       } else {
-        _columnExp = renderOperatorExp(dispatchFunc, condition, prefix);
+        const columnType = getColumnType(column, tableSchema);
+
+        _columnExp = renderOperatorExp(
+          dispatchFunc,
+          expression,
+          prefix,
+          columnType
+        );
       }
 
       return _columnExp;
@@ -511,17 +584,17 @@ class PermissionBuilder extends React.Component {
 
     const renderBoolExpArray = (
       dispatchFunc,
-      conditions,
+      expressions,
       table,
       tableSchemas,
       prefix
     ) => {
       const _boolExpArray = [];
 
-      conditions.concat([{}]).forEach((condition, i) => {
+      expressions.concat([{}]).forEach((expression, i) => {
         const _boolExp = renderBoolExp(
           dispatchFunc,
-          condition,
+          expression,
           table,
           tableSchemas,
           addToPrefix(prefix, i)
@@ -529,7 +602,7 @@ class PermissionBuilder extends React.Component {
         _boolExpArray.push(_boolExp);
       });
 
-      const unselectedElements = [conditions.length];
+      const unselectedElements = [expressions.length];
 
       return (
         <QueryBuilderJson
@@ -541,18 +614,18 @@ class PermissionBuilder extends React.Component {
 
     const renderBoolExp = (
       dispatchFunc,
-      condition,
+      expression,
       table,
       tableSchemas,
       prefix = ''
     ) => {
-      const dispatchOperation = val => {
+      const dispatchOperationSelect = val => {
         dispatchFunc({ prefix: val });
       };
 
       let operation = null;
-      if (condition) {
-        operation = Object.keys(condition)[0];
+      if (expression) {
+        operation = Object.keys(expression)[0];
       }
 
       let tableColumns = [];
@@ -564,44 +637,43 @@ class PermissionBuilder extends React.Component {
       }
 
       const columnOptions = tableColumns.concat(tableRelationships);
-      const operationOptions = Object.values(boolOperators);
 
       const operatorOptions = columnOptions
         .concat(['---'])
-        .concat(operationOptions);
+        .concat(boolOperators);
 
-      const boolExpKey = renderSelect(
-        dispatchOperation,
+      const _boolExpKey = renderSelect(
+        dispatchOperationSelect,
         operation,
         operatorOptions,
         prefix,
         ['---']
       );
 
-      let boolExpValue = null;
+      let _boolExpValue = null;
       if (operation) {
         const newPrefix = addToPrefix(prefix, operation);
-        if (isAndOrOperator(operation)) {
-          boolExpValue = renderBoolExpArray(
+        if (isArrayBoolOperator(operation)) {
+          _boolExpValue = renderBoolExpArray(
             dispatchFunc,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
           );
-        } else if (isNotOperator(operation)) {
-          boolExpValue = renderBoolExp(
+        } else if (isBoolOperator(operation)) {
+          _boolExpValue = renderBoolExp(
             dispatchFunc,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
           );
         } else {
-          boolExpValue = renderColumnExp(
+          _boolExpValue = renderColumnExp(
             dispatchFunc,
             operation,
-            condition[operation],
+            expression[operation],
             table,
             tableSchemas,
             newPrefix
@@ -609,7 +681,7 @@ class PermissionBuilder extends React.Component {
         }
       }
 
-      const _boolExp = [{ key: boolExpKey, value: boolExpValue }];
+      const _boolExp = [{ key: _boolExpKey, value: _boolExpValue }];
 
       const unselectedElements = [];
       if (!operation) {
@@ -623,6 +695,8 @@ class PermissionBuilder extends React.Component {
         />
       );
     };
+
+    /********************************/
 
     const showPermissionBuilder = () => {
       const { tableName, schemaName, filter, allTableSchemas } = this.props;

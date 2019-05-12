@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -53,10 +54,13 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 	return consoleCmd
 }
@@ -90,23 +94,32 @@ func (o *consoleOptions) run() error {
 		r,
 	}
 
-	router.setRoutes(o.EC.Config.ParsedEndpoint, o.EC.Config.AccessKey, o.EC.MigrationDir, o.EC.MetadataFile, o.EC.Logger)
-
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
+
+	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	if err != nil {
+		return err
+	}
+
+	router.setRoutes(o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.MigrationDir, metadataPath, o.EC.Logger, o.EC.Version)
+
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
+	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
+
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
-		"dataApiUrl":      o.EC.Config.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"accessKey":       o.EC.Config.AccessKey,
+		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
+		"adminSecret":     o.EC.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
@@ -160,12 +173,12 @@ type cRouter struct {
 	*gin.Engine
 }
 
-func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadataFile string, logger *logrus.Logger) {
+func (router *cRouter) setRoutes(nurl *url.URL, adminSecret, migrationDir, metadataFile string, logger *logrus.Logger, v *version.Version) {
 	apis := router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
-		apis.Use(setDataPath(nurl, accessKey))
+		apis.Use(setDataPath(nurl, getAdminSecretHeaderName(v), adminSecret))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -184,9 +197,9 @@ func (router *cRouter) setRoutes(nurl *url.URL, accessKey, migrationDir, metadat
 	}
 }
 
-func setDataPath(nurl *url.URL, accessKey string) gin.HandlerFunc {
+func setDataPath(nurl *url.URL, adminSecretHeader, adminSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := getDataPath(nurl, accessKey)
+		host := getDataPath(nurl, adminSecretHeader, adminSecret)
 
 		c.Set("dbpath", host)
 		c.Next()
@@ -218,7 +231,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders("X-Hasura-Access-Key")
+	config.AddAllowHeaders(XHasuraAccessKey)
+	config.AddAllowHeaders(XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")

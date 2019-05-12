@@ -69,25 +69,71 @@ arrNodeToSelect bn extrs joinCond =
     selFrom = S.mkSelFromItem (baseNodeToSel joinCond bn) $ S.Alias $
               _bnPrefix bn
 
-asSingleRowExtr :: S.Alias -> S.Extractor
-asSingleRowExtr col = S.Extractor extr $ Just col
+asSingleRowExtr :: S.Alias -> S.SQLExp
+asSingleRowExtr col =
+  S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
   where
-    extr    = S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
     jsonAgg = S.SEOpApp (S.SQLOp "->")
               [ S.SEFnApp "json_agg" [S.SEIden $ toIden col] Nothing
               , S.SEUnsafe "0"
               ]
 
-withJsonAggExtr :: Maybe S.OrderByExp -> S.Alias -> S.Extractor
-withJsonAggExtr orderByM col =
-  S.Extractor extr $ Just col
+withJsonAggExtr :: Maybe Int -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
+withJsonAggExtr permLimitM ordBy alias =
+  maybe (mkSimpleJsonAgg rowIdenExp ordBy) withPermLimit permLimitM
   where
-    extr = S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
-    jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ toIden col] orderByM
+    rowIdenExp = S.SEIden $ S.getAlias alias
+    subSelAls = Iden "sub_query"
+    unnestTable = Iden "unnest_table"
 
-asJsonAggExtr :: Bool -> S.Alias -> Maybe S.OrderByExp -> S.Extractor
-asJsonAggExtr singleObj als ordByExpM =
-  bool (withJsonAggExtr ordByExpM als) (asSingleRowExtr als) singleObj
+    mkSimpleJsonAgg rowExp ob =
+      let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
+      in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
+
+    withPermLimit limit =
+      let subSelect = mkSubSelect limit
+          rowIden = S.mkQIdenExp subSelAls alias
+          extr = S.Extractor (mkSimpleJsonAgg rowIden newOrdBy) Nothing
+          fromExp = S.FromExp $ pure $
+                    S.mkSelFromItem subSelect $ S.Alias subSelAls
+      in S.SESelect $ S.mkSelect { S.selExtr = pure extr
+                                 , S.selFrom = Just fromExp
+                                 }
+
+    mkSubSelect limit =
+      let jsonRowExtr = flip S.Extractor (Just alias) $
+                        S.mkQIdenExp unnestTable alias
+          obExtrs = flip map newOBAliases $ \a ->
+                    S.Extractor (S.mkQIdenExp unnestTable a) $ Just $ S.Alias a
+      in S.mkSelect { S.selExtr    = jsonRowExtr : obExtrs
+                    , S.selFrom    = Just $ S.FromExp $ pure unnestFromItem
+                    , S.selLimit   = Just $ S.LimitExp $ S.intToSQLExp limit
+                    , S.selOrderBy = newOrdBy
+                    }
+
+    unnestFromItem =
+      let arrayAggItems = flip map (rowIdenExp : obCols) $
+                          \s -> S.SEFnApp "array_agg" [s] Nothing
+      in S.FIUnnest arrayAggItems (S.Alias unnestTable) $
+         rowIdenExp : map S.SEIden newOBAliases
+
+    newOrdBy = bool (Just $ S.OrderByExp newOBItems) Nothing $ null newOBItems
+
+    (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrdBy ordBy
+    transformOrdBy (S.OrderByExp l) = unzip3 $
+      flip map (zip l [1..]) $ \(obItem, i::Int) ->
+                 let iden = Iden $ "ob_col_" <> T.pack (show i)
+                 in ( obItem{S.oColumn = S.SEIden iden}
+                    , S.oColumn obItem
+                    , iden
+                    )
+
+
+asJsonAggExtr
+  :: Bool -> S.Alias -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
+asJsonAggExtr singleObj als permLimit ordByExpM =
+  flip S.Extractor (Just als) $
+  bool (withJsonAggExtr permLimit ordByExpM als) (asSingleRowExtr als) singleObj
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
@@ -123,9 +169,9 @@ ordByFldName = FieldName "order_by"
 -- json_build_object is slower than row_to_json hence it is only
 -- used when needed
 buildJsonObject
-  :: Iden -> FieldName -> ArrRelCtx
+  :: Iden -> FieldName -> ArrRelCtx -> Bool
   -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-buildJsonObject pfx parAls arrRelCtx flds =
+buildJsonObject pfx parAls arrRelCtx strfyNum flds =
   if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
   then withJsonBuildObj parAls jsonBuildObjExps
   else withRowToJSON parAls rowToJsonExtrs
@@ -142,8 +188,7 @@ buildJsonObject pfx parAls arrRelCtx flds =
     toSQLFld :: (FieldName -> S.SQLExp -> f)
              -> (FieldName, AnnFld) -> f
     toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol col    -> toJSONableExp (pgiType col) $
-                     S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
+      FCol col args  -> toSQLCol col args
       FExp e      -> S.SELit e
       FObj objSel ->
         let qual = mkObjRelTableAls pfx $ aarName objSel
@@ -152,6 +197,14 @@ buildJsonObject pfx parAls arrRelCtx flds =
         let arrPfx = snd $ mkArrNodePfx pfx parAls arrRelCtx $
                      ANIField (fldAls, arrSel)
         in S.mkQIdenExp arrPfx fldAls
+
+    toSQLCol :: PGColInfo -> Maybe ColOp -> S.SQLExp
+    toSQLCol col colOpM =
+      toJSONableExp strfyNum (pgiType col) $ case colOpM of
+        Nothing              -> colNameExp
+        Just (ColOp op cExp) -> S.mkSQLOpExp op colNameExp cExp
+      where
+        colNameExp = S.mkQIdenExp (mkBaseTableAls pfx) $ pgiName col
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -191,6 +244,7 @@ processAnnOrderByItem
   :: Iden
   -> FieldName
   -> ArrRelCtx
+  -> Bool
   -> AnnOrderByItem
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
@@ -199,13 +253,15 @@ processAnnOrderByItem
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByItem pfx parAls arrRelCtx (OrderByItemG obTyM annObCol obNullsM) =
+processAnnOrderByItem pfx parAls arrRelCtx strfyNum obItemG =
   ( (obColAls, obColExp)
   , sqlOrdByItem
   , relNodeM
   )
   where
-    ((obColAls, obColExp), relNodeM) = processAnnOrderByCol pfx parAls arrRelCtx annObCol
+    OrderByItemG obTyM annObCol obNullsM = obItemG
+    ((obColAls, obColExp), relNodeM) =
+      processAnnOrderByCol pfx parAls arrRelCtx strfyNum annObCol
 
     sqlOrdByItem =
       S.OrderByItem (S.SEIden $ toIden obColAls)
@@ -215,13 +271,14 @@ processAnnOrderByCol
   :: Iden
   -> FieldName
   -> ArrRelCtx
+  -> Bool
   -> AnnObCol
        -- the extractors which will select the needed columns
   -> ( (S.Alias, S.SQLExp)
        -- extra nodes for order by
      , OrderByNode
      )
-processAnnOrderByCol pfx parAls arrRelCtx = \case
+processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
   AOCPG colInfo ->
     let
       qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiName colInfo)
@@ -233,7 +290,7 @@ processAnnOrderByCol pfx parAls arrRelCtx = \case
   AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
     let relPfx  = mkObjRelTableAls pfx rn
         ((nesAls, nesCol), ordByNode) =
-          processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx rest
+          processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
         (objNodeM, arrNodeM) = case ordByNode of
           OBNNothing           -> (Nothing, Nothing)
           OBNObjNode name node -> (Just (name, node), Nothing)
@@ -259,7 +316,7 @@ processAnnOrderByCol pfx parAls arrRelCtx = \case
         tabPerm = TablePerm relFltr Nothing
         (extr, arrFlds) = mkAggObExtrAndFlds annAggOb
         selFld = TAFAgg arrFlds
-        bn = mkBaseNode arrPfx fldName selFld tabFrom tabPerm noTableArgs
+        bn = mkBaseNode arrPfx fldName selFld tabFrom tabPerm noTableArgs strfyNum
         aggNode = ArrNode [extr] colMapping $ mergeBaseNodes bn $
                   mkEmptyBaseNode arrPfx tabFrom
         obAls = arrPfx <> Iden "." <> toIden fldName
@@ -291,30 +348,18 @@ mkEmptyBaseNode pfx tableFrom =
     selOne = HM.singleton (S.Alias $ pfx <> Iden "__one") (S.SEUnsafe "1")
     fromItem = tableFromToFromItem tableFrom
 
--- If query limit > permission limit then consider permission limit Else consider query limit
-applyPermLimit
-  :: Maybe Int -- Permission limit
-  -> Maybe Int -- Query limit
-  -> Maybe Int -- Return SQL exp
-applyPermLimit mPermLimit mQueryLimit =
-  maybe mQueryLimit compareWithPermLimit mPermLimit
-  where
-    compareWithPermLimit pLimit =
-      maybe (Just pLimit) (compareLimits pLimit) mQueryLimit
-    compareLimits pLimit qLimit = Just $
-      if qLimit > pLimit then pLimit else qLimit
-
 aggSelToArrNode :: Iden -> FieldName -> ArrRelAgg -> ArrNode
 aggSelToArrNode pfx als aggSel =
   ArrNode [extr] colMapping mergedBN
   where
     AnnRelG _ colMapping annSel = aggSel
-    AnnSelG aggFlds tabFrm tabPerm tabArgs = annSel
+    AnnSelG aggFlds tabFrm tabPerm tabArgs strfyNum = annSel
     fldAls = S.Alias $ toIden als
 
     extr = flip S.Extractor (Just fldAls) $ S.applyJsonBuildObj $
            concatMap selFldToExtr aggFlds
 
+    permLimit = _tpLimit tabPerm
     ordBy = _bnOrderBy mergedBN
 
     allBNs = map mkAggBaseNode aggFlds
@@ -322,14 +367,12 @@ aggSelToArrNode pfx als aggSel =
     mergedBN = foldr mergeBaseNodes emptyBN allBNs
 
     mkAggBaseNode (fn, selFld) =
-      mkBaseNode pfx fn selFld tabFrm tabPerm tabArgs
+      mkBaseNode pfx fn selFld tabFrm tabPerm tabArgs strfyNum
 
     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
       TAFAgg flds -> aggFldToExp flds
-      TAFNodes _ ->
-        let jsonAgg = S.SEFnApp "json_agg" [S.SEIden $ Iden t] ordBy
-        in S.SEFnApp "coalesce" [jsonAgg, S.SELit "[]"] Nothing
-      TAFExp e ->
+      TAFNodes _  -> withJsonAggExtr permLimit ordBy $ S.Alias $ Iden t
+      TAFExp e    ->
         -- bool_or to force aggregation
         S.SEFnApp "coalesce"
         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
@@ -381,6 +424,7 @@ fetchOrdByAggRels orderByM = fromMaybe [] relNamesM
 mkOrdByItems
   :: Iden -> FieldName
   -> Maybe (NE.NonEmpty AnnOrderByItem)
+  -> Bool
   -> ArrRelCtx
      -- extractors
   -> ( [(S.Alias, S.SQLExp)]
@@ -391,10 +435,10 @@ mkOrdByItems
      -- final order by expression
      , Maybe S.OrderByExp
      )
-mkOrdByItems pfx fldAls orderByM arrRelCtx =
+mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
   (obExtrs, ordByObjsMap, ordByArrsMap, ordByExpM)
   where
-    procAnnOrdBy' = processAnnOrderByItem pfx fldAls arrRelCtx
+    procAnnOrdBy' = processAnnOrderByItem pfx fldAls arrRelCtx strfyNum
     procOrdByM =
       unzip3 . map procAnnOrdBy' . toList <$> orderByM
 
@@ -415,12 +459,12 @@ mkOrdByItems pfx fldAls orderByM arrRelCtx =
 
 mkBaseNode
   :: Iden -> FieldName -> TableAggFld -> TableFrom
-  -> TablePerm -> TableArgs -> BaseNode
-mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
-  BaseNode pfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
+  -> TablePerm -> TableArgs -> Bool -> BaseNode
+mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs strfyNum =
+  BaseNode pfx distExprM fromItem finalWhere ordByExpM limitM offsetM
   allExtrs allObjsWithOb allArrsWithOb
   where
-    TablePerm fltr permLimitM = tablePerm
+    fltr = _tpFilter tablePerm
     TableArgs whereM orderByM limitM offsetM distM = tableArgs
     aggOrdByRelNames = fetchOrdByAggRels orderByM
 
@@ -429,7 +473,7 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
         TAFNodes flds ->
           let arrFlds = mapMaybe getAnnArr flds
               arrRelCtx = mkArrRelCtx arrFlds
-              selExtr = buildJsonObject pfx fldAls arrRelCtx flds
+              selExtr = buildJsonObject pfx fldAls arrRelCtx strfyNum flds
               -- all object relationships
               objNodes = HM.fromListWith mergeObjNodes $
                         map mkObjItem (mapMaybe getAnnObj flds)
@@ -483,11 +527,10 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
       toSQLBoolExp tableQual $ maybe fltr (andAnnBoolExps fltr) whereM
     fromItem = tableFromToFromItem tableFrom
     tableQual = tableFromToQual tableFrom
-    finalLimit = applyPermLimit permLimitM limitM
 
     mkArrRelCtx arrSels = ArrRelCtx arrSels aggOrdByRelNames
 
-    mkOrdByItems' = mkOrdByItems pfx fldAls orderByM
+    mkOrdByItems' = mkOrdByItems pfx fldAls orderByM strfyNum
 
     distItemsM = processDistinctOnCol pfx <$> distM
     distExprM = fst <$> distItemsM
@@ -515,11 +558,11 @@ mkBaseNode pfx fldAls annSelFlds tableFrom tablePerm tableArgs =
       FArr ar -> Just (f, ar)
       _       -> Nothing
 
-annSelToBaseNode :: Iden -> FieldName -> AnnSel -> BaseNode
+annSelToBaseNode :: Iden -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode pfx fldAls annSel =
-  mkBaseNode pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs
+  mkBaseNode pfx fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
   where
-    AnnSelG selFlds tabFrm tabPerm tabArgs = annSel
+    AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
 
 mkObjNode :: Iden -> (FieldName, ObjSel) -> ObjNode
 mkObjNode pfx (fldName, AnnRelG _ rMapn rAnnSel) =
@@ -529,7 +572,8 @@ mkArrNode :: Iden -> (FieldName, ArrSel) -> ArrNode
 mkArrNode pfx (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
     let bn = annSelToBaseNode pfx fldName $ aarAnnSel annArrRel
-        extr = asJsonAggExtr False (S.toAlias fldName) $
+        permLimit = getPermLimit $ aarAnnSel annArrRel
+        extr = asJsonAggExtr False (S.toAlias fldName) permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
@@ -601,36 +645,37 @@ mkAggSelect annAggSel =
     ArrNode extr _ bn =
       aggSelToArrNode (Iden "root") (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSel -> S.Select
+mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
 mkSQLSelect isSingleObject annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
-    extrs = pure $ asJsonAggExtr isSingleObject rootFldAls $ _bnOrderBy baseNode
+    permLimit = getPermLimit annSel
+    extrs = pure $ asJsonAggExtr isSingleObject rootFldAls permLimit
+            $ _bnOrderBy baseNode
     baseNode = annSelToBaseNode (toIden rootFldName) rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
 
 mkFuncSelectWith
-  :: QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs -> Either TableAggFlds AnnFlds
-  -> S.FromItem -> S.SelectWith
-mkFuncSelectWith qf tn tabPerm tabArgs eSelFlds frmItem = selWith
+  :: (AnnSelG a S.SQLExp -> S.Select)
+  -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
+  -> S.SelectWith
+mkFuncSelectWith f annFn =
+  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
+  -- we'll need to modify the table from of the underlying
+  -- select to the alias of the select from function
+  f annSel { _asnFrom = newTabFrom }
   where
+    AnnFnSel qf fnArgs annSel = annFn
+
     -- SELECT * FROM function_name(args)
     funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
                          , S.selExtr = [S.Extractor S.SEStar Nothing]
                          }
+    frmItem = S.mkFuncFromItem qf fnArgs
 
-    mainSel = case eSelFlds of
-      Left aggFlds  -> mkAggSelect $
-                       AnnSelG aggFlds tabFrom tabPerm tabArgs
-      Right annFlds -> mkSQLSelect False $
-                       AnnSelG annFlds tabFrom tabPerm tabArgs
-
-    tabFrom = TableFrom tn $ Just $ toIden funcAls
+    newTabFrom = (_asnFrom annSel) {_tfIden = Just $ toIden funcAls}
 
     QualifiedObject sn fn = qf
     funcAls = S.Alias $ Iden $
       getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"
-
-    selWith = S.SelectWith [(funcAls, S.CTESelect funcSel)] mainSel

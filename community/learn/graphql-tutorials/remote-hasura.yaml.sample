@@ -1,0 +1,36 @@
+apiVersion: gitkube.sh/v1alpha1
+kind: Remote
+metadata:
+  creationTimestamp: null
+  name: hasura
+  namespace: default
+spec:
+  authorizedKeys:
+  - |
+    <add ssh keys here; one per line>
+  deployments:
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/backend-services/homepage/Dockerfile
+      name: homepage
+      path: ./community/learn/graphql-tutorials/backend-services/homepage
+    name: homepage
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/backend-services/graphiql/Dockerfile
+      name: graphiql
+      path: ./community/learn/graphql-tutorials/backend-services/graphiql
+    name: graphiql
+  - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site/Dockerfile
+      name: react-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site
+    name: react-apollo
+  manifests:
+    helm: {}
+    path: ./community/learn/graphql-tutorials/manifests
+  registry:
+    credentials:
+      secretKeyRef:
+        key: ""
+status:
+  remoteUrl: ""
+  remoteUrlDesc: ""

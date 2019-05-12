@@ -32,7 +32,7 @@ class LandingPage extends Component {
               {!isAuthenticated() && (
                 <button
                   id="qsLoginBtn"
-                  bsStyle="primary"
+                  bsstyle="primary"
                   className="btn-margin logoutBtn"
                   onClick={this.login.bind(this)}
                 >
@@ -138,7 +138,13 @@ class LandingPage extends Component {
                   </div>
                   <div className="col-md-11 col-sm-11 col-xs-10 noPadd">
                     <div className="description removePaddBottom">
-                      Full tutorial coming soon!
+                      <a
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href="https://auth0.com/blog/building-a-collaborative-todo-app-with-realtime-graphql-using-hasura/"
+                      >
+                        Full tutorial with Auth0!
+                      </a>
                     </div>
                   </div>
                 </div>

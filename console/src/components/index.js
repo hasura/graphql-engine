@@ -4,6 +4,6 @@
 
 export App from './App/App';
 export Main from './Main/Main';
-export PageNotFound from './404/PageNotFound';
+export PageNotFound from './Error/PageNotFound';
 export Login from './Login/Login';
 export VoyagerView from './VoyagerView/VoyagerView';

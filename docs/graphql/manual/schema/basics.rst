@@ -42,9 +42,9 @@ automatically generated.
 
 For example, here is the schema for the ``article`` table in this interface:
 
-.. image:: ../../../img/graphql/manual/schema/create-table-graphql.png
+.. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
 
-The following *object type* and *query/mutation* fields are generated for the ``article`` table we just created:
+The following object type and query/mutation fields are generated for the ``article`` table we just created:
 
 .. code-block:: graphql
 
@@ -83,12 +83,15 @@ The following *object type* and *query/mutation* fields are generated for the ``
     where: article_bool_exp!
   ): article_mutation_response
 
-See the :doc:`API reference <../api-reference/index>` for more details.
+See the :doc:`query <../api-reference/graphql-api/query>` and :doc:`mutation <../api-reference/graphql-api/mutation>`
+API references for the full specifications
+
+You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
 
 Try basic GraphQL queries
 -------------------------
 At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables using the
-console ``GraphiQL`` tab (*you may want to add some test data in the tables first*).
+console ``GraphiQL`` tab (*you may want to add some sample data into the tables first*).
 
 Here are a couple of examples:
 

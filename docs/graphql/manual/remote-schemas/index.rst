@@ -17,9 +17,9 @@ endpoint to Hasura. Your GraphQL service can be written in any language or frame
 This is what Hasura running with "Remote schemas" looks like:
 
 
-.. image:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
+.. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
-   :width: 500px
+   :width: 75%
 
 .. note::
 
@@ -60,6 +60,8 @@ started is to use one of our boilerplates:
 
 - `Boilerplates <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas>`__
 
+.. _merge_remote_schema:
+
 Step 2: Merge remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -67,17 +69,21 @@ To merge your remote schema with GraphQL Engine's auto-generated schema:
 
 Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button
 
-.. image:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
+.. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
 
 
 You need to enter the following information:
 
 - **Remote Schema name**: an alias for the remote schema that must be unique on an instance of GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
-  manually or by specifying an environment variable that contains this information. If you want to specify an
-  environment variable, please note that currently there is no validation that the environment variable is
-  actually available at the time of this configuration, so any errors in this configuration will result in a
-  runtime error.
+  manually or by specifying an environment variable that contains this information.
+
+  .. note::
+
+    During **local development** using docker and a localhost server, ensure the Hasura docker container can reach
+    the server endpoint on the host. i.e. use ``host.docker.internal`` on mac or ``docker.for.win.localhost`` on
+    windows.
+
 - **Headers**: configure the headers to be sent to your custom GraphQL server.
 
   - Toggle forwarding all headers sent by the client (when making a GraphQL query) to your remote GraphQL server.
@@ -102,7 +108,7 @@ Step 3: Make queries to the remote server from Hasura
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Now you can head to the ``GraphiQL`` tab and make queries to your remote server from Hasura.
 
-You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1alpha1/graphql``).
+You can query your remote server by making requests to the Hasura GraphQL endpoint (``/v1/graphql``).
 
 Points to remember
 ------------------
@@ -136,6 +142,33 @@ community tooling to write your own client-facing GraphQL gateway that interacts
   **Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by
   it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
+
+
+Authorization in your remote schema server
+------------------------------------------
+
+Hasura will forward the resolved ``x-hasura-*`` values as headers to your remote
+schema. You can use this information to apply authorization rules in your
+server. You don't have to redo authentication in your remote schema server.
+
+You can also configure Hasura to have (as shown :ref:`above <merge_remote_schema>`):
+
+1. static header values that are sent to the remote server
+2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
+
+In case there are multiple headers with same name, the order of precedence is:
+configuration headers > resolved user (``x-hasura-*``) variables > client headers
+
+So for example, if client sends an ``Authorization`` header, and the
+configuration also has ``Authorization`` header, the configuration header value
+will selected.
+
+.. note::
+
+   The headers from client behave similar to the authorization system. If
+   ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
+   client are respected, otherwise they are ignored.
+
 
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------

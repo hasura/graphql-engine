@@ -4,11 +4,12 @@ import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import Modal from 'react-bootstrap/lib/Modal';
+import { hot } from 'react-hot-loader';
 import './progress-bar.scss';
 import { NOTIF_EXPANDED } from './Actions';
 import AceEditor from 'react-ace';
 import 'brace/mode/json';
-import ErrorBoundary from './ErrorBoundary';
+import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 
@@ -40,6 +41,7 @@ class App extends Component {
       notifMsg,
       telemetry,
       dispatch,
+      metadata,
     } = this.props;
 
     if (requestError && error) {
@@ -74,8 +76,9 @@ class App extends Component {
           className={styles.alertDanger + ' alert alert-danger'}
         >
           <strong>
-            Hey there! Console is not able to reach your cluster. Please check
-            if hasura console server is running. Restart and try again.
+            Hasura console is not able to reach your Hasura GraphQL engine
+            instance. Please ensure that your instance is running and the
+            endpoint is configured correctly.
           </strong>
         </div>
       );
@@ -89,7 +92,7 @@ class App extends Component {
     }
 
     return (
-      <ErrorBoundary>
+      <ErrorBoundary metadata={metadata} dispatch={dispatch}>
         <div>
           {hasuraCliDown}
           {ongoingRequest && (
@@ -165,7 +168,8 @@ const mapStateToProps = state => {
     ...state.progressBar,
     notifications: state.notifications,
     telemetry: state.telemetry,
+    metadata: state.metadata,
   };
 };
 
-export default connect(mapStateToProps)(App);
+export default hot(module)(connect(mapStateToProps)(App));

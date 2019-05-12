@@ -5,8 +5,8 @@
  *
  */
 
-export dataHeaderConnector from './DataHeader';
-export PageContainer from './PageContainer/PageContainer';
+export dataPageConnector from './DataPageContainer';
+export PageContainer from './DataSubSidebar';
 export viewTableConnector from './TableBrowseRows/ViewTable';
 export addExistingTableViewConnector from './Add/AddExistingTableView';
 export addTableConnector from './Add/AddTable';
@@ -19,14 +19,11 @@ export relationshipsConnector from './TableRelationships/Relationships';
 export relationshipsViewConnector from './TableRelationships/RelationshipsView';
 export permissionsConnector from './TablePermissions/Permissions';
 export schemaConnector from './Schema/Schema';
-export schemaContainerConnector from './Schema/SchemaContainer';
 export migrationsConnector from './Migrations/MigrationsHome';
 
-export dataRouter from './DataRouter';
+export dataRouterUtils from './DataRouter';
 
 export dataReducer from './DataReducer';
-
-export metadataConnector from './Metadata/Metadata.js';
 
 /* Function component */
 
