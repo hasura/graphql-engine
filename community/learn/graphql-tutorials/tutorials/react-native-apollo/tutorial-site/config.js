@@ -24,12 +24,12 @@ const config = {
     		"/queries",
     		"/mutations",
     		"/update-delete-mutations",
-        "/load-older",
+        	"/load-older",
     		"/subscriptions",
     		"/realtime-feed",
-        "/logout",
+        	"/logout",
     		"/what-next"
-    		],
+    	],
 		"links": [
 			{
 			"text": "Hasura Docs",
