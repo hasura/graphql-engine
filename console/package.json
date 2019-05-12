@@ -133,7 +133,6 @@
     "bootstrap-sass": "^3.3.7",
     "clean-webpack-plugin": "^0.1.17",
     "concurrently": "^3.5.0",
-    "copy-webpack-plugin": "^4.5.3",
     "css-loader": "^0.28.11",
     "cypress": "^3.2.0",
     "dotenv": "^5.0.1",
