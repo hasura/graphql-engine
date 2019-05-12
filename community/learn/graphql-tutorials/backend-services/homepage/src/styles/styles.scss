@@ -302,7 +302,7 @@ ul
     li
     {
       padding: 20px;
-      a, span
+      a
       {
         font-family: 'Raleway';
         font-size: 12px;
@@ -311,7 +311,6 @@ ul
         padding: 0;
         color: #ffffff;
         opacity: 0.5;
-        min-height: 20px;
         &:hover
         {
           background-color: transparent;
@@ -331,12 +330,22 @@ ul
         border-radius: 2px;
         top: 42px;
         padding: 15px 10px;
+        .dropdownMenuBgImg
+        {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          overflow: hidden;
+        }
         .menuTitle
         {
           font-family: 'Roboto';
           font-size: 24px;
           font-weight: bold;
           color: #2b0785;
+          line-height: 1.17;
+          padding-bottom: 15px;
         }
         .dropdownUl
         {
@@ -346,65 +355,47 @@ ul
             border-bottom: 1px solid #ededed;
             list-style-type: none;
             padding-left: 35px;
-            color: #505050;
+            color: #2b0785;
             cursor: pointer;
+            background-repeat: no-repeat;
+            background-size: 21px 21px;
+            background-position: left;
             .circle
             {
               width: 5px;
               height: 5px;
               background-color: #909090;
               border-radius: 50%;
-              margin: 0 10px;
+              margin: 0 5px;
+            }
+            span
+            {
+              font-size: 10px;
+              color: #909090;
+              text-transform: inherit;
             }
           }
           li:hover
           {
-            color: #2b0785;
+            color: #505050;
             font-weight: 500;
           }
           li:last-child
           {
             border-bottom: 0;
           }
-          .react, .vue, .angular, .elm
-          {
-            background-repeat: no-repeat;
-            background-size: 21px 21px;
-            background-position: left;
-          }
-          .react
-          {
-            background-image: url('../images/react-gray.svg');
-          }
-          .react:hover
-          {
-            background-image: url('../images/react-blue.svg');
-          }
-          .vue
-          {
-            background-image: url('../images/Vue-gray.svg');
-          }
-          .vue:hover
-          {
-            background-image: url('../images/Vue-icon.svg');
-          }
-          .angular
-          {
-            background-image: url('../images/angular-gray.svg');
-          }
-          .angular:hover
-          {
-            background-image: url('../images/angular-icon.svg');
-          }
-          .elm
-          {
-            background-image: url('../images/elm.svg');
-          }
           .comingSoonHover, .comingSoonHover:hover
           {
-            color: #909090;
+            color: #909090 !important;
             font-weight: normal;
             cursor: not-allowed;
+            opacity: 0.5 !important;
+            span
+            {
+              color: #909090 !important;
+              font-weight: normal;
+
+            }
           }
         }
       }
@@ -426,10 +417,134 @@ ul
     }
   }
 }
+.reactBg
+{
+  background-image: url('../images/react-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/react-original.svg');
+  }
+}
+.vueBg
+{
+  background-image: url('../images/vue-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/vue-original.svg');
+  }
+}
+.angularBg
+{
+  background-image: url('../images/angular-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/angular-original.svg');
+  }
+}
+.elmBg
+{
+  background-image: url('../images/elm-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/elm-original.jpg');
+  }
+}
+.reBg
+{
+  background-image: url('../images/reasonml-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/reasonml-original.svg');
+  }
+}
+.hasuraBg
+{
+  background-image: url('../images/hasura-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/hasura-original.svg');
+  }
+}
+.postgresBg
+{
+  background-image: url('../images/postgres-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/postgres-original.svg');
+  }
+}
+.iosBg
+{
+  background-image: url('../images/ios-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/ios-original.svg');
+  }
+}
+.androidBg
+{
+  background-image: url('../images/android-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/android-original.svg');
+  }
+}
+.flutterBg
+{
+  background-image: url('../images/flutter-purple.svg');
+  &:hover
+  {
+    background-image: url('../images/flutter-original.svg');
+  }
+}
+.reactDisableBg
+{
+  background-image: url('../images/react-disable.svg');
+}
+.vueDisableBg
+{
+  background-image: url('../images/vue-disable.svg');
+}
+.angularDisableBg
+{
+  background-image: url('../images/angular-disable.svg');
+}
+.elmDisableBg
+{
+  background-image: url('../images/elm-disable.svg');
+}
+.reDisableBg
+{
+  background-image: url('../images/reasonml-disable.svg');
+}
+.hasuraDisableBg
+{
+  background-image: url('../images/hasura-disable.svg');
+}
+.postgresDisableBg
+{
+  background-image: url('../images/postgres-disable.svg');
+}
+.iosDisableBg
+{
+  background-image: url('../images/ios-disable.svg');
+}
+.androidDisableBg
+{
+  background-image: url('../images/android-disable.svg');
+}
+.flutterDisableBg
+{
+  background-image: url('../images/flutter-disable.svg');
+}
 .navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover
 {
   background-color: transparent;
   color: #fff;
+}
+.navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover
+{
+  background-color: transparent;
 }
 .topBannerWrapper
 {
@@ -462,255 +577,6 @@ ul
     }
   }
 }
-/*
-.commonSectionWrapperBot
-{
-  padding-bottom: 300px;
-}
-.positionRel
-{
-  position: relative;
-}
-.positionWrapper
-{
-  position: absolute;
-  bottom: -200px;
-}
-.iconWrapper
-{
-  width: inherit;
-  padding: 50px;
-  border-radius: 10px;
-  background-color: #fff;
-  .sectionSubHeader
-  {
-    text-align: center;
-  }
-  .iconListWrapper
-  {
-    padding-top: 40px;
-    .iconList
-    {
-      .scenarioImg
-      {
-        text-align: center;
-        img
-        {
-          display: inline-block;
-          width: 60px;
-        }
-      }
-      .listHeader
-      {
-        text-align: center;
-        color: #f78431;
-        font-size: 16px;
-        padding-top: 20px;
-      }
-      .sectionDescription
-      {
-        padding: 0 20px;
-        padding-top: 20px;
-        text-align: center;
-      }
-    }
-  }
-}
-.twistWrapper
-{
-  padding-top: 200px;
-  .sectionHeader
-  {
-    text-align: center;
-  }
-  .sectionSubHeader
-  {
-    text-align: center;
-  }
-  .gradientBtn
-  {
-    padding-top: 20px;
-  }
-  .twistImg
-  {
-    text-align: center;
-    padding-top: 50px;
-    img
-    {
-      display: inline-block;
-    }
-  }
-}
-.faqWrapper
-{
-  .sectionHeader
-  {
-    color: #fff;
-  }
-  .topicCovered
-  {
-    .topicCoveredList
-    {
-      .circle
-      {
-        background-color: #5f4489;
-      }
-      .sectionDescription
-      {
-        color: #fff;
-      }
-    }
-  }
-}
-.topicCoveredWrapper
-{
-  .sectionHeader
-  {
-    color: #fff;
-  }
-  .topicCovered
-  {
-    .topicCoveredList
-    {
-      .circle
-      {
-        background-color: #5f4489;
-      }
-      .sectionDescription
-      {
-        color: #fff;
-      }
-    }
-  }
-}
-.topicCoveredWrapper, .faqWrapper
-{
-  .sectionHeader
-  {
-    padding-bottom: 20px;
-  }
-  .topicCovered
-  {
-    display: flex;
-    align-items: center;
-    .topicCoveredList
-    {
-      padding: 15px 0;
-      .circle
-      {
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        img
-        {
-          width: 80%;
-          display: inline-block;
-        }
-      }
-      .sectionDescription
-      {
-        text-align: left;
-      }
-    }
-    .topicCoveredImg
-    {
-      text-align: center;
-      img
-      {
-        display: inline-block;
-      }
-    }
-  }
-}
-.techologyWrapper
-{
-  .sectionHeader
-  {
-    text-align: center;
-    padding-bottom: 30px;
-  }
-  .chooseListWrapper
-  {
-    width: 80%;
-    margin: 0 auto;
-    .techName
-    {
-      text-align: center;
-      font-size: 14px;
-      color: #7a4fa1;
-      padding-top: 20px;
-      font-family: 'raleway';
-      font-weight: 600;
-    }
-    .techNameGray
-    {
-      text-align: center;
-      font-size: 14px;
-      color: #797979;
-      padding-top: 20px;
-      font-family: 'raleway';
-      font-weight: 600;
-    }
-    .chooseList
-    {
-      background-image: url('../images/container-light.svg');
-      cursor: pointer;
-    }
-    .chooseListDisable
-    {
-      background-image: url('../images/container-gray.svg');
-      cursor: not-allowed;
-    }
-    .chooseList, .chooseListDisable
-    {
-      background-repeat: no-repeat;
-      position: relative;
-      .chooseListImg
-      {
-        padding: 30px;
-        img
-        {
-          display: inline-block;
-        }
-      }
-      .circle
-      {
-        position: absolute;
-        width: 30px;
-      }
-      .cirLeft
-      {
-        left: -15px;
-        top: 20px;
-      }
-      .cirBottom
-      {
-        bottom: -15px;
-        right: 20px;
-      }
-      .cirRight
-      {
-        right: -15px;
-        top: 20px;
-      }
-      .cirBottom1
-      {
-        right: -15px;
-        bottom: 20px;
-      }
-    }
-    .chooseList:hover
-    {
-      background-image: url('../images/container-dark.svg');
-    }
-  }
-}
-*/
 .footerWrapper
 {
   padding: 20px 0px;
@@ -803,7 +669,11 @@ ul
   .tutorialListWrapper
   {
     text-align: left;
-    .listTutorial
+    .disabledList
+    {
+      cursor: not-allowed;
+    }
+    .listTutorial, .disabledList
     {
       width: calc(33.33% - 8px);
       background-color: #fff;
@@ -814,11 +684,16 @@ ul
       text-align: center;
       margin-right: 8px;
       border-radius: 2px;
+      background-repeat: no-repeat;
+      background-size: 70px 70px;
+      background-position: center;
+      transition: all .2s ease-out;
+      &:hover
+      {
+        transition: all .2s ease-out;
+      }
       .tutorialIconWrapper
       {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
         min-height: 70px;
         position: relative;
         img
@@ -834,17 +709,16 @@ ul
           color: #909090;
           position: absolute;
           left: 50%;
-          bottom: -5px;
+          bottom: -10px;
           transform: translateX(-50%);
           padding-top: 5px;
           width: 60px;
         }
       }
-      &:hover
-      {
-        box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
-      }
-
+    }
+    .listTutorial:hover
+    {
+      box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
     }
   }
 }
@@ -1038,11 +912,6 @@ ul
   {
     font-size: 22px;
   }
-  .positionWrapper
-  {
-    position: static;
-    clear: both;
-  }
   .whiteLineSeperator, .purpleLineSeperator
   {
     margin: 0 auto;
@@ -1050,6 +919,38 @@ ul
   }
   .headerWrapper
   {
+    padding-top: 15px;
+    .navBarWrapper
+    {
+      li
+      {
+        padding: 10px 20px;
+        .dropdownMenu
+        {
+          width: 100%;
+          float: left;
+          background-color: #fff;
+          position: relative;
+          top: 10px;
+          .dropdownMenuBgImg
+          {
+            display: none;
+          }
+          .purpleLineSeperator
+          {
+            margin: 20px;
+            margin-left: 0;
+          }
+        }
+      }
+      .active
+      {
+        a
+        {
+          border-bottom: 0;
+        }
+      }
+    }
     .logoWrapper
     {
       text-align: center;
@@ -1171,93 +1072,53 @@ ul
       padding: 10px 25px;
     }
   }
-  /*
-  .iconWrapper
+  .footer_wrapper
   {
-    padding: 25px;
-    width: calc(100% - 60px);
-    float: left;
-    margin: 0 auto;
-    margin: 0 30px;
-    .iconListWrapper
+    .logo_icon
     {
-      padding-top: 0px;
-    }
-    .iconList
-    {
-      padding-top: 40px;
-    }
-  }
-  .twistWrapper
-  {
-    padding-top: 0;
-    .sectionSubHeader, .sectionHeader
-    {
-      padding: 0 15px;
-    }
-    .twistImg
-    {
-      padding: 0 20px;
-      padding-top: 30px;
-    }
-  }
-  .topicCoveredWrapper, .faqWrapper
-  {
-    .sectionHeader
-    {
+      padding-top: 0;
       text-align: center;
+      padding-left: 0;
     }
-    .topicCovered
+    .footer_section
     {
-      display: block;
-      .topicCoveredList
-      {
-        .circle
-        {
-          margin-left: 15px;
-        }
-        .sectionDescription
-        {
-          padding-right: 15px;
-        }
-      }
-      .topicCoveredImg
-      {
-        padding-top: 30px;
-      }
-    }
-  }
-  .techologyWrapper
-  {
-    .chooseListWrapper
-    {
-      .techName, .techNameGray
-      {
-        padding-bottom: 30px;
-        padding-top: 10px;
-      }
-      .chooseList
-      {
-
-      }
-    }
-  }
-  .footerWrapper
-  {
-    .pageDescriptionSmall
-    {
-      padding: 0px 10px;
       padding-top: 15px;
+      text-align: center;
+      .footer_header
+      {
+        padding-bottom: 10px;
+        text-align: center;
+      }
+      .footer_links
+      {
+        padding-bottom: 10px;
+        text-align: center;
+      }
+      .footer_social_wrapper
+      {
+        padding-bottom: 25px;
+        justify-content: center;
+        .social_icons
+        {
+          padding-right: 10px;
+        }
+      }
+      .footer_email
+      {
+        .footer_arrow
+        {
+          right: 20px;
+        }
+      }
     }
   }
-  */
+  .copy_text
+  {
+    padding-top: 30px;
+  }
 }
 @media (min-width: 768px) and (max-width: 991px)
 {
-  .purpleLineSeperator
-  {
-
-  }
   .tutorialWrapper
   {
     .sectionHeader
@@ -1313,19 +1174,49 @@ ul
       }
     }
   }
-  /*
-  .techologyWrapper
+  .footer_wrapper
   {
-    .chooseListWrapper
+    .logo_icon
     {
-      .chooseList, .chooseListDisable
+      padding-top: 0;
+      text-align: center;
+      padding-left: 0;
+    }
+  }
+
+  .footer_section
+  {
+    padding-top: 20px;
+    text-align: center;
+    .footer_header
+    {
+      padding-bottom: 15px;
+      text-align: center;
+    }
+    .footer_links
+    {
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    .footer_social_wrapper
+    {
+      padding-bottom: 25px;
+      justify-content: center;
+      .social_icons
       {
-        .chooseListImg
-        {
-          padding: 25px;
-        }
+        padding-right: 5px;
+      }
+    }
+    .footer_email
+    {
+      .footer_arrow
+      {
+        right: 20px;
       }
     }
   }
-  */
+  .copy_text
+  {
+    padding-top: 30px;
+  }
 }

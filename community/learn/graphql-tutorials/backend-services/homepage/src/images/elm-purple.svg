@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+    <defs>
+        <style>
+            .cls-1{fill:#2b0785}.cls-2{fill:none}
+        </style>
+    </defs>
+    <g id="Group_1080" data-name="Group 1080" transform="translate(-148 -2928)">
+        <g id="Group_922" data-name="Group 922" transform="translate(154 2934)">
+            <path id="Path_515" d="M1415.858 568.953l22.318-22.533 22.425 22.533z" class="cls-1" data-name="Path 515" transform="translate(-1414.176 -520.953)"/>
+            <path id="Path_516" d="M1408.5 441.8v45.128l22.768-22.564z" class="cls-1" data-name="Path 516" transform="translate(-1408.499 -440.243)"/>
+            <path id="Path_517" d="M1414.686 435h22.371l10.415 10.425h-22.5z" class="cls-1" data-name="Path 517" transform="translate(-1413.272 -435)"/>
+            <path id="Path_518" d="M1526.108 435h21.118v21.225z" class="cls-1" data-name="Path 518" transform="translate(-1499.226 -435)"/>
+            <path id="Path_519" d="M1585.845 552.046l-9.675 9.981 9.675 9.948z" class="cls-1" data-name="Path 519" transform="translate(-1537.845 -525.293)"/>
+            <path id="Path_520" d="M1531.186 513.373l11.266-11.261-11.347-11.379-11.185 11.314z" class="cls-1" data-name="Path 520" transform="translate(-1494.453 -477.995)"/>
+            <path id="Path_521" d="M1468.311 489.046h20.8l-10.4 10.382z" class="cls-1" data-name="Path 521" transform="translate(-1454.64 -476.693)"/>
+        </g>
+        <path id="Path_535" d="M0 0h60v60H0z" class="cls-2" data-name="Path 535" transform="translate(148 2928)"/>
+    </g>
+</svg>

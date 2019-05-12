@@ -137,7 +137,7 @@ class Footer extends React.Component {
                     </div>
                     <div className={'social_icons'}>
                       <a href={'https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ'} target={'_blank'}>
-                        <i className="fab fa-youtube-play" aria-hidden="true"></i>
+                        <i className="fab fa-youtube" aria-hidden="true"></i>
                       </a>
                     </div>
                   </div>

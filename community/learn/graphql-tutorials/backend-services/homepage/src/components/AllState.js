@@ -1,86 +1,73 @@
-const angularIcon = require('../images/angular-icon.svg');
-const vueIcon = require('../images/Vue-icon.svg');
-const reactIcon = require('../images/React-icon.svg');
-const elm = require('../images/elm.svg');
-const re = require('../images/re.svg');
-const hasura = require('../images/hasura-icon.svg');
-const postgres = require('../images/postgres.svg');
-
-const reactBlue = require('../images/react-blue.svg');
-const ios = require('../images/ios.svg');
-const android = require('../images/android-icon.svg');
-const arrow = require('../images/arrow.svg');
-
 const frontendTutorial = [
   {
-    imgSrc:reactIcon,
-    imgAlt:'React icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: false,
+    bgClassName: 'reactBg',
+    disableBgClassName: 'reactDisableBg',
   },
   {
-    imgSrc:vueIcon,
-    imgAlt:'Vue icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: false,
+    bgClassName: 'vueBg',
+    disableBgClassName: 'vueDisableBg',
   },
   {
-    imgSrc:angularIcon,
-    imgAlt:'Angular icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: true,
+    bgClassName: 'angularBg',
+    disableBgClassName: 'angularDisableBg',
   },
   {
-    imgSrc:elm,
-    imgAlt:'elm icon',
     url: 'https://www.google.com/',
-    comingSoon: 'Coming soon',
+    comingSoon: true,
+    bgClassName: 'elmBg',
+    disableBgClassName: 'elmDisableBg',
   },
   {
-    imgSrc:re,
-    imgAlt:'re icon',
     url: 'https://www.google.com/',
-    comingSoon: 'Coming soon',
+    comingSoon: true,
+    bgClassName: 'reBg',
+    disableBgClassName: 'reDisableBg',
   },
 ]
 const backendTutorial = [
   {
-    imgSrc:hasura,
-    imgAlt:'hasura icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: false,
+    bgClassName: 'hasuraBg',
+    disableBgClassName: 'hasuraDisableBg',
   },
   {
-    imgSrc:postgres,
-    imgAlt:'postgres icon',
     url: 'https://www.google.com/',
-    comingSoon: 'Coming soon',
+    comingSoon: true,
+    bgClassName: 'postgresBg',
+    disableBgClassName: 'postgresDisableBg',
   },
 ]
 const mobileTutorial = [
   {
-    imgSrc:reactBlue,
-    imgAlt:'reactBlue icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: false,
+    bgClassName: 'reactBg',
+    disableBgClassName: 'reactDisableBg',
   },
   {
-    imgSrc:ios,
-    imgAlt:'ios icon',
     url: 'https://www.google.com/',
-    comingSoon: '',
+    comingSoon: false,
+    bgClassName: 'iosBg',
+    disableBgClassName: 'iosDisableBg',
   },
   {
-    imgSrc:android,
-    imgAlt:'android icon',
     url: 'https://www.google.com/',
-    comingSoon: 'Coming soon',
+    comingSoon: true,
+    bgClassName: 'androidBg',
+    disableBgClassName: 'androidDisableBg',
   },
   {
-    imgSrc:arrow,
-    imgAlt:'arrow icon',
     url: 'https://www.google.com/',
-    comingSoon: 'Coming soon',
+    comingSoon: true,
+    bgClassName: 'flutterBg',
+    disableBgClassName: 'flutterDisableBg',
   },
 ]
 const learnFrontend = [
@@ -132,4 +119,5 @@ const learnBackend = [
     list: 'GraphQL & UI modularisation techniques.',
   },
 ]
+
 export {frontendTutorial, backendTutorial, mobileTutorial, learnFrontend, learnBackend}

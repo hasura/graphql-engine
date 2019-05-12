@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#2b0785}
+        </style>
+    </defs>
+    <g id="Group_1070" data-name="Group 1070" transform="translate(-1072 -2556)">
+        <path id="Path_541" d="M0 0h60v60H0z" class="cls-1" data-name="Path 541" transform="translate(1072 2556)"/>
+        <g id="Android_greenrobot" transform="translate(1074.4 2554.5)">
+            <path id="Path_562" d="M251.578 117.589a2.989 2.989 0 1 0-5.978 0v12.455a2.989 2.989 0 1 0 5.978 0z" class="cls-2" data-name="Path 562" transform="translate(-203.127 -91.407)"/>
+            <path id="Path_563" d="M13.578 117.589a2.989 2.989 0 0 0-5.978 0v12.455a2.989 2.989 0 0 0 5.978 0z" class="cls-2" data-name="Path 563" transform="translate(0 -91.407)"/>
+            <g id="Group_1030" data-name="Group 1030" transform="translate(14.692 7.5)">
+                <path id="Path_564" d="M75.869 11.94l2.11-3.81a.411.411 0 0 0-.161-.571.477.477 0 0 0-.205-.059.4.4 0 0 0-.366.22l-2.139 3.854a14.31 14.31 0 0 0-11.546 0L61.436 7.72a.42.42 0 1 0-.733.41l2.11 3.81A12.147 12.147 0 0 0 56 22.651h26.668a12.16 12.16 0 0 0-6.799-10.711zM63.18 17.771a1.114 1.114 0 1 1 1.114-1.114 1.113 1.113 0 0 1-1.114 1.114zm12.308 0a1.114 1.114 0 1 1 1.112-1.113 1.113 1.113 0 0 1-1.112 1.113z" class="cls-2" data-name="Path 564" transform="translate(-56 -7.5)"/>
+                <path id="Path_565" d="M56 118.1v19.327a3.214 3.214 0 0 0 3.224 3.224h2.139v6.594a2.989 2.989 0 1 0 5.978 0v-6.595h3.985v6.594a2.989 2.989 0 1 0 5.978 0v-6.594h2.139a3.214 3.214 0 0 0 3.224-3.224V118.1z" class="cls-2" data-name="Path 565" transform="translate(-56 -101.894)"/>
+            </g>
+        </g>
+    </g>
+</svg>

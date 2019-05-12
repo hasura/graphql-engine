@@ -4,16 +4,18 @@ import '../styles/styles.scss';
 class CommonTutorialsList extends React.Component {
   render() {
     const path = require('../images/tutorial-path.svg');
-    const listTutorial = this.props.frontendTutorial.map((list, key) => {
+    console.log(this.props)
+    const listTutorial = this.props.tutorial.map((list, key) => {
+      console.log(list);
       return (
         <a key={key} href={list.url} target={'_blank'}>
-          <div className={'listTutorial'}>
+          <div className= {(list.comingSoon) ? list.disableBgClassName + ' disabledList' : list.bgClassName + ' listTutorial'}>
             <div className={'tutorialIconWrapper'}>
-              <img className={'img-responsive'} src={list.imgSrc} alt={list.imgAlt} />
-              {(list.comingSoon === '') ? null :
+              {(list.comingSoon) ?
                 <div className={'comingSoon'}>
-                  {list.comingSoon}
+                  Coming soon
                 </div>
+                : null
               }
             </div>
           </div>
@@ -39,7 +41,9 @@ class CommonTutorialsList extends React.Component {
 }
 CommonTutorialsList.propTypes = {
   title: PropTypes.string.isRequired,
-  frontendTutorial: PropTypes.array.isRequired,
+  tutorial: PropTypes.array.isRequired,
+  bgClassName: PropTypes.string.isRequired,
   subText: PropTypes.string.isRequired,
+  disableBgClassName: PropTypes.string.isRequired,
 }
 export default CommonTutorialsList;

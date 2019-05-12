@@ -16,17 +16,17 @@ class Tutorials extends React.Component {
             <CommonTutorialsList
             title="Frontend Tutorials"
             subText="(2-hour Series)"
-            frontendTutorial={frontendTutorial}
+            tutorial={frontendTutorial}
             />
             <CommonTutorialsList
             title="Backend Tutorials"
             subText=""
-            frontendTutorial={backendTutorial}
+            tutorial={backendTutorial}
             />
             <CommonTutorialsList
             title="Mobile Tutorials"
             subText="(2-hour Series)"
-            frontendTutorial={mobileTutorial}
+            tutorial={mobileTutorial}
             />
           </div>
         </div>

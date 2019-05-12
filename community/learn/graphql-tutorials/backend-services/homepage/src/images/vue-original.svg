@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#4dba87}.cls-3{fill:#435466}
+        </style>
+    </defs>
+    <g id="Group_1036" data-name="Group 1036" transform="translate(-258 -2559)">
+        <path id="Path_537" d="M0 0h60v60H0z" class="cls-1" data-name="Path 537" transform="translate(258 2559)"/>
+        <g id="Vue.js_Logo" transform="translate(186.689 2880.344)">
+            <g id="g12" transform="translate(76.311 -313.344)">
+                <path id="path14" d="M-129.888 0l-5.857 10.144L-141.6 0h-19.5l25.361 43.926L-110.384 0z" class="cls-2" transform="translate(161.105)"/>
+            </g>
+            <g id="g16" transform="translate(86.456 -313.344)">
+                <path id="path18" d="M-87.68 0l-5.857 10.144L-99.393 0h-9.36l15.216 26.355L-78.32 0z" class="cls-3" transform="translate(108.753)"/>
+            </g>
+        </g>
+    </g>
+</svg>
