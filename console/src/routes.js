@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound, VoyagerView } from 'components';
 
 import { dataRouterUtils } from './components/Services/Data';
 
@@ -79,6 +79,7 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
+      <Route path="voyager-view(/:root)" component={VoyagerView} />
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""

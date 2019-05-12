@@ -8,6 +8,7 @@ const assetsPath = path.resolve(__dirname, '../static/dist');
 const hasuraConfig = require('../hasuraconfig');
 const host = hasuraConfig.hmrHost;
 const port = hasuraConfig.hmrPort;
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const autoprefixer = require('autoprefixer');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
@@ -148,5 +149,8 @@ module.exports = {
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
     }),
     webpackIsomorphicToolsPlugin.development(),
+    new CopyWebpackPlugin([
+      { from: './node_modules/graphql-voyager/dist/voyager.worker.js' },
+    ]),
   ],
 };

@@ -22,6 +22,7 @@ gzip-assets:
 	gzip $(DIST_PATH)/*.css
 	mv $(DIST_PATH)/main.js.gz $(DIST_PATH)/main.js
 	mv $(DIST_PATH)/vendor.js.gz $(DIST_PATH)/vendor.js
+	mv $(DIST_PATH)/voyager.worker.js.gz $(DIST_PATH)/voyager.worker.js
 	mv $(DIST_PATH)/main.css.gz $(DIST_PATH)/main.css
 
 # to be run inside circle-ci
@@ -34,6 +35,7 @@ gcloud-cp-stable:
 	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css
 	gsutil cp -r $(DIST_PATH)/main.js gs://$(BUCKET_NAME)/console/$(VERSION)/main.js
 	gsutil cp -r $(DIST_PATH)/vendor.js gs://$(BUCKET_NAME)/console/$(VERSION)/vendor.js
+	gsutil cp -r $(DIST_PATH)/voyager.worker.js gs://$(BUCKET_NAME)/console/$(VERSION)/voyager.worker.js
 
 gcloud-set-metadata:
 	gsutil setmeta -h "Content-Type: application/javascript" gs://$(BUCKET_NAME)/console/$(VERSION)/*.js
