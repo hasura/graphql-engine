@@ -340,6 +340,10 @@ ul
           top: 0;
           height: 100%;
           overflow: hidden;
+          img
+          {
+            height: 100%;
+          }
         }
         .menuTitle
         {
@@ -564,12 +568,12 @@ ul
 }
 .navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover
 {
-  background-color: transparent;
-  color: #fff;
+  background-color: transparent !important;
+  color: #fff !important;
 }
 .navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover
 {
-  background-color: transparent;
+  background-color: transparent !important;
 }
 .flexBoxWrapper
 {
