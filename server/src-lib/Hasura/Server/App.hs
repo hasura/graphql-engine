@@ -232,9 +232,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       manager = scManager serverCtx
 
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  -- apply the error modifier
-  let modUserInfoE = fmapL qErrModifier userInfoE
-  userInfo <- either (logAndThrow req reqBody False) return modUserInfoE
+  userInfo <- either (logAndThrow req reqBody False . qErrModifier) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
