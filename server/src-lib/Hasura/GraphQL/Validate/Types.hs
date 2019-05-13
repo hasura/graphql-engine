@@ -43,7 +43,7 @@ module Hasura.GraphQL.Validate.Types
   , AnnGObject
   , hasNullVal
   , getAnnInpValKind
-  , stripeOffTypeNames
+  , stripTypenames
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -640,8 +640,8 @@ getAnnInpValKind = \case
   AGObject _ _ -> "object"
   AGArray _ _  -> "array"
 
-stripeOffTypeNames :: [G.ExecutableDefinition] -> [G.ExecutableDefinition]
-stripeOffTypeNames = map filterExecDef
+stripTypenames :: [G.ExecutableDefinition] -> [G.ExecutableDefinition]
+stripTypenames = map filterExecDef
   where
     filterExecDef = \case
       G.ExecutableDefinitionOperation opDef  ->

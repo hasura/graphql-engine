@@ -204,7 +204,7 @@ isQueryInAllowlist q listMap =
   gqlQuery `elem` allAllowQueries
   where
     allAllowQueries = map _lqQuery $ concat $ Map.elems listMap
-    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripeOffTypeNames $
+    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
                unGQLExecDoc q
 
 getQueryParts

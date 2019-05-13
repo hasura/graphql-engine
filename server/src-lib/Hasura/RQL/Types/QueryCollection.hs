@@ -1,6 +1,6 @@
 module Hasura.RQL.Types.QueryCollection where
 
-import           Hasura.GraphQL.Validate.Types    (stripeOffTypeNames)
+import           Hasura.GraphQL.Validate.Types    (stripTypenames)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
@@ -31,7 +31,7 @@ newtype GQLQuery
 
 queryWithoutTypeNames :: GQLQuery -> GQLQuery
 queryWithoutTypeNames =
-  GQLQuery . G.ExecutableDocument . stripeOffTypeNames
+  GQLQuery . G.ExecutableDocument . stripTypenames
   . G.getExecutableDefinitions . unGQLQuery
 
 data ListedQuery
