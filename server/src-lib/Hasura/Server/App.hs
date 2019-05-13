@@ -131,17 +131,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx    :: PGExecCtx
-  , scConnInfo     :: Q.ConnInfo
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scSQLGenCtx    :: SQLGenCtx
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
-  , scPlanCache    :: E.PlanCache
-  , scLQState      :: EL.LiveQueriesState
+  { scPGExecCtx   :: PGExecCtx
+  , scConnInfo    :: Q.ConnInfo
+  , scLogger      :: L.Logger
+  , scCacheRef    :: SchemaCacheRef
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
+  , scInstanceId  :: InstanceId
+  , scPlanCache   :: E.PlanCache
+  , scLQState     :: EL.LiveQueriesState
   }
 
 data HandlerCtx
@@ -232,7 +232,9 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       manager = scManager serverCtx
 
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+  -- apply the error modifier
+  let modUserInfoE = fmapL qErrModifier userInfoE
+  userInfo <- either (logAndThrow req reqBody False) return modUserInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
