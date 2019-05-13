@@ -17,7 +17,6 @@ import           Data.CaseInsensitive  (original)
 import           Hasura.Server.Utils   (bsToTxt)
 import           Hasura.Server.Version (currentVersion)
 
-
 hdrsToText :: [HTTP.Header] -> [(Text, Text)]
 hdrsToText hdrs =
   [ (bsToTxt $ original hdrName, bsToTxt hdrVal)
