@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import '../styles/styles.scss';
 class CommonTutorialsList extends React.Component {
   render() {
-    const path = require('../images/tutorial-path.svg');
+    const path = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/tutorial-path.svg';
     let anchorClass;
     const listTutorial = this.props.tutorial.map((list, key) => {
       anchorClass = list.comingSoon ? 'noClick' : '';

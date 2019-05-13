@@ -23,7 +23,7 @@ export default class HTML extends React.Component {
           <meta property="twitter:description" content="Learn how to integrate GraphQL APIs with your favorite frontend / mobile framework and Hasura GraphQL Engine" />
           <meta property="twitter:image" content="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-homepage.png" />
           {this.props.headComponents}
-          <link rel="shortcut icon" href="./images/favicon.png" type="image/png" />
+          <link rel="shortcut icon" href="https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/favicon.png" type="image/png" />
           <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossOrigin="anonymous" />

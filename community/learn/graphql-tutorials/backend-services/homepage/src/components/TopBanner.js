@@ -3,7 +3,7 @@ import '../styles/styles.scss';
 
 class TopBanner extends React.Component {
   render() {
-    const hasuraDumbledore =require('../images/hasura-dumbledore.png');
+    const hasuraDumbledore = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/hasura-dumbledore.png';
     return (
       <div className={'gradientBgColor commonSectionWrapper positionRel'}>
         <div className={'container noPadd'}>
@@ -16,7 +16,7 @@ class TopBanner extends React.Component {
                 <div className={'whiteLineSeperator'}>
                 </div>
                 <div className={'sectionDescription'}>
-                  You will move from GraphQL basics to production-ready concepts in 2 hours flat.
+                  With these <a href="https://github.com/hasura/graphql-engine/tree/master/community/learn">open-source</a> tutorials, you will move from the basics of GraphQL to building a real-time application in 2 hours
                 </div>
               </div>
               <div className={'col-md-6 col-sm-6 col-xs-12 noPadd'}>

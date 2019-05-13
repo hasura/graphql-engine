@@ -3,8 +3,8 @@ import '../styles/styles.scss';
 import {frontendTutorial, backendTutorial, mobileTutorial} from './AllState.js'
 class TopBanner extends React.Component {
   render() {
-    const logo = require('../images/logo.svg');
-    const dropPath = require('../images/dropdown-path.svg');
+    const logo = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/logo.svg';
+    const dropPath = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/dropdown-path.svg';
     return (
       <div className={'headerWrapper blueBgColor'}>
         <nav className="navbar navbar-default navbarDefault">

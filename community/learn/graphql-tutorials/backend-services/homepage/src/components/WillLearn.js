@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/styles.scss';
 import { learnFrontend, learnBackend} from './AllState.js';
-const tick = require('../images/tick.svg');
+const tick = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/tick.svg';
 class WillLearn extends React.Component {
   render() {
     const frontend = learnFrontend.map((list, key) => {

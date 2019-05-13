@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-    <defs>
-        <style>
-            .cls-1{fill:#2b0785}
-        </style>
-    </defs>
-    <path id="tick" d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0zm5.742 8.311L9.46 14.593a1.414 1.414 0 0 1-2 0l-3.2-3.2a1.414 1.414 0 1 1 2-2l2.2 2.2 5.282-5.282a1.414 1.414 0 0 1 2 2z" class="cls-1"/>
-</svg>

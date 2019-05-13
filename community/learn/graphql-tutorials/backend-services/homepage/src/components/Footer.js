@@ -30,7 +30,7 @@ const formProps = {
 };
 class Footer extends React.Component {
   render() {
-    const blueLamda = require('../images/Hasura.svg');
+    const blueLamda = 'https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/Hasura.svg';
     return (
       <div id="footer" ref="footer" className={'darkGrayBgColor commonSectionWrapper wd100'}>
           <div className={'container noPadd'}>
