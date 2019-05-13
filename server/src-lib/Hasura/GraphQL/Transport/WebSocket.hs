@@ -38,8 +38,7 @@ import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
-import           Hasura.Server.Auth                          (AuthMode,
-                                                              getUserInfo)
+import           Hasura.Server.Auth                          (AuthMode, getUserInfoWithExpTime)
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (bsToTxt,
                                                               diffTimeToMicro)
@@ -61,7 +60,8 @@ data WSConnState
   = CSNotInitialised !WsHeaders
   | CSInitError Text
   -- headers from the client (in conn params) to forward to the remote schema
-  | CSInitialised UserInfo [H.Header]
+  -- and JWT expiry time if any
+  | CSInitialised UserInfo (Maybe TC.UTCTime) [H.Header]
 
 data WSConnData
   = WSConnData
@@ -152,10 +152,10 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       expTime <- STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
-          CSNotInitialised _       -> STM.retry
-          CSInitError _            -> STM.retry
-          CSInitialised userInfo _ ->
-            maybe STM.retry return $ userJWTExpiry userInfo
+          CSNotInitialised _         -> STM.retry
+          CSInitError _              -> STM.retry
+          CSInitialised _ expTimeM _ ->
+            maybe STM.retry return expTimeM
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
@@ -228,7 +228,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   userInfoM <- liftIO $ STM.readTVarIO userInfoR
   (userInfo, reqHdrs) <- case userInfoM of
-    CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
+    CSInitialised userInfo _ reqHdrs -> return (userInfo, reqHdrs)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendStartErr e
@@ -382,8 +382,8 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let userInfoM = case userInfoME of
-        CSInitialised userInfo _ -> return $ userVars userInfo
-        _                        -> Nothing
+        CSInitialised userInfo _ _ -> return $ userVars userInfo
+        _                          -> Nothing
   liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
@@ -394,7 +394,7 @@ onConnInit
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
-  res <- runExceptT $ getUserInfo logger manager headers authMode
+  res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
   case res of
     Left e  -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
@@ -402,9 +402,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
-    Right userInfo -> do
+    Right (userInfo, expTimeM) -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
-        CSInitialised userInfo paramHeaders
+        CSInitialised userInfo expTimeM paramHeaders
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?

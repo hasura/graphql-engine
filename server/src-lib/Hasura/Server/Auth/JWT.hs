@@ -17,8 +17,8 @@ import           Crypto.JWT
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
-import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
-                                                  getCurrentTime)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime,
+                                                  diffUTCTime, getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
@@ -172,7 +172,7 @@ processJwt
   => JWTCtx
   -> HTTP.RequestHeaders
   -> Maybe RoleName
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processJwt jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
   where
@@ -183,7 +183,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ mkUserInfo unAuthRole (mkUserVars $ hdrsToText headers) Nothing
+      return $ (, Nothing) $
+        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -194,7 +195,7 @@ processAuthZHeader
   => JWTCtx
   -> HTTP.RequestHeaders
   -> BLC.ByteString
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processAuthZHeader jwtCtx headers authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
@@ -228,7 +229,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ A.Object finalClaims
 
-  return $ mkUserInfo role (mkUserVars $ Map.toList metadata) expTimeM
+  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList metadata
 
   where
     parseAuthzHeader = do

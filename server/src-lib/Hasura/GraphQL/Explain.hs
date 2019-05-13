@@ -129,4 +129,4 @@ explainGQLQuery pgExecCtx sc sqlGenCtx (GQLExplain query userVarsRaw)= do
       throw400 InvalidParams "only queries can be explained"
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
-    userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars Nothing
+    userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars

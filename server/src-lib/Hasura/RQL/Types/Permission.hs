@@ -32,8 +32,6 @@ import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
 import           Data.Hashable
-import           Data.Hashable.Time         ()
-import           Data.Time.Clock
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -86,12 +84,11 @@ mkUserVars l =
 
 data UserInfo
   = UserInfo
-  { userRole      :: !RoleName
-  , userVars      :: !UserVars
-  , userJWTExpiry :: !(Maybe UTCTime)
+  { userRole :: !RoleName
+  , userVars :: !UserVars
   } deriving (Show, Eq, Generic)
 
-mkUserInfo :: RoleName -> UserVars -> Maybe UTCTime -> UserInfo
+mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
   UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
@@ -110,7 +107,7 @@ userInfoToList userInfo =
 
 adminUserInfo :: UserInfo
 adminUserInfo =
-  mkUserInfo adminRole (mkUserVars []) Nothing
+  mkUserInfo adminRole $ mkUserVars []
 
 data PermType
   = PTInsert
