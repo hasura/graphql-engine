@@ -40,6 +40,11 @@ spec:
       path: ./community/learn/graphql-tutorials/tutorials/react-apollo/tutorial-site
     name: react-apollo
   - containers:
+    - dockerfile: ./community/learn/graphql-tutorials/tutorials/react-native-apollo/tutorial-site/Dockerfile
+      name: react-native-apollo
+      path: ./community/learn/graphql-tutorials/tutorials/react-native-apollo/tutorial-site
+    name: react-native-apollo
+  - containers:
     - dockerfile: ./community/learn/graphql-tutorials/tutorials/vue-apollo/tutorial-site/Dockerfile
       name: vue-apollo
       path: ./community/learn/graphql-tutorials/tutorials/vue-apollo/tutorial-site
