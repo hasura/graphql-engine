@@ -23,7 +23,6 @@ import {
 } from '../Add/AddExistingTableViewActions';
 import {
   loadUntrackedRelations,
-  fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
 } from '../DataActions';
@@ -44,10 +43,6 @@ class Schema extends Component {
     this.state = {
       isExporting: false,
     };
-
-    // Initialize this table
-    this.props.dispatch(fetchDataInit());
-    this.props.dispatch(fetchFunctionInit());
   }
 
   render() {

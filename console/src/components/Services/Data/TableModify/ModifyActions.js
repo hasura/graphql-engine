@@ -572,7 +572,16 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      dispatch(loadUntrackedRelations()).then(() => {
+      dispatch(
+        loadUntrackedRelations({
+          tables: [
+            {
+              table_schema: currentSchema,
+              table_name: tableName,
+            },
+          ],
+        })
+      ).then(() => {
         dispatch(_push('/'));
       });
     };
@@ -590,7 +599,8 @@ const untrackTableSql = tableName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
