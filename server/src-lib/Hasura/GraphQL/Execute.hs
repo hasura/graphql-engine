@@ -365,7 +365,7 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
       n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
                   , "Origin", "Referer" , "Accept", "Accept-Encoding"
                   , "Accept-Language", "Accept-Datetime"
-                  , "Cache-Control", "Connection", "DNT"
+                  , "Cache-Control", "Connection", "DNT", "Content-Type"
                   ]
 
     filterUserVars hdrs =
