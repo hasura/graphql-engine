@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Button from '../../../Common/Button/Button';
+import Operations from './Operations';
 
 import {
   removeHeader,
@@ -30,20 +31,24 @@ import { showErrorNotification } from '../Notification';
 import { createTrigger } from './AddActions';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
+import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 import semverCheck from '../../../../helpers/semver';
 
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
+
     this.props.dispatch(loadTableList('public'));
+
     this.state = {
-      advancedExpanded: false,
       supportColumnChangeFeature: false,
       supportWebhookEnv: false,
       supportRetryTimeout: false,
+      supportManualTriggerInvocations: false,
     };
   }
+
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
@@ -54,6 +59,7 @@ class AddTrigger extends Component {
       });
     }
   }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.serverVersion !== this.props.serverVersion) {
       this.checkSemVer(nextProps.serverVersion).then(() => {
@@ -62,6 +68,7 @@ class AddTrigger extends Component {
       });
     }
   }
+
   componentWillUnmount() {
     // set defaults
     this.props.dispatch(setDefaults());
@@ -78,6 +85,7 @@ class AddTrigger extends Component {
       } else {
         this.updateSupportColumnChangeFeature(false);
       }
+      this.checkManualTriggerInvocationSupport(version);
     } catch (e) {
       this.updateSupportColumnChangeFeature(false);
       console.error(e);
@@ -95,6 +103,12 @@ class AddTrigger extends Component {
     const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
     this.setState({ supportRetryTimeout });
     return Promise.resolve();
+  }
+
+  checkManualTriggerInvocationSupport(version) {
+    this.setState({
+      supportManualTriggerInvocations: semverCheck('manualTriggers', version),
+    });
   }
 
   updateSupportColumnChangeFeature(val) {
@@ -209,9 +223,7 @@ class AddTrigger extends Component {
       );
     }
   }
-  toggleAdvanced() {
-    this.setState({ advancedExpanded: !this.state.advancedExpanded });
-  }
+
   render() {
     const {
       tableName,
@@ -228,12 +240,18 @@ class AddTrigger extends Component {
       headers,
       webhookURL,
       webhookUrlType,
+      enableManual,
     } = this.props;
 
-    const { supportColumnChangeFeature, supportRetryTimeout } = this.state;
+    const {
+      supportColumnChangeFeature,
+      supportRetryTimeout,
+      supportManualTriggerInvocations,
+    } = this.state;
 
     const styles = require('../TableCommon/EventTable.scss');
-    let createBtnText = 'Add Event Trigger';
+
+    let createBtnText = 'Create Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
     } else if (lastError) {
@@ -243,6 +261,11 @@ class AddTrigger extends Component {
     } else if (lastSuccess) {
       createBtnText = 'Created! Redirecting...';
     }
+
+    const handleOperationSelection = e => {
+      dispatch(setOperationSelection(e.target.value));
+    };
+
     const updateTableList = e => {
       dispatch(setSchemaName(e.target.value));
       dispatch(loadTableList(e.target.value));
@@ -263,10 +286,6 @@ class AddTrigger extends Component {
       dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
     };
 
-    const handleOperationSelection = e => {
-      dispatch(setOperationSelection(e.target.value, e.target.checked));
-    };
-
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
@@ -278,39 +297,41 @@ class AddTrigger extends Component {
         t => t.table_name === tableName
       );
 
-      if (tableSchema) {
-        return tableSchema.columns.map((colObj, i) => {
-          const column = colObj.column_name;
-          const columnDataType = colObj.udt_name;
-          const checked = operations[type]
-            ? operations[type].includes(column)
-            : false;
-
-          const isDisabled = false;
-          const inputHtml = (
-            <input
-              type="checkbox"
-              checked={checked}
-              value={column}
-              onChange={dispatchToggleColumn}
-              disabled={isDisabled}
-            />
-          );
-          return (
-            <div key={i} className={styles.padd_remove + ' col-md-4'}>
-              <div className={'checkbox '}>
-                <label>
-                  {inputHtml}
-                  {column}
-                  <small> ({columnDataType})</small>
-                </label>
-              </div>
-            </div>
-          );
-        });
+      if (!tableSchema) {
+        return <i>Select a table first to get column list</i>;
       }
-      return null;
+
+      return tableSchema.columns.map((colObj, i) => {
+        const column = colObj.column_name;
+        const columnDataType = colObj.udt_name;
+        const checked = operations[type]
+          ? operations[type].includes(column)
+          : false;
+
+        const isDisabled = false;
+        const inputHtml = (
+          <input
+            type="checkbox"
+            checked={checked}
+            value={column}
+            onChange={dispatchToggleColumn}
+            disabled={isDisabled}
+          />
+        );
+        return (
+          <div key={i} className={styles.padd_remove + ' col-md-4'}>
+            <div className={'checkbox '}>
+              <label>
+                {inputHtml}
+                {column}
+                <small> ({columnDataType})</small>
+              </label>
+            </div>
+          </div>
+        );
+      });
     };
+
     const advancedColumnSection = supportColumnChangeFeature ? (
       <div>
         <h4 className={styles.subheading_text}>
@@ -328,16 +349,8 @@ class AddTrigger extends Component {
             {getColumnList('update')}{' '}
           </div>
         ) : (
-          <div>
-            <div
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-              style={{
-                marginTop: '10px',
-                marginBottom: '10px',
-              }}
-            >
-              Applicable to update operation only.
-            </div>
+          <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
+            <i>Applicable only if update operation is selected.</i>
           </div>
         )}
       </div>
@@ -402,7 +415,7 @@ class AddTrigger extends Component {
       </div>
     );
 
-    const heads = headers.map((header, i) => {
+    const headersList = headers.map((header, i) => {
       let removeIcon;
       if (i + 1 === headers.length) {
         removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
@@ -474,9 +487,9 @@ class AddTrigger extends Component {
           styles.padd_left
         }`}
       >
-        <Helmet title="Add Trigger - Events | Hasura" />
+        <Helmet title="Create Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new event trigger</h2>
+          <h2 className={styles.heading_text}>Create a new event trigger</h2>
           <div className="clearfix" />
         </div>
         <br />
@@ -566,64 +579,15 @@ class AddTrigger extends Component {
                   styles.add_mar_bottom + ' ' + styles.selectOperations
                 }
               >
-                <h4 className={styles.subheading_text}>
-                  Operations &nbsp; &nbsp;
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={tooltip.operationsDescription}
-                  >
-                    <i className="fa fa-question-circle" aria-hidden="true" />
-                  </OverlayTrigger>{' '}
-                </h4>
-                <div className={styles.display_inline}>
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="insert-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="insert"
-                      checked={selectedOperations.insert}
-                    />
-                    Insert
-                  </label>
-                </div>
-                <div
-                  className={styles.display_inline + ' ' + styles.add_mar_left}
-                >
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="update-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="update"
-                      checked={selectedOperations.update}
-                    />
-                    Update
-                  </label>
-                </div>
-                <div
-                  className={styles.display_inline + ' ' + styles.add_mar_left}
-                >
-                  <label>
-                    <input
-                      onChange={handleOperationSelection}
-                      data-test="delete-operation"
-                      className={
-                        styles.display_inline + ' ' + styles.add_mar_right
-                      }
-                      type="checkbox"
-                      value="delete"
-                      checked={selectedOperations.delete}
-                    />
-                    Delete
-                  </label>
-                </div>
+                <Operations
+                  dispatch={dispatch}
+                  supportManualTriggerInvocations={
+                    supportManualTriggerInvocations
+                  }
+                  enableManual={enableManual}
+                  selectedOperations={selectedOperations}
+                  handleOperationSelection={handleOperationSelection}
+                />
               </div>
               <hr />
               <div className={styles.add_mar_bottom}>
@@ -635,13 +599,6 @@ class AddTrigger extends Component {
                   >
                     <i className="fa fa-question-circle" aria-hidden="true" />
                   </OverlayTrigger>{' '}
-                  <br />
-                  <br />
-                  <small>
-                    Note: Specifying the webhook URL via an environmental
-                    variable is recommended if you have different URLs for
-                    multiple environments.
-                  </small>
                 </h4>
                 <div>
                   {this.state.supportWebhookEnv ? (
@@ -689,42 +646,24 @@ class AddTrigger extends Component {
                     />
                   )}
                 </div>
+                <br />
+                <small>
+                  Note: Specifying the webhook URL via an environmental variable
+                  is recommended if you have different URLs for multiple
+                  environments.
+                </small>
               </div>
               <hr />
-              <div
-                onClick={this.toggleAdvanced.bind(this)}
-                className={styles.toggleAdvanced}
-                data-test="advanced-settings"
+              <CollapsibleToggle
+                title={
+                  <h4 className={styles.subheading_text}>Advanced Settings</h4>
+                }
+                testId="advanced-settings"
               >
-                {this.state.advancedExpanded ? (
-                  <i className={'fa fa-chevron-down'} />
-                ) : (
-                  <i className={'fa fa-chevron-right'} />
-                )}{' '}
-                <b>Advanced Settings</b>
-              </div>
-              {this.state.advancedExpanded ? (
-                <div
-                  className={
-                    styles.advancedOperations +
-                    ' ' +
-                    styles.add_mar_bottom +
-                    ' ' +
-                    styles.add_mar_top +
-                    ' ' +
-                    styles.wd100
-                  }
-                >
-                  {tableName ? advancedColumnSection : null}
-                  <div
-                    className={
-                      styles.add_mar_bottom +
-                      ' ' +
-                      styles.add_mar_top +
-                      ' ' +
-                      styles.wd100
-                    }
-                  >
+                <div>
+                  {advancedColumnSection}
+                  <hr />
+                  <div className={styles.add_mar_top}>
                     <h4 className={styles.subheading_text}>Retry Logic</h4>
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
@@ -801,20 +740,13 @@ class AddTrigger extends Component {
                       </div>
                     )}
                   </div>
-                  <div
-                    className={
-                      styles.add_mar_bottom +
-                      ' ' +
-                      styles.add_mar_top +
-                      ' ' +
-                      styles.wd100
-                    }
-                  >
+                  <hr />
+                  <div className={styles.add_mar_top}>
                     <h4 className={styles.subheading_text}>Headers</h4>
-                    {heads}
+                    {headersList}
                   </div>
                 </div>
-              ) : null}
+              </CollapsibleToggle>
               <hr />
               <Button
                 type="submit"
@@ -851,7 +783,7 @@ const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    serverVersion: state.main.serverVersion,
   };
 };
 

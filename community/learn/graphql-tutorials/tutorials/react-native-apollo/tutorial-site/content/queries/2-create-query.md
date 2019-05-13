@@ -61,7 +61,7 @@ What does this query do?
 ------------------------
 The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
 
-[Try](https://learn.hasura.io/graphql/graphiql) out this query now!
+[Try](https://learn.hasura.io/graphql/graphiql?tutorial=react-native) out this query now!
 
 Introducing query variables
 ---------------------------
