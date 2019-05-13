@@ -2,9 +2,13 @@
 title: "Course introduction"
 ---
 
-This course is a concise and powerful introduction to GraphQL for iOS developers.
+GraphQL is becoming the new way to use APIs in modern web and mobile apps.
 
-We’ve structured this course to cover fundamental concepts of both GraphQL and using GraphQL in iOS, in the shortest amount of time possible. The course is light on opinions so that once you grok the fundamentals you can go on to choose your favourite tools and tailor your workflow.
+However, learning new things always takes time and without getting your hands dirty it’s very hard to understand the nuances of a new technology.
+
+So, we put together a powerful and concise course that will introduce you to GraphQL and integrating GraphQL into your frontend stack, in the shortest amount of time possible.
+
+We will explore the fundamentals of GraphQL and the especially things that make GraphQL suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
 
 ## Key topics and takeways:
 
@@ -21,14 +25,13 @@ We’ve structured this course to cover fundamental concepts of both GraphQL and
 ## What will be building?
 We will be building a realtime todo app using authenticated GraphQL APIs.
 
-Try this deployed version of the app to see what we'll be building:
+Try this deployed version of the frontend app to see what we'll be building:
 https://final-graphql-tutorial.netlify.com/
 
+This is built on React but the functionality will be the same for iOS.
+
 ## Will this course teach iOS concepts as well?
-No, we will be simulating a scenario where we already have a
-GraphQL API and the basic UI of a ios app built. Our task in this
-scenario is to integrate the GraphQL APIs into our ios app to build
-a complete and working app.
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our iOS app to build a complete and working app.
 
 ## What do I need to take this tutorial?
 You need to have npm/yarn & node 8+ running.

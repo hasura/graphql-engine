@@ -29,7 +29,7 @@ Try this deployed version of the app to see what we'll be building:
 https://final-graphql-tutorial.netlify.com/
 
 ## Will this course teach React concepts as well?
-No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our react native app to build a complete and working app.
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our react app to build a complete and working app.
 
 If you're new to React, we recommend going through this [official tutorial](https://reactjs.org/tutorial/tutorial.html) and then coming back here!
 

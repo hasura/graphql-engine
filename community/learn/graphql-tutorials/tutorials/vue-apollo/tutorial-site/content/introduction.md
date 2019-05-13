@@ -29,11 +29,7 @@ Try this deployed version of the app to see what we'll be building:
 https://final-graphql-tutorial.netlify.com/
 
 ## Will this course teach Vue concepts as well?
-No, we will be simulating a scenario where we already have a
-GraphQL API and the basic UI of a vue app built. Our task in this
-scenario is to integrate the GraphQL APIs into our vue app to build
-a complete and working app.
-No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our react native app to build a complete and working app.
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our vue app to build a complete and working app.
 
 If you're new to Vue, we recommend going through this [official tutorial](https://vuejs.org/v2/guide/) and then coming back here!
 
