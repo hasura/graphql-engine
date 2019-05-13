@@ -70,13 +70,13 @@ As you see, we have explicitly mentioned that `is_public` must be false. But in 
 
 ```graphql
 - query {
-+ query ($is_public: Boolean) {
++ query ($isPublic: Boolean) {
 +   todos (
 +     order_by: {
 +       created_at: desc
 +     },
 -     where: { is_public: { _eq: false} }
-+     where: { is_public: { _eq: $is_public} }
++     where: { is_public: { _eq: $isPublic} }
 +   ) {
 +     id
 +     title

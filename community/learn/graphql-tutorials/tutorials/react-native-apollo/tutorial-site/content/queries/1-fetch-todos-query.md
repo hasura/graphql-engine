@@ -11,6 +11,10 @@ query getMyTodos {
     title
     created_at
     is_completed
+    is_public
+    user {
+      name
+    }
   }
 }
 ```
