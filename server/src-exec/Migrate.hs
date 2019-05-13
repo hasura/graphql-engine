@@ -329,7 +329,8 @@ migrateCatalog
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
-         return "already at the latest version"
+         return $ "already at the latest version. current version: "
+                   <> show curCatalogVer
      | preVer == "0.8" -> from08ToCurrent
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
@@ -351,7 +352,7 @@ migrateCatalog migrationTime = do
   where
     from15ToCurrent = from15To16 >> postMigrate
 
-    from14ToCurrent = from14To15 >> postMigrate
+    from14ToCurrent = from14To15 >> from15ToCurrent
 
     from13ToCurrent = from13To14 >> from14ToCurrent
 
