@@ -241,7 +241,6 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Instances
                      , Hasura.GraphQL.Resolve.ContextTypes
 
                      , Hasura.Events.Lib

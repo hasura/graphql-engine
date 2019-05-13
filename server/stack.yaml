@@ -15,7 +15,7 @@ extra-deps:
 - git: https://github.com/hasura/pg-client-hs.git
   commit: 85f9c2c15e4fa09f2e2a86dbb23149b5256bdd34
 - git: https://github.com/hasura/graphql-parser-hs.git
-  commit: aff988cdcb7c77114cccb791e86c38a6b73f47c5
+  commit: 39d175c5c7bca35ec04d13c92a39f600bd6413cf
 - ginger-0.8.4.0
 
 # extra dep for pg-client-hs

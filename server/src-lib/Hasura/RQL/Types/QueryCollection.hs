@@ -1,19 +1,19 @@
 module Hasura.RQL.Types.QueryCollection where
 
-import           Hasura.GraphQL.Instances      ()
-import           Hasura.GraphQL.Validate.Types (stripeOffTypeNames)
+import           Hasura.GraphQL.Validate.Types    (stripeOffTypeNames)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.GraphQL.Draft.Instances ()
+import           Language.Haskell.TH.Syntax       (Lift)
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict              as HM
+import qualified Data.Text                        as T
+import qualified Database.PG.Query                as Q
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 newtype CollectionName
   = CollectionName {unCollectionName :: T.Text}
