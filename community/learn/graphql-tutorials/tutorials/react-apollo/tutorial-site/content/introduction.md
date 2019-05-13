@@ -22,7 +22,7 @@ We will explore the fundamentals of GraphQL and the especially things that make 
 - Using subscriptions with a subscriptions components
 - Building a real-time feed with notifications using mutations and subscriptions
 
-## What will be building?
+## What will we be building?
 We will be building a realtime todo app using authenticated GraphQL APIs.
 
 Try this deployed version of the app to see what we'll be building:
