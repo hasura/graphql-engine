@@ -74,6 +74,7 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
     };
     const customOnError = () => {};
 
+    // Rename relationship should fetch entire schema info.
     makeMigrationCall(
       dispatch,
       getState,
@@ -219,6 +220,7 @@ const deleteRelMigrate = (tableName, relName, lcol, rtable, rcol, isObjRel) => (
   const customOnSuccess = () => {};
   const customOnError = () => {};
 
+  // Delete relationship should fetch entire schema info.
   makeMigrationCall(
     dispatch,
     getState,
@@ -258,10 +260,20 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    dispatch(resetRelationshipForm());
+    dispatch(loadUntrackedRelations({
+      tables: [
+        {
+          table_schema: currentSchema,
+          table_name: state.tableName,
+        }
+      ]
+    })).then(() => {
+      dispatch(resetRelationshipForm());
+    });
   };
   const customOnError = () => {};
 
+  // Rename relationship should fetch only current table schema info.
   makeMigrationCall(
     dispatch,
     getState,
@@ -272,7 +284,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
+    errorMsg,
+    true
   );
 };
 
