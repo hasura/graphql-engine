@@ -1,16 +1,15 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/svg+xml" href="http://localhost:8000/common/img/hasura_icon_green.svg" />
     <script>
      window.__env = {
        consoleMode: "server",
        urlPrefix: "/console",
        consolePath: "{{consolePath}}",
-       consoleAssetsLoc: "{{consoleAssetsLoc}}",
-       staticAssetsPath: "http://localhost:8000",
        isAccessKeySet: {{isAdminSecretSet}},
        isAdminSecretSet: {{isAdminSecretSet}},
-       enableTelemetry: {{enableTelemetry}}
+       enableTelemetry: {{enableTelemetry}},
+       assetsPath: "{{assetsPath}}",
+       assetsVersion: "{{assetsVersion}}",
      };
     </script>
   </head>
@@ -74,19 +73,25 @@
      if (navigator.onLine === true) {
        console.log('offline, loading assets from static-dir');
        if (window.__env.consoleMode === 'server') {
-         window.__env.staticAssetsPath =
+         window.__env.assetsPath =
            window.location.pathname.slice(
              0, window.location.pathname.lastIndexOf(window.__env.consolePath)
            ) + '/console/assets';
        } else {
-         window.__env.staticAssetsPath = '/assets';
+         window.__env.assetsPath = '/assets';
        }
      }
-     loadResource(window.__env.staticAssetsPath + '/common/css/font-awesome.min.css');
-     loadResource(window.__env.staticAssetsPath + '/common/img/hasura_icon_green.svg');
-     loadResource(window.__env.staticAssetsPath + '/main.css');
-     loadResource(window.__env.staticAssetsPath + '/main.js');
-     loadResource(window.__env.staticAssetsPath + '/vendor.js');
+     loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css');
+     loadResource(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js');
+
+     console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css');
+     console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js');
     </script>
 
   </body>

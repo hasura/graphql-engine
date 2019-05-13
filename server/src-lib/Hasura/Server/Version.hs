@@ -28,15 +28,18 @@ isDevVersion = case parsedVersion of
   Left _  -> False
   Right _ -> True
 
+rawVersion :: T.Text
+rawVersion = "versioned/" <> version
+
 consoleVersion :: T.Text
 consoleVersion = case parsedVersion of
-  Left _  -> "" <> version
+  Left _  -> rawVersion
   Right v -> mkConsoleV v
 
 mkConsoleV :: V.Version -> T.Text
 mkConsoleV v = case getReleaseChannel v of
-  Nothing -> "" <> version
-  Just c -> T.pack $ c <> "/" <> vMajMin
+  Nothing -> rawVersion
+  Just c -> T.pack $ "channel/" <> c <> "/" <> vMajMin
   where
     vMajMin = "v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor)
 

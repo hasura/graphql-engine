@@ -8,6 +8,7 @@ import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
+import Debug.Trace
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Wai                            (requestHeaders,
@@ -26,6 +27,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
+import qualified Network.Wai.Middleware.Static as WMS
 import qualified Network.WebSockets                     as WS
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
@@ -69,12 +71,11 @@ isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
-consoleAssetsLoc :: Text
-consoleAssetsLoc = "/static"
+consoleAssetsPath :: Text
+consoleAssetsPath = "/static"
 #else
-consoleAssetsLoc :: Text
-consoleAssetsLoc =
-  "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
+consoleAssetsPath :: Text
+consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
 #endif
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
@@ -82,7 +83,8 @@ mkConsoleHTML path authMode enableTelemetry =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-                  object [ "consoleAssetsLoc" .= consoleAssetsLoc
+                  object [ "assetsPath" .= consoleAssetsPath
+                         , "assetsVersion" .= consoleVersion
                          , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
                          , "enableTelemetry" .= boolToText enableTelemetry
@@ -414,7 +416,8 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when (enableConsole && enableMetadata) serveApiConsole
+    when (enableConsole && enableMetadata) $ do
+      serveApiConsole
 
     -- Health check endpoint
     get "healthz" $ do
@@ -524,6 +527,11 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
     serveApiConsole = do
       get root $ redirect "console"
+      -- static files
+      get ("console/assets" <//> wildcard) $ \path ->
+        lazyBytes $ BL.pack $ "hello" ++ T.unpack path
+
+      -- console html
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
           mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry

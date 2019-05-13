@@ -147,6 +147,9 @@ library
                      -- metrics in multiplexed subs
                      , ekg-core
 
+                     -- serve static files
+                     , wai-middleware-static
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
