@@ -46,21 +46,25 @@ class WillLearn extends React.Component {
                 2 hour GraphQL Tutorial Series to teach you what GraphQL is and how to integrate GraphQL APIs with your favourite web/mobile framework.
               </div>
             </div>
-            <div className={'willLearnTutorial wd100'}>
-              <div className={'col-md-8 col-sm-12 col-xs-12'}>
-                <div className={'willLearnList wd100'}>
-                  <div className={'willLearnHeader'}>
-                    Frontend Tutorials (Mobile & Web)
+            <div className={'willLearnTutorial wd100 flexBoxWrapper'}>
+              <div className={'col-md-8 col-sm-12 col-xs-12 flexContainer'}>
+                <div className={'flexList'}>
+                  <div className={'willLearnList wd100 flexAlign'}>
+                    <div className={'willLearnHeader'}>
+                      Frontend Tutorials (Mobile & Web)
+                    </div>
+                    {frontend}
                   </div>
-                  {frontend}
                 </div>
               </div>
-              <div className={'col-md-4 col-sm-12 col-xs-12'}>
-                <div className={'willLearnList wd100'}>
-                  <div className={'willLearnHeader'}>
-                    Backend Tutorials
+              <div className={'col-md-4 col-sm-12 col-xs-12 flexContainer'}>
+                <div className={'flexList'}>
+                  <div className={'willLearnList wd100 flexAlign'}>
+                    <div className={'willLearnHeader'}>
+                      Backend Tutorials
+                    </div>
+                    {backend}
                   </div>
-                  {backend}
                 </div>
               </div>
             </div>

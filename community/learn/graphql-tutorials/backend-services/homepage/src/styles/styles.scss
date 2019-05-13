@@ -13,8 +13,8 @@ body
 }
 .noPadd
 {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 .mb-20
 {
@@ -316,10 +316,10 @@ ul
         opacity: 0.5;
         &:hover
         {
-          background-color: transparent;
+          background-color: transparent !important;
           opacity: 1;
           outline: none;
-          color: #ffffff;
+          color: #ffffff !important;
         }
         &:focus
         {
@@ -352,6 +352,15 @@ ul
         }
         .dropdownUl
         {
+          a
+          {
+            li
+            {
+              padding: 13px 0;
+              padding-left: 35px;
+              border-bottom: 1px solid #ededed;
+            }
+          }
           li
           {
             padding: 13px 0;
@@ -363,6 +372,11 @@ ul
             background-repeat: no-repeat;
             background-size: 21px 21px;
             background-position: left;
+            a
+            {
+              color: #2b0785;
+              opacity: 1;
+            }
             .circle
             {
               width: 5px;
@@ -387,11 +401,12 @@ ul
           li:hover
           {
             color: #505050;
-            font-weight: 500;
-          }
-          li:last-child
-          {
-            border-bottom: 0;
+            font-weight: 700;
+            a
+            {
+              color: #505050 !important;
+              font-weight: 700;
+            }
           }
           .comingSoonHover, .comingSoonHover:hover
           {
@@ -488,7 +503,7 @@ ul
   background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-purple.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.png');
   }
 }
 .androidBg
@@ -556,6 +571,27 @@ ul
 {
   background-color: transparent;
 }
+.flexBoxWrapper
+{
+  display: flex;
+  list-style: none;
+  flex-wrap: wrap;
+  clear: both;
+  .flexContainer
+  {
+    display: flex;
+    .flexList
+    {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      .flexAlign
+      {
+        flex: 1 0 auto;
+      }
+    }
+  }
+}
 .topBannerWrapper
 {
   display: flex;
@@ -585,7 +621,7 @@ ul
     text-align: center;
     img
     {
-      width: 70%;
+      width: 100%;
       display: inline-block;
     }
   }
@@ -754,7 +790,7 @@ ul
       border-radius: 2px;
       box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
       background-color: #ffffff;
-      padding-bottom: 8px;
+      padding-bottom: 10px;
       .willLearnHeader
       {
         border-radius: 2px;
@@ -773,7 +809,7 @@ ul
       .listWrapper
       {
         display: flex;
-        padding: 8px 0;
+        padding: 10px 0;
         .tick
         {
           padding-right: 8px;
@@ -929,6 +965,12 @@ ul
   {
     margin: 0 auto;
     margin-bottom: 20px;
+  }
+  .subscribe_form {
+    button
+    {
+      font-size: 12px;
+    }
   }
   .headerWrapper
   {
