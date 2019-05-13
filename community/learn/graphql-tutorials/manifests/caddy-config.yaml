@@ -15,23 +15,26 @@ data:
       }
 
       redir 301 {
+        /graphql/ios/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/ios-boilerplate/boilerplate.zip
+      }
+
+      redir 301 {
         /graphql/react/ /graphql/react/introduction
       }
 
       redir 301 {
         /graphql/vue/ /graphql/vue/introduction
       }
+
+      redir 301 {
+        /graphql/ios/ /graphql/ios/introduction
+      }
       
       redir 301 {
         /graphql/hasura/ /graphql/hasura/introduction
       }
 
-      redir 302 {
-        if {path} is /
-        / /graphql/react/introduction
-      }
-
-      # proxy / homepage
+      proxy / homepage
 
       proxy /auth/webhook auth-webhook {
         without /auth
@@ -67,6 +70,8 @@ data:
       proxy /graphql/react react-apollo
 
       proxy /graphql/vue vue-apollo
+
+      proxy /graphql/ios ios-apollo
       
       proxy /graphql hasura/v1alpha1/graphql {
         without /graphql
