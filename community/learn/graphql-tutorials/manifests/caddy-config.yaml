@@ -34,12 +34,7 @@ data:
         /graphql/hasura/ /graphql/hasura/introduction
       }
 
-      redir 302 {
-        if {path} is /
-        / /graphql/react/introduction
-      }
-
-      # proxy / homepage
+      proxy / homepage
 
       proxy /auth/webhook auth-webhook {
         without /auth
