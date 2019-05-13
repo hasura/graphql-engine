@@ -7,10 +7,10 @@ where
 
 import           Control.Arrow                      ((***))
 import           Hasura.Prelude
+import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
-import qualified Hasura.RQL.DDL.EventTrigger as DS
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -335,11 +335,12 @@ updateColInEventTriggerDef trigName rnCol = do
       SubscribeOpSpec
       (rewriteSubsCols trigTab cols)
       (rewriteSubsCols trigTab <$> payload)
-    rewriteTrigOpsDef trigTab (TriggerOpsDef ins upd del) =
+    rewriteTrigOpsDef trigTab (TriggerOpsDef ins upd del man) =
       TriggerOpsDef
       (rewriteOpSpec trigTab <$> ins)
       (rewriteOpSpec trigTab <$> upd)
       (rewriteOpSpec trigTab <$> del)
+      man
     rewriteEventTriggerConf trigTab etc =
       etc { etcDefinition =
             rewriteTrigOpsDef trigTab $ etcDefinition etc
