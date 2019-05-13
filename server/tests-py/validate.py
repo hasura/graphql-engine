@@ -59,13 +59,21 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
+    if conf['url'] == '/v1alpha1/graphql':
+        status = [401, 404]
+    elif conf['url'] == '/v1/graphql':
+        status = [200]
+    else:
+        raise ValueError('unknown endpoint ' + conf['url'])
+
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
 
     # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code in [401,404], "\n" + yaml.dump({
+    #assert code in [401,404], "\n" + yaml.dump({
+    assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
@@ -76,7 +84,8 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     # Test with random admin secret
     headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
-    assert code in [401,404], "\n" + yaml.dump({
+    #assert code in [401,404], "\n" + yaml.dump({
+    assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
@@ -86,9 +95,17 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 
 def test_forbidden_webhook(hge_ctx, conf):
+    if conf['url'] == '/v1alpha1/graphql':
+        status = [401, 404]
+    elif conf['url'] == '/v1/graphql':
+        status = [200]
+    else:
+        raise ValueError('unknown endpoint ' + conf['url'])
+
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)
-    assert code in [401,404], "\n" + yaml.dump({
+    #assert code in [401,404], "\n" + yaml.dump({
+    assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as it is denied from webhook",
         "actual": {
             "code": code,

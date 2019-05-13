@@ -1,5 +1,6 @@
 import yaml
 import pytest
+#from validate import check_query, test_forbidden_when_admin_secret_reqd, test_forbidden_webhook
 from validate import check_query
 from super_classes import DefaultTestSelectQueries
 from context import GQLWsClient
@@ -10,6 +11,39 @@ class TestV1Alpha1GraphQLErrors(DefaultTestSelectQueries):
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/v1alpha1/errors'
+
+    def test_v1alpha1_authorization_error(self, hge_ctx):
+        gql_query = """
+          query {
+            author {
+              id
+              name
+            }
+          }
+        """
+        http_conf = {
+            'url': '/v1alpha1/graphql',
+            'status': 200,
+            'query': {'query': gql_query},
+        }
+        print('ok')
+
+        # if hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
+        #     # Test whether it is forbidden when incorrect/no admin_secret is specified
+        #     print(' I AM HERE !!')
+        #     test_forbidden_when_admin_secret_reqd(hge_ctx, http_conf)
+        #     assert True
+
+        # elif hge_ctx.hge_webhook is not None:
+        #     print(' I AM HERE NOWWWW !!')
+        #     if not hge_ctx.webhook_insecure:
+        #     # Check whether the output is also forbidden when webhook returns forbidden
+        #         test_forbidden_webhook(hge_ctx, http_conf)
+        #         assert True
+        # else:
+        #     print(' AND HERE ........ !! ')
+        #     pass
+
 
     @pytest.mark.parametrize('transport', ['http', 'websocket'])
     def test_v1alpha1_validation_error(self, hge_ctx, transport):
