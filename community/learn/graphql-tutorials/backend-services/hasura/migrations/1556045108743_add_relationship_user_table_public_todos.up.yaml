@@ -1,8 +1,0 @@
-- args:
-    name: user
-    table:
-      name: todos
-      schema: public
-    using:
-      foreign_key_constraint_on: user_id
-  type: create_object_relationship
