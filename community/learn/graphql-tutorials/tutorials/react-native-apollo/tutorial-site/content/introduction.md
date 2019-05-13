@@ -38,12 +38,8 @@ You need to have npm/yarn & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Other courses
+## Other courses:
 
-- GraphQL
-  - Frontent
-    - [React](https://learn.hasura.io/graphql/react)
-    - [Vue](https://learn.hasura.io/graphql/vue)
-    - [iOS](https://learn.hasura.io/graphql/ios)
-  - Backend
-    - [Realtime GraphQL with Hasura](https://learn.hasura.io/backend/hasura): Building a realtime GraphQL backend with Hasura in 30 mins (ideal for frontend, backend or fullstack developers) 
+**Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [React](https://learn.hasura.io/graphql/react), [iOS](https://learn.hasura.io/graphql/ios)
+
+**Backend**: [Building a realtime GraphQL backend with Hasura](https://learn.hasura.io/graphql/hasura) in 30 mins (ideal for frontend, backend or fullstack developers)
