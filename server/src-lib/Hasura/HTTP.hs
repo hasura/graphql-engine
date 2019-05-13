@@ -27,14 +27,10 @@ hdrsToText hdrs =
 wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
 wreqOptions manager hdrs =
   Wreq.defaults
-  & finalHdrs
+  & Wreq.headers .~  contentType : userAgent : hdrs
   & Wreq.checkResponse ?~ (\_ _ -> return ())
   & Wreq.manager .~ Right manager
   where
-    finalHdrs =
-      if contentType `elem` hdrs
-      then Wreq.headers .~  userAgent : hdrs
-      else Wreq.headers .~  contentType : userAgent : hdrs
     contentType = ("Content-Type", "application/json")
     userAgent   = ( "User-Agent"
                   , "hasura-graphql-engine/" <> T.encodeUtf8 currentVersion
