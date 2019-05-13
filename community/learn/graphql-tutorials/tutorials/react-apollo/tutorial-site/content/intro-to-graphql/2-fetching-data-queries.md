@@ -17,7 +17,7 @@ When you connect GraphiQL to a GraphQL endpoint, it
 queries the server for its GraphQL schema and gives you a UI to browse
 and test queries, and that powers its amazing autocomplete!
 
-![GraphiQL demo](./graphiql.gif)
+![GraphiQL demo](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql.gif)
 
 Tools like GraphiQL make GraphQL APIs really easy
 to use and integrate APIs in your app without requiring
@@ -44,7 +44,7 @@ use a tool like GraphiQL to explore and test your GraphQL queries.
      name
    }
  }
- ```
+```
 
 4. Hit `ctrl + enter` or `cmd + enter` (mac) or click on the ▶️ icon to run the GraphQL query
 5. On the right, you should see a list of users by their names that are in the system!
@@ -60,7 +60,7 @@ that you see on the right hand side.
 Our todo app has users, todos and information about users that are currently online.
 This is what our API "schema" looks like:
 
-![Schema](./schema.png)
+![Schema](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/schema.png)
 
 As you can see, it is a "graph" like schema where all the 3 models are linked to each other.
 

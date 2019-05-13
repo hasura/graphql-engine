@@ -1,6 +1,6 @@
 description: Insert into author_complex view (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
     mutation author_complex{

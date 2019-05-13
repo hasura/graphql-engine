@@ -56,7 +56,7 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
     const idToken = await getIdToken()
 
     const axios = axiosBase.create({
-      baseURL: 'https://YOURHASURADOMAIN/v1alpha1/graphql',
+      baseURL: 'https://YOURHASURADOMAIN/v1/graphql',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + idToken
