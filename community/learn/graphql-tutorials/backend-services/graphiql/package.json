@@ -51,6 +51,7 @@
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",
+    "jwt-decode": "^2.2.0",
     "less": "^3.7.1",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",

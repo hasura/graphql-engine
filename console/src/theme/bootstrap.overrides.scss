@@ -108,6 +108,35 @@ select.form-control {
   padding-right: 0 !important;
 }
 
+#invokeEventTrigger {
+  .modal-content {
+    min-height: 100px;
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
+#redeliverModal
+{
+  .modal-content
+  {
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
 .generateCodeWrapper {
   width: 65% !important;
 
@@ -212,6 +241,33 @@ select.form-control {
             min-height: 150px;
             border: 1px solid #ccc;
             border-radius: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+.invocationClass
+{
+  clear: both;
+  .rt-table
+  {
+    .rt-tbody
+    {
+      .rt-tr-group
+      {
+        .rt-tr
+        {
+          .rt-td
+          {
+            .rt-expander
+            {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 21px;
+              width: 13px;
+            }
           }
         }
       }

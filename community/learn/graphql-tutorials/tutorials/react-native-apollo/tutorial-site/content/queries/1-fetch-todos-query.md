@@ -19,7 +19,7 @@ query getMyTodos {
 }
 ```
 
-[Try](https://learn.hasura.io/graphql/graphiql) this query in GraphiQL against the application database to see what the response looks like.
+[Try](https://learn.hasura.io/graphql/graphiql?tutorial=react-native) this query in GraphiQL against the application database to see what the response looks like.
 
 **Note**: You need to pass the `Authorization: Bearer <token>` header before querying to get the results. The token is auto-filled in the UI after logging in via Auth0.
 
