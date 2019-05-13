@@ -25,7 +25,7 @@ After you login, you should get something like this:
 
 ### Load GraphiQL to play with your GraphQL APIs
 
-1. Head to https://learn.hasura.io/graphql/graphiql
+1. Head to https://learn.hasura.io/graphql/graphiql?tutorial=react-native
 2. Log in (so that you can test the GraphQL APIs with a valid user token)
 
 This is what you should see after the steps above:
