@@ -148,7 +148,6 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       threadDelay $ 5 * 1000 * 1000
 
     jwtExpiryHandler wsConn = do
-      currTime <- TC.getCurrentTime
       expTime <- STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
@@ -156,6 +155,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitError _              -> STM.retry
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
+      currTime <- TC.getCurrentTime
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
