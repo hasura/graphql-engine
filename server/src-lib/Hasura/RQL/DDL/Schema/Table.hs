@@ -426,7 +426,7 @@ buildSchemaCacheG withSetup = do
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
       when withSetup $ liftTx $
-        mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
+        mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
   forM_ functions $ \(CatalogFunction qf rawfiM) -> do
@@ -609,8 +609,8 @@ execWithMDCheck (RunSQL t cascade _) = do
           let tn = tiName ti
               cols = getCols $ tiFieldInfoMap ti
           forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-            let opsDef = etiOpsDef eti
-            liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
+            let fullspec = etiOpsDef eti
+            liftTx $ mkAllTriggersQ trn tn cols strfyNum fullspec
 
   bool withoutReload withReload reloadRequired
 

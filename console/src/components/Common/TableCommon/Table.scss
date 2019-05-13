@@ -9,6 +9,9 @@
   //margin-top: 25px;
 }
 
+.tableContainerModified {
+}
+
 .schemaWrapper {
   width: 100%;
 
@@ -198,8 +201,13 @@ a.expanded {
 
 .tableCellCenterAligned {
   text-align: center;
+  overflow: unset !important;
 }
-
+.tableCellCenterAlignedOverflow
+{
+  text-align: center;
+  overflow: hidden !important;
+}
 .tableCellExpanded {
   white-space: normal;
 }
@@ -210,4 +218,3 @@ a.expanded {
     padding-bottom: 3px;
   }
 }
-

@@ -19,6 +19,7 @@ const componentsSemver = {
   tableColumnRename: '1.0.0-alpha39',
   inconsistentState: '1.0.0-alpha43',
   allowedQueries: '1.0.0-alpha46',
+  manualTriggers: '1.0.0-alpha46',
 };
 
 const getPreRelease = version => {

@@ -1,13 +1,32 @@
-CREATE TABLE hdb_catalog.hdb_query_collection
-(
-  collection_name TEXT PRIMARY KEY,
-  collection_defn JSONB NOT NULL,
-  comment TEXT NULL,
-  is_system_defined boolean default false
-);
-
-CREATE TABLE hdb_catalog.hdb_allowlist
-(
-  collection_name TEXT UNIQUE
-    REFERENCES hdb_catalog.hdb_query_collection(collection_name)
-);
+CREATE OR REPLACE FUNCTION
+  hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, op text, row_data json)
+  RETURNS text AS $$
+  DECLARE
+  id text;
+  payload json;
+  session_variables json;
+  server_version_num int;
+BEGIN
+  id := gen_random_uuid();
+  server_version_num := current_setting('server_version_num');
+  IF server_version_num >= 90600 THEN
+    session_variables := current_setting('hasura.user', 't');
+  ELSE
+    BEGIN
+      session_variables := current_setting('hasura.user');
+    EXCEPTION WHEN OTHERS THEN
+      session_variables := NULL;
+    END;
+  END IF;
+  payload := json_build_object(
+    'op', op,
+    'data', row_data,
+    'session_variables', session_variables
+  );
+  INSERT INTO hdb_catalog.event_log
+    (id, schema_name, table_name, trigger_name, payload)
+  VALUES
+    (id, schema_name, table_name, trigger_name, payload);
+  RETURN id;
+END;
+$$ LANGUAGE plpgsql;

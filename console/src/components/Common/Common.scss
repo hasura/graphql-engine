@@ -11,6 +11,10 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   -webkit-margin-after: 0;
 }
 
+.error_text {
+  color: #dc3545;
+}
+
 .graphSpinner {
   font-size: 40px;
   text-align: center;
@@ -385,10 +389,20 @@ input {
   padding-right: 0 !important;
 }
 
+.padding_top_20 {
+  padding-top: 20px;
+}
+.margin_bottom_20 {
+  margin-bottom: 20px;
+}
+
 .remove_margin_bottom {
   margin-bottom: 0 !important;
 }
 
+.remove_padding_left {
+  padding-left: 0 !important;
+}
 .remove_margin {
   margin: 0 !important;
 }
@@ -537,7 +551,7 @@ code {
 }
 
 .padd_bottom_small {
-  padding-bottom: 4px;
+  padding-bottom: 5px;
 }
 
 .padd_top_small {

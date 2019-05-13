@@ -60,6 +60,9 @@ Query
      - JSON Value
      - The arguments to the query
 
+Request types
+-------------
+
 The various types of queries are listed in the following table:
 
 .. list-table::
@@ -152,6 +155,10 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - Delete existing event trigger
+
+   * - :ref:`invoke_event_trigger`
+     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - Invoke trigger manually
 
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
