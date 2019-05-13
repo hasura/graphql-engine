@@ -68,12 +68,14 @@ dropCollectionP1
   => CollectionName -> m ()
 dropCollectionP1 name = do
   adminOnly
-  collectionMap <- scQueryCollections <$> askSchemaCache
-  withPathK "name" $
-    case HM.lookup name collectionMap of
-      Nothing -> throw400 NotExists $
-                 "query collection with name " <> name <<> " does not exists"
-      Just _ -> return ()
+  withPathK "name" $ do
+    -- check for query collection
+    void $ askQueryMap name
+    -- check if the collection defined in allowlist
+    allowlistMap <- scAllowlist <$> askSchemaCache
+    onJust (HM.lookup name allowlistMap) $ const $
+      throw400 DependencyError $ "query collection with name "
+      <> name <<> " is present in allowlist; cannot proceed to drop"
 
 runAddQueryToCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -91,10 +93,7 @@ runDropCollection
 runDropCollection (DropCollection name) = do
   dropCollectionP1 name
   delCollectionFromCache name
-  delCollectionFromAllowlist name
-  liftTx $ do
-    delCollectionFromAllowlistCatalog name
-    delCollectionFromCatalog name
+  liftTx $ delCollectionFromCatalog name
   return successMsg
 
 runDropQueryFromCollection

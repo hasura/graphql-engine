@@ -93,8 +93,8 @@ setAsSystemDefinedFor9 =
              AND  table_name = 'hdb_version';
            |]
 
-setAsSystemDefinedFor14 :: MonadTx m => m ()
-setAsSystemDefinedFor14 =
+setAsSystemDefinedFor16 :: MonadTx m => m ()
+setAsSystemDefinedFor16 =
   liftTx $ Q.catchE defaultTxErrorHandler $
   Q.multiQ [Q.sql|
             UPDATE hdb_catalog.hdb_table
@@ -308,11 +308,11 @@ from15To16
 from15To16 = do
   -- Migrate database
   Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
-    $(Q.sqlFromFile "src-rsr/migrate_from_14_to_15.sql")
+    $(Q.sqlFromFile "src-rsr/migrate_from_15_to_16.sql")
   -- Migrate metadata
   migrateMetadata False migrateMetadataFrom13
   -- Set as system defined
-  setAsSystemDefinedFor14
+  setAsSystemDefinedFor16
   where
     migrateMetadataFrom13 =
       $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_15_to_16.yaml" :: Q (TExp RQLQuery)))

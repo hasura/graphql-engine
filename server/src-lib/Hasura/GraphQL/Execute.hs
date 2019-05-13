@@ -19,6 +19,7 @@ import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
 
+import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
@@ -136,7 +137,11 @@ getExecPlanPartial userInfo sc enableAL req = do
       when (role /= adminRole) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-        when notInAllowlist $ throwVE "query is not in allowlist"
+        when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
+
+    modErr e =
+      let msg = "query is not in any of the allowlists"
+      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction

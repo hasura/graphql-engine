@@ -1,5 +1,9 @@
 type: bulk
 args:
+- type: drop_collection_from_allowlist
+  args:
+    collection: collection_1
+
 - type: drop_query_collection
   args:
     name: collection_1

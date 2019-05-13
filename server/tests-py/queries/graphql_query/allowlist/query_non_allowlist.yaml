@@ -8,7 +8,7 @@ response:
   - extensions:
       path: "$"
       code: validation-failed
-    message: query is not in allowlist
+    message: query is not allowed
 query:
   query: |
     query {

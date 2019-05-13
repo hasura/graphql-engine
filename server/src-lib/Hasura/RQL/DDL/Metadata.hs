@@ -149,7 +149,7 @@ data ReplaceMetadata
   , aqFunctions        :: !(Maybe [QualifiedFunction])
   , aqRemoteSchemas    :: !(Maybe [TRS.AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [DQC.CreateCollection])
-  , aqAllowlist        :: !(Maybe [DQC.CollectionName])
+  , aqAllowlist        :: !(Maybe [DQC.CollectionReq])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
@@ -199,7 +199,7 @@ applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
 
   onJust mAllowlist $ \allowlist ->
     withPathK "allowlist" $
-        checkMultipleDecls "allow list" allowlist
+        checkMultipleDecls "allow list" $ map DQC._crCollection allowlist
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -280,7 +280,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
 
   -- allow list
   withPathK "allowlist" $ do
-    indexedForM_ allowlist $ \name -> do
+    indexedForM_ allowlist $ \(DQC.CollectionReq name) -> do
       DQC.addToAllowlistSetup name
       liftTx $ DQC.addCollectionToAllowlistCatalog name
 
@@ -380,10 +380,10 @@ fetchMetadata = do
   collections <- DQC.fetchAllCollections
 
   -- fetch allow list
-  allowlist <- DQC.fetchAllowlist
+  allowlist <- map DQC.CollectionReq <$> DQC.fetchAllowlist
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
-                            (Just functions) (Just schemas) (Just collections) (Just allowlist)
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just functions)
+                           (Just schemas) (Just collections) (Just allowlist)
 
   where
 
