@@ -46,7 +46,7 @@ class TopBanner extends React.Component {
                             return (
                               <a href={item.url} target={'_blank'}>
                                 <li key={'frontend'+key} className={item.bgClassName}>
-                                  {item.name}
+                                    {item.name}
                                 </li>
                               </a>
                             );
@@ -84,9 +84,11 @@ class TopBanner extends React.Component {
                         {mobileTutorial.map((item, key) => {
                           if(!item.comingSoon) {
                             return (
-                              <li key={'mobile'+ key} className={item.bgClassName}>
-                                {item.name}
-                              </li>
+                              <a href={item.url} target={'_blank'}>
+                                <li key={'mobile'+ key} className={item.bgClassName}>
+                                    {item.name}
+                                </li>
+                              </a>
                             );
                           } else {
                             return (
@@ -122,9 +124,11 @@ class TopBanner extends React.Component {
                         {backendTutorial.map((item, key) => {
                           if(!item.comingSoon) {
                             return (
-                              <li key={'backend'+key} className={item.bgClassName}>
-                                {item.name}
-                              </li>
+                              <a href={item.url} target={'_blank'}>
+                                <li key={'backend'+key} className={item.bgClassName}>
+                                    {item.name}
+                                </li>
+                              </a>
                             );
                           } else {
                             return (
