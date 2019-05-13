@@ -188,12 +188,12 @@ Args Syntax
      - :ref:`QueryName`
      - Name of the query
 
-.. _add_collections_to_allowlist:
+.. _add_collection_to_allowlist:
 
-add_collections_to_allowlist
+add_collection_to_allowlist
 ----------------------------
 
-``add_collections_to_allowlist`` is used to add collections to allow-list
+``add_collection_to_allowlist`` is used to add a collection to allow-list
 
 .. code-block:: http
 
@@ -202,13 +202,13 @@ add_collections_to_allowlist
    X-Hasura-Role: admin
 
    {
-       "type" : "add_collections_to_allowlist",
+       "type" : "add_collection_to_allowlist",
        "args": {
-            "collections": ["my_collection_1", "my_collection_2"]
+            "collection": "my_collection"
         }
    }
 
-.. _add_collections_to_allowlist_syntax:
+.. _add_collection_to_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -220,17 +220,17 @@ Args Syntax
      - Required
      - Schema
      - Description
-   * - collections
+   * - collection
      - true
-     - :ref:`CollectionName` array
+     - :ref:`CollectionName`
      - Names of query collections
 
-.. _drop_collections_from_allowlist:
+.. _drop_collection_from_allowlist:
 
-drop_collections_from_allowlist
+drop_collection_from_allowlist
 -------------------------------
 
-``drop_collections_from_allowlist`` is used to remove collections from allow-list
+``drop_collection_from_allowlist`` is used to remove a collection from allow-list
 
 .. code-block:: http
 
@@ -239,13 +239,13 @@ drop_collections_from_allowlist
    X-Hasura-Role: admin
 
    {
-       "type" : "drop_collections_from_allowlist",
+       "type" : "drop_collection_from_allowlist",
        "args": {
-            "collections": ["my_collection_1", "my_collection_2"]
+            "collection": "my_collection_1"
         }
    }
 
-.. _drop_collections_from_allowlist_syntax:
+.. _drop_collection_from_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -257,7 +257,7 @@ Args Syntax
      - Required
      - Schema
      - Description
-   * - collections
+   * - collection
      - true
-     - :ref:`CollectionName` array
+     - :ref:`CollectionName`
      - Names of query collections

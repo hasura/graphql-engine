@@ -200,13 +200,13 @@ The various types of queries are listed in the following table:
      - :ref:`drop_query_from_collection_args <drop_query_from_collection_syntax>`
      - Drop a query from given collection
 
-   * - :ref:`add_collections_to_allowlist`
-     - :ref:`add_collections_to_allowlist_args <add_collections_to_allowlist_syntax>`
-     - Add collections to allow-list
+   * - :ref:`add_collection_to_allowlist`
+     - :ref:`add_collection_to_allowlist_args <add_collection_to_allowlist_syntax>`
+     - Add a collection to allow-list
 
-   * - :ref:`drop_collections_from_allowlist`
-     - :ref:`drop_collections_from_allowlist_args <drop_collections_from_allowlist_syntax>`
-     - Drop collections from allow-list
+   * - :ref:`drop_collection_from_allowlist`
+     - :ref:`drop_collection_from_allowlist_args <drop_collection_from_allowlist_syntax>`
+     - Drop a collection from allow-list
 
 **See:**
 

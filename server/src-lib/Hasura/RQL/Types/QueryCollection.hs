@@ -59,6 +59,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 
 type QueryMap = HM.HashMap QueryName GQLQuery
 type CollectionMap = HM.HashMap CollectionName QueryMap
+type AllowlistMap = HM.HashMap CollectionName QueryList
 
 queryListToMap :: QueryList  -> QueryMap
 queryListToMap ql =
@@ -86,8 +87,8 @@ data DropQueryFromCollection
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
 
-newtype CollectionsReq
-  = CollectionsReq
-  {_crCollections :: [CollectionName]}
+newtype CollectionReq
+  = CollectionReq
+  {_crCollection :: CollectionName}
   deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CollectionsReq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)

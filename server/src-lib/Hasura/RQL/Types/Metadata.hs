@@ -52,7 +52,7 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOQueryCollection !CollectionName
-  | MOAllowlist ![CollectionName]
+  | MOAllowlist !CollectionName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
 

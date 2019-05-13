@@ -226,9 +226,9 @@ const createAllowListQuery = queries => {
   });
 
   const addCollectionToAllowListQuery = () => ({
-    type: 'add_collections_to_allowlist',
+    type: 'add_collection_to_allowlist',
     args: {
-      collections: [allowedQueriesCollection],
+      collection: allowedQueriesCollection,
     },
   });
 
@@ -240,9 +240,9 @@ const createAllowListQuery = queries => {
 
 const deleteAllowListQuery = () => {
   const removeCollectionFromAllowListQuery = () => ({
-    type: 'drop_collections_from_allowlist',
+    type: 'drop_collection_from_allowlist',
     args: {
-      collections: [allowedQueriesCollection],
+      collection: allowedQueriesCollection,
     },
   });
 

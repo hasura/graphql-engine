@@ -449,13 +449,14 @@ buildSchemaCacheG withSetup = do
       handleInconsistentObj mkInconsObj $ addCollectionP2 c
 
   -- allow list
-  let allowlistDef = object [ "name" .= ("allowlist" :: Text)
-                            , "definition" .= CollectionsReq allowlist
-                            ]
-      mkAllowlistInconsObj =
-        InconsistentMetadataObj (MOAllowlist allowlist) MOTAllowlist allowlistDef
-  modifyErr(\e -> "allow list" <> "; " <> e) $
-     handleInconsistentObj mkAllowlistInconsObj $ addToAllowlistSetup allowlist
+  forM_ allowlist $ \name -> do
+    let allowlistDef = object [ "name" .= ("allowlist" :: Text)
+                              , "definition" .= CollectionReq name
+                              ]
+        mkAllowlistInconsObj =
+          InconsistentMetadataObj (MOAllowlist name) MOTAllowlist allowlistDef
+    modifyErr(\e -> "allow list collection" <> "; " <> e) $
+       handleInconsistentObj mkAllowlistInconsObj $ addToAllowlistSetup name
 
   -- build GraphQL context
   postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx

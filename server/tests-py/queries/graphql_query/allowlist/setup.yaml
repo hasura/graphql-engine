@@ -57,7 +57,6 @@ args:
             }
           }
 
-- type: add_collections_to_allowlist
+- type: add_collection_to_allowlist
   args:
-    collections:
-    - collection_1
+    collection: collection_1

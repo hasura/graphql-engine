@@ -104,9 +104,8 @@ module Hasura.RQL.Types.SchemaCache
        , addQueryToCollectionInCache
        , dropQueryFromCollectionCache
        , askQueryMap
-       , QueryCollection(..)
-       , addCollectionsToAllowlist
-       , delCollectionsFromAllowlist
+       , addCollectionToAllowlist
+       , delCollectionFromAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -434,13 +433,6 @@ removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
 
-data QueryCollection
-  = QueryCollection
-  { _qcName    :: !CollectionName
-  , _qcQueries :: !QueryList
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''QueryCollection)
-
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
   deriving (Show, Eq, Hashable, ToJSON, FromJSON)
@@ -458,7 +450,7 @@ data SchemaCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
   , scQueryCollections  :: !CollectionMap
-  , scAllowlist         :: ![QueryCollection]
+  , scAllowlist         :: !AllowlistMap
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
@@ -528,7 +520,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache M.empty M.empty M.empty M.empty [] M.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache M.empty M.empty M.empty M.empty M.empty
+              M.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -870,22 +863,31 @@ dropQueryFromCollectionCache collName queryName = do
       writeSchemaCache sc{scQueryCollections = newCollectionMap}
       return newQueryMap
 
-addCollectionsToAllowlist
-  :: (CacheRWM m)
-  => [QueryCollection] -> m ()
-addCollectionsToAllowlist qc = do
+addCollectionToAllowlist
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> QueryList -> m ()
+addCollectionToAllowlist cName qList = do
   sc <- askSchemaCache
-  let newAllowlist = scAllowlist sc <> qc
-  writeSchemaCache sc{scAllowlist = newAllowlist}
+  let allowListMap = scAllowlist sc
+  case M.lookup cName allowListMap of
+    Just _ -> throw400 AlreadyExists $ "collection with name " <> cName
+              <<> " already exist in allowlist"
+    Nothing -> do
+      let newAllowlistMap = M.insert cName qList allowListMap
+      writeSchemaCache sc{scAllowlist = newAllowlistMap}
 
-delCollectionsFromAllowlist
-  :: (CacheRWM m)
-  => [CollectionName] -> m ()
-delCollectionsFromAllowlist collNames = do
+delCollectionFromAllowlist
+  :: (QErrM m, CacheRWM m)
+  => CollectionName -> m ()
+delCollectionFromAllowlist cName = do
   sc <- askSchemaCache
-  let newAllowlist =
-        filter (not . flip elem collNames . _qcName) $ scAllowlist sc
-  writeSchemaCache sc{scAllowlist = newAllowlist}
+  let allowlistMap = scAllowlist sc
+  case M.lookup cName allowlistMap of
+    Nothing -> throw400 NotExists $ "collection with name " <> cName
+               <<> " does not exist in allowlist"
+    Just _  -> do
+      let newAllowlistMap = M.delete cName allowlistMap
+      writeSchemaCache sc{scAllowlist = newAllowlistMap}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

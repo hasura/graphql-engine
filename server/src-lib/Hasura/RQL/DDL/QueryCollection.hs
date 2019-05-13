@@ -7,10 +7,10 @@ module Hasura.RQL.DDL.QueryCollection
   , runAddQueryToCollection
   , runDropQueryFromCollection
   , addToAllowlistSetup
-  , runAddCollectionsToAllowlist
-  , runDropCollectionsFromAllowlist
-  , addCollectionsToAllowlistCatalog
-  , delCollectionsFromAllowlistCatalog
+  , runAddCollectionToAllowlist
+  , runDropCollectionFromAllowlist
+  , addCollectionToAllowlistCatalog
+  , delCollectionFromAllowlistCatalog
   , fetchAllCollections
   , fetchAllowlist
   , module Hasura.RQL.Types.QueryCollection
@@ -91,9 +91,10 @@ runDropCollection
 runDropCollection (DropCollection name) = do
   dropCollectionP1 name
   delCollectionFromCache name
-  delCollectionsFromAllowlist $ pure name
-  liftTx $ delCollectionsFromAllowlistCatalog $ pure name
-  liftTx $ delCollectionFromCatalog name
+  delCollectionFromAllowlist name
+  liftTx $ do
+    delCollectionFromAllowlistCatalog name
+    delCollectionFromCatalog name
   return successMsg
 
 runDropQueryFromCollection
@@ -106,59 +107,30 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   liftTx $ delQueryFromCollectionCatalog collName collDef
   return successMsg
 
-reportCollections :: [CollectionName] -> T.Text
-reportCollections =
-  T.intercalate ", " . map (T.dquote . unCollectionName)
+addToAllowlistSetup :: (QErrM m, CacheRWM m) => CollectionName -> m ()
+addToAllowlistSetup collName = do
+  qMap <- askQueryMap collName
+  let queryList = flip map (HM.toList qMap) $
+        \(qn, q) -> ListedQuery qn $ queryWithoutTypeNames q
+  addCollectionToAllowlist collName queryList
 
-handleDuplicateCollections :: QErrM m => [CollectionName] -> m ()
-handleDuplicateCollections collNames =
-  -- check for duplicates
-  unless (null duplicateColls) $ throw400 NotSupported $
-    "found duplicate collections; " <> reportCollections duplicateColls
-  where
-    duplicateColls = duplicates collNames
-
-addToAllowlistSetup :: (QErrM m, CacheRWM m) => [CollectionName] -> m ()
-addToAllowlistSetup collNames = do
-  handleDuplicateCollections collNames
-  sc <- askSchemaCache
-  let allowlist = scAllowlist sc
-      collsCurrList = flip filter collNames $
-                      \c -> c `elem` map _qcName allowlist
-  -- check for collections already present on current allow list
-  unless (null collsCurrList) $ throw400 NotSupported $
-    "collections already added to allow list " <> reportCollections collsCurrList
-
-  colls <- indexedForM collNames $ \c -> do
-    qMap <- askQueryMap c
-    return $ QueryCollection c $ flip map (HM.toList qMap) $
-      \(qn, q) -> ListedQuery qn $ queryWithoutTypeNames q
-
-  addCollectionsToAllowlist colls
-
-runAddCollectionsToAllowlist
+runAddCollectionToAllowlist
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
-  => CollectionsReq -> m EncJSON
-runAddCollectionsToAllowlist (CollectionsReq collNames) = do
+  => CollectionReq -> m EncJSON
+runAddCollectionToAllowlist (CollectionReq name) = do
   adminOnly
-  withPathK "collections" $ addToAllowlistSetup collNames
-  liftTx $ addCollectionsToAllowlistCatalog collNames
+  withPathK "collection" $ addToAllowlistSetup name
+  liftTx $ addCollectionToAllowlistCatalog name
   return successMsg
 
-runDropCollectionsFromAllowlist
+runDropCollectionFromAllowlist
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
-  => CollectionsReq -> m EncJSON
-runDropCollectionsFromAllowlist (CollectionsReq collNames) = do
+  => CollectionReq -> m EncJSON
+runDropCollectionFromAllowlist (CollectionReq collName) = do
   adminOnly
-  liftTx $ delCollectionsFromAllowlistCatalog collNames
-  withPathK "collections" $ do
-    handleDuplicateCollections collNames
-    allowlist <- scAllowlist <$> askSchemaCache
-    let invalidCollNames = collNames \\ map _qcName allowlist
-    unless (null invalidCollNames) $ throw400 NotFound $
-      "collections are not found in allow list; "
-      <> reportCollections invalidCollNames
-    delCollectionsFromAllowlist collNames
+  void $ askQueryMap collName
+  delCollectionFromAllowlist collName
+  liftTx $ delCollectionFromAllowlistCatalog collName
   return successMsg
 
 -- Database functions
@@ -213,22 +185,17 @@ delQueryFromCollectionCatalog collName def = do
      WHERE collection_name = $2
   |] (Q.AltJ def, collName) True
 
-encCollNamesToArray :: [CollectionName] -> Text
-encCollNamesToArray colls =
-  "{" <> T.intercalate "," (map unCollectionName colls) <> "}"
-
-addCollectionsToAllowlistCatalog :: [CollectionName] -> Q.TxE QErr ()
-addCollectionsToAllowlistCatalog collNames =
+addCollectionToAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
+addCollectionToAllowlistCatalog collName =
   Q.unitQE defaultTxErrorHandler [Q.sql|
       INSERT INTO hdb_catalog.hdb_allowlist
                    (collection_name)
-            VALUES (unnest($1::text[]))
-      |] (Identity $ encCollNamesToArray collNames) True
+            VALUES ($1)
+      |] (Identity collName) True
 
-delCollectionsFromAllowlistCatalog :: [CollectionName] -> Q.TxE QErr ()
-delCollectionsFromAllowlistCatalog collNames =
+delCollectionFromAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
+delCollectionFromAllowlistCatalog collName =
   Q.unitQE defaultTxErrorHandler [Q.sql|
       DELETE FROM hdb_catalog.hdb_allowlist
-         WHERE collection_name IN
-         (SELECT q.name FROM unnest($1::text[]) as q(name))
-      |] (Identity $ encCollNamesToArray collNames) True
+         WHERE collection_name = $1
+      |] (Identity collName) True

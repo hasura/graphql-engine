@@ -199,11 +199,11 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
 
-isQueryInAllowlist :: GQLExecDoc -> [QueryCollection] -> Bool
-isQueryInAllowlist q qColls =
+isQueryInAllowlist :: GQLExecDoc -> AllowlistMap -> Bool
+isQueryInAllowlist q listMap =
   gqlQuery `elem` allAllowQueries
   where
-    allAllowQueries = map _lqQuery $ concatMap _qcQueries qColls
+    allAllowQueries = map _lqQuery $ concat $ Map.elems listMap
     gqlQuery = GQLQuery $ G.ExecutableDocument $ stripeOffTypeNames $
                unGQLExecDoc q
 
