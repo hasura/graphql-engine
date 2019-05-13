@@ -144,7 +144,8 @@ const Form = ({
   buttonText
 }) => {
 
-  const validateAndSubmit = () => {
+  const validateAndSubmit = (e) => {
+    e.preventDefault();
     if (!emailRegex.test(email.toLowerCase())) {
       alert('Invalid email', 'Please enter a valid email address');
       return;
@@ -157,7 +158,9 @@ const Form = ({
   }
 
   return (
-    <div>
+    <form
+      onSubmit={validateAndSubmit}
+    >
       <div className={styles.loginFormElement}>
         <input
           value={email}
@@ -180,13 +183,12 @@ const Form = ({
         <button
           type="submit"
           className="btn btn-primary"
-          onClick={validateAndSubmit}
           disabled={loading}
         >
           {buttonText}
         </button>
       </div>      
-    </div>
+    </form>
   )
 }
 
