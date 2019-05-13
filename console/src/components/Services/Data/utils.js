@@ -163,7 +163,7 @@ const getSchemaQuery = options => {
   whereCondtions.forEach((whereInfo, index) => {
     whereQuery = whereQuery + ` ${whereInfo}`;
     if (index + 1 !== whereCondtions.length) {
-      whereQuery = whereQuery + ' and';
+      whereQuery = whereQuery + ' or';
     }
   });
   const runSql = `select 

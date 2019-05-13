@@ -156,8 +156,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -182,8 +182,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -572,14 +572,33 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
+      // Combine foreign_key_constraints and opp_foreign_key_constraints to get merged table data
+      const tableData = [];
+      const allSchemas = getState().tables.allSchemas;
+      const schemaInfo = allSchemas.find(
+        schema =>
+          schema.table_name === tableName &&
+          schema.table_schema === currentSchema
+      );
+      schemaInfo.foreign_key_constraints.forEach(fk_obj => {
+        tableData.push({
+          table_name: fk_obj.ref_table,
+          table_schema: fk_obj.ref_table_table_schema,
+        });
+      });
+      schemaInfo.opp_foreign_key_constraints.forEach(fk_obj => {
+        tableData.push({
+          table_name: fk_obj.table_name,
+          table_schema: fk_obj.table_schema,
+        });
+      });
+      tableData.push({
+        table_schema: currentSchema,
+        table_name: tableName,
+      });
       dispatch(
         loadUntrackedRelations({
-          tables: [
-            {
-              table_schema: currentSchema,
-              table_name: tableName,
-            },
-          ],
+          tables: tableData,
         })
       ).then(() => {
         dispatch(_push('/'));
@@ -1130,24 +1149,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */

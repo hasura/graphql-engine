@@ -15,6 +15,7 @@ import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import semverCheck from '../../../../helpers/semver';
 import styles from './ModifyTable.scss';
+import { replace } from 'react-router-redux';
 
 class ModifyTable extends React.Component {
   state = {
@@ -64,6 +65,10 @@ class ModifyTable extends React.Component {
       fkModify,
     } = this.props;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    if (!tableSchema) {
+      dispatch(replace('/404'));
+      return null;
+    }
     const tableComment = tableSchema.comment;
 
     const untrackBtn = (
