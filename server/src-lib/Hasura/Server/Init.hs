@@ -271,10 +271,10 @@ mkServeOptions rso = do
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
-  enableWL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
+  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole
-                        enableTelemetry strfyNum enabledAPIs lqOpts enableWL
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]

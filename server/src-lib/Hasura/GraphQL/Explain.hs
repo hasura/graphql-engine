@@ -112,8 +112,8 @@ explainGQLQuery
   -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableWL (GQLExplain query userVarsRaw)= do
-  execPlan <- E.getExecPlanPartial userInfo sc enableWL query
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw)= do
+  execPlan <- E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet, _) ->
       return (gCtx, rootSelSet)

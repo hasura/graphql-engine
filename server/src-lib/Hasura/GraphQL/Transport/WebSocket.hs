@@ -225,7 +225,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx enableWL sc scVer q
+               planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
     E.GExPHasura resolvedOp ->
@@ -274,7 +274,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendCompleted
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
-      sqlGenCtx planCache _ enableWL = serverEnv
+      sqlGenCtx planCache _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
@@ -435,11 +435,11 @@ createWSServerEnv
   -> E.PlanCache
   -> IO WSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
-  corsPolicy sqlGenCtx enableWL planCache = do
+  corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
   return $ WSServerEnv logger
     pgExecCtx lqState cacheRef
-    httpManager corsPolicy sqlGenCtx planCache wsServer enableWL
+    httpManager corsPolicy sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

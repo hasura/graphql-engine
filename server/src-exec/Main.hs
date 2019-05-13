@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications       #-}
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -123,7 +123,7 @@ main =  do
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole
-                enableTelemetry strfyNum enabledAPIs lqOpts enableWL) -> do
+                enableTelemetry strfyNum enabledAPIs lqOpts enableAL) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
 
       initTime <- Clock.getCurrentTime
@@ -146,7 +146,7 @@ main =  do
       initRes <- initialise pool sqlGenCtx logger httpManager
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx enableWL pool ci httpManager am
+        mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects

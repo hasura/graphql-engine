@@ -104,13 +104,10 @@ getExecPlanPartial
   -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc enableWL req = do
+getExecPlanPartial userInfo sc enableAL req = do
 
-  when enableWL $
-    -- check if query is in allowlist for non admin role
-    unless (role == adminRole) $
-      unless (VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)) $
-        throwVE "query is not in allowlist"
+  -- check if query is in allowlist
+  when enableAL checkQueryInAllowlist
 
   (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
@@ -133,6 +130,13 @@ getExecPlanPartial userInfo sc enableWL req = do
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
+
+    checkQueryInAllowlist =
+      -- only for non-admin roles
+      when (role /= adminRole) $ do
+        let notInAllowlist =
+              not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+        when notInAllowlist $ throwVE "query is not in allowlist"
 
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
@@ -158,7 +162,7 @@ getResolvedExecPlan
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableWL sc scVer reqUnparsed = do
+  enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -177,7 +181,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       opNameM queryStr plan planCache
     noExistingPlan = do
       req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc enableWL req
+      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation selSet ->

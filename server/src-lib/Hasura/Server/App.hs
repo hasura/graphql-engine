@@ -305,8 +305,8 @@ v1Alpha1GQHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
-  enableWL <- scEnableAllowlist . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx userInfo sqlGenCtx enableWL planCache
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
@@ -319,8 +319,8 @@ gqlExplainHandler query = do
   sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  enableWL <- scEnableAllowlist . hcServerCtx <$> ask
-  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableWL query
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
@@ -380,7 +380,7 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx enableWL pool ci httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -402,13 +402,13 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableWL pool ci httpManager mode corsCfg
 
     lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
-                   httpManager corsPolicy sqlGenCtx enableWL planCache
+                   httpManager corsPolicy sqlGenCtx enableAL planCache
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
-                    sqlGenCtx apis instanceId planCache lqState enableWL
+                    sqlGenCtx apis instanceId planCache lqState enableAL
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry
