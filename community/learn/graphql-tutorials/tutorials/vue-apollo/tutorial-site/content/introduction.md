@@ -2,9 +2,13 @@
 title: "Course introduction"
 ---
 
-This course is a concise and powerful introduction to GraphQL for Vue developers.
+GraphQL is becoming the new way to use APIs in modern web and mobile apps.
 
-We’ve structured this course to cover fundamental concepts of both GraphQL and using GraphQL in Vue, in the shortest amount of time possible. The course is light on opinions so that once you grok the fundamentals you can go on to choose your favourite tools and tailor your workflow.
+However, learning new things always takes time and without getting your hands dirty it’s very hard to understand the nuances of a new technology.
+
+So, we put together a powerful and concise course that will introduce you to GraphQL and integrating GraphQL into your frontend stack, in the shortest amount of time possible.
+
+We will explore the fundamentals of GraphQL and the especially things that make GraphQL suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
 
 ## Key topics and takeways:
 
@@ -29,6 +33,9 @@ No, we will be simulating a scenario where we already have a
 GraphQL API and the basic UI of a vue app built. Our task in this
 scenario is to integrate the GraphQL APIs into our vue app to build
 a complete and working app.
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our react native app to build a complete and working app.
+
+If you're new to Vue, we recommend going through this [official tutorial](https://vuejs.org/v2/guide/) and then coming back here!
 
 ## What do I need to take this tutorial?
 You need to have npm/yarn & node 8+ running.
@@ -36,5 +43,9 @@ You need to have npm/yarn & node 8+ running.
 ## How long will this tutorial take?
 Less than 2 hours
 
-## Will this course teach setting up the GraphQL backend?
-No, this course is focussed on the frontend. You can take the [Introduction to Hasura](https://learn.hasura.io/graphql/hasura) backend course to know how the backend for this realtime todo app was setup.
+## Other courses:
+
+**Frontend**: GraphQL for: [React](https://learn.hasura.io/graphql/react), [React Native](https://learn.hasura.io/graphql/react-native), [iOS](https://learn.hasura.io/graphql/ios)
+
+**Backend**: [Building a realtime GraphQL backend with Hasura in 30 mins](https://learn.hasura.io/graphql/hasura) (ideal for frontend, backend or fullstack developers)
+
