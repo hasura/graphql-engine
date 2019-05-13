@@ -600,6 +600,7 @@ class HeaderTestGraphQL(RequestHandler):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
     def post(self, request):
+        print(request.headers)
         if not request.json:
             return Response(HTTPStatus.BAD_REQUEST)
         res = header_test_schema.execute(request.json['query'],
