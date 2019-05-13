@@ -26,15 +26,21 @@ We will explore the fundamentals of GraphQL and the especially things that make 
 We will be building a realtime todo app using authenticated GraphQL APIs.
 
 Try this deployed version of the frontend app to see what we'll be building:
-https://final-graphql-tutorial.netlify.com/
+https://learn-hasura-todo-app.netlify.com/
 
 This is built on React but the functionality will be the same for iOS.
 
 ## Will this course teach iOS concepts as well?
-No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of a X app built. Our task in this scenario is to integrate the GraphQL APIs into our iOS app to build a complete and working app.
+No, we will be simulating a scenario where we already have a GraphQL API and the basic UI of an iOS app built. Our task in this scenario is to integrate the GraphQL APIs into our iOS app to build a complete and working app.
 
 ## What do I need to take this tutorial?
 You need to have npm/yarn & node 8+ running.
 
 ## How long will this tutorial take?
 Less than 2 hours
+
+## Other courses:
+
+**Frontend**: GraphQL for: [Vue](https://learn.hasura.io/graphql/vue), [React Native](https://learn.hasura.io/graphql/react-native), [React](https://learn.hasura.io/graphql/react)
+
+**Backend**: [Building a realtime GraphQL backend with Hasura](https://learn.hasura.io/graphql/hasura) in 30 mins (ideal for frontend, backend or fullstack developers)
