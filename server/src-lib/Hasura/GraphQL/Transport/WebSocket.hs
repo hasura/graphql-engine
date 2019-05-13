@@ -111,6 +111,7 @@ data WSLog
   = WSLog
   { _wslWebsocketId :: !WS.WSId
   , _wslUser        :: !(Maybe UserVars)
+  , _wslJwtExpiry   :: !(Maybe TC.UTCTime)
   , _wslEvent       :: !WSEvent
   , _wslMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
@@ -159,7 +160,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
-      logger $ WSLog wsId Nothing EAccepted Nothing
+      logger $ WSLog wsId Nothing Nothing EAccepted Nothing
       connData <- WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
@@ -170,7 +171,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
                        (Just keepAliveAction) (Just jwtExpiryHandler)
 
     reject qErr = do
-      logger $ WSLog wsId Nothing (ERejected qErr) Nothing
+      logger $ WSLog wsId Nothing Nothing (ERejected qErr) Nothing
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -192,7 +193,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         if readCookie
         then return reqHdrs
         else do
-          liftIO $ logger $ WSLog wsId Nothing EAccepted (Just corsNote)
+          liftIO $ logger $ WSLog wsId Nothing Nothing EAccepted (Just corsNote)
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -381,10 +382,12 @@ logWSEvent
   => L.Logger -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
-  let userInfoM = case userInfoME of
-        CSInitialised userInfo _ _ -> return $ userVars userInfo
-        _                          -> Nothing
-  liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
+  let (userVarsM, jwtExpM) = case userInfoME of
+        CSInitialised userInfo jwtM _ -> ( Just $ userVars userInfo
+                                         , jwtM
+                                         )
+        _                             -> (Nothing, Nothing)
+  liftIO $ logger $ WSLog wsId userVarsM jwtExpM wsEv Nothing
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
