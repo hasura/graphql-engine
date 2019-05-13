@@ -6,10 +6,10 @@ module Hasura.Server.Version
   )
 where
 
-import           Control.Lens        ((^.))
+import           Control.Lens        ((^.), (^?))
 
+import qualified Data.SemVer         as V
 import qualified Data.Text           as T
-import qualified Salve               as V
 
 import           Hasura.Prelude
 import           Hasura.Server.Utils (getValFromEnvOrScript)
@@ -17,31 +17,42 @@ import           Hasura.Server.Utils (getValFromEnvOrScript)
 version :: T.Text
 version = T.dropWhileEnd (== '\n') $(getValFromEnvOrScript "VERSION1" "../scripts/get-version.sh")
 
-parsedVersion :: Maybe V.Version
-parsedVersion = V.parseVersion $ T.unpack $ T.dropWhile (== 'v') version
+parsedVersion :: Either String V.Version
+parsedVersion = V.fromText $ T.dropWhile (== 'v') version
 
 currentVersion :: T.Text
 currentVersion = version
 
 isDevVersion :: Bool
 isDevVersion = case parsedVersion of
-  Just _  -> False
-  Nothing -> True
+  Left _  -> False
+  Right _ -> True
 
 consoleVersion :: T.Text
 consoleVersion = case parsedVersion of
-  Nothing -> version
-  Just v  -> mkConsoleV v
+  Left _  -> "" <> version
+  Right v -> mkConsoleV v
 
 mkConsoleV :: V.Version -> T.Text
-mkConsoleV v = T.pack $ release <> "/v" <> show major <> "." <> show minor
+mkConsoleV v = case getReleaseChannel v of
+  Nothing -> "" <> version
+  Just c -> T.pack $ c <> "/" <> vMajMin
   where
-    major = v ^. V.majorLens
-    minor = v ^. V.minorLens
-    release = case v ^. V.preReleasesLens of
-      [] -> "stable"
-      (r:_) -> case V.renderPreRelease r of
-        ('a':'l':'p':'h':'a':_) -> "alpha"
-        ('b':'e':'t':'a':_) -> "beta"
-        ('r':'c':_) -> "rc"
-        _ -> "unknown"
+    vMajMin = "v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor)
+
+getReleaseChannel :: V.Version -> Maybe String
+getReleaseChannel sv = case sv ^. V.release of
+  [] -> Just "stable"
+  (mr:_) -> case getTextFromId mr of
+    Nothing -> Nothing
+    Just r -> case T.unpack r of
+      ('a':'l':'p':'h':'a':_) -> Just "alpha"
+      ('b':'e':'t':'a':_)     -> Just "beta"
+      ('r':'c':_)             -> Just "rc"
+      _                       -> Nothing
+
+getTextFromId :: V.Identifier -> Maybe T.Text
+getTextFromId i = Just i ^? (toTextualM . V._Textual)
+  where
+    toTextualM _ Nothing  = pure Nothing
+    toTextualM f (Just a) = f a
