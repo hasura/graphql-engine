@@ -16,11 +16,11 @@ Adding or removing a query in allow-list
 
 You can add or remove a query in the allow-list in two ways:
 
-* **Using the console:**:  Head to the ``Settings`` (⚙) --> ``Allowed queries`` section in the console. You can add a new query to the allow-list or upload a list of new queries from a file that will be added to the allow-list. You can also see a list of existing queries in the allow-list and delete them individually. 
+* **Using the console:**  Head to the ``Settings`` (⚙) --> ``Allowed queries`` section in the console. You can
+  add a new query to the allow-list or upload a list of new queries from a file that will be added to the
+  allow-list. You can also see a list of existing queries in the allow-list and delete them individually.
 
-  Examples:
-
-  * You can add the following query to the allow-list:
+  * You can add an individual query, like the one below, manually to the allow-list with a unique name.
 
     .. code-block:: graphql
 
@@ -34,7 +34,7 @@ You can add or remove a query in the allow-list in two ways:
      }
 
   * You can upload files, like this `sample file <https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025>`_,
-    to add multiple queries to the allow-list.
+    to add multiple queries to the allow-list (each query needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection(s) can added to or removed
   from the allow-list. See :doc:`Collections & Allow-list APIs<../api-reference/schema-metadata-api/query-collections>`
@@ -43,6 +43,9 @@ You can add or remove a query in the allow-list in two ways:
 .. note::
 
   * ``__typename`` introspection fields will be ignored when adding queries and comparing them to the allow-list.
+
+  * Any introspection queries that your client apps require will have to be explicitly added to the allow-list
+    to allow running them.
 
   * The order of fields in a query will be **strictly** compared. E.g. assuming the query in first example
     above is part of the allow-list, the following query will be **rejected**:
@@ -58,7 +61,6 @@ You can add or remove a query in the allow-list in two ways:
         }
      }
 
-
   * Allow-list is stored in the metadata. To version control the state of the list, you are required to export
     the metadata. See :doc:`Managing Hasura metadata <../migrations/manage-metadata>` for more details.
 
@@ -72,10 +74,7 @@ variable to ``true`` or running GraphQL engine with the ``--enable-allowlist`` f
 
 .. note::
 
-  * Any introspection queries that your client apps require will have to be explicitly added to the allow-list
-    to allow running them.
-  
-  * The allow-list validation will not be enforced for the ``admin`` role.
+  The allow-list validation will not be enforced for the ``admin`` role.
 
 Recommended usage
 -----------------
