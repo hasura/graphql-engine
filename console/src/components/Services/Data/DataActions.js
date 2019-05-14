@@ -451,33 +451,6 @@ const makeMigrationCall = (
   );
 };
 
-const fetchTableListBySchema = (schemaName, successAction, errorAction) => (
-  dispatch,
-  getState
-) => {
-  const url = Endpoints.getSchema;
-  const body = getSchemaQuery(schemaName);
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      if (successAction) {
-        dispatch({ type: successAction, data: JSON.parse(data.result[1]) });
-      }
-    },
-    error => {
-      console.error('Failed to load table list' + JSON.stringify(error));
-      if (errorAction) {
-        dispatch({ type: errorAction, data: error });
-      }
-    }
-  );
-};
-
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -619,7 +592,6 @@ export {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-  fetchTableListBySchema,
   RESET_MANUAL_REL_TABLE_LIST,
   fetchViewInfoFromInformationSchema,
   fetchTrackedFunctions,

@@ -110,7 +110,6 @@ const defaultModifyState = {
     isManualExpanded: false,
     manualRelInfo: {
       remoteSchema: '',
-      tables: [],
     },
   },
   permissionsState: { ...defaultPermissionsState },

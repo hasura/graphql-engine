@@ -19,8 +19,6 @@ export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
 export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
-export const UPDATE_MANUAL_REL_TABLE_LIST =
-  'ModifyTable/UPDATE_MANUAL_REL_TABLE_LIST';
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
@@ -260,14 +258,16 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    dispatch(loadUntrackedRelations({
-      tables: [
-        {
-          table_schema: currentSchema,
-          table_name: state.tableName,
-        }
-      ]
-    })).then(() => {
+    dispatch(
+      loadUntrackedRelations({
+        tables: [
+          {
+            table_schema: currentSchema,
+            table_name: state.tableName,
+          },
+        ],
+      })
+    ).then(() => {
       dispatch(resetRelationshipForm());
     });
   };
@@ -293,8 +293,9 @@ const relTableChange = tableName => (dispatch, getState) => {
   // set table name state
   dispatch({ type: REL_SET_RTABLE, rTable: tableName });
   // fetch columns of the selected table
-  const tableSchema = getState().tables.modify.relAdd.manualRelInfo.tables.find(
-    t => t.table_name === tableName
+  const schemaName = getState().tables.modify.relAdd.manualRelInfo.remoteSchema;
+  const tableSchema = getState().tables.allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === schemaName
   );
   if (tableSchema) {
     const tableColumns = tableSchema.columns;
