@@ -18,5 +18,5 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      payload: "*"
     webhook: http://127.0.0.1:5592

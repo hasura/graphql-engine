@@ -18,13 +18,11 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
       payload: "*"
     update:
       columns: "*"
       payload: ["c1"]
     delete:
-      columns: "*"
       payload: ["c2"]
     webhook: http://127.0.0.1:5592
     retry_conf:
