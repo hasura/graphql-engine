@@ -16,6 +16,7 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
+import qualified Data.Time.Clock                             as TC
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
@@ -37,10 +38,10 @@ import qualified Hasura.Logging                              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
-import           Hasura.Server.Auth                          (AuthMode,
-                                                              getUserInfo)
+import           Hasura.Server.Auth                          (AuthMode, getUserInfoWithExpTime)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (bsToTxt)
+import           Hasura.Server.Utils                         (bsToTxt,
+                                                              diffTimeToMicro)
 
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -59,12 +60,13 @@ data WSConnState
   = CSNotInitialised !WsHeaders
   | CSInitError Text
   -- headers from the client (in conn params) to forward to the remote schema
-  | CSInitialised UserInfo [H.Header]
+  -- and JWT expiry time if any
+  | CSInitialised UserInfo (Maybe TC.UTCTime) [H.Header]
 
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
-  { _wscUser      :: !(IORef.IORef WSConnState)
+  { _wscUser      :: !(STM.TVar WSConnState)
   -- we only care about subscriptions,
   -- the other operations (query/mutations)
   -- are not tracked here
@@ -109,6 +111,7 @@ data WSLog
   = WSLog
   { _wslWebsocketId :: !WS.WSId
   , _wslUser        :: !(Maybe UserVars)
+  , _wslJwtExpiry   :: !(Maybe TC.UTCTime)
   , _wslEvent       :: !WSEvent
   , _wslMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
@@ -146,18 +149,30 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
+    jwtExpiryHandler wsConn = do
+      expTime <- STM.atomically $ do
+        connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
+        case connState of
+          CSNotInitialised _         -> STM.retry
+          CSInitError _              -> STM.retry
+          CSInitialised _ expTimeM _ ->
+            maybe STM.retry return expTimeM
+      currTime <- TC.getCurrentTime
+      threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
+
     accept hdrs errType = do
-      logger $ WSLog wsId Nothing EAccepted Nothing
+      logger $ WSLog wsId Nothing Nothing EAccepted Nothing
       connData <- WSConnData
-                  <$> IORef.newIORef (CSNotInitialised hdrs)
+                  <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
                   <*> pure errType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return $ Right (connData, acceptRequest, Just keepAliveAction)
+      return $ Right $ WS.AcceptWith connData acceptRequest
+                       (Just keepAliveAction) (Just jwtExpiryHandler)
 
     reject qErr = do
-      logger $ WSLog wsId Nothing (ERejected qErr) Nothing
+      logger $ WSLog wsId Nothing Nothing (ERejected qErr) Nothing
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
@@ -179,7 +194,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         if readCookie
         then return reqHdrs
         else do
-          liftIO $ logger $ WSLog wsId Nothing EAccepted (Just corsNote)
+          liftIO $ logger $ WSLog wsId Nothing Nothing EAccepted (Just corsNote)
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -213,9 +228,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   when (isJust opM) $ withComplete $ sendStartErr $
     "an operation already exists with this id: " <> unOperationId opId
 
-  userInfoM <- liftIO $ IORef.readIORef userInfoR
+  userInfoM <- liftIO $ STM.readTVarIO userInfoR
   (userInfo, reqHdrs) <- case userInfoM of
-    CSInitialised userInfo reqHdrs -> return (userInfo, reqHdrs)
+    CSInitialised userInfo _ reqHdrs -> return (userInfo, reqHdrs)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with : " <> initErr
       withComplete $ sendStartErr e
@@ -367,11 +382,13 @@ logWSEvent
   :: (MonadIO m)
   => L.Logger -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
-  userInfoME <- liftIO $ IORef.readIORef userInfoR
-  let userInfoM = case userInfoME of
-        CSInitialised userInfo _ -> return $ userVars userInfo
-        _                        -> Nothing
-  liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
+  userInfoME <- liftIO $ STM.readTVarIO userInfoR
+  let (userVarsM, jwtExpM) = case userInfoME of
+        CSInitialised userInfo jwtM _ -> ( Just $ userVars userInfo
+                                         , jwtM
+                                         )
+        _                             -> (Nothing, Nothing)
+  liftIO $ logger $ WSLog wsId userVarsM jwtExpM wsEv Nothing
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
@@ -380,18 +397,18 @@ onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
-  headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscUser $ WS.getData wsConn))
-  res <- runExceptT $ getUserInfo logger manager headers authMode
+  headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
+  res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
   case res of
     Left e  -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
+      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
         CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
-    Right userInfo -> do
-      liftIO $ IORef.writeIORef (_wscUser $ WS.getData wsConn) $
-        CSInitialised userInfo paramHeaders
+    Right (userInfo, expTimeM) -> do
+      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
+        CSInitialised userInfo expTimeM paramHeaders
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -412,10 +429,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
 onClose
   :: L.Logger
   -> LQ.LiveQueriesState
-  -> WS.ConnectionException
   -> WSConn
   -> IO ()
-onClose logger lqMap _ wsConn = do
+onClose logger lqMap wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
   void $ A.forConcurrently operations $ \(_, (lqId, _)) ->
