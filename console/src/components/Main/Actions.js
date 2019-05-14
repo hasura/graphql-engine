@@ -32,9 +32,9 @@ const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
 const SET_SEMVER = 'Main/SET_SEMVER';
-const setSemverBulk = (data) => ({
+const setSemverBulk = data => ({
   type: SET_SEMVER,
-  data
+  data,
 });
 
 const semverInit = () => {
@@ -46,10 +46,10 @@ const semverInit = () => {
     const semverObj = {};
     Object.keys(componentsSemver).forEach(feature => {
       semverObj[feature] = semverCheck(feature, serverVersion);
-    })
+    });
     return dispatch(setSemverBulk(semverObj));
-  }
-}
+  };
+};
 
 const loadMigrationStatus = () => dispatch => {
   const url = Endpoints.hasuractlMigrateSettings;
@@ -258,7 +258,6 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         serverVersion: null,
       };
-
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
         ...state,
@@ -309,8 +308,8 @@ const mainReducer = (state = defaultState, action) => {
     case SET_SEMVER:
       return {
         ...state,
-        semver: { ...action.data }
-      }
+        semver: { ...action.data },
+      };
     default:
       return state;
   }
@@ -330,5 +329,5 @@ export {
   validateLogin,
   loadServerVersion,
   checkServerUpdates,
-  semverInit
+  semverInit,
 };

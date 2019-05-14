@@ -9,7 +9,6 @@ import Spinner from '../Common/Spinner/Spinner';
 import { loadServerVersion, checkServerUpdates, semverInit } from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
-import semverCheck from '../../helpers/semver';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
@@ -32,17 +31,23 @@ class Main extends React.Component {
     this.state.loveConsentState = getLoveConsentState();
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
+
   componentDidMount() {
     const { dispatch } = this.props;
+
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
+
     dispatch(loadServerVersion()).then(() => {
       dispatch(semverInit());
+
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
+
       dispatch(loadConsoleOpts());
+
       dispatch(checkServerUpdates()).then(() => {
         let isUpdateAvailable = false;
         try {
@@ -79,14 +84,17 @@ class Main extends React.Component {
       document.getElementById('dropdown_wrapper').classList.remove('open');
     }
   }
+
   handleDropdownToggle() {
     document.getElementById('dropdown_wrapper').classList.toggle('open');
   }
+
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
     }
   }
+
   closeLoveIcon() {
     const s = {
       isDismissed: true,
@@ -96,6 +104,7 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
     window.localStorage.setItem(
@@ -378,56 +387,6 @@ class Main extends React.Component {
       return helpDropdownPosStyle;
     };
 
-    const getRemoteSchemaLink = () => {
-      return (
-        <OverlayTrigger placement="right" overlay={tooltip.customresolver}>
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'remote-schemas'
-                  ? styles.navSideBarActive
-                  : ''
-              }
-              to={appPrefix + '/remote-schemas/manage/schemas'}
-            >
-              <div className={styles.iconCenter}>
-                <i
-                  title="Remote Schemas"
-                  className="fa fa-plug"
-                  aria-hidden="true"
-                />
-              </div>
-              <p>Remote Schemas</p>
-            </Link>
-          </li>
-        </OverlayTrigger>
-      );
-    };
-
-    const getEventsLink = () => {
-      return (
-        <OverlayTrigger placement="right" overlay={tooltip.events}>
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'events' ? styles.navSideBarActive : ''
-              }
-              to={appPrefix + '/events/manage/triggers'}
-            >
-              <div className={styles.iconCenter}>
-                <i
-                  title="Events"
-                  className="fa fa-cloud"
-                  aria-hidden="true"
-                />
-              </div>
-              <p>Events</p>
-            </Link>
-          </li>
-        </OverlayTrigger>
-      );
-    };
-
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
@@ -492,10 +451,51 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-
-                {getRemoteSchemaLink()}
-
-                {getEventsLink()}
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.customresolver}
+                >
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'remote-schemas'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/remote-schemas/manage/schemas'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Remote Schemas"
+                          className="fa fa-plug"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Remote Schemas</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
+                <OverlayTrigger placement="right" overlay={tooltip.events}>
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'events'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/events/manage/triggers'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Events"
+                          className="fa fa-cloud"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Events</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>

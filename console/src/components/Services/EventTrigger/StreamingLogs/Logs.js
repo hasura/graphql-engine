@@ -7,7 +7,6 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
-import semverCheck from '../../../../helpers/semver';
 import parseRowData from './util';
 import {
   loadEventLogs,
@@ -130,6 +129,7 @@ class StreamingLogs extends Component {
 
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
+      //TODO check logic
       if (!(column === 'redeliver' && false)) {
         invocationGridHeadings.push({
           Header: column,

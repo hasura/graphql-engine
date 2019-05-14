@@ -1,7 +1,8 @@
 const semver = require('semver');
 
-// TODO check events redeliver code
+// list of feature launch versions
 const componentsSemver = {
+  // feature: '1.0.1'
 };
 
 const getPreRelease = version => {
@@ -77,8 +78,6 @@ const semverCheck = (component, serverVersion) => {
   return false;
 };
 
-export {
-  componentsSemver
-};
+export { componentsSemver };
 
 export default semverCheck;
