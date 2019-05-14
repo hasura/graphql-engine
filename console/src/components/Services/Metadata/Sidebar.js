@@ -7,30 +7,27 @@ import CrossIcon from '../../Common/Icons/Cross';
 
 const Sidebar = ({
   location,
-  supportMetadata,
   supportInconsistentMetadata,
   metadata,
 }) => {
   const currentLocation = location.pathname;
   const sections = [];
-  if (supportMetadata) {
-    sections.push(
-      <li
-        role="presentation"
-        className={
-          currentLocation.includes('metadata/actions') ? styles.active : ''
-        }
+  sections.push(
+    <li
+      role="presentation"
+      className={
+        currentLocation.includes('metadata/actions') ? styles.active : ''
+      }
+    >
+      <Link
+        className={styles.linkBorder}
+        to={'/metadata/actions'}
+        data-test="metadata-actions-link"
       >
-        <Link
-          className={styles.linkBorder}
-          to={'/metadata/actions'}
-          data-test="metadata-actions-link"
-        >
-          Actions
-        </Link>
-      </li>
-    );
-  }
+        Actions
+      </Link>
+    </li>
+  );
   if (supportInconsistentMetadata) {
     let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
     if (metadata.inconsistentObjects.length > 0) {

@@ -4,16 +4,10 @@ import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 const useMetadataSemver = serverVersion => {
-  const [supportMetadata, setSupportMetadata] = useState(false);
   const [
     supportInconsistentMetadata,
     setSupportInconsistentMetadata,
   ] = useState(false);
-  useEffect(() => {
-    if (serverVersion) {
-      setSupportMetadata(semverCheck('metadataReload', serverVersion));
-    }
-  }, [serverVersion]);
   useEffect(() => {
     if (serverVersion) {
       setSupportInconsistentMetadata(
@@ -22,21 +16,16 @@ const useMetadataSemver = serverVersion => {
     }
   }, [serverVersion]);
   return {
-    supportMetadata,
     supportInconsistentMetadata,
   };
 };
 
 const Container = ({ location, serverVersion, children, metadata }) => {
-  const { supportMetadata, supportInconsistentMetadata } = useMetadataSemver(
+  const { supportInconsistentMetadata } = useMetadataSemver(
     serverVersion
   );
-  if (!supportMetadata) {
-    return null;
-  }
   const sidebar = (
     <Sidebar
-      supportMetadata={supportMetadata}
       supportInconsistentMetadata={supportInconsistentMetadata}
       location={location}
       metadata={metadata}
@@ -45,7 +34,6 @@ const Container = ({ location, serverVersion, children, metadata }) => {
   const helmet = 'Metadata | Hasura';
   const childrenWithProps = React.Children.map(children, child =>
     React.cloneElement(child, {
-      supportMetadata,
       supportInconsistentMetadata,
       metadata,
     })

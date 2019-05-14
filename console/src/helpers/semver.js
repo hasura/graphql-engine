@@ -1,8 +1,6 @@
 const semver = require('semver');
 
 const componentsSemver = {
-  eventsTab: '1.0.0-alpha16',
-  metadataReload: '1.0.0-alpha17',
   eventRedeliver: '1.0.0-alpha17',
   sqlAnalyze: '1.0.0-alpha25',
   aggregationPerm: '1.0.0-alpha26',
@@ -11,7 +9,6 @@ const componentsSemver = {
   insertPrefix: '1.0.0-alpha26',
   insertPermRestrictColumns: '1.0.0-alpha28',
   webhookEnvSupport: '1.0.0-alpha29',
-  schemaStitching: '1.0.0-alpha30',
   permHideUpsertSection: '1.0.0-alpha32',
   customFunctionSection: '1.0.0-alpha36',
   triggerRetryTimeout: '1.0.0-alpha38',
