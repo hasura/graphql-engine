@@ -1,15 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import semverCheck from '../../../helpers/semver';
+import React from 'react';
 import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
-const Container = ({ location, serverVersion, children, metadata }) => {
-  const sidebar = (
-    <Sidebar
-      location={location}
-      metadata={metadata}
-    />
-  );
+const Container = ({ location, children, metadata }) => {
+  const sidebar = <Sidebar location={location} metadata={metadata} />;
   const helmet = 'Metadata | Hasura';
   const childrenWithProps = React.Children.map(children, child =>
     React.cloneElement(child, {
@@ -28,7 +22,6 @@ const mapStateToProps = state => {
     ...state.main,
     metadata: state.metadata,
     dataHeaders: { ...state.tables.dataHeaders },
-    serverVersion: state.main.serverVersion,
   };
 };
 

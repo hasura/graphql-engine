@@ -33,8 +33,6 @@ import { createTrigger } from './AddActions';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
-import semverCheck from '../../../../helpers/semver';
-
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
@@ -214,9 +212,7 @@ class AddTrigger extends Component {
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
-        dispatch(
-          operationToggleColumn(column, type)
-        );
+        dispatch(operationToggleColumn(column, type));
       };
       const tableSchema = tableListBySchema.find(
         t => t.table_name === tableName

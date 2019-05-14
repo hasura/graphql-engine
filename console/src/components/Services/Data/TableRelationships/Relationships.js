@@ -22,7 +22,6 @@ import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
-import semverCheck from '../../../../helpers/semver';
 
 const addRelationshipCellView = (
   dispatch,
@@ -308,7 +307,6 @@ const AddRelationship = ({
 };
 
 class Relationships extends Component {
-
   componentDidMount() {
     const { dispatch, tableName } = this.props;
     dispatch({ type: RESET });

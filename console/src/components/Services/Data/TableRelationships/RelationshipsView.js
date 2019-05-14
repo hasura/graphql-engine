@@ -10,10 +10,8 @@ import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
-import semverCheck from '../../../../helpers/semver';
 
 class RelationshipsView extends Component {
-
   componentDidMount() {
     const { dispatch, currentSchema, tableName } = this.props;
     dispatch({ type: RESET });

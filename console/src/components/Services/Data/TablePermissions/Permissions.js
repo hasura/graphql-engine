@@ -45,7 +45,6 @@ import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 import { setTable, fetchViewInfoFromInformationSchema } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
-import semverCheck from '../../../../helpers/semver';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
@@ -299,13 +298,7 @@ class Permissions extends Component {
                 permOpenEdit(tableSchema, permissionsState.newRole, queryType)
               );
             } else if (role !== '') {
-              dispatch(
-                permOpenEdit(
-                  tableSchema,
-                  role,
-                  queryType,
-                )
-              );
+              dispatch(permOpenEdit(tableSchema, role, queryType));
             } else {
               document.getElementById('newRoleInput').focus();
             }

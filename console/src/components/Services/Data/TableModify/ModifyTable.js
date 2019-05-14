@@ -13,13 +13,11 @@ import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
-import semverCheck from '../../../../helpers/semver';
 import styles from './ModifyTable.scss';
 
 class ModifyTable extends React.Component {
-
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));

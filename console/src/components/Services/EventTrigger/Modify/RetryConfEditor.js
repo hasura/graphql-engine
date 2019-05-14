@@ -8,10 +8,7 @@ import {
 } from './Actions';
 import Tooltip from './Tooltip';
 
-import semverCheck from '../../../../helpers/semver';
-
 class RetryConfEditor extends React.Component {
-
   setValues = () => {
     const { dispatch } = this.props;
     const retryConf = this.props.retryConf || {};
@@ -77,9 +74,7 @@ class RetryConfEditor extends React.Component {
           </div>
         </div>
         <div className={styles.modifyOpsCollapsedContent1}>
-          <div className={'col-md-4 ' + styles.padd_remove}>
-            Timeout (sec):
-          </div>
+          <div className={'col-md-4 ' + styles.padd_remove}>Timeout (sec):</div>
           <div className={'col-md-12 ' + styles.padd_remove}>
             {retryConf.timeout_sec || 60}
           </div>

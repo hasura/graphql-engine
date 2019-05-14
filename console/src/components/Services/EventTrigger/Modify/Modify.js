@@ -11,15 +11,10 @@ import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
-import semverCheck from '../../../../helpers/semver';
 
 import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
 
 class Modify extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(setDefaults());

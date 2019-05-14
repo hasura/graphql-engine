@@ -16,10 +16,8 @@ import {
 import { ordinalColSort } from '../utils';
 import { setTable, fetchTableComment } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import semverCheck from '../../../../helpers/semver';
 
 class ModifyView extends Component {
-
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({ type: RESET });

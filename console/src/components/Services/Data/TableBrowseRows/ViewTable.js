@@ -14,8 +14,6 @@ import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
 import { replace } from 'react-router-redux';
 
-import semverCheck from '../../../../helpers/semver';
-
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -83,10 +81,6 @@ class ViewTable extends Component {
     this.getInitialData(this.props.tableName);
   }
 
-  componentDidMount() {
-    this.retrieveManualTriggers(this.state.tableName);
-  }
-
   componentWillReceiveProps(nextProps) {
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
@@ -99,7 +93,7 @@ class ViewTable extends Component {
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
       dispatch(vMakeRequest()),
-      this.retrieveManualTriggers(tableName),
+      dispatch(fetchManualTriggers(tableName)),
     ]);
   }
 
@@ -116,7 +110,7 @@ class ViewTable extends Component {
       document.body.offsetHeight - document.body.scrollTop;
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
     if (this.shouldScrollBottom) {
       document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
     }
@@ -142,11 +136,6 @@ class ViewTable extends Component {
       type: UPDATE_TRIGGER_FUNCTION,
       data: triggerFunc,
     });
-  };
-
-  retrieveManualTriggers = tableName => {
-    const { dispatch } = this.props;
-    return dispatch(fetchManualTriggers(tableName));
   };
 
   render() {
