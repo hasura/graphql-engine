@@ -1043,7 +1043,7 @@ const isColumnUnique = (tableSchema, colName) => {
   );
 };
 
-const saveColumnChangesSql = (colName, column, allowRename) => {
+const saveColumnChangesSql = (colName, column) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
@@ -1053,7 +1053,7 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const unique = columnEdit.isUnique;
     const def = columnEdit.default || '';
     const comment = columnEdit.comment || '';
-    const newName = allowRename ? columnEdit.name : null;
+    const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes = "''";

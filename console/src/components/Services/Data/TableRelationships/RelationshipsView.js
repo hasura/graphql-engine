@@ -13,11 +13,9 @@ import RelationshipEditor from './RelationshipEditor';
 import semverCheck from '../../../../helpers/semver';
 
 class RelationshipsView extends Component {
-  state = {
-    supportRename: false,
-  };
+
   componentDidMount() {
-    const { dispatch, serverVersion, currentSchema, tableName } = this.props;
+    const { dispatch, currentSchema, tableName } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
@@ -25,31 +23,8 @@ class RelationshipsView extends Component {
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: currentSchema,
     });
-    if (serverVersion) {
-      this.checkRenameSupport(serverVersion);
-    }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
   render() {
     const {
       tableName,
@@ -127,7 +102,6 @@ class RelationshipsView extends Component {
                       rel.objRel
                     )}
                     isObjRel
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />
@@ -144,7 +118,6 @@ class RelationshipsView extends Component {
                       rel.arrRel
                     )}
                     isObjRel={false}
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />

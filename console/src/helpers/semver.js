@@ -2,7 +2,6 @@ const semver = require('semver');
 
 // TODO check events redeliver code
 const componentsSemver = {
-  tableColumnRename: '1.0.0-alpha39',
   inconsistentState: '1.0.0-alpha43',
 };
 

@@ -66,7 +66,6 @@ class RelationshipEditor extends React.Component {
       relName,
       relConfig,
       isObjRel,
-      allowRename,
     } = this.props;
 
     const { text, isEditting } = this.state;
@@ -86,16 +85,12 @@ class RelationshipEditor extends React.Component {
     const collapsed = () => (
       <div>
         <Button
-          color={allowRename ? 'white' : 'red'}
-          size={allowRename ? 'xs' : 'sm'}
-          onClick={allowRename ? this.toggleEditor : onDelete}
-          data-test={
-            allowRename
-              ? `relationship-toggle-editor-${relName}`
-              : `relationship-remove-${relName}`
-          }
+          color={'white'}
+          size={'xs'}
+          onClick={this.toggleEditor}
+          data-test={`relationship-toggle-editor-${relName}`}
         >
-          {allowRename ? 'Edit' : 'Remove'}
+          Edit
         </Button>
         &nbsp;
         <b>{relName}</b>

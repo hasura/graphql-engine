@@ -308,39 +308,13 @@ const AddRelationship = ({
 };
 
 class Relationships extends Component {
-  state = {
-    supportRename: false,
-  };
 
   componentDidMount() {
-    const { dispatch, serverVersion, tableName } = this.props;
+    const { dispatch, tableName } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(tableName));
-    if (serverVersion) {
-      this.checkRenameSupport(serverVersion);
-    }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
   render() {
     const {
       tableName,
@@ -418,7 +392,6 @@ class Relationships extends Component {
                       rel.objRel
                     )}
                     isObjRel
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />
@@ -435,7 +408,6 @@ class Relationships extends Component {
                       rel.arrRel
                     )}
                     isObjRel={false}
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />
