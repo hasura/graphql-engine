@@ -97,7 +97,10 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 def test_forbidden_webhook(hge_ctx, conf):
     if conf['url'] == '/v1/graphql':
-        status = [200]
+        if conf['status'] == 404:
+            status = [404]
+        else:
+            status = [200]
     else:
         status = [401, 404]
 
