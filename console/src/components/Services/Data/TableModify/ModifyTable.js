@@ -64,7 +64,9 @@ class ModifyTable extends React.Component {
       pkModify,
       fkModify,
     } = this.props;
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
     if (!tableSchema) {
       dispatch(replace('/404'));
       return null;

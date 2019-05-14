@@ -17,6 +17,7 @@ import styles from './ModifyTable.scss';
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
+  currentSchema,
   dispatch,
   fkModify,
 }) => {
@@ -46,7 +47,9 @@ const ForeignKeyEditor = ({
   // Generate a list of reference tables and their columns
   const refTables = {};
   allSchemas.forEach(ts => {
-    refTables[ts.table_name] = ts.columns.map(c => c.column_name);
+    if (ts.table_schema === currentSchema) {
+      refTables[ts.table_name] = ts.columns.map(c => c.column_name);
+    }
   });
   const numFks = fkModify.length;
 

@@ -200,7 +200,11 @@ FROM
                 WHERE 
                   c.oid = (
                     SELECT 
-                    ((ist.table_schema || '.' || ist.table_name)::text):: regclass :: oid
+                      (
+                        (
+                          ist.table_schema || '.' || ist.table_name
+                        ):: text
+                      ):: regclass :: oid
                   ) 
                   AND c.relname = isc.table_name
               )
@@ -212,9 +216,7 @@ FROM
       to_jsonb(
         array_remove(
           array_agg(
-            DISTINCT row_to_json(hdb_fkc) :: JSONB || jsonb_build_object(
-              'is_ref_table_tracked', fk_ref_table.table_name IS NOT NULL
-            )
+            DISTINCT hdb_fkc :: JSONB
           ), 
           NULL
         )
@@ -228,7 +230,7 @@ FROM
           ), 
           NULL
         )
-      ) AS opp_foreign_key_constraints,
+      ) AS opp_foreign_key_constraints, 
       to_jsonb(
         array_remove(
           array_agg(
@@ -259,14 +261,34 @@ FROM
       information_schema.tables AS ist 
       LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
       and isc.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema 
-      and hdb_fkc.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
-      and fk_ref_table.table_name = hdb_fkc.ref_table
+      LEFT OUTER JOIN (
+        select
+          row_to_json(hdb_fkc.*):: JSONB || jsonb_build_object(
+            'is_ref_table_tracked', fk_ref_table.table_name IS NOT NULL
+          ) || jsonb_build_object(
+            'ref_table_columns', 
+            array_agg(
+              row_to_json(fkc_cols)
+            )
+          ) AS def 
+        from 
+          hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc 
+          LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
+          and fk_ref_table.table_name = hdb_fkc.ref_table 
+          LEFT OUTER JOIN information_schema.columns AS fkc_cols ON fkc_cols.table_schema = hdb_fkc.ref_table_table_schema 
+          and fkc_cols.table_name = hdb_fkc.ref_table 
+        GROUP BY 
+          hdb_fkc.table_schema, 
+          hdb_fkc.table_name, 
+          row_to_json(hdb_fkc.*):: JSONB, 
+          fk_ref_table.table_name, 
+          fk_ref_table.table_schema
+      ) AS hdb_fkc ON hdb_fkc.def#>>'{table_schema}' = ist.table_schema 
+      and hdb_fkc.def#>>'{table_name}' = ist.table_schema 
       LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_ofkc ON hdb_ofkc.ref_table_table_schema = ist.table_schema 
-      and hdb_ofkc.ref_table = ist.table_name
+      and hdb_ofkc.ref_table = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_table AS ofk_ref_table ON ofk_ref_table.table_schema = hdb_ofkc.table_schema 
-      and ofk_ref_table.table_name = hdb_ofkc.table_name
+      and ofk_ref_table.table_name = hdb_ofkc.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = ist.table_schema 
       and hdb_pk.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = ist.table_schema 
@@ -277,14 +299,14 @@ FROM
       and hdb_rel.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_permission_agg AS hdb_perm ON hdb_perm.table_schema = ist.table_schema 
       and hdb_perm.table_name = ist.table_name 
-    ${whereQuery}
+    ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
       ist.table_name, 
       ist.*, 
       row_to_json(hdb_pk.*):: JSONB, 
       hdb_table.table_name
-  ) AS info;
+  ) AS info
 `;
   return {
     type: 'run_sql',
