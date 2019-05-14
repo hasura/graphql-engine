@@ -6,7 +6,8 @@ args:
 
 - type: drop_query_collection
   args:
-    name: collection_1
+    collection: collection_1
+    cascade: False
 
 - type: run_sql
   args:

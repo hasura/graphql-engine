@@ -78,7 +78,8 @@ drop_query_collection
    {
        "type" : "drop_query_collection",
        "args": {
-            "name": "my_collection",
+            "collection": "my_collection",
+            "cascade": false
         }
    }
 
@@ -94,10 +95,14 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - name
+   * - collection
      - true
      - :ref:`CollectionName`
      - Name of the query collection
+   * - cascade
+     - true
+     - boolean
+     - When set to ``true``, the collection (if present) is removed from allowlist
 
 .. _add_query_to_collection:
 

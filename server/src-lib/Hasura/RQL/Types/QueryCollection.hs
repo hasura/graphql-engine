@@ -66,10 +66,11 @@ queryListToMap ql =
   HM.fromList $ flip map ql $
     \(ListedQuery queryName query) -> (queryName, query)
 
-newtype DropCollection
+data DropCollection
   = DropCollection
-  { _dcName :: CollectionName}
-  deriving (Show, Eq, Lift)
+  { _dcCollection :: !CollectionName
+  , _dcCascade    :: !Bool
+  } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase) ''DropCollection)
 
 data AddQueryToCollection

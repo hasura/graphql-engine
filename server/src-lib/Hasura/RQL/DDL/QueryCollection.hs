@@ -63,20 +63,6 @@ runCreateCollection cc = do
   liftTx $ addCollectionToCatalog cc
   return successMsg
 
-dropCollectionP1
-  :: (QErrM m, CacheRM m, UserInfoM m)
-  => CollectionName -> m ()
-dropCollectionP1 name = do
-  adminOnly
-  withPathK "name" $ do
-    -- check for query collection
-    void $ askQueryMap name
-    -- check if the collection defined in allowlist
-    allowlistMap <- scAllowlist <$> askSchemaCache
-    onJust (HM.lookup name allowlistMap) $ const $
-      throw400 DependencyError $ "query collection with name "
-      <> name <<> " is present in allowlist; cannot proceed to drop"
-
 runAddQueryToCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
   => AddQueryToCollection -> m EncJSON
@@ -90,10 +76,21 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
 runDropCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
   => DropCollection -> m EncJSON
-runDropCollection (DropCollection name) = do
-  dropCollectionP1 name
-  delCollectionFromCache name
-  liftTx $ delCollectionFromCatalog name
+runDropCollection (DropCollection collName cascade) = do
+  adminOnly
+  withPathK "collection" $ do
+    -- check for query collection
+    void $ askQueryMap collName
+    allowlistMap <- scAllowlist <$> askSchemaCache
+    onJust (HM.lookup collName allowlistMap) $ const $ do
+      if cascade then do
+        -- drop collection in allowlist
+        delCollectionFromAllowlist collName
+        liftTx $ delCollectionFromAllowlistCatalog collName
+      else throw400 DependencyError $ "query collection with name "
+           <> collName <<> " is present in allowlist; cannot proceed to drop"
+  delCollectionFromCache collName
+  liftTx $ delCollectionFromCatalog collName
   return successMsg
 
 runDropQueryFromCollection

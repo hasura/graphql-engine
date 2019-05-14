@@ -249,7 +249,8 @@ const deleteAllowListQuery = () => {
   const deleteAllowListCollectionQuery = () => ({
     type: 'drop_query_collection',
     args: {
-      name: allowedQueriesCollection,
+      collection: allowedQueriesCollection,
+      cascade: false,
     },
   });
 
