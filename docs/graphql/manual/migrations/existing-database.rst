@@ -67,7 +67,7 @@ Step 3: Initialize the migrations as per your current state
 -----------------------------------------------------------
 
 Create a migration called ``init`` by exporting the current Postgres schema and
-metadata from server:
+metadata from server: *(available after version alpha45)*
 
 .. code-block:: bash
 
