@@ -16,10 +16,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
---import qualified Control.Concurrent.Async                      as A
 import qualified Data.Aeson                                    as J
--- import qualified Data.Aeson.Casing                             as J
--- import qualified Data.Aeson.TH                                 as J
 import qualified Data.ByteString.Lazy                          as BL
 import qualified Data.HashMap.Strict                           as Map
 import qualified Data.IORef                                    as IORef
@@ -35,19 +32,10 @@ import qualified Hasura.Logging                                as L
 sendInit :: WS.Connection -> Maybe WS.ConnParams -> IO ()
 sendInit conn reqHdrs =
   WS.sendTextData conn $ J.encode (WS.CMConnInit reqHdrs)
-  --   J.object [ "type" J..= ("connection_init" :: Text)
-  --            , "payload" J..= connParams
-  --            ]
-  -- where
-  --   connParams = (WS.ConnParams . Just . Map.fromList . hdrsToText) reqHdrs
 
 sendStopMsg :: WS.Connection -> WS.StopMsg -> IO ()
 sendStopMsg conn msg =
   WS.sendTextData conn $ J.encode $ WS.CMStop msg
-    -- J.object [ "type" J..= ("stop" :: Text)
-    --          , "id" J..= unOperationId opId
-    --          ]
-
 
 mkGraphqlProxy
   :: WS.WSConn a
@@ -111,10 +99,11 @@ runGqlClient' (L.Logger logger) url wsConn stRef rn opId hdrs payload = do
   liftIO $ updateState stRef rn newState
 
   where
-    mHost = (URI.uriUserInfo <$> uriAuth) <> (URI.uriRegName <$> uriAuth)
-    port = read $ maybe "80" (drop 1 . URI.uriPort) uriAuth
-    path = URI.uriPath url
     uriAuth = URI.uriAuthority url
+    path = URI.uriPath url
+    mHost = (URI.uriUserInfo <$> uriAuth) <> (URI.uriRegName <$> uriAuth)
+    port = let val = maybe "80" (drop 1 . URI.uriPort) uriAuth
+           in read $ bool val "80" (null val)
     wsId = WS._wcConnId wsConn
 
 
