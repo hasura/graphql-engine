@@ -37,7 +37,7 @@ import qualified Text.Regex.TDFA            as TDFA
 type TriggerName = T.Text
 type EventId     = T.Text
 
-data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
+data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show, Eq)
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
 
@@ -151,7 +151,6 @@ instance FromJSON CreateEventTriggerQuery where
     where
       checkEmptyCols spec
         = case spec of
-        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
         Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
         _ -> return ()
   parseJSON _ = fail "expecting an object"
