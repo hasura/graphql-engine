@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 import math
 import json
+import time
 
 import yaml
 import pytest
 import jwt
+from test_subscriptions import init_ws_conn
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -207,3 +209,29 @@ def gen_rsa_key():
         encryption_algorithm=serialization.NoEncryption()
     )
     return pem
+
+class TestSubscriptionJwtExpiry(object):
+
+    def test_jwt_expiry(self, hge_ctx, ws_client):
+        curr_time = datetime.now()
+        self.claims = {
+            'sub': '1234567890',
+            'name': 'John Doe',
+            'iat': math.floor(curr_time.timestamp())
+        }
+        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        exp = curr_time + timedelta(seconds=5)
+        self.claims['exp'] = round(exp.timestamp())
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        payload = {
+            'headers': {
+                'Authorization': 'Bearer ' + token
+            }
+        }
+        init_ws_conn(hge_ctx, ws_client, payload)
+        time.sleep(5)
+        assert ws_client.remote_closed == True, ws_client.remote_closed

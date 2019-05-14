@@ -1,5 +1,14 @@
+import { isReactNative } from './utils';
 const existingHeaders = window.__env.headers;
-const authToken = window.localStorage.getItem('auth0:id_token');
+
+let authToken;
+
+if (!isReactNative()) {
+  authToken = window.localStorage.getItem('auth0:id_token');
+} else {
+  authToken = window.localStorage.getItem('@learn.hasura.io:graphiql-react-native-token');
+}
+
 
 const defaultHeader = [
   {
