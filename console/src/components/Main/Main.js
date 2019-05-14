@@ -336,7 +336,7 @@ class Main extends React.Component {
                       <img
                         className="img img-responsive"
                         src={`${
-                          globals.staticAssetsPath
+                          globals.assetsPath
                         }/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
@@ -369,7 +369,7 @@ class Main extends React.Component {
                       <img
                         className="img img-responsive"
                         src={`${
-                          globals.staticAssetsPath
+                          globals.assetsPath
                         }/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />

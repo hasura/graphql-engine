@@ -41,7 +41,7 @@ const globals = {
   enableTelemetry: window.__env.enableTelemetry,
   telemetryTopic:
     window.__env.nodeEnv !== 'development' ? 'console' : 'console_test',
-  staticAssetsPath: window.__env.staticAssetsPath,
+  assetsPath: window.__env.assetsPath,
 };
 
 // set defaults
