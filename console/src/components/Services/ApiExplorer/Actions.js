@@ -149,11 +149,12 @@ const analyzeFetcher = (url, headers) => {
     const editedQuery = {
       query,
     };
-    let user = {};
-    const reqHeaders = getHeadersAsJSON(headers);
-    user = {
+
+    const user = {
       'x-hasura-role': 'admin',
     };
+
+    const reqHeaders = getHeadersAsJSON(headers);
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
@@ -171,6 +172,7 @@ const analyzeFetcher = (url, headers) => {
     });
 
     editedQuery.user = user;
+
     return fetch(`${url}/explain`, {
       method: 'post',
       headers: reqHeaders,

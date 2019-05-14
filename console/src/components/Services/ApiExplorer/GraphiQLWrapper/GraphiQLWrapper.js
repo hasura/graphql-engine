@@ -6,7 +6,6 @@ import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
-import semverCheck from '../../../../helpers/semver';
 
 import './GraphiQL.css';
 
@@ -55,15 +54,15 @@ class GraphiQLWrapper extends Component {
 
     const analyzeFetcherInstance = analyzeFetcher(
       graphqlNetworkData.url,
-      graphqlNetworkData.headers,
+      graphqlNetworkData.headers
     );
 
     const renderGraphiql = graphiqlProps => {
       return (
         <GraphiQL
           fetcher={graphQLFetcher}
+          supportAnalyze
           analyzeFetcher={analyzeFetcherInstance}
-          supportAnalyze={true}
           {...graphiqlProps}
         />
       );

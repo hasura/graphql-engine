@@ -19,7 +19,6 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
-import semverCheck from '../../../../helpers/semver';
 import './AceEditorFix.css';
 
 const RawSQL = ({
@@ -36,7 +35,6 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  serverVersion,
   allSchemas,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
@@ -60,8 +58,8 @@ const RawSQL = ({
   );
   const trackTableTip = () => (
     <Tooltip id="tooltip-tracktable">
-      {`If you are creating a table/view/function, checking this will also expose them
-      over the GraphQL API`}
+      If you are creating a table/view/function, checking this will also expose
+      them over the GraphQL API
     </Tooltip>
   );
 
@@ -314,8 +312,9 @@ const RawSQL = ({
             statement fails, none of the statements will be applied.
           </li>
           <li>
-            If you are creating a Table/View/Function using Raw SQL, checking the{' '}
-            <b>Track this</b> checkbox will also expose it over the GraphQL API.
+            If you are creating a Table/View/Function using Raw SQL, checking
+            the <b>Track this</b> checkbox will also expose it over the GraphQL
+            API.
           </li>
           <li>
             If migrations are enabled, down migrations will not be generated for
@@ -373,10 +372,7 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <OverlayTrigger
-          placement="right"
-          overlay={trackTableTip()}
-        >
+        <OverlayTrigger placement="right" overlay={trackTableTip()}>
           <i
             className={`${styles.add_mar_left_small} fa fa-info-circle`}
             aria-hidden="true"
