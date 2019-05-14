@@ -131,26 +131,26 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx       :: PGExecCtx
-  , scConnInfo        :: Q.ConnInfo
-  , scLogger          :: L.Logger
-  , scCacheRef        :: SchemaCacheRef
-  , scAuthMode        :: AuthMode
-  , scManager         :: HTTP.Manager
-  , scSQLGenCtx       :: SQLGenCtx
-  , scEnabledAPIs     :: S.HashSet API
-  , scInstanceId      :: InstanceId
-  , scPlanCache       :: E.PlanCache
-  , scLQState         :: EL.LiveQueriesState
-  , scEnableAllowlist :: Bool
+  { scPGExecCtx       :: !PGExecCtx
+  , scConnInfo        :: !Q.ConnInfo
+  , scLogger          :: !L.Logger
+  , scCacheRef        :: !SchemaCacheRef
+  , scAuthMode        :: !AuthMode
+  , scManager         :: !HTTP.Manager
+  , scSQLGenCtx       :: !SQLGenCtx
+  , scEnabledAPIs     :: !(S.HashSet API)
+  , scInstanceId      :: !InstanceId
+  , scPlanCache       :: !E.PlanCache
+  , scLQState         :: !EL.LiveQueriesState
+  , scEnableAllowlist :: !Bool
   }
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx  :: ServerCtx
-  , hcReqBody    :: BL.ByteString
-  , hcUser       :: UserInfo
-  , hcReqHeaders :: [N.Header]
+  { hcServerCtx  :: !ServerCtx
+  , hcReqBody    :: !BL.ByteString
+  , hcUser       :: !UserInfo
+  , hcReqHeaders :: ![N.Header]
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
@@ -233,7 +233,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       manager = scManager serverCtx
 
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+  userInfo <- either (logAndThrow req reqBody False . qErrModifier) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
