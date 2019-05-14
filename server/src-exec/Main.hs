@@ -77,6 +77,7 @@ parseHGECommand =
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseConsoleAssetsDir
                 <*> parseEnableTelemetry
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
@@ -121,7 +122,7 @@ main =  do
       pgLogger = mkPGLogger logger
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
-                mJwtSecret mUnAuthRole corsCfg enableConsole
+                mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
                 enableTelemetry strfyNum enabledAPIs lqOpts) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
 
@@ -146,7 +147,8 @@ main =  do
 
       (app, cacheRef, cacheInitTime) <-
         mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
-          corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
+          corsCfg enableConsole consoleAssetsDir enableTelemetry
+          instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef

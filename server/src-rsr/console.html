@@ -56,21 +56,21 @@
          linkElem.href = url;
          document.head.append(linkElem);
        }
-       if (url.endsWith('css')) {
+       if (url.endsWith('css.gz')) {
          linkElem = document.createElement('link');
          linkElem.rel = 'stylesheet';
          linkElem.charset = 'UTF-8';
          linkElem.href = url;
          document.body.append(linkElem);
        }
-       if (url.endsWith('js')) {
+       if (url.endsWith('js.gz')) {
          scriptElem = document.createElement('script');
          scriptElem.charset = 'UTF-8';
          scriptElem.src = url;
          document.body.append(scriptElem);
        }
      };
-     if (navigator.onLine === true) {
+     if (navigator.onLine === false) {
        console.log('offline, loading assets from static-dir');
        if (window.__env.consoleMode === 'server') {
          window.__env.assetsPath =
@@ -81,17 +81,17 @@
          window.__env.assetsPath = '/assets';
        }
      }
-     loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css');
+     loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
      loadResource(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
+     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
 
-     console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css');
+     console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
      console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
+     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
     </script>
 
   </body>

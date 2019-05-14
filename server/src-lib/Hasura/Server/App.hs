@@ -162,7 +162,7 @@ type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
   = JSONResp !EncJSON
-  | RawResp !T.Text !BL.ByteString -- content-type, body
+  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
@@ -269,8 +269,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       JSONResp j -> do
         uncurry setHeader jsonHeader
         lazyBytes $ encJToLBS j
-      RawResp ct b -> do
-        setHeader "content-type" ct
+      RawResp h b -> do
+        mapM_ (uncurry setHeader) h
         lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler EncJSON
@@ -330,21 +330,28 @@ v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
-  return $ RawResp "application/sql" output
+  return $ RawResp [sqlHeader] output
 
-consoleAssetsLocalPath :: String
-consoleAssetsLocalPath = "/console-assets"
+defaultConsoleAssetsDir :: Text
+defaultConsoleAssetsDir = "/console-assets"
 
-consoleAssetsHandler :: FilePath -> Handler APIResp
-consoleAssetsHandler path = do
+consoleAssetsHandler :: Maybe Text -> FilePath -> Handler APIResp
+consoleAssetsHandler mdir path = do
   eFileContents <- liftIO $ try $ BL.readFile $
-    joinPath [consoleAssetsLocalPath, path]
+    joinPath [T.unpack dir, path]
   fileContents <- either throwException return eFileContents
-  return $ RawResp mimeType fileContents
+  -- all assets should be gzipped
+  return $ RawResp headers fileContents
   where
-    fileName = takeFileName path
-    mimeType = bsToTxt $ defaultMimeLookup $ T.pack fileName
-
+    dir = fromMaybe defaultConsoleAssetsDir mdir
+    fn = T.pack $ takeFileName path
+    (fileName, encHeader) = case T.stripSuffix ".gz" fn of
+      Just v  -> (v, [gzipHeader])
+      Nothing -> (fn, [])
+    -- TODO(shahidhk): check if fileName is empty - i.e. path is a dir
+    -- or leave it for the readfile to check if it is a dir or not
+    mimeType = bsToTxt $ defaultMimeLookup fileName
+    headers = ("Content-Type", mimeType) : encHeader
     throwException :: (MonadError QErr m) => IOException -> m a
     throwException e = throw404 $ T.pack (show e)
 
@@ -386,12 +393,12 @@ initErrExit e = do
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
   -> Q.PGPool -> Q.ConnInfo -> HTTP.Manager -> AuthMode
-  -> CorsConfig -> Bool -> Bool
+  -> CorsConfig -> Bool -> Maybe Text -> Bool
   -> InstanceId -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
-         enableConsole enableTelemetry instanceId apis
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -421,7 +428,8 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
                     sqlGenCtx apis instanceId planCache lqState
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole enableTelemetry
+                httpApp corsCfg serverCtx enableConsole
+                  consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -429,8 +437,8 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
            , cacheBuiltTime
            )
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole enableTelemetry = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
@@ -551,8 +559,8 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
       -- static files
       get ("console/assets" <//> wildcard) $ \path ->
-        mkSpockAction encodeQErr id serverCtx $
-          consoleAssetsHandler $ T.unpack path
+        mkSpockAction encodeQErr id serverCtx $ do
+          consoleAssetsHandler consoleAssetsDir (T.unpack path)
 
       -- console html
       get ("console" <//> wildcard) $ \path ->

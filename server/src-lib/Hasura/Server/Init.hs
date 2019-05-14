@@ -53,6 +53,7 @@ data RawServeOptions
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
+  , rsoConsoleAssetsDir :: !(Maybe Text)
   , rsoEnableTelemetry    :: !(Maybe Bool)
   , rsoWsReadCookie       :: !Bool
   , rsoStringifyNum       :: !Bool
@@ -74,6 +75,7 @@ data ServeOptions
   , soUnAuthRole      :: !(Maybe RoleName)
   , soCorsConfig      :: !CorsConfig
   , soEnableConsole   :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
   , soEnableTelemetry :: !Bool
   , soStringifyNum    :: !Bool
   , soEnabledAPIs     :: !(Set.HashSet API)
@@ -263,6 +265,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
+  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
@@ -270,7 +273,7 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole
+                        unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts
   where
 #ifdef DeveloperAPIs
@@ -541,8 +544,8 @@ enabledAPIsEnv =
 
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
-  ( "HASURA_GRAPHQL_ASSETS_DIR"
-  , "Directory to serve the console assets from"
+  ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
+  , "Directory to serve the console assets from (default: /console-assets)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -765,6 +768,13 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
+parseConsoleAssetsDir :: Parser (Maybe Text)
+parseConsoleAssetsDir = optional $
+    option (eitherReader fromEnv)
+      ( long "console-assets-dir" <>
+        help (snd consoleAssetsDirEnv)
+      )
+
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
@@ -862,6 +872,7 @@ serveOptsToLog so =
                        , "unauth_role" J..= soUnAuthRole so
                        , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
+                       , "console_assets_dir" J..= soConsoleAssetsDir so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
