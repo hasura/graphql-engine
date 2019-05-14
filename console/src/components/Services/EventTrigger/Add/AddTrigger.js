@@ -215,7 +215,7 @@ class AddTrigger extends Component {
   render() {
     const {
       tableName,
-      tableListBySchema,
+      allSchemas,
       schemaName,
       schemaList,
       selectedOperations,
@@ -244,14 +244,16 @@ class AddTrigger extends Component {
       createBtnText = 'Created! Redirecting...';
     }
     const updateTableList = e => {
-      dispatch(setSchemaName(e.target.value));
-      dispatch(loadTableList(e.target.value));
+      const selectedSchemaName = e.target.value;
+      dispatch(setSchemaName(selectedSchemaName));
+      dispatch(loadTableList(selectedSchemaName));
     };
 
     const updateTableSelection = e => {
-      dispatch(setTableName(e.target.value));
-      const tableSchema = tableListBySchema.find(
-        t => t.table_name === e.target.value
+      const selectedTableName = e.target.value;
+      dispatch(setTableName(selectedTableName));
+      const tableSchema = allSchemas.find(
+        t => t.table_name === selectedTableName && t.table_schema === schemaName
       );
       const columns = [];
       if (tableSchema) {
@@ -274,8 +276,8 @@ class AddTrigger extends Component {
           operationToggleColumn(column, type, supportColumnChangeFeature)
         );
       };
-      const tableSchema = tableListBySchema.find(
-        t => t.table_name === tableName
+      const tableSchema = allSchemas.find(
+        t => t.table_name === tableName && t.table_schema === schemaName
       );
 
       if (tableSchema) {
@@ -550,8 +552,11 @@ class AddTrigger extends Component {
                 }
               >
                 <option value="">Select table</option>
-                {tableListBySchema.map(t => {
-                  if (t.detail.table_type === 'BASE TABLE') {
+                {allSchemas.map(t => {
+                  if (
+                    t.table_schema === schemaName &&
+                    t.detail.table_type === 'BASE TABLE'
+                  ) {
                     return (
                       <option key={t.table_name} value={t.table_name}>
                         {t.table_name}
@@ -837,7 +842,7 @@ AddTrigger.propTypes = {
   tableName: PropTypes.string,
   schemaName: PropTypes.string,
   schemaList: PropTypes.array,
-  tableListBySchema: PropTypes.array,
+  allSchemas: PropTypes.array.isRequired,
   selectedOperations: PropTypes.object,
   operations: PropTypes.object,
   ongoingRequest: PropTypes.bool.isRequired,
@@ -851,6 +856,7 @@ const mapStateToProps = state => {
   return {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
+    allSchemas: state.tables.allSchemas,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };

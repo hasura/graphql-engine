@@ -3,7 +3,7 @@ import _push from '../push';
 import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { showSuccessNotification } from '../Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { fetchTableListBySchema } from '../../Data/DataActions';
+import { loadSchema } from '../../Data/DataActions';
 
 const SET_DEFAULTS = 'AddTrigger/SET_DEFAULTS';
 const SET_TRIGGERNAME = 'AddTrigger/SET_TRIGGERNAME';
@@ -17,7 +17,6 @@ const MAKING_REQUEST = 'AddTrigger/MAKING_REQUEST';
 const REQUEST_SUCCESS = 'AddTrigger/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTrigger/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
-const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
 const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
@@ -182,8 +181,7 @@ const createTrigger = () => {
 };
 
 const loadTableList = schemaName => {
-  return dispatch =>
-    dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
+  return dispatch => dispatch(loadSchema({ schemas: [schemaName] }));
 };
 
 const operationToggleColumn = (
@@ -363,8 +361,6 @@ const addTriggerReducer = (state = defaultState, action) => {
       return { ...state, tableName: action.value };
     case SET_SCHEMANAME:
       return { ...state, schemaName: action.value };
-    case UPDATE_TABLE_LIST:
-      return { ...state, tableListBySchema: action.data };
     case TOGGLE_COLUMNS:
       const operations = state.operations;
       operations[action.op] = action.cols;
