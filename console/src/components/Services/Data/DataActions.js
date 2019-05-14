@@ -329,11 +329,22 @@ const fetchSchemaList = () => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(initQueries.schemaList),
   };
+  console.log('****************************');
+  console.log('Fetching schema list');
+  console.log('****************************');
   return dispatch(requestAction(url, options)).then(
     data => {
+      console.log('-----------------------------------========---');
+      console.log('Fetched schema');
+      console.log(data);
+      console.log('-------------------==========-------------------');
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
     },
     error => {
+      console.log('---------------============----------------------');
+      console.log('Fetched errored schema');
+      console.log(error);
+      console.log('--------------------------============------------');
       console.error('Failed to fetch schema ' + JSON.stringify(error));
     }
   );

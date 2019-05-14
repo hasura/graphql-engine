@@ -44,10 +44,21 @@ const gqlRelErrorNotif = [
   'Error renaming relationship!',
 ];
 
+const gqlSchemaErrorNotif = [
+  'Error creating schema!',
+  'Schema name cannot contain special characters',
+  '',
+  {
+    custom:
+      'Schema name cannot contain special characters. It can have alphabets, numbers (cannot start with numbers) and _ (can start with _)',
+  },
+];
+
 export default gqlPattern;
 export {
   gqlTableErrorNotif,
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
   gqlRelErrorNotif,
+  gqlSchemaErrorNotif,
 };

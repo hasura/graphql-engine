@@ -35,6 +35,7 @@ import {
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
+import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const appPrefix = globals.urlPrefix + '/data';
@@ -46,6 +47,7 @@ class Schema extends Component {
     this.state = {
       isExporting: false,
       createSchemaOpen: false,
+      schemaNameEdit: '',
     };
 
     // Initialize this table
@@ -91,17 +93,19 @@ class Schema extends Component {
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
-    const handleSchemaChange = e => {
-      const updatedSchema = e.target.value;
-
-      dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
+    const updateCurrentSchema = schemaName => {
+      dispatch(push(`${appPrefix}/schema/${schemaName}`));
 
       Promise.all([
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
         dispatch(fetchDataInit()),
         dispatch(fetchFunctionInit()),
         dispatch(loadUntrackedRelations()),
       ]);
+    };
+
+    const handleSchemaChange = e => {
+      updateCurrentSchema(e.target.value);
     };
 
     /***********/
@@ -158,7 +162,6 @@ class Schema extends Component {
       if (migrationMode) {
         const handleClick = e => {
           e.preventDefault();
-
           dispatch(push(`${appPrefix}/schema/${currentSchema}/table/add`));
         };
 
@@ -184,36 +187,68 @@ class Schema extends Component {
       });
 
       const getCreateSchemaSection = () => {
-        const { createSchemaOpen } = this.state;
+        const { createSchemaOpen, schemaNameEdit } = this.state;
 
         const handleCreateNewClick = () => {
           this.setState({ createSchemaOpen: true });
         };
 
-        const handleCreateClick = () => {}; // TODO
+        const handleSchemaNameChange = e => {
+          this.setState({ schemaNameEdit: e.target.value });
+        };
+
+        const handleCreateClick = () => {
+          const successCb = () => {
+            updateCurrentSchema(schemaNameEdit.trim());
+            this.setState({
+              schemaNameEdit: '',
+              createSchemaOpen: false,
+            });
+          };
+          dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
+        };
 
         const closedCreateSection = (
-          <Button
-            color="white"
-            className={styles.add_mar_left}
-            size="xs"
-            onClick={handleCreateNewClick}
-          >
+          <Button color="white" size="xs" onClick={handleCreateNewClick}>
             + Create new schema
           </Button>
         );
 
+        const handleCancelCreateNewSchema = () => {
+          this.setState({
+            createSchemaOpen: false,
+          });
+        };
+
         const openCreateSection = (
-          <div className={styles.inline_block + ' ' + styles.add_mar_left}>
-            <div className={styles.inline_block}>
+          <div className={styles.inline_block}>
+            <div
+              className={`${styles.inline_block} ${styles.remove_pad_right} ${
+                styles.add_mar_right_mid
+              }`}
+            >
               <input
                 type="text"
+                value={schemaNameEdit}
+                onChange={handleSchemaNameChange}
                 placeholder="schema_name"
                 className={'form-control input-sm ' + styles.inline_block}
               />
             </div>
-            <Button color="white" size="xs" onClick={handleCreateClick}>
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCreateClick}
+              className={styles.add_mar_right_mid}
+            >
               Create
+            </Button>
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCancelCreateNewSchema}
+            >
+              Cancel
             </Button>
           </div>
         );
@@ -221,7 +256,12 @@ class Schema extends Component {
         return createSchemaOpen ? openCreateSection : closedCreateSection;
       };
 
-      const handleDelete = () => {}; // TODO
+      const handleDelete = () => {
+        const successCb = () => {
+          updateCurrentSchema('public');
+        };
+        dispatch(deleteCurrentSchema(successCb));
+      };
 
       return (
         <div className={styles.add_mar_top}>
@@ -235,7 +275,9 @@ class Schema extends Component {
               {schemaOptions}
             </select>
           </div>
-          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+          <div
+            className={styles.display_inline + ' ' + styles.add_mar_left_mid}
+          >
             <div
               className={styles.display_inline + ' ' + styles.cursorPointer}
               title="Delete current schema"
@@ -243,7 +285,11 @@ class Schema extends Component {
             >
               <i className="fa fa-trash" aria-hidden="true" />
             </div>
-            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div
+              className={`${styles.display_inline} ${styles.add_mar_left} ${
+                styles.remove_pad_right
+              } ${styles.add_mar_right_mid}`}
+            >
               {getCreateSchemaSection()}
             </div>
           </div>
