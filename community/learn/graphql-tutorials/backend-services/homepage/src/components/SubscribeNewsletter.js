@@ -26,7 +26,7 @@ const formProps = {
     error: {
       fontSize: '15px',
       paddingTop: '10px',
-      color: 'red'
+      color: '#fff'
     }
   }
 };
@@ -37,28 +37,26 @@ class SubscribeNewsletter extends React.Component {
     return (
       <div className={'gradientBgColor commonSectionWrapper positionRel'}>
         <div className={'container noPadd'}>
-          <div className={'topBannerWrapper'}>
-            <div className={'col-md-12'}>
-              <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
-                <div className={'sectionHeader'}>
-                  Subscribe to the Hasura newsletter
-                </div>
-                <div className={'sectionDescription'}>
-                  Join the community mailing list to receive updates about the product, company and our OSS work.
-                </div>
-                {/*
-                <div className={'notifyWrapper'}>
-                  <div className={'sectionDescription notifyHeader'}>
-                    Subscribe for updates
-                  </div>
-                  <SubscribeFrom className={"notifyForm"} {...formProps}/>
-                </div>
-                */}
+          <div className={'topBannerWrapper col-md-12'}>
+            <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
+              <div className={'sectionHeader'}>
+                Subscribe to the Hasura newsletter
               </div>
-              <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
-                <div className={'notifyWrapper'}>
-                  <SubscribeFrom className={"notifyForm"} {...formProps}/>
+              <div className={'sectionDescription'}>
+                Join the community mailing list to receive updates about the product, company and our OSS work.
+              </div>
+              {/*
+              <div className={'notifyWrapper'}>
+                <div className={'sectionDescription notifyHeader'}>
+                  Subscribe for updates
                 </div>
+                <SubscribeFrom className={"notifyForm"} {...formProps}/>
+              </div>
+              */}
+            </div>
+            <div className={'col-md-6 col-sm-12 col-xs-12 noPadd'}>
+              <div className={'notifyWrapper'}>
+                <SubscribeFrom className={"notifyForm"} {...formProps}/>
               </div>
             </div>
           </div>
