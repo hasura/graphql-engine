@@ -59,10 +59,7 @@ export const passVCreateViews = () => {
 };
 
 export const passTrackTable = () => {
-  cy.get('a')
-    .contains('Data')
-    .last()
-    .click();
+  cy.visit('/data');
   cy.wait(7000);
   cy.get(
     getElementFromAlias('add-track-table-author_average_rating_vt')
