@@ -16,10 +16,10 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol   (OperationId (..)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
+import qualified Control.Concurrent.STM                        as STM
 import qualified Data.Aeson                                    as J
 import qualified Data.ByteString.Lazy                          as BL
 import qualified Data.HashMap.Strict                           as Map
-import qualified Data.IORef                                    as IORef
 import qualified Data.Text                                     as T
 import qualified Network.URI                                   as URI
 import qualified Network.WebSockets                            as WS
@@ -39,7 +39,7 @@ sendStopMsg conn msg =
 
 mkGraphqlProxy
   :: WS.WSConn a
-  -> IORef.IORef WSConnState
+  -> STM.TVar WSConnState
   -> RemoteSchemaName
   -> Maybe WS.ConnParams -- connection params in conn_init from the client
   -> WS.StartMsg -- the start msg
@@ -51,7 +51,7 @@ mkGraphqlProxy wsconn stRef rn hdrs payload destConn = do
   -- if corresponding state is not found, are we silently ignoring it?
   -- the state won't have the remote's websocket conn. which is actually problematic
   onJust res $ \curState -> do
-    let newState = curState{ _wpsRemoteConn = Just destConn }
+    let newState = curState { _wpsRemoteConn = Just destConn }
     updateState stRef rn newState
 
   -- setting up the proxy from remote to hasura
@@ -59,6 +59,7 @@ mkGraphqlProxy wsconn stRef rn hdrs payload destConn = do
   where
     srcConn = WS._wcConnRaw wsconn
     proxy recvConn sendConn =
+      --TODO: protocol level proxying
       forever $ do
         msg <- WS.receiveData recvConn
         sendMsg sendConn msg
@@ -77,7 +78,7 @@ runGqlClient'
   :: L.Logger
   -> URI.URI
   -> WS.WSConn a
-  -> IORef.IORef WSConnState
+  -> STM.TVar WSConnState
   -> RemoteSchemaName
   -> OperationId
   -> Maybe WS.ConnParams
@@ -93,7 +94,7 @@ runGqlClient' (L.Logger logger) url wsConn stRef rn opId hdrs payload = do
       let err = T.pack $ show (e :: SomeException)
           opDet = ODQueryErr $ err500 Unexpected err
       logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
-        (Just "exception from runClient thread")
+        (Just "exception from runClient thread") Nothing
 
   let newState = WebsocketProxyState thrId Nothing [(wsId, opId)]
   liftIO $ updateState stRef rn newState
@@ -111,7 +112,7 @@ runGqlClient
   :: L.Logger
   -> URI.URI
   -> WS.WSConn a
-  -> IORef.IORef WSConnState
+  -> STM.TVar WSConnState
   -> RemoteSchemaName
   -> OperationId
   -> Maybe WS.ConnParams
@@ -136,47 +137,49 @@ runGqlClient logger url wsConn stRef rn opId hdrs startMsg = do
         WS.sendTextData conn $ J.encode startMsg
 
 updateState
-  :: IORef.IORef WSConnState
+  :: STM.TVar WSConnState
   -> RemoteSchemaName
   -> WebsocketProxyState
   -> IO ()
 updateState stRef rn wsProxyState = do
   -- this updates the IORef only on start msg, should we be doing this with a
   -- lock?
-  st <- IORef.readIORef stRef
+  st <- STM.readTVarIO stRef
   let rmConnState = getStateData st
   onJust rmConnState $ \connState -> do
     let rmConnState' = Map.insert rn wsProxyState $ _cisRemoteConn connState
     let newSt = connState {_cisRemoteConn = rmConnState'}
-    IORef.writeIORef stRef (CSInitialised newSt)
+    STM.atomically $
+      STM.writeTVar stRef (CSInitialised newSt)
 
 getWsProxyState
   :: (MonadIO m)
-  => IORef.IORef WSConnState
+  => STM.TVar WSConnState
   -> RemoteSchemaName
   -> m (Maybe WebsocketProxyState)
 getWsProxyState ref rn = do
-  st <- liftIO $ IORef.readIORef ref
+  --st <- liftIO $ IORef.readIORef ref
+  st <- liftIO $ STM.readTVarIO ref
   return $ getStateData st >>= (Map.lookup rn . _cisRemoteConn)
 
 
 -- given a websocket id (WSId), close connections to that remote from
 -- WSConnState
 -- and updates state :: modifies IORef
-closeRemote :: L.Logger -> IORef.IORef WSConnState -> WS.WSId -> IO ()
+closeRemote :: L.Logger -> STM.TVar WSConnState -> WS.WSId -> IO ()
 closeRemote (L.Logger logger) stRef wsId = do
   logger $ L.debugT $ "closing connections belonging to: " <>
     T.pack (show wsId)
-  connState <- liftIO $ IORef.readIORef stRef
+  connState <- liftIO $ STM.readTVarIO stRef
   let stData = getStateData connState
-  onJust stData $ \ciSt@(ConnInitState _ _ connMap) ->
+  onJust stData $ \ciSt@(ConnInitState _ _ connMap _) ->
     onJust (findWebsocketId connMap wsId) $ \(rn, wst) -> do
       let (WebsocketProxyState thrId _ _) = wst
       --A.cancel rmOp
       liftIO $ killThread thrId
       let newConnMap = Map.delete rn connMap
           newState = CSInitialised $ ciSt {_cisRemoteConn = newConnMap }
-      IORef.writeIORef stRef newState
+      STM.atomically $ STM.writeTVar stRef newState
 
 
 stopRemote

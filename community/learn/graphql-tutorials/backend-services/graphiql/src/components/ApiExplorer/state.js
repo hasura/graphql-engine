@@ -1,5 +1,14 @@
+import { isReactNative } from './utils';
 const existingHeaders = window.__env.headers;
-const authToken = window.localStorage.getItem('auth0:id_token');
+
+let authToken;
+
+if (!isReactNative()) {
+  authToken = window.localStorage.getItem('auth0:id_token');
+} else {
+  authToken = window.localStorage.getItem('@learn.hasura.io:graphiql-react-native-token');
+}
+
 
 const defaultHeader = [
   {
@@ -53,7 +62,7 @@ dataApisContent.push({
   },
   request: {
     method: 'POST',
-    url: getUrl('/v1/graphql'),
+    url: getUrl('/v1alpha1/graphql'),
     headers: defaultHeader,
     bodyType: 'graphql',
     params: JSON.stringify({}, null, 4),

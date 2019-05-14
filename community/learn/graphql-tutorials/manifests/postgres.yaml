@@ -41,8 +41,8 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
-  storageClassName: do-block-storage
+      storage: 10Gi
+  storageClassName: standard
 ---
 apiVersion: v1
 kind: Service

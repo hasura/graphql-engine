@@ -18,6 +18,7 @@ import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.Time.Clock                             as TC
 import qualified Hasura.Logging                              as L
 import qualified Network.HTTP.Types                          as HTTP
 import qualified Network.WebSockets                          as WS
@@ -32,6 +33,7 @@ data ConnInitState
   -- headers from the client (in conn params) to forward to the remote schema
   , _cisHeaders    :: ![HTTP.Header]
   , _cisRemoteConn :: !RemoteConnState
+  , _cisJwtExpiry  :: !(Maybe TC.UTCTime)
   } deriving (Show)
 
 newtype WsHeaders
@@ -53,6 +55,7 @@ type WebsocketProxyState = WebsocketProxyStateG ()
 data WebsocketProxyStateG a
   = WebsocketProxyState
   { _wpsRunClientThread :: !ThreadId
+  -- TODO: change Maybe. Why Maybe?
   , _wpsRemoteConn      :: !(Maybe WS.Connection)
   , _wpsOperations      :: ![GOperationId]
   }
@@ -120,6 +123,7 @@ data WSLog
   , _wslUser        :: !(Maybe UserVars)
   , _wslEvent       :: !WSEvent
   , _wslMsg         :: !(Maybe Text)
+  , _wslJwtExpiry   :: !(Maybe TC.UTCTime)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
