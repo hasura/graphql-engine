@@ -10,6 +10,7 @@
        enableTelemetry: {{enableTelemetry}},
        assetsPath: "{{assetsPath}}",
        assetsVersion: "{{assetsVersion}}",
+       cdnAssets: {{cdnAssets}},
      };
     </script>
   </head>
@@ -48,50 +49,50 @@
     <div id="content" class="mainContent"></div>
 
     <script>
-     loadResource = (url) => {
-       if (url.endsWith('svg')) {
-         linkElem = document.createElement('link');
-         linkElem.rel = 'icon';
-         linkElem.type = 'image/svg+xml';
-         linkElem.href = url;
-         document.head.append(linkElem);
-       }
-       if (url.endsWith('css.gz')) {
-         linkElem = document.createElement('link');
-         linkElem.rel = 'stylesheet';
-         linkElem.charset = 'UTF-8';
-         linkElem.href = url;
-         document.body.append(linkElem);
-       }
-       if (url.endsWith('js.gz')) {
-         scriptElem = document.createElement('script');
-         scriptElem.charset = 'UTF-8';
-         scriptElem.src = url;
-         document.body.append(scriptElem);
-       }
-     };
-     if (navigator.onLine === false) {
-       console.log('offline, loading assets from static-dir');
-       if (window.__env.consoleMode === 'server') {
-         window.__env.assetsPath =
-           window.location.pathname.slice(
-             0, window.location.pathname.lastIndexOf(window.__env.consolePath)
-           ) + '/console/assets';
-       } else {
-         window.__env.assetsPath = '/assets';
-       }
-     }
-     loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
-     loadResource(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
-     loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
+      loadResource = (url) => {
+        if (url.endsWith('svg')) {
+          linkElem = document.createElement('link');
+          linkElem.rel = 'icon';
+          linkElem.type = 'image/svg+xml';
+          linkElem.href = url;
+          document.head.append(linkElem);
+        }
+        if (url.endsWith('css.gz')) {
+          linkElem = document.createElement('link');
+          linkElem.rel = 'stylesheet';
+          linkElem.charset = 'UTF-8';
+          linkElem.href = url;
+          document.body.append(linkElem);
+        }
+        if (url.endsWith('js.gz')) {
+          scriptElem = document.createElement('script');
+          scriptElem.charset = 'UTF-8';
+          scriptElem.src = url;
+          document.body.append(scriptElem);
+        }
+      };
+      if (navigator.onLine === false || window.__env.cdnAssets === true) {
+        console.log('offline, loading assets from static-dir');
+        if (window.__env.consoleMode === 'server') {
+          window.__env.assetsPath =
+            window.location.pathname.slice(
+              0, window.location.pathname.lastIndexOf(window.__env.consolePath)
+            ) + '/console/assets';
+        } else {
+          window.__env.assetsPath = '/assets';
+        }
+      }
+      loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
+      loadResource(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
+      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
+      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
+      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
 
-     console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
-     console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
-     console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
+      console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
+      console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
+      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
+      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
+      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
     </script>
 
   </body>

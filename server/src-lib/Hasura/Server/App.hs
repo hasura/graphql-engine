@@ -82,8 +82,8 @@ consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
 consoleAssetsRemotePath :: Text
 consoleAssetsRemotePath = "https://graphql-engine-cdn.hasura.io/console/assets"
 
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry =
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -92,6 +92,7 @@ mkConsoleHTML path authMode enableTelemetry =
                          , "isAdminSecretSet" .= isAdminSecretSet authMode
                          , "consolePath" .= consolePath
                          , "enableTelemetry" .= boolToText enableTelemetry
+                         , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
                          ]
     consolePath = case path of
       "" -> "/console"
@@ -565,7 +566,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- console html
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry
+          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
 
 #ifdef LocalConsole
       get "static/main.js" $ do
