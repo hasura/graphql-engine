@@ -232,7 +232,15 @@ ul
 .notifyWrapper button:focus, .notifyWrapper input:focus {
   outline: none;
 }
-
+.upArrow
+{
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+  display: none;
+}
 .subscribe_form {
   input {
     background-color: #353535;
@@ -315,6 +323,14 @@ ul
     li
     {
       padding: 10px 20px;
+      position: relative;
+      .upArrow
+      {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -2px;
+      }
       a
       {
         font-family: 'Raleway';
@@ -343,6 +359,7 @@ ul
         border-radius: 2px;
         top: 42px;
         padding: 15px 10px;
+        border: 0 !important;
         .dropdownMenuBgImg
         {
           position: absolute;
@@ -439,6 +456,17 @@ ul
         }
       }
     }
+    .open
+    {
+      a {
+        opacity: 1 !important;
+      }
+      .upArrow
+      {
+        display: block;
+      }
+    }
+
     .active
     {
       a, span

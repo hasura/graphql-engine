@@ -23,6 +23,8 @@ class TopBanner extends React.Component {
             <div id="navbar" className="navbar-collapse collapse">
               <ul className="nav navbar-nav navbar-right navBarWrapper">
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="frontend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">FRONTEND</a>
                   <div aria-labelledby="frontend" className="dropdown-menu dropdownMenu">
@@ -63,6 +65,8 @@ class TopBanner extends React.Component {
                   </div>
                 </li>
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="mobile" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">MOBILE</a>
                   <div aria-labelledby="mobile" className="dropdown-menu dropdownMenu">
@@ -103,6 +107,8 @@ class TopBanner extends React.Component {
                   </div>
                 </li>
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="backend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">BACKEND</a>
                   <div aria-labelledby="backend" className="dropdown-menu dropdownMenu">
