@@ -2,15 +2,10 @@ const semver = require('semver');
 
 // TODO check events redeliver code
 const componentsSemver = {
-  aggregationPerm: '1.0.0-alpha26',
   supportColumnChangeTrigger: '1.0.0-alpha26',
-  insertPrefix: '1.0.0-alpha26',
-  insertPermRestrictColumns: '1.0.0-alpha28',
   webhookEnvSupport: '1.0.0-alpha29',
-  permHideUpsertSection: '1.0.0-alpha32',
   customFunctionSection: '1.0.0-alpha36',
   triggerRetryTimeout: '1.0.0-alpha38',
-  permUpdatePresets: '1.0.0-alpha38',
   tableColumnRename: '1.0.0-alpha39',
   inconsistentState: '1.0.0-alpha43',
   manualTriggers: '1.0.0-alpha46',

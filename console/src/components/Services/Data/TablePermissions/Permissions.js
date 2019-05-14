@@ -55,9 +55,6 @@ class Permissions extends Component {
 
     this.state = {};
     this.state.viewInfo = {};
-    this.state.showAggregation = false;
-    this.state.showIshowInsertPresets = false;
-    this.state.showUpdatePresets = false;
     this.state.presetsInfo = {
       insert: {
         columnTypeMap: {},
@@ -69,9 +66,6 @@ class Permissions extends Component {
   }
 
   componentDidMount() {
-    if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
-    }
     this.props.dispatch({ type: RESET });
     const currentSchema = this.props.allSchemas.find(
       t => t.table_name === this.props.tableName
@@ -95,22 +89,6 @@ class Permissions extends Component {
           this.setState({ viewInfo: r[0] });
         }
       });
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
-    }
-  }
-
-  checkSemVer(version) {
-    this.setState({
-      showAggregation: semverCheck('aggregationPerm', version),
-      showUpsertSection: !semverCheck('permHideUpsertSection', version),
-      showInsertPresets: semverCheck('insertPrefix', version),
-      showUpdatePresets: semverCheck('permUpdatePresets', version),
-      allowInsertPermColumns: semverCheck('insertPermRestrictColumns', version),
-    });
   }
 
   render() {
@@ -315,8 +293,6 @@ class Permissions extends Component {
         const _permissionsRowsHtml = [];
 
         const getPermissionsTableRow = (role, newPermRow = null) => {
-          const { allowInsertPermColumns } = this.state;
-
           const dispatchOpenEdit = queryType => () => {
             if (newPermRow && permissionsState.newRole !== '') {
               dispatch(
@@ -328,7 +304,6 @@ class Permissions extends Component {
                   tableSchema,
                   role,
                   queryType,
-                  allowInsertPermColumns
                 )
               );
             } else {
@@ -582,13 +557,6 @@ class Permissions extends Component {
       const dispatchCloseEdit = () => {
         dispatch(permCloseEdit());
       };
-
-      const {
-        showAggregation,
-        showUpsertSection,
-        showInsertPresets,
-        showUpdatePresets,
-      } = this.state;
 
       const query = permissionsState.query;
 
@@ -930,14 +898,8 @@ class Permissions extends Component {
       };
 
       const getColumnSection = () => {
-        const { allowInsertPermColumns } = this.state;
-
-        const getQueriesWithPermColumns = allowInsert => {
-          const queries = ['select', 'update'];
-          if (allowInsert) {
-            queries.push('insert');
-          }
-          return queries;
+        const getQueriesWithPermColumns = () => {
+          return ['select', 'update', 'insert'];
         };
 
         const getColumnList = () => {
@@ -1027,9 +989,7 @@ class Permissions extends Component {
 
         let _columnSection = '';
 
-        const queriesWithPermColumns = getQueriesWithPermColumns(
-          allowInsertPermColumns
-        );
+        const queriesWithPermColumns = getQueriesWithPermColumns();
 
         if (queriesWithPermColumns.includes(query)) {
           const getAccessText = () => {
@@ -1802,10 +1762,10 @@ class Permissions extends Component {
           <div>
             {getRowSection()}
             {getColumnSection()}
-            {showAggregation && getAggregationSection()}
-            {showUpsertSection && getUpsertSection()}
-            {showInsertPresets && getPresetsSection('insert')}
-            {showUpdatePresets && getPresetsSection('update')}
+            {getAggregationSection()}
+            {getUpsertSection()}
+            {getPresetsSection('insert')}
+            {getPresetsSection('update')}
             {getButtonsSection()}
             {getClonePermsSection()}
           </div>

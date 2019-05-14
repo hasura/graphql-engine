@@ -249,7 +249,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         action.tableSchema,
         action.role,
         action.query,
-        action.insertPermColumnRestriction
       );
       return {
         ...modifyState,
