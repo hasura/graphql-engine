@@ -6,7 +6,6 @@ var app = express();
 var port = process.env.PORT || 8080;
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
-const utf8 = require('utf8');
 
 const AUTH0_JWT_SECRET = process.env.AUTH0_JWT_SECRET ? process.env.AUTH0_JWT_SECRET : fs.readFileSync('./graphql-tutorials.pem');
 const AUTH0_ISSUER = 'https://graphql-tutorials.auth0.com/';

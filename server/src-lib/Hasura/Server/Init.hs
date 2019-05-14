@@ -4,6 +4,7 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query                as Q
 
 import           Options.Applicative
+import           Data.Char                        (toLower)
 
 import qualified Data.Aeson                       as J
 import qualified Data.HashSet                     as Set
@@ -167,8 +168,8 @@ instance FromEnv LQ.RefetchInterval where
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
-  | t `elem` truthVals = Right True
-  | t `elem` falseVals = Right False
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
   | otherwise = Left errMsg
   where
     truthVals = ["true", "t", "yes", "y"]
