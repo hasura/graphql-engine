@@ -29,8 +29,6 @@ const DataSubSidebar = ({
   const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
   const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
 
-  const handleFunc = semverCheck('customFunctionSection', serverVersion);
-
   if (metadata.ongoingRequest) {
     return null;
   }
@@ -60,7 +58,7 @@ const DataSubSidebar = ({
         type="text"
         onChange={tableSearch.bind(this)}
         className="form-control"
-        placeholder={`search table/view${handleFunc ? '/function' : ''}`}
+        placeholder={`search table/view/function`}
         data-test="search-tables"
       />
     );

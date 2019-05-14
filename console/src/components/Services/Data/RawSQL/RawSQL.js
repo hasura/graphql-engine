@@ -58,11 +58,9 @@ const RawSQL = ({
       'run_sql_migration'
     </Tooltip>
   );
-  const trackTableTip = _hasFunctionSupport => (
+  const trackTableTip = () => (
     <Tooltip id="tooltip-tracktable">
-      {`If you are creating a table/view${
-        _hasFunctionSupport ? '/function' : ''
-      }, checking this will also expose them
+      {`If you are creating a table/view/function, checking this will also expose them
       over the GraphQL API`}
     </Tooltip>
   );
@@ -134,11 +132,6 @@ const RawSQL = ({
       </div>
     );
   }
-
-  const hasFunctionSupport = semverCheck(
-    'customFunctionSection',
-    serverVersion
-  );
 
   const getMigrationModal = () => {
     const onModalClose = () => {
@@ -321,8 +314,7 @@ const RawSQL = ({
             statement fails, none of the statements will be applied.
           </li>
           <li>
-            If you are creating a Table/View
-            {hasFunctionSupport ? '/Function' : ''} using Raw SQL, checking the{' '}
+            If you are creating a Table/View/Function using Raw SQL, checking the{' '}
             <b>Track this</b> checkbox will also expose it over the GraphQL API.
           </li>
           <li>
@@ -383,7 +375,7 @@ const RawSQL = ({
         </label>
         <OverlayTrigger
           placement="right"
-          overlay={trackTableTip(hasFunctionSupport)}
+          overlay={trackTableTip()}
         >
           <i
             className={`${styles.add_mar_left_small} fa fa-info-circle`}
