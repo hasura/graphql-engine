@@ -1,16 +1,15 @@
 module Hasura.RQL.DDL.QueryCollection
   ( runCreateCollection
   , runDropCollection
-  , addCollectionP2
   , addCollectionToCatalog
   , delCollectionFromCatalog
   , runAddQueryToCollection
   , runDropQueryFromCollection
-  , addToAllowlistSetup
   , runAddCollectionToAllowlist
   , runDropCollectionFromAllowlist
   , addCollectionToAllowlistCatalog
   , delCollectionFromAllowlistCatalog
+  , refreshAllowlist
   , fetchAllCollections
   , fetchAllowlist
   , module Hasura.RQL.Types.QueryCollection
@@ -24,54 +23,52 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Utils              (duplicates)
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict              as HM
 import qualified Data.Text                        as T
 import qualified Data.Text.Extended               as T
 import qualified Database.PG.Query                as Q
 
-addCollectionP1
-  :: (QErrM m, CacheRM m, UserInfoM m)
-  => CollectionName -> m ()
-addCollectionP1 name = do
-  adminOnly
-  collectionMap <- scQueryCollections <$> askSchemaCache
-  withPathK "name" $
-    case HM.lookup name collectionMap of
-      Just _  -> throw400 AlreadyExists $
-                 "query collection with name " <> name <<> " already exists"
-      Nothing -> return ()
-
 addCollectionP2
-  :: (QErrM m, CacheRWM m)
-  => CreateCollection -> m ()
-addCollectionP2 (CreateCollection name defn _) =
-  withPathK "queries" $ do
+  :: (QErrM m)
+  => CollectionDef -> m ()
+addCollectionP2 (CollectionDef queryList) =
+  withPathK "queries" $
     unless (null duplicateNames) $ throw400 NotSupported $
       "found duplicate query names "
       <> T.intercalate ", " (map (T.dquote . unQueryName) duplicateNames)
-    addCollectionToCache name queryList
   where
-    CollectionDef queryList = defn
     duplicateNames = duplicates $ map _lqName queryList
 
 runCreateCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, UserInfoM m, MonadTx m)
   => CreateCollection -> m EncJSON
 runCreateCollection cc = do
-  addCollectionP1 $ _ccName cc
-  withPathK "definition" $ addCollectionP2 cc
+  adminOnly
+  collDetM <- getCollectionDefM collName
+  withPathK "name" $
+    onJust collDetM $ const $ throw400 AlreadyExists $
+      "query collection with name " <> collName <<> " already exists"
+  withPathK "definition" $ addCollectionP2 def
   liftTx $ addCollectionToCatalog cc
   return successMsg
+  where
+    CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, UserInfoM m, MonadTx m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   adminOnly
-  qMap <- addQueryToCollectionInCache collName queryName query
-  let collDef = CollectionDef $ map (uncurry ListedQuery) $ HM.toList qMap
-  liftTx $ addQueryToCollectionCatalog collName collDef
+  CollectionDef qList <- getCollectionDef collName
+  let queryExists = flip any qList $ \q -> _lqName q == queryName
+
+  when queryExists $ throw400 AlreadyExists $ "query with name "
+    <> queryName <<> " already exists in collection " <>> collName
+
+  let collDef = CollectionDef $ qList <> pure listQ
+  liftTx $ updateCollectionDefCatalog collName collDef
   return successMsg
+  where
+    listQ = ListedQuery queryName query
 
 runDropCollection
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
@@ -80,43 +77,41 @@ runDropCollection (DropCollection collName cascade) = do
   adminOnly
   withPathK "collection" $ do
     -- check for query collection
-    void $ askQueryMap collName
-    allowlistMap <- scAllowlist <$> askSchemaCache
-    onJust (HM.lookup collName allowlistMap) $ const $ do
+    void $ getCollectionDef collName
+
+    allowlist <- liftTx fetchAllowlist
+    when (collName `elem` allowlist) $
       if cascade then do
         -- drop collection in allowlist
-        delCollectionFromAllowlist collName
         liftTx $ delCollectionFromAllowlistCatalog collName
+        refreshAllowlist
       else throw400 DependencyError $ "query collection with name "
            <> collName <<> " is present in allowlist; cannot proceed to drop"
-  delCollectionFromCache collName
   liftTx $ delCollectionFromCatalog collName
   return successMsg
 
 runDropQueryFromCollection
-  :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
+  :: (QErrM m, UserInfoM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   adminOnly
-  qMap <- dropQueryFromCollectionCache collName queryName
-  let collDef = CollectionDef $ map (uncurry ListedQuery) $ HM.toList qMap
-  liftTx $ delQueryFromCollectionCatalog collName collDef
+  CollectionDef qList <- getCollectionDef collName
+  let queryExists = flip any qList $ \q -> _lqName q == queryName
+  when (not queryExists) $ throw400 NotFound $ "query with name "
+    <> queryName <<> " not found in collection " <>> collName
+  let collDef = CollectionDef $ flip filter qList $
+                                \q -> _lqName q /= queryName
+  liftTx $ updateCollectionDefCatalog collName collDef
   return successMsg
-
-addToAllowlistSetup :: (QErrM m, CacheRWM m) => CollectionName -> m ()
-addToAllowlistSetup collName = do
-  qMap <- askQueryMap collName
-  let queryList = flip map (HM.toList qMap) $
-        \(qn, q) -> ListedQuery qn $ queryWithoutTypeNames q
-  addCollectionToAllowlist collName queryList
 
 runAddCollectionToAllowlist
   :: (QErrM m, UserInfoM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
-runAddCollectionToAllowlist (CollectionReq name) = do
+runAddCollectionToAllowlist (CollectionReq collName) = do
   adminOnly
-  withPathK "collection" $ addToAllowlistSetup name
-  liftTx $ addCollectionToAllowlistCatalog name
+  void $ withPathK "collection" $ getCollectionDef collName
+  liftTx $ addCollectionToAllowlistCatalog collName
+  refreshAllowlist
   return successMsg
 
 runDropCollectionFromAllowlist
@@ -124,10 +119,46 @@ runDropCollectionFromAllowlist
   => CollectionReq -> m EncJSON
 runDropCollectionFromAllowlist (CollectionReq collName) = do
   adminOnly
-  void $ askQueryMap collName
-  delCollectionFromAllowlist collName
+  void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ delCollectionFromAllowlistCatalog collName
+  refreshAllowlist
   return successMsg
+
+refreshAllowlist
+  :: (CacheRWM m, MonadTx m) => m ()
+refreshAllowlist = do
+  queries <- liftTx fetchAllowlistQueries
+  replaceAllowlist queries
+  where
+    fetchAllowlistQueries = do
+      r <- map (Q.getAltJ . runIdentity) <$>
+           Q.listQE defaultTxErrorHandler [Q.sql|
+             SELECT qc.collection_defn::json
+               FROM hdb_catalog.hdb_allowlist a
+               LEFT OUTER JOIN
+                 hdb_catalog.hdb_query_collection qc
+                 ON (qc.collection_name = a.collection_name)
+           |] () True
+      return $ concatMap _cdQueries r
+
+getCollectionDef
+  :: (QErrM m, MonadTx m)
+  => CollectionName -> m CollectionDef
+getCollectionDef collName = do
+  detM <- getCollectionDefM collName
+  onNothing detM $ throw400 NotExists $
+    "query collection with name " <> collName <<> " does not exists"
+
+getCollectionDefM
+  :: (QErrM m, MonadTx m)
+  => CollectionName -> m (Maybe CollectionDef)
+getCollectionDefM collName = do
+  allCollections <- liftTx fetchAllCollections
+  let filteredList = flip filter allCollections $ \c -> collName == _ccName c
+  case filteredList of
+    []  -> return Nothing
+    [a] -> return $ Just $ _ccDefinition a
+    _   -> throw500 "more than one row returned for query collections"
 
 -- Database functions
 fetchAllCollections :: Q.TxE QErr [CreateCollection]
@@ -161,19 +192,9 @@ delCollectionFromCatalog name =
      WHERE collection_name = $1
   |] (Identity name) True
 
-addQueryToCollectionCatalog
+updateCollectionDefCatalog
   :: CollectionName -> CollectionDef -> Q.TxE QErr ()
-addQueryToCollectionCatalog collName def = do
-  -- Update definition
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    UPDATE hdb_catalog.hdb_query_collection
-       SET collection_defn = $1
-     WHERE collection_name = $2
-  |] (Q.AltJ def, collName) True
-
-delQueryFromCollectionCatalog
-  :: CollectionName -> CollectionDef -> Q.TxE QErr ()
-delQueryFromCollectionCatalog collName def = do
+updateCollectionDefCatalog collName def =
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|
     UPDATE hdb_catalog.hdb_query_collection

@@ -8,8 +8,7 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'query_collections', query_collections.items,
-    'allowlist', allowlist.item
+    'allowlist_collections', allowlist.item
   )
 from
   (
@@ -193,21 +192,9 @@ from
   ) as foreign_keys,
   (
     select
-      coalesce(json_agg(collection.info), '[]') as items
-    from
-       (
-         select
-           json_build_object(
-             'name', collection_name,
-             'definition', collection_defn,
-             'comment', comment
-           ) as info
-           from
-             hdb_catalog.hdb_query_collection
-       ) as collection
-  ) as query_collections,
-  (
-    select
-      coalesce(json_agg(collection_name), '[]') as item
-    from hdb_catalog.hdb_allowlist
+      coalesce(json_agg(hqc.collection_defn), '[]') as item
+    from hdb_catalog.hdb_allowlist ha
+    left outer join
+         hdb_catalog.hdb_query_collection hqc
+         on (hqc.collection_name = ha.collection_name)
   ) as allowlist

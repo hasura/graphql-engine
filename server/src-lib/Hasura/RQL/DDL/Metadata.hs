@@ -275,14 +275,14 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
   -- query collections
   withPathK "query_collections" $
     indexedForM_ collections $ \c -> do
-    DQC.addCollectionP2 c
     liftTx $ DQC.addCollectionToCatalog c
 
   -- allow list
   withPathK "allowlist" $ do
     indexedForM_ allowlist $ \(DQC.CollectionReq name) -> do
-      DQC.addToAllowlistSetup name
       liftTx $ DQC.addCollectionToAllowlistCatalog name
+    -- add to cache
+    DQC.refreshAllowlist
 
   -- remote schemas
   onJust mSchemas $ \schemas ->
@@ -537,8 +537,6 @@ purgeMetadataObj = liftTx . \case
   (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
   (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
   (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
-  (MOQueryCollection qcn)         -> DQC.delCollectionFromCatalog qcn
-  (MOAllowlist l)                 -> DQC.delCollectionFromAllowlistCatalog l
   (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
   (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
   (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

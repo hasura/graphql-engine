@@ -82,15 +82,14 @@ instance Hashable CatalogFKey
 
 data CatalogMetadata
   = CatalogMetadata
-  { _cmTables           :: ![CatalogTable]
-  , _cmRelations        :: ![CatalogRelation]
-  , _cmPermissions      :: ![CatalogPermission]
-  , _cmQueryTemplates   :: ![CatalogQueryTemplate]
-  , _cmEventTriggers    :: ![CatalogEventTrigger]
-  , _cmRemoteSchemas    :: ![AddRemoteSchemaQuery]
-  , _cmFunctions        :: ![CatalogFunction]
-  , _cmForeignKeys      :: ![CatalogFKey]
-  , _cmQueryCollections :: ![CreateCollection]
-  , _cmAllowlist        :: ![CollectionName]
+  { _cmTables               :: ![CatalogTable]
+  , _cmRelations            :: ![CatalogRelation]
+  , _cmPermissions          :: ![CatalogPermission]
+  , _cmQueryTemplates       :: ![CatalogQueryTemplate]
+  , _cmEventTriggers        :: ![CatalogEventTrigger]
+  , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
+  , _cmFunctions            :: ![CatalogFunction]
+  , _cmForeignKeys          :: ![CatalogFKey]
+  , _cmAllowlistCollections :: ![CollectionDef]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

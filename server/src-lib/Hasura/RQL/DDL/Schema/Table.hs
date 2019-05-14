@@ -9,7 +9,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
@@ -19,6 +18,7 @@ import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
@@ -354,7 +354,7 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeys' qCollections allowlist
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -439,24 +439,8 @@ buildSchemaCacheG withSetup = do
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
       trackFunctionP2Setup qf rawfi
 
-  -- query collections
-  forM_ qCollections $ \c -> do
-    let name = _ccName c
-        def = object ["name" .= name, "definition" .= _ccDefinition c]
-        mkInconsObj =
-          InconsistentMetadataObj (MOQueryCollection name) MOTQueryCollection def
-    modifyErr (\e -> "query collection " <> name <<> "; " <> e) $
-      handleInconsistentObj mkInconsObj $ addCollectionP2 c
-
   -- allow list
-  forM_ allowlist $ \name -> do
-    let allowlistDef = object [ "name" .= ("allowlist" :: Text)
-                              , "definition" .= CollectionReq name
-                              ]
-        mkAllowlistInconsObj =
-          InconsistentMetadataObj (MOAllowlist name) MOTAllowlist allowlistDef
-    modifyErr(\e -> "allow list collection" <> "; " <> e) $
-       handleInconsistentObj mkAllowlistInconsObj $ addToAllowlistSetup name
+  replaceAllowlist $ concatMap _cdQueries allowlistDefs
 
   -- build GraphQL context
   postGCtxSc <- askSchemaCache >>= GS.updateSCWithGCtx

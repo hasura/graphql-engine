@@ -20,6 +20,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as HS
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -199,11 +200,9 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
 
-isQueryInAllowlist :: GQLExecDoc -> AllowlistMap -> Bool
-isQueryInAllowlist q listMap =
-  gqlQuery `elem` allAllowQueries
+isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
+isQueryInAllowlist q = HS.member gqlQuery
   where
-    allAllowQueries = map _lqQuery $ concat $ Map.elems listMap
     gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
                unGQLExecDoc q
 

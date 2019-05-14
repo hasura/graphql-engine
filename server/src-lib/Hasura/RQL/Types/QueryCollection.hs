@@ -10,7 +10,6 @@ import           Data.Aeson.TH
 import           Language.GraphQL.Draft.Instances ()
 import           Language.Haskell.TH.Syntax       (Lift)
 
-import qualified Data.HashMap.Strict              as HM
 import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 import qualified Language.GraphQL.Draft.Syntax    as G
@@ -56,15 +55,6 @@ data CreateCollection
   , _ccComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
-
-type QueryMap = HM.HashMap QueryName GQLQuery
-type CollectionMap = HM.HashMap CollectionName QueryMap
-type AllowlistMap = HM.HashMap CollectionName QueryList
-
-queryListToMap :: QueryList  -> QueryMap
-queryListToMap ql =
-  HM.fromList $ flip map ql $
-    \(ListedQuery queryName query) -> (queryName, query)
 
 data DropCollection
   = DropCollection
