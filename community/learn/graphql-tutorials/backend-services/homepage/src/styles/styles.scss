@@ -289,6 +289,16 @@ ul
     background-color: transparent;
     border: 0;
     margin-bottom: -1px;
+    .navbarHeader
+    {
+      flex: 1;
+      .navbarToggle
+      {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+      }
+    }
+
   }
   .logoWrapper
   {
@@ -304,7 +314,7 @@ ul
   {
     li
     {
-      padding: 20px;
+      padding: 10px 20px;
       a
       {
         font-family: 'Raleway';
@@ -809,6 +819,12 @@ ul
         display: flex;
         align-items: center;
         color: #2b0785;
+        span
+        {
+          font-size: 16px;
+          font-weight: 400;
+          margin-left: 6px;
+        }
       }
       .listWrapper
       {
@@ -979,6 +995,15 @@ ul
   .headerWrapper
   {
     padding-top: 15px;
+    .navbarDefault
+    {
+      .navbarHeader
+      {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+    }
     .navBarWrapper
     {
       li
@@ -991,6 +1016,10 @@ ul
           background-color: #fff;
           position: relative;
           top: 10px;
+          .menuTitle
+          {
+            padding-bottom: 0;
+          }
           .dropdownMenuBgImg
           {
             display: none;
@@ -1012,7 +1041,7 @@ ul
     }
     .logoWrapper
     {
-      text-align: center;
+      text-align: left;
       padding-left: 15px;
       img
       {
@@ -1113,6 +1142,15 @@ ul
       .willLearnList
       {
         margin-top: 30px;
+        .willLearnHeader
+        {
+          font-size: 16px;
+          padding: 0 15px;
+          span
+          {
+            font-size: 12px;
+          }
+        }
       }
     }
   }
