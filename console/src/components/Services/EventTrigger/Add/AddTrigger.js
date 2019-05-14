@@ -38,83 +38,17 @@ import semverCheck from '../../../../helpers/semver';
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
-
     this.props.dispatch(loadTableList('public'));
-
-    this.state = {
-      supportColumnChangeFeature: false,
-      supportWebhookEnv: false,
-      supportRetryTimeout: false,
-      supportManualTriggerInvocations: false,
-    };
   }
 
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
-    if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion).then(() => {
-        this.checkWebhookEnvSupport(this.props.serverVersion);
-        this.checkRetryTimeoutSupport(this.props.serverVersion);
-      });
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion).then(() => {
-        this.checkWebhookEnvSupport(nextProps.serverVersion);
-        this.checkRetryTimeoutSupport(nextProps.serverVersion);
-      });
-    }
   }
 
   componentWillUnmount() {
     // set defaults
     this.props.dispatch(setDefaults());
-  }
-
-  checkSemVer(version) {
-    try {
-      const supportColumnChangeFeature = semverCheck(
-        'supportColumnChangeTrigger',
-        version
-      );
-      if (supportColumnChangeFeature) {
-        this.updateSupportColumnChangeFeature(true);
-      } else {
-        this.updateSupportColumnChangeFeature(false);
-      }
-      this.checkManualTriggerInvocationSupport(version);
-    } catch (e) {
-      this.updateSupportColumnChangeFeature(false);
-      console.error(e);
-    }
-    return Promise.resolve();
-  }
-
-  checkWebhookEnvSupport(version) {
-    const supportWebhookEnv = semverCheck('webhookEnvSupport', version);
-    this.setState({ supportWebhookEnv });
-    return Promise.resolve();
-  }
-
-  checkRetryTimeoutSupport(version) {
-    const supportRetryTimeout = semverCheck('triggerRetryTimeout', version);
-    this.setState({ supportRetryTimeout });
-    return Promise.resolve();
-  }
-
-  checkManualTriggerInvocationSupport(version) {
-    this.setState({
-      supportManualTriggerInvocations: semverCheck('manualTriggers', version),
-    });
-  }
-
-  updateSupportColumnChangeFeature(val) {
-    this.setState({
-      supportColumnChangeFeature: val,
-    });
   }
 
   updateWebhookUrlType(e) {
@@ -167,10 +101,7 @@ class AddTrigger extends Component {
         errorMsg = 'Retry interval is not valid';
         customMsg = 'Retry interval must be a postiive number';
       }
-      if (
-        this.state.supportRetryTimeout &&
-        (isNaN(iTimeout) || iTimeout <= 0)
-      ) {
+      if (isNaN(iTimeout) || iTimeout <= 0) {
         isValid = false;
         errorMsg = 'Timeout is not valid';
         customMsg = 'Timeout must be a positive number';
@@ -243,12 +174,6 @@ class AddTrigger extends Component {
       enableManual,
     } = this.props;
 
-    const {
-      supportColumnChangeFeature,
-      supportRetryTimeout,
-      supportManualTriggerInvocations,
-    } = this.state;
-
     const styles = require('../TableCommon/EventTable.scss');
 
     let createBtnText = 'Create Event Trigger';
@@ -283,14 +208,14 @@ class AddTrigger extends Component {
           columns.push(column);
         });
       }
-      dispatch(operationToggleAllColumns(columns, supportColumnChangeFeature));
+      dispatch(operationToggleAllColumns(columns));
     };
 
     const getColumnList = type => {
       const dispatchToggleColumn = e => {
         const column = e.target.value;
         dispatch(
-          operationToggleColumn(column, type, supportColumnChangeFeature)
+          operationToggleColumn(column, type)
         );
       };
       const tableSchema = tableListBySchema.find(
@@ -332,7 +257,7 @@ class AddTrigger extends Component {
       });
     };
 
-    const advancedColumnSection = supportColumnChangeFeature ? (
+    const advancedColumnSection = (
       <div>
         <h4 className={styles.subheading_text}>
           Listen columns for update &nbsp; &nbsp;
@@ -353,65 +278,6 @@ class AddTrigger extends Component {
             <i>Applicable only if update operation is selected.</i>
           </div>
         )}
-      </div>
-    ) : (
-      <div>
-        <h4 className={styles.subheading_text}>
-          Advanced - Operation/Columns &nbsp; &nbsp;
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltip.advancedOperationDescription}
-          >
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>{' '}
-        </h4>
-        <div>
-          <div>
-            <label>
-              <input
-                onChange={handleOperationSelection}
-                className={styles.display_inline + ' ' + styles.add_mar_right}
-                type="checkbox"
-                value="insert"
-                checked={selectedOperations.insert}
-              />
-              Insert
-            </label>
-          </div>
-          {getColumnList('insert')}
-        </div>
-        <hr />
-        <div>
-          <div>
-            <label>
-              <input
-                onChange={handleOperationSelection}
-                className={styles.display_inline + ' ' + styles.add_mar_right}
-                type="checkbox"
-                value="update"
-                checked={selectedOperations.update}
-              />
-              Update
-            </label>
-          </div>
-          {getColumnList('update')}
-        </div>
-        <hr />
-        <div>
-          <div>
-            <label>
-              <input
-                onChange={handleOperationSelection}
-                className={styles.display_inline + ' ' + styles.add_mar_right}
-                type="checkbox"
-                value="delete"
-                checked={selectedOperations.delete}
-              />
-              Delete
-            </label>
-          </div>
-          {getColumnList('delete')}
-        </div>
       </div>
     );
 
@@ -581,9 +447,6 @@ class AddTrigger extends Component {
               >
                 <Operations
                   dispatch={dispatch}
-                  supportManualTriggerInvocations={
-                    supportManualTriggerInvocations
-                  }
                   enableManual={enableManual}
                   selectedOperations={selectedOperations}
                   handleOperationSelection={handleOperationSelection}
@@ -601,50 +464,37 @@ class AddTrigger extends Component {
                   </OverlayTrigger>{' '}
                 </h4>
                 <div>
-                  {this.state.supportWebhookEnv ? (
-                    <div className={styles.dropdown_wrapper}>
-                      <DropdownButton
-                        dropdownOptions={[
-                          { display_text: 'URL', value: 'url' },
-                          { display_text: 'From env var', value: 'env' },
-                        ]}
-                        title={
-                          (webhookUrlType === 'url' && 'URL') ||
-                          (webhookUrlType === 'env' && 'From env var') ||
-                          'Value'
-                        }
-                        dataKey={
-                          (webhookUrlType === 'url' && 'url') ||
-                          (webhookUrlType === 'env' && 'env')
-                        }
-                        onButtonChange={this.updateWebhookUrlType.bind(this)}
-                        onInputChange={e => {
-                          dispatch(setWebhookURL(e.target.value));
-                        }}
-                        required
-                        bsClass={styles.dropdown_button}
-                        inputVal={webhookURL}
-                        id="webhook-url"
-                        inputPlaceHolder={
-                          (webhookUrlType === 'url' &&
-                            'http://httpbin.org/post') ||
-                          (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
-                        }
-                        testId="webhook"
-                      />
-                    </div>
-                  ) : (
-                    <input
-                      type="url"
-                      required
-                      data-test="webhook"
-                      placeholder="webhook url"
-                      className={`${styles.tableNameInput} form-control`}
-                      onChange={e => {
+                  <div className={styles.dropdown_wrapper}>
+                    <DropdownButton
+                      dropdownOptions={[
+                        { display_text: 'URL', value: 'url' },
+                        { display_text: 'From env var', value: 'env' },
+                      ]}
+                      title={
+                        (webhookUrlType === 'url' && 'URL') ||
+                        (webhookUrlType === 'env' && 'From env var') ||
+                        'Value'
+                      }
+                      dataKey={
+                        (webhookUrlType === 'url' && 'url') ||
+                        (webhookUrlType === 'env' && 'env')
+                      }
+                      onButtonChange={this.updateWebhookUrlType.bind(this)}
+                      onInputChange={e => {
                         dispatch(setWebhookURL(e.target.value));
                       }}
+                      required
+                      bsClass={styles.dropdown_button}
+                      inputVal={webhookURL}
+                      id="webhook-url"
+                      inputPlaceHolder={
+                        (webhookUrlType === 'url' &&
+                          'http://httpbin.org/post') ||
+                        (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
+                      }
+                      testId="webhook"
                     />
-                  )}
+                  </div>
                 </div>
                 <br />
                 <small>
@@ -713,32 +563,30 @@ class AddTrigger extends Component {
                         />
                       </div>
                     </div>
-                    {supportRetryTimeout && (
-                      <div className={styles.retrySection}>
-                        <div className={`col-md-3 ${styles.padd_left_remove}`}>
-                          <label
-                            className={`${styles.add_mar_right} ${
-                              styles.retryLabel
-                            }`}
-                          >
-                            Timeout in seconds (default: 60)
-                          </label>
-                        </div>
-                        <div className={`col-md-6 ${styles.padd_left_remove}`}>
-                          <input
-                            onChange={e => {
-                              dispatch(setRetryTimeout(e.target.value));
-                            }}
-                            data-test="timeout-seconds"
-                            className={`${styles.display_inline} form-control ${
-                              styles.width300
-                            }`}
-                            type="text"
-                            placeholder="timeout in seconds"
-                          />
-                        </div>
+                    <div className={styles.retrySection}>
+                      <div className={`col-md-3 ${styles.padd_left_remove}`}>
+                        <label
+                          className={`${styles.add_mar_right} ${
+                            styles.retryLabel
+                          }`}
+                        >
+                          Timeout in seconds (default: 60)
+                        </label>
                       </div>
-                    )}
+                      <div className={`col-md-6 ${styles.padd_left_remove}`}>
+                        <input
+                          onChange={e => {
+                            dispatch(setRetryTimeout(e.target.value));
+                          }}
+                          data-test="timeout-seconds"
+                          className={`${styles.display_inline} form-control ${
+                            styles.width300
+                          }`}
+                          type="text"
+                          placeholder="timeout in seconds"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <hr />
                   <div className={styles.add_mar_top}>

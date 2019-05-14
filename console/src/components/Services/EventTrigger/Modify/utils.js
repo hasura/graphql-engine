@@ -1,12 +1,10 @@
 export const MANUAL_TRIGGER_TEXT = 'Via console';
 export const MANUAL_TRIGGER_VAR = 'enable_manual';
 
-export const getValidQueryTypes = supportManualTriggerInvocations => {
+export const getValidQueryTypes = () => {
   const defaultQueryTypes = ['insert', 'update', 'delete'];
 
-  if (supportManualTriggerInvocations) {
-    defaultQueryTypes.push(MANUAL_TRIGGER_TEXT);
-  }
+  defaultQueryTypes.push(MANUAL_TRIGGER_TEXT);
 
   return defaultQueryTypes;
 };

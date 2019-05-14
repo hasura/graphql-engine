@@ -78,29 +78,18 @@ class ViewTable extends Component {
     this.state = {
       dispatch: props.dispatch,
       tableName: props.tableName,
-      supportManualTriggers: false,
     };
 
     this.getInitialData(this.props.tableName);
   }
 
   componentDidMount() {
-    this.checkSupportedFeatures(this.props.serverVersion);
+    this.retrieveManualTriggers(this.state.tableName);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSupportedFeatures(nextProps.serverVersion);
-    }
-
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
-    }
-  }
-
-  checkSupportedFeatures(version) {
-    if (semverCheck('manualTriggers', version)) {
-      this.setState({ supportManualTriggers: true });
     }
   }
 
@@ -128,10 +117,6 @@ class ViewTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.supportManualTriggers !== prevState.supportManualTriggers) {
-      this.retrieveManualTriggers(this.state.tableName);
-    }
-
     if (this.shouldScrollBottom) {
       document.body.scrollTop = document.body.offsetHeight - window.innerHeight;
     }
@@ -161,9 +146,7 @@ class ViewTable extends Component {
 
   retrieveManualTriggers = tableName => {
     const { dispatch } = this.props;
-    return this.state.supportManualTriggers
-      ? dispatch(fetchManualTriggers(tableName))
-      : Promise.resolve();
+    return dispatch(fetchManualTriggers(tableName));
   };
 
   render() {

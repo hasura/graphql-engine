@@ -5,7 +5,6 @@ import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
 
 const Operations = ({
-  supportManualTriggerInvocations,
   enableManual,
   selectedOperations,
   handleOperationSelection,
@@ -38,10 +37,6 @@ const Operations = ({
   ];
 
   const getManualInvokeOperation = () => {
-    if (!supportManualTriggerInvocations) {
-      return null;
-    }
-
     const handleManualOperationSelection = () => {
       dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
     };
@@ -122,7 +117,6 @@ const Operations = ({
 };
 
 Operations.propTypes = {
-  supportManualTriggerInvocations: PropTypes.bool.isRequired,
   enableManual: PropTypes.bool.isRequired,
   selectedOperations: PropTypes.object.isRequired,
   handleOperationSelection: PropTypes.func.isRequired,

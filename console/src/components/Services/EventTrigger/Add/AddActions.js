@@ -204,36 +204,22 @@ const loadTableList = schemaName => {
 const operationToggleColumn = (
   column,
   operation,
-  supportColumnChangeFeature
 ) => {
   return (dispatch, getState) => {
-    if (supportColumnChangeFeature) {
-      if (operation === 'update') {
-        const currentOperations = getState().addTrigger.operations;
-        const currentCols = currentOperations[operation];
-        // check if column is in currentCols. if not, push
-        const isExists = currentCols.includes(column);
-        let finalCols = currentCols;
-        if (isExists) {
-          finalCols = currentCols.filter(col => col !== column);
-        } else {
-          finalCols.push(column);
-        }
-        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+    if (operation === 'update') {
+      const currentOperations = getState().addTrigger.operations;
+      const currentCols = currentOperations[operation];
+      // check if column is in currentCols. if not, push
+      const isExists = currentCols.includes(column);
+      let finalCols = currentCols;
+      if (isExists) {
+        finalCols = currentCols.filter(col => col !== column);
+      } else {
+        finalCols.push(column);
       }
-      return;
+      dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
     }
-    const currentOperations = getState().addTrigger.operations;
-    const currentCols = currentOperations[operation];
-    // check if column is in currentCols. if not, push
-    const isExists = currentCols.includes(column);
-    let finalCols = currentCols;
-    if (isExists) {
-      finalCols = currentCols.filter(col => col !== column);
-    } else {
-      finalCols.push(column);
-    }
-    dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+    return;
   };
 };
 

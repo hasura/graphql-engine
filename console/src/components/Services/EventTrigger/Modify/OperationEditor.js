@@ -58,13 +58,12 @@ class OperationEditor extends React.Component {
       save,
       modifyTrigger,
       dispatch,
-      supportManualTriggerInvocations,
     } = this.props;
     /*
      * Query types will have `CONSOLE_QUERY` only for version > 45
      *
      * */
-    const queryTypes = getValidQueryTypes(supportManualTriggerInvocations);
+    const queryTypes = getValidQueryTypes();
     const renderOperation = (qt, i) => {
       const isChecked = Boolean(definition[queryToInternalNameMap[qt]]);
 
