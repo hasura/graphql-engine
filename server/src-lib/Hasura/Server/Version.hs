@@ -15,7 +15,8 @@ import           Hasura.Prelude
 import           Hasura.Server.Utils (getValFromEnvOrScript)
 
 version :: T.Text
-version = T.dropWhileEnd (== '\n') $(getValFromEnvOrScript "VERSION1" "../scripts/get-version.sh")
+version = T.dropWhileEnd (== '\n')
+  $(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
 
 parsedVersion :: Either String V.Version
 parsedVersion = V.fromText $ T.dropWhile (== 'v') version
@@ -39,7 +40,7 @@ consoleVersion = case parsedVersion of
 mkConsoleV :: V.Version -> T.Text
 mkConsoleV v = case getReleaseChannel v of
   Nothing -> rawVersion
-  Just c -> T.pack $ "channel/" <> c <> "/" <> vMajMin
+  Just c  -> T.pack $ "channel/" <> c <> "/" <> vMajMin
   where
     vMajMin = "v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor)
 

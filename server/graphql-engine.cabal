@@ -148,7 +148,8 @@ library
                      , ekg-core
 
                      -- serve static files
-                     , wai-middleware-static
+                     , filepath >= 1.4
+                     , mime-types >= 0.1
 
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
@@ -170,6 +171,7 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
+
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache

@@ -6,14 +6,16 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
+import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
-import Debug.Trace
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           System.Exit                            (exitFailure)
+import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
@@ -27,7 +29,6 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wai                            as Wai
 import qualified Network.Wai.Handler.WebSockets         as WS
-import qualified Network.Wai.Middleware.Static as WMS
 import qualified Network.WebSockets                     as WS
 import qualified Text.Mustache                          as M
 import qualified Text.Mustache.Compile                  as M
@@ -77,6 +78,9 @@ consoleAssetsPath = "/static"
 consoleAssetsPath :: Text
 consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
 #endif
+
+consoleAssetsRemotePath :: Text
+consoleAssetsRemotePath = "https://graphql-engine-cdn.hasura.io/console/assets"
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
 mkConsoleHTML path authMode enableTelemetry =
@@ -133,17 +137,17 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx    :: PGExecCtx
-  , scConnInfo     :: Q.ConnInfo
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scSQLGenCtx    :: SQLGenCtx
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
-  , scPlanCache    :: E.PlanCache
-  , scLQState      :: EL.LiveQueriesState
+  { scPGExecCtx   :: PGExecCtx
+  , scConnInfo    :: Q.ConnInfo
+  , scLogger      :: L.Logger
+  , scCacheRef    :: SchemaCacheRef
+  , scAuthMode    :: AuthMode
+  , scManager     :: HTTP.Manager
+  , scSQLGenCtx   :: SQLGenCtx
+  , scEnabledAPIs :: S.HashSet API
+  , scInstanceId  :: InstanceId
+  , scPlanCache   :: E.PlanCache
+  , scLQState     :: EL.LiveQueriesState
   }
 
 data HandlerCtx
@@ -327,6 +331,22 @@ v1Alpha1PGDumpHandler b = do
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
   return $ RawResp "application/sql" output
+
+consoleAssetsLocalPath :: String
+consoleAssetsLocalPath = "/console-assets"
+
+consoleAssetsHandler :: FilePath -> Handler APIResp
+consoleAssetsHandler path = do
+  eFileContents <- liftIO $ try $ BL.readFile $
+    joinPath [consoleAssetsLocalPath, path]
+  fileContents <- either throwException return eFileContents
+  return $ RawResp mimeType fileContents
+  where
+    fileName = takeFileName path
+    mimeType = bsToTxt $ defaultMimeLookup $ T.pack fileName
+
+    throwException :: (MonadError QErr m) => IOException -> m a
+    throwException e = throw404 $ T.pack (show e)
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -526,10 +546,13 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       lazyBytes $ encode qErr
 
     serveApiConsole = do
+      -- redirect / to /console
       get root $ redirect "console"
+
       -- static files
       get ("console/assets" <//> wildcard) $ \path ->
-        lazyBytes $ BL.pack $ "hello" ++ T.unpack path
+        mkSpockAction encodeQErr id serverCtx $
+          consoleAssetsHandler $ T.unpack path
 
       -- console html
       get ("console" <//> wildcard) $ \path ->
