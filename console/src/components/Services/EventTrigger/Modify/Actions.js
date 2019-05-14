@@ -182,7 +182,8 @@ export const save = (property, triggerName) => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };

@@ -175,7 +175,8 @@ const createTrigger = () => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };

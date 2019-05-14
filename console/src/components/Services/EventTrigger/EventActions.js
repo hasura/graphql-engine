@@ -485,7 +485,8 @@ const deleteTrigger = triggerName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
