@@ -256,7 +256,8 @@ class TestAddRemoteSchemaTbls:
             'x-hasura-test': 'xyzz',
             'x-hasura-role': 'user',
             'x-hasura-user-id': 'abcd1234',
-            'Authorization': 'Bearer abcdef'
+            'content-type': 'application/json',
+            'Authorization': 'Bearer abcdef',
         }
         if hge_ctx.hge_key:
             hdrs['x-hasura-admin-secret'] = hge_ctx.hge_key
