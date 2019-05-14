@@ -8,8 +8,9 @@ args:
       name: test_t1
     update:
       columns: ["c1"]
+      payload: "*"
     delete:
-      columns: "*"
+      payload: "*"
     webhook: http://127.0.0.1:5592/new
     retry_conf:
       num_retries: 5

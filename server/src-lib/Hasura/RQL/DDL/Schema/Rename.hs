@@ -331,10 +331,13 @@ updateColInEventTriggerDef trigName rnCol = do
       SubCStar       -> SubCStar
       SubCArray cols -> SubCArray $
                         map (getNewCol rnCol trigTab) cols
-    rewriteOpSpec trigTab (SubscribeOpSpec cols payload) =
-      SubscribeOpSpec
-      (rewriteSubsCols trigTab cols)
-      (rewriteSubsCols trigTab <$> payload)
+    rewriteOpSpec trigTab spec = case spec of
+      InsDelSpec (PayloadColumns payload) ->
+        InsDelSpec (PayloadColumns $ rewriteSubsCols trigTab payload)
+      UpdSpec (ListenColumns listenCols) (PayloadColumns payload) ->
+        UpdSpec
+        (ListenColumns $ rewriteSubsCols trigTab listenCols)
+        (PayloadColumns $ rewriteSubsCols trigTab payload)
     rewriteTrigOpsDef trigTab (TriggerOpsDef ins upd del man) =
       TriggerOpsDef
       (rewriteOpSpec trigTab <$> ins)
