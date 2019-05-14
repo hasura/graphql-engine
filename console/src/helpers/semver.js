@@ -1,11 +1,9 @@
 const semver = require('semver');
 
+// TODO check events redeliver code
 const componentsSemver = {
-  eventRedeliver: '1.0.0-alpha17',
-  sqlAnalyze: '1.0.0-alpha25',
   aggregationPerm: '1.0.0-alpha26',
   supportColumnChangeTrigger: '1.0.0-alpha26',
-  analyzeApiChange: '1.0.0-alpha26',
   insertPrefix: '1.0.0-alpha26',
   insertPermRestrictColumns: '1.0.0-alpha28',
   webhookEnvSupport: '1.0.0-alpha29',

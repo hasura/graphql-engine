@@ -18,27 +18,11 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
-      supportAnalyze: false,
-      analyzeApiChange: false,
     };
   }
 
   componentDidMount() {
-    if (this.props.data.serverVersion) {
-      this.checkSemVer(this.props.data.serverVersion).then(() =>
-        this.checkNewAnalyzeVersion(this.props.data.serverVersion)
-      );
-    }
-
     setQueryVariableSectionHeight();
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.data.serverVersion !== this.props.data.serverVersion) {
-      this.checkSemVer(nextProps.data.serverVersion).then(() =>
-        this.checkNewAnalyzeVersion(nextProps.data.serverVersion)
-      );
-    }
   }
 
   componentWillUnmount() {
@@ -49,52 +33,10 @@ class GraphiQLWrapper extends Component {
     return !nextProps.headerFocus;
   }
 
-  checkSemVer(version) {
-    try {
-      const showAnalyze = semverCheck('sqlAnalyze', version);
-      if (showAnalyze) {
-        this.updateAnalyzeState(true);
-      } else {
-        this.updateAnalyzeState(false);
-      }
-    } catch (e) {
-      this.updateAnalyzeState(false);
-      console.error(e);
-    }
-    return Promise.resolve();
-  }
-
-  checkNewAnalyzeVersion(version) {
-    try {
-      const analyzeApiChange = semverCheck('analyzeApiChange', version);
-      if (analyzeApiChange) {
-        this.updateAnalyzeApiState(true);
-      } else {
-        this.updateAnalyzeApiState(false);
-      }
-    } catch (e) {
-      this.updateAnalyzeApiState(false);
-      console.error(e);
-    }
-    return Promise.resolve();
-  }
-
-  updateAnalyzeState(supportAnalyze) {
-    this.setState({
-      supportAnalyze: supportAnalyze,
-    });
-  }
-
-  updateAnalyzeApiState(analyzeApiChange) {
-    this.setState({
-      analyzeApiChange: analyzeApiChange,
-    });
-  }
-
   render() {
     const styles = require('../../../Common/Common.scss');
 
-    const { supportAnalyze, analyzeApiChange, headerFocus } = this.state;
+    const { headerFocus } = this.state;
 
     const { numberOfTables, urlParams } = this.props;
     const graphqlNetworkData = this.props.data;
@@ -114,7 +56,6 @@ class GraphiQLWrapper extends Component {
     const analyzeFetcherInstance = analyzeFetcher(
       graphqlNetworkData.url,
       graphqlNetworkData.headers,
-      analyzeApiChange
     );
 
     const renderGraphiql = graphiqlProps => {
@@ -122,7 +63,7 @@ class GraphiQLWrapper extends Component {
         <GraphiQL
           fetcher={graphQLFetcher}
           analyzeFetcher={analyzeFetcherInstance}
-          supportAnalyze={supportAnalyze}
+          supportAnalyze={true}
           {...graphiqlProps}
         />
       );

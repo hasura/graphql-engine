@@ -38,40 +38,17 @@ class StreamingLogs extends Component {
       intervalId: null,
       filtered: [],
       filterAll: '',
-      showRedeliver: false,
     };
     this.refreshData = this.refreshData.bind(this);
     this.filterAll = this.filterAll.bind(this);
     this.props.dispatch(setTrigger(this.props.triggerName));
   }
   componentDidMount() {
-    if (this.props.serverVersion) {
-      this.checkSemVer(this.props.serverVersion);
-    }
     this.props.dispatch(setTrigger(this.props.triggerName));
     this.props.dispatch(loadEventLogs(this.props.triggerName));
   }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.serverVersion !== this.props.serverVersion) {
-      this.checkSemVer(nextProps.serverVersion);
-    }
-  }
   componentWillUnmount() {
     this.props.dispatch(vSetDefaults());
-  }
-  checkSemVer(version) {
-    let showRedeliver = false;
-    try {
-      showRedeliver = semverCheck('eventRedeliver', version);
-      if (showRedeliver) {
-        this.setState({ showRedeliver: true });
-      } else {
-        this.setState({ showRedeliver: false });
-      }
-    } catch (e) {
-      console.error(e);
-      this.setState({ showRedeliver: false });
-    }
   }
   handleNewerEvents() {
     // get the first element
@@ -153,7 +130,7 @@ class StreamingLogs extends Component {
 
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
-      if (!(column === 'redeliver' && !this.state.showRedeliver)) {
+      if (!(column === 'redeliver' && false)) {
         invocationGridHeadings.push({
           Header: column,
           accessor: column,
@@ -229,7 +206,7 @@ class StreamingLogs extends Component {
             </div>
           );
         }
-        if (col === 'redeliver' && this.state.showRedeliver) {
+        if (col === 'redeliver') {
           return (
             <div className={conditionalClassname}>
               <i
