@@ -59,12 +59,13 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
-    if conf['url'] == '/v1alpha1/graphql':
-        status = [401, 404]
-    elif conf['url'] == '/v1/graphql':
-        status = [200]
+    if conf['url'] == '/v1/graphql':
+        if conf['status'] == 404:
+            status = [404]
+        else:
+            status = [200]
     else:
-        raise ValueError('unknown endpoint ' + conf['url'])
+        status = [401, 404]
 
     headers = {}
     if 'headers' in conf:
@@ -95,12 +96,10 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 
 def test_forbidden_webhook(hge_ctx, conf):
-    if conf['url'] == '/v1alpha1/graphql':
-        status = [401, 404]
-    elif conf['url'] == '/v1/graphql':
+    if conf['url'] == '/v1/graphql':
         status = [200]
     else:
-        raise ValueError('unknown endpoint ' + conf['url'])
+        status = [401, 404]
 
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)

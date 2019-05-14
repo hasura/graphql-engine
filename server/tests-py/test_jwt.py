@@ -35,9 +35,10 @@ def mk_claims(conf, claims):
     else:
         return claims
 
-class TestJWTBasic:
+@pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
+class TestJWTBasic():
 
-    def test_jwt_valid_claims_success(self, hge_ctx):
+    def test_jwt_valid_claims_success(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['user', 'editor'],
@@ -45,10 +46,11 @@ class TestJWTBasic:
         })
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['url'] = endpoint
         self.conf['status'] = 200
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_invalid_role_in_request_header(self, hge_ctx):
+    def test_jwt_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['contractor', 'editor'],
@@ -65,10 +67,14 @@ class TestJWTBasic:
                 'message': 'Your current role is not in allowed roles'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_no_allowed_roles_in_claim(self, hge_ctx):
+    def test_jwt_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user'
@@ -84,10 +90,14 @@ class TestJWTBasic:
                 'message': 'JWT claim does not contain x-hasura-allowed-roles'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_invalid_allowed_roles_in_claim(self, hge_ctx):
+    def test_jwt_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': 'user',
@@ -104,10 +114,14 @@ class TestJWTBasic:
                 'message': 'invalid x-hasura-allowed-roles; should be a list of roles'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_no_default_role(self, hge_ctx):
+    def test_jwt_no_default_role(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['user'],
@@ -123,10 +137,14 @@ class TestJWTBasic:
                 'message': 'JWT claim does not contain x-hasura-default-role'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_expired(self, hge_ctx):
+    def test_jwt_expired(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
@@ -146,10 +164,14 @@ class TestJWTBasic:
                 'message': 'Could not verify JWT: JWTExpired'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
-    def test_jwt_invalid_signature(self, hge_ctx):
+    def test_jwt_invalid_signature(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user',
@@ -168,7 +190,11 @@ class TestJWTBasic:
                 'message': 'Could not verify JWT: JWSError JWSInvalidSignature'
             }]
         }
-        self.conf['status'] = 400
+        self.conf['url'] = endpoint
+        if endpoint == '/v1/graphql':
+            self.conf['status'] = 200
+        if endpoint == '/v1alpha1/graphql':
+            self.conf['status'] = 400
         check_query(hge_ctx, self.conf, add_auth=False)
 
     @pytest.fixture(autouse=True)
