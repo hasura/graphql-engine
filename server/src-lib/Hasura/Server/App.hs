@@ -4,7 +4,6 @@
 
 module Hasura.Server.App where
 
-import Debug.Trace
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
@@ -16,6 +15,7 @@ import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           System.Exit                            (exitFailure)
+
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
