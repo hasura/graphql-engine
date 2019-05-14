@@ -20,7 +20,7 @@ import {
   permCloseEdit,
   permSetRoleName,
   permChangePermissions,
-  permToggleAllowUpsert,
+  // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
   permCustomChecked,
@@ -52,20 +52,22 @@ class Permissions extends Component {
   constructor() {
     super();
 
-    this.state = {};
-    this.state.viewInfo = {};
-    this.state.presetsInfo = {
-      insert: {
-        columnTypeMap: {},
-      },
-      update: {
-        columnTypeMap: {},
+    this.state = {
+      viewInfo: {},
+      presetsInfo: {
+        insert: {
+          columnTypeMap: {},
+        },
+        update: {
+          columnTypeMap: {},
+        },
       },
     };
   }
 
   componentDidMount() {
     this.props.dispatch({ type: RESET });
+
     const currentSchema = this.props.allSchemas.find(
       t => t.table_name === this.props.tableName
     );
@@ -891,10 +893,6 @@ class Permissions extends Component {
       };
 
       const getColumnSection = () => {
-        const getQueriesWithPermColumns = () => {
-          return ['select', 'update', 'insert'];
-        };
-
         const getColumnList = () => {
           const _columnList = [];
 
@@ -982,7 +980,7 @@ class Permissions extends Component {
 
         let _columnSection = '';
 
-        const queriesWithPermColumns = getQueriesWithPermColumns();
+        const queriesWithPermColumns = ['select', 'update', 'insert'];
 
         if (queriesWithPermColumns.includes(query)) {
           const getAccessText = () => {
@@ -1055,59 +1053,59 @@ class Permissions extends Component {
         return _columnSection;
       };
 
-      const getUpsertSection = () => {
-        if (query !== 'insert') {
-          return;
-        }
-
-        const dispatchToggleAllowUpsert = checked => {
-          dispatch(permToggleAllowUpsert(checked));
-        };
-
-        const upsertAllowed = permissionsState.insert
-          ? permissionsState.insert.allow_upsert
-          : false;
-
-        const upsertToolTip = (
-          <Tooltip id="tooltip-upsert">
-            Allow upsert queries. Upsert lets you update a row if it already
-            exists, otherwise insert it
-          </Tooltip>
-        );
-
-        const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
-
-        return (
-          <CollapsibleToggle
-            title={getSectionHeader(
-              'Upsert queries permissions',
-              upsertToolTip,
-              upsertStatus
-            )}
-            useDefaultTitleStyle
-            testId={'toggle-upsert-permission'}
-          >
-            <div
-              className={sectionClasses}
-              title={noPermissions ? noPermissionsMsg : ''}
-            >
-              <div className="checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={upsertAllowed}
-                    value="toggle_upsert"
-                    onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
-                    disabled={noPermissions}
-                  />
-                  Allow role <b>{permissionsState.role}</b> to make upsert
-                  queries
-                </label>
-              </div>
-            </div>
-          </CollapsibleToggle>
-        );
-      };
+      // const getUpsertSection = () => {
+      //   if (query !== 'insert') {
+      //     return;
+      //   }
+      //
+      //   const dispatchToggleAllowUpsert = checked => {
+      //     dispatch(permToggleAllowUpsert(checked));
+      //   };
+      //
+      //   const upsertAllowed = permissionsState.insert
+      //     ? permissionsState.insert.allow_upsert
+      //     : false;
+      //
+      //   const upsertToolTip = (
+      //     <Tooltip id="tooltip-upsert">
+      //       Allow upsert queries. Upsert lets you update a row if it already
+      //       exists, otherwise insert it
+      //     </Tooltip>
+      //   );
+      //
+      //   const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
+      //
+      //   return (
+      //     <CollapsibleToggle
+      //       title={getSectionHeader(
+      //         'Upsert queries permissions',
+      //         upsertToolTip,
+      //         upsertStatus
+      //       )}
+      //       useDefaultTitleStyle
+      //       testId={'toggle-upsert-permission'}
+      //     >
+      //       <div
+      //         className={sectionClasses}
+      //         title={noPermissions ? noPermissionsMsg : ''}
+      //       >
+      //         <div className="checkbox">
+      //           <label>
+      //             <input
+      //               type="checkbox"
+      //               checked={upsertAllowed}
+      //               value="toggle_upsert"
+      //               onChange={e => dispatchToggleAllowUpsert(e.target.checked)}
+      //               disabled={noPermissions}
+      //             />
+      //             Allow role <b>{permissionsState.role}</b> to make upsert
+      //             queries
+      //           </label>
+      //         </div>
+      //       </div>
+      //     </CollapsibleToggle>
+      //   );
+      // };
 
       const getPresetsSection = action => {
         if (query !== action) {
@@ -1756,7 +1754,7 @@ class Permissions extends Component {
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
-            {getUpsertSection()}
+            {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getButtonsSection()}

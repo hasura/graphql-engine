@@ -201,25 +201,19 @@ const loadTableList = schemaName => {
     dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
 };
 
-const operationToggleColumn = (
-  column,
-  operation,
-) => {
+const operationToggleColumn = (column, operation) => {
   return (dispatch, getState) => {
-    if (operation === 'update') {
-      const currentOperations = getState().addTrigger.operations;
-      const currentCols = currentOperations[operation];
-      // check if column is in currentCols. if not, push
-      const isExists = currentCols.includes(column);
-      let finalCols = currentCols;
-      if (isExists) {
-        finalCols = currentCols.filter(col => col !== column);
-      } else {
-        finalCols.push(column);
-      }
-      dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
+    const currentOperations = getState().addTrigger.operations;
+    const currentCols = currentOperations[operation];
+    // check if column is in currentCols. if not, push
+    const isExists = currentCols.includes(column);
+    let finalCols = currentCols;
+    if (isExists) {
+      finalCols = currentCols.filter(col => col !== column);
+    } else {
+      finalCols.push(column);
     }
-    return;
+    dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
   };
 };
 

@@ -266,8 +266,7 @@ class AddTrigger extends Component {
         </h4>
         {selectedOperations.update ? (
           <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
-            {' '}
-            {getColumnList('update')}{' '}
+            {getColumnList('update')}
           </div>
         ) : (
           <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>

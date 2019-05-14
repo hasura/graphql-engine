@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
 import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
@@ -60,13 +59,7 @@ class RelationshipEditor extends React.Component {
   };
 
   render() {
-    const {
-      dispatch,
-      tableName,
-      relName,
-      relConfig,
-      isObjRel,
-    } = this.props;
+    const { dispatch, tableName, relName, relConfig, isObjRel } = this.props;
 
     const { text, isEditting } = this.state;
     const { lcol, rtable, rcol } = relConfig;
