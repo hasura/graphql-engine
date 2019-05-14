@@ -216,7 +216,7 @@ FROM
       to_jsonb(
         array_remove(
           array_agg(
-            DISTINCT hdb_fkc :: JSONB
+            DISTINCT hdb_fkc.def :: JSONB
           ), 
           NULL
         )
