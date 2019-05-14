@@ -217,18 +217,9 @@ const operationToggleColumn = (column, operation) => {
   };
 };
 
-const operationToggleAllColumns = (
-  columns,
-  supportListeningToColumnsUpdate
-) => {
+const operationToggleAllColumns = columns => {
   return dispatch => {
-    if (supportListeningToColumnsUpdate) {
-      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
-    } else {
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
-    }
+    dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
   };
 };
 

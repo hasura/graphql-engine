@@ -3,12 +3,12 @@ import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 const Container = ({ location, children, metadata }) => {
-  const sidebar = <Sidebar location={location} metadata={metadata} />;
   const helmet = 'Metadata | Hasura';
+
+  const sidebar = <Sidebar location={location} metadata={metadata} />;
+
   const childrenWithProps = React.Children.map(children, child =>
-    React.cloneElement(child, {
-      metadata,
-    })
+    React.cloneElement(child, { metadata })
   );
   return (
     <PageContainer helmet={helmet} leftContainer={sidebar}>

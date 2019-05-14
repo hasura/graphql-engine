@@ -33,13 +33,13 @@ const MetadataOptions = props => {
   };
 
   const getMetadataUpdateSection = () => {
-    const updateSection = (
+    return (
       <div>
         <div key="meta_data_1" className={metaDataStyles.intro_note}>
           <h4>Reload metadata</h4>
           <div className={metaDataStyles.content_width}>
-            Refresh Hasura metadata, typically required if you have changed
-            the underlying postgres.
+            Refresh Hasura metadata, typically required if you have changed the
+            underlying postgres.
           </div>
         </div>
 
@@ -61,8 +61,6 @@ const MetadataOptions = props => {
         </div>
       </div>
     );
-
-    return updateSection;
   };
 
   const getClearSecretSection = () => {
@@ -119,6 +117,7 @@ const MetadataOptions = props => {
           .
         </div>
       </div>
+
       {getMetadataImportExportSection()}
 
       {getMetadataUpdateSection()}

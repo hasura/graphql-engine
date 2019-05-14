@@ -129,13 +129,10 @@ class StreamingLogs extends Component {
 
     const invocationGridHeadings = [];
     invocationColumns.map(column => {
-      //TODO check logic
-      if (!(column === 'redeliver' && false)) {
-        invocationGridHeadings.push({
-          Header: column,
-          accessor: column,
-        });
-      }
+      invocationGridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
     });
 
     const invocationRowsData = [];

@@ -5,8 +5,8 @@ import Tooltip from './Tooltip';
 import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
 
 import {
-  getValidQueryTypes,
-  queryToInternalNameMap,
+  getTriggerOperations,
+  triggerOperationMap,
   MANUAL_TRIGGER_VAR,
 } from './utils';
 
@@ -63,9 +63,9 @@ class OperationEditor extends React.Component {
      * Query types will have `CONSOLE_QUERY` only for version > 45
      *
      * */
-    const queryTypes = getValidQueryTypes();
+    const operationTypes = getTriggerOperations();
     const renderOperation = (qt, i) => {
-      const isChecked = Boolean(definition[queryToInternalNameMap[qt]]);
+      const isChecked = Boolean(definition[triggerOperationMap[qt]]);
 
       return (
         <div
@@ -88,7 +88,7 @@ class OperationEditor extends React.Component {
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent}>
           <div className={'col-md-12 ' + styles.padd_remove}>
-            {queryTypes.map((qt, i) => renderOperation(qt, i))}
+            {operationTypes.map((qt, i) => renderOperation(qt, i))}
           </div>
         </div>
         <div className={styles.modifyOpsCollapsedContent}>
@@ -137,7 +137,7 @@ class OperationEditor extends React.Component {
       <div className={styles.modifyOpsPadLeft}>
         <div className={styles.modifyOpsCollapsedContent}>
           <div className={'col-md-12 ' + styles.padd_remove}>
-            {queryTypes.map((qt, i) => (
+            {operationTypes.map((qt, i) => (
               <div
                 className={`${styles.opsCheckboxWrapper} col-md-2 ${
                   styles.padd_remove
@@ -146,11 +146,9 @@ class OperationEditor extends React.Component {
                 onClick={() => {
                   dispatch(
                     this.toggleOperation({
-                      query: queryToInternalNameMap[qt],
+                      query: triggerOperationMap[qt],
                       columns: allTableColumns.map(c => c.name),
-                      value: !modifyTrigger.definition[
-                        queryToInternalNameMap[qt]
-                      ],
+                      value: !modifyTrigger.definition[triggerOperationMap[qt]],
                     })
                   );
                 }}
@@ -159,7 +157,7 @@ class OperationEditor extends React.Component {
                   type="checkbox"
                   className={`${styles.opsCheckbox} ${styles.cursorPointer}`}
                   checked={Boolean(
-                    modifyTrigger.definition[queryToInternalNameMap[qt]]
+                    modifyTrigger.definition[triggerOperationMap[qt]]
                   )}
                 />
                 {qt}

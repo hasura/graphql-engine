@@ -5,12 +5,11 @@ import styles from '../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 
-const Sidebar = ({
-  location,
-  metadata,
-}) => {
+const Sidebar = ({ location, metadata }) => {
   const currentLocation = location.pathname;
+
   const sections = [];
+
   sections.push(
     <li
       role="presentation"
@@ -27,10 +26,12 @@ const Sidebar = ({
       </Link>
     </li>
   );
+
   let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
   if (metadata.inconsistentObjects.length > 0) {
     consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
   }
+
   sections.push(
     <li
       role="presentation"
@@ -50,7 +51,9 @@ const Sidebar = ({
       </Link>
     </li>
   );
+
   const content = <ul>{sections}</ul>;
+
   return <LeftContainer>{content}</LeftContainer>;
 };
 

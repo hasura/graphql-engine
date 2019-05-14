@@ -49,12 +49,14 @@ class RetryConfEditor extends React.Component {
       return;
     }
     dispatch(setRetryTimeout(iTimeout));
+
     this.props.save();
   };
 
   render() {
     const { styles, dispatch, modifyTrigger } = this.props;
     const retryConf = this.props.retryConf || {};
+
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent1}>

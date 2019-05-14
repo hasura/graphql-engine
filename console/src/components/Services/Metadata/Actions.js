@@ -4,7 +4,10 @@ import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
 import { filterSchema } from './metadataFilters';
-import { setConsistentSchema, setConsistentFunctions } from '../Data/DataActions';
+import {
+  setConsistentSchema,
+  setConsistentFunctions,
+} from '../Data/DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -110,14 +113,8 @@ export const loadInconsistentObjects = (
 };
 
 export const reloadMetadata = (successCb, failureCb) => {
-  return (dispatch, getState) => {
-    return dispatch(
-      loadInconsistentObjects(
-        true,
-        successCb,
-        failureCb
-      )
-    );
+  return dispatch => {
+    return dispatch(loadInconsistentObjects(true, successCb, failureCb));
   };
 };
 
