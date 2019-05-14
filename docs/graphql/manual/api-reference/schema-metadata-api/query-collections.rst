@@ -228,7 +228,7 @@ Args Syntax
    * - collection
      - true
      - :ref:`CollectionName`
-     - Names of query collections
+     - Name of a query collection to be added to the allow-list
 
 .. _drop_collection_from_allowlist:
 
@@ -265,4 +265,4 @@ Args Syntax
    * - collection
      - true
      - :ref:`CollectionName`
-     - Names of query collections
+     - Name of a query collection to be removed from the allow-list

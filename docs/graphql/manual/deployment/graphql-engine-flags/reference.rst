@@ -47,6 +47,8 @@ Or you can specify following options *(only via flags)*
   -d, --dbname             Database name to connect to
 
 
+.. _command-flags:
+
 Command flags
 ^^^^^^^^^^^^^
 
@@ -167,6 +169,10 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``live-quries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
      - multiplexed live queries are split into batches of the specified size. Default 100. 
+   * - ``enable-allowlist``
+     - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
+     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured allow-list. Default ``false``.
+  
 
 .. note::
 
