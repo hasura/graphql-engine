@@ -51,7 +51,7 @@ class WillLearn extends React.Component {
                 <div className={'flexList'}>
                   <div className={'willLearnList wd100 flexAlign'}>
                     <div className={'willLearnHeader'}>
-                      Frontend Tutorials (Mobile & Web)
+                      Frontend Tutorials <span> (Mobile & Web)</span>
                     </div>
                     {frontend}
                   </div>

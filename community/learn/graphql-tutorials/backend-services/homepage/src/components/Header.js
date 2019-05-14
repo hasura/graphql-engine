@@ -9,16 +9,16 @@ class TopBanner extends React.Component {
       <div className={'headerWrapper blueBgColor'}>
         <nav className="navbar navbar-default navbarDefault">
           <div className="container">
-            <div className="navbar-header">
-              <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <div className="navbar-header navbarHeader">
+              <div className={'logoWrapper'}>
+                <a href="https://hasura.io/" target="_blank" rel="noopener noreferrer"><img className={'img-responsive'} src={logo} alt={'Hasura logo'} /></a>
+              </div>
+              <button type="button" className="navbar-toggle collapsed navbarToggle" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 <span className="sr-only">Toggle navigation</span>
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
               </button>
-              <div className={'logoWrapper'}>
-                <a href="https://hasura.io/" target="_blank" rel="noopener noreferrer"><img className={'img-responsive'} src={logo} alt={'Hasura logo'} /></a>
-              </div>
             </div>
             <div id="navbar" className="navbar-collapse collapse">
               <ul className="nav navbar-nav navbar-right navBarWrapper">
