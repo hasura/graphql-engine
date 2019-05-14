@@ -3,14 +3,15 @@ module Hasura.RQL.DDL.EventTrigger
   , runCreateEventTriggerQuery
   , DeleteEventTriggerQuery
   , runDeleteEventTriggerQuery
-  , DeliverEventQuery
-  , runDeliverEvent
+  , RedeliverEventQuery
+  , runRedeliverEvent
+  , runInvokeEventTrigger
 
   -- TODO: review
   , delEventTriggerFromCatalog
   , subTableP2
   , subTableP2Setup
-  , mkTriggerQ
+  , mkAllTriggersQ
   , getEventTriggerDef
   , updateEventTriggerDef
   ) where
@@ -56,7 +57,7 @@ getTriggerSql
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
-  -> Maybe SubscribeOpSpec
+  -> SubscribeOpSpec
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
@@ -64,10 +65,10 @@ getTriggerSql op trn qt allCols strfyNum spec =
                    , (T.pack "QUALIFIED_TRIGGER_NAME", pgIdenTrigger op trn)
                    , (T.pack "QUALIFIED_TABLE", toSQLTxt qt)
                    ]
-      opCtx = maybe HashMap.empty (createOpCtx op) spec
+      opCtx = createOpCtx op spec
       context = HashMap.union globalCtx opCtx
   in
-      spec >> renderGingerTmplt context <$> triggerTmplt
+      renderGingerTmplt context <$> triggerTmplt
   where
     createOpCtx op1 (SubscribeOpSpec columns payload) =
       HashMap.fromList
@@ -82,11 +83,13 @@ getTriggerSql op trn qt allCols strfyNum spec =
         INSERT -> S.SEUnsafe "NULL"
         UPDATE -> getRowExpression OLD scs
         DELETE -> getRowExpression OLD scs
+        MANUAL -> S.SEUnsafe "NULL"
     renderNewDataExp op2 scs =
       case op2 of
         INSERT -> getRowExpression NEW scs
         UPDATE -> getRowExpression NEW scs
         DELETE -> S.SEUnsafe "NULL"
+        MANUAL -> S.SEUnsafe "NULL"
     getRowExpression opVar scs =
       case scs of
         SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
@@ -112,18 +115,32 @@ getTriggerSql op trn qt allCols strfyNum spec =
 
     fromMaybePayload = fromMaybe SubCStar
 
-mkTriggerQ
+mkAllTriggersQ
   :: TriggerName
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
   -> TriggerOpsDef
   -> Q.TxE QErr ()
-mkTriggerQ trn qt allCols strfyNum (TriggerOpsDef insert update delete) = do
-  let msql = getTriggerSql INSERT trn qt allCols strfyNum insert
-             <> getTriggerSql UPDATE trn qt allCols strfyNum update
-             <> getTriggerSql DELETE trn qt allCols strfyNum delete
-  case msql of
+mkAllTriggersQ trn qt allCols strfyNum fullspec = do
+  let insertDef = tdInsert fullspec
+      updateDef = tdUpdate fullspec
+      deleteDef = tdDelete fullspec
+  onJust insertDef (mkTriggerQ trn qt allCols strfyNum INSERT)
+  onJust updateDef (mkTriggerQ trn qt allCols strfyNum UPDATE)
+  onJust deleteDef (mkTriggerQ trn qt allCols strfyNum DELETE)
+
+mkTriggerQ
+  :: TriggerName
+  -> QualifiedTable
+  -> [PGColInfo]
+  -> Bool
+  -> Ops
+  -> SubscribeOpSpec
+  -> Q.TxE QErr ()
+mkTriggerQ trn qt allCols strfyNum op spec = do
+  let mTriggerSql = getTriggerSql op trn qt allCols strfyNum spec
+  case mTriggerSql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing  -> throw500 "no trigger sql generated"
 
@@ -146,10 +163,10 @@ addEventTriggerToCatalog qt allCols strfyNum etc = do
            VALUES ($1, 'table', $2, $3, $4)
          |] (name, sn, tn, Q.AltJ $ toJSON etc) True
 
-  mkTriggerQ name qt allCols strfyNum opsdef
+  mkAllTriggersQ name qt allCols strfyNum fullspec
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name opsdef _ _ _ _) = etc
+    (EventTriggerConf name fullspec _ _ _ _) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -169,9 +186,9 @@ updateEventTriggerToCatalog
 updateEventTriggerToCatalog qt allCols strfyNum etc = do
   updateEventTriggerDef name etc
   delTriggerQ name
-  mkTriggerQ name qt allCols strfyNum opsdef
-  where
-    EventTriggerConf name opsdef _ _ _ _ = etc
+  mkAllTriggersQ name qt allCols strfyNum fullspec
+ where
+    EventTriggerConf name fullspec _ _ _ _ = etc
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
@@ -205,7 +222,7 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
   adminOnly
   ti <- askTabInfo qt
   -- can only replace for same table
@@ -218,7 +235,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete retryConf webho
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete) webhook webhookFromEnv rconf mheaders)
+  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -245,7 +262,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   addEventTriggerToCache qt eTrigInfo (tabDep:getTrigDefDeps qt def)
 
 getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
-getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel) =
+getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
                       , subsOpSpecDeps <$> mUpd
                       , subsOpSpecDeps <$> mDel
@@ -310,17 +327,48 @@ runDeleteEventTriggerQuery q =
 
 deliverEvent
   :: (QErrM m, MonadTx m)
-  => DeliverEventQuery -> m EncJSON
-deliverEvent (DeliverEventQuery eventId) = do
+  => RedeliverEventQuery -> m EncJSON
+deliverEvent (RedeliverEventQuery eventId) = do
   _ <- liftTx $ fetchEvent eventId
   liftTx $ markForDelivery eventId
   return successMsg
 
-runDeliverEvent
+runRedeliverEvent
   :: (QErrM m, UserInfoM m, MonadTx m)
-  => DeliverEventQuery -> m EncJSON
-runDeliverEvent q =
+  => RedeliverEventQuery -> m EncJSON
+runRedeliverEvent q =
   adminOnly >> deliverEvent q
+
+insertManualEvent
+  :: QualifiedTable
+  -> TriggerName
+  -> Value
+  -> Q.TxE QErr EventId
+insertManualEvent qt trn rowData = do
+  let op = T.pack $ show MANUAL
+  eids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
+           SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
+                |] (sn, tn, trn, op, Q.AltJ $ toJSON rowData) True
+  getEid eids
+  where
+    QualifiedObject sn tn = qt
+    getEid []    = throw500 "could not create manual event"
+    getEid (x:_) = return x
+
+runInvokeEventTrigger
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
+  => InvokeEventTriggerQuery -> m EncJSON
+runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
+  adminOnly
+  trigInfo <- askEventTriggerInfo name
+  assertManual $ etiOpsDef trigInfo
+  ti  <- askTabInfoFromTrigger name
+  eid <-liftTx $ insertManualEvent (tiName ti) name payload
+  return $ encJFromJValue $ object ["event_id" .= eid]
+  where
+    assertManual (TriggerOpsDef _ _ _ man) = case man of
+      Just True -> return ()
+      _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)

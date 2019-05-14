@@ -32,9 +32,8 @@ class EventTrigger extends Component {
     affected_rows
   }
 }`;
-
+    const showIntroSection = !listingTrigger.length;
     const getIntroSection = () => {
-      const showIntroSection = !listingTrigger.length;
       if (!showIntroSection) {
         return null;
       }
@@ -70,7 +69,7 @@ class EventTrigger extends Component {
             className={styles.add_mar_left}
             onClick={handleClick}
           >
-            Add
+            Create
           </Button>
         );
       }
@@ -113,6 +112,7 @@ class EventTrigger extends Component {
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
             awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
             adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+            isAvailable={showIntroSection}
           />
         </div>
       </div>
