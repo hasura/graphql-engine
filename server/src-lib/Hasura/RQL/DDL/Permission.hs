@@ -86,7 +86,6 @@ buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
   QualifiedObject hdbViewsSchema $ TableName
   (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
-    hdbViewsSchema = SchemaName "hdb_views"
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn
 

@@ -99,7 +99,7 @@ request.
 
 .. code-block:: http
 
-   POST /v1alpha1/graphql HTTP/1.1
+   POST /v1/graphql HTTP/1.1
    Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
    X-Hasura-Role: editor
 

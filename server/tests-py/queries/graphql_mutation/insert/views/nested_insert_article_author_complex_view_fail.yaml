@@ -1,6 +1,6 @@
 description: Insert article along with it's author_complex object (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
      mutation article_author_complex{

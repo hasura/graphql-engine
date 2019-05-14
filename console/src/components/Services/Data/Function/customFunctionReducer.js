@@ -14,7 +14,7 @@ import { SERVER_CONSOLE_MODE } from '../../../../constants';
 import { loadMigrationStatus } from '../../../Main/Actions';
 import { handleMigrationErrors } from '../../EventTrigger/EventActions';
 
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 // import { push } from 'react-router-redux';
 
 import { fetchTrackedFunctions } from '../DataActions';

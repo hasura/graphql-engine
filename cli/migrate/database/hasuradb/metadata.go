@@ -13,7 +13,7 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return nil, err
@@ -46,7 +46,7 @@ func (h *HasuraDB) ResetMetadata() error {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -72,7 +72,7 @@ func (h *HasuraDB) ReloadMetadata() error {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -106,7 +106,7 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 		},
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -151,7 +151,7 @@ func (h *HasuraDB) Query(data []interface{}) error {
 		Args: data,
 	}
 
-	resp, body, err := h.sendQuery(query)
+	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
 		return err

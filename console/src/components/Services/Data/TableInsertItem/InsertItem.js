@@ -5,12 +5,7 @@ import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import {
-  getPlaceholder,
-  BOOLEAN,
-  JSONB,
-  JSONDTYPE,
-} from '../../../../constants';
+import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
 
 class InsertItem extends Component {
   constructor() {

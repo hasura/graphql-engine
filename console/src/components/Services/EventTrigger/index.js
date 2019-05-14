@@ -10,4 +10,4 @@ export processedEventsConnector from './ProcessedEvents/ViewTable';
 export pendingEventsConnector from './PendingEvents/ViewTable';
 export runningEventsConnector from './RunningEvents/ViewTable';
 export streamingLogsConnector from './StreamingLogs/Logs';
-export schemaConnector from './Schema/Schema';
+export landingConnector from './Landing/EventTrigger';

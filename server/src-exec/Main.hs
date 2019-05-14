@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications       #-}
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -16,6 +17,7 @@ import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Text                  as T
+import qualified Data.Time.Clock            as Clock
 import qualified Data.Yaml                  as Y
 import qualified Network.HTTP.Client        as HTTP
 import qualified Network.HTTP.Client.TLS    as HTTP
@@ -26,10 +28,10 @@ import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
-import           Hasura.RQL.Types           (SQLGenCtx (..), adminUserInfo,
-                                             emptySchemaCache)
+import           Hasura.RQL.Types           (SQLGenCtx (..), SchemaCache (..),
+                                             adminUserInfo, emptySchemaCache)
 import           Hasura.Server.App          (SchemaCacheRef (..), getSCFromRef,
-                                             mkWaiApp)
+                                             logInconsObjs, mkWaiApp)
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates (checkForUpdates)
 import           Hasura.Server.Init
@@ -122,6 +124,8 @@ main =  do
                 mJwtSecret mUnAuthRole corsCfg enableConsole
                 enableTelemetry strfyNum enabledAPIs lqOpts) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
+
+      initTime <- Clock.getCurrentTime
       -- log serve options
       unLogger logger $ serveOptsToLog so
       hloggerCtx  <- mkLoggerCtx $ defaultLoggerSettings False
@@ -138,18 +142,15 @@ main =  do
       pool <- Q.initPGPool ci cp pgLogger
 
       -- safe init catalog
-      initRes <- initialise sqlGenCtx logger ci httpManager
-
-      -- prepare event triggers data
-      prepareEvents logger ci
+      initRes <- initialise pool sqlGenCtx logger httpManager
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx pool httpManager am
+        mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
           corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
 
-      sc <- getSCFromRef cacheRef
       -- log inconsistent schema objects
-      unLogger logger $ inconsistentMetadataLog sc
+      inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef
+      logInconsObjs logger inconsObjs
 
       -- start a background thread for schema sync
       startSchemaSync sqlGenCtx pool logger httpManager
@@ -161,8 +162,9 @@ main =  do
       evFetchMilliSec  <- getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
       logEnvHeaders <- getFromEnv False "LOG_HEADERS_FROM_ENV"
 
+      -- prepare event triggers data
+      prepareEvents pool logger
       eventEngineCtx <- atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-
       let scRef = _scrCache cacheRef
       unLogger logger $
         mkGenericStrLog "event_triggers" "starting workers"
@@ -177,36 +179,42 @@ main =  do
         unLogger logger $ mkGenericStrLog "telemetry" telemetryNotice
         void $ C.forkIO $ runTelemetry logger httpManager scRef initRes
 
+      finishTime <- Clock.getCurrentTime
+      let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
       unLogger logger $
-        mkGenericStrLog "server" "starting API server"
+        mkGenericStrLog "server" $
+        "starting API server, took " <> show @Double apiInitTime <> "s"
       Warp.runSettings warpSettings app
 
     HCExport -> do
       ci <- procConnInfo rci
-      res <- runTx pgLogger ci fetchMetadata
+      res <- runTx' pgLogger ci fetchMetadata
       either printErrJExit printJSON res
 
     HCClean -> do
       ci <- procConnInfo rci
-      res <- runTx pgLogger ci cleanCatalog
+      res <- runTx' pgLogger ci cleanCatalog
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
       queryBs <- BL.getContents
       ci <- procConnInfo rci
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin sqlGenCtx pgLogger ci httpManager $ execQuery queryBs
+      pool <- getMinimalPool pgLogger ci
+      res <- runAsAdmin pool sqlGenCtx httpManager $ execQuery queryBs
       either printErrJExit BLC.putStrLn res
 
     HCVersion -> putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
   where
 
-    runTx pgLogger ci tx = do
+    runTx pool tx =
+      runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+
+    runTx' pgLogger ci tx = do
       pool <- getMinimalPool pgLogger ci
       runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
 
-    runAsAdmin sqlGenCtx pgLogger ci httpManager m = do
-      pool <- getMinimalPool pgLogger ci
+    runAsAdmin pool sqlGenCtx httpManager m = do
       res  <- runExceptT $ peelRun emptySchemaCache adminUserInfo
               httpManager sqlGenCtx (PGExecCtx pool Q.Serializable) m
       return $ fmap fst res
@@ -219,28 +227,28 @@ main =  do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       Q.initPGPool ci connParams pgLogger
 
-    initialise sqlGenCtx (Logger logger) ci httpMgr = do
+    initialise pool sqlGenCtx (Logger logger) httpMgr = do
       currentTime <- getCurrentTime
-      let pgLogger = mkPGLogger $ Logger logger
       -- initialise the catalog
-      initRes <- runAsAdmin sqlGenCtx pgLogger ci httpMgr $ initCatalogSafe currentTime
+      initRes <- runAsAdmin pool sqlGenCtx httpMgr $
+                 initCatalogSafe currentTime
       either printErrJExit (logger . mkGenericStrLog "db_init") initRes
 
       -- migrate catalog if necessary
-      migRes <- runAsAdmin sqlGenCtx pgLogger ci httpMgr $ migrateCatalog currentTime
+      migRes <- runAsAdmin pool sqlGenCtx httpMgr $
+                migrateCatalog currentTime
       either printErrJExit (logger . mkGenericStrLog "db_migrate") migRes
 
       -- generate and retrieve uuids
-      getUniqIds pgLogger ci
+      getUniqIds pool
 
-    prepareEvents (Logger logger) ci = do
-      let pgLogger = mkPGLogger $ Logger logger
+    prepareEvents pool (Logger logger) = do
       logger $ mkGenericStrLog "event_triggers" "preparing data"
-      res <- runTx pgLogger ci unlockAllEvents
+      res <- runTx pool unlockAllEvents
       either printErrJExit return res
 
-    getUniqIds pgLogger ci = do
-      eDbId <- runTx pgLogger ci getDbId
+    getUniqIds pool = do
+      eDbId <- runTx pool getDbId
       dbId <- either printErrJExit return eDbId
       fp <- liftIO generateFingerprint
       return (dbId, fp)

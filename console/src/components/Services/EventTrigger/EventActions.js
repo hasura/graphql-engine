@@ -15,7 +15,7 @@ import { initQueries } from '../Data/DataActions';
 import {
   filterInconsistentMetadata,
   loadInconsistentObjects,
-} from '../Data/Metadata/Actions';
+} from '../Metadata/Actions';
 import { replace } from 'react-router-redux';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -345,7 +345,7 @@ const redeliverEvent = eventId => (dispatch, getState) => {
     method: 'POST',
     headers: dataHeaders(getState),
     body: JSON.stringify({
-      type: 'deliver_event',
+      type: 'redeliver_event',
       args: {
         event_id: eventId,
       },

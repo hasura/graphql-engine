@@ -48,7 +48,7 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
   // can also be a function that accepts a `context` object (SSR only) and returns a config
   const config = {
     link: new HttpLink({
-      uri: 'https://my-app.herokuapp.com/v1alpha1/graphql', // <- Configure GraphQL Server URL (must be absolute)
+      uri: 'https://my-app.herokuapp.com/v1/graphql', // <- Configure GraphQL Server URL (must be absolute)
     })
   }
 

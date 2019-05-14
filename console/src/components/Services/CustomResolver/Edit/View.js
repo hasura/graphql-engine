@@ -9,7 +9,7 @@ import { push } from 'react-router-redux';
 import { fetchResolver, RESET } from '../Add/addResolverReducer';
 
 import { VIEW_RESOLVER } from '../customActions';
-import ReloadMetadata from '../../Data/Metadata/ReloadMetadata';
+import ReloadMetadata from '../../Metadata/ReloadMetadata';
 
 import { appPrefix } from '../constants';
 
