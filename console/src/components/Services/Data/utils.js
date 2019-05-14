@@ -284,7 +284,7 @@ FROM
           fk_ref_table.table_name, 
           fk_ref_table.table_schema
       ) AS hdb_fkc ON hdb_fkc.def#>>'{table_schema}' = ist.table_schema 
-      and hdb_fkc.def#>>'{table_name}' = ist.table_schema 
+      and hdb_fkc.def#>>'{table_name}' = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_ofkc ON hdb_ofkc.ref_table_table_schema = ist.table_schema 
       and hdb_ofkc.ref_table = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_table AS ofk_ref_table ON ofk_ref_table.table_schema = hdb_ofkc.table_schema 
