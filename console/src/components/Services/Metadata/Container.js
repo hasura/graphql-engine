@@ -3,30 +3,9 @@ import semverCheck from '../../../helpers/semver';
 import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
-const useMetadataSemver = serverVersion => {
-  const [
-    supportInconsistentMetadata,
-    setSupportInconsistentMetadata,
-  ] = useState(false);
-  useEffect(() => {
-    if (serverVersion) {
-      setSupportInconsistentMetadata(
-        semverCheck('inconsistentState', serverVersion)
-      );
-    }
-  }, [serverVersion]);
-  return {
-    supportInconsistentMetadata,
-  };
-};
-
 const Container = ({ location, serverVersion, children, metadata }) => {
-  const { supportInconsistentMetadata } = useMetadataSemver(
-    serverVersion
-  );
   const sidebar = (
     <Sidebar
-      supportInconsistentMetadata={supportInconsistentMetadata}
       location={location}
       metadata={metadata}
     />
@@ -34,7 +13,6 @@ const Container = ({ location, serverVersion, children, metadata }) => {
   const helmet = 'Metadata | Hasura';
   const childrenWithProps = React.Children.map(children, child =>
     React.cloneElement(child, {
-      supportInconsistentMetadata,
       metadata,
     })
   );

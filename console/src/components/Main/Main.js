@@ -38,7 +38,7 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
     dispatch(loadServerVersion()).then(() => {
-      dispatch(loadInconsistentObjects(this.props.serverVersion)).then(() => {
+      dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
       dispatch(loadConsoleOpts());

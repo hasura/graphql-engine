@@ -2,7 +2,6 @@ const semver = require('semver');
 
 // TODO check events redeliver code
 const componentsSemver = {
-  inconsistentState: '1.0.0-alpha43',
 };
 
 const getPreRelease = version => {

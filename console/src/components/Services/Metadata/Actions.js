@@ -3,7 +3,6 @@ import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
-import semverCheck from '../../../helpers/semver';
 import { filterSchema } from './metadataFilters';
 import { setConsistentSchema, setConsistentFunctions } from '../Data/DataActions';
 import {
@@ -53,21 +52,11 @@ export const filterInconsistentMetadata = (
 };
 
 export const loadInconsistentObjects = (
-  serverVersion,
   shouldReloadCache,
   successCb,
   failureCb
 ) => {
   return (dispatch, getState) => {
-    if (!semverCheck('inconsistentState', serverVersion)) {
-      return Promise.resolve();
-    }
-    if (!serverVersion) {
-      const serverVersionFromState = getState().main.serverVersion;
-      if (!semverCheck('inconsistentState', serverVersionFromState)) {
-        return Promise.resolve();
-      }
-    }
     const headers = getState().tables.dataHeaders;
     dispatch({ type: LOADING_METADATA });
     return dispatch(
@@ -122,32 +111,8 @@ export const loadInconsistentObjects = (
 
 export const reloadMetadata = (successCb, failureCb) => {
   return (dispatch, getState) => {
-    const serverVersionFromState = getState().main.serverVersion;
-    if (!semverCheck('inconsistentState', serverVersionFromState)) {
-      const headers = getState().tables.dataHeaders;
-      return dispatch(
-        requestAction(endpoints.query, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(reloadCacheQuery),
-        })
-      ).then(
-        data => {
-          if (successCb) {
-            successCb(data);
-          }
-        },
-        error => {
-          console.error(error);
-          if (failureCb) {
-            failureCb(error);
-          }
-        }
-      );
-    }
     return dispatch(
       loadInconsistentObjects(
-        serverVersionFromState,
         true,
         successCb,
         failureCb
@@ -170,7 +135,7 @@ export const dropInconsistentObjects = () => {
       () => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
-        dispatch(loadInconsistentObjects(null, false));
+        dispatch(loadInconsistentObjects(false));
       },
       error => {
         console.error(error);

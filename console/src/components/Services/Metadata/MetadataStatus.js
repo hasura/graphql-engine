@@ -13,16 +13,12 @@ import CrossIcon from '../../Common/Icons/Cross';
 
 const MetadataStatus = ({
   dispatch,
-  supportInconsistentMetadata,
   metadata,
 }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
   };
-  if (!supportInconsistentMetadata) {
-    return null;
-  }
   const inconsistentObjectsTable = () => {
     return (
       <table
@@ -100,7 +96,7 @@ const MetadataStatus = ({
   };
 
   const reloadCacheAndLoadInconsistentObjects = () => {
-    dispatch(loadInconsistentObjects(null, true))
+    dispatch(loadInconsistentObjects(true))
       .then(() => {
         dispatch(showSuccessNotification('Metadata reloaded'));
       })

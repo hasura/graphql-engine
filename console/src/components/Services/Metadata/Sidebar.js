@@ -7,7 +7,6 @@ import CrossIcon from '../../Common/Icons/Cross';
 
 const Sidebar = ({
   location,
-  supportInconsistentMetadata,
   metadata,
 }) => {
   const currentLocation = location.pathname;
@@ -28,31 +27,29 @@ const Sidebar = ({
       </Link>
     </li>
   );
-  if (supportInconsistentMetadata) {
-    let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
-    if (metadata.inconsistentObjects.length > 0) {
-      consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
-    }
-    sections.push(
-      <li
-        role="presentation"
-        className={
-          currentLocation.includes('metadata/status') ? styles.active : ''
-        }
-      >
-        <Link
-          className={styles.linkBorder}
-          to={'/metadata/status'}
-          data-test="metadata-status-link"
-        >
-          <div className={styles.display_flex}>
-            Status
-            {consistentIcon}
-          </div>
-        </Link>
-      </li>
-    );
+  let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
+  if (metadata.inconsistentObjects.length > 0) {
+    consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
   }
+  sections.push(
+    <li
+      role="presentation"
+      className={
+        currentLocation.includes('metadata/status') ? styles.active : ''
+      }
+    >
+      <Link
+        className={styles.linkBorder}
+        to={'/metadata/status'}
+        data-test="metadata-status-link"
+      >
+        <div className={styles.display_flex}>
+          Status
+          {consistentIcon}
+        </div>
+      </Link>
+    </li>
+  );
   const content = <ul>{sections}</ul>;
   return <LeftContainer>{content}</LeftContainer>;
 };
