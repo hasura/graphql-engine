@@ -71,8 +71,8 @@
           document.body.append(scriptElem);
         }
       };
-      if (navigator.onLine === false || window.__env.cdnAssets === true) {
-        console.log('offline, loading assets from static-dir');
+      if (navigator.onLine === false || window.__env.cdnAssets === false) {
+        console.log('offline/cdnAssets=false, loading assets from static-dir');
         if (window.__env.consoleMode === 'server') {
           window.__env.assetsPath =
             window.location.pathname.slice(
@@ -82,17 +82,18 @@
           window.__env.assetsPath = '/assets';
         }
       }
+      prependSlash = (str) => str === '' ? '' : '/' + str;
       loadResource(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
       loadResource(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
-      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
-      loadResource(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
+      loadResource(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.css.gz');
+      loadResource(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.js.gz');
+      loadResource(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/vendor.js.gz');
 
       console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
       console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.css.gz');
-      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/main.js.gz');
-      console.log(window.__env.assetsPath + "/" + window.__env.assetsVersion + '/vendor.js.gz');
+      console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.css.gz');
+      console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.js.gz');
+      console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/vendor.js.gz');
     </script>
 
   </body>

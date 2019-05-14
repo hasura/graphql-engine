@@ -4,6 +4,7 @@
 
 module Hasura.Server.App where
 
+import Debug.Trace
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
@@ -19,9 +20,6 @@ import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
-#ifdef LocalConsole
-import qualified Data.FileEmbed                         as FE
-#endif
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
@@ -72,28 +70,34 @@ isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
 #ifdef LocalConsole
-consoleAssetsPath :: Text
-consoleAssetsPath = "/static"
+defaultConsoleAssetsDir :: Text
+defaultConsoleAssetsDir = "../console/static/dist"
 #else
-consoleAssetsPath :: Text
-consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
+defaultConsoleAssetsDir :: Text
+defaultConsoleAssetsDir = "/srv/console-assets"
 #endif
 
-consoleAssetsRemotePath :: Text
-consoleAssetsRemotePath = "https://graphql-engine-cdn.hasura.io/console/assets"
+consoleAssetsPath :: Text
+consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
 
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text
+              -> Either String T.Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-                  object [ "assetsPath" .= consoleAssetsPath
-                         , "assetsVersion" .= consoleVersion
-                         , "isAdminSecretSet" .= isAdminSecretSet authMode
-                         , "consolePath" .= consolePath
-                         , "enableTelemetry" .= boolToText enableTelemetry
-                         , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-                         ]
+      object [ "assetsPath" .= consoleAssetsPath
+        , "isAdminSecretSet" .= isAdminSecretSet authMode
+        , "consolePath" .= consolePath
+        , "enableTelemetry" .= boolToText enableTelemetry
+#ifdef LocalConsole
+        , "cdnAssets" .= boolToText False
+        , "assetsVersion" .= ("" :: Text)
+#else
+        , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+        , "assetsVersion" .= consoleVersion
+#endif
+      ]
     consolePath = case path of
       "" -> "/console"
       r  -> "/console/" <> r
@@ -333,19 +337,16 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-defaultConsoleAssetsDir :: Text
-defaultConsoleAssetsDir = "/console-assets"
-
 consoleAssetsHandler :: Maybe Text -> FilePath -> Handler APIResp
 consoleAssetsHandler mdir path = do
   eFileContents <- liftIO $ try $ BL.readFile $
     joinPath [T.unpack dir, path]
   fileContents <- either throwException return eFileContents
-  -- all assets should be gzipped
   return $ RawResp headers fileContents
   where
     dir = fromMaybe defaultConsoleAssetsDir mdir
     fn = T.pack $ takeFileName path
+    -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
       Just v  -> (v, [gzipHeader])
       Nothing -> (fn, [])
@@ -566,16 +567,5 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- console html
       get ("console" <//> wildcard) $ \path ->
         either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
-
-#ifdef LocalConsole
-      get "static/main.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.js")
-      get "static/main.css" $ do
-        setHeader "Content-Type" "text/css;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.css")
-      get "static/vendor.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/vendor.js")
-#endif
+          mkConsoleHTML path (scAuthMode serverCtx)
+            enableTelemetry consoleAssetsDir
