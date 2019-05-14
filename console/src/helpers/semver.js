@@ -77,4 +77,8 @@ const semverCheck = (component, serverVersion) => {
   return false;
 };
 
+export {
+  componentsSemver
+};
+
 export default semverCheck;
