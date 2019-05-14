@@ -26,7 +26,7 @@ class DataSubSidebar extends React.Component {
     this.setTrackedTables(currentSchema, schema);
   }
 
-  componentWillReceiveProps(nextProps) {
+  shouldComponentUpdate(nextProps) {
     const { currentSchema, schema } = this.props;
     if (
       currentSchema !== nextProps.currentSchema ||
@@ -34,13 +34,17 @@ class DataSubSidebar extends React.Component {
     ) {
       this.setTrackedTables(nextProps.currentSchema, nextProps.schema);
     }
+    return true;
   }
 
   setTrackedTables(currentSchema, schema) {
-    this.state.trackedTables = schema.filter(
+    const trackedTables = schema.filter(
       table => table.is_table_tracked && table.table_schema === currentSchema
     );
-    this.state.tableList = this.state.trackedTables;
+    this.setState({
+      trackedTables: trackedTables,
+      tableList: trackedTables,
+    });
   }
 
   tableSearch(e) {
@@ -73,8 +77,10 @@ class DataSubSidebar extends React.Component {
       serverVersion,
     } = this.props;
 
+    const { trackedTables, tableList } = this.state;
+
     const handleFunc = semverCheck('customFunctionSection', serverVersion);
-    const trackedTablesLength = this.state.trackedTables.length;
+    const trackedTablesLength = trackedTables.length;
 
     const getSearchInput = () => {
       return (
@@ -96,7 +102,7 @@ class DataSubSidebar extends React.Component {
       ];
 
       const tables = {};
-      this.state.tableList.map(t => {
+      tableList.map(t => {
         if (t.is_table_tracked) {
           tables[t.table_name] = t;
         }
@@ -104,7 +110,7 @@ class DataSubSidebar extends React.Component {
 
       const currentLocation = location.pathname;
 
-      if (this.state.tableList && this.state.tableList.length) {
+      if (tableList && tableList.length) {
         tableLinks = Object.keys(tables)
           .sort()
           .map((tableName, i) => {
