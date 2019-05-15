@@ -88,8 +88,9 @@ instance ToJSON InsDelSpec where
     ]
 
 instance FromJSON InsDelSpec where
-  parseJSON (Object v) = InsDelSpec <$>  (PayloadColumns <$> v .: "payload")
-  parseJSON _          = fail "adfa"
+  parseJSON (Object v) = InsDelSpec <$>
+    ((PayloadColumns <$> v .: "payload") <|> pure defaultPayload )
+  parseJSON _          = fail "expected object for spec"
 
 instance ToJSON UpdSpec where
   toJSON (UpdSpec payload listen) = object
@@ -98,8 +99,10 @@ instance ToJSON UpdSpec where
     ]
 
 instance FromJSON UpdSpec where
-  parseJSON (Object v) = UpdSpec <$> (PayloadColumns <$> v .: "payload") <*> (ListenColumns <$> v .: "columns")
-  parseJSON _          = fail "adfa"
+  parseJSON (Object v) = UpdSpec
+    <$> ((PayloadColumns <$> v .: "payload") <|> pure defaultPayload)
+    <*> ((ListenColumns <$> v .: "columns") <|> pure defaultListenCols)
+  parseJSON _          = fail "expected object for spec"
 
 defaultNumRetries :: Int
 defaultNumRetries = 0
@@ -112,6 +115,12 @@ defaultTimeoutSeconds = 60
 
 defaultRetryConf :: RetryConf
 defaultRetryConf = RetryConf defaultNumRetries defaultRetryInterval (Just defaultTimeoutSeconds)
+
+defaultPayload :: PayloadColumns
+defaultPayload = PayloadColumns SubCStar
+
+defaultListenCols :: ListenColumns
+defaultListenCols = ListenColumns $ SubCArray []
 
 data RetryConf
   = RetryConf

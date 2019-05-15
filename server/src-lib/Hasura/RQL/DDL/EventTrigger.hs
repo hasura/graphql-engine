@@ -55,7 +55,7 @@ getTriggerSql
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
-  -> SubscribeOpSpec
+  -> Either InsDelSpec UpdSpec
   -> Maybe T.Text
 getTriggerSql op trn qt allCols strfyNum spec =
   let globalCtx =  HashMap.fromList
@@ -77,18 +77,20 @@ getTriggerSql op trn qt allCols strfyNum spec =
       else
         False
 
-    createOpCtx op1 spec' = case spec' of
-      InsDelSpec payload -> HashMap.fromList
+    createOpCtx op1 = either
+      (\(InsDelSpec payload) -> HashMap.fromList
         [ (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ getPayloadCols payload )
         , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ getPayloadCols payload )
         ]
-      UpdSpec listenCols payload -> HashMap.fromList
+      )
+      (\(UpdSpec payload listenCols) -> HashMap.fromList
         [ (T.pack "SHOULD_DIFF", T.pack $ show $ shouldDiff op1 (getListenCols listenCols))
         , (T.pack "OLD_ROW", toSQLTxt $ renderRow OLD (getListenCols listenCols))
         , (T.pack "NEW_ROW", toSQLTxt $ renderRow NEW (getListenCols listenCols))
         , (T.pack "OLD_PAYLOAD_EXPRESSION", toSQLTxt $ renderOldDataExp op1 $ getPayloadCols payload )
         , (T.pack "NEW_PAYLOAD_EXPRESSION", toSQLTxt $ renderNewDataExp op1 $ getPayloadCols payload )
         ]
+      )
     renderOldDataExp op2 scs =
       case op2 of
         INSERT -> S.SEUnsafe "NULL"
@@ -135,20 +137,45 @@ mkAllTriggersQ trn qt allCols strfyNum fullspec = do
   let insertDef = tdInsert fullspec
       updateDef = tdUpdate fullspec
       deleteDef = tdDelete fullspec
-  onJust insertDef (mkTriggerQ trn qt allCols strfyNum INSERT)
-  onJust updateDef (mkTriggerQ trn qt allCols strfyNum UPDATE)
-  onJust deleteDef (mkTriggerQ trn qt allCols strfyNum DELETE)
+  onJust insertDef (mkInsTriggerQ trn qt allCols strfyNum )
+  onJust updateDef (mkUpdTriggerQ trn qt allCols strfyNum )
+  onJust deleteDef (mkDelTriggerQ trn qt allCols strfyNum )
 
-mkTriggerQ
+mkInsTriggerQ
   :: TriggerName
   -> QualifiedTable
   -> [PGColInfo]
   -> Bool
-  -> Ops
-  -> SubscribeOpSpec
+  -> InsDelSpec
   -> Q.TxE QErr ()
-mkTriggerQ trn qt allCols strfyNum op spec = do
-  let mTriggerSql = getTriggerSql op trn qt allCols strfyNum spec
+mkInsTriggerQ trn qt allCols strfyNum spec = do
+  let mTriggerSql = getTriggerSql INSERT trn qt allCols strfyNum (Left spec)
+  case mTriggerSql of
+    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
+    Nothing  -> throw500 "no trigger sql generated"
+
+mkUpdTriggerQ
+  :: TriggerName
+  -> QualifiedTable
+  -> [PGColInfo]
+  -> Bool
+  -> UpdSpec
+  -> Q.TxE QErr ()
+mkUpdTriggerQ trn qt allCols strfyNum spec = do
+  let mTriggerSql = getTriggerSql UPDATE trn qt allCols strfyNum (Right spec)
+  case mTriggerSql of
+    Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
+    Nothing  -> throw500 "no trigger sql generated"
+
+mkDelTriggerQ
+  :: TriggerName
+  -> QualifiedTable
+  -> [PGColInfo]
+  -> Bool
+  -> InsDelSpec
+  -> Q.TxE QErr ()
+mkDelTriggerQ trn qt allCols strfyNum spec = do
+  let mTriggerSql = getTriggerSql DELETE trn qt allCols strfyNum (Left spec)
   case mTriggerSql of
     Just sql -> Q.multiQE defaultTxErrorHandler (Q.fromText sql)
     Nothing  -> throw500 "no trigger sql generated"
@@ -239,24 +266,26 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
     ti' <- askTabInfoFromTrigger name
     when (tiName ti' /= tiName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
-  onJust insert $ assertCols ti
-  onJust update $ assertCols ti
-  onJust delete $ assertCols ti
+  onJust insert $ assertInsCols ti
+  onJust update $ assertUpdCols ti
+  onJust delete $ assertDelCols ti
 
   let rconf = fromMaybe defaultRetryConf retryConf
   return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
   where
-    assertCols ti spec = case spec of
-      InsDelSpec (PayloadColumns cols) -> case cols of
+    assertInsCols ti (InsDelSpec (PayloadColumns cols)) = case cols of
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
-      UpdSpec (ListenColumns listenCols) (PayloadColumns payload) -> do
+    assertUpdCols ti (UpdSpec (PayloadColumns payload) (ListenColumns listenCols)) = do
         case payload of
           SubCStar         -> return ()
           SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
         case listenCols of
           SubCStar         -> return ()
           SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
+    assertDelCols ti (InsDelSpec (PayloadColumns cols)) = case cols of
+        SubCStar         -> return ()
+        SubCArray pgcols -> forM_ pgcols (assertPGCol (tiFieldInfoMap ti) "")
 
 --(QErrM m, CacheRWM m, MonadTx m, MonadIO m)
 
@@ -277,26 +306,26 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
 
 getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
 getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
-  mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
-                      , subsOpSpecDeps <$> mUpd
-                      , subsOpSpecDeps <$> mDel
+  mconcat $ catMaybes [ subsOpSpecInsDelDeps <$> mIns
+                      , subsOpSpecUpdDeps <$> mUpd
+                      , subsOpSpecInsDelDeps <$> mDel
                       ]
   where
-    subsOpSpecDeps :: SubscribeOpSpec -> [SchemaDependency]
-    subsOpSpecDeps os =
-      let listenCols = getListenColsFromSub os
+    subsOpSpecUpdDeps :: UpdSpec -> [SchemaDependency]
+    subsOpSpecUpdDeps (UpdSpec (PayloadColumns payload) (ListenColumns cols)) =
+      let listenCols = getColsFromSub cols
           listenColDeps = flip map listenCols $ \col ->
             SchemaDependency (SOTableObj qt (TOCol col)) "listen column"
-          payload = getPayloadColsFromSub os
-          payloadDeps = flip map payload $ \col ->
+          payloadCols = getColsFromSub payload
+          payloadDeps = flip map payloadCols $ \col ->
             SchemaDependency (SOTableObj qt (TOCol col)) "payload"
         in listenColDeps <> payloadDeps
-    getListenColsFromSub spec = case spec of
-      InsDelSpec _                   -> []
-      UpdSpec (ListenColumns cols) _ -> getColsFromSub cols
-    getPayloadColsFromSub spec = case spec of
-      InsDelSpec (PayloadColumns payload) -> getColsFromSub payload
-      UpdSpec _ (PayloadColumns payload)  -> getColsFromSub payload
+    subsOpSpecInsDelDeps :: InsDelSpec -> [SchemaDependency]
+    subsOpSpecInsDelDeps (InsDelSpec (PayloadColumns payload) ) =
+      let payloadCols = getColsFromSub payload
+          payloadDeps = flip map payloadCols $ \col ->
+            SchemaDependency (SOTableObj qt (TOCol col)) "payload"
+        in payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []
       SubCArray pgcols -> pgcols
