@@ -110,7 +110,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers, callbac
       return query(
         {
           query: mutation,
-          endpoint: `${url}/v1alpha1/graphql`,
+          endpoint: `${url}/v1/graphql`,
           variables,
           headers,
         }

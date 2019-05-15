@@ -39,7 +39,7 @@ setInterval(changeMajor, 5000);
 // Update stock prices
 const updatePrices = () => {
  fetch(
-   'https://graphql2chartjs.hasura.app/v1alpha1/graphql',
+   'https://graphql2chartjs.hasura.app/v1/graphql',
    {
      method: 'POST',
      body: JSON.stringify({
