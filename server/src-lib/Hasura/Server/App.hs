@@ -75,25 +75,6 @@ defaultConsoleAssetsDir = "/srv/console-assets"
 consoleAssetsPath :: Text
 consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
 
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text
-              -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
-  bool (Left errMsg) (Right res) $ null errs
-  where
-    (errs, res) = M.checkedSubstitute consoleTmplt $
-      object [ "assetsPath" .= consoleAssetsPath
-        , "isAdminSecretSet" .= isAdminSecretSet authMode
-        , "consolePath" .= consolePath
-        , "enableTelemetry" .= boolToText enableTelemetry
-        , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-        , "assetsVersion" .= consoleVersion
-      ]
-    consolePath = case path of
-      "" -> "/console"
-      r  -> "/console/" <> r
-
-    errMsg = "console template rendering failed: " ++ show errs
-
 data SchemaCacheRef
   = SchemaCacheRef
   { _scrLock     :: MVar ()
@@ -347,6 +328,24 @@ consoleAssetsHandler mdir path = do
     throwException :: (MonadError QErr m) => IOException -> m a
     throwException e = throw404 $ T.pack (show e)
 
+consoleHTMLHandler :: T.Text -> AuthMode -> Bool -> Maybe Text -> Handler APIResp
+consoleHTMLHandler path authMode enableTelemetry consoleAssetsDir = do
+  unless (null errs) $ throw500 $ T.pack errMsg
+  return $ RawResp [htmlHeader] (BL.fromStrict $ txtToBs res)
+  where
+    (errs, res) = M.checkedSubstitute consoleTmplt $
+      object [ "assetsPath" .= consoleAssetsPath
+        , "isAdminSecretSet" .= isAdminSecretSet authMode
+        , "consolePath" .= consolePath
+        , "enableTelemetry" .= boolToText enableTelemetry
+        , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+        , "assetsVersion" .= consoleVersion
+      ]
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+    errMsg = "console template rendering failed: " ++ show errs
+
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
 
@@ -556,6 +555,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       -- console html
       get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path (scAuthMode serverCtx)
+        mkSpockAction encodeQErr id serverCtx $ do
+          consoleHTMLHandler path (scAuthMode serverCtx)
             enableTelemetry consoleAssetsDir
