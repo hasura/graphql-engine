@@ -226,17 +226,22 @@ class Schema extends Component {
         );
 
         const openCreateSection = (
-          <div className={styles.inline_block + ' ' + styles.add_mar_left}>
-            <div className={styles.inline_block}>
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div className={styles.display_inline}>
               <input
                 type="text"
                 value={schemaNameEdit}
                 onChange={handleSchemaNameChange}
                 placeholder="schema_name"
-                className={'form-control input-sm ' + styles.inline_block}
+                className={'form-control input-sm ' + styles.display_inline}
               />
             </div>
-            <Button color="white" size="xs" onClick={handleCreateClick}>
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCreateClick}
+              className={styles.add_mar_left_mid}
+            >
               Create
             </Button>
             <Button
@@ -333,7 +338,7 @@ class Schema extends Component {
 
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
-              <div className={styles.inline_block}>
+              <div className={styles.display_inline}>
                 <Button
                   data-test={`add-track-table-${table.table_name}`}
                   className={`${styles.display_inline}`}
@@ -344,7 +349,7 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.inline_block}>{table.table_name}</div>
+              <div className={styles.display_inline}>{table.table_name}</div>
             </div>
           );
         });
@@ -432,7 +437,7 @@ class Schema extends Component {
 
           untrackedRelList.push(
             <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-              <div className={styles.inline_block}>
+              <div className={styles.display_inline}>
                 <Button
                   className={styles.display_inline}
                   color="white"
@@ -442,7 +447,7 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.inline_block}>
+              <div className={styles.display_inline}>
                 <span>
                   {relFrom} &rarr; {relTo}
                 </span>
@@ -539,7 +544,9 @@ class Schema extends Component {
                       </Button>
                     </div>
                     <div
-                      className={`${styles.padd_right} ${styles.inline_block}`}
+                      className={`${styles.padd_right} ${
+                        styles.display_inline
+                      }`}
                     >
                       {p.function_name}
                     </div>
@@ -587,7 +594,7 @@ class Schema extends Component {
       //           >
       //             <div
       //               className={`${styles.padd_right} ${
-      //                 styles.inline_block
+      //                 styles.display_inline
       //               }`}
       //             >
       //               {p.function_name}
@@ -612,7 +619,7 @@ class Schema extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Schema - Data | Hasura" />
           <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.inline_block}`}>
+            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
               Schema
             </h2>
             {getCreateBtn()}

@@ -2,7 +2,7 @@ import gqlPattern, { gqlSchemaErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 
-const getDropSchemaSql = schemaName => `drop schema "${schemaName}";`;
+const getDropSchemaSql = schemaName => `drop schema "${schemaName}" cascade;`;
 
 const getCreateSchemaSql = schemaName => `create schema "${schemaName}";`;
 
