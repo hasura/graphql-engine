@@ -12,7 +12,8 @@ Introduction
 
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query: 
 
-.. thumbnail:: ../../../img/graphql/manual/auth/permissions-rule-analogy.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/permissions-rule-analogy.png
+  :width: 70%
 
 This query returns the right set of results by defining the requirements for columns and rows in a given table. Hasura's rule-based access control works similary - you define the following permissions for a combination of **role**, **table** and **action** (*insert, update, select and delete*):
 
@@ -65,14 +66,14 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 You'll see that this results in a response that contains all the authors because by default the GraphQL query is
 accepted with **admin** permissions.
 
-.. thumbnail:: ../../../img/graphql/manual/auth/fetch-authors.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/fetch-authors.png
 
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now let's define an access control rule for the ``author`` table for a role ``users``. Head to the **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions as shown below:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/permission-basics-simple-example.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
 
 
 This permission rule reads as "*For the role* ``user`` *, table* `` *and operation* ``select``/``query``*, allow access to those rows where the value in the* ``id`` *column is the same as the value in the* ``X-Hasura-User-ID`` *session variable*".
@@ -81,7 +82,7 @@ Run a query **with** access control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Hasura-User-ID`` session variables also included to indicate role and user information. These session variables are passed in the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/permission-basics-query-with-access-control.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-query-with-access-control.png
 
 As you can see, the results are now filtered based on the access control rule for the role ``user`` (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are restricted to only those rows where the value in the ``id`` column is equal to ``1`` (*as indicated by the* ``X-Hasura-User-ID`` *session variable*).
 

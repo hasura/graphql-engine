@@ -1,5 +1,5 @@
-Authorization using JWT
-=======================
+Authentication using JWT
+========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -7,7 +7,7 @@ Authorization using JWT
   :local:
 
 You can configure JWT authorization mode (see :doc:`GraphQL server options
-<../deployment/graphql-engine-flags/reference>`) to authorize all incoming
+<../../deployment/graphql-engine-flags/reference>`) to authorize all incoming
 requests to Hasura GraphQL engine server.
 
 The idea is - Your auth server will return JWT tokens, which is decoded and
@@ -15,7 +15,7 @@ verified by GraphQL engine to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
 
-.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -332,7 +332,7 @@ If you are using Firebase and Hasura, use this config:
 Auth0
 ^^^^^
 
-Refer the :doc:`Auth0 JWT Integration guide <../guides/integrations/auth0-jwt>` for a full integration guide
+Refer the :doc:`Auth0 JWT Integration guide <../../guides/integrations/auth0-jwt>` for a full integration guide
 with Auth0
 
 Auth0 publishes their JWK under:
@@ -386,9 +386,17 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
 
-**See:**
+Auth JWT Examples
+-----------------
 
-- :doc:`Auth JWT examples <jwt-examples>`
+Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
+repositories to get started.
+
+- `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
+  A todo app that uses Hasura GraphQL Engine and Auth0 JWT
+
+- `Firebase JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt>`__:
+  Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode

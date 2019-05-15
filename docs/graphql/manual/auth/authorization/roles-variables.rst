@@ -102,7 +102,7 @@ For Development & Testing
 While you're developing or testing, just indicate your role and your session variables by passing headers along with
 the request:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
 
 .. note::
 
@@ -126,5 +126,5 @@ that are not logged in. The configured unauthorized role will be used whenever a
 request to the GraphQL API. This can be useful for data that you would like anyone to be able to access and can be
 configured and restricted just like any other role.
 
-See :doc:`webhook` or :doc:`jwt` for more details on passing dynamic session variables in production.
+See :doc:`../authentication/index` for more details on passing dynamic session variables in production.
 

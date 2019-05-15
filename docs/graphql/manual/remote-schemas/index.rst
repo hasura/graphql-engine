@@ -42,7 +42,7 @@ a union of top-level nodes from each of the sub-schemas.
 
   If you are looking for adding authorization & access control for your
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
-  :doc:`Authorization / Access control <../auth/index>`
+  :doc:`../auth/index`
 
 Adding a remote schema
 ----------------------
@@ -188,7 +188,7 @@ Hasura. However a similar solution can achieved by the following workarounds:
 Bypassing webhook authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`webhook authorization setup <../auth/webhook>`, in the normal scenario, your authorization
+If you have a :doc:`webhook authorization setup <../auth/authentication/webhook>`, in the normal scenario, your authorization
 webhook would return ``200`` on success and ``401`` if it is either unable to authorize the current request or if
 the authorization information is absent (like cookie, authorization header etc.)
 
@@ -202,7 +202,7 @@ To bypass the webhook auth:
 Bypassing JWT authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`JWT authorization setup <../auth/jwt>`, to bypass the JWT auth:
+If you have a :doc:`JWT authorization setup <../auth/authentication/jwt>`, to bypass the JWT auth:
 
 - your authentication server should generate a static JWT token for ``anonymous`` i.e. unauthenticated users.
 - when adding the remote schema, check the ``Forward all headers from client`` option so that the remote server
