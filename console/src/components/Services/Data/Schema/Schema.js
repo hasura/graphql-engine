@@ -162,6 +162,7 @@ class Schema extends Component {
       if (migrationMode) {
         const handleClick = e => {
           e.preventDefault();
+
           dispatch(push(`${appPrefix}/schema/${currentSchema}/table/add`));
         };
 
@@ -537,6 +538,7 @@ class Schema extends Component {
                         } btn btn-xs btn-default`}
                         onClick={e => {
                           e.preventDefault();
+
                           dispatch(addExistingFunction(p.function_name));
                         }}
                       >
