@@ -63,9 +63,9 @@ const UniqueKeyEditor = ({
     }
 
     // unique key config text
-    const uniqueKeyConfig = getUkeyPkeyConfig(
-      uniqueKey.map(uk => orderedColumns[uk].name)
-    );
+    const uniqueKeyConfig = existingConstraints[i]
+      ? getUkeyPkeyConfig(existingConstraints[i].columns)
+      : null;
 
     // content of the unique key editor
     const expandedContent = () => {

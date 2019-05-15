@@ -25,7 +25,7 @@ export const foreignKeyDescription = (
 
 export const uniqueKeyDescription = (
   <Tooltip id="tooltip-foreign-key-description">
-    A unique key is a column (or set of columns) in one table that has unique
+    A unique key is a column (or set of columns) in a table that has unique
     values across the table.
   </Tooltip>
 );
