@@ -208,6 +208,12 @@ class Schema extends Component {
           dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
         };
 
+        const handleCancelCreateNewSchema = () => {
+          this.setState({
+            createSchemaOpen: false,
+          });
+        };
+
         const closedCreateSection = (
           <Button
             color="white"
@@ -219,19 +225,9 @@ class Schema extends Component {
           </Button>
         );
 
-        const handleCancelCreateNewSchema = () => {
-          this.setState({
-            createSchemaOpen: false,
-          });
-        };
-
         const openCreateSection = (
           <div className={styles.inline_block + ' ' + styles.add_mar_left}>
-            <div
-              className={`${styles.inline_block} ${styles.remove_pad_right} ${
-                styles.add_mar_right_mid
-              }`}
-            >
+            <div className={styles.inline_block}>
               <input
                 type="text"
                 value={schemaNameEdit}
@@ -240,18 +236,14 @@ class Schema extends Component {
                 className={'form-control input-sm ' + styles.inline_block}
               />
             </div>
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCreateClick}
-              className={styles.add_mar_right_mid}
-            >
+            <Button color="white" size="xs" onClick={handleCreateClick}>
               Create
             </Button>
             <Button
               color="white"
               size="xs"
               onClick={handleCancelCreateNewSchema}
+              className={styles.add_mar_left_mid}
             >
               Cancel
             </Button>
