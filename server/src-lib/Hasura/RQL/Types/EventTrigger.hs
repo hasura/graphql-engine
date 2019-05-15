@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.EventTrigger
   ( CreateEventTriggerQuery(..)
-  , SubscribeOpSpec(..)
   , SubscribeColumns(..)
   , TriggerName
   , Ops(..)
@@ -11,6 +10,8 @@ module Hasura.RQL.Types.EventTrigger
   , DeleteEventTriggerQuery(..)
   , RedeliverEventQuery(..)
   , InvokeEventTriggerQuery(..)
+  , InsDelSpec(..)
+  , UpdSpec(..)
   , ListenColumns(..)
   , PayloadColumns(..)
   -- , HeaderConf(..)
@@ -75,27 +76,30 @@ data SubscribeOpSpecOpt
 
 $(deriveFromJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''SubscribeOpSpecOpt)
 
-data SubscribeOpSpec = InsDelSpec PayloadColumns | UpdSpec ListenColumns PayloadColumns
+data InsDelSpec = InsDelSpec PayloadColumns
   deriving (Show, Eq, Lift)
 
-instance ToJSON SubscribeOpSpec where
-  toJSON (InsDelSpec payload)    = object ["payload" .= (toJSON $ getPayloadCols payload)]
-  toJSON (UpdSpec listen payload) = object ["columns" .= (toJSON $ getListenCols listen), "payload" .= (toJSON $ getPayloadCols payload)]
+data UpdSpec = UpdSpec PayloadColumns ListenColumns
+  deriving (Show, Eq, Lift)
 
-instance FromJSON SubscribeOpSpec where
-  parseJSON (Object v) = parseUpdSpec v <|> parseInsDelSpec v
-    where
-    parseUpdSpec obj = UpdSpec <$> (ListenColumns <$> obj .: "columns") <*> (PayloadColumns <$> obj .: "payload")
-    parseInsDelSpec obj = InsDelSpec <$>  (PayloadColumns <$> obj .: "payload")
+instance ToJSON InsDelSpec where
+  toJSON (InsDelSpec payload) = object
+    ["payload" .= (toJSON $ getPayloadCols payload)
+    ]
+
+instance FromJSON InsDelSpec where
+  parseJSON (Object v) = InsDelSpec <$>  (PayloadColumns <$> v .: "payload")
   parseJSON _          = fail "adfa"
 
+instance ToJSON UpdSpec where
+  toJSON (UpdSpec payload listen) = object
+    [ "payload" .= (toJSON $ getPayloadCols payload)
+    , "columns" .= (toJSON $ getListenCols listen)
+    ]
 
-mergeWithDefaults :: Ops -> Maybe SubscribeOpSpecOpt -> Maybe SubscribeOpSpec
-mergeWithDefaults op specM = case (op, specM) of
-  (INSERT, Just spec) -> Just $ InsDelSpec (PayloadColumns $ fromMaybe SubCStar (sosoPayload spec))
-  (UPDATE, Just spec) -> Just $ UpdSpec (ListenColumns $ fromMaybe (SubCArray []) (sosoColumns spec)) (PayloadColumns $ fromMaybe SubCStar (sosoPayload spec))
-  (DELETE, Just spec) -> Just $ InsDelSpec (PayloadColumns $ fromMaybe SubCStar (sosoPayload spec))
-  _ -> Nothing
+instance FromJSON UpdSpec where
+  parseJSON (Object v) = UpdSpec <$> (PayloadColumns <$> v .: "payload") <*> (ListenColumns <$> v .: "columns")
+  parseJSON _          = fail "adfa"
 
 defaultNumRetries :: Int
 defaultNumRetries = 0
@@ -145,9 +149,9 @@ data CreateEventTriggerQuery
   = CreateEventTriggerQuery
   { cetqName           :: !T.Text
   , cetqTable          :: !QualifiedTable
-  , cetqInsert         :: !(Maybe SubscribeOpSpec)
-  , cetqUpdate         :: !(Maybe SubscribeOpSpec)
-  , cetqDelete         :: !(Maybe SubscribeOpSpec)
+  , cetqInsert         :: !(Maybe InsDelSpec)
+  , cetqUpdate         :: !(Maybe UpdSpec)
+  , cetqDelete         :: !(Maybe InsDelSpec)
   , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
   , cetqWebhook        :: !(Maybe T.Text)
@@ -184,24 +188,31 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _ ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    let insert' = mergeWithDefaults INSERT insert
-        update' = mergeWithDefaults UPDATE update
-        delete' = mergeWithDefaults DELETE delete
+    let insert' = fmap mergeInsDefaults insert
+        update' = fmap mergeUpdDefaults update
+        delete' = fmap mergeDelDefaults delete
     return $ CreateEventTriggerQuery name table insert' update' delete' (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case (sosoPayload <$> spec) of
         Just (Just (SubCArray cols)) -> when (null cols) (fail "found empty payload specification")
         _ -> return ()
+      mergeInsDefaults :: SubscribeOpSpecOpt -> InsDelSpec
+      mergeInsDefaults specOpt = InsDelSpec (PayloadColumns $ fromMaybe SubCStar $ sosoPayload specOpt )
+
+      mergeUpdDefaults specOpt = UpdSpec
+        (PayloadColumns $ fromMaybe SubCStar $ sosoPayload specOpt)
+        (ListenColumns $ fromMaybe (SubCArray []) $ sosoColumns specOpt)
+      mergeDelDefaults specOpt = InsDelSpec (PayloadColumns $ fromMaybe SubCStar $ sosoPayload specOpt)
   parseJSON _ = fail "expecting an object"
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
 data TriggerOpsDef
   = TriggerOpsDef
-  { tdInsert       :: !(Maybe SubscribeOpSpec)
-  , tdUpdate       :: !(Maybe SubscribeOpSpec)
-  , tdDelete       :: !(Maybe SubscribeOpSpec)
+  { tdInsert       :: !(Maybe InsDelSpec)
+  , tdUpdate       :: !(Maybe UpdSpec)
+  , tdDelete       :: !(Maybe InsDelSpec)
   , tdEnableManual :: !(Maybe Bool)
   } deriving (Show, Eq, Lift)
 
