@@ -19,6 +19,7 @@ import {
   SET_PRIMARY_KEYS,
   SET_FOREIGN_KEYS,
   RESET,
+  SET_UNIQUE_KEYS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -552,7 +553,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         fkModify: action.fks,
       };
-
+    case SET_UNIQUE_KEYS:
+      return {
+        ...modifyState,
+        uniqueKeyModify: action.keys,
+      };
     case UPDATE_MANUAL_REL_TABLE_LIST:
       return {
         ...modifyState,
