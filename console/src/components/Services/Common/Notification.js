@@ -47,7 +47,7 @@ const showErrorNotification = (title, message, reqBody, error) => {
     modMessage = error ? error : message;
   }
 
-  let finalJson = error ? error.message : '{}';
+  let finalJson = error ? error.message : null;
 
   if (error && 'action' in error) {
     refreshBtn = (
