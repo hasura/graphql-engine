@@ -5,6 +5,7 @@ import {
   deleteTableSql,
   untrackTableSql,
   RESET,
+  setUniqueKeys,
 } from '../TableModify/ModifyActions';
 import { setTable, fetchTableComment } from '../DataActions';
 import Button from '../../../Common/Button/Button';
@@ -13,6 +14,7 @@ import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
+import UniqueKeyEditor from './UniqueKeyEditor';
 import semverCheck from '../../../../helpers/semver';
 import styles from './ModifyTable.scss';
 
@@ -65,6 +67,7 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      uniqueKeyModify,
     } = this.props;
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
 
@@ -155,6 +158,16 @@ class ModifyTable extends React.Component {
               allSchemas={allSchemas}
               dispatch={dispatch}
               fkModify={fkModify}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Unique Keys</h4>
+            <UniqueKeyEditor
+              tableSchema={tableSchema}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              dispatch={dispatch}
+              uniqueKeys={uniqueKeyModify}
+              setUniqueKeys={setUniqueKeys}
             />
             <hr />
             {untrackBtn}

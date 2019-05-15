@@ -21,6 +21,9 @@ class TryItOut extends React.Component {
     const AWS = require('./images/AWS.png');
     const externalLink = require('./images/external-link.svg');
     // const { title, imgUrl, imgAlt,  description} = this.props;
+    const commonStyle = this.props.isAvailable
+      ? styles.instructionsWrapper
+      : styles.instructionsWrapperPos;
     return (
       <div>
         <div className={styles.subHeaderText}>
@@ -46,9 +49,7 @@ class TryItOut extends React.Component {
                 />
               </button>
             </a>
-            <div
-              className={styles.instructionsWrapper + ' ' + styles.displayFlex}
-            >
+            <div className={styles.displayFlex + ' ' + commonStyle}>
               <span
                 onClick={this.togglePopup.bind(this)}
                 className={styles.instructions + ' ' + styles.displayFlex}
@@ -63,6 +64,7 @@ class TryItOut extends React.Component {
                   title={this.props.title}
                   queryDefinition={this.props.queryDefinition}
                   footerDescription={this.props.footerDescription}
+                  isAvailable={this.props.isAvailable}
                 />
               ) : null}
             </div>

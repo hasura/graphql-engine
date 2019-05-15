@@ -1,5 +1,5 @@
 description: GraphQL introspection query which returns the kind of queryType. This output should be the same across any GraphQL implementation
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

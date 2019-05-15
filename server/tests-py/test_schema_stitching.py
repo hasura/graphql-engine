@@ -68,6 +68,7 @@ class TestRemoteSchemaBasic:
     def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
+
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 
@@ -255,7 +256,8 @@ class TestAddRemoteSchemaTbls:
             'x-hasura-test': 'xyzz',
             'x-hasura-role': 'user',
             'x-hasura-user-id': 'abcd1234',
-            'Authorization': 'Bearer abcdef'
+            'content-type': 'application/json',
+            'Authorization': 'Bearer abcdef',
         }
         if hge_ctx.hge_key:
             hdrs['x-hasura-admin-secret'] = hge_ctx.hge_key
