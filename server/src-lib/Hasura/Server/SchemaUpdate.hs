@@ -5,7 +5,7 @@ where
 import           Hasura.Prelude
 
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema.Table (buildSchemaCache)
+import           Hasura.RQL.DDL.Schema.Table (buildSCWithoutSetup)
 import           Hasura.RQL.Types
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
@@ -72,25 +72,26 @@ $(deriveToJSON
 
 -- | An IO action that enables metadata syncing
 startSchemaSync
-  :: Bool
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
-startSchemaSync strfyNum pool logger httpMgr cacheRef instanceId cacheInitTime = do
-  -- Init events queue
-  eventsQueue <- STM.newTQueueIO
+startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
+  -- only the latest event is recorded here
+  -- we don't want to store and process all the events, only the latest event
+  updateEventRef <- STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- C.forkIO $ listener strfyNum pool
-    logger httpMgr eventsQueue cacheRef instanceId cacheInitTime
+  lTId <- C.forkIO $ listener sqlGenCtx pool
+    logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pTId <- C.forkIO $ processor strfyNum pool
-    logger httpMgr eventsQueue cacheRef instanceId
+  pTId <- C.forkIO $ processor sqlGenCtx pool
+    logger httpMgr updateEventRef cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
   where
@@ -105,15 +106,15 @@ startSchemaSync strfyNum pool logger httpMgr cacheRef instanceId cacheInitTime =
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue
 listener
-  :: Bool
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
-  -> STM.TQueue EventPayload
+  -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime -> IO ()
-listener strfyNum pool logger httpMgr eventsQueue
+listener sqlGenCtx pool logger httpMgr updateEventRef
   cacheRef instanceId cacheInitTime =
   -- Never exits
   forever $ do
@@ -133,7 +134,7 @@ listener strfyNum pool logger httpMgr eventsQueue
     refreshCache Nothing = return ()
     refreshCache (Just (dbInstId, accrdAt)) =
       when (shouldRefresh dbInstId accrdAt) $
-        refreshSchemaCache strfyNum pool logger httpMgr cacheRef
+        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
           threadType "schema cache reloaded after postgres listen init"
 
     notifyHandler = \case
@@ -150,7 +151,7 @@ listener strfyNum pool logger httpMgr eventsQueue
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
             -- Push a notify event to Queue
-            STM.atomically $ STM.writeTQueue eventsQueue payload
+            STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
     onError = logError logger threadType . TEQueryError
     logWarn = unLogger logger $
@@ -160,41 +161,50 @@ listener strfyNum pool logger httpMgr eventsQueue
 
 -- | An IO action that processes events from Queue
 processor
-  :: Bool
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
-  -> STM.TQueue EventPayload
+  -> STM.TVar (Maybe EventPayload)
   -> SchemaCacheRef
   -> InstanceId -> IO ()
-processor strfyNum pool logger httpMgr eventsQueue
+processor sqlGenCtx pool logger httpMgr updateEventRef
   cacheRef instanceId =
   -- Never exits
   forever $ do
-    event <- STM.atomically $ STM.readTQueue eventsQueue
+    event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
-      refreshSchemaCache strfyNum pool logger httpMgr cacheRef
+      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
         threadType "schema cache reloaded"
   where
+    -- checks if there is an event
+    -- and replaces it with Nothing
+    getLatestEvent = do
+      eventM <- STM.readTVar updateEventRef
+      case eventM of
+        Just event -> do
+          STM.writeTVar updateEventRef Nothing
+          return event
+        Nothing -> STM.retry
     threadType = TTProcessor
 
       -- If event is from another server
     shouldReload payload = _epInstanceId payload /= instanceId
 
 refreshSchemaCache
-  :: Bool
+  :: SQLGenCtx
   -> PG.PGPool
   -> Logger
   -> HTTP.Manager
   -> SchemaCacheRef
   -> ThreadType
   -> T.Text -> IO ()
-refreshSchemaCache strfyNum pool logger httpManager cacheRef threadType msg = do
+refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
-  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef $
+  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
            peelRun emptySchemaCache adminUserInfo
-           httpManager strfyNum pool PG.Serializable buildSchemaCache
+           httpManager sqlGenCtx (PGExecCtx pool PG.Serializable) buildSCWithoutSetup
   case resE of
     Left e -> logError logger threadType $ TEQueryError e
     Right _ ->

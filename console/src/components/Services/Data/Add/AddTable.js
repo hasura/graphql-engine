@@ -9,8 +9,8 @@ import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector'
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 
 import dataTypes from '../Common/DataTypes';
-import { showErrorNotification } from '../Notification';
-import { setForeignKeys } from './AddActions';
+import { TIMESTAMP, DATE, UUID } from '../utils';
+import { showErrorNotification } from '../../Common/Notification';
 
 import {
   setTableName,
@@ -22,16 +22,20 @@ import {
   setColDefault,
   setColUnique,
   removeColDefault,
+  setForeignKeys,
+  validationError,
+  resetValidation,
+  setDefaults,
+  setPk,
+  createTableSql,
   addCol,
 } from './AddActions';
-import { setDefaults, setPk, createTableSql } from './AddActions';
-import { validationError, resetValidation } from './AddActions';
 
 import {
   ATLEAST_ONE_PRIMARY_KEY_MSG,
   ATLEAST_ONE_COLUMN_MSG,
+  fieldRepeatedMsg,
 } from './AddWarning';
-import { fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDuplicate,
@@ -57,7 +61,6 @@ class AddTable extends Component {
     this.props.dispatch(setDefaults());
     const { columns, dispatch } = this.props;
     columns.map((column, i) => {
-      //eslint-disable-line
       let defValue = '';
       if ('default' in column) {
         defValue = column.default.value;
@@ -249,11 +252,11 @@ class AddTable extends Component {
         defValue = column.default.value;
       }
       let defPlaceholder = 'default_value';
-      if (column.type === 'timestamptz') {
+      if (column.type === TIMESTAMP) {
         defPlaceholder = 'example: now()';
-      } else if (column.type === 'date') {
+      } else if (column.type === DATE) {
         defPlaceholder = '';
-      } else if (column.type === 'uuid') {
+      } else if (column.type === UUID) {
         defPlaceholder = 'example: gen_random_uuid()';
       }
       return (

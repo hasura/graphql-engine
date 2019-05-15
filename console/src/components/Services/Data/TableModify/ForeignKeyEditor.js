@@ -12,8 +12,6 @@ import {
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
 
-import styles from './ModifyTable.scss';
-
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
@@ -58,23 +56,28 @@ const ForeignKeyEditor = ({
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
 
+    const getFkConfigLabel = config => {
+      let fkConfigLabel;
+      if (config) {
+        fkConfigLabel = (
+          <span>
+            <b>{config}</b> - <i>{fk.constraintName}</i>
+          </span>
+        );
+      }
+
+      return fkConfigLabel;
+    };
+
     const isLast = i + 1 === numFks;
 
     // Label to show next to the 'Edit' button (the FK configuration)
-    const collapsedLabelText =
-      isLast && numFks === 1 ? 'No foreign keys' : <b>{fkConfig}</b>;
-    const collapsedLabel = () => (
-      <div>
-        <div className="container-fluid">
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              {collapsedLabelText}
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
+    const collapsedLabel = () => {
+      const collapsedLabelText =
+        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
+
+      return <div>{collapsedLabelText}</div>;
+    };
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -98,16 +101,16 @@ const ForeignKeyEditor = ({
 
     // label next to the button when the editor is expanded
     const expandedLabel = () => {
-      if (isLast) return null;
+      if (isLast) {
+        return null;
+      }
+
       const existingFkConfig = getForeignKeyConfig(
         existingForeignKeys[i],
         orderedColumns
       );
-      return (
-        <h5 className={styles.padd_bottom}>
-          <b>{existingFkConfig}</b>
-        </h5>
-      );
+
+      return <div>{getFkConfigLabel(existingFkConfig)}</div>;
     };
 
     // If the user made some changes and collapses the editor, the changes are lost

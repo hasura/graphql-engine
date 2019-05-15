@@ -11,6 +11,10 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from '../Metadata/Actions';
 import { replace } from 'react-router-redux';
 import { getEventTriggersQuery } from './utils';
 
@@ -52,21 +56,31 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
         console.error('Failed to event trigger info' + JSON.stringify(data[1]));
         return;
       }
-      data = JSON.parse(data.result[1]);
+      let triggerData = JSON.parse(data.result[1]);
       if (triggerNames.length !== 0) {
         // getExisting state
         const existingTriggers = getState().triggers.triggerList.filter(
           trigger => triggerNames.some(item => item !== trigger.name)
         );
-        const triggerLists = existingTriggers.concat(data);
-        data = triggerLists.sort((a, b) => {
+        const triggerLists = existingTriggers.concat(triggerData);
+        triggerData = triggerLists.sort((a, b) => {
           return a.name === b.name ? 0 : +(a.name > b.name) || -1;
         });
       }
+      const { inconsistentObjects } = getState().metadata;
+      let consistentTriggers;
+      if (inconsistentObjects.length > 1) {
+        consistentTriggers = filterInconsistentMetadata(
+          triggerData,
+          inconsistentObjects,
+          'events'
+        );
+      }
       dispatch({
         type: LOAD_TRIGGER_LIST,
-        triggerList: data,
+        triggerList: consistentTriggers || triggerData,
       });
+      dispatch(loadInconsistentObjects(null, false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -269,7 +283,7 @@ const redeliverEvent = eventId => (dispatch, getState) => {
     method: 'POST',
     headers: dataHeaders(getState),
     body: JSON.stringify({
-      type: 'deliver_event',
+      type: 'redeliver_event',
       args: {
         event_id: eventId,
       },

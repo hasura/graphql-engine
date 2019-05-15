@@ -45,7 +45,7 @@ Ensure to configure Hasura GraphQL Engine with the environment variables `HASURA
 
   ```js
   const httpLink = new HttpLink({
-      uri: 'https://myapp.herokuapp.com/v1alpha1/graphql', // Server URL (must be absolute)
+      uri: 'https://myapp.herokuapp.com/v1/graphql', // Server URL (must be absolute)
       credentials: 'same-origin' // Additional fetch() options like `credentials` or `headers`
   })
   ```

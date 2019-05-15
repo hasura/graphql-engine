@@ -1,0 +1,21 @@
+description: Query bid prices more than actual price
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  data:
+    auction:
+    - id: 4
+      bid_price: 260
+query:
+  query: |
+    query {
+      auction(
+        order_by: {bid_price: asc}
+        limit: 1
+      ) {
+        id
+        bid_price
+      }
+    }

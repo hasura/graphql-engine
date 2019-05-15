@@ -49,13 +49,13 @@ const dataTypes = [
   },
   {
     name: 'Timestamp',
-    value: 'timestamptz',
+    value: 'timestamp with time zone',
     description: 'date and time, including time zone',
     hasuraDatatype: 'timestamp with time zone',
   },
   {
     name: 'Time',
-    value: 'timetz',
+    value: 'time with time zone',
     description: 'time of day (no time zone)',
     hasuraDatatype: 'time with time zone',
   },

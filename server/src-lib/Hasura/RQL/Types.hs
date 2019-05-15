@@ -6,10 +6,6 @@ module Hasura.RQL.Types
        , liftP1WithQCtx
        , MonadTx(..)
 
-       , LazyTx
-       , runLazyTx
-       , withUserInfo
-
        , UserInfoM(..)
        , successMsg
 
@@ -36,7 +32,6 @@ module Hasura.RQL.Types
        , askQTemplateInfo
 
        , adminOnly
-       , defaultTxErrorHandler
 
        , HeaderObj
 
@@ -44,6 +39,7 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.Db                     as R
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
@@ -51,6 +47,7 @@ import           Hasura.RQL.Types.Common       as R
 import           Hasura.RQL.Types.DML          as R
 import           Hasura.RQL.Types.Error        as R
 import           Hasura.RQL.Types.EventTrigger as R
+import           Hasura.RQL.Types.Metadata     as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
@@ -59,14 +56,8 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC
 
-import qualified Database.PG.Query             as Q
-
-import           Data.Aeson
-
-import qualified Data.Aeson.Text               as AT
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
-import qualified Data.Text.Lazy                as LT
 import qualified Network.HTTP.Client           as HTTP
 
 getFieldInfoMap
@@ -88,8 +79,8 @@ class HasQCtx a where
 instance HasQCtx QCtx where
   getQCtx = id
 
-mkAdminQCtx :: Bool -> SchemaCache -> QCtx
-mkAdminQCtx b sc = QCtx adminUserInfo sc $ SQLGenCtx b
+mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
+mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -116,9 +107,12 @@ askTabInfoFromTrigger trn = do
     errMsg = "event trigger " <> trn <<> " does not exist"
 
 askEventTriggerInfo
-  :: (QErrM m)
-  => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
-askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
+  :: (QErrM m, CacheRM m)
+  => TriggerName -> m EventTriggerInfo
+askEventTriggerInfo trn = do
+  ti <- askTabInfoFromTrigger trn
+  let etim = tiEventTriggerInfoMap ti
+  liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> trn <<> " does not exist"
 
@@ -154,86 +148,6 @@ newtype SQLGenCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
-
-class (MonadError QErr m) => MonadTx m where
-  liftTx :: Q.TxE QErr a -> m a
-
-instance (MonadTx m) => MonadTx (StateT s m) where
-  liftTx = lift . liftTx
-
-instance (MonadTx m) => MonadTx (ReaderT s m) where
-  liftTx = lift . liftTx
-
-data LazyTx e a
-  = LTErr !e
-  | LTNoTx !a
-  | LTTx !(Q.TxE e a)
-
-lazyTxToQTx :: LazyTx e a -> Q.TxE e a
-lazyTxToQTx = \case
-  LTErr e  -> throwError e
-  LTNoTx r -> return r
-  LTTx tx  -> tx
-
-runLazyTx
-  :: Q.PGPool -> Q.TxIsolation
-  -> LazyTx QErr a -> ExceptT QErr IO a
-runLazyTx pgPool txIso = \case
-  LTErr e  -> throwError e
-  LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Nothing) tx
-
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
-  Q.unitQE defaultTxErrorHandler setSess () False
-  where
-    toStrictText = LT.toStrict . AT.encodeToLazyText
-    setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <>
-      pgFmtLit (toStrictText uVars)
-
-withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
-withUserInfo uInfo = \case
-  LTErr e  -> LTErr e
-  LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
-
-instance Functor (LazyTx e) where
-  fmap f = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx $ f a
-    LTTx tx  -> LTTx $ fmap f tx
-
-instance Applicative (LazyTx e) where
-  pure = LTNoTx
-
-  LTErr e   <*> _         = LTErr e
-  LTNoTx f  <*> r         = fmap f r
-  LTTx _    <*> LTErr e   = LTErr e
-  LTTx txf  <*> LTNoTx a  = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx   = LTTx $ txf <*> tx
-
-instance Monad (LazyTx e) where
-  LTErr e >>= _  = LTErr e
-  LTNoTx a >>= f = f a
-  LTTx txa >>= f =
-    LTTx $ txa >>= lazyTxToQTx . f
-
-instance MonadError e (LazyTx e) where
-  throwError = LTErr
-  LTErr e  `catchError` f = f e
-  LTNoTx a `catchError` _ = LTNoTx a
-  LTTx txe `catchError` f =
-    LTTx $ txe `catchError` (lazyTxToQTx . f)
-
-instance MonadTx (LazyTx QErr) where
-  liftTx = LTTx
-
-instance MonadTx (Q.TxE QErr) where
-  liftTx = id
-
-instance MonadIO (LazyTx QErr) where
-  liftIO = LTTx . liftIO
 
 type ER e r = ExceptT e (Reader r)
 type P1 = ER QErr QCtx
@@ -346,11 +260,6 @@ adminOnly = do
   unless (curRole == adminRole) $ throw400 AccessDenied errMsg
   where
     errMsg = "restricted access : admin only"
-
-defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler txe =
-  let e = err500 PostgresError "postgres query error"
-  in e {qeInternal = Just $ toJSON txe}
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

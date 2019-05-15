@@ -86,7 +86,6 @@ buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
   QualifiedObject hdbViewsSchema $ TableName
   (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
-    hdbViewsSchema = SchemaName "hdb_views"
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn
 
@@ -106,7 +105,8 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe ColVals -> m (PreSetCols, [Text], [SchemaDependency])
+  => TableInfo -> Maybe ColVals
+  -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
@@ -128,7 +128,8 @@ buildInsPermInfo
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
+  withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
@@ -147,7 +148,9 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
-  trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
+  resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
+  trigFnQ <- buildInsTrigFn vn tn $
+    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False

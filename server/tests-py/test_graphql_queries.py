@@ -4,7 +4,7 @@ from validate import check_query_f
 from super_classes import DefaultTestSelectQueries
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryBasic(DefaultTestSelectQueries):
 
     def test_select_query_author(self, hge_ctx, transport):
@@ -43,12 +43,15 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
     def test_select_query_col_not_present_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
+    def test_select_query_user_col_change(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml")
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryAgg(DefaultTestSelectQueries):
 
     def test_article_agg_count_sum_avg_max_min_with_aliases(self, hge_ctx, transport):
@@ -71,7 +74,7 @@ class TestGraphQLQueryAgg(DefaultTestSelectQueries):
         return 'queries/graphql_query/aggregations'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
 
     def test_author_agg_articles(self, hge_ctx, transport):
@@ -90,22 +93,22 @@ class TestGraphQLQueryAggPerm(DefaultTestSelectQueries):
 
 class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_1.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_limit_2(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_2.yaml', transport)
 
     def test_limit_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_null.yaml')
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_str_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_limit_error.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_err_neg_limit_error(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_neg_limit_error.yaml', transport)
 
@@ -116,15 +119,15 @@ class TestGraphQLQueryLimits(DefaultTestSelectQueries):
 
 class TestGraphQLQueryOffsets(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_offset_1_limit_2(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_offset_1_limit_2.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_offset_2_limit_1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_offset_2_limit_1.yaml', transport)
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_int_as_string_offset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_string_offset.yaml', transport)
 
@@ -136,7 +139,7 @@ class TestGraphQLQueryOffsets(DefaultTestSelectQueries):
         return 'queries/graphql_query/offset'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
 
     def test_author_article_where_not_equal(self, hge_ctx, transport):
@@ -198,7 +201,7 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
         return 'queries/graphql_query/boolexp/basic'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
 
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
@@ -240,12 +243,15 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_staff_passed_students(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/staff_passed_students.yaml', transport)
 
+    def test_user_query_auction(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryBoolExpSearch(DefaultTestSelectQueries):
 
     def test_city_where_like(self, hge_ctx, transport):
@@ -271,7 +277,7 @@ class TestGraphQLQueryBoolExpSearch(DefaultTestSelectQueries):
         return 'queries/graphql_query/boolexp/search'
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryBoolExpJsonB(DefaultTestSelectQueries):
 
     def test_jsonb_contains_article_latest(self, hge_ctx, transport):
@@ -299,7 +305,7 @@ class TestGraphQLQueryBoolExpJsonB(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
 
     def test_query_using_point(self, hge_ctx, transport):
@@ -318,7 +324,7 @@ class TestGraphQLQueryBoolExpPostGIS(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/graphql_query/boolexp/postgis'
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
     def test_articles_order_by_without_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/articles_order_by_without_id.yaml', transport)
@@ -356,11 +362,11 @@ class TestGraphQLQueryOrderBy(DefaultTestSelectQueries):
 
 class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
 
-    @pytest.mark.parametrize("transport", ['http','websocket'])
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_search_posts_aggregate(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
 

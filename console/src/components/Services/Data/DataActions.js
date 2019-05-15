@@ -1,3 +1,5 @@
+import sanitize from 'sanitize-filename';
+
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -6,10 +8,17 @@ import viewReducer from './TableBrowseRows/ViewActions';
 import editReducer from './TableBrowseRows/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
 import { getAllUnTrackedRelations } from './TableRelationships/Actions';
-import { showErrorNotification, showSuccessNotification } from './Notification';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
+import {
+  filterInconsistentMetadata,
+  loadInconsistentObjects,
+} from '../Metadata/Actions';
 import globals from '../../../Globals';
 import { getSchemaQuery } from './utils';
 
@@ -28,6 +37,8 @@ const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 const RESET_MANUAL_REL_TABLE_LIST = 'Data/RESET_MANUAL_REL_TABLE_LIST';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
+const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
+const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
@@ -159,7 +170,16 @@ const fetchTrackedFunctions = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
-        dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data });
+        let consistentFunctions = data;
+        const { inconsistentObjects } = getState().metadata;
+        if (inconsistentObjects.length > 0) {
+          consistentFunctions = filterInconsistentMetadata(
+            data,
+            inconsistentObjects,
+            'functions'
+          );
+        }
+        dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
       },
       error => {
         console.error('Failed to load schema ' + JSON.stringify(error));
@@ -213,12 +233,26 @@ const loadSchema = configOptions => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(body),
   };
+
   return dispatch(requestAction(url, options)).then(
     data => {
+      const maybeInconsistentSchemas = allSchemas.concat(
+        JSON.parse(data.result[1])
+      );
+      let consistentSchemas;
+      const { inconsistentObjects } = getState().metadata;
+      if (inconsistentObjects.length > 0) {
+        consistentSchemas = filterInconsistentMetadata(
+          maybeInconsistentSchemas,
+          inconsistentObjects,
+          'tables'
+        );
+      }
       dispatch({
         type: LOAD_SCHEMA,
-        allSchemas: allSchemas.concat(JSON.parse(data.result[1])),
+        allSchemas: consistentSchemas || maybeInconsistentSchemas,
       });
+      dispatch(loadInconsistentObjects());
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));
@@ -231,6 +265,16 @@ const loadUntrackedRelations = options => dispatch => {
     dispatch(setUntrackedRelations());
   });
 };
+
+const setConsistentSchema = data => ({
+  type: SET_CONSISTENT_SCHEMA,
+  data,
+});
+
+const setConsistentFunctions = data => ({
+  type: SET_CONSISTENT_FUNCTIONS,
+  data,
+});
 
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
@@ -283,7 +327,16 @@ const fetchFunctionInit = () => (dispatch, getState) => {
     data => {
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
       dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
-      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: data[2] });
+      let consistentFunctions = data[2];
+      const { inconsistentObjects } = getState().metadata;
+      if (inconsistentObjects.length > 0) {
+        consistentFunctions = filterInconsistentMetadata(
+          consistentFunctions,
+          inconsistentObjects,
+          'functions'
+        );
+      }
+      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -402,7 +455,7 @@ const makeMigrationCall = (
   };
 
   const migrationBody = {
-    name: migrationName,
+    name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
   };
@@ -538,6 +591,14 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, currentTable: action.tableName };
     case FETCH_SCHEMA_LIST:
       return { ...state, schemaList: action.schemaList };
+    case SET_CONSISTENT_SCHEMA:
+      return { ...state, allSchemas: action.data, listingSchemas: action.data };
+    case SET_CONSISTENT_FUNCTIONS:
+      return {
+        ...state,
+        trackedFunctions: action.data,
+        listedFunctions: action.data,
+      };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
     case ADMIN_SECRET_ERROR:
@@ -598,4 +659,6 @@ export {
   UPDATE_TRACKED_FUNCTIONS,
   initQueries,
   LOAD_SCHEMA,
+  setConsistentSchema,
+  setConsistentFunctions,
 };

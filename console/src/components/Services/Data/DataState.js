@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {

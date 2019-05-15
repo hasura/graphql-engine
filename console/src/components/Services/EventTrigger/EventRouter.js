@@ -4,7 +4,7 @@ import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
 
 import {
-  schemaConnector,
+  landingConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
@@ -42,7 +42,7 @@ const makeEventRouter = (
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
-        <Route path="triggers" component={schemaConnector(connect)} />
+        <Route path="triggers" component={landingConnector(connect)} />
         <Route
           path="triggers/:trigger/processed"
           component={processedEventsConnector(connect)}

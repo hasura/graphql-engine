@@ -14,6 +14,11 @@ module Hasura.GraphQL.Resolve.Context
   , LazyRespTx
   , AnnPGVal(..)
   , PrepFn
+  , UnresolvedVal(..)
+  , resolveValPrep
+  , resolveValTxt
+  , AnnBoolExpUnresolved
+  , partialSQLExpToUnresolvedVal
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -21,13 +26,16 @@ module Hasura.GraphQL.Resolve.Context
   , withArg
   , withArgM
   , nameAsPath
+
   , PrepArgs
-  , Convert
-  , runConvert
-  , withPrepArgs
   , prepare
   , prepareColVal
+  , withPrepArgs
+
   , txtConverter
+
+  , withSelSet
+  , fieldAsPath
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -44,13 +52,14 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Resolve.ContextTypes
 
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+
+import           Hasura.RQL.DML.Internal             (sessVarFromCurrentSetting)
 
 import qualified Hasura.SQL.DML                      as S
 
@@ -61,12 +70,6 @@ data InsResp
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
 
-type RespTx = Q.TxE QErr EncJSON
-
-type LazyRespTx = LazyTx QErr EncJSON
-
-type PrepFn m = AnnPGVal -> m S.SQLExp
-
 data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
@@ -75,10 +78,30 @@ data AnnPGVal
   , _apvValue      :: !PGColValue
   } deriving (Show, Eq)
 
+type PrepFn m = AnnPGVal -> m S.SQLExp
+
+-- lifts PartialSQLExp to UnresolvedVal
+partialSQLExpToUnresolvedVal :: PartialSQLExp -> UnresolvedVal
+partialSQLExpToUnresolvedVal = \case
+  PSESessVar colTy sessVar -> UVSessVar colTy sessVar
+  PSESQLExp s -> UVSQL s
+
+-- A value that will be converted to an sql expression eventually
+data UnresolvedVal
+  -- From a session variable
+  = UVSessVar !PGColType !SessVar
+  -- This is postgres
+  | UVPG !AnnPGVal
+  -- This is a full resolved sql expression
+  | UVSQL !S.SQLExp
+  deriving (Show, Eq)
+
+type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
+
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int))
+  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -138,18 +161,27 @@ withArgM args arg f = prependArgsInPath $ nameAsPath arg $
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
-type Convert =
-  (ReaderT ( FieldMap
-           , OrdByCtx
-           , InsCtxMap
-           , SQLGenCtx
-           ) (Except QErr)
-  )
-
 prepare
-  :: (MonadState PrepArgs m) => PrepFn m
+  :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
 prepare (AnnPGVal _ _ colTy colVal) =
   prepareColVal colTy colVal
+
+resolveValPrep
+  :: (MonadState PrepArgs m)
+  => UnresolvedVal -> m S.SQLExp
+resolveValPrep = \case
+  UVPG annPGVal -> prepare annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> return sqlExp
+
+resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
+resolveValTxt = \case
+  UVPG annPGVal -> txtConverter annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> pure sqlExp
+
+withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
+withPrepArgs m = runStateT m Seq.empty
 
 prepareColVal
   :: (MonadState PrepArgs m)
@@ -159,19 +191,15 @@ prepareColVal colTy colVal = do
   put (preparedArgs Seq.|> binEncoder colVal)
   return $ toPrepParam (Seq.length preparedArgs + 1) colTy
 
-
-txtConverter :: Monad m => PrepFn m
+txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
 txtConverter (AnnPGVal _ _ a b) =
-  return $ toTxtValue a b
+  pure $ toTxtValue a b
 
-withPrepArgs :: StateT PrepArgs Convert a -> Convert (a, PrepArgs)
-withPrepArgs m = runStateT m Seq.empty
+withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
+withSelSet selSet f =
+  forM (toList selSet) $ \fld -> do
+    res <- f fld
+    return (G.unName $ G.unAlias $ _fAlias fld, res)
 
-runConvert
-  :: (MonadError QErr m)
-  => (FieldMap, OrdByCtx, InsCtxMap, SQLGenCtx)
-  -> Convert a
-  -> m a
-runConvert ctx m =
-  either throwError return $
-  runExcept $ runReaderT m ctx
+fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
+fieldAsPath = nameAsPath . _fName

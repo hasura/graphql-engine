@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "13"
+curCatalogVer = "15"
 
 migrateMetadata
   :: ( MonadTx m
@@ -33,7 +33,7 @@ migrateMetadata
 migrateMetadata buildSC rqlQuery = do
   -- Build schema cache from 'hdb_catalog' only if current
   -- metadata migration depends on metadata added in previous versions
-  when buildSC $ buildSchemaCache
+  when buildSC $ buildSchemaCacheStrict
   -- run the RQL query to Migrate metadata
   void $ runQueryM rqlQuery
 
@@ -272,6 +272,20 @@ from12To13 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_12_to_13.sql")
   return ()
 
+from13To14 :: (MonadTx m) => m ()
+from13To14 = liftTx $ do
+  -- Migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_13_to_14.sql")
+  return ()
+
+from14To15 :: (MonadTx m) => m ()
+from14To15 = liftTx $ do
+  -- Migrate database
+  Q.Discard () <- Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_14_to_15.sql")
+  return ()
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -295,13 +309,19 @@ migrateCatalog migrationTime = do
      | preVer == "7"   -> from7ToCurrent
      | preVer == "8"   -> from8ToCurrent
      | preVer == "9"   -> from9ToCurrent
-     | preVer == "10"   -> from10ToCurrent
-     | preVer == "11"   -> from11ToCurrent
-     | preVer == "12"   -> from12ToCurrent
+     | preVer == "10"  -> from10ToCurrent
+     | preVer == "11"  -> from11ToCurrent
+     | preVer == "12"  -> from12ToCurrent
+     | preVer == "13"  -> from13ToCurrent
+     | preVer == "14"  -> from14ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from12ToCurrent = from12To13 >> postMigrate
+    from14ToCurrent = from14To15 >> postMigrate
+    
+    from13ToCurrent = from13To14 >> from14ToCurrent
+
+    from12ToCurrent = from12To13 >> from13ToCurrent
 
     from11ToCurrent = from11To12 >> from12ToCurrent
 
@@ -331,7 +351,7 @@ migrateCatalog migrationTime = do
        -- update the catalog version
        updateVersion
        -- try building the schema cache
-       buildSchemaCache
+       buildSchemaCacheStrict
        return $ "successfully migrated to " ++ show curCatalogVer
 
     updateVersion =

@@ -100,7 +100,7 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
             conditionalClassname = styles.tableCellExpanded;
@@ -287,7 +287,8 @@ const ViewRows = ({
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
                   conditionalClassname = styles.tableCellExpanded;

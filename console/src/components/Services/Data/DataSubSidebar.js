@@ -251,6 +251,7 @@ const mapStateToProps = state => {
     listedFunctions: state.tables.listedFunctions,
     currentFunction: state.functions.functionName,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    metadata: state.metadata,
   };
 };
 

@@ -7,7 +7,7 @@
 import PropTypes from 'prop-types';
 
 import React, { Component } from 'react';
-import Operators from '../Operators';
+import { Operators } from '../constants';
 import {
   setFilterCol,
   setFilterOp,

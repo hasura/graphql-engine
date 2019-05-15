@@ -6,7 +6,7 @@ import {
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
@@ -44,7 +44,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: oldName,
           new_name: newName,
         },
@@ -54,7 +57,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: newName,
           new_name: oldName,
         },

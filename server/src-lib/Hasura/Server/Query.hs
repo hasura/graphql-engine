@@ -9,6 +9,7 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryTemplate
@@ -17,7 +18,6 @@ import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -55,6 +55,9 @@ data RQLQuery
   | RQDropDeletePermission !DropDelPerm
   | RQSetPermissionComment !SetPermComment
 
+  | RQGetInconsistentMetadata !GetInconsistentMetadata
+  | RQDropInconsistentMetadata !DropInconsistentMetadata
+
   | RQInsert !InsertQuery
   | RQSelect !SelectQuery
   | RQUpdate !UpdateQuery
@@ -68,7 +71,8 @@ data RQLQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
-  | RQDeliverEvent       !DeliverEventQuery
+  | RQRedeliverEvent     !RedeliverEventQuery
+  | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
@@ -83,7 +87,6 @@ data RQLQuery
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
-
   deriving (Show, Eq, Lift)
 
 $(deriveJSON
@@ -141,29 +144,28 @@ peelRun
   :: SchemaCache
   -> UserInfo
   -> HTTP.Manager
-  -> Bool
-  -> Q.PGPool -> Q.TxIsolation
+  -> SQLGenCtx
+  -> PGExecCtx
   -> Run a -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc userInfo httMgr strfyNum pgPool txIso (Run m) =
-  runLazyTx pgPool txIso $ withUserInfo userInfo lazyTx
+peelRun sc userInfo httMgr sqlGenCtx pgExecCtx (Run m) =
+  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
   where
-    sqlGenCtx = SQLGenCtx strfyNum
     lazyTx = runReaderT (runStateT m sc) (userInfo, httMgr, sqlGenCtx)
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> Q.TxIsolation -> InstanceId
+  => PGExecCtx -> InstanceId
   -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> Bool -> RQLQuery -> m (EncJSON, SchemaCache)
-runQuery pool isoL instanceId userInfo sc hMgr strfyNum query = do
+  -> SQLGenCtx -> RQLQuery -> m (EncJSON, SchemaCache)
+runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
   resE <- liftIO $ runExceptT $
-    peelRun sc userInfo hMgr strfyNum pool isoL $ runQueryM query
+    peelRun sc userInfo hMgr sqlGenCtx pgExecCtx $ runQueryM query
   either throwError withReload resE
   where
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ Q.runTx pool (isoL, Nothing)
-             $ recordSchemaUpdate instanceId
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+             $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
 
@@ -192,6 +194,9 @@ queryNeedsReload qi = case qi of
   RQDropDeletePermission _     -> True
   RQSetPermissionComment _     -> False
 
+  RQGetInconsistentMetadata _  -> False
+  RQDropInconsistentMetadata _ -> True
+
   RQInsert _                   -> False
   RQSelect _                   -> False
   RQUpdate _                   -> False
@@ -203,7 +208,8 @@ queryNeedsReload qi = case qi of
 
   RQCreateEventTrigger _       -> True
   RQDeleteEventTrigger _       -> True
-  RQDeliverEvent _             -> False
+  RQRedeliverEvent _           -> False
+  RQInvokeEventTrigger _       -> False
 
   RQCreateQueryTemplate _      -> True
   RQDropQueryTemplate _        -> True
@@ -252,6 +258,9 @@ runQueryM rq = withPathK "args" $ case rq of
   RQDropDeletePermission q     -> runDropPerm q
   RQSetPermissionComment q     -> runSetPermComment q
 
+  RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
+  RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
+
   RQInsert q                   -> runInsert q
   RQSelect q                   -> runSelect q
   RQUpdate q                   -> runUpdate q
@@ -263,7 +272,8 @@ runQueryM rq = withPathK "args" $ case rq of
 
   RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
   RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
-  RQDeliverEvent q             -> runDeliverEvent q
+  RQRedeliverEvent q           -> runRedeliverEvent q
+  RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
   RQCreateQueryTemplate q      -> runCreateQueryTemplate q
   RQDropQueryTemplate q        -> runDropQueryTemplate q

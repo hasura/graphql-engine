@@ -6,7 +6,7 @@ import { findTableFromRel } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 /* ****************** View actions *************/
@@ -20,6 +20,14 @@ const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
+
+const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
+const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
+
+const UPDATE_TRIGGER_ROW = 'ViewTable/UPDATE_TRIGGER_ROW';
+const UPDATE_TRIGGER_FUNCTION = 'ViewTable/UPDATE_TRIGGER_FUNCTION';
+
 // const V_ADD_WHERE;
 // const V_REMOVE_WHERE;
 // const V_SET_LIMIT;
@@ -94,6 +102,59 @@ const vMakeRequest = () => {
       },
       error => {
         dispatch({ type: V_REQUEST_ERROR, data: error });
+      }
+    );
+  };
+};
+
+const fetchManualTriggers = tableName => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const body = {
+      type: 'select',
+      args: {
+        table: {
+          name: 'event_triggers',
+          schema: 'hdb_catalog',
+        },
+        columns: ['*'],
+        order_by: {
+          column: 'name',
+          type: 'asc',
+          nulls: 'last',
+        },
+        where: {
+          table_name: tableName,
+        },
+      },
+    };
+
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
+
+    dispatch({ type: FETCHING_MANUAL_TRIGGER });
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        // Filter only triggers whose configuration has `enable_manual` key as true
+        const manualTriggers = data.filter(trigger => {
+          const triggerDef = trigger.configuration.definition;
+
+          return (
+            Object.keys(triggerDef).includes('enable_manual') &&
+            triggerDef.enable_manual
+          );
+        });
+
+        dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
+      },
+      error => {
+        dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
+        console.error('Failed to load triggers' + JSON.stringify(error));
       }
     );
   };
@@ -443,6 +504,36 @@ const viewReducer = (tableName, schemas, viewState, action) => {
         ...viewState,
         expandedRow: '',
       };
+    case FETCHING_MANUAL_TRIGGER:
+      return {
+        ...viewState,
+        ongoingRequest: true,
+        lastError: {},
+      };
+    case FETCH_MANUAL_TRIGGER_SUCCESS:
+      return {
+        ...viewState,
+        manualTriggers: action.data,
+        ongoingRequest: false,
+      };
+    case FETCH_MANUAL_TRIGGER_FAIL:
+      return {
+        ...viewState,
+        manualTriggers: [],
+        ongoingRequest: false,
+        lastError: action.data,
+      };
+    case UPDATE_TRIGGER_ROW:
+      return {
+        ...viewState,
+        triggeredRow: action.data,
+      };
+
+    case UPDATE_TRIGGER_FUNCTION:
+      return {
+        ...viewState,
+        triggeredFunction: action.data,
+      };
     default:
       return viewState;
   }
@@ -450,6 +541,7 @@ const viewReducer = (tableName, schemas, viewState, action) => {
 
 export default viewReducer;
 export {
+  fetchManualTriggers,
   vSetDefaults,
   vMakeRequest,
   vExpandRel,
@@ -458,4 +550,6 @@ export {
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  UPDATE_TRIGGER_ROW,
+  UPDATE_TRIGGER_FUNCTION,
 };

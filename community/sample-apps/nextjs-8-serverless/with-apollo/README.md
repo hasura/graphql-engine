@@ -17,15 +17,15 @@
   Open Hasura console: visit https://my-app.herokuapp.com on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
-  ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
+  ![Create author table](../../gatsby-postgres-graphql/assets/add_table.jpg)
 
 - Insert sample data into `author` table:
 
-  ![Insert data into author table](../gatsby-postgres-graphql/assets/insert_data.jpg)
+  ![Insert data into author table](../../gatsby-postgres-graphql/assets/insert_data.jpg)
 
   Verify if the row is inserted successfully
 
-  ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
+  ![Insert data into author table](../../gatsby-postgres-graphql/assets/browse_rows.jpg)
 
 - Clone this repo:
   ```bash
@@ -47,7 +47,7 @@
         connectToDevTools: process.browser,
         ssrMode: !process.browser, // Disables forceFetch on the server (so queries are only run once)
         link: new HttpLink({
-          uri: 'https://myapp.herokuapp.com/v1alpha1/graphql', // Server URL (must be absolute)
+          uri: 'https://myapp.herokuapp.com/v1/graphql', // Server URL (must be absolute)
           credentials: 'same-origin' // Additional fetch() options like `credentials` or `headers`
         }),
         cache: new InMemoryCache().restore(initialState || {})

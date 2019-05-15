@@ -1,12 +1,10 @@
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
-  , pgColValToBoolExp
   ) where
 
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Language.GraphQL.Draft.Syntax     as G
 
@@ -24,7 +22,7 @@ parseOpExps
   => PGColType -> AnnInpVal -> m [OpExp]
 parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
-    forM (OMap.toList obj) $ \(k, v) -> do
+    forM (OMap.toList obj) $ \(k, v) ->
     case k of
       "_eq"       -> fmap (AEQ True) <$> asPGColValM v
       "_ne"       -> fmap (ANE True) <$> asPGColValM v
@@ -93,59 +91,42 @@ parseOpExps colTy annVal = do
                     throw500 "expected \"use_spheroid\" input field in st_d_within"
           useSpheroid <- asPGColVal useSpheroidVal
           return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-        PGGeometry -> do
+        PGGeometry ->
           return $ ASTDWithinGeom $ DWithinGeomOp dist from
         _ -> throw500 "expected PGGeometry/PGGeography column for st_d_within"
 
-parseAsEqOp
-  :: (MonadError QErr m)
-  => AnnInpVal -> m [OpExp]
-parseAsEqOp annVal = do
-  annValOpExp <- AEQ True <$> asPGColVal annVal
-  return [annValOpExp]
-
 parseColExp
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => PrepFn m -> G.NamedType -> G.Name -> AnnInpVal
-  -> m AnnBoolExpFldSQL
-parseColExp f nt n val = do
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     )
+  => G.NamedType -> G.Name -> AnnInpVal
+  -> m (AnnBoolExpFld UnresolvedVal)
+parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
     Left pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
-      AVCol pgColInfo <$> traverse (traverse f) opExps
+      return $ AVCol pgColInfo $ map (fmap UVPG) opExps
     Right (relInfo, _, permExp, _) -> do
-      relBoolExp <- parseBoolExp f val
-      return $ AVRel relInfo $ andAnnBoolExps relBoolExp permExp
+      relBoolExp <- parseBoolExp val
+      return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
+        fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
 
 parseBoolExp
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => PrepFn m -> AnnInpVal -> m AnnBoolExpSQL
-parseBoolExp f annGVal = do
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     )
+  => AnnInpVal -> m (AnnBoolExp UnresolvedVal)
+parseBoolExp annGVal = do
   boolExpsM <-
     flip withObjectM annGVal
       $ \nt objM -> forM objM $ \obj -> forM (OMap.toList obj) $ \(k, v) -> if
           | k == "_or"  -> BoolOr . fromMaybe []
-                           <$> parseMany (parseBoolExp f) v
+                           <$> parseMany parseBoolExp v
           | k == "_and" -> BoolAnd . fromMaybe []
-                           <$> parseMany (parseBoolExp f) v
-          | k == "_not" -> BoolNot <$> parseBoolExp f v
-          | otherwise   -> BoolFld <$> parseColExp f nt k v
+                           <$> parseMany parseBoolExp v
+          | k == "_not" -> BoolNot <$> parseBoolExp v
+          | otherwise   -> BoolFld <$> parseColExp nt k v
   return $ BoolAnd $ fromMaybe [] boolExpsM
-
-type PGColValMap = Map.HashMap G.Name AnnInpVal
-
-pgColValToBoolExp
-  :: (MonadError QErr m)
-  => PrepFn m -> PGColArgMap -> PGColValMap -> m AnnBoolExpSQL
-pgColValToBoolExp f colArgMap colValMap = do
-  colExps <- forM colVals $ \(name, val) ->
-    BoolFld <$> do
-      opExps <- parseAsEqOp val
-      colInfo <- onNothing (Map.lookup name colArgMap) $
-        throw500 $ "column name " <> showName name
-        <> " not found in column arguments map"
-      AVCol colInfo <$> traverse (traverse f) opExps
-  return $ BoolAnd colExps
-  where
-    colVals = Map.toList colValMap

@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique,
           is_registered boolean not null default false,
           remarks_internal text
@@ -98,7 +98,7 @@ args:
     permission:
       columns:
       - id
-      - name 
+      - name
       - is_registered
       filter:
         _or:
@@ -116,7 +116,7 @@ args:
     permission:
       columns:
       - id
-      - name 
+      - name
       filter:
         articles:
           is_published:
@@ -151,7 +151,7 @@ args:
     - title: Article 1
       content: Sample article content 1
       author_id: 1
-      is_published: false 
+      is_published: false
 
     - title: Article 2
       content: Sample article content 2
@@ -367,7 +367,7 @@ args:
       filter:
         jsonb_col:
           $has_key: age
-      
+
 - type: create_select_permission
   args:
     table: jsonb_table
@@ -428,3 +428,33 @@ args:
       - id
       - student_name
       filter: {}
+
+#Auction table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE auction (
+      id serial primary key,
+      price integer not null DEFAULT 250,
+      bid_price integer
+      );
+      INSERT INTO auction
+      (bid_price)
+      VALUES
+      (100), (120), (300), (260)
+      ;
+- type: track_table
+  args:
+    name: auction
+    schema: public
+- type: create_select_permission
+  args:
+    role: user
+    table: auction
+    permission:
+      filter:
+        bid_price:
+          $cgt: price
+      columns:
+      - id
+      - bid_price
