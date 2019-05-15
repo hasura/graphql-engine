@@ -72,15 +72,21 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
 export const deleteCurrentSchema = (successCb, errorCb) => {
   return (dispatch, getState) => {
     const { currentSchema } = getState().tables;
+
     if (currentSchema === 'public') {
-      return dispatch(showErrorNotification('Cannot drop schema public'));
+      return dispatch(
+        showErrorNotification('Dropping public schema is not supported')
+      );
     }
+
     const isOk = window.confirm(
-      `Are you sure you want the current postgres schema: "${currentSchema}"`
+      `Are you sure you want to delete the postgres schema: "${currentSchema}"`
     );
+
     if (!isOk) {
       return;
     }
+
     const migrationUp = [
       {
         type: 'run_sql',

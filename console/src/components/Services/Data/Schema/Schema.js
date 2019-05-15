@@ -209,8 +209,13 @@ class Schema extends Component {
         };
 
         const closedCreateSection = (
-          <Button color="white" size="xs" onClick={handleCreateNewClick}>
-            + Create new schema
+          <Button
+            color="white"
+            size="xs"
+            onClick={handleCreateNewClick}
+            title="Create new schema"
+          >
+            <i className="fa fa-plus" aria-hidden="true" />
           </Button>
         );
 
@@ -221,7 +226,7 @@ class Schema extends Component {
         };
 
         const openCreateSection = (
-          <div className={styles.inline_block}>
+          <div className={styles.inline_block + ' ' + styles.add_mar_left}>
             <div
               className={`${styles.inline_block} ${styles.remove_pad_right} ${
                 styles.add_mar_right_mid
@@ -275,20 +280,19 @@ class Schema extends Component {
               {schemaOptions}
             </select>
           </div>
-          <div
-            className={styles.display_inline + ' ' + styles.add_mar_left_mid}
-          >
-            <div
-              className={styles.display_inline + ' ' + styles.cursorPointer}
-              title="Delete current schema"
-              onClick={handleDelete}
-            >
-              <i className="fa fa-trash" aria-hidden="true" />
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div className={styles.display_inline}>
+              <Button
+                color="white"
+                size="xs"
+                onClick={handleDelete}
+                title="Delete current schema"
+              >
+                <i className="fa fa-trash" aria-hidden="true" />
+              </Button>
             </div>
             <div
-              className={`${styles.display_inline} ${styles.add_mar_left} ${
-                styles.remove_pad_right
-              } ${styles.add_mar_right_mid}`}
+              className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
             >
               {getCreateSchemaSection()}
             </div>
