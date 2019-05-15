@@ -9,6 +9,7 @@
        isAdminSecretSet: {{isAdminSecretSet}},
        enableTelemetry: {{enableTelemetry}},
        assetsPath: "{{assetsPath}}",
+       versionedAssetsPath: "{{assetsPath}}",
        assetsVersion: "{{assetsVersion}}",
        cdnAssets: {{cdnAssets}},
      };
@@ -74,33 +75,39 @@
      document.body.addEventListener('assetsPathReadyEvent', (e) => {
        loadCSS(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
        loadIcon(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-       loadCSS(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.css.gz');
-       loadScript(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.js.gz');
-       loadScript(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/vendor.js.gz');
+       loadCSS(window.__env.versionedAssetsPath + '/main.css.gz');
+       loadScript(window.__env.versionedAssetsPath + '/main.js.gz');
+       loadScript(window.__env.versionedAssetsPath + '/vendor.js.gz');
 
        console.log(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
        console.log(window.__env.assetsPath + '/common/img/hasura_icon_green.svg');
-       console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.css.gz');
-       console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/main.js.gz');
-       console.log(window.__env.assetsPath + prependSlash(window.__env.assetsVersion) + '/vendor.js.gz');
+       console.log(window.__env.versionedAssetsPath + '/main.css.gz');
+       console.log(window.__env.versionedAssetsPath + '/main.js.gz');
+       console.log(window.__env.versionedAssetsPath + '/vendor.js.gz');
      }, false);
 
      // if browser is offline or cdnAssets is set to false, load assets from
      // server itself.
      if (navigator.onLine === false || window.__env.cdnAssets === false) {
        console.log('offline/cdnAssets=false, loading assets from static-dir');
-       if (window.__env.consoleMode === 'server') {
-         window.__env.assetsPath =
-           window.location.pathname.slice(
-             0, window.location.pathname.lastIndexOf(window.__env.consolePath)
-           ) + '/console/assets';
-         // dispatch the event to load the assets now
-         document.body.dispatchEvent(assetsPathReadyEvent);
-       } else {
-         window.__env.assetsPath = '/assets';
-       }
-     }
+       window.__env.assetsPath =
+         window.location.pathname.slice(
+           0, window.location.pathname.lastIndexOf(window.__env.consolePath)
+         ) + '/console/assets';
+       // set the path to get versioned assets from server
+       window.__env.versionedAssetsPath = window.__env.assetsPath + '/versioned';
+       // dispatch the event to load the assets now
+       document.body.dispatchEvent(assetsPathReadyEvent);
 
+     // otherwise load from cdn itself
+     } else {
+       console.log('online/cdnAssets=true, loading assets from cdn');
+       window.__env.assetsPath =
+       // set the path (cdn-based) to get assets from
+       window.__env.versionedAssetsPath = window.__env.assetsPath + prependSlash(window.__env.assetsVersion);
+       // fire the event
+       document.body.dispatchEvent(assetsPathReadyEvent);
+     }
     </script>
   </body>
 </html>

@@ -106,7 +106,7 @@ setup_gcloud() {
 # push the server binary to google cloud storage
 push_server_binary() {
     gsutil cp /build/_server_output/graphql-engine \
-              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64  
+              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
 }
 
 # skip deploy for pull requests
