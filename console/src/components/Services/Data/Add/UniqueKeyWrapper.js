@@ -77,7 +77,7 @@ const UniqueKeyWrapper = ({
     }
 
     return (
-      <div key={`uniquey-key-${i}`}>
+      <div key={`unique-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
