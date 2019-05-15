@@ -10,12 +10,14 @@ import {
   relTypeChange,
   addRelViewMigrate,
   REL_SET_MANUAL_COLUMNS,
+  UPDATE_MANUAL_REL_TABLE_LIST,
 } from './Actions';
 import {
   fetchTableListBySchema,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
+import Button from '../../../Common/Button/Button';
 
 class AddManualRelationship extends Component {
   constructor() {
@@ -35,7 +37,12 @@ class AddManualRelationship extends Component {
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: this.props.currentSchema,
     });
-    this.props.dispatch(fetchTableListBySchema(this.props.currentSchema));
+    this.props.dispatch(
+      fetchTableListBySchema(
+        this.props.currentSchema,
+        UPDATE_MANUAL_REL_TABLE_LIST
+      )
+    );
   }
   componentWillUnmount() {
     this.props.dispatch({ type: RESET_MANUAL_REL_TABLE_LIST });
@@ -52,7 +59,9 @@ class AddManualRelationship extends Component {
       type: REL_SET_MANUAL_COLUMNS,
       data: [],
     });
-    this.props.dispatch(fetchTableListBySchema(e.target.value));
+    this.props.dispatch(
+      fetchTableListBySchema(e.target.value, UPDATE_MANUAL_REL_TABLE_LIST)
+    );
   }
   onRelNameChange(e) {
     this.props.dispatch(relNameChanged(e.target.value));
@@ -78,7 +87,7 @@ class AddManualRelationship extends Component {
   }
 
   render() {
-    const styles = require('../TableModify/Modify.scss');
+    const styles = require('../TableModify/ModifyTable.scss');
     const {
       tableName,
       allSchemas,
@@ -198,21 +207,24 @@ class AddManualRelationship extends Component {
             </select>
           </div>
         </div>
-        <button
-          className={styles.yellow_button}
+        <Button
+          color="yellow"
+          size="sm"
           onClick={this.onAddRelClicked}
           data-test={this.props.dataTestVal}
         >
           Add
-        </button>
+        </Button>
         {this.props.showClose ? (
-          <button
-            className={styles.add_mar_left + ' btn btn-default btn-sm'}
+          <Button
+            className={styles.add_mar_left}
+            color="white"
+            size="sm"
             onClick={this.onCloseClicked}
             data-test="table-close-manual-relationship"
           >
             Close
-          </button>
+          </Button>
         ) : null}
       </div>
     );

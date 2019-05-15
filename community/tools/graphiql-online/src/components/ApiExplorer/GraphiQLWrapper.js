@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import GraphiQL from 'hasura-console-graphiql';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { graphQLFetcherFinal } from './Actions';
+import OneGraphExplorer from './OneGraphExplorer';
+import { graphQLFetcherFinal, getRemoteQueries } from './Actions';
 
 import './GraphiQL.css';
 
@@ -12,8 +13,17 @@ class GraphiQLWrapper extends Component {
     this.state = {
       schema: null,
       error: false,
+      queries: null,
       onBoardingEnabled: false,
     };
+    const queryFile = this.props.queryParams
+      ? this.props.queryParams.query_file
+      : null;
+    if (queryFile) {
+      getRemoteQueries(queryFile, queries =>
+        this.setState({ queries })
+      );
+    }
   }
 
   shouldComponentUpdate(nextProps) {
@@ -38,7 +48,15 @@ class GraphiQLWrapper extends Component {
       if (variables !== 'undefined') {
         graphiqlProps.variables = JSON.stringify(variables, null, 2);
       }
+    } else if (this.state.queries) {
+      graphiqlProps.query = this.state.queries;
     }
+    const renderGraphiql = props => (
+      <GraphiQL
+        {...graphiqlProps}
+        {...props}
+      />
+    )
     return (
       <ErrorBoundary>
         <div
@@ -49,7 +67,12 @@ class GraphiQLWrapper extends Component {
             styles.graphQLHeight
           }
         >
-          <GraphiQL {...graphiqlProps} />
+          <OneGraphExplorer
+            renderGraphiql={renderGraphiql}
+            endpoint={this.props.data.url}
+            headers={this.props.data.headers}
+            query={query}
+          />
         </div>
       </ErrorBoundary>
     );

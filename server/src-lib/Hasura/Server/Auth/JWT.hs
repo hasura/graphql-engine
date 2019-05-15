@@ -1,15 +1,10 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
   , JWTConfig (..)
   , JWTCtx (..)
   , JWKSet (..)
+  , JWTClaimsFormat (..)
   , updateJwkRef
   , jwkRefreshCtrl
   ) where
@@ -22,18 +17,19 @@ import           Crypto.JWT
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
-import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
-                                                  getCurrentTime)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime,
+                                                  diffUTCTime, getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
-import           Hasura.HTTP.Utils
+import           Hasura.HTTP
 import           Hasura.Logging                  (Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (bsToTxt, userRoleHeader)
+import           Hasura.Server.Utils             (bsToTxt, diffTimeToMicro,
+                                                  userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Data.Aeson                      as A
@@ -45,6 +41,7 @@ import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.String.Conversions         as CS
 import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
@@ -52,25 +49,36 @@ import qualified Network.Wreq                    as Wreq
 
 newtype RawJWT = RawJWT BL.ByteString
 
+data JWTClaimsFormat
+  = JCFJson
+  | JCFStringifiedJson
+  deriving (Show, Eq)
+
+$(A.deriveJSON A.defaultOptions { A.sumEncoding = A.ObjectWithSingleField
+                                , A.constructorTagModifier = A.snakeCase . drop 3
+                                } ''JWTClaimsFormat)
+
 data JWTConfig
   = JWTConfig
-  { jcType     :: !T.Text
-  , jcKeyOrUrl :: !(Either JWK URI)
-  , jcClaimNs  :: !(Maybe T.Text)
-  , jcAudience :: !(Maybe T.Text)
+  { jcType         :: !T.Text
+  , jcKeyOrUrl     :: !(Either JWK URI)
+  , jcClaimNs      :: !(Maybe T.Text)
+  , jcAudience     :: !(Maybe T.Text)
+  , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
   -- , jcIssuer   :: !(Maybe T.Text)
   } deriving (Show, Eq)
 
 data JWTCtx
   = JWTCtx
-  { jcxKey      :: !(IORef JWKSet)
-  , jcxClaimNs  :: !(Maybe T.Text)
-  , jcxAudience :: !(Maybe T.Text)
+  { jcxKey          :: !(IORef JWKSet)
+  , jcxClaimNs      :: !(Maybe T.Text)
+  , jcxAudience     :: !(Maybe T.Text)
+  , jcxClaimsFormat :: !JWTClaimsFormat
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM) =
-    show ["<IORef JWKSet>", show nsM, show audM]
+  show (JWTCtx _ nsM audM cf) =
+    show ["<IORef JWKSet>", show nsM, show audM, show cf]
 
 data HasuraClaims
   = HasuraClaims
@@ -99,13 +107,12 @@ jwkRefreshCtrl
   -> m ()
 jwkRefreshCtrl lggr mngr url ref time =
   void $ liftIO $ C.forkIO $ do
-    C.threadDelay $ delay time
+    C.threadDelay $ diffTimeToMicro time
     forever $ do
       res <- runExceptT $ updateJwkRef lggr mngr url ref
       mTime <- either (const $ return Nothing) return res
-      C.threadDelay $ maybe (60 * aSecond) delay mTime
+      C.threadDelay $ maybe (60 * aSecond) diffTimeToMicro mTime
   where
-    delay t = (floor (realToFrac t :: Double) - 10) * aSecond
     aSecond = 1000 * 1000
 
 
@@ -150,7 +157,8 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
     logAndThrowHttp :: (MonadIO m, MonadError T.Text m) => HTTP.HttpException -> m a
     logAndThrowHttp err = do
-      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url) (Just err) Nothing
+      let httpErr = JwkRefreshHttpError Nothing (T.pack $ show url)
+                    (Just $ HttpException err) Nothing
           errMsg = "error fetching JWK: " <> T.pack (show err)
       logAndThrow errMsg (Just httpErr)
 
@@ -164,7 +172,7 @@ processJwt
   => JWTCtx
   -> HTTP.RequestHeaders
   -> Maybe RoleName
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processJwt jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
   where
@@ -175,7 +183,9 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ mkUserInfo unAuthRole $ mkUserVars []
+      return $ (, Nothing) $
+        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
 
@@ -185,7 +195,7 @@ processAuthZHeader
   => JWTCtx
   -> HTTP.RequestHeaders
   -> BLC.ByteString
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processAuthZHeader jwtCtx headers authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
@@ -193,13 +203,16 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-  let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
+  let claimsNs  = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
+      claimsFmt = jcxClaimsFormat jwtCtx
+      expTimeM = fmap (\(NumericDate t) -> t) $ claims ^. claimExp
 
   -- see if the hasura claims key exist in the claims map
   let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
-  -- the value of hasura claims key has to be an object
-  hasuraClaims <- validateIsObject hasuraClaimsV
+
+  -- get hasura claims value as an object. parse from string possibly
+  hasuraClaims <- parseObjectFromString claimsFmt hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
   let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
@@ -216,7 +229,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ A.Object finalClaims
 
-  return $ mkUserInfo role $ mkUserVars $ Map.toList metadata
+  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList metadata
 
   where
     parseAuthzHeader = do
@@ -225,10 +238,22 @@ processAuthZHeader jwtCtx headers authzHeader = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
-    validateIsObject jVal =
-      case jVal of
-        A.Object x -> return x
-        _          -> throw400 JWTInvalidClaims "hasura claims should be an object"
+    parseObjectFromString claimsFmt jVal =
+      case (claimsFmt, jVal) of
+        (JCFStringifiedJson, A.String v) ->
+          either (const $ claimsErr $ strngfyErr v) return
+          $ A.eitherDecodeStrict $ T.encodeUtf8 v
+        (JCFStringifiedJson, _) ->
+          claimsErr "expecting a string when claims_format is stringified_json"
+        (JCFJson, A.Object o) -> return o
+        (JCFJson, _) ->
+          claimsErr "expecting a json object when claims_format is json"
+
+    strngfyErr v = "expecting stringified json at: '"
+                   <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
+                   <> "', but found: " <> v
+
+    claimsErr = throw400 JWTInvalidClaims
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
@@ -319,15 +344,16 @@ instance A.FromJSON JWTConfig where
     claimNs <- o A..:? "claims_namespace"
     aud     <- o A..:? "audience"
     jwkUrl  <- o A..:? "jwk_url"
+    isStrngfd <- o A..:? "claims_format"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
         key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud
+        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud
+        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd
 
     where
       parseKey keyType rawKey =

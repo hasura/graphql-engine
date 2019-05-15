@@ -1,536 +1,79 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { Link } from 'react-router';
+import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import {
-  activateCommentEdit,
-  updateCommentInput,
-  saveTableCommentSql,
-} from './ModifyActions';
-import {
-  fkRefTableChange,
-  fkLColChange,
-  fkRColChange,
-  toggleFKCheckBox,
-  saveColChangesWithFkSql,
-  isColumnUnique,
   deleteTableSql,
-  deleteConstraintSql,
-  addColSql,
   untrackTableSql,
   RESET,
-  TOGGLE_ACTIVE_COLUMN,
-  saveColumnChangesSql,
-  deleteColumnSql,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort } from '../utils';
-import dataTypes from '../Common/DataTypes';
-import {
-  convertListToDictUsingKV,
-  convertListToDict,
-} from '../../../../utils/data';
-import {
-  setTable,
-  fetchTableComment,
-  fetchColumnComment,
-} from '../DataActions';
-import { showErrorNotification } from '../Notification';
-import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
+import { setTable, fetchTableComment } from '../DataActions';
+import Button from '../../../Common/Button/Button';
+import ColumnEditorList from './ColumnEditorList';
+import ColumnCreator from './ColumnCreator';
+import PrimaryKeyEditor from './PrimaryKeyEditor';
+import TableCommentEditor from './TableCommentEditor';
+import ForeignKeyEditor from './ForeignKeyEditor';
+import semverCheck from '../../../../helpers/semver';
+import styles from './ModifyTable.scss';
 
-const appPrefix = '/data';
-
-const alterTypeOptions = dataTypes.map((datatype, index) => (
-  <option value={datatype.value} key={index} title={datatype.description}>
-    {datatype.name}
-  </option>
-));
-
-const ColumnEditor = ({
-  column,
-  onSubmit,
-  onDelete,
-  allSchemas,
-  fkAdd,
-  tableName,
-  dispatch,
-  currentSchema,
-  columnComment,
-}) => {
-  //  eslint-disable-line no-unused-vars
-  const c = column;
-  const styles = require('./Modify.scss');
-  let [inullable, iunique, idefault, icomment, itype] = [
-    null,
-    null,
-    null,
-    null,
-    null,
-  ];
-  // NOTE: the datatypes is filtered of serial and bigserial where hasuraDatatype === null
-  const refTable = fkAdd.refTable;
-  const tableSchema = allSchemas.find(t => t.table_name === tableName);
-  const rcol = fkAdd.rcol;
-  const typeMap = convertListToDictUsingKV(
-    'hasuraDatatype',
-    'value',
-    dataTypes.filter(dataType => dataType.hasuraDatatype)
-  );
-  const refSchema = allSchemas.find(t => t.table_name === refTable);
-  // const allTableNamesExceptCurrent = allSchemas.filter(t => t.table_name !== tableName);
-  const allTableNames = allSchemas.map(t => t.table_name);
-  allTableNames.sort();
-
-  const refColumnNames = refSchema
-    ? refSchema.columns.map(col => col.column_name)
-    : [];
-  refColumnNames.sort();
-  const onFKRefTableChange = e => {
-    dispatch(fkRefTableChange(e.target.value));
+class ModifyTable extends React.Component {
+  state = {
+    supportTableColumnRename: false,
   };
-  const onFKRefColumnChange = e => {
-    dispatch(fkRColChange(e.target.value));
-  };
-  const checkExistingForeignKey = () => {
-    const numFk = tableSchema.foreign_key_constraints.length;
-    let fkName = '';
-    const onDeleteFK = e => {
-      e.preventDefault();
-      const isOk = confirm('Are you sure?');
-      if (isOk) {
-        dispatch(deleteConstraintSql(tableName, fkName));
-      }
-    };
-    if (numFk > 0) {
-      for (let i = 0; i < numFk; i++) {
-        const fk = tableSchema.foreign_key_constraints[i];
-        if (
-          Object.keys(fk.column_mapping).toString() === c.column_name.toString()
-        ) {
-          fkName = fk.constraint_name;
-          return (
-            <div className={`${styles.display_flex} form-group`}>
-              <label className="col-xs-3 text-right">Foreign Key</label>
-              <div className="col-xs-9">
-                <h5>
-                  <span>{fk.ref_table} :: </span>
-                  <span className={styles.add_mar_right}>
-                    {Object.keys(fk.column_mapping)
-                      .map(l => fk.column_mapping[l])
-                      .join(',')}
-                  </span>
-                  <Link
-                    to={`${appPrefix}/schema/${currentSchema}/tables/${tableName}/relationships`}
-                  >
-                    <button
-                      className={`${styles.default_button} btn`}
-                      type="button"
-                      data-test="add-rel-mod"
-                    >
-                      +Add relationship
-                    </button>
-                  </Link>
-                  &nbsp;
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={onDeleteFK}
-                    data-test="remove-constraint-button"
-                  >
-                    {' '}
-                    Remove Constraint{' '}
-                  </button>{' '}
-                  &nbsp;
-                </h5>
-              </div>
-            </div>
-          );
-        }
-      }
-    }
-    return (
-      <div className={`${styles.display_flex} form-group`}>
-        <label className="col-xs-3 text-right">
-          <input
-            type="checkbox"
-            checked={fkAdd.fkCheckBox}
-            onChange={e => {
-              dispatch(toggleFKCheckBox(e.target.checked));
-            }}
-            value="ForeignKey"
-            data-test="foreign-key-checkbox"
-          />{' '}
-          Foreign Key
-        </label>
-        <div className="col-xs-6">
-          <select
-            className={`${styles.fkSelect} ${styles.fkInEdit} ${
-              styles.fkInEditLeft
-            } input-sm form-control`}
-            disabled={fkAdd.fkCheckBox === false}
-            value={refTable}
-            onChange={onFKRefTableChange}
-            data-test="ref-table"
-          >
-            <option disabled value="">
-              Reference table
-            </option>
-            {allTableNames.map((tName, i) => (
-              <option key={i} value={tName}>
-                {tName}
-              </option>
-            ))}
-          </select>
-          <select
-            className={`${styles.fkSelect} ${
-              styles.fkInEdit
-            } input-sm form-control`}
-            disabled={fkAdd.fkCheckBox === false}
-            value={rcol}
-            onChange={onFKRefColumnChange}
-            data-test="ref-col"
-          >
-            <option disabled value="">
-              Reference column
-            </option>
-            {refColumnNames.map((co, i) => (
-              <option key={i} value={co}>
-                {co}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    );
-  };
-  let isPrimaryKey = false;
-  const isUnique = isColumnUnique(tableSchema, c.column_name);
 
-  if (
-    tableSchema.primary_key &&
-    tableSchema.primary_key.columns.includes(c.column_name)
-  ) {
-    isPrimaryKey = true;
-  }
-
-  const additionalOptions = [];
-  let finalDefaultValue = typeMap[c.data_type];
-  if (!typeMap[c.data_type]) {
-    finalDefaultValue = c.data_type;
-    additionalOptions.push(
-      <option value={finalDefaultValue} key={finalDefaultValue}>
-        {c.data_type}
-      </option>
-    );
-  }
-  return (
-    <div className={`${styles.colEditor} container-fluid`}>
-      <form
-        className="form-horizontal"
-        onSubmit={e => {
-          e.preventDefault();
-          onSubmit(
-            itype.value,
-            inullable.value,
-            iunique.value,
-            idefault.value,
-            icomment.value,
-            column
-          );
-        }}
-      >
-        <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Type</label>
-          <div className="col-xs-6">
-            <select
-              ref={n => (itype = n)}
-              className="input-sm form-control"
-              defaultValue={finalDefaultValue}
-              disabled={isPrimaryKey}
-            >
-              {alterTypeOptions}
-              {additionalOptions}
-            </select>
-          </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Nullable</label>
-          <div className="col-xs-6">
-            <select
-              ref={n => (inullable = n)}
-              className="input-sm form-control"
-              defaultValue={c.is_nullable === 'NO' ? 'false' : 'true'}
-              disabled={isPrimaryKey}
-              data-test="edit-col-nullable"
-            >
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </select>
-          </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Unique</label>
-          <div className="col-xs-6">
-            <select
-              ref={n => (iunique = n)}
-              className="input-sm form-control"
-              defaultValue={isUnique.toString()}
-              disabled={isPrimaryKey}
-              data-test="edit-col-unique"
-            >
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </select>
-          </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Default</label>
-          <div className="col-xs-6">
-            <input
-              ref={n => (idefault = n)}
-              className="input-sm form-control"
-              defaultValue={c.column_default ? c.column_default : null}
-              type="text"
-              disabled={isPrimaryKey}
-              data-test="edit-col-default"
-            />
-          </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-3 text-right">Comment</label>
-          <div className="col-xs-6">
-            <input
-              ref={n => (icomment = n)}
-              className="input-sm form-control"
-              defaultValue={columnComment ? columnComment.result[1] : null}
-              type="text"
-              data-test="edit-col-comment"
-            />
-          </div>
-        </div>
-        {checkExistingForeignKey()}
-        <div className="row">
-          <button
-            type="submit"
-            className={`${styles.yellow_button} btn`}
-            data-test="save-button"
-          >
-            Save
-          </button>
-          {!isPrimaryKey ? (
-            <button
-              type="submit"
-              className={`${styles.yellow_button1} btn btn-danger btn-sm`}
-              onClick={e => {
-                e.preventDefault();
-                onDelete();
-              }}
-              data-test="remove-button"
-            >
-              Remove
-            </button>
-          ) : null}
-        </div>
-      </form>
-      <div className="row">
-        <br />
-      </div>
-    </div>
-  );
-};
-
-class ModifyTable extends Component {
   componentDidMount() {
-    const { dispatch } = this.props;
+    const { dispatch, serverVersion } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));
+    if (serverVersion) {
+      this.checkTableColumnRenameSupport(serverVersion);
+    }
   }
+
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.serverVersion &&
+      nextProps.serverVersion !== this.props.serverVersion
+    ) {
+      this.checkTableColumnRenameSupport(nextProps.serverVersion);
+    }
+  }
+
+  checkTableColumnRenameSupport = serverVersion => {
+    try {
+      if (semverCheck('tableColumnRename', serverVersion)) {
+        this.setState({
+          supportTableColumnRename: true,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   render() {
     const {
       tableName,
       allSchemas,
       dispatch,
-      activeEdit,
-      fkAdd,
       migrationMode,
       currentSchema,
       tableComment,
-      columnComment,
+      columnComments,
       tableCommentEdit,
+      columnEdit,
+      pkModify,
+      fkModify,
     } = this.props;
-    const styles = require('./Modify.scss');
     const tableSchema = allSchemas.find(t => t.table_name === tableName);
-    const hasPrimaryKeys =
-      tableSchema &&
-      tableSchema.primary_key &&
-      tableSchema.primary_key.columns.length > 0;
-    const primaryKeyDict = hasPrimaryKeys
-      ? convertListToDict(tableSchema.primary_key.columns)
-      : {};
-
-    const columns = tableSchema.columns.sort(ordinalColSort);
-    const columnEditors = columns.map((c, i) => {
-      let btnText = 'Edit';
-      let colEditor = null;
-      let bg = '';
-      const colName = c.column_name;
-      const onSubmit = (type, nullable, unique, def, comment, column) => {
-        // dispatch(saveColumnChangesSql(tableName, colName, type, nullable, def, column));
-        if (fkAdd.fkCheckBox === true) {
-          dispatch(fkLColChange(column.column_name));
-          dispatch(
-            saveColChangesWithFkSql(
-              tableName,
-              colName,
-              type,
-              nullable,
-              unique,
-              def,
-              comment,
-              column
-            )
-          );
-        } else {
-          dispatch(
-            saveColumnChangesSql(
-              tableName,
-              colName,
-              type,
-              nullable,
-              unique,
-              def,
-              comment,
-              column
-            )
-          );
-        }
-      };
-      const onDelete = () => {
-        const isOk = confirm('Are you sure you want to delete?');
-        if (isOk) {
-          dispatch(deleteColumnSql(tableName, colName, c));
-        }
-      };
-      if (activeEdit.column === colName) {
-        btnText = 'Close';
-        if (primaryKeyDict[colName]) {
-          colEditor = (
-            <ColumnEditor
-              column={c}
-              onSubmit={onSubmit}
-              onDelete={() => {
-                const isOk = window.confirm(`Are you sure? Deleting a primary key DISABLE ALL ROW EDIT VIA THE CONSOLE.
-              Also, this will delete everything associated with the column (included related entities in other tables) permanently?`);
-                if (isOk) {
-                  dispatch(deleteColumnSql(tableName, colName));
-                }
-              }}
-              fkAdd={fkAdd}
-              tableName={tableName}
-              dispatch={dispatch}
-              allSchemas={allSchemas}
-              currentSchema={currentSchema}
-              columnComment={columnComment}
-            />
-          );
-        } else {
-          colEditor = (
-            <ColumnEditor
-              column={c}
-              onSubmit={onSubmit}
-              onDelete={onDelete}
-              fkAdd={fkAdd}
-              tableName={tableName}
-              dispatch={dispatch}
-              allSchemas={allSchemas}
-              currentSchema={currentSchema}
-              columnComment={columnComment}
-            />
-          );
-        }
-        bg = styles.activeEdit;
-      }
-      // check if column name is primary key
-      let isPrimaryKey = false;
-      if (hasPrimaryKeys) {
-        if (tableSchema.primary_key.columns.includes(colName)) {
-          isPrimaryKey = true;
-        }
-      }
-      let isForeignKey = false;
-      if (tableSchema.foreign_key_constraints.length > 0) {
-        const numFk = tableSchema.foreign_key_constraints.length;
-        for (let iFk = 0; iFk < numFk; iFk++) {
-          const fk = tableSchema.foreign_key_constraints[iFk];
-          if (
-            Object.keys(fk.column_mapping).toString() ===
-            c.column_name.toString()
-          ) {
-            isForeignKey = true;
-            break;
-          }
-        }
-      }
-
-      const keyProperties = () => {
-        if (isPrimaryKey && isForeignKey) {
-          return <i> - primary key, foreign key </i>;
-        }
-        if (isPrimaryKey) {
-          return <i> - primary key </i>;
-        }
-        if (isForeignKey) {
-          return <i> - foreign key </i>;
-        }
-        return <i> {''} </i>;
-      };
-      return (
-        <div key={i} className={bg}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <button
-                  className={`${styles.add_mar_small} btn btn-xs btn-default`}
-                  data-test={`edit-${colName}`}
-                  onClick={() => {
-                    if (activeEdit.column === colName) {
-                      // just closing the column
-                      dispatch({ type: TOGGLE_ACTIVE_COLUMN, column: colName });
-                    } else {
-                      // fetch column comment
-                      dispatch(fetchColumnComment(tableName, colName)).then(
-                        () => {
-                          dispatch({
-                            type: TOGGLE_ACTIVE_COLUMN,
-                            column: colName,
-                          });
-                        }
-                      );
-                    }
-                  }}
-                >
-                  {btnText}
-                </button>
-                <b>{colName}</b> {keyProperties()}
-                &nbsp;
-              </h5>
-              {colEditor}
-            </div>
-          </div>
-        </div>
-      );
-    });
-
-    let colNameInput;
-    let colTypeInput;
-    let colNullInput;
-    let colUniqueInput;
-    let colDefaultInput;
 
     const untrackBtn = (
-      <button
+      <Button
         type="submit"
-        className={`${styles.add_mar_right} btn btn-sm btn-default`}
+        className={styles.add_mar_right}
+        color="white"
+        size="sm"
         onClick={() => {
           const isOk = confirm('Are you sure to untrack?');
           if (isOk) {
@@ -540,89 +83,26 @@ class ModifyTable extends Component {
         data-test="untrack-table"
       >
         Untrack Table
-      </button>
+      </Button>
     );
 
-    const editCommentClicked = () => {
-      let commentText =
-        tableComment && tableComment.result[1] && tableComment.result[1][0]
-          ? tableComment.result[1][0]
-          : null;
-      commentText = commentText !== 'NULL' ? commentText : null;
-      dispatch(activateCommentEdit(true, commentText));
-    };
-    const commentEdited = e => {
-      dispatch(updateCommentInput(e.target.value));
-    };
-    const commentEditSave = () => {
-      dispatch(saveTableCommentSql(true));
-    };
-    const commentEditCancel = () => {
-      dispatch(activateCommentEdit(false, ''));
-    };
-    let commentText =
-      tableComment && tableComment.result[1] && tableComment.result[1][0]
-        ? tableComment.result[1][0]
-        : null;
-    commentText = commentText !== 'NULL' ? commentText : null;
-    let commentHtml = (
-      <div className={styles.add_pad_bottom}>
-        <div className={styles.commentText}>Add a comment</div>
-        <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
-        </div>
-      </div>
+    const deleteBtn = (
+      <Button
+        type="submit"
+        color="red"
+        size="sm"
+        onClick={() => {
+          const isOk = confirm('Are you sure?');
+          if (isOk) {
+            dispatch(deleteTableSql(tableName, tableSchema));
+          }
+        }}
+        data-test="delete-table"
+      >
+        Delete table
+      </Button>
     );
-    if (commentText && !tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <div className={styles.commentText + ' alert alert-warning'}>
-            {commentText}
-          </div>
-          <div onClick={editCommentClicked} className={styles.commentEdit}>
-            <i className="fa fa-edit" />
-          </div>
-        </div>
-      );
-    } else if (tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <input
-            onChange={commentEdited}
-            className={'form-control ' + styles.commentInput}
-            type="text"
-            value={tableCommentEdit.value}
-            defaultValue={commentText}
-          />
-          <div
-            onClick={commentEditSave}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Save
-          </div>
-          <div
-            onClick={commentEditCancel}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Cancel
-          </div>
-        </div>
-      );
-    }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -631,133 +111,54 @@ class ModifyTable extends Component {
           tabName="modify"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
+          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div
             className={
-              `col-xs-9 ${styles.padd_left_remove}` +
+              `col-xs-10 ${styles.padd_left_remove}` +
               ' ' +
               styles.modifyMinWidth
             }
           >
-            {commentHtml}
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              dispatch={dispatch}
+            />
             <h4 className={styles.subheading_text}>Columns</h4>
-            {columnEditors}
-            <div className={styles.activeEdit}>
-              <form
-                className={`form-inline ${styles.display_flex}`}
-                onSubmit={e => {
-                  e.preventDefault();
-                  // validate before sending
-                  if (!gqlPattern.test(colNameInput.value)) {
-                    dispatch(
-                      showErrorNotification(
-                        gqlColumnErrorNotif[0],
-                        gqlColumnErrorNotif[1],
-                        gqlColumnErrorNotif[2],
-                        gqlColumnErrorNotif[3]
-                      )
-                    );
-                  } else if (
-                    colNameInput.value === '' ||
-                    colTypeInput.value === ''
-                  ) {
-                    dispatch(
-                      showErrorNotification(
-                        'Error creating column!',
-                        'Column name/type cannot be empty',
-                        '',
-                        {
-                          custom: 'Column name/type cannot be empty',
-                        }
-                      )
-                    );
-                  } else {
-                    dispatch(
-                      addColSql(
-                        tableName,
-                        colNameInput.value,
-                        colTypeInput.value,
-                        colNullInput.checked,
-                        colUniqueInput.checked,
-                        colDefaultInput.value,
-                        e.target
-                      )
-                    );
-                  }
-                }}
-              >
-                <input
-                  placeholder="column name"
-                  type="text"
-                  className={`${styles.input} input-sm form-control`}
-                  ref={n => (colNameInput = n)}
-                  data-test="column-name"
-                />
-                <select
-                  className={`${styles.select} input-sm form-control`}
-                  defaultValue=""
-                  ref={n => (colTypeInput = n)}
-                  data-test="data-type"
-                >
-                  <option disabled value="">
-                    -- type --
-                  </option>
-                  {alterTypeOptions}
-                </select>
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className={`${styles.input} ${
-                    styles.nullable
-                  } input-sm form-control`}
-                  ref={n => (colNullInput = n)}
-                  data-test="nullable-checkbox"
-                />
-                <label className={styles.nullLabel}>Nullable</label>
-                <input
-                  type="checkbox"
-                  className={`${styles.input} ${
-                    styles.nullable
-                  } input-sm form-control`}
-                  ref={n => (colUniqueInput = n)}
-                  data-test="unique-checkbox"
-                />
-                <label className={styles.nullLabel}>Unique</label>
-                <input
-                  placeholder="default value"
-                  type="text"
-                  className={`${styles.input} ${
-                    styles.defaultInput
-                  } input-sm form-control`}
-                  ref={n => (colDefaultInput = n)}
-                  data-test="default-value"
-                />
-                <button
-                  type="submit"
-                  className="btn btn-sm btn-warning"
-                  data-test="add-column-button"
-                >
-                  + Add column
-                </button>
-              </form>
-            </div>
+            <ColumnEditorList
+              tableSchema={tableSchema}
+              columnEdit={columnEdit}
+              allowRename={this.state.supportTableColumnRename}
+              columnComments={columnComments}
+              dispatch={dispatch}
+              currentSchema={currentSchema}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Add a new column</h4>
+            <ColumnCreator dispatch={dispatch} tableName={tableName} />
+            <hr />
+            <h4 className={styles.subheading_text}>Primary Key</h4>
+            <PrimaryKeyEditor
+              tableSchema={tableSchema}
+              pkModify={pkModify}
+              dispatch={dispatch}
+              currentSchema={currentSchema}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Foreign Keys</h4>
+            <ForeignKeyEditor
+              tableSchema={tableSchema}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              dispatch={dispatch}
+              fkModify={fkModify}
+            />
             <hr />
             {untrackBtn}
-            <button
-              type="submit"
-              className="btn btn-sm btn-danger"
-              onClick={() => {
-                const isOk = confirm('Are you sure?');
-                if (isOk) {
-                  dispatch(deleteTableSql(tableName, tableSchema));
-                }
-              }}
-              data-test="delete-table"
-            >
-              Delete table
-            </button>
+            {deleteBtn}
             <br />
             <br />
           </div>
@@ -773,24 +174,32 @@ ModifyTable.propTypes = {
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   tableComment: PropTypes.string.isRequired,
-  columnComment: PropTypes.string.isRequired,
+  columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
+  columnEdit: PropTypes.object.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  pkModify: PropTypes.array.isRequired,
+  fkModify: PropTypes.array.isRequired,
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allSchemas: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
+  serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   tableComment: state.tables.tableComment,
-  columnComment: state.tables.columnComment,
+  columnComments: state.tables.columnComments,
+  columnEdit: state.tables.modify.columnEdit,
+  pkModify: state.tables.modify.pkModify,
+  fkModify: state.tables.modify.fkModify,
   ...state.tables.modify,
 });
 

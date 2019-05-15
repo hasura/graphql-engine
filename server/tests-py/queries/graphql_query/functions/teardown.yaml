@@ -1,0 +1,9 @@
+type: bulk
+args:
+#Drop table and function from postgres
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE post cascade;
+      DROP TABLE test cascade;
+    cascade: true

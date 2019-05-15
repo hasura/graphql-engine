@@ -28,6 +28,27 @@ QualifiedTable
            "schema": String
    }
 
+.. _FunctionName:
+
+FunctionName
+^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String | QualifiedFunction_
+
+QualifiedFunction
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+           "name": String,
+           "schema": String
+   }
+
 .. _RoleName:
 
 RoleName
@@ -182,7 +203,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -213,6 +234,15 @@ NotExp
    {
        "$not" : BoolExp_
    }
+
+
+TrueExp
+^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+    {}
 
 ColumnExp
 ^^^^^^^^^
@@ -256,6 +286,62 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``"$cgte"``
 - ``"$clte"``
 
+Checking for NULL values :
+
+- ``_is_null`` (takes true/false as values)
+
+JSONB operators :
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_contains``
+     - ``@>``
+   * - ``_contained_in``
+     - ``<@``
+   * - ``_has_key``
+     - ``?``
+
+PostGIS related operators on GEOMETRY columns: 
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersects``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     - ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
+
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+
+.. note::
+
+   - All operators take a JSON representation of ``geometry/geography`` values as input value.
+   - Input value for ``_st_d_within`` operator is an object:
+
+     .. parsed-literal::
+
+       {
+         field-name : {_st_d_within: {distance: Float, from: Value} }
+       }
+
+
 .. _Object:
 
 Object
@@ -273,3 +359,42 @@ A JSONObject_
    }
 
 .. _JSONObject: https://tools.ietf.org/html/rfc7159
+
+.. _Empty Object:
+
+Empty Object
+^^^^^^^^^^^^
+
+An empty JSONObject_
+
+.. code-block:: json
+
+   {}
+
+.. _ColumnPresetExp:
+
+ColumnPresetsExp
+^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to value mapping, where value can be static or derived from a session variable.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : colVal1,
+      "column2" : colVal2,
+      ..
+   }
+
+E.g. where ``id`` is derived from session variable and ``city`` is a static value.
+
+.. code-block:: json
+
+   {
+      "id" : "x-hasura-User-Id", 
+      "city" : "San Francisco"
+   }
+
+.. note::
+
+   If the value of any key begins with "x-hasura-" (*case-insensitive*), the value of the column specified in the key will be derived from a session variable of the same name.

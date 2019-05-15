@@ -1,10 +1,10 @@
 description: Insert landmark using only one co-ordinate. Error as minimum 2 are required
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
-      path: '$.variableValues[0].location.coordinates'
+      path: '$.variableValues.landmarks[0].location.coordinates'
       code: parse-failed
     message: A Position needs at least 2 elements
 query:

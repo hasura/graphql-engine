@@ -26,6 +26,9 @@ sys.setrecursionlimit(2000)
 # Monkey patching StandaloneHTMLBuilder as to not include unnecessary scripts
 
 from sphinx.builders.html import StandaloneHTMLBuilder
+from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+from sphinx.util import compat
+compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
@@ -35,34 +38,8 @@ StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 
-# Algolia variables
-ALGOLIA_SECRETS = {
-    "development": {
-        "APPLICATION_ID": "WCBB1VVLRC",
-        "APPLICATION_SEARCH_KEY": "a50259f1da0f835fbb5e4d421b97b2de",
-        "ALGOLIA_INDEX_NAME": "stg_graphql_docs_search",
-    },
-    "production": {
-        "APPLICATION_ID": "WCBB1VVLRC",
-        "APPLICATION_SEARCH_KEY": "dea0d2c67378878fad5678396a532c95",
-        "ALGOLIA_INDEX_NAME": "graphql_docs_search",
-    }
-}
-
-ALGOLIA_APPLICATION_ID = ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_ID"]
-ALGOLIA_SEARCH_KEY = ALGOLIA_SECRETS[CURRENT_ENV]["APPLICATION_SEARCH_KEY"]
-# Get from env if set
-if os.getenv("ALGOLIA_APPLICATION_ID") and os.getenv("ALGOLIA_SEARCH_KEY"):
-    ALGOLIA_APPLICATION_ID = os.getenv("ALGOLIA_APPLICATION_ID")
-    ALGOLIA_SEARCH_KEY = os.getenv("ALGOLIA_SEARCH_KEY")
-
-ALGOLIA_INDEX_NAME = ALGOLIA_SECRETS[CURRENT_ENV]["ALGOLIA_INDEX_NAME"]
-# Get from env if set
-if os.getenv("ALGOLIA_INDEX_NAME"):
-    ALGOLIA_INDEX_NAME = os.getenv("ALGOLIA_INDEX_NAME")
-
 # GraphiQL defaults
-GRAPHIQL_DEFAULT_ENDPOINT = "https://data.accouterments35.hasura-app.io/v1alpha1/graphql"
+GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
@@ -72,9 +49,6 @@ html_context = {
     "SITEMAP_DOMAIN": "https://docs.hasura.io/",
     "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io",
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
-    "ALGOLIA_APPLICATION_ID": ALGOLIA_APPLICATION_ID,
-    "ALGOLIA_SEARCH_KEY": ALGOLIA_SEARCH_KEY,
-    "ALGOLIA_INDEX_NAME": ALGOLIA_INDEX_NAME
 }
 
 # End of it
@@ -102,6 +76,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
+    "sphinxcontrib.images",
     "sphinx.ext.todo",
     "global_tabs",
     "sphinx_tabs.tabs",
@@ -109,6 +84,10 @@ extensions = [
     "lexer_jsx",
     "lexer_graphql",
 ]
+
+images_config = {
+    "default_image_width": "auto"
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -235,7 +214,7 @@ html_theme_path = ["_theme"]
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #
-html_favicon = "img/layout/favicon.png"
+html_favicon = "img/layout/favicon_yellow.svg"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -296,7 +275,7 @@ html_show_copyright = True
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #
-# html_use_opensearch = ''
+html_use_opensearch = 'https://docs.hasura.io'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None

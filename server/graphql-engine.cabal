@@ -22,8 +22,17 @@ flag developer
   default: False
   manual: True
 
+flag profile
+  description: compile with profile options set
+  default: False
+  manual: True
+
+flag local-console
+  description: embeds resources needed by console and serves them at /static/
+  default: False
+  manual: True
+
 library
-  default-extensions:  NoImplicitPrelude
   hs-source-dirs:      src-lib
                      , src-exec
   default-language:    Haskell2010
@@ -83,7 +92,6 @@ library
 
                      -- GraphQL related
                      , graphql-parser
-                     , wai-middleware-static
 
                      -- URL parser related
                      , network-uri
@@ -132,7 +140,19 @@ library
                      -- regex related
                      , regex-tdfa >= 1.2
 
-  exposed-modules:     Hasura.Server.App
+                     -- pretty printer
+                     , ansi-wl-pprint
+
+                     -- metrics in multiplexed subs
+                     , ekg-core
+
+  exposed-modules:     Hasura.Prelude
+                     , Hasura.Logging
+                     , Hasura.EncJSON
+                     , Hasura.Db
+                     , Hasura.Cache
+
+                     , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
@@ -140,37 +160,49 @@ library
                      , Hasura.Server.Logging
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
+                     , Hasura.Server.Cors
                      , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
+                     , Hasura.Server.Telemetry
+                     , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.PGDump
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
-                     , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship
+                     , Hasura.RQL.DDL.Relationship.Rename
+                     , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Rename
+                     , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
-                     , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Mutation
                      , Hasura.RQL.DML.Returning
                      , Hasura.RQL.DML.Select.Internal
+                     , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
@@ -189,9 +221,15 @@ library
                      , Hasura.GraphQL.Validate.Context
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
-                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Explain
-                     , Hasura.GraphQL.Resolve.LiveQuery
+                     , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.LiveQuery
+                     , Hasura.GraphQL.Execute.LiveQuery.Types
+                     , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
+                     , Hasura.GraphQL.Execute.LiveQuery.Fallback
+                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
@@ -206,12 +244,14 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
-                     , Hasura.HTTP.Utils
+                     , Hasura.HTTP
 
                      , Data.Text.Extended
+                     , Data.Aeson.Extended
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.Parser.JSONPath
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types
@@ -219,23 +259,73 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Rewrite
-                     , Hasura.Prelude
-                     , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
-                     , TH
+                     , Migrate
 
   other-modules:       Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
 
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
 
-  if flag(developer)
+
+  if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
+  if flag(developer)
+    cpp-options: -DDeveloperAPIs -DLocalConsole
+  if flag(local-console)
+    cpp-options: -DLocalConsole
 
-  ghc-options: -O2 -Wall
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
 
 executable graphql-engine
-  default-extensions:  NoImplicitPrelude
+  default-extensions: EmptyCase
+                      FlexibleContexts
+                      FlexibleInstances
+                      InstanceSigs
+                      MultiParamTypeClasses
+                      LambdaCase
+                      MultiWayIf
+                      TupleSections
+                      DeriveFoldable
+                      DeriveFunctor
+                      DeriveGeneric
+                      DeriveLift
+                      DeriveTraversable
+                      GeneralizedNewtypeDeriving
+                      BangPatterns
+                      OverloadedStrings
+                      ScopedTypeVariables
+                      TemplateHaskell
+                      QuasiQuotes
+                      TypeFamilies
+                      NoImplicitPrelude
+
   main-is:           Main.hs
   default-language:  Haskell2010
   hs-source-dirs:    src-exec
@@ -258,9 +348,10 @@ executable graphql-engine
                      , wreq
                      , connection
                      , string-conversions
+                     , uuid
 
-  other-modules:     Ops
-                     TH
+  other-modules:       Ops
+                     , Migrate
 
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries

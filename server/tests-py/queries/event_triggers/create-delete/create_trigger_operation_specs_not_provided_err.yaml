@@ -1,0 +1,22 @@
+- description: Track table test_t1
+  url: /v1/query
+  status: 200
+  query:
+    type: track_table
+    args:
+      schema: hge_tests
+      name: test_t1
+- description: 'Create event trigger with no operation specs provider: Error'
+  url: /v1/query
+  status: 400
+  response:
+    error: atleast one amongst insert/update/delete/enable_manual spec must be provided
+    code: parse-failed
+    path: $
+  query:
+    type: create_event_trigger
+    args:
+      name: t1_1
+      table:
+        schema: hge_tests
+        name: test_t1

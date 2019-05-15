@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
 module Hasura.RQL.Types.Common
        ( PGColInfo(..)
        , RelName(..)
@@ -22,14 +14,17 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
+       , ColVals
+       , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import qualified Data.HashMap.Strict        as HM
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import           Instances.TH.Lift          ()
@@ -43,7 +38,7 @@ data PGColInfo
   , pgiIsNullable :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGColInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype RelName
   = RelName {getRelTxt :: T.Text}
@@ -62,7 +57,9 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable RelType
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -91,7 +88,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -141,3 +138,12 @@ instance (FromJSON a) => FromJSON (WithTable a) where
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
+
+type ColVals = HM.HashMap PGCol Value
+
+data MutateResp
+  = MutateResp
+  { _mrAffectedRows     :: !Int
+  , _mrReturningColumns :: ![ColVals]
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)

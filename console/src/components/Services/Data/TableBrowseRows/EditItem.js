@@ -5,6 +5,21 @@ import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
 import Jsontoggler from '../../../Common/Toggler/Jsontoggler';
+import Button from '../../../Common/Button/Button';
+
+import {
+  getPlaceholder,
+  INTEGER,
+  BIGINT,
+  NUMERIC,
+  DATE,
+  BOOLEAN,
+  UUID,
+  // JSONDTYPE,
+  // JSONB,
+  TIMESTAMP,
+  TIMETZ,
+} from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
@@ -15,13 +30,12 @@ class EditItem extends Component {
   }
 
   onTextChange = (e, colName) => {
-    const textValue = e.target.value;
-    const tempState = {
-      ...this.state,
-    };
-    tempState.editorColumnMap = { ...this.state.editorColumnMap };
-    tempState.editorColumnMap[colName] = textValue;
-    this.setState({ ...tempState });
+    this.setState({
+      editorColumnMap: {
+        ...this.state.editorColumnMap,
+        [colName]: e.target.value,
+      },
+    });
   };
 
   onModalClose = () => {
@@ -52,7 +66,7 @@ class EditItem extends Component {
       return null;
     }
 
-    const styles = require('../TableCommon/Table.scss');
+    const styles = require('../../../Common/TableCommon/Table.scss');
     const columns = schemas.find(x => x.table_name === tableName).columns;
 
     const refs = {};
@@ -71,7 +85,7 @@ class EditItem extends Component {
       // Text type
       let typedInput = (
         <input
-          placeholder="text"
+          placeholder={getPlaceholder(colType)}
           type="text"
           className={'form-control ' + styles.insertBox}
           onClick={clicker}
@@ -82,10 +96,10 @@ class EditItem extends Component {
       );
 
       // Integer
-      if (colType === 'integer') {
+      if (colType === INTEGER) {
         typedInput = (
           <input
-            placeholder="integer"
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -94,10 +108,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'numeric') {
+      } else if (colType === BIGINT) {
         typedInput = (
           <input
-            placeholder="float"
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -106,10 +120,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'timestamp with time zone') {
+      } else if (colType === NUMERIC) {
         typedInput = (
           <input
-            placeholder={new Date().toISOString()}
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -118,10 +132,10 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'date') {
+      } else if (colType === TIMESTAMP) {
         typedInput = (
           <input
-            placeholder={new Date().toISOString().slice(0, 10)}
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -130,11 +144,22 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === 'timetz') {
-        const time = new Date().toISOString().slice(11, 19);
+      } else if (colType === DATE) {
         typedInput = (
           <input
-            placeholder={`${time}Z or ${time}+05:30`}
+            placeholder={getPlaceholder(colType)}
+            type="text"
+            className={'form-control ' + styles.insertBox}
+            onClick={clicker}
+            ref={inputRef}
+            defaultValue={oldItem[colName]}
+            data-test={`typed-input-${i}`}
+          />
+        );
+      } else if (colType === TIMETZ) {
+        typedInput = (
+          <input
+            placeholder={getPlaceholder(colType)}
             type="text"
             className={'form-control ' + styles.insertBox}
             onClick={clicker}
@@ -158,7 +183,7 @@ class EditItem extends Component {
             placeholderProp={'{"name": "foo"} or [12, "asdf"]'}
           />
         );
-      } else if (colType === 'boolean') {
+      } else if (colType === BOOLEAN) {
         typedInput = (
           <select
             className="form-control"
@@ -174,6 +199,18 @@ class EditItem extends Component {
             <option value="true">True</option>
             <option value="false">False</option>
           </select>
+        );
+      } else if (colType === UUID) {
+        typedInput = (
+          <input
+            placeholder={getPlaceholder(colType)}
+            type="text"
+            className={'form-control ' + styles.insertBox}
+            onClick={clicker}
+            ref={inputRef}
+            defaultValue={oldItem[colName]}
+            data-test={`typed-input-${i}`}
+          />
         );
       } else {
         // everything else is text.
@@ -301,9 +338,10 @@ class EditItem extends Component {
           <div className="col-xs-9">
             <form className="form-horizontal">
               {elements}
-              <button
+              <Button
                 type="submit"
-                className={styles.yellow_button}
+                color="yellow"
+                size="sm"
                 onClick={e => {
                   e.preventDefault();
                   dispatch({ type: E_ONGOING_REQ });
@@ -324,7 +362,7 @@ class EditItem extends Component {
                 data-test="save-button"
               >
                 {buttonText}
-              </button>
+              </Button>
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>

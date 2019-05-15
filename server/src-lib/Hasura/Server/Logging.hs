@@ -1,14 +1,14 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
 -- This is taken from wai-logger and customised for our use
 
 module Hasura.Server.Logging
-  ( mkAccessLog
+  ( StartupLog(..)
+  , PGLog(..)
+  , mkInconsMetadataLog
+  , mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
   , WebHookLogger
+  , HttpException
   ) where
 
 import           Crypto.Hash                 (Digest, SHA1, hash)
@@ -30,15 +30,68 @@ import           Text.Printf                 (printf)
 
 import qualified Data.ByteString.Char8       as BS
 import qualified Data.CaseInsensitive        as CI
-import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
 
+import           Hasura.HTTP
 import qualified Hasura.Logging              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
 
+data StartupLog
+  = StartupLog
+  { slLogLevel :: !L.LogLevel
+  , slKind     :: !T.Text
+  , slInfo     :: !Value
+  } deriving (Show, Eq)
+
+instance ToJSON StartupLog where
+  toJSON (StartupLog _ k info) =
+    object [ "kind" .= k
+           , "info" .= info
+           ]
+
+instance L.ToEngineLog StartupLog where
+  toEngineLog startupLog =
+    (slLogLevel startupLog, "startup", toJSON startupLog)
+
+data PGLog
+  = PGLog
+  { plLogLevel :: !L.LogLevel
+  , plMessage  :: !T.Text
+  } deriving (Show, Eq)
+
+instance ToJSON PGLog where
+  toJSON (PGLog _ msg) =
+    object ["message" .= msg]
+
+instance L.ToEngineLog PGLog where
+  toEngineLog pgLog =
+    (plLogLevel pgLog, "pg-client", toJSON pgLog)
+
+data MetadataLog
+  = MetadataLog
+  { mlLogLevel :: !L.LogLevel
+  , mlMessage  :: !T.Text
+  , mlInfo     :: !Value
+  } deriving (Show, Eq)
+
+instance ToJSON MetadataLog where
+  toJSON (MetadataLog _ msg infoVal) =
+    object [ "message" .= msg
+           , "info" .= infoVal
+           ]
+
+instance L.ToEngineLog MetadataLog where
+  toEngineLog ml =
+    (mlLogLevel ml, "metadata", toJSON ml)
+
+mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog objs =
+  MetadataLog L.LevelWarn "Inconsistent Metadata!" $
+    object [ "objects" .= objs]
 
 data WebHookLog
   = WebHookLog
@@ -46,7 +99,7 @@ data WebHookLog
   , whlStatusCode :: !(Maybe N.Status)
   , whlUrl        :: !T.Text
   , whlMethod     :: !N.StdMethod
-  , whlError      :: !(Maybe H.HttpException)
+  , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
@@ -54,23 +107,14 @@ instance L.ToEngineLog WebHookLog where
   toEngineLog webHookLog =
     (whlLogLevel webHookLog, "webhook-log", toJSON webHookLog)
 
-instance ToJSON H.HttpException where
-  toJSON (H.InvalidUrlException _ e) =
-    object [ "type" .= ("invalid_url" :: T.Text)
-           , "message" .= e
-           ]
-  toJSON (H.HttpExceptionRequest _ cont) =
-    object [ "type" .= ("http_exception" :: T.Text)
-           , "message" .= show cont
-           ]
-
 instance ToJSON WebHookLog where
-  toJSON whl = object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
-                      , "url" .= whlUrl whl
-                      , "method" .= show (whlMethod whl)
-                      , "http_error" .= whlError whl
-                      , "response" .= whlResponse whl
-                      ]
+  toJSON whl =
+    object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
+           , "url" .= whlUrl whl
+           , "method" .= show (whlMethod whl)
+           , "http_error" .= whlError whl
+           , "response" .= whlResponse whl
+           ]
 
 type WebHookLogger = WebHookLog -> IO ()
 
@@ -119,27 +163,6 @@ instance ToJSON LogDetail where
     object [ "request"  .= q
            , "error" .= e
            ]
-
--- type ServerLogger = Request -> BL.ByteString -> Either QErr BL.ByteString -> IO ()
--- type ServerLogger r = Request -> r -> Maybe (UTCTime, UTCTime) -> IO ()
-
--- type LogDetailG r = Request -> r -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
-
--- withStdoutLogger :: LogDetailG r -> (ServerLogger r -> IO a) -> IO a
--- withStdoutLogger detailF appf =
---   bracket setup teardown $ \(rlogger, _) -> appf rlogger
---   where
---     setup = do
---       getter <- newTimeCache "%FT%T%z"
---       lgrset <- newStdoutLoggerSet defaultBufSize
---       let logger req env timeT = do
---             zdata <- getter
---             let serverLog = mkAccessLog detailF zdata req env timeT
---             pushLogStrLn lgrset $ toLogStr $ encode serverLog
---             when (isJust $ slDetail serverLog) $ flushLogStr lgrset
---           remover = rmLoggerSet lgrset
---       return (logger, remover)
---     teardown (_, remover) = void remover
 
 ravenLogGen
   :: (BL.ByteString, Either QErr BL.ByteString)

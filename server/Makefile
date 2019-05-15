@@ -1,21 +1,32 @@
 project  := graphql-engine
 registry := hasura
-version  := $(shell ../scripts/get-version.sh)
+VERSION  ?= $(shell ../scripts/get-version.sh)
+export VERSION
+nproc    := $(shell nproc)
 
 # TODO: needs to be replaced with something like yq
-stack_resolver := $(shell grep '^resolver:' stack.yaml | awk '{print $$2;}')
-packager_ver := 1.2
+stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
+packager_ver := 20190326
+pg_dump_ver := 11
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 
 build_output := /build/_server_output
 
-dev: src-lib src-exec src-rsr
-	stack build --fast
-	stack exec graphql-engine -- --database-url postgres://postgres:@localhost:5432/hge serve --enable-console
+build:
+	stack build --fast --ghc-options '-j$(nproc)'
+
+build-local-console:
+	stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
+
+exec: build
+	stack exec graphql-engine -- serve
+
+exec-local-console: build-local-console
+	stack exec graphql-engine -- serve --enable-console
 
 image: $(project).cabal
-	docker build -t "$(registry)/$(project):$(version)" \
+	docker build -t "$(registry)/$(project):$(VERSION)" \
 		-f packaging/Dockerfile \
 		--build-arg build_flags=--fast \
 		--build-arg project=$(project) \
@@ -24,7 +35,7 @@ image: $(project).cabal
 		.
 
 release-image: $(project).cabal
-	docker build -t "$(registry)/$(project):$(version)" \
+	docker build -t "$(registry)/$(project):$(VERSION)" \
 		-f packaging/Dockerfile \
 		--build-arg project=$(project) \
 		--build-arg stack_resolver=$(stack_resolver) \
@@ -38,7 +49,7 @@ ci-binary:
 	mkdir -p $(build_output)
 	cp $(build_dir)/$(project)/$(project) $(build_output)
 # cp "$(build_dir)/$(project)-test/$(project)-test" $(build_output)
-	echo "$(version)" > $(build_output)/version.txt
+	echo "$(VERSION)" > $(build_output)/version.txt
 
 ci-test:
 	$(build_output)/graphql-engine-test --database-url=$(DATABASE_URL)
@@ -49,23 +60,24 @@ ci-image:
 	docker cp $(build_dir)/$(project)/$(project) dummy:/root/
 	docker run --rm --volumes-from dummy $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
 	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
+	cp /usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump packaging/build/rootfs/bin/pg_dump
 	upx packaging/build/rootfs/bin/$(project)
-	docker build -t $(registry)/$(project):$(version) packaging/build/
+	docker build -t $(registry)/$(project):$(VERSION) packaging/build/
 
 ci-save-image:
-	docker save -o $(build_output)/image.tar $(registry)/$(project):$(version)
+	docker save -o $(build_output)/image.tar $(registry)/$(project):$(VERSION)
 
 ci-load-image:
 	docker load -i $(build_output)/image.tar
 
 push:
-	docker push $(registry)/$(project):$(version)
+	docker push $(registry)/$(project):$(VERSION)
 
 push-latest:
-	docker tag $(registry)/$(project):$(version) $(registry)/$(project):latest
+	docker tag $(registry)/$(project):$(VERSION) $(registry)/$(project):latest
 	docker push $(registry)/$(project):latest
 
 packager: packaging/packager.df
 	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
 
-.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image
+.PHONY: image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec build-local-console exec-local-console

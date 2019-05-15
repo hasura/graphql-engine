@@ -1,82 +1,90 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
 module Hasura.GraphQL.Transport.HTTP.Protocol
-  ( GraphQLRequest(..)
-  , GraphQLQuery(..)
+  ( GQLReq(..)
+  , GQLReqUnparsed
+  , GQLReqParsed
+  , toParsed
+  , GQLQueryText
+  , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues
   , encodeGQErr
-  , encodeJSONObject
   , encodeGQResp
-  , mkJSONObj
   , GQResp(..)
   , isExecError
   ) where
 
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
+import           Hasura.RQL.Types
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Builder       as BB
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Vector                   as V
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.RQL.Types
+newtype GQLExecDoc
+  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
+  deriving (Ord, Show, Eq, Hashable)
 
-newtype GraphQLQuery
-  = GraphQLQuery { unGraphQLQuery :: [G.ExecutableDefinition] }
-  deriving (Show, Eq, Hashable)
-
-instance J.FromJSON GraphQLQuery where
-  parseJSON = J.withText "GraphQLQuery" $ \t ->
+instance J.FromJSON GQLExecDoc where
+  parseJSON = J.withText "GQLExecDoc" $ \t ->
     case G.parseExecutableDoc t of
       Left _  -> fail "parsing the graphql query failed"
-      Right q -> return $ GraphQLQuery $ G.getExecutableDefinitions q
+      Right q -> return $ GQLExecDoc $ G.getExecutableDefinitions q
 
-instance J.ToJSON GraphQLQuery where
+instance J.ToJSON GQLExecDoc where
   -- TODO, add pretty printer in graphql-parser
-  toJSON _ = J.String "toJSON not implemented for GraphQLQuery"
+  toJSON _ = J.String "toJSON not implemented for GQLExecDoc"
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName . G.Name <$> J.parseJSON v
 
 type VariableValues = Map.HashMap G.Variable J.Value
 
-data GraphQLRequest
-  = GraphQLRequest
+data GQLReq a
+  = GQLReq
   { _grOperationName :: !(Maybe OperationName)
-  , _grQuery         :: !GraphQLQuery
+  , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
-  ''GraphQLRequest
+  ''GQLReq
  )
 
-instance Hashable GraphQLRequest
+instance (Hashable a) => Hashable (GQLReq a)
+
+newtype GQLQueryText
+  = GQLQueryText
+  { _unGQLQueryText :: Text
+  } deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable)
+
+type GQLReqUnparsed = GQLReq GQLQueryText
+type GQLReqParsed = GQLReq GQLExecDoc
+
+toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
+toParsed req = case G.parseExecutableDoc gqlText of
+  Left _ -> withPathK "query" $ throwVE "not a valid graphql query"
+  Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
+  where
+    gqlText = _unGQLQueryText $ _grQuery req
 
 encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 data GQResp
-  = GQSuccess BL.ByteString
-  | GQPreExecError [J.Value]
-  | GQExecError [J.Value]
+  = GQSuccess !BL.ByteString
+  | GQPreExecError ![J.Value]
+  | GQExecError ![J.Value]
   deriving (Show, Eq)
 
 isExecError :: GQResp -> Bool
@@ -84,24 +92,9 @@ isExecError = \case
   GQExecError _ -> True
   _             -> False
 
-encodeJSONObject :: V.Vector (Text, BL.ByteString) -> BB.Builder
-encodeJSONObject xs
-  | V.null xs = BB.char7 '{' <> BB.char7 '}'
-  | otherwise = BB.char7 '{' <> builder' (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 '}') (V.unsafeTail xs)
-  where
-    go v b  = BB.char7 ',' <> builder' v <> b
-    -- builds "key":value from (key,value)
-    builder' (t, v) =
-      BB.char7 '"' <> TE.encodeUtf8Builder t <> BB.string7 "\":"
-      <> BB.lazyByteString v
-
-encodeGQResp :: GQResp -> BL.ByteString
+encodeGQResp :: GQResp -> EncJSON
 encodeGQResp gqResp =
-  mkJSONObj $ case gqResp of
-    GQSuccess r      -> [("data", r)]
-    GQPreExecError e -> [("errors", J.encode e)]
-    GQExecError e    -> [("data", "null"), ("errors", J.encode e)]
-
-mkJSONObj :: [(Text, BL.ByteString)] -> BL.ByteString
-mkJSONObj = BB.toLazyByteString . encodeJSONObject . V.fromList
+  encJFromAssocList $ case gqResp of
+    GQSuccess r      -> [("data", encJFromLBS r)]
+    GQPreExecError e -> [("errors", encJFromJValue e)]
+    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]

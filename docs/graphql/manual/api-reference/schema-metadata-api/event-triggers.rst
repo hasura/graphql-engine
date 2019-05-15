@@ -133,11 +133,53 @@ Args syntax
      - true
      - TriggerName_
      - Name of the event trigger
+
+.. _invoke_event_trigger:
+
+invoke_event_trigger
+--------------------
+
+``invoke_event_trigger`` is used to invoke an event trigger manually.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "invoke_event_trigger",
+       "args" : {
+           "name": "sample_trigger",
+           "payload": {}
+       }
+   }
+
+.. _invoke_event_trigger_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - TriggerName_
+     - Name of the event trigger
+   * - payload
+     - true
+     - JSON
+     - Some JSON payload to send to trigger
  
 .. _TriggerName:
 
-``TriggerName``
-&&&&&&&&&&&&&&&
+TriggerName
+&&&&&&&&&&&
 
 .. parsed-literal::
 
@@ -145,8 +187,8 @@ Args syntax
 
 .. _OperationSpec:
 
-``OperationSpec``
-&&&&&&&&&&&&&&&&&
+OperationSpec
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -166,8 +208,8 @@ Args syntax
 
 .. _HeaderFromValue:
 
-``HeaderFromValue``
-&&&&&&&&&&&&&&&&&&&
+HeaderFromValue
+&&&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -187,8 +229,8 @@ Args syntax
 
 .. _HeaderFromEnv:
 
-``HeaderFromEnv``
-&&&&&&&&&&&&&&&&&
+HeaderFromEnv
+&&&&&&&&&&&&&
 
 .. list-table::
    :header-rows: 1
@@ -208,8 +250,8 @@ Args syntax
 
 .. _EventTriggerColumns:
 
-``EventTriggerColumns``
-&&&&&&&&&&&&&&&&&&&&&&&
+EventTriggerColumns
+&&&&&&&&&&&&&&&&&&&
 
 .. parsed-literal::
    :class: haskell-pre

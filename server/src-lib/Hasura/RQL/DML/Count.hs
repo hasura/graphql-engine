@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-
-module Hasura.RQL.DML.Count where
+module Hasura.RQL.DML.Count
+  ( CountQueryP1(..)
+  , getCountDeps
+  , validateCountQWith
+  , validateCountQ
+  , runCount
+  , countQToTx
+  ) where
 
 import           Data.Aeson
 import           Instances.TH.Lift       ()
@@ -11,6 +13,7 @@ import           Instances.TH.Lift       ()
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
@@ -68,12 +71,13 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
-countP1
-  :: (P1C m)
-  => (PGColType -> Value -> m S.SQLExp)
+validateCountQWith
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => SessVarBldr m
+  -> (PGColType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   tableInfo <- askTabInfo qt
 
   -- Check if select is allowed
@@ -90,11 +94,14 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp' colInfoMap selPerm be prepValBuilder
+    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+
+  resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
+                     spiFilter selPerm
 
   return $ CountQueryP1
     qt
-    (spiFilter selPerm, annSQLBoolExp)
+    (resolvedSelFltr, annSQLBoolExp)
     mDistCols
   where
     selNecessaryMsg =
@@ -103,21 +110,26 @@ countP1 prepValBuilder (CountQuery qt mDistCols mWhere) = do
     relInDistColsErr =
       "Relationships can't be used in \"distinct\"."
 
-countP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
-countP2 (u, p) = do
+validateCountQ
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ =
+  liftDMLP1 . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
+
+countQToTx
+  :: (QErrM m, MonadTx m)
+  => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
+countQToTx (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
           (Q.fromBuilder countSQL) (toList p) True
-  return $ BB.toLazyByteString $ encodeCount qRes
+  return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
-instance HDBQuery CountQuery where
-
-  type Phase1Res CountQuery = (CountQueryP1, DS.Seq Q.PrepArg)
-  phaseOne = flip runStateT DS.empty . countP1 binRHSBuilder
-
-  phaseTwo _ = countP2
-
-  schemaCachePolicy = SCPNoChange
+runCount
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  => CountQuery -> m EncJSON
+runCount q =
+  validateCountQ q >>= countQToTx

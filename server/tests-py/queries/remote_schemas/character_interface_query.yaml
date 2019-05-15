@@ -1,0 +1,43 @@
+description: Query from the remote schema with interfaces
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hero3: null
+    hero4:
+      __typename: Droid
+      id: '1'
+      name: R2-D2
+      primaryFunction: Astromech
+    hero5:
+      __typename: Human
+      name: Luke Skywalker
+      homePlanet: Tatooine
+
+query:
+  query: |
+    query getHeroes {
+      hero3: hero (episode: 3) {
+        id
+      }
+
+      hero4: hero (episode: 4) {
+        __typename
+        id
+        name
+        ... on Droid {
+          primaryFunction
+        }
+      }
+
+      hero5: hero (episode: 5) {
+        __typename
+        name
+        ... on Droid {
+          primaryFunction
+        }
+        ... on Human {
+          homePlanet
+        }
+      }
+    }

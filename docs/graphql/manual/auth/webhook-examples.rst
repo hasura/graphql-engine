@@ -6,7 +6,7 @@ Auth webhook samples
   :depth: 1
   :local:
 
-We have put together a `GitHub Node.js repo <https://github.com/hasura/sample-auth-webhook>`__ that has some sample auth
+We have put together a `GitHub Node.js repo <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/nodejs-express>`__ that has some sample auth
 webhooks configured.
 
 You can deploy these samples using `glitch <https://glitch.com/>`__:
@@ -19,10 +19,9 @@ You can deploy these samples using `glitch <https://glitch.com/>`__:
 
 Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
 
-- ``/simple/webhook``   (`View source <https://github.com/hasura/sample-auth-webhook/blob/master/server.js#L25>`__)
-- ``/firebase/webhook``  (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/firebase>`__)
-- ``/auth0/webhook`` (`View source <https://github.com/hasura/sample-auth-webhook/tree/master/auth0>`__)
+- ``/simple/webhook``  (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js>`__)
+- ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/firebase/firebaseHandler.js>`__) 
 
 .. note::
 
-    If you are using ``auth0`` or ``firebase`` you will have to set the associated environment variables.
+    If you are using ``firebase`` you will have to set the associated environment variables.

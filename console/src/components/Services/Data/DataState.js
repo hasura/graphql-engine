@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -33,9 +36,15 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultInsertSetState = {
-  key: '',
-  value: '',
+const defaultPresetsState = {
+  insert: {
+    key: '',
+    value: '',
+  },
+  update: {
+    key: '',
+    value: '',
+  },
 };
 const defaultQueryPermissions = {
   insert: {
@@ -43,12 +52,11 @@ const defaultQueryPermissions = {
     allow_upsert: true,
     set: {},
     columns: [],
-    localSet: [
+    localPresets: [
       {
-        ...defaultInsertSetState,
+        ...defaultPresetsState.insert,
       },
     ],
-    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -59,6 +67,12 @@ const defaultQueryPermissions = {
   update: {
     columns: [],
     filter: {},
+    set: {},
+    localPresets: [
+      {
+        ...defaultPresetsState.update,
+      },
+    ],
   },
   delete: {
     filter: {},
@@ -76,13 +90,17 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
-  fkAdd: {
-    refTable: '',
-    pairs: [],
-    lcol: '',
-    rcol: '',
-    fkCheckBox: false,
-  },
+  columnEdit: {},
+  pkEdit: [''],
+  pkModify: [''],
+  fkModify: [
+    {
+      refTableName: '',
+      colMappings: [{ '': '' }],
+      onDelete: 'restrict',
+      onUpdate: 'restrict',
+    },
+  ],
   relAdd: {
     isActive: true,
     name: '',
@@ -99,6 +117,7 @@ const defaultModifyState = {
     },
   },
   permissionsState: { ...defaultPermissionsState },
+  prevPermissionState: { ...defaultPermissionsState },
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
@@ -126,18 +145,22 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  postgresFunctions: [],
+  nonTrackablePostgresFunctions: [],
+  trackedFunctions: [],
+  listedFunctions: [],
 
   listingSchemas: [],
   untrackedSchemas: [],
   information_schema: [],
   tableComment: null,
-  columnComment: null,
+  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
-  accessKeyError: false,
+  adminSecretError: false,
   dataHeaders: {
-    'Content-Type': 'application/json',
+    'content-type': 'application/json',
   },
 };
 
@@ -148,5 +171,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultInsertSetState,
+  defaultPresetsState,
 };

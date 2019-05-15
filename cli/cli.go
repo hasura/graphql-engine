@@ -8,57 +8,112 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/briandowns/spinner"
+	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
 	colorable "github.com/mattn/go-colorable"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-// Environment variable names recognised by the CLI.
-const (
-	// ENV_ENDPOINT is the name of env var which indicates the Hasura GraphQL
-	// Engine endpoint URL.
-	ENV_ENDPOINT = "HASURA_GRAPHQL_ENDPOINT"
-	// ENV_ACCESS_KEY is the name of env var that has the access key for GraphQL
-	// Engine endpoint.
-	ENV_ACCESS_KEY = "HASURA_GRAPHQL_ACCESS_KEY"
-)
-
 // Other constants used in the package
 const (
 	// Name of the global configuration directory
-	GLOBAL_CONFIG_DIR_NAME = ".hasura-graphql"
+	GlobalConfigDirName = ".hasura"
 	// Name of the global configuration file
-	GLOBAL_CONFIG_FILE_NAME = "config.json"
+	GlobalConfigFileName = "config.json"
+
+	// Name of the file to store last update check time
+	LastUpdateCheckFileName = "last_update_check_at"
 )
 
-// HasuraGraphQLConfig has the config values required to contact the server.
-type HasuraGraphQLConfig struct {
+// String constants
+const (
+	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
+allow us to keep improving Hasura at warp speed. To opt-out or read more,
+visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
+`
+)
+
+// ServerConfig has the config values required to contact the server.
+type ServerConfig struct {
+	// Endpoint for the GraphQL Engine
+	Endpoint string
+	// AdminSecret (optional) required to query the endpoint
+	AdminSecret string
+
+	ParsedEndpoint *url.URL
+}
+
+type rawServerConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
-	// AccessKey (optional) required to query the endpoint
+	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
 	AccessKey string `json:"access_key,omitempty"`
+	// AdminSecret (optional) Admin secret required to query the endpoint
+	AdminSecret string `json:"admin_secret,omitempty"`
 
 	ParsedEndpoint *url.URL `json:"-"`
 }
 
+func (r rawServerConfig) toServerConfig() ServerConfig {
+	s := r.AdminSecret
+	if s == "" {
+		s = r.AccessKey
+	}
+	return ServerConfig{
+		Endpoint:       r.Endpoint,
+		AdminSecret:    s,
+		ParsedEndpoint: r.ParsedEndpoint,
+	}
+}
+
+func (s ServerConfig) toRawServerConfig() rawServerConfig {
+	return rawServerConfig{
+		Endpoint:       s.Endpoint,
+		AccessKey:      "",
+		AdminSecret:    s.AdminSecret,
+		ParsedEndpoint: s.ParsedEndpoint,
+	}
+}
+
+// MarshalJSON converts s to JSON
+func (s ServerConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.toRawServerConfig())
+}
+
+// UnmarshalJSON converts b to struct s
+func (s ServerConfig) UnmarshalJSON(b []byte) error {
+	var r rawServerConfig
+	err := json.Unmarshal(b, &r)
+	if err != nil {
+		return errors.Wrap(err, "unmarshal error")
+	}
+	sc := r.toServerConfig()
+	s.Endpoint = sc.Endpoint
+	s.AdminSecret = sc.AdminSecret
+	s.ParsedEndpoint = sc.ParsedEndpoint
+	return nil
+}
+
 // ParseEndpoint ensures the endpoint is valid.
-func (hgc *HasuraGraphQLConfig) ParseEndpoint() error {
-	nurl, err := url.Parse(hgc.Endpoint)
+func (s *ServerConfig) ParseEndpoint() error {
+	nurl, err := url.Parse(s.Endpoint)
 	if err != nil {
 		return err
 	}
-	hgc.ParsedEndpoint = nurl
+	s.ParsedEndpoint = nurl
 	return nil
 }
 
@@ -71,6 +126,12 @@ type ExecutionContext struct {
 	// correctly render example strings etc.
 	CMDName string
 
+	// ID is a unique ID for this Execution
+	ID string
+
+	// ServerUUID is the unique ID for the server this execution is contacting.
+	ServerUUID string
+
 	// Spinner is the global spinner object used to show progress across the cli.
 	Spinner *spinner.Spinner
 	// Logger is the global logger object to print logs.
@@ -82,12 +143,12 @@ type ExecutionContext struct {
 	MigrationDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
-	// MetadataFile (optional) is a yaml file where Hasura metadata is stored.
-	MetadataFile string
+	// MetadataFile (optional) is a yaml|json file where Hasura metadata is stored.
+	MetadataFile []string
 
-	// Config is the configuration object storing the endpoint and access key
+	// ServerConfig is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
-	Config *HasuraGraphQLConfig
+	ServerConfig *ServerConfig
 
 	// GlobalConfigDir is the ~/.hasura-graphql directory to store configuration
 	// globally.
@@ -95,6 +156,9 @@ type ExecutionContext struct {
 	// GlobalConfigFile is the file inside GlobalConfigDir where values are
 	// stored.
 	GlobalConfigFile string
+
+	// GlobalConfig holds all the configuration options.
+	GlobalConfig *GlobalConfig
 
 	// IsStableRelease indicates if the CLI release is stable or not.
 	IsStableRelease bool
@@ -106,6 +170,23 @@ type ExecutionContext struct {
 
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
+
+	// Telemetry collects the telemetry data throughout the execution
+	Telemetry *telemetry.Data
+
+	// LastUpdateCheckFile is the file where the timestamp of last update check is stored
+	LastUpdateCheckFile string
+
+	// SkipUpdateCheck will skip the auto update check if set to true
+	SkipUpdateCheck bool
+}
+
+// NewExecutionContext returns a new instance of execution context
+func NewExecutionContext() *ExecutionContext {
+	ec := &ExecutionContext{}
+	ec.Telemetry = telemetry.BuildEvent()
+	ec.Telemetry.Version = version.BuildVersion
+	return ec
 }
 
 // Prepare as the name suggests, prepares the ExecutionContext ec by
@@ -128,14 +209,32 @@ func (ec *ExecutionContext) Prepare() error {
 	// populate version
 	ec.setVersion()
 
-	// setup global config directory
-	err := ec.setupGlobalConfigDir()
+	// setup global config
+	err := ec.setupGlobalConfig()
 	if err != nil {
-		return errors.Wrap(err, "setting up config directory failed")
+		return errors.Wrap(err, "setting up global config failed")
 	}
 
-	// initialize a blank config
-	ec.Config = &HasuraGraphQLConfig{}
+	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
+
+	// initialize a blank server config
+	if ec.ServerConfig == nil {
+		ec.ServerConfig = &ServerConfig{}
+	}
+
+	// generate an execution id
+	if ec.ID == "" {
+		id := "00000000-0000-0000-0000-000000000000"
+		u, err := uuid.NewV4()
+		if err == nil {
+			id = u.String()
+		} else {
+			ec.Logger.Debugf("generating uuid for execution ID failed, %v", err)
+		}
+		ec.ID = id
+		ec.Logger.Debugf("execution id: %v", ec.ID)
+	}
+	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
 }
@@ -144,14 +243,9 @@ func (ec *ExecutionContext) Prepare() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// prepare the context
-	err := ec.Prepare()
-	if err != nil {
-		return errors.Wrap(err, "failed preparing context")
-	}
 
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -159,7 +253,8 @@ func (ec *ExecutionContext) Validate() error {
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = filepath.Join(ec.MigrationDir, "metadata.yaml")
+	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.yaml"))
+	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.json"))
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -167,19 +262,30 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
-	ec.Logger.Debug("graphql engine access_key: ", ec.Config.AccessKey)
+	ec.Logger.Debug("graphql engine endpoint: ", ec.ServerConfig.Endpoint)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.ServerConfig.AdminSecret)
 
 	// get version from the server and match with the cli version
-	return ec.checkServerVersion()
+	err = ec.checkServerVersion()
+	if err != nil {
+		return errors.Wrap(err, "version check")
+	}
+
+	state := util.GetServerState(ec.ServerConfig.Endpoint, ec.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+
+	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.Endpoint)
+	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
 	ec.Version.SetServerVersion(v)
+	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
@@ -194,22 +300,26 @@ func (ec *ExecutionContext) checkServerVersion() error {
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetDefault("endpoint", "http://localhost:8080")
-	v.SetDefault("access_key", "")
 	v.SetEnvPrefix("HASURA_GRAPHQL")
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("endpoint", "http://localhost:8080")
+	v.SetDefault("admin_secret", "")
+	v.SetDefault("access_key", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannor read config file")
+		return errors.Wrap(err, "cannot read config from file/env")
 	}
-	ec.Config = &HasuraGraphQLConfig{
-		Endpoint:  v.GetString("endpoint"),
-		AccessKey: v.GetString("access_key"),
+	adminSecret := v.GetString("admin_secret")
+	if adminSecret == "" {
+		adminSecret = v.GetString("access_key")
 	}
-	err = ec.Config.ParseEndpoint()
-	return err
+	ec.ServerConfig = &ServerConfig{
+		Endpoint:    v.GetString("endpoint"),
+		AdminSecret: adminSecret,
+	}
+	return ec.ServerConfig.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -249,111 +359,11 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
-}
 
-// setupGlobalConfigDir ensures that global config directory exists and the
-// paths are correctly set.
-func (ec *ExecutionContext) setupGlobalConfigDir() error {
-	if len(ec.GlobalConfigDir) == 0 {
-		home, err := homedir.Dir()
-		if err != nil {
-			return errors.Wrap(err, "cannot get home directory")
-		}
-		globalConfigDir := filepath.Join(home, GLOBAL_CONFIG_DIR_NAME)
-		ec.GlobalConfigDir = globalConfigDir
+	// set the logger for telemetry
+	if ec.Telemetry.Logger == nil {
+		ec.Telemetry.Logger = ec.Logger
 	}
-	err := os.MkdirAll(ec.GlobalConfigDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "cannot create config directory")
-	}
-	ec.GlobalConfigFile = filepath.Join(ec.GlobalConfigDir, GLOBAL_CONFIG_FILE_NAME)
-	return nil
-}
-
-// validateDirectory sets execution directory and validate it to see that or any
-// of the parent directory is a valid project directory. A valid project
-// directory contains the following:
-// 1. migrations directory
-// 2. config.yaml file
-// 3. metadata.yaml (optional)
-// If the current directory or any parent directory (upto filesystem root) is
-// found to have these files, ExecutionDirectory is set as that directory.
-func (ec *ExecutionContext) validateDirectory() error {
-	if len(ec.ExecutionDirectory) == 0 {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return errors.Wrap(err, "error getting current working directory")
-		}
-		ec.ExecutionDirectory = cwd
-	}
-
-	ed, err := os.Stat(ec.ExecutionDirectory)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Wrap(err, "did not find required directory. use 'init'?")
-		} else {
-			return errors.Wrap(err, "error getting directory details")
-		}
-	}
-	if !ed.IsDir() {
-		return errors.Errorf("'%s' is not a directory", ed.Name())
-	}
-	// config.yaml
-	// migrations/
-	// (optional) metadata.yaml
-	dir, err := recursivelyValidateDirectory(ec.ExecutionDirectory)
-	if err != nil {
-		return errors.Wrap(err, "validate")
-	}
-
-	ec.ExecutionDirectory = dir
-	return nil
-}
-
-// filesRequired are the files that are mandatory to qualify for a project
-// directory.
-var filesRequired = []string{
-	"config.yaml",
-	"migrations",
-}
-
-// recursivelyValidateDirectory tries to parse 'startFrom' as a project
-// directory by checking for the 'filesRequired'. If the parent of 'startFrom'
-// (nextDir) is filesystem root, error is returned. Otherwise, 'nextDir' is
-// validated, recursively.
-func recursivelyValidateDirectory(startFrom string) (validDir string, err error) {
-	err = validateDirectory(startFrom)
-	if err != nil {
-		nextDir := filepath.Dir(startFrom)
-		cleaned := filepath.Clean(nextDir)
-		isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
-		// return error if filesystem boundary is hit
-		if cleaned == "/" || isWindowsRoot {
-			return nextDir, errors.Errorf("cannot find [%s] | search stopped at filesystem boundary", strings.Join(filesRequired, ", "))
-
-		}
-		return recursivelyValidateDirectory(nextDir)
-	}
-	return startFrom, nil
-}
-
-// validateDirectory tries to parse dir for the filesRequired and returns error
-// if any one of them is missing.
-func validateDirectory(dir string) error {
-	notFound := []string{}
-	for _, f := range filesRequired {
-		if _, err := os.Stat(filepath.Join(dir, f)); os.IsNotExist(err) {
-			relpath, e := filepath.Rel(dir, f)
-			if e == nil {
-				f = relpath
-			}
-			notFound = append(notFound, f)
-		}
-	}
-	if len(notFound) > 0 {
-		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
-	}
-	return nil
 }
 
 // SetVersion sets the version inside context, according to the variable
@@ -362,4 +372,16 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+// GetMetadataPath returns the file path based on the format.
+func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
+	ext := fmt.Sprintf(".%s", format)
+	for _, filePath := range ec.MetadataFile {
+		switch p := filepath.Ext(filePath); p {
+		case ext:
+			return filePath, nil
+		}
+	}
+	return "", errors.New("unsupported file type")
 }

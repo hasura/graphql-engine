@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.SQL.Value where
 
 import           Hasura.SQL.GeoJSON
@@ -48,32 +46,49 @@ data PGColValue
   | PGValUnknown !T.Text
   deriving (Show, Eq)
 
-txtEncoder :: PGColValue -> S.SQLExp
-txtEncoder colVal = case colVal of
-  PGValInteger i  -> S.SELit $ T.pack $ show i
-  PGValSmallInt i -> S.SELit $ T.pack $ show i
-  PGValBigInt i   -> S.SELit $ T.pack $ show i
-  PGValFloat f    -> S.SELit $ T.pack $ show f
-  PGValDouble d   -> S.SELit $ T.pack $ show d
-  PGValNumeric sc -> S.SELit $ T.pack $ show sc
-  PGValBoolean b  -> S.SELit $ bool "false" "true" b
-  PGValChar t     -> S.SELit $ T.pack $ show t
-  PGValVarchar t  -> S.SELit t
-  PGValText t     -> S.SELit t
-  PGValDate d     -> S.SELit $ T.pack $ showGregorian d
+data TxtEncodedPGVal
+  = TENull
+  | TELit !Text
+  deriving (Show, Eq, Generic)
+
+instance Hashable TxtEncodedPGVal
+
+instance ToJSON TxtEncodedPGVal where
+  toJSON = \case
+    TENull  -> Null
+    TELit t -> String t
+
+txtEncodedPGVal :: PGColValue -> TxtEncodedPGVal
+txtEncodedPGVal colVal = case colVal of
+  PGValInteger i  -> TELit $ T.pack $ show i
+  PGValSmallInt i -> TELit $ T.pack $ show i
+  PGValBigInt i   -> TELit $ T.pack $ show i
+  PGValFloat f    -> TELit $ T.pack $ show f
+  PGValDouble d   -> TELit $ T.pack $ show d
+  PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValBoolean b  -> TELit $ bool "false" "true" b
+  PGValChar t     -> TELit $ T.pack $ show t
+  PGValVarchar t  -> TELit t
+  PGValText t     -> TELit t
+  PGValDate d     -> TELit $ T.pack $ showGregorian d
   PGValTimeStampTZ u ->
-    S.SELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
-    S.SELit $ T.pack (show tod ++ timeZoneOffsetString tz)
+    TELit $ T.pack (show tod ++ timeZoneOffsetString tz)
   PGNull _ ->
-    S.SEUnsafe "NULL"
-  PGValJSON (Q.JSON j)    -> S.SELit $ TL.toStrict $
+    TENull
+  PGValJSON (Q.JSON j)    -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
-  PGValJSONB (Q.JSONB j)  -> S.SELit $ TL.toStrict $
+  PGValJSONB (Q.JSONB j)  -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
-  PGValGeo o    -> S.SELit $ TL.toStrict $
+  PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
-  PGValUnknown t -> S.SELit t
+  PGValUnknown t -> TELit t
+
+txtEncoder :: PGColValue -> S.SQLExp
+txtEncoder colVal = case txtEncodedPGVal colVal of
+  TENull  -> S.SEUnsafe "NULL"
+  TELit t -> S.SELit t
 
 binEncoder :: PGColValue -> Q.PrepArg
 binEncoder colVal = case colVal of
@@ -112,7 +127,11 @@ binEncoder colVal = case colVal of
   PGValGeo o ->
     Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
   PGValUnknown t ->
-    (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+    textToPrepVal t
+
+textToPrepVal :: Text -> Q.PrepArg
+textToPrepVal t =
+  (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 parsePGValue' :: PGColType
              -> Value
@@ -178,7 +197,7 @@ convToTxt :: PGColType
           -> Value
           -> AT.Parser S.SQLExp
 convToTxt ty val =
-  txtEncoder <$> parsePGValue ty val
+  toTxtValue ty <$> parsePGValue ty val
 
 readEitherTxt :: (Read a) => T.Text -> Either String a
 readEitherTxt = readEither . T.unpack
@@ -190,11 +209,27 @@ iresToEither (ISuccess a)   = return a
 pgValFromJVal :: (FromJSON a) => Value -> Either String a
 pgValFromJVal = iresToEither . ifromJSON
 
+withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
+withGeoVal ty v =
+  bool v applyGeomFromGeoJson isGeoTy
+  where
+    applyGeomFromGeoJson =
+      S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
+
+    isGeoTy = case ty of
+      PGGeometry  -> True
+      PGGeography -> True
+      _           -> False
+
 toPrepParam :: Int -> PGColType -> S.SQLExp
-toPrepParam i pct =
-  if pct == PGGeometry || pct == PGGeography
-  then S.SEFnApp "ST_GeomFromGeoJSON" [S.SEPrep i] Nothing
-  else S.SEPrep i
+toPrepParam i ty =
+  withGeoVal ty $ S.SEPrep i
+
+toTxtValue :: PGColType -> PGColValue -> S.SQLExp
+toTxtValue ty val =
+  S.withTyAnn ty txtVal
+  where
+    txtVal = withGeoVal ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

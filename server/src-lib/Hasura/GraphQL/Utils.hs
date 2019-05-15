@@ -1,11 +1,5 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hasura.GraphQL.Utils
-  ( onNothing
-  , showName
+  ( showName
   , showNamedTy
   , throwVE
   , getBaseTy
@@ -13,10 +7,8 @@ module Hasura.GraphQL.Utils
   , groupTuples
   , groupListWith
   , mkMapWith
-  , onLeft
   , showNames
   , isValidName
-  , onJust
   ) where
 
 import           Hasura.Prelude
@@ -31,12 +23,6 @@ import qualified Text.Regex.TDFA               as TDFA
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
-
-onNothing :: (Monad m) => Maybe a -> m a -> m a
-onNothing m act = maybe act return m
-
-onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-onJust m action = maybe (return ()) action m
 
 throwVE :: (MonadError QErr m) => Text -> m a
 throwVE = throw400 ValidationFailed
@@ -83,9 +69,6 @@ mkMapWith f l =
   where
     mapG = groupListWith f l
     dups = Map.keys $ Map.filter ((> 1) . length) mapG
-
-onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
-onLeft e f = either f return e
 
 showNames :: (Foldable t) => t G.Name -> Text
 showNames names =

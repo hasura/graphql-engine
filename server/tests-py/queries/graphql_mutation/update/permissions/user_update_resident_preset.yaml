@@ -1,0 +1,30 @@
+description: Update mutation on resident using preset permissions
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user1
+response:
+  data:
+    update_resident:
+      affected_rows: 1
+      returning:
+      - id: 3
+        name: clarke
+        age: 21
+        city: melbourne
+#Always city column updated to melbourne
+query:
+  query: |
+    mutation updateResident{
+      update_resident(
+        where: {name: {_eq: "clarke"}}
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          age
+          city
+        }
+      }
+    }

@@ -11,7 +11,7 @@ import { validatePermission } from '../../validators/validators';
 const testName = 'perm';
 
 export const savePermission = () => {
-  cy.get(getElementFromAlias('Save-permissions-button')).click();
+  cy.get(getElementFromAlias('Save-Permissions-button')).click();
   cy.wait(7000);
   // Check for success notif
   // cy.get('.notification-success').click();
@@ -25,49 +25,47 @@ export const permNoCheck = (tableName, query, first) => {
     getElementFromAlias(`${query === first ? '' : 'role0'}-${query}`)
   ).click();
   // check the custom check textbox
+  // cy.get(getElementFromAlias('toggle-row-permission')).click();
   cy.get(getElementFromAlias('without-checks')).click();
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
-    cy.get('span')
-      .contains('Toggle all')
-      .click();
+    cy.get(getElementFromAlias('toggle-col-permission')).click();
+    cy.get(getElementFromAlias('toggle-all-col-btn')).click();
+  }
+  if (query === 'insert' || query === 'update') {
+    cy.get(getElementFromAlias('toggle-presets-permission')).click();
+    cy.get(getElementFromAlias('column-presets-column-0')).select(
+      getColName(0)
+    );
+    cy.get(getElementFromAlias('column-presets-type-0')).select('static');
+    cy.get(getElementFromAlias('column-presets-value-0'))
+      .type('1')
+      .blur();
+    cy.get(getElementFromAlias('column-presets-column-1')).select(
+      getColName(1)
+    );
+    cy.get(getElementFromAlias('column-presets-type-1')).select('session');
+    cy.get(getElementFromAlias('column-presets-value-1')).type('user-id');
   }
   // Save
   savePermission();
   // Validate
   validatePermission(tableName, 'role0', query, 'none', 'success', null, true);
-  // Do not allow users to make upset queries in case of Insert
-  if (query === 'insert') {
-    // Reopen insert permission
-    cy.get(getElementFromAlias('role0-insert')).click();
-    cy.get('span')
-      .contains('upsert queries')
-      .click();
-    // Save
-    savePermission();
-    // Validate
-    validatePermission(
-      tableName,
-      'role0',
-      query,
-      'none',
-      'success',
-      null,
-      false
-    );
-  }
 };
 
 export const permCustomCheck = (tableName, query) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the without checks textbox
+  cy.get(getElementFromAlias('toggle-row-permission')).click();
   cy.get(getElementFromAlias('custom-check')).click();
   // Select column
-  cy.get('select').select(getColName(0));
+  cy.get(getElementFromAlias('qb-select'))
+    .first()
+    .select(getColName(0));
   // Select operator
-  cy.get('select')
+  cy.get(getElementFromAlias('qb-select'))
     .last()
     .select(`${getColName(0)}._eq`);
   // Set filter to 1
@@ -91,7 +89,7 @@ export const permRemove = (tableName, query) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
-  cy.get(getElementFromAlias('Remove-button')).click();
+  cy.get(getElementFromAlias('Delete-Permissions-button')).click();
   cy.wait(2500);
   // Check for notif
   // cy.get('.notification-success').click();
@@ -142,7 +140,7 @@ export const createView = (viewName, tableName) => {
     const { __env } = win;
     const requestOptions = makeDataAPIOptions(
       __env.dataApiUrl,
-      __env.accessKey,
+      __env.adminSecret,
       reqBody
     );
     cy.request(requestOptions);

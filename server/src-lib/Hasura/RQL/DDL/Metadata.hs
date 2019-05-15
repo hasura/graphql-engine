@@ -1,61 +1,59 @@
-{-# LANGUAGE DeriveLift        #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Hasura.RQL.DDL.Metadata
-  ( ReplaceMetadata(..)
-  , TableMeta(..)
-  , tmObjectRelationships
-  , tmArrayRelationships
-  , tmInsertPermissions
-  , tmSelectPermissions
-  , tmUpdatePermissions
-  , tmDeletePermissions
+  ( TableMeta
 
-  , mkTableMeta
-  , applyQP1
-  , applyQP2
-
-  , DumpInternalState(..)
+  , ReplaceMetadata(..)
+  , runReplaceMetadata
 
   , ExportMetadata(..)
+  , runExportMetadata
   , fetchMetadata
 
   , ClearMetadata(..)
-  , clearMetadata
+  , runClearMetadata
 
   , ReloadMetadata(..)
+  , runReloadMetadata
+
+  , DumpInternalState(..)
+  , runDumpInternalState
+
+  , GetInconsistentMetadata
+  , runGetInconsistentMetadata
+
+  , DropInconsistentMetadata
+  , runDropInconsistentMetadata
   ) where
 
-import           Control.Lens
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
-import qualified Data.List                     as L
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashSet                       as HS
+import qualified Data.List                          as L
+import qualified Data.Text                          as T
 
-import           Hasura.GraphQL.Utils
+import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
-import qualified Hasura.RQL.DDL.Permission     as DP
-import qualified Hasura.RQL.DDL.QueryTemplate  as DQ
-import qualified Hasura.RQL.DDL.Relationship   as DR
-import qualified Hasura.RQL.DDL.RemoteSchema   as DRS
-import qualified Hasura.RQL.DDL.Schema.Table   as DT
-import qualified Hasura.RQL.DDL.Subscribe      as DS
-import qualified Hasura.RQL.Types.RemoteSchema as TRS
-import qualified Hasura.RQL.Types.Subscribe    as DTS
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.RQL.DDL.EventTrigger        as DE
+import qualified Hasura.RQL.DDL.Permission          as DP
+import qualified Hasura.RQL.DDL.Permission.Internal as DP
+import qualified Hasura.RQL.DDL.QueryTemplate       as DQ
+import qualified Hasura.RQL.DDL.Relationship        as DR
+import qualified Hasura.RQL.DDL.RemoteSchema        as DRS
+import qualified Hasura.RQL.DDL.Schema.Function     as DF
+import qualified Hasura.RQL.DDL.Schema.Table        as DT
+import qualified Hasura.RQL.Types.EventTrigger      as DTS
+import qualified Hasura.RQL.Types.RemoteSchema      as TRS
 
 data TableMeta
   = TableMeta
@@ -125,36 +123,38 @@ instance FromJSON ClearMetadata where
 clearMetadata :: Q.TxE QErr ()
 clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_template WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
-  clearHdbViews
 
-instance HDBQuery ClearMetadata where
-
-  type Phase1Res ClearMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = do
-    hMgr <- askHttpManager
-    newSc <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
-    writeSchemaCache newSc
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runClearMetadata
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ClearMetadata -> m EncJSON
+runClearMetadata _ = do
+  adminOnly
+  liftTx clearMetadata
+  DT.buildSchemaCacheStrict
+  return successMsg
 
 data ReplaceMetadata
   = ReplaceMetadata
   { aqTables         :: ![TableMeta]
   , aqQueryTemplates :: ![DQ.CreateQueryTemplate]
+  , aqFunctions      :: !(Maybe [QualifiedFunction])
   , aqRemoteSchemas  :: !(Maybe [TRS.AddRemoteSchemaQuery])
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
-applyQP1 :: ReplaceMetadata -> P1 ()
-applyQP1 (ReplaceMetadata tables templates mSchemas) = do
+applyQP1
+  :: (QErrM m, UserInfoM m)
+  => ReplaceMetadata -> m ()
+applyQP1 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
   adminOnly
 
@@ -183,12 +183,16 @@ applyQP1 (ReplaceMetadata tables templates mSchemas) = do
   withPathK "queryTemplates" $
     checkMultipleDecls "query templates" $ map DQ.cqtName templates
 
+  withPathK "functions" $
+    checkMultipleDecls "functions" functions
+
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
         checkMultipleDecls "remote schemas" $ map TRS._arsqName schemas
 
   where
-    withTableName qt = withPathK (qualTableToTxt qt)
+    withTableName qt = withPathK (qualObjectToText qt)
+    functions = fromMaybe [] mFunctions
 
     checkMultipleDecls t l = do
       let dups = getDups l
@@ -201,19 +205,18 @@ applyQP1 (ReplaceMetadata tables templates mSchemas) = do
 
 applyQP2
   :: ( UserInfoM m
-     , QErrM m
      , CacheRWM m
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
+     , HasSQLGenCtx m
      )
   => ReplaceMetadata
-  -> m RespBody
-applyQP2 (ReplaceMetadata tables templates mSchemas) = do
+  -> m EncJSON
+applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas) = do
 
-  hMgr <- askHttpManager
-  defaultSchemaCache <- liftTx $ clearMetadata >> DT.buildSchemaCache hMgr
-  writeSchemaCache defaultSchemaCache
+  liftTx clearMetadata
+  DT.buildSchemaCacheStrict
 
   withPathK "tables" $ do
 
@@ -246,7 +249,7 @@ applyQP2 (ReplaceMetadata tables templates mSchemas) = do
     indexedForM_ tables $ \table ->
       withPathK "event_triggers" $
         indexedForM_ (table ^. tmEventTriggers) $ \etc ->
-        DS.subTableP2 (table ^. tmTable) False etc
+        DE.subTableP2 (table ^. tmTable) False etc
 
   -- query templates
   withPathK "queryTemplates" $
@@ -254,29 +257,42 @@ applyQP2 (ReplaceMetadata tables templates mSchemas) = do
       qti <- DQ.createQueryTemplateP1 template
       void $ DQ.createQueryTemplateP2 template qti
 
+  -- sql functions
+  withPathK "functions" $
+    indexedMapM_ (void . DF.trackFunctionP2) functions
+
   -- remote schemas
   onJust mSchemas $ \schemas ->
     withPathK "remote_schemas" $
       indexedForM_ schemas $ \conf ->
-        void $ DRS.addRemoteSchemaP2 conf
+        void $ DRS.addRemoteSchemaP1 conf
+               >>= DRS.addRemoteSchemaP2 conf
+
+  -- build GraphQL Context
+  sc <- GS.updateSCWithGCtx =<< askSchemaCache
+
+  -- resolve remote schemas
+  httpMgr <- askHttpManager
+  newSc <- DRS.resolveRemoteSchemas sc httpMgr
+  writeSchemaCache newSc
 
   return successMsg
 
   where
+    functions = fromMaybe [] mFunctions
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- DP.addPermP1 tabInfo permDef
         DP.addPermP2 (tiName tabInfo) permDef permInfo
 
-
-instance HDBQuery ReplaceMetadata where
-
-  type Phase1Res ReplaceMetadata = ()
-  phaseOne = applyQP1
-
-  phaseTwo q _ = applyQP2 q
-
-  schemaCachePolicy = SCPReload
+runReplaceMetadata
+  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ReplaceMetadata -> m EncJSON
+runReplaceMetadata q = do
+  applyQP1 q
+  applyQP2 q
 
 data ExportMetadata
   = ExportMetadata
@@ -290,8 +306,7 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 fetchMetadata :: Q.TxE QErr ReplaceMetadata
 fetchMetadata = do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
-
-  let qts          = map (uncurry QualifiedTable) tables
+  let qts          = map (uncurry QualifiedObject) tables
       tableMetaMap = M.fromList $ zip qts $ map mkTableMeta qts
 
   -- Fetch all the relationships
@@ -329,10 +344,15 @@ fetchMetadata = do
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
 
+  -- fetch all functions
+  functions <- map (uncurry QualifiedObject) <$>
+    Q.catchE defaultTxErrorHandler fetchFunctions
+
   -- fetch all custom resolvers
   schemas <- DRS.fetchRemoteSchemas
 
-  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs (Just schemas)
+  return $ ReplaceMetadata (M.elems postRelMap) qTmpltDefs
+                            (Just functions) (Just schemas)
 
   where
 
@@ -344,19 +364,19 @@ fetchMetadata = do
 
     permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
       perm <- decodeValue pDef
-      return (QualifiedTable sn tn,  DP.PermDef rn perm mComment)
+      return (QualifiedObject sn tn,  DP.PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
     relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
       using <- decodeValue rDef
-      return (QualifiedTable sn tn, DR.RelDef rn using mComment)
+      return (QualifiedObject sn tn, DR.RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
     trigRowToDef (sn, tn, Q.AltJ configuration) = do
       conf <- decodeValue configuration
-      return (QualifiedTable sn tn, conf::EventTriggerConf)
+      return (QualifiedObject sn tn, conf::EventTriggerConf)
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -389,16 +409,19 @@ fetchMetadata = do
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               |] () False
+    fetchFunctions =
+      Q.listQ [Q.sql|
+                SELECT function_schema, function_name
+                FROM hdb_catalog.hdb_function
+                WHERE is_system_defined = 'false'
+                    |] () False
 
-
-instance HDBQuery ExportMetadata where
-
-  type Phase1Res ExportMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = encode <$> liftTx fetchMetadata
-
-  schemaCachePolicy = SCPNoChange
+runExportMetadata
+  :: (QErrM m, UserInfoM m, MonadTx m)
+  => ExportMetadata -> m EncJSON
+runExportMetadata _ = do
+  adminOnly
+  encJFromJValue <$> liftTx fetchMetadata
 
 data ReloadMetadata
   = ReloadMetadata
@@ -409,20 +432,15 @@ instance FromJSON ReloadMetadata where
 
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
-instance HDBQuery ReloadMetadata where
-
-  type Phase1Res ReloadMetadata = ()
-  phaseOne _ = adminOnly
-
-  phaseTwo _ _ = do
-    hMgr <- askHttpManager
-    sc <- liftTx $ do
-      Q.catchE defaultTxErrorHandler clearHdbViews
-      DT.buildSchemaCache hMgr
-    writeSchemaCache sc
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runReloadMetadata
+  :: ( QErrM m, UserInfoM m, CacheRWM m
+     , MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     )
+  => ReloadMetadata -> m EncJSON
+runReloadMetadata _ = do
+  adminOnly
+  DT.buildSchemaCache
+  return successMsg
 
 data DumpInternalState
   = DumpInternalState
@@ -433,12 +451,61 @@ instance FromJSON DumpInternalState where
 
 $(deriveToJSON defaultOptions ''DumpInternalState)
 
-instance HDBQuery DumpInternalState where
+runDumpInternalState
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => DumpInternalState -> m EncJSON
+runDumpInternalState _ = do
+  adminOnly
+  encJFromJValue <$> askSchemaCache
 
-  type Phase1Res DumpInternalState = ()
-  phaseOne _ = adminOnly
 
-  phaseTwo _ _ =
-    encode <$> askSchemaCache
+data GetInconsistentMetadata
+  = GetInconsistentMetadata
+  deriving (Show, Eq, Lift)
 
-  schemaCachePolicy = SCPNoChange
+instance FromJSON GetInconsistentMetadata where
+  parseJSON _ = return GetInconsistentMetadata
+
+$(deriveToJSON defaultOptions ''GetInconsistentMetadata)
+
+runGetInconsistentMetadata
+  :: (QErrM m, UserInfoM m, CacheRM m)
+  => GetInconsistentMetadata -> m EncJSON
+runGetInconsistentMetadata _ = do
+  adminOnly
+  inconsObjs <- scInconsistentObjs <$> askSchemaCache
+  return $ encJFromJValue $ object
+                [ "is_consistent" .= null inconsObjs
+                , "inconsistent_objects" .= inconsObjs
+                ]
+
+data DropInconsistentMetadata
+ = DropInconsistentMetadata
+ deriving(Show, Eq, Lift)
+
+instance FromJSON DropInconsistentMetadata where
+  parseJSON _ = return DropInconsistentMetadata
+
+$(deriveToJSON defaultOptions ''DropInconsistentMetadata)
+
+runDropInconsistentMetadata
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropInconsistentMetadata -> m EncJSON
+runDropInconsistentMetadata _ = do
+  adminOnly
+  sc <- askSchemaCache
+  let inconsSchObjs = map _moId $ scInconsistentObjs sc
+  mapM_ purgeMetadataObj inconsSchObjs
+  writeSchemaCache sc{scInconsistentObjs = []}
+  return successMsg
+
+purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
+purgeMetadataObj = liftTx . \case
+  (MOTable qt) ->
+    Q.catchE defaultTxErrorHandler $ DT.delTableFromCatalog qt
+  (MOFunction qf)                 -> DF.delFunctionFromCatalog qf
+  (MORemoteSchema rsn)            -> DRS.removeRemoteSchemaFromCatalog rsn
+  (MOQTemplate qtn)               -> DQ.delQTemplateFromCatalog qtn
+  (MOTableObj qt (MTORel rn _))   -> DR.delRelFromCatalog qt rn
+  (MOTableObj qt (MTOPerm rn pt)) -> DP.dropPermFromCatalog qt rn pt
+  (MOTableObj _ (MTOTrigger trn)) -> DE.delEventTriggerFromCatalog trn

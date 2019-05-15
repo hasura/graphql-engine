@@ -1,0 +1,51 @@
+description: Query from the remote schema with union
+url: /v1/graphql
+status: 200
+
+response:
+  data:
+    hero3: null
+    hero2:
+      __typename: Human
+      id: '7'
+      name: Luke Skywalker
+      homePlanet: Tatooine
+    hero1:
+      __typename: Droid
+      id: '6'
+      name: R2-D2
+      primaryFunction: Astromech
+
+query:
+  query: |
+    query unionSearch {
+      hero3: search (episode: 3) {
+        __typename
+        ... on Droid {
+        id
+        }
+      }
+
+      hero2: search (episode: 2) {
+        __typename
+        ... on Human {
+          id
+          name
+          homePlanet
+        }
+      }
+
+      hero1: search (episode: 1) {
+        __typename
+        ... on Droid {
+          id
+          name
+          primaryFunction
+        }
+        ... on Human {
+          id
+          homePlanet
+        }
+      }
+    }
+

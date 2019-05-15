@@ -1,24 +1,22 @@
-{-# LANGUAGE DeriveLift                 #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 module Hasura.RQL.DDL.QueryTemplate
   ( createQueryTemplateP1
   , createQueryTemplateP2
   , delQTemplateFromCatalog
   , TemplateParamConf(..)
   , CreateQueryTemplate(..)
-  , DropQueryTemplate(..)
+  , runCreateQueryTemplate
   , QueryTP1
+
+  , DropQueryTemplate(..)
+  , runDropQueryTemplate
+
   , SetQueryTemplateComment(..)
+  , runSetQueryTemplateComment
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal    (sessVarFromCurrentSetting)
 import           Hasura.RQL.GBoolExp        (txtRHSBuilder)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -59,9 +57,10 @@ data CreateQueryTemplate
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateQueryTemplate)
 
 validateParam
-  :: PGColType
+  :: (QErrM m)
+  => PGColType
   -> Value
-  -> P1 PS.SQLExp
+  -> m PS.SQLExp
 validateParam pct val =
   case val of
     Object _ -> do
@@ -74,7 +73,7 @@ validateParam pct val =
     validateDefault =
       void . runAesonParser (convToBin pct)
 
-mkSelQ :: SelectQueryT -> P1 SelectQuery
+mkSelQ :: (QErrM m) => SelectQueryT -> m SelectQuery
 mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
   intLim <- withPathK "limit" $ maybe returnNothing parseAsInt lim
   intOffset <- withPathK "offset" $ maybe returnNothing parseAsInt offset
@@ -90,23 +89,29 @@ mkSelQ (DMLQuery tn (SelectG c w o lim offset)) = do
 
 data QueryTP1
   = QTP1Insert R.InsertQueryP1
-  | QTP1Select R.AnnSel
-  | QTP1Update R.UpdateQueryP1
-  | QTP1Delete R.DeleteQueryP1
+  | QTP1Select R.AnnSimpleSel
+  | QTP1Update R.AnnUpd
+  | QTP1Delete R.AnnDel
   | QTP1Count R.CountQueryP1
   | QTP1Bulk [QueryTP1]
   deriving (Show, Eq)
 
 validateTQuery
-  :: QueryT
-  -> P1 QueryTP1
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  => QueryT
+  -> m QueryTP1
 validateTQuery qt = withPathK "args" $ case qt of
-  QTInsert q -> QTP1Insert <$> R.convInsertQuery decodeInsObjs validateParam q
-  QTSelect q -> QTP1Select <$> (mkSelQ q >>= R.convSelectQuery validateParam)
-  QTUpdate q -> QTP1Update <$> R.convUpdateQuery validateParam q
-  QTDelete q -> QTP1Delete <$> R.convDeleteQuery validateParam q
-  QTCount q  -> QTP1Count <$> R.countP1 validateParam q
-  QTBulk q   -> QTP1Bulk <$> mapM validateTQuery q
+  QTInsert q -> QTP1Insert <$>
+    R.convInsertQuery decodeInsObjs sessVarFromCurrentSetting validateParam q
+  QTSelect q -> QTP1Select <$>
+    (mkSelQ q >>= R.convSelectQuery sessVarFromCurrentSetting validateParam)
+  QTUpdate q -> QTP1Update <$>
+    R.validateUpdateQueryWith sessVarFromCurrentSetting validateParam q
+  QTDelete q -> QTP1Delete <$>
+    R.validateDeleteQWith sessVarFromCurrentSetting validateParam q
+  QTCount q  -> QTP1Count  <$>
+    R.validateCountQWith sessVarFromCurrentSetting validateParam q
+  QTBulk q   -> QTP1Bulk   <$> mapM validateTQuery q
   where
     decodeInsObjs val = do
       tpc <- decodeValue val
@@ -124,17 +129,15 @@ collectDeps qt = case qt of
   QTP1Bulk qp1   -> concatMap collectDeps qp1
 
 createQueryTemplateP1
-  :: (P1C m)
+  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => CreateQueryTemplate
   -> m (WithDeps QueryTemplateInfo)
 createQueryTemplateP1 (CreateQueryTemplate qtn qt _) = do
   adminOnly
-  ui <- askUserInfo
   sc <- askSchemaCache
   withPathK "name" $ when (isJust $ M.lookup qtn $ scQTemplates sc) $
     throw400 AlreadyExists $ "the query template already exists : " <>> qtn
-  let qCtx = QCtx ui sc
-  qtp1 <- withPathK "template" $ liftP1 qCtx $ validateTQuery qt
+  qtp1 <- withPathK "template" $ liftP1 $ validateTQuery qt
   let deps = collectDeps qtp1
   return (QueryTemplateInfo qtn qt, deps)
 
@@ -153,20 +156,17 @@ createQueryTemplateP2
   :: (QErrM m, CacheRWM m, MonadTx m)
   => CreateQueryTemplate
   -> WithDeps QueryTemplateInfo
-  -> m RespBody
+  -> m EncJSON
 createQueryTemplateP2 cqt (qti, deps) = do
   addQTemplateToCache qti deps
   liftTx $ addQTemplateToCatalog cqt
   return successMsg
 
-instance HDBQuery CreateQueryTemplate where
-
-  type Phase1Res CreateQueryTemplate = WithDeps QueryTemplateInfo
-  phaseOne = createQueryTemplateP1
-
-  phaseTwo = createQueryTemplateP2
-
-  schemaCachePolicy = SCPReload
+runCreateQueryTemplate
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  => CreateQueryTemplate -> m EncJSON
+runCreateQueryTemplate q =
+  createQueryTemplateP1 q >>= createQueryTemplateP2 q
 
 data DropQueryTemplate
   = DropQueryTemplate
@@ -185,18 +185,16 @@ delQTemplateFromCatalog qtn =
            WHERE template_name =  $1
                 |] (Identity qtn) False
 
-instance HDBQuery DropQueryTemplate where
-
-  type Phase1Res DropQueryTemplate = ()
-  phaseOne (DropQueryTemplate qtn) =
-    withPathK "name" $ void $ askQTemplateInfo qtn
-
-  phaseTwo (DropQueryTemplate qtn) _ = do
-    delQTemplateFromCache qtn
-    liftTx $ delQTemplateFromCatalog qtn
-    return successMsg
-
-  schemaCachePolicy = SCPReload
+runDropQueryTemplate
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => DropQueryTemplate -> m EncJSON
+runDropQueryTemplate q = do
+  withPathK "name" $ void $ askQTemplateInfo qtn
+  delQTemplateFromCache qtn
+  liftTx $ delQTemplateFromCatalog qtn
+  return successMsg
+  where
+    qtn = dqtName q
 
 data SetQueryTemplateComment
   = SetQueryTemplateComment
@@ -206,24 +204,18 @@ data SetQueryTemplateComment
 
 $(deriveJSON (aesonDrop 4 snakeCase) ''SetQueryTemplateComment)
 
-setQueryTemplateCommentP1 :: (P1C m) => SetQueryTemplateComment -> m ()
+setQueryTemplateCommentP1
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => SetQueryTemplateComment -> m ()
 setQueryTemplateCommentP1 (SetQueryTemplateComment qtn _) = do
   adminOnly
   void $ askQTemplateInfo qtn
 
-setQueryTemplateCommentP2 :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m) => SetQueryTemplateComment -> m RespBody
+setQueryTemplateCommentP2
+  :: (QErrM m, MonadTx m) => SetQueryTemplateComment -> m EncJSON
 setQueryTemplateCommentP2 apc = do
   liftTx $ setQueryTemplateCommentTx apc
   return successMsg
-
-instance HDBQuery SetQueryTemplateComment where
-
-  type Phase1Res SetQueryTemplateComment = ()
-  phaseOne = setQueryTemplateCommentP1
-
-  phaseTwo q _ = setQueryTemplateCommentP2 q
-
-  schemaCachePolicy = SCPNoChange
 
 setQueryTemplateCommentTx
   :: SetQueryTemplateComment
@@ -235,3 +227,10 @@ setQueryTemplateCommentTx (SetQueryTemplateComment qtn comment) =
     SET comment = $1
     WHERE template_name =  $2
         |] (comment, qtn) False
+
+runSetQueryTemplateComment
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  => SetQueryTemplateComment -> m EncJSON
+runSetQueryTemplateComment q = do
+  setQueryTemplateCommentP1 q
+  setQueryTemplateCommentP2 q

@@ -1,8 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TemplateHaskell            #-}
-
 module Hasura.GraphQL.Transport.WebSocket.Protocol
   ( OperationId(..)
   , ConnParams(..)
@@ -23,6 +18,7 @@ import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 
@@ -33,7 +29,7 @@ newtype OperationId
 data StartMsg
   = StartMsg
   { _smId      :: !OperationId
-  , _smPayload :: !GraphQLRequest
+  , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 
@@ -72,7 +68,7 @@ data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
   , _dmPayload :: !GQResp
-  } deriving (Show, Eq)
+  }
 
 data ErrorMsg
   = ErrorMsg
@@ -95,7 +91,6 @@ data ServerMsg
   | SMData !DataMsg
   | SMErr !ErrorMsg
   | SMComplete !CompletionMsg
-  deriving (Show, Eq)
 
 data ServerMsgType
   = SMT_GQL_CONNECTION_ACK
@@ -120,7 +115,7 @@ instance J.ToJSON ServerMsgType where
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
-  mkJSONObj $ case msg of
+  encJToLBS $ encJFromAssocList $ case msg of
 
   SMConnAck ->
     [encTy SMT_GQL_CONNECTION_ACK]
@@ -130,25 +125,25 @@ encodeServerMsg msg =
 
   SMConnErr connErr ->
     [ encTy SMT_GQL_CONNECTION_ERROR
-    , ("payload", J.encode connErr)
+    , ("payload", encJFromJValue connErr)
     ]
 
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
-    , ("id", J.encode opId)
+    , ("id", encJFromJValue opId)
     , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->
     [ encTy SMT_GQL_ERROR
-    , ("id", J.encode opId)
-    , ("payload", J.encode payload)
+    , ("id", encJFromJValue opId)
+    , ("payload", encJFromJValue payload)
     ]
 
   SMComplete compMsg ->
     [ encTy SMT_GQL_COMPLETE
-    , ("id", J.encode $ unCompletionMsg compMsg)
+    , ("id", encJFromJValue $ unCompletionMsg compMsg)
     ]
 
   where
-    encTy ty = ("type", J.encode ty)
+    encTy ty = ("type", encJFromJValue ty)

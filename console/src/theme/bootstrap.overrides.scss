@@ -7,11 +7,10 @@
 .hljs{display:block;overflow-x:auto;padding:0.5em;background:#F0F0F0}.hljs,.hljs-subst{color:#444}.hljs-comment{color:#888888}.hljs-keyword,.hljs-attribute,.hljs-selector-tag,.hljs-meta-keyword,.hljs-doctag,.hljs-name{font-weight:bold}.hljs-type,.hljs-string,.hljs-number,.hljs-selector-id,.hljs-selector-class,.hljs-quote,.hljs-template-tag,.hljs-deletion{color:#880000}.hljs-title,.hljs-section{color:#880000;font-weight:bold}.hljs-regexp,.hljs-symbol,.hljs-variable,.hljs-template-variable,.hljs-link,.hljs-selector-attr,.hljs-selector-pseudo{color:#BC6060}.hljs-literal{color:#78A960}.hljs-built_in,.hljs-bullet,.hljs-code,.hljs-addition{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta-string{color:#4d99bf}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
 /* */
 
-
-input[type="radio"], input[type="checkbox"]
-{
+input[type="radio"], input[type="checkbox"] {
   margin: 0 5px 0px 0px;
 }
+
 .dropdown.input-group-btn {
   button {
     min-height: 34px;
@@ -22,10 +21,10 @@ input[type="radio"], input[type="checkbox"]
   min-width: 300px;
 }
 
-label
-{
+label {
   margin-bottom: 0 !important;
 }
+
 .navbar-brand {
   position: relative;
   padding-left: 50px;
@@ -41,13 +40,15 @@ label
   color: #33e0ff;
   background-color: transparent;
 }
-.control-label
-{
+
+.control-label {
   padding-top: 0;
 }
+
 form {
     margin-bottom: 0em;
 }
+
 .form-control:focus {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
 }
@@ -56,27 +57,29 @@ form {
   // border-radius: 0;
   height: auto;
 }
-select.form-control
-{
+
+select.form-control {
   border-radius: 0;
   -webkit-border-radius: 0px;
 }
+
 .btn {
   // border-radius: 0;
   outline: none;
 }
-.btn:active, .btn.active
-{
+
+.btn:active, .btn.active {
   box-shadow: none !important;
 }
-.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus
-{
+
+.btn:focus, .btn.focus, .btn:active:focus, .btn:active.focus, .btn.active:focus, .btn.active.focus {
   outline: none !important;
 }
-.btn:focus
-{
+
+.btn:focus {
   outline: none !important;
 }
+
 .alert {
 	word-wrap: break-word;
 }
@@ -89,24 +92,56 @@ select.form-control
   font-size: 12px !important;
   line-height: 1.5 !important;
 }
+
 .btn-warning:hover {
   color: #000;
-  background-color: #ec971f;
-  border-color: #d58512;
+  background-color: #F2B130 !important;
+  border-color: #F2B130 !important;
+}
+
+.btn-warning:focus {
+  background-color: #F2B130 !important;
 }
 // Generate Code modal
-.padd_remove
-{
+.padd_remove {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
-.generateCodeWrapper
+
+#invokeEventTrigger {
+  .modal-content {
+    min-height: 100px;
+    .modal-header
+    {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
+#redeliverModal
 {
-  width: 65% !important;
   .modal-content
   {
     .modal-header
     {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .modal-body
+    {
+      padding: 20px;
+    }
+  }
+}
+.generateCodeWrapper {
+  width: 65% !important;
+
+  .modal-content {
+    .modal-header {
       background-color: #F8FAFB;
       color: #222 ;
       padding: 20px;
@@ -114,36 +149,34 @@ select.form-control
       border-top-right-radius: 4px;
       border-bottom: 0;
       border-bottom: 1px solid #ccc;
-      h4
-      {
+
+      h4 {
         font-size: 16px;
         font-weight: bold;
       }
-      button
-      {
+
+      button {
         text-shadow: none;
         color: #C4C6C6;
         opacity: 1;
-        span
-        {
+
+        span {
           font-weight: normal;
         }
       }
     }
-    .modal-body
-    {
+
+    .modal-body {
       padding: 25px;
-      .generateBodyWrapper
-      {
-        .generateButtonWrapper
-        {
+
+      .generateBodyWrapper {
+        .generateButtonWrapper {
           width: 100%;
           float: left;
           padding-bottom: 20px;
-          .generateSelect
-          {
-            button
-            {
+
+          .generateSelect {
+            button {
               width: auto;
               padding: 10px 35px;
               padding-left: 10px;
@@ -154,18 +187,19 @@ select.form-control
               text-align: left;
               border: 1px solid #ccc;
               position: relative;
-              .dropCaret
-              {
+
+              .dropCaret {
                 position: absolute;
                 right: 10px;
                 top: 16px;
               }
             }
           }
-          .generateCopyButton
-          {
+
+          .generateCopyButton {
             text-align: right;
             font-weight: bold;
+
             button {
               background-color: #FEC53D;
               border-radius: 5px;
@@ -174,16 +208,17 @@ select.form-control
               padding: 5px 10px;
               font-size: 12px;
               line-height: 1.5;
+
               &:hover {
                 background-color: #F2B130;
               }
             }
           }
-          .generateCopyButtonDisabled
-          {
+
+          .generateCopyButtonDisabled {
             text-align: right;
-            button
-            {
+
+            button {
               border-radius: 5px;
               border: 1px solid #606060;
               height: 39px;
@@ -195,17 +230,44 @@ select.form-control
               font-weight: bold;
             }
           }
-          .ace_editor
-          {
+
+          .ace_editor {
             min-height: 150px;
             border: 1px solid #ccc;
             border-radius: 5px;
           }
-          .ace-github
-          {
+
+          .ace-github {
             min-height: 150px;
             border: 1px solid #ccc;
             border-radius: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+.invocationClass
+{
+  clear: both;
+  .rt-table
+  {
+    .rt-tbody
+    {
+      .rt-tr-group
+      {
+        .rt-tr
+        {
+          .rt-td
+          {
+            .rt-expander
+            {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 21px;
+              width: 13px;
+            }
           }
         }
       }

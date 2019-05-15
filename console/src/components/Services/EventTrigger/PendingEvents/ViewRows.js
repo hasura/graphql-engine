@@ -16,9 +16,8 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
-import '../TableCommon/ReactTableFix.css';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
+import '../TableCommon/EventReactTableOverrides.css';
 
 const ViewRows = ({
   curTriggerName,
@@ -30,12 +29,11 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -100,10 +98,10 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -114,7 +112,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -207,14 +205,7 @@ const ViewRows = ({
   };
 
   const renderTableBody = () => {
-    if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
-    } else if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -275,10 +266,11 @@ const ViewRows = ({
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -291,7 +283,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
                   return formattedDate;
                 }
                 const content =
@@ -313,6 +305,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;

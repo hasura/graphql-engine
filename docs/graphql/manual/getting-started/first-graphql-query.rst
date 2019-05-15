@@ -16,29 +16,16 @@ Create a table
 Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
 the following columns:
 
-+----------+----------+
-|   **profile**       |
-+----------+----------+
-| id       | integer  |
-+----------+----------+
-| name     | text     |
-+----------+----------+
+.. code-block:: sql
 
-.. image:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+  profile (
+    id INT PRIMARY KEY,
+    name TEXT
+  )
 
-Insert some sample data into the table:
+.. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
 
-+-----------+------------+
-| **id**    | **name**   |
-+-----------+------------+
-| 1         |  john      |
-+-----------+------------+
-| 2         |  shruti    |
-+-----------+------------+
-| 3         |  celine    |
-+-----------+------------+
-| 4         |  raj       |
-+-----------+------------+
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
 Try out a query
 ---------------
@@ -56,7 +43,7 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 
 You'll see that you get all the inserted data!
 
-.. image:: ../../../img/graphql/manual/getting-started/profile-query.png
+.. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
 
 Next steps
 ----------

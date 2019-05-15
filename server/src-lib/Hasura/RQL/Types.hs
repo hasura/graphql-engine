@@ -1,31 +1,19 @@
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Hasura.RQL.Types
-       ( HasSchemaCache(..)
-       , ProvidesFieldInfoMap(..)
-       , HDBQuery(..)
-       , SchemaCachePolicy(..)
-       , queryModifiesSchema
-
-       , P1
-       , P1C
-       , MonadTx(..)
-       , UserInfoM(..)
-       , RespBody
-       --, P2C
-       , P2Ctx (..)
-       -- , P2Res
+       ( P1
        , liftP1
-       , runP1
+       , liftP1WithQCtx
+       , MonadTx(..)
+
+       , UserInfoM(..)
        , successMsg
 
        , HasHttpManager (..)
        , HasGCtxMap (..)
+
+       , SQLGenCtx(..)
+       , HasSQLGenCtx(..)
 
        , QCtx(..)
        , HasQCtx(..)
@@ -44,7 +32,6 @@ module Hasura.RQL.Types
        , askQTemplateInfo
 
        , adminOnly
-       , defaultTxErrorHandler
 
        , HeaderObj
 
@@ -52,81 +39,38 @@ module Hasura.RQL.Types
        , module R
        ) where
 
+import           Hasura.Db                     as R
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp      as R
 import           Hasura.RQL.Types.Common       as R
 import           Hasura.RQL.Types.DML          as R
 import           Hasura.RQL.Types.Error        as R
+import           Hasura.RQL.Types.EventTrigger as R
+import           Hasura.RQL.Types.Metadata     as R
 import           Hasura.RQL.Types.Permission   as R
 import           Hasura.RQL.Types.RemoteSchema as R
 import           Hasura.RQL.Types.SchemaCache  as R
-import           Hasura.RQL.Types.Subscribe    as R
+
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Context        as GC
 
-import qualified Database.PG.Query             as Q
-
-import           Data.Aeson
-
-import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Text                     as T
 import qualified Network.HTTP.Client           as HTTP
 
-class ProvidesFieldInfoMap r where
-  getFieldInfoMap :: QualifiedTable -> r -> Maybe FieldInfoMap
-
-class HasSchemaCache a where
-  getSchemaCache :: a -> SchemaCache
-
-instance HasSchemaCache QCtx where
-  getSchemaCache = qcSchemaCache
-
-instance HasSchemaCache SchemaCache where
-  getSchemaCache = id
-
-instance ProvidesFieldInfoMap SchemaCache where
-  getFieldInfoMap tn =
-    fmap tiFieldInfoMap . M.lookup tn . scTables
-
--- There are two phases to every query.
--- Phase 1 : Use the cached env to validate or invalidate
--- Phase 2 : Hit Postgres if need to
-
-class HDBQuery q where
-  type Phase1Res q -- Phase 1 result
-
-  -- Use QCtx
-  phaseOne :: q -> P1 (Phase1Res q)
-
-  -- Hit Postgres
-  phaseTwo :: q -> Phase1Res q -> P2 BL.ByteString
-
-  schemaCachePolicy :: SchemaCachePolicy q
-
-data SchemaCachePolicy a
-  = SCPReload
-  | SCPNoChange
-  deriving (Show, Eq)
-
-schemaCachePolicyToBool :: SchemaCachePolicy a -> Bool
-schemaCachePolicyToBool SCPReload   = True
-schemaCachePolicyToBool SCPNoChange = False
-
-getSchemaCachePolicy :: (HDBQuery a) => a -> SchemaCachePolicy a
-getSchemaCachePolicy _ = schemaCachePolicy
-
-type RespBody = BL.ByteString
-
-queryModifiesSchema :: (HDBQuery q) => q -> Bool
-queryModifiesSchema =
-  schemaCachePolicyToBool . getSchemaCachePolicy
+getFieldInfoMap
+  :: QualifiedTable
+  -> SchemaCache -> Maybe FieldInfoMap
+getFieldInfoMap tn =
+  fmap tiFieldInfoMap . M.lookup tn . scTables
 
 data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
+  , qcSQLCtx      :: !SQLGenCtx
   } deriving (Show, Eq)
 
 class HasQCtx a where
@@ -135,16 +79,8 @@ class HasQCtx a where
 instance HasQCtx QCtx where
   getQCtx = id
 
-mkAdminQCtx :: SchemaCache -> QCtx
-mkAdminQCtx = QCtx adminUserInfo
-
-data P2Ctx
-  = P2Ctx
-  { _p2cUserInfo    :: !UserInfo
-  , _p2cHttpManager :: !HTTP.Manager
-  }
-
-type P2 = StateT SchemaCache (ReaderT P2Ctx (Q.TxE QErr))
+mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
+mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo
@@ -172,8 +108,11 @@ askTabInfoFromTrigger trn = do
 
 askEventTriggerInfo
   :: (QErrM m, CacheRM m)
-  => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
-askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
+  => TriggerName -> m EventTriggerInfo
+askEventTriggerInfo trn = do
+  ti <- askTabInfoFromTrigger trn
+  let etim = tiEventTriggerInfoMap ti
+  liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> trn <<> " does not exist"
 
@@ -193,45 +132,49 @@ instance UserInfoM P1 where
 instance CacheRM P1 where
   askSchemaCache = qcSchemaCache <$> ask
 
-instance UserInfoM P2 where
-  askUserInfo = _p2cUserInfo <$> ask
+instance HasSQLGenCtx P1 where
+  askSQLGenCtx = qcSQLCtx <$> ask
 
 class (Monad m) => HasHttpManager m where
   askHttpManager :: m HTTP.Manager
 
-instance HasHttpManager P2 where
-  askHttpManager = _p2cHttpManager <$> ask
-
 class (Monad m) => HasGCtxMap m where
   askGCtxMap :: m GC.GCtxMap
 
--- instance HasGCtxMap P2 where
---   askGCtxMap = _p2cGCtxMap <$> ask
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
---type P2C m = (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m)
+class (Monad m) => HasSQLGenCtx m where
+  askSQLGenCtx :: m SQLGenCtx
 
-class (Monad m) => MonadTx m where
-  liftTx :: Q.TxE QErr a -> m a
+type ER e r = ExceptT e (Reader r)
+type P1 = ER QErr QCtx
 
-instance (MonadTx m) => MonadTx (StateT s m) where
-  liftTx = lift . liftTx
-
-instance (MonadTx m) => MonadTx (ReaderT s m) where
-  liftTx = lift . liftTx
-
-instance MonadTx (Q.TxE QErr) where
-  liftTx = id
-
-type P1 = ExceptT QErr (Reader QCtx)
-
-runP1 :: QCtx -> P1 a -> Either QErr a
-runP1 qEnv m = runReader (runExceptT m) qEnv
+runER :: r -> ER e r a -> Either e a
+runER r m = runReader (runExceptT m) r
 
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
 
-liftP1 :: (MonadError QErr m) => QCtx -> P1 a -> m a
-liftP1 r m = liftEither $ runP1 r m
+liftP1
+  :: ( QErrM m
+     , UserInfoM m
+     , CacheRM m
+     , HasSQLGenCtx m
+     ) => P1 a -> m a
+liftP1 m = do
+  ui <- askUserInfo
+  sc <- askSchemaCache
+  sqlCtx <- askSQLGenCtx
+  let qCtx = QCtx ui sc sqlCtx
+  liftP1WithQCtx qCtx m
+
+liftP1WithQCtx
+  :: (MonadError e m) => r -> ER e r a -> m a
+liftP1WithQCtx r m =
+  liftEither $ runER r m
 
 askFieldInfoMap
   :: (QErrM m, CacheRM m)
@@ -318,12 +261,7 @@ adminOnly = do
   where
     errMsg = "restricted access : admin only"
 
-defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler txe =
-  let e = err500 PostgresError "postgres query error"
-  in e {qeInternal = Just $ toJSON txe}
-
-successMsg :: BL.ByteString
+successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

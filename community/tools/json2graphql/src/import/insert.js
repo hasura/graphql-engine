@@ -44,7 +44,7 @@ const transformData = (data, tables) => {
         if (column.type === 'timestamptz' && row[column.name]) {
           newRow[column.name] = moment(row[column.name]).format();
         }
-        if (column.type === 'json' && row[column.name]) {
+        if (column.type === 'jsonb' && row[column.name]) {
           newRow[column.name] = JSON.stringify(row[column.name]);
         }
       });
@@ -69,7 +69,7 @@ const insertData = async (insertOrder, sampleData, tables, url, headers) => {
   try {
     const response = await query({
       query: mutation,
-      endpoint: `${url}/v1alpha1/graphql`,
+      endpoint: `${url}/v1/graphql`,
       variables,
       headers,
     });

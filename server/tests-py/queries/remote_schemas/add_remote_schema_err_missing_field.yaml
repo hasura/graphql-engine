@@ -1,0 +1,16 @@
+description: Add a remote schema with an object not having a field defined in the interface that it implements
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Interface field 'Character'."id" expected, but 'Droid' does not provide it
+  code: remote-schema-error
+query:
+  type: add_remote_schema
+  args:
+    name: err-missing-arg
+    definition:
+      url: http://localhost:5000/iface-graphql-err-missing-field
+      headers: []
+      forward_client_headers: true

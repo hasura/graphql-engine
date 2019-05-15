@@ -17,9 +17,10 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort } from '../utils';
-import Spinner from '../../../Common/Spinner/Spinner';
-import '../TableCommon/ReactTableFix.css';
+import { ordinalColSort, convertDateTimeToLocale } from '../utils';
+import '../TableCommon/EventReactTableOverrides.css';
+import * as tooltip from '../Common/Tooltips';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 const ViewRows = ({
   curTriggerName,
@@ -31,12 +32,11 @@ const ViewRows = ({
   activePath,
   triggerList,
   dispatch,
-  isProgressing,
   isView,
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/Table.scss');
+  const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
@@ -101,10 +101,10 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
-            conditionalClassname = styles.tableCellCenterAlignedExpanded;
+            conditionalClassname = styles.tableCellExpanded;
           }
           if (row[col] === null) {
             return (
@@ -115,7 +115,7 @@ const ViewRows = ({
           }
           let content = row[col] === undefined ? 'NULL' : row[col].toString();
           if (col === 'created_at') {
-            content = new Date(row[col]).toUTCString();
+            content = convertDateTimeToLocale(row[col]);
           }
           if (col === 'event_id') {
             content = row.id.toString();
@@ -203,7 +203,7 @@ const ViewRows = ({
     } else {
       dispatch(setOrderType('asc', 0));
     }
-    dispatch(runQuery(triggerSchema));
+    dispatch(runQuery());
     // Add a new empty filter
     dispatch(addOrder());
   };
@@ -211,19 +211,19 @@ const ViewRows = ({
   const changePage = page => {
     if (curFilter.offset !== page * curFilter.limit) {
       dispatch(setOffset(page * curFilter.limit));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
   const changePageSize = size => {
     if (curFilter.size !== size) {
       dispatch(setLimit(size));
-      dispatch(runQuery(triggerSchema));
+      dispatch(runQuery());
     }
   };
 
   const renderTableBody = () => {
-    if (count === 0) {
+    if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
     let shouldSortColumn = true;
@@ -288,10 +288,11 @@ const ViewRows = ({
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
-                  conditionalClassname = styles.tableCellCenterAlignedExpanded;
+                  conditionalClassname = styles.tableCellExpanded;
                 }
                 if (r[col] === null) {
                   return (
@@ -304,7 +305,7 @@ const ViewRows = ({
                   return status;
                 }
                 if (col === 'created_at') {
-                  const formattedDate = new Date(r.created_at).toUTCString();
+                  const formattedDate = convertDateTimeToLocale(r.created_at);
                   return formattedDate;
                 }
                 const content =
@@ -326,6 +327,7 @@ const ViewRows = ({
                     data={invocationRowsData}
                     columns={invocationGridHeadings}
                     defaultPageSize={currentRow.logs.length}
+                    minRows={0}
                     showPagination={false}
                     SubComponent={logRow => {
                       const finalIndex = logRow.index;
@@ -406,8 +408,57 @@ const ViewRows = ({
                                 </div>
                               ) : null}
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Payload
+                                <div
+                                  className={
+                                    styles.subheading_text +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? 'Payload'
+                                    : 'Error'}
+                                </div>
+                                <div
+                                  className={
+                                    styles.status_code_right +
+                                    ' col-md-6 ' +
+                                    styles.padd_remove
+                                  }
+                                >
+                                  {finalResponse.status_code
+                                    ? [
+                                      'Status Code: ',
+                                      finalResponse.status_code === 200 ? (
+                                        <i
+                                          className={
+                                            styles.invocationSuccess +
+                                              ' fa fa-check'
+                                          }
+                                        />
+                                      ) : (
+                                        <i
+                                          className={
+                                            styles.invocationFailure +
+                                              ' fa fa-times'
+                                          }
+                                        />
+                                      ),
+                                      finalResponse.status_code,
+                                      ' ',
+                                      <OverlayTrigger
+                                        placement="top"
+                                        overlay={
+                                          tooltip.statusCodeDescription
+                                        }
+                                      >
+                                        <i
+                                          className="fa fa-question-circle"
+                                          aria-hidden="true"
+                                        />
+                                      </OverlayTrigger>,
+                                    ]
+                                    : null}
                                 </div>
                                 <AceEditor
                                   mode="json"
@@ -451,12 +502,6 @@ const ViewRows = ({
       <div className="row">
         <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
-            {isProgressing ? (
-              <div>
-                {' '}
-                <Spinner />{' '}
-              </div>
-            ) : null}
             {renderTableBody()}
           </div>
           <br />

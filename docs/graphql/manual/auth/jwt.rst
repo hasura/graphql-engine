@@ -15,7 +15,7 @@ verified by GraphQL engine to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
 
-.. image:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -24,11 +24,11 @@ If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 is used for the permissions system.
 
 .. note::
-   Configuring JWT requires Hasura to run with an access key (``--access-key``).
+   Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
 
-   - The authorization is **enforced** when ``X-Hasura-Access-Key`` header is
+   - JWT authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
-   - The authorization is **skipped** when ``X-Hasura-Access-Key`` header **is
+   - JWT authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
      found** in the request.
 
 ..   :doc:`Read more<config>`.
@@ -99,7 +99,7 @@ request.
 
 .. code-block:: http
 
-   POST /v1alpha1/graphql HTTP/1.1
+   POST /v1/graphql HTTP/1.1
    Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
    X-Hasura-Role: editor
 
@@ -111,9 +111,7 @@ Configuring JWT mode
 
 You can enable JWT mode by using the ``--jwt-secret`` flag or
 ``HASURA_GRAPHQL_JWT_SECRET`` environment variable; the value of which is a
-JSON.
-
-The JSON is:
+JSON object:
 
 .. code-block:: json
 
@@ -121,10 +119,11 @@ The JSON is:
      "type": "<standard-JWT-algorithms>",
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
-     "claims_namespace": "<optional-key-name-in-claims>"
+     "claims_namespace": "<optional-key-name-in-claims>",
+     "claims_format": "json|stringified_json"
    }
 
-``key`` or ``jwk_url``, either of them has to be present.
+``key`` or ``jwk_url``, **one of them has to be present**.
 
 ``type``
 ^^^^^^^^
@@ -139,7 +138,8 @@ public keys are not yet supported.
 ``key``
 ^^^^^^^
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
-  "abcdef...").
+  "abcdef..."). The key must be long enough for the algorithm chosen,
+  (e.g. for HS256 it must be at least 32 characters long).
 - In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
@@ -175,6 +175,55 @@ This is an optional field. You can specify the key name
 inside which the Hasura specific claims will be present. E.g. - ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
+
+
+``claims_format``
+^^^^^^^^^^^^^^^^^
+This is an optional field, with only the following possible values:
+- ``json``
+- ``stringified_json``
+
+Default is ``json``.
+
+This is to indicate that if the hasura specific claims are a regular JSON object
+or stringified JSON
+
+This is required because providers like AWS Cognito only allows strings in the
+JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
+
+Example:-
+
+If ``claims_format`` is ``json`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["editor","user", "mod"],
+      "x-hasura-default-role": "user",
+      "x-hasura-user-id": "1234567890",
+      "x-hasura-org-id": "123",
+      "x-hasura-custom": "custom-value"
+    }
+  }
+
+
+If ``claims_format`` is ``stringified_json`` then JWT claims should look like:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "https://hasura.io/jwt/claims": "{\"x-hasura-allowed-roles\":[\"editor\",\"user\",\"mod\"],\"x-hasura-default-role\":\"user\",\"x-hasura-user-id\":\"1234567890\",\"x-hasura-org-id\":\"123\",\"x-hasura-custom\":\"custom-value\"}"
+  }
+
 
 Examples
 ^^^^^^^^
@@ -237,7 +286,7 @@ Using the flag:
       graphql-engine \
       --database-url postgres://username:password@hostname:port/dbname \
       serve \
-      --access-key mysecretkey \
+      --admin-secret myadminsecretkey \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -245,7 +294,7 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ACCESS_KEY="mysecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \
@@ -326,12 +375,20 @@ And use it in the ``key`` field:
     "
         }
 
-Generate JWT Config
-^^^^^^^^^^^^^^^^^^^
-The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using
-the following UI https://hasura.io/jwt-config.
+Generating JWT Config
+---------------------
 
-Currently the UI supports generating config for Auth0 and Firebase. The config generated from this page can be
-directly pasted in yaml files and command line arguments as it takes care of escaping new lines.
+The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using:
+https://hasura.io/jwt-config.
 
-.. image:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+**Currently the UI supports generating config for Auth0 and Firebase**.
+
+The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
+care of escaping new lines.
+
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+   :width: 75%
+
+**See:**
+
+- :doc:`Auth JWT examples <jwt-examples>`

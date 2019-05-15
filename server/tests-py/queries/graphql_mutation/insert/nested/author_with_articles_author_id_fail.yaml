@@ -1,12 +1,12 @@
 description: Insert author and it's articles via nested mutation (Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
       code: validation-failed
       path: $.selectionSet.insert_author.args.objects[0].articles.data[0]
-    message: cannot insert author_id columns as their values are already being determined by parent insert
+    message: "cannot insert \"author_id\" columns as their values are already being determined by parent insert"
 query:
   query: |
    mutation nested_author_insert {

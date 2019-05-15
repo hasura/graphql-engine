@@ -10,7 +10,7 @@ class LoginComponent extends React.Component {
     this.state = { graphqlEndpoint: '' };
   }
   setGraphQLEndpoint(e) {
-    this.setState({ ...this.state, graphqlEndpoint: e.target.value });
+    this.setState({ graphqlEndpoint: e.target.value });
   }
   render() {
     const { dispatch } = this.props;
@@ -37,8 +37,8 @@ class LoginComponent extends React.Component {
                   type="submit"
                   onClick={(e) => {
                     e.preventDefault();
-                    const emailRegex = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
-                    if (!emailRegex.test(this.state.graphqlEndpoint)) {
+                    const urlRegex= /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
+                    if (!urlRegex.test(this.state.graphqlEndpoint)) {
                       alert('Please enter a valid URL');
                     } else {
                       dispatch(updateGraphQLEndpoint(this.state.graphqlEndpoint));
