@@ -23,6 +23,7 @@ import gqlPattern, {
 import {
   pgConfTypes,
   generateFKConstraintName,
+  getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
 const DELETE_PK_WARNING =
@@ -48,6 +49,10 @@ const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
 const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
 const SAVE_FOREIGN_KEY = 'ModifyTable/SAVE_FOREIGN_KEY';
 const REMOVE_FOREIGN_KEY = 'ModifyTable/REMOVE_FOREIGN_KEY';
+
+const SET_UNIQUE_KEYS = 'ModifyTable/SET_UNIQUE_KEYS';
+const SAVE_UNIQUE_KEY = 'ModifyTable/SAVE_UNIQUE_KEY';
+const REMOVE_UNIQUE_KEY = 'ModifyTable/REMOVE_UNIQUE_KEY';
 
 const RESET = 'ModifyTable/RESET';
 
@@ -420,6 +425,11 @@ const removeForeignKey = (index, tableSchema) => {
     );
   };
 };
+
+const setUniqueKeys = keys => ({
+  type: SET_UNIQUE_KEYS,
+  keys,
+});
 
 const changeTableOrViewName = (isTable, oldName, newName, callback) => {
   return (dispatch, getState) => {
@@ -1037,8 +1047,9 @@ const saveTableCommentSql = isTable => {
 
 const isColumnUnique = (tableSchema, colName) => {
   return (
-    tableSchema.unique_constraints.filter(constraint =>
-      constraint.columns.includes(colName)
+    tableSchema.unique_constraints.filter(
+      constraint =>
+        constraint.columns.includes(colName) && constraint.columns.length === 1
     ).length !== 0
   );
 };
@@ -1605,6 +1616,191 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
   };
 };
 
+const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
+  return (dispatch, getState) => {
+    dispatch({ type: REMOVE_UNIQUE_KEY });
+    const { currentSchema } = getState().tables;
+    const existingConstraint = existingConstraints[index];
+
+    // Up migration: Drop the constraint
+    const sqlUp = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${
+            existingConstraint.constraint_name
+          }";`,
+        },
+      },
+    ];
+
+    // Down Migration: Create the constraint that is being dropped
+    const sqlDown = [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+            tableName,
+            existingConstraint.columns
+          )}" unique (${existingConstraint.columns
+            .map(c => `"${c}"`)
+            .join(', ')});`,
+        },
+      },
+    ];
+
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      tableName +
+      '_drop_constraint_' +
+      existingConstraint.constraint_name;
+
+    const requestMsg = 'Deleting Constraint...';
+    const successMsg = 'Constraint deleted';
+    const errorMsg = 'Deleting constraint failed';
+
+    const customOnSuccess = () => {
+      // success callback
+      if (callback) {
+        callback();
+      }
+
+      // remove the removed unique constraint from state
+      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      dispatch(
+        setUniqueKeys([
+          ...uniqueKeysInState.slice(0, index),
+          ...uniqueKeysInState.slice(index + 1),
+        ])
+      );
+    };
+
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      sqlUp,
+      sqlDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const saveUniqueKey = (
+  index,
+  tableName,
+  allColumns,
+  existingConstraints,
+  callback
+) => {
+  return (dispatch, getState) => {
+    dispatch({ type: SAVE_UNIQUE_KEY });
+    const { currentSchema } = getState().tables;
+    const uniqueKeys = getState().tables.modify.uniqueKeyModify;
+    const numUniqueKeys = uniqueKeys.length;
+    const uniqueKey = uniqueKeys[index];
+    const columns = uniqueKey.map(c => allColumns[c].name);
+    const existingConstraint = existingConstraints[index];
+
+    // Down migration
+    const downMigration = [];
+    // drop the newly created constraint
+    downMigration.push({
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${getUniqueConstraintName(
+          tableName,
+          columns
+        )}";`,
+      },
+    });
+    // if any constraint is being dropped, create it back
+    if (index < numUniqueKeys - 1) {
+      downMigration.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+            tableName,
+            existingConstraint.columns
+          )}" unique (${existingConstraint.columns
+            .map(c => `"${c}"`)
+            .join(', ')});`,
+        },
+      });
+    }
+
+    // up migration
+    const upMigration = [];
+    // drop the old constraint if there is any
+    if (index < numUniqueKeys - 1) {
+      upMigration.push({
+        type: 'run_sql',
+        args: {
+          sql: `alter table "${currentSchema}"."${tableName}" drop constraint "${
+            existingConstraint.constraint_name
+          }";`,
+        },
+      });
+    }
+
+    // create the new constraint
+    upMigration.push({
+      type: 'run_sql',
+      args: {
+        sql: `alter table "${currentSchema}"."${tableName}" add constraint "${getUniqueConstraintName(
+          tableName,
+          columns
+        )}" unique (${columns.map(c => `"${c}"`).join(', ')});`,
+      },
+    });
+
+    const migrationName =
+      'alter_table_' +
+      currentSchema +
+      '_' +
+      tableName +
+      '_add_unique_' +
+      columns.join('_');
+    const requestMsg = 'Saving unique key...';
+    const successMsg = 'Unique key saved';
+    const errorMsg = 'Saving unique key failed';
+
+    const customOnSuccess = () => {
+      // success callback
+      if (callback) {
+        callback();
+      }
+
+      // add an empty unique key to state
+      const uniqueKeysInState = getState().tables.modify.uniqueKeyModify;
+      dispatch(setUniqueKeys([...uniqueKeysInState, []]));
+    };
+
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upMigration,
+      downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 export {
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
@@ -1621,6 +1817,7 @@ export {
   DELETE_PK_WARNING,
   SET_FOREIGN_KEYS,
   RESET,
+  SET_UNIQUE_KEYS,
   changeTableOrViewName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -1646,4 +1843,7 @@ export {
   setForeignKeys,
   saveForeignKeys,
   removeForeignKey,
+  setUniqueKeys,
+  removeUniqueKey,
+  saveUniqueKey,
 };
