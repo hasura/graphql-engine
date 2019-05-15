@@ -69,12 +69,6 @@ isAdminSecretSet :: AuthMode -> T.Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
-defaultConsoleAssetsDir :: Text
-defaultConsoleAssetsDir = "/srv/console-assets"
-
-consoleAssetsPath :: Text
-consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
-
 data SchemaCacheRef
   = SchemaCacheRef
   { _scrLock     :: MVar ()
@@ -308,21 +302,20 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-consoleAssetsHandler :: Maybe Text -> FilePath -> Handler APIResp
-consoleAssetsHandler mdir path = do
+consoleAssetsHandler :: Text -> FilePath -> Handler APIResp
+consoleAssetsHandler dir path = do
+  -- '..' in paths need not be handed as it is resolved in the url by
+  -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
     joinPath [T.unpack dir, path]
   fileContents <- either throwException return eFileContents
   return $ RawResp headers fileContents
   where
-    dir = fromMaybe defaultConsoleAssetsDir mdir
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
       Just v  -> (v, [gzipHeader])
       Nothing -> (fn, [])
-    -- TODO(shahidhk): check if fileName is empty - i.e. path is a dir
-    -- or leave it for the readfile to check if it is a dir or not
     mimeType = bsToTxt $ defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
     throwException :: (MonadError QErr m) => IOException -> m a
@@ -334,13 +327,13 @@ consoleHTMLHandler path authMode enableTelemetry consoleAssetsDir = do
   return $ RawResp [htmlHeader] (BL.fromStrict $ txtToBs res)
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
-      object [ "assetsPath" .= consoleAssetsPath
-        , "isAdminSecretSet" .= isAdminSecretSet authMode
-        , "consolePath" .= consolePath
-        , "enableTelemetry" .= boolToText enableTelemetry
-        , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-        , "assetsVersion" .= consoleVersion
-      ]
+      -- variables required to render the template
+      object [ "isAdminSecretSet" .= isAdminSecretSet authMode
+             , "consolePath" .= consolePath
+             , "enableTelemetry" .= boolToText enableTelemetry
+             , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+             , "assetsVersion" .= consoleVersion
+             ]
     consolePath = case path of
       "" -> "/console"
       r  -> "/console/" <> r
@@ -548,12 +541,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- redirect / to /console
       get root $ redirect "console"
 
-      -- static files
-      get ("console/assets" <//> wildcard) $ \path ->
-        mkSpockAction encodeQErr id serverCtx $ do
-          consoleAssetsHandler consoleAssetsDir (T.unpack path)
+      -- serve static files if consoleAssetsDir is set
+      onJust consoleAssetsDir $ \dir ->
+        get ("console/assets" <//> wildcard) $ \path ->
+          mkSpockAction encodeQErr id serverCtx $ do
+            consoleAssetsHandler dir (T.unpack path)
 
-      -- console html
+      -- serve console html
       get ("console" <//> wildcard) $ \path ->
         mkSpockAction encodeQErr id serverCtx $ do
           consoleHTMLHandler path (scAuthMode serverCtx)

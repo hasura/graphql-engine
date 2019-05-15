@@ -53,7 +53,7 @@ data RawServeOptions
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
-  , rsoConsoleAssetsDir :: !(Maybe Text)
+  , rsoConsoleAssetsDir   :: !(Maybe Text)
   , rsoEnableTelemetry    :: !(Maybe Bool)
   , rsoWsReadCookie       :: !Bool
   , rsoStringifyNum       :: !Bool
@@ -65,21 +65,21 @@ data RawServeOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort            :: !Int
-  , soHost            :: !HostPreference
-  , soConnParams      :: !Q.ConnParams
-  , soTxIso           :: !Q.TxIsolation
-  , soAdminSecret     :: !(Maybe AdminSecret)
-  , soAuthHook        :: !(Maybe AuthHook)
-  , soJwtSecret       :: !(Maybe Text)
-  , soUnAuthRole      :: !(Maybe RoleName)
-  , soCorsConfig      :: !CorsConfig
-  , soEnableConsole   :: !Bool
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe Text)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
   , soConsoleAssetsDir :: !(Maybe Text)
-  , soEnableTelemetry :: !Bool
-  , soStringifyNum    :: !Bool
-  , soEnabledAPIs     :: !(Set.HashSet API)
-  , soLiveQueryOpts   :: !LQ.LQOpts
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LQOpts
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -545,7 +545,9 @@ enabledAPIsEnv =
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
-  , "Directory to serve the console assets from (default: /console-assets)"
+  , "A directory from which static assets required for console is served at"
+  ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
+  ++ " default docker image to disable loading assets from CDN."
   )
 
 parseRawConnInfo :: Parser RawConnInfo

@@ -8,7 +8,7 @@
        isAccessKeySet: {{isAdminSecretSet}},
        isAdminSecretSet: {{isAdminSecretSet}},
        enableTelemetry: {{enableTelemetry}},
-       assetsPath: "{{assetsPath}}",
+       assetsPath: "https://graphql-engine-cdn.hasura.io/console/assets",
        versionedAssetsPath: "{{assetsPath}}",
        assetsVersion: "{{assetsVersion}}",
        cdnAssets: {{cdnAssets}},
@@ -87,10 +87,9 @@
        console.log(window.__env.versionedAssetsPath + '/vendor.js.gz');
      }, false);
 
-     // if browser is offline or cdnAssets is set to false, load assets from
-     // server itself.
-     if (navigator.onLine === false || window.__env.cdnAssets === false) {
-       console.log('offline/cdnAssets=false, loading assets from static-dir');
+     // if cdnAssets is set to false, load assets from server instead of cdn
+     if (window.__env.cdnAssets === false) {
+       console.log('cdnAssets=false, loading assets from static-dir');
        window.__env.assetsPath =
          window.location.pathname.slice(
            0, window.location.pathname.lastIndexOf(window.__env.consolePath)
@@ -102,7 +101,7 @@
 
      // otherwise load from cdn itself
      } else {
-       console.log('online/cdnAssets=true, loading assets from cdn');
+       console.log('cdnAssets=true, loading assets from cdn');
        // set the path (cdn-based) to get assets from
        window.__env.versionedAssetsPath = window.__env.assetsPath + prependSlash(window.__env.assetsVersion);
        // fire the event

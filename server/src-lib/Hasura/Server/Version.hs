@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Hasura.Server.Version
   ( currentVersion
   , consoleVersion
