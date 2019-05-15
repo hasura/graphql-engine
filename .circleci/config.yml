@@ -393,7 +393,7 @@ jobs:
         paths:
           - _console_output
 
-  # test and build console
+  # test console
   test_console:
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
