@@ -1,4 +1,4 @@
-import { parse, print } from 'graphql';
+import { parse, print, visit } from 'graphql';
 
 export const readFile = (file, callback) => {
   const reader = new FileReader();
@@ -14,19 +14,51 @@ export const readFile = (file, callback) => {
   reader.readAsText(file);
 };
 
+const getQueryFragments = queryDef => {
+  const fragments = [];
+
+  visit(queryDef, {
+    FragmentSpread(node) {
+      fragments.push(node.name.value);
+    },
+  });
+
+  return fragments;
+};
+
+const getQueryString = (queryDef, fragmentDefs) => {
+  let queryString = print(queryDef);
+
+  const queryFragments = getQueryFragments(queryDef);
+
+  queryFragments.forEach(qf => {
+    const fragmentDef = fragmentDefs.find(fd => fd.name.value === qf);
+
+    if (fragmentDef) {
+      queryString += '\n\n' + print(fragmentDef);
+    }
+  });
+
+  return queryString;
+};
+
 export const parseQueryString = queryString => {
   const queries = [];
 
-  let parsedQuery;
+  let parsedQueryString;
 
   try {
-    parsedQuery = parse(queryString);
+    parsedQueryString = parse(queryString);
   } catch (ex) {
     throw new Error('Parsing query failed');
   }
 
-  const queryDefs = parsedQuery.definitions.filter(
-    qd => qd.kind === 'OperationDefinition'
+  const queryDefs = parsedQueryString.definitions.filter(
+    def => def.kind === 'OperationDefinition'
+  );
+
+  const fragmentDefs = parsedQueryString.definitions.filter(
+    def => def.kind === 'FragmentDefinition'
   );
 
   queryDefs.forEach(queryDef => {
@@ -36,7 +68,7 @@ export const parseQueryString = queryString => {
 
     const query = {
       name: queryDef.name.value,
-      query: print(queryDef),
+      query: getQueryString(queryDef, fragmentDefs),
     };
 
     queries.push(query);
