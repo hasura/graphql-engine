@@ -28,6 +28,20 @@ newtype GQLQuery
   = GQLQuery {unGQLQuery :: G.ExecutableDocument}
   deriving (Show, Eq, Hashable, Lift, ToJSON, FromJSON)
 
+newtype GQLQueryWithText
+  = GQLQueryWithText (T.Text, GQLQuery)
+  deriving (Show, Eq, Lift)
+
+instance FromJSON GQLQueryWithText where
+  parseJSON v@(String t) = GQLQueryWithText . (t, ) <$> parseJSON v
+  parseJSON _            = fail "expecting String for GraphQL query"
+
+instance ToJSON GQLQueryWithText where
+  toJSON (GQLQueryWithText (t, _)) = String t
+
+getGQLQuery :: GQLQueryWithText -> GQLQuery
+getGQLQuery (GQLQueryWithText v) = snd v
+
 queryWithoutTypeNames :: GQLQuery -> GQLQuery
 queryWithoutTypeNames =
   GQLQuery . G.ExecutableDocument . stripTypenames
@@ -36,7 +50,7 @@ queryWithoutTypeNames =
 data ListedQuery
   = ListedQuery
   { _lqName  :: !QueryName
-  , _lqQuery :: !GQLQuery
+  , _lqQuery :: !GQLQueryWithText
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
 
@@ -67,7 +81,7 @@ data AddQueryToCollection
   = AddQueryToCollection
   { _aqtcCollectionName :: !CollectionName
   , _aqtcQueryName      :: !QueryName
-  , _aqtcQuery          :: !GQLQuery
+  , _aqtcQuery          :: !GQLQueryWithText
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 5 snakeCase) ''AddQueryToCollection)
 

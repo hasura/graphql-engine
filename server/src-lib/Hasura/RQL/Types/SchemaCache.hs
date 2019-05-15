@@ -794,7 +794,8 @@ replaceAllowlist
   => QueryList -> m ()
 replaceAllowlist qList = do
   sc <- askSchemaCache
-  let allowlist = HS.fromList $ map (queryWithoutTypeNames . _lqQuery) qList
+  let allowlist = HS.fromList $
+        map (queryWithoutTypeNames . getGQLQuery . _lqQuery) qList
   writeSchemaCache sc{scAllowlist = allowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
