@@ -238,30 +238,13 @@ const createAllowListQuery = queries => {
   };
 };
 
-const deleteAllowListQuery = () => {
-  const removeCollectionFromAllowListQuery = () => ({
-    type: 'drop_collection_from_allowlist',
-    args: {
-      collection: allowedQueriesCollection,
-    },
-  });
-
-  const deleteAllowListCollectionQuery = () => ({
-    type: 'drop_query_collection',
-    args: {
-      collection: allowedQueriesCollection,
-      cascade: false,
-    },
-  });
-
-  return {
-    type: 'bulk',
-    args: [
-      removeCollectionFromAllowListQuery(),
-      deleteAllowListCollectionQuery(),
-    ],
-  };
-};
+const deleteAllowListQuery = () => ({
+  type: 'drop_query_collection',
+  args: {
+    collection: allowedQueriesCollection,
+    cascade: true,
+  },
+});
 
 const addAllowedQueryQuery = query => ({
   type: 'add_query_to_collection',
@@ -527,7 +510,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
