@@ -331,8 +331,46 @@ jobs:
         paths:
           - _cli_output
 
+  # build console assets
+  build_console:
+    docker:
+    - image: hasura/graphql-engine-console-builder:v0.3
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build console
+        working_directory: console
+        command: |
+          make build
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_console_output
+        destination: console
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _console_output
+
   # test and build console
-  test_and_build_console:
+  test_console:
     docker:
     - image: hasura/graphql-engine-console-builder:v0.3
       environment:
@@ -366,19 +404,6 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
-    - run:
-        name: build console
-        working_directory: console
-        command: |
-          make build
-          make ci-copy-assets
-    - store_artifacts:
-        path: /build/_console_output
-        destination: console
-    - persist_to_workspace:
-        root: /build
-        paths:
-          - _console_output
 
   # test server upgrade from last version to current build
   test_server_upgrade:
@@ -422,10 +447,14 @@ workflows:
   build_and_test:
     jobs:
     - check_build_worthiness: *filter_only_vtags
-    - build_server:
+    - build_console:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
+    - build_server:
+        <<: *filter_only_vtags
+        requires:
+        - build_console
     - pytest_server_pg_11.1:
         <<: *filter_only_vtags
         requires:
@@ -462,7 +491,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - test_and_build_console:
+    - test_console:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli
@@ -470,5 +499,5 @@ workflows:
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:
-        - test_and_build_console
+        - test_console
         - all_server_tests_pass
