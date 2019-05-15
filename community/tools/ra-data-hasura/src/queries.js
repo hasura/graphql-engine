@@ -16,7 +16,8 @@ const countQuery = {
   type: 'count',
   args: {
     table: {'schema': '', 'name': ''},
-    where: { id: { '$ne': null }}
+    // where: { id: { '$ne': null }}
+    where: {}
   }
 };
 
