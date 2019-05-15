@@ -339,7 +339,9 @@ class Schema extends Component {
 
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
-              <div className={styles.display_inline}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
                 <Button
                   data-test={`add-track-table-${table.table_name}`}
                   className={`${styles.display_inline}`}
@@ -438,7 +440,9 @@ class Schema extends Component {
 
           untrackedRelList.push(
             <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-              <div className={styles.display_inline}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
                 <Button
                   className={styles.display_inline}
                   color="white"
@@ -528,7 +532,7 @@ class Schema extends Component {
                   >
                     <div
                       className={`${styles.display_inline} ${
-                        styles.padd_right
+                        styles.add_mar_right
                       }`}
                     >
                       <Button
@@ -545,12 +549,8 @@ class Schema extends Component {
                         Track
                       </Button>
                     </div>
-                    <div
-                      className={`${styles.padd_right} ${
-                        styles.display_inline
-                      }`}
-                    >
-                      {p.function_name}
+                    <div className={styles.display_inline}>
+                      <span>{p.function_name}</span>
                     </div>
                   </div>
                 ))}
