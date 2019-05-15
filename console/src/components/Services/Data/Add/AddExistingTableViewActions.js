@@ -5,7 +5,7 @@ import {
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
