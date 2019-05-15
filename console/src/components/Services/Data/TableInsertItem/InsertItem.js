@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Jsontoggler from '../../../Common/Toggler/Jsontoggler';
+import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
 
@@ -83,14 +83,12 @@ class InsertItem extends Component {
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
-
           refs[colName].insertRadioNode.checked = !!textValue.length;
           radioToSelectWhenEmpty.checked = !textValue.length;
         },
         onFocus: e => {
           if (isAutoIncrement) return;
           if (!isNullable && !hasDefault) return;
-
           const textValue = e.target.value;
           if (
             textValue === undefined ||
@@ -111,7 +109,6 @@ class InsertItem extends Component {
       };
 
       const colType = col.data_type;
-
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);
@@ -129,7 +126,7 @@ class InsertItem extends Component {
       if (colType === JSONDTYPE || colType === JSONB) {
         // JSON/JSONB
         typedInput = (
-          <Jsontoggler
+          <JsonInput
             standardProps={standardInputProps}
             placeholderProp={getPlaceholder(colType)}
           />
@@ -164,7 +161,14 @@ class InsertItem extends Component {
           >
             {colName}
           </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
+          <label
+            className={
+              styles.radioLabel +
+              ' radio-inline' +
+              ' ' +
+              styles.relative_position
+            }
+          >
             <input
               disabled={isAutoIncrement}
               type="radio"

@@ -4,7 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
-import Jsontoggler from '../../../Common/Toggler/Jsontoggler';
+import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 
 import {
@@ -178,7 +178,7 @@ class EditItem extends Component {
           type: 'text',
         };
         typedInput = (
-          <Jsontoggler
+          <JsonInput
             standardProps={standardEditProps}
             placeholderProp={'{"name": "foo"} or [12, "asdf"]'}
           />

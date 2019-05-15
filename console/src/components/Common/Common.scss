@@ -50,12 +50,10 @@ table thead tr th {
 }
 
 .jsonButtonAlign {
-  position: relative;
-  float: right;
-  margin-left: -30px;
-  margin-right: 5px;
-  margin-top: 10px;
-  z-index: 2;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
 }
 .pageSidebar {
   height: calc(100vh - 50px);
@@ -1236,6 +1234,10 @@ code {
     margin-left: -15px;
     margin-right: -15px;
   }
+}
+
+.relative_position {
+  position: relative;
 }
 
 .fixed_header_internal_link {
