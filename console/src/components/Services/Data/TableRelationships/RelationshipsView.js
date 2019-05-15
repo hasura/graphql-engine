@@ -118,15 +118,12 @@ class RelationshipsView extends Component {
                 const column1 = rel.objRel ? (
                   <RelationshipEditor
                     dispatch={dispatch}
-                    tableName={tableName}
                     key={rel.objRel.rel_name}
-                    relName={rel.objRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.objRel
                     )}
-                    isObjRel
                     allowRename={this.state.supportRename}
                   />
                 ) : (
@@ -136,14 +133,11 @@ class RelationshipsView extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
-                    tableName={tableName}
-                    relName={rel.arrRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.arrRel
                     )}
-                    isObjRel={false}
                     allowRename={this.state.supportRename}
                   />
                 ) : (

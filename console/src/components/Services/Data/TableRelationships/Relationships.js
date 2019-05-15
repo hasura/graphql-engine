@@ -89,14 +89,7 @@ const addRelationshipCellView = (
           </Button>
         )}
         &nbsp;
-        {getRelDef(
-          rel.isObjRel,
-          rel.lcol,
-          rel.rcol,
-          tableSchema.table_name,
-          rel.rTable
-        )}{' '}
-        &nbsp;
+        {getRelDef(rel)} &nbsp;
       </div>
       {selectedRelationship === rel ? (
         <form className="form-inline" onSubmit={onSave}>
@@ -131,6 +124,7 @@ const addRelationshipCellView = (
 
 const AddRelationship = ({
   tableName,
+  currentSchema,
   allSchemas,
   cachedRelationshipData,
   dispatch,
@@ -138,11 +132,14 @@ const AddRelationship = ({
   const styles = require('../TableModify/ModifyTable.scss');
   const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
-  const cTable = allSchemas.find(t => t.table_name === tableName);
+  const cTable = allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === currentSchema
+  );
 
   const suggestedRelationshipsData = suggestedRelationshipsRaw(
     tableName,
-    allSchemas
+    allSchemas,
+    currentSchema
   );
 
   if (
@@ -409,15 +406,12 @@ class Relationships extends Component {
                 const column1 = rel.objRel ? (
                   <RelationshipEditor
                     dispatch={dispatch}
-                    tableName={tableName}
                     key={rel.objRel.rel_name}
-                    relName={rel.objRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.objRel
                     )}
-                    isObjRel
                     allowRename={this.state.supportRename}
                   />
                 ) : (
@@ -427,14 +421,11 @@ class Relationships extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
-                    tableName={tableName}
-                    relName={rel.arrRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.arrRel
                     )}
-                    isObjRel={false}
                     allowRename={this.state.supportRename}
                   />
                 ) : (
@@ -473,6 +464,7 @@ class Relationships extends Component {
               <div className={styles.activeEdit}>
                 <AddRelationship
                   tableName={tableName}
+                  currentSchema={currentSchema}
                   allSchemas={allSchemas}
                   cachedRelationshipData={relAdd}
                   dispatch={dispatch}

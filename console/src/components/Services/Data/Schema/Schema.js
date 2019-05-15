@@ -285,7 +285,7 @@ class Schema extends Component {
             dispatch(autoAddRelName(rel));
           };
 
-          const relFrom = <b>{relData.tableName}</b>;
+          const relFrom = <b>{relData.lTable}</b>;
 
           const relTo = relData.isObjRel ? (
             <b>{relData.rTable}</b>
@@ -310,15 +310,7 @@ class Schema extends Component {
                   {relFrom} &rarr; {relTo}
                 </span>
                 &nbsp;&nbsp; - &nbsp;&nbsp;
-                <span>
-                  {getRelDef(
-                    relData.isObjRel,
-                    relData.lcol,
-                    relData.rcol,
-                    relData.tableName,
-                    relData.rTable
-                  )}
-                </span>
+                <span>{getRelDef(relData)}</span>
               </div>
             </div>
           );

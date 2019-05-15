@@ -8,10 +8,14 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import styles from '../TableModify/ModifyTable.scss';
 
 class RelationshipEditor extends React.Component {
-  state = {
-    isEditting: false,
-    text: this.props.relName,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isEditting: false,
+      text: this.props.relConfig.relName,
+    };
+  }
 
   handleTextChange = e => {
     this.setState({
@@ -34,13 +38,13 @@ class RelationshipEditor extends React.Component {
   };
 
   save = () => {
-    const { tableName, relName, dispatch } = this.props;
+    const { relConfig, dispatch } = this.props;
     const { text } = this.state;
-    if (text === relName) {
+    if (text === relConfig.relName) {
       return dispatch(
         showErrorNotification(
           'Renaming relationship failed',
-          `The relationship name is already ${relName}`
+          `The relationship name is already ${relConfig.relName}`
         )
       );
     }
@@ -55,22 +59,19 @@ class RelationshipEditor extends React.Component {
       );
     }
     dispatch(
-      saveRenameRelationship(relName, text, tableName, this.toggleEditor)
+      saveRenameRelationship(
+        relConfig.relName,
+        text,
+        relConfig.lTable,
+        this.toggleEditor
+      )
     );
   };
 
   render() {
-    const {
-      dispatch,
-      tableName,
-      relName,
-      relConfig,
-      isObjRel,
-      allowRename,
-    } = this.props;
-
+    const { dispatch, relConfig, allowRename } = this.props;
     const { text, isEditting } = this.state;
-    const { lcol, rtable, rcol } = relConfig;
+    const { relName } = relConfig;
 
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
@@ -78,9 +79,7 @@ class RelationshipEditor extends React.Component {
       e.preventDefault();
       const isOk = confirm('Are you sure?');
       if (isOk) {
-        dispatch(
-          deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
-        );
+        dispatch(deleteRelMigrate(relConfig));
       }
     };
     const collapsed = () => (
@@ -100,7 +99,7 @@ class RelationshipEditor extends React.Component {
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(isObjRel, lcol, rcol, tableName, rtable)}
+          {getRelDef(relConfig)}
         </div>
       </div>
     );
@@ -118,7 +117,7 @@ class RelationshipEditor extends React.Component {
           </Button>
         </div>
         <div className={tableStyles.relationshipTopPadding}>
-          <div>{getRelDef(isObjRel, lcol, rcol, tableName, rtable)}</div>
+          <div>{getRelDef(relConfig)}</div>
           <input
             onChange={this.handleTextChange}
             className={`form-control ${styles.add_mar_top_small}`}

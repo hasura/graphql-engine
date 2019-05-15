@@ -102,52 +102,68 @@ export const findTableFromRel = (schemas, curTable, rel) => {
 };
 
 export const findAllFromRel = (schemas, curTable, rel) => {
-  let rtable = null;
-  let lcol;
-  let rcol;
-
-  const foreignKeyConstraintOn = rel.rel_def.foreign_key_constraint_on;
+  const relMeta = {
+    relName: rel.rel_name,
+    lTable: rel.table_name,
+    lSchema: rel.table_schema,
+    isObjRel: rel.rel_type === 'object',
+    lcol: null,
+    rcol: null,
+    rTable: null,
+    rSchema: null,
+  };
 
   // for view
   if (rel.rel_def.manual_configuration !== undefined) {
-    rtable = rel.rel_def.manual_configuration.remote_table;
-
-    if (rtable.schema) {
-      rtable = rtable.name;
+    const rTableConfig = rel.rel_def.manual_configuration.remote_table;
+    if (rTableConfig.schema) {
+      relMeta.rTable = rTableConfig.name;
+      relMeta.rSchema = rTableConfig.schema;
+    } else {
+      relMeta.rTable = rTableConfig;
+      relMeta.rSchema = 'public';
     }
     const columnMapping = rel.rel_def.manual_configuration.column_mapping;
-    lcol = Object.keys(columnMapping);
-    rcol = lcol.map(column => columnMapping[column]);
+    relMeta.lcol = Object.keys(columnMapping);
+    relMeta.rcol = relMeta.lcol.map(column => columnMapping[column]);
   }
 
   // for table
+  const foreignKeyConstraintOn = rel.rel_def.foreign_key_constraint_on;
   if (foreignKeyConstraintOn !== undefined) {
     // for object relationship
     if (rel.rel_type === 'object') {
-      lcol = [foreignKeyConstraintOn];
+      relMeta.lcol = [foreignKeyConstraintOn];
 
-      const fkc = findFKConstraint(curTable, lcol);
+      const fkc = findFKConstraint(curTable, relMeta.lcol);
       if (fkc) {
-        rtable = fkc.ref_table;
-        rcol = [fkc.column_mapping[lcol]];
+        relMeta.rTable = fkc.ref_table;
+        relMeta.rSchema = fkc.ref_table_table_schema;
+        relMeta.rcol = [fkc.column_mapping[relMeta.lcol]];
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
-      rtable = foreignKeyConstraintOn.table;
-      rcol = [foreignKeyConstraintOn.column];
-      if (rtable.schema) {
-        // if schema exists, its not public schema
-        rtable = rtable.name;
+      relMeta.rcol = [foreignKeyConstraintOn.column];
+      const rTableConfig = foreignKeyConstraintOn.table;
+      if (rTableConfig.schema) {
+        relMeta.rTable = rTableConfig.name;
+        relMeta.rSchema = rTableConfig.schema;
+      } else {
+        relMeta.rTable = rTableConfig;
+        relMeta.rSchema = 'public';
       }
 
-      const rtableSchema = schemas.find(x => x.table_name === rtable);
-      const rfkc = findFKConstraint(rtableSchema, rcol);
-      lcol = [rfkc.column_mapping[rcol]];
+      const rtableSchema = schemas.find(
+        x =>
+          x.table_name === relMeta.rTable && x.table_schema === relMeta.rSchema
+      );
+      const rfkc = findFKConstraint(rtableSchema, relMeta.rcol);
+      relMeta.lcol = [rfkc.column_mapping[relMeta.rcol]];
     }
   }
-  return { lcol, rtable, rcol };
+  return relMeta;
 };
 
 export const getIngForm = string => {

@@ -1,9 +1,11 @@
 import { getTableName } from '../utils';
 
-const suggestedRelationshipsRaw = (tableName, allSchemas) => {
+const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
   const objRels = [];
   const arrRels = [];
-  const currentTableSchema = allSchemas.find(t => t.table_name === tableName);
+  const currentTableSchema = allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === currentSchema
+  );
   const currentTableRelationships = currentTableSchema.relationships;
   const currentObjRels = currentTableRelationships.filter(
     r => r.rel_type === 'object'
@@ -45,12 +47,14 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
     }
     if (!isExistingObjRel) {
       objRels.push({
-        tableName: tableName,
+        lTable: fk_obj.table_name,
+        lSchema: fk_obj.table_schema,
         isObjRel: true,
         name: null,
         lcol: lcol,
         rcol: lcol.map(column => fk_obj.column_mapping[column]),
         rTable: fk_obj.ref_table,
+        rSchema: fk_obj.ref_table_table_schema,
       });
     }
   });
@@ -85,12 +89,14 @@ const suggestedRelationshipsRaw = (tableName, allSchemas) => {
     }
     if (!isExistingArrayRel) {
       arrRels.push({
-        tableName: tableName,
+        lTable: o_fk_obj.ref_table,
+        lSchema: o_fk_obj.ref_table_table_schema,
         isObjRel: false,
         name: null,
         rcol: rcol,
         lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
         rTable: rTable,
+        rSchema: o_fk_obj.table_schema,
       });
     }
   });
