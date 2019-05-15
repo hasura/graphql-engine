@@ -27,11 +27,6 @@ flag profile
   default: False
   manual: True
 
-flag local-console
-  description: embeds resources needed by console and serves them at /static/
-  default: False
-  manual: True
-
 library
   hs-source-dirs:      src-lib
                      , src-exec
@@ -297,9 +292,7 @@ library
   if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
   if flag(developer)
-    cpp-options: -DDeveloperAPIs -DLocalConsole
-  if flag(local-console)
-    cpp-options: -DLocalConsole
+    cpp-options: -DDeveloperAPIs
 
   ghc-options: -O2
                -Wall

@@ -69,13 +69,8 @@ isAdminSecretSet :: AuthMode -> T.Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
 
-#ifdef LocalConsole
-defaultConsoleAssetsDir :: Text
-defaultConsoleAssetsDir = "../console/static/dist"
-#else
 defaultConsoleAssetsDir :: Text
 defaultConsoleAssetsDir = "/srv/console-assets"
-#endif
 
 consoleAssetsPath :: Text
 consoleAssetsPath = "https://graphql-engine-cdn.hasura.io/console/assets"
@@ -90,13 +85,8 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         , "isAdminSecretSet" .= isAdminSecretSet authMode
         , "consolePath" .= consolePath
         , "enableTelemetry" .= boolToText enableTelemetry
-#ifdef LocalConsole
-        , "cdnAssets" .= boolToText False
-        , "assetsVersion" .= ("" :: Text)
-#else
         , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
         , "assetsVersion" .= consoleVersion
-#endif
       ]
     consolePath = case path of
       "" -> "/console"

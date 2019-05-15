@@ -103,7 +103,6 @@
      // otherwise load from cdn itself
      } else {
        console.log('online/cdnAssets=true, loading assets from cdn');
-       window.__env.assetsPath =
        // set the path (cdn-based) to get assets from
        window.__env.versionedAssetsPath = window.__env.assetsPath + prependSlash(window.__env.assetsVersion);
        // fire the event
