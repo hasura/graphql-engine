@@ -9,10 +9,10 @@
        isAdminSecretSet: {{isAdminSecretSet}},
        enableTelemetry: {{enableTelemetry}},
        assetsPath: "https://graphql-engine-cdn.hasura.io/console/assets",
-       versionedAssetsPath: "{{assetsPath}}",
        assetsVersion: "{{assetsVersion}}",
        cdnAssets: {{cdnAssets}},
      };
+     window.__env.versionedAssetsPath = window.__env.assetsPath;
     </script>
   </head>
   <body>
