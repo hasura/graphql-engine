@@ -14,7 +14,7 @@ when GraphQL engine receives a request:
 As you can see from this:
 
 - **Authentication** is handled outside Hasura. Hasura delegates authentication and resolution of request
-  headers into session variables to your existing (*or new/custom*) authentication service.
+  headers into session variables to your authentication service *(existing or new)*
 
   Your authentication service is required to pass a user's **role** information in the form of session
   variables like ``X-Hasura-Role``, etc. More often than not, you'll also need to pass user information
@@ -30,7 +30,7 @@ As you can see from this:
   the database to perform the required operation (*fetch the required rows for queries, insert/edit
   rows for mutations, etc.*).
 
-**See more details about these at:**
+**See more details about setting up authentication and access control at:**
 
 .. toctree::
   :maxdepth: 1

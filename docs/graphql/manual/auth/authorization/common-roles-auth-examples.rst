@@ -6,7 +6,9 @@ Access control examples
   :depth: 1
   :local:
 
-This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended that you first check out :doc:`access control basics <basics>` and :doc:`reference documentation for permissions<reference-permissions>` that will be referred to throughout this guide.
+This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended
+that you first check out :doc:`roles-variables` and :doc:`permission-rules`
+that will be referred to throughout this guide.
 
 Here are some examples of common use-cases.
 
@@ -76,40 +78,41 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 .. thumbnail:: ../../../../img/graphql/manual/auth/collaborator-relationship.png
    :class: no-shadow
 
-Role-based schemas
-------------------
 
-For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
-right queries, fields, and mutations that are available to that role.
+.. Role-based schemas
+  ------------------
 
-Case 1: Logged-in users and anonymous users can access the same GraphQL fields
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
+  right queries, fields, and mutations that are available to that role.
 
-In simple use-cases, logged-in users and anonymous users might be able to fetch different rows (let's say because
-of a ``is_public`` flag), but have access to the same fields.
+  Case 1: Logged-in users and anonymous users can access the same GraphQL fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
+  In simple use-cases, logged-in users and anonymous users might be able to fetch different rows (let's say because
+  of a ``is_public`` flag), but have access to the same fields.
 
-  - This reads: Allow anyone to access rows that are marked public.
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
 
-- ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``.
+    - This reads: Allow anyone to access rows that are marked public.
 
-  - This reads: Allow users to access any rows that are public, or that are owned by them.
+  - ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``.
 
-Case 2: Logged-in users and anonymous users have access to different fields
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    - This reads: Allow users to access any rows that are public, or that are owned by them.
 
-In this case, anonymous users might have access only to a subset of fields while logged-in users can access all the
-fields for data that they own.
+  Case 2: Logged-in users and anonymous users have access to different fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition, and only the right columns are allowed to
-  be selected.
+  In this case, anonymous users might have access only to a subset of fields while logged-in users can access all the
+  fields for data that they own.
 
-  - This reads: Allow anyone to access rows that are marked public.
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition, and only the right columns are allowed to
+    be selected.
 
-- ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
+    - This reads: Allow anyone to access rows that are marked public.
 
-  - This reads: Allow users to that are owned by them.
+  - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
+
+    - This reads: Allow users to that are owned by them.
 
 
 .. _nested-object-permissions-example:

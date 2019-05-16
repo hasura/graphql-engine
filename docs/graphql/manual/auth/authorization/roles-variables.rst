@@ -3,39 +3,33 @@ Roles & Session variables
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
-
-The permissions system offered by Hasura GraphQL engine is extremely flexible and is built to capture complex
-use-cases conveniently.
 
 Roles
 -----
-Every table/view can have permission rules that are grouped together by multiple roles.
+Every table/view can have permission rules for users based on their role.
+
 By default, there is an ``admin`` role that can perform any operation on any table.
 
-You can create your own roles that make it easy for you to group permissions together.
+You can define roles and then create permissions for each of these roles:
 
 Examples:
 
-+-----------+-----------------------------------+
-| user      | A logged-in user                  |
-+-----------+-----------------------------------+
-| anonymous | A not logged-in user              |
-+-----------+-----------------------------------+
-| manager   | A user that  has access to other  |
-|           | user's data                       |
-+-----------+-----------------------------------+
++-----------+-----------------------------------+---------------------------------------+
+| user      | A logged-in user                  | CRUD on data that belongs to them     |
++-----------+-----------------------------------+---------------------------------------+
+| anonymous | A not logged-in user              | Only read from some tables/views      |
++-----------+-----------------------------------+---------------------------------------+
+| manager   | A user that  has access to other  | CRUD on all users data                |
+|           | user's data                       |                                       |
++-----------+-----------------------------------+---------------------------------------+
 
-You can then create permissions for each of these roles:
+.. admonition:: Role-based schemas
 
-Examples:
+  For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
+  right queries, fields, and mutations that are available to that role.
 
-+-----------+-----------------------------------+
-| user      | CRUD on data that belongs to them |
-+-----------+-----------------------------------+
-| anonymous | Only read from some tables/views  |
-+-----------+-----------------------------------+
 
 Dynamic session variables
 -------------------------
@@ -90,41 +84,115 @@ Examples:
             }
           }
 
-Indicating roles and session-variables in a GraphQL request
------------------------------------------------------------
+Modelling Roles in Hasura
+-------------------------
 
-Now that we have these roles and permission rules that use session variables set up, how do we actually use them
-when we make GraphQL requests from an app or from a different service?
+General guidelines for modelling roles in Hasura.
 
-For Development & Testing
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Roles are typically be modelled in two ways:
 
-While you're developing or testing, just indicate your role and your session variables by passing headers along with
-the request:
+1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in Github for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
+   is a great example of such modelling where access scopes are inherited by deeper roles:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/dev-mode-role-header-access-key.png
+   .. thumbnail:: ../../../../img/graphql/manual/auth/github-org-hierarchical-roles.png
 
-.. note::
+2. **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined.
 
-  If you've enabled Hasura GraphQL engine with an admin secret key, make sure you add the ``X-HASURA-ADMIN_SECRET``
-  header as well.
+**Roles in Hasura have to be defined in the latter way i.e. in a flat, non-hierarchical model**.
+
+To convert the above hierarchical roles model into the one expected by Hasura, you will need to model roles as
+partially captured by the table below (*showing access permissions for the* ``user`` *&* ``org-member`` *roles*,
+``repositories`` *table and* ``select`` *operation*):
+
+.. list-table::
+  :header-rows: 1
+  :widths: 25 20 45
+
+  * - Role
+    - Access Permissions
+    - Example permission rule
+
+  * - user
+    - Allow access to personally created repositories
+    -
+       .. code-block:: json
+
+          {
+            "creator_id": {
+              "_eq": "X-Hasura-User-Id"
+             }
+           }
+
+  * - org-member
+    - Allow access to personally created repositories and the organisation's repositories.
+    -
+      .. code-block:: json
+
+        {
+          "_or": [
+            {
+              "creator_id": {
+                "_eq": "X-Hasura-User-Id"
+              }
+            },
+            {
+              "organization": {
+                "members": {
+                  "member_id" : {
+                    "_eq" : "X-Hasura-User-Id"
+                  }
+                }
+              }
+            }
+          ]
+        }
+
+Making role-based user information available
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Effective permission rules require that information about which roles have access to which objects is available
+when processing the permission rule. Different users with the same role or the same user with different roles
+may have access to different sets of rows of the same table.
+
+In some cases this is straightforward - for example, to restrict access for authors to only their articles, a
+trivial row-level permission like ``"creator_id": {"_eq": "X-Hasura-User-Id"}`` will suffice. In others, like
+our example in the previous section, this user information (*ownership or relationship*) must be available for
+defining a permission rule.
+
+These non-trivial use-cases are to handled differently based on whether this information is available in the same
+database or not.
+
+Relationship information is available in the same database
+**********************************************************
+
+Let's take a closer look at the permission rule for the ``org-member`` rule in the example from the previous
+section. The rule reads as "*allow access to this repository if it was created by this user or if this user is
+a member of the organisation that this repository belongs to*".
+
+The crucial piece of user information, that is presumed to be available in the same database, that makes this an
+effective rule is the mapping of users (*members*) to organizations.
+
+Since this information is available in the same database, it can be easily leveraged via
+:ref:`Relationships in permissions <relationships-in-permissions>` (*see this reference for another
+example of the same kind*).
+
+Relationship information is **not** available in the same database
+******************************************************************
+
+When this user information is not available in the database that Hasura is configured to use, session variables
+are the only avenue to pass this information to a permission rule. In our example, the mapping of users (members)
+to organizations may not have been in available in the same database.
+
+To convey this information, a session variable, say ``X-Hasura-Allowed-Organisations`` can be used by the
+configured authentication to relay this information. We can then check for the following condition to emulate
+the same rule - *is the organization that this repository belongs to part of the list of the organizations the
+user is a member of*.
+
+.. admonition:: Arrays in permission rules
+
+  The ability to use arrays and operators like ``contains`` or ``contained_by`` are currently work-in-progress
+  and will be available soon.
 
 
-In Production, from apps
-^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you're making GraphQL queries from your apps, you will probably not (and should not) be sending session
-variables directly from your app because anyone can spoof the role and values of the variables and get access
-to whatever data they want.
-
-In this case, you should configure a webhook that will return an object containing the role and session variables
-given the session token (authorization token, JWT, cookie etc.) that your app normally uses.
-
-For **non-logged in users**, you can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the
-``--unauthorized-role`` flag to set a default role (e.g. ``anonymous``). This will allow you to set a role for users
-that are not logged in. The configured unauthorized role will be used whenever an access token is not present in a
-request to the GraphQL API. This can be useful for data that you would like anyone to be able to access and can be
-configured and restricted just like any other role.
-
-See :doc:`../authentication/index` for more details on passing dynamic session variables in production.
 

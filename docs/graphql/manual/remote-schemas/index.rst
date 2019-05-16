@@ -140,7 +140,7 @@ community tooling to write your own client-facing GraphQL gateway that interacts
 .. note::
 
   **Adding an additional layer on top of Hasura GraphQL engine significantly impacts the performance provided by
-  it out of the box** (*by as much as 4x*). If you need any help with remodeling these kind of use cases to use the
+  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kind of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
 

@@ -41,9 +41,7 @@ Follow the example at :doc:`access control basics <basics>`.
   :maxdepth: 1
 
   basics
-  common-roles-auth-examples
-  modeling-roles
   roles-variables
-  use-cases
-  reference-permissions
+  permission-rules
+  common-roles-auth-examples
 

@@ -10,7 +10,11 @@ Overview
 --------
 
 Authentication is handled outside Hasura. Hasura delegates authentication and resolution of request
-headers into session variables to your existing (*or new/custom*) authentication service.
+headers into session variables to your authentication service *(existing or new)*.
+
+Your authentication service is required to pass a user's **role** information in the form of session
+variables like ``X-Hasura-Role``, etc. More often than not, you'll also need to pass user information
+for your use-cases, like ``X-Hasura-User-Id``.
 
 Authentication options
 ----------------------
