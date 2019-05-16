@@ -16,7 +16,6 @@ import styles from './ModifyTable.scss';
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
-  allowRename,
   columnEdit,
   dispatch,
 }) => {
@@ -54,7 +53,7 @@ const ColumnEditorList = ({
     };
 
     const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col, allowRename));
+      dispatch(saveColumnChangesSql(colName, col));
     };
 
     const onDelete = () => {
@@ -127,7 +126,6 @@ const ColumnEditorList = ({
           dispatch={dispatch}
           currentSchema={currentSchema}
           columnComment={col.comment}
-          allowRename={allowRename}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}

@@ -19,6 +19,7 @@ import {
   SET_PRIMARY_KEYS,
   SET_FOREIGN_KEYS,
   RESET,
+  SET_UNIQUE_KEYS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -249,8 +250,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query,
-        action.insertPermColumnRestriction
+        action.query
       );
       return {
         ...modifyState,
@@ -553,7 +553,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         fkModify: action.fks,
       };
-
+    case SET_UNIQUE_KEYS:
+      return {
+        ...modifyState,
+        uniqueKeyModify: action.keys,
+      };
     default:
       return modifyState;
   }

@@ -12,42 +12,14 @@ import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import semverCheck from '../../../../helpers/semver';
 
 class ModifyView extends Component {
-  state = {
-    supportTableColumnRename: false,
-  };
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   modifyViewDefinition = viewName => {
     // fetch the definition
@@ -177,7 +149,6 @@ class ModifyView extends Component {
           tabName="modify"
           currentSchema={currentSchema}
           migrationMode={migrationMode}
-          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>

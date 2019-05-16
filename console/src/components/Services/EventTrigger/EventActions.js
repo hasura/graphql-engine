@@ -80,7 +80,7 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
         type: LOAD_TRIGGER_LIST,
         triggerList: consistentTriggers || triggerData,
       });
-      dispatch(loadInconsistentObjects(null, false));
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));

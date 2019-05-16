@@ -1,8 +1,7 @@
 import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-
-const styles = require('./ModifyEvent.scss');
+import styles from './Tooltip.scss';
 
 const tooltipGen = message => {
   return <Tooltip id={message}>{message}</Tooltip>;

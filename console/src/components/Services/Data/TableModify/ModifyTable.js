@@ -5,6 +5,7 @@ import {
   deleteTableSql,
   untrackTableSql,
   RESET,
+  setUniqueKeys,
 } from '../TableModify/ModifyActions';
 import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
@@ -13,44 +14,16 @@ import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
-import semverCheck from '../../../../helpers/semver';
+import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
 import { replace } from 'react-router-redux';
 
 class ModifyTable extends React.Component {
-  state = {
-    supportTableColumnRename: false,
-  };
-
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   render() {
     const {
@@ -63,6 +36,7 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      uniqueKeyModify,
     } = this.props;
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
@@ -116,7 +90,6 @@ class ModifyTable extends React.Component {
           tabName="modify"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
-          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -137,7 +110,6 @@ class ModifyTable extends React.Component {
             <ColumnEditorList
               tableSchema={tableSchema}
               columnEdit={columnEdit}
-              allowRename={this.state.supportTableColumnRename}
               dispatch={dispatch}
               currentSchema={currentSchema}
             />
@@ -160,6 +132,16 @@ class ModifyTable extends React.Component {
               allSchemas={allSchemas}
               dispatch={dispatch}
               fkModify={fkModify}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Unique Keys</h4>
+            <UniqueKeyEditor
+              tableSchema={tableSchema}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              dispatch={dispatch}
+              uniqueKeys={uniqueKeyModify}
+              setUniqueKeys={setUniqueKeys}
             />
             <hr />
             {untrackBtn}

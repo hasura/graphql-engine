@@ -190,28 +190,8 @@ const loadTableList = schemaName => {
   return dispatch => dispatch(loadSchema({ schemas: [schemaName] }));
 };
 
-const operationToggleColumn = (
-  column,
-  operation,
-  supportColumnChangeFeature
-) => {
+const operationToggleColumn = (column, operation) => {
   return (dispatch, getState) => {
-    if (supportColumnChangeFeature) {
-      if (operation === 'update') {
-        const currentOperations = getState().addTrigger.operations;
-        const currentCols = currentOperations[operation];
-        // check if column is in currentCols. if not, push
-        const isExists = currentCols.includes(column);
-        let finalCols = currentCols;
-        if (isExists) {
-          finalCols = currentCols.filter(col => col !== column);
-        } else {
-          finalCols.push(column);
-        }
-        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
-      }
-      return;
-    }
     const currentOperations = getState().addTrigger.operations;
     const currentCols = currentOperations[operation];
     // check if column is in currentCols. if not, push
@@ -226,18 +206,9 @@ const operationToggleColumn = (
   };
 };
 
-const operationToggleAllColumns = (
-  columns,
-  supportListeningToColumnsUpdate
-) => {
+const operationToggleAllColumns = columns => {
   return dispatch => {
-    if (supportListeningToColumnsUpdate) {
-      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
-    } else {
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
-    }
+    dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
   };
 };
 

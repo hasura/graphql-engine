@@ -5,7 +5,6 @@ import { Link } from 'react-router';
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
 import { UPDATE_TRACKED_FUNCTIONS } from './DataActions';
-import semverCheck from '../../../helpers/semver';
 
 const appPrefix = '/data';
 
@@ -65,7 +64,6 @@ class DataSubSidebar extends React.Component {
     const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
     const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
     const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
-
     const {
       functionsList,
       listedFunctions,
@@ -74,12 +72,15 @@ class DataSubSidebar extends React.Component {
       migrationMode,
       location,
       currentFunction,
-      serverVersion,
+      metadata,
     } = this.props;
+
+    if (metadata.ongoingRequest) {
+      return null;
+    }
 
     const { trackedTables, tableList } = this.state;
 
-    const handleFunc = semverCheck('customFunctionSection', serverVersion);
     const trackedTablesLength = trackedTables.length;
 
     const getSearchInput = () => {
@@ -88,7 +89,7 @@ class DataSubSidebar extends React.Component {
           type="text"
           onChange={this.tableSearch}
           className="form-control"
-          placeholder={`search table/view${handleFunc ? '/function' : ''}`}
+          placeholder={'search table/view/function'}
           data-test="search-tables"
         />
       );
