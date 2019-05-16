@@ -161,14 +161,7 @@ class InsertItem extends Component {
           >
             {colName}
           </label>
-          <label
-            className={
-              styles.radioLabel +
-              ' radio-inline' +
-              ' ' +
-              styles.relative_position
-            }
-          >
+          <label className={styles.radioLabel + ' radio-inline'}>
             <input
               disabled={isAutoIncrement}
               type="radio"

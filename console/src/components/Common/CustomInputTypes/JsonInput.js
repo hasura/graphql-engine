@@ -3,8 +3,8 @@ import AceEditor from 'react-ace';
 
 const styles = require('../Common.scss');
 
-const N = 'normal';
-const J = 'json';
+const NORMALKEY = 'normal';
+const JSONKEY = 'json';
 
 const parseJSONData = data => {
   try {
@@ -19,7 +19,7 @@ const parseJSONData = data => {
 
 const createInitialState = data => {
   const initialState = {
-    showEditorType: N,
+    showEditorType: NORMALKEY,
     data: parseJSONData(data),
   };
   return initialState;
@@ -39,28 +39,25 @@ const JsonInput = props => {
     };
   };
   const toggleEditorType = () => {
-    if (state.showEditorType === J) {
+    if (state.showEditorType === JSONKEY) {
       return {
         ...state,
-        showEditorType: N,
+        showEditorType: NORMALKEY,
       };
     }
     return {
       ...state,
       data: parseJSONData(state.data),
-      showEditorType: J,
+      showEditorType: JSONKEY,
     };
   };
   const handleKeyUpEvent = e => {
     if (e.ctrlKey && e.which === 32) {
-      console.log(
-        'Control space conbination is pressed, toggling between json'
-      );
       updateState(toggleEditorType());
     }
   };
   const renderHtml =
-    showEditorType === J ? (
+    showEditorType === JSONKEY ? (
       <AceEditor
         key="ace_json_editor"
         {...allProps}
@@ -74,6 +71,7 @@ const JsonInput = props => {
         showPrintMargin={false}
         showGutter={false}
         onChange={val => updateState(updateData(val))}
+        onFocus={e => console.log(e)}
       />
     ) : (
       <input
@@ -85,17 +83,20 @@ const JsonInput = props => {
         onKeyUp={handleKeyUpEvent}
       />
     );
-  return [
-    renderHtml,
-    <i
-      key="icon_json_editor"
-      className={
-        (state.showEditorType === J ? 'fa fa-compress ' : 'fa fa-expand ') +
-        styles.jsonButtonAlign
-      }
-      onClick={() => updateState(toggleEditorType())}
-    />,
-  ];
+  return (
+    <span>
+      <label>{renderHtml}</label>
+      <i
+        key="icon_json_editor"
+        className={
+          (state.showEditorType === JSONKEY
+            ? 'fa fa-compress '
+            : 'fa fa-expand ') + styles.jsonButtonAlign
+        }
+        onClick={() => updateState(toggleEditorType())}
+      />
+    </span>
+  );
 };
 
 /*

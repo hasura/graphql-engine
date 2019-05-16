@@ -44,6 +44,8 @@ const editItem = (tableName, colValues) => {
           insertObject[colName] = null;
         }
       } else if (colType === 'json' || colType === 'jsonb') {
+        console.log('ColValues');
+        console.log(colValues[colName]);
         try {
           const val = JSON.parse(colValues[colName]);
           insertObject[colName] = val;
