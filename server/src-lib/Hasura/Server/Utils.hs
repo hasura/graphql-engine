@@ -40,6 +40,14 @@ userIdHeader = "x-hasura-user-id"
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
 parseDatabaseUrl :: String -> Maybe String -> Maybe Q.ConnInfo
