@@ -6,19 +6,20 @@ module Hasura.Server.App where
 
 import           Control.Arrow                          ((***))
 import           Control.Concurrent.MVar
+import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
+import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           System.Exit                            (exitFailure)
+
+import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
 import qualified Data.ByteString.Lazy                   as BL
-#ifdef LocalConsole
-import qualified Data.FileEmbed                         as FE
-#endif
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
@@ -67,31 +68,6 @@ boolToText = bool "false" "true"
 isAdminSecretSet :: AuthMode -> T.Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _        = boolToText True
-
-#ifdef LocalConsole
-consoleAssetsLoc :: Text
-consoleAssetsLoc = "/static"
-#else
-consoleAssetsLoc :: Text
-consoleAssetsLoc =
-  "https://storage.googleapis.com/hasura-graphql-engine/console/" <> consoleVersion
-#endif
-
-mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry =
-  bool (Left errMsg) (Right res) $ null errs
-  where
-    (errs, res) = M.checkedSubstitute consoleTmplt $
-                  object [ "consoleAssetsLoc" .= consoleAssetsLoc
-                         , "isAdminSecretSet" .= isAdminSecretSet authMode
-                         , "consolePath" .= consolePath
-                         , "enableTelemetry" .= boolToText enableTelemetry
-                         ]
-    consolePath = case path of
-      "" -> "/console"
-      r  -> "/console/" <> r
-
-    errMsg = "console template rendering failed: " ++ show errs
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -157,7 +133,7 @@ type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
   = JSONResp !EncJSON
-  | RawResp !T.Text !BL.ByteString -- content-type, body
+  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
@@ -203,20 +179,18 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
+  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> L.Logger
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult userInfoM req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
-  where
-    logger = L.unLogger $ scLogger sc
+logResult userInfoM req reqBody logger res qTime =
+  liftIO $ (L.unLogger logger) $ mkAccessLog userInfoM req (reqBody, res) qTime
 
 logError
   :: MonadIO m
   => Maybe UserInfo -> Wai.Request
-  -> BL.ByteString -> ServerCtx -> QErr -> m ()
-logError userInfoM req reqBody sc qErr =
-  logResult userInfoM req reqBody sc (Left qErr) Nothing
+  -> BL.ByteString -> L.Logger -> QErr -> m ()
+logError userInfoM req reqBody logger qErr =
+  logResult userInfoM req reqBody logger (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -245,7 +219,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
@@ -257,15 +231,15 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       json $ qErrEncoder includeInternal qErr
 
     logAndThrow req reqBody includeInternal qErr = do
-      logError Nothing req reqBody serverCtx qErr
+      logError Nothing req reqBody logger qErr
       qErrToResp includeInternal qErr
 
     resToResp = \case
       JSONResp j -> do
         uncurry setHeader jsonHeader
         lazyBytes $ encJToLBS j
-      RawResp ct b -> do
-        setHeader "content-type" ct
+      RawResp h b -> do
+        mapM_ (uncurry setHeader) h
         lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler EncJSON
@@ -327,7 +301,45 @@ v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
-  return $ RawResp "application/sql" output
+  return $ RawResp [sqlHeader] output
+
+consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger dir path = do
+  -- '..' in paths need not be handed as it is resolved in the url by
+  -- spock's routing. we get the expanded path.
+  eFileContents <- liftIO $ try $ BL.readFile $
+    joinPath [T.unpack dir, path]
+  either onError onSuccess eFileContents
+  where
+    onSuccess c = do
+      mapM_ (uncurry setHeader) headers
+      lazyBytes c
+    onError :: IOException -> ActionT IO ()
+    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
+    fn = T.pack $ takeFileName path
+    -- set gzip header if the filename ends with .gz
+    (fileName, encHeader) = case T.stripSuffix ".gz" fn of
+      Just v  -> (v, [gzipHeader])
+      Nothing -> (fn, [])
+    mimeType = bsToTxt $ defaultMimeLookup fileName
+    headers = ("Content-Type", mimeType) : encHeader
+
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
+  bool (Left errMsg) (Right res) $ null errs
+  where
+    (errs, res) = M.checkedSubstitute consoleTmplt $
+      -- variables required to render the template
+      object [ "isAdminSecretSet" .= isAdminSecretSet authMode
+             , "consolePath" .= consolePath
+             , "enableTelemetry" .= boolToText enableTelemetry
+             , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
+             , "assetsVersion" .= consoleVersion
+             ]
+    consolePath = case path of
+      "" -> "/console"
+      r  -> "/console/" <> r
+    errMsg = "console template rendering failed: " ++ show errs
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -375,13 +387,14 @@ mkWaiApp
   -> AuthMode
   -> CorsConfig
   -> Bool
+  -> Maybe Text
   -> Bool
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
-         enableConsole enableTelemetry instanceId apis
+         enableConsole consoleAssetsDir enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
         pgExecCtxSer = PGExecCtx pool Q.Serializable
@@ -411,7 +424,8 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
                     sqlGenCtx apis instanceId planCache lqState enableAL
 
     spockApp <- spockAsApp $ spockT id $
-                httpApp corsCfg serverCtx enableConsole enableTelemetry
+                httpApp corsCfg serverCtx enableConsole
+                  consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
     return ( WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp
@@ -419,14 +433,15 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
            , cacheBuiltTime
            )
 
-httpApp :: CorsConfig -> ServerCtx -> Bool -> Bool -> SpockT IO ()
-httpApp corsCfg serverCtx enableConsole enableTelemetry = do
+httpApp :: CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT IO ()
+httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- cors middleware
     unless (isCorsDisabled corsCfg) $
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when (enableConsole && enableMetadata) serveApiConsole
+    when (enableConsole && enableMetadata) $ do
+      serveApiConsole
 
     -- Health check endpoint
     get "healthz" $ do
@@ -492,9 +507,10 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError qErr
+      raiseGenericApiError logger qErr
 
   where
+    logger = scLogger serverCtx
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
 
@@ -526,28 +542,25 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    raiseGenericApiError qErr = do
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      setStatus $ qeStatus qErr
-      lazyBytes $ encode qErr
-
     serveApiConsole = do
+      -- redirect / to /console
       get root $ redirect "console"
-      get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
-          mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry
 
-#ifdef LocalConsole
-      get "static/main.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.js")
-      get "static/main.css" $ do
-        setHeader "Content-Type" "text/css;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/main.css")
-      get "static/vendor.js" $ do
-        setHeader "Content-Type" "text/javascript;charset=UTF-8"
-        bytes $(FE.embedFile "../console/static/dist/vendor.js")
-#endif
+      -- serve static files if consoleAssetsDir is set
+      onJust consoleAssetsDir $ \dir ->
+        get ("console/assets" <//> wildcard) $ \path ->
+          consoleAssetsHandler logger dir (T.unpack path)
+
+      -- serve console html
+      get ("console" <//> wildcard) $ \path ->
+        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
+        mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+
+raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
+raiseGenericApiError logger qErr = do
+  req <- request
+  reqBody <- liftIO $ strictRequestBody req
+  logError Nothing req reqBody logger qErr
+  uncurry setHeader jsonHeader
+  setStatus $ qeStatus qErr
+  lazyBytes $ encode qErr

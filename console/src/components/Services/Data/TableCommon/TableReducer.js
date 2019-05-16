@@ -249,8 +249,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       const permState = getBasePermissionsState(
         action.tableSchema,
         action.role,
-        action.query,
-        action.insertPermColumnRestriction
+        action.query
       );
       return {
         ...modifyState,

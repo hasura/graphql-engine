@@ -8,7 +8,6 @@ import ClearAdminSecret from './ClearAdminSecret';
 import { CONSOLE_ADMIN_SECRET } from '../../../AppState';
 
 const MetadataOptions = props => {
-  const { supportMetadata } = props;
   const styles = require('../Metadata.scss');
 
   const getMetadataImportExportSection = () => {
@@ -33,40 +32,34 @@ const MetadataOptions = props => {
   };
 
   const getMetadataUpdateSection = () => {
-    let updateSection = null;
-
-    if (supportMetadata) {
-      updateSection = (
-        <div>
-          <div key="meta_data_1" className={styles.intro_note}>
-            <h4>Reload metadata</h4>
-            <div className={styles.content_width}>
-              Refresh Hasura metadata, typically required if you have changed
-              the underlying postgres.
-            </div>
-          </div>
-
-          <div key="meta_data_2">
-            <ReloadMetadata {...props} />
-          </div>
-
-          <div key="meta_data_3" className={styles.intro_note}>
-            <h4>Reset Metadata</h4>
-            <div className={styles.content_width}>
-              Permanently clear GraphQL Engine's metadata and configure it from
-              scratch (tracking relevant tables and relationships). This process
-              is not reversible.
-            </div>
-          </div>
-
-          <div key="meta_data_4">
-            <ResetMetadata {...props} />
+    return (
+      <div>
+        <div key="meta_data_1" className={styles.intro_note}>
+          <h4>Reload metadata</h4>
+          <div className={styles.content_width}>
+            Refresh Hasura metadata, typically required if you have changed the
+            underlying postgres.
           </div>
         </div>
-      );
-    }
 
-    return updateSection;
+        <div key="meta_data_2">
+          <ReloadMetadata {...props} />
+        </div>
+
+        <div key="meta_data_3" className={styles.intro_note}>
+          <h4>Reset Metadata</h4>
+          <div className={styles.content_width}>
+            Permanently clear GraphQL Engine's metadata and configure it from
+            scratch (tracking relevant tables and relationships). This process
+            is not reversible.
+          </div>
+        </div>
+
+        <div key="meta_data_4">
+          <ResetMetadata {...props} />
+        </div>
+      </div>
+    );
   };
 
   const getClearSecretSection = () => {
@@ -123,6 +116,7 @@ const MetadataOptions = props => {
           </a>
         </div>
       </div>
+
       {getMetadataImportExportSection()}
 
       {getMetadataUpdateSection()}
