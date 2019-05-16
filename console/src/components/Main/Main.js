@@ -323,9 +323,9 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
-                        }
+                        src={`${
+                          globals.assetsPath
+                        }/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
                     </div>
@@ -356,9 +356,9 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/twittericon.png'
-                        }
+                        src={`${
+                          globals.assetsPath
+                        }/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
