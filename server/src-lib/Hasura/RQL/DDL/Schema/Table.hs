@@ -47,22 +47,25 @@ saveTableToCatalog (QualifiedObject sn tn) =
                 |] (sn, tn) False
 
 -- Build the TableInfo with all its columns
-getTableInfo :: (QErrM m, CacheRWM m, MonadTx m) =>
-  QualifiedTable -> Bool -> m TableInfo
-getTableInfo qt@(QualifiedObject sn tn) isSystemDefined = do
+getTableInfo
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => PGTyInfoMaps -> QualifiedTable -> Bool -> m TableInfo
+getTableInfo tyMaps qt@(QualifiedObject sn tn) isSystemDefined = do
   tableData <- liftTx $ Q.catchE defaultTxErrorHandler $
                Q.listQ $(Q.sqlFromFile "src-rsr/table_info.sql")(sn, tn) True
   case tableData of
     [] -> throw400 NotExists $ "no such table/view exists in postgres : " <>> qt
     [(Q.AltJ cols', Q.AltJ cons, Q.AltJ viewInfoM)] -> do
-      cols <- toPGColTypes cols'
+      cols <- toPGColTypes tyMaps cols'
       return $ mkTableInfo qt isSystemDefined cons cols viewInfoM
     _ -> throw500 $ "more than one row found for: " <>> qt
 
-toPGColTypes :: (CacheRWM m, MonadTx m) => [PGColInfo'] -> m [PGColInfo]
-toPGColTypes cols' = do
+toPGColTypes
+  :: (CacheRWM m, MonadTx m)
+  => PGTyInfoMaps -> [PGColInfo'] -> m [PGColInfo]
+toPGColTypes tyMaps cols' = do
   let colOids' = map pgipType cols'
-  pgTysMap <- zip cols' <$> toPGColTysWithCaching colOids'
+  pgTysMap <- zip cols' <$> resolveColTypes tyMaps colOids'
   return $ flip map pgTysMap
     $ \(PGColInfo' na _ nu,pgColTy) -> PGColInfo na pgColTy nu
 
@@ -81,9 +84,9 @@ trackExistingTableOrViewP1 (TrackTable vn) = do
 
 trackExistingTableOrViewP2Setup
   :: (QErrM m, CacheRWM m, MonadTx m)
-  => QualifiedTable -> Bool -> m ()
-trackExistingTableOrViewP2Setup tn isSystemDefined = do
-  ti <- getTableInfo tn isSystemDefined
+  => PGTyInfoMaps -> QualifiedTable -> Bool -> m ()
+trackExistingTableOrViewP2Setup tyMaps tn isSystemDefined = do
+  ti <- getTableInfo tyMaps tn isSystemDefined
   addTableToCache ti
 
 trackExistingTableOrViewP2
@@ -95,7 +98,9 @@ trackExistingTableOrViewP2 vn isSystemDefined = do
       tn = GS.qualObjectToName vn
   GS.checkConflictingNode defGCtx tn
 
-  trackExistingTableOrViewP2Setup vn isSystemDefined
+  tyMaps <- liftTx getPGTyInfoMap
+
+  trackExistingTableOrViewP2Setup tyMaps vn isSystemDefined
   liftTx $ Q.catchE defaultTxErrorHandler $
     saveTableToCatalog vn
 
@@ -140,8 +145,8 @@ purgeDep schemaObjId = case schemaObjId of
     "unexpected dependent object : " <> reportSchemaObj schemaObjId
 
 processTableChanges :: (MonadTx m, CacheRWM m)
-                    => TableInfo -> TableDiff -> m Bool
-processTableChanges ti tableDiff = do
+                    => PGTyInfoMaps -> TableInfo -> TableDiff -> m Bool
+processTableChanges tyMaps ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
   sc <- askSchemaCache
@@ -180,7 +185,7 @@ processTableChanges ti tableDiff = do
 
     procAddedCols tn = do
       -- In the newly added columns check that there is no conflict with relationships
-      addedCols <- toPGColTypes addedCols'
+      addedCols <- toPGColTypes tyMaps addedCols'
       forM_ addedCols $ \pci@(PGColInfo colName _ _) ->
         case M.lookup (fromPGCol colName) $ tiFieldInfoMap ti of
           Just (FIRelationship _) ->
@@ -223,8 +228,8 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
     delTableFromCatalog qtn
   delTableFromCache qtn
 
-processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m Bool
-processSchemaChanges schemaDiff = do
+processSchemaChanges :: (MonadTx m, CacheRWM m) => PGTyInfoMaps -> SchemaDiff -> m Bool
+processSchemaChanges tyMaps schemaDiff = do
   -- Purge the dropped tables
   mapM_ delTableAndDirectDeps droppedTables
 
@@ -233,7 +238,7 @@ processSchemaChanges schemaDiff = do
     ti <- case M.lookup oldQtn $ scTables sc of
       Just ti -> return ti
       Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-    processTableChanges ti tableDiff
+    processTableChanges tyMaps ti tableDiff
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
@@ -301,13 +306,14 @@ buildSchemaCache = do
   -- clean hdb_views
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
+  tyMaps <- liftTx getPGTyInfoMap
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
   strfyNum <- stringifyNum <$> askSQLGenCtx
   tables <- liftTx $ Q.catchE defaultTxErrorHandler fetchTables
   forM_ tables $ \(sn, tn, isSystemDefined) ->
     modifyErr (\e -> "table " <> tn <<> "; " <> e) $
-    trackExistingTableOrViewP2Setup (QualifiedObject sn tn) isSystemDefined
+    trackExistingTableOrViewP2Setup tyMaps (QualifiedObject sn tn) isSystemDefined
 
   -- Fetch all the relationships
   relationships <- liftTx $ Q.catchE defaultTxErrorHandler fetchRelationships
@@ -352,7 +358,7 @@ buildSchemaCache = do
   functions <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctions
   forM_ functions $ \(sn, fn) ->
     modifyErr (\e -> "function " <> fn <<> "; " <> e) $
-    trackFunctionP2Setup (QualifiedObject sn fn)
+    trackFunctionP2Setup tyMaps (QualifiedObject sn fn)
 
   -- remote schemas
   res <- liftTx fetchRemoteSchemas
@@ -495,8 +501,10 @@ execWithMDCheck (RunSQL t cascade _) = do
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
+  tyMaps <- liftTx getPGTyInfoMap
+
   -- update the schema cache and hdb_catalog with the changes
-  reloadRequired <- processSchemaChanges schemaDiff
+  reloadRequired <- processSchemaChanges tyMaps schemaDiff
 
   let withReload = buildSchemaCache
       withoutReload = do

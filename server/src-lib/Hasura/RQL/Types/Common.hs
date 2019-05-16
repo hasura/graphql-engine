@@ -22,13 +22,14 @@ module Hasura.RQL.Types.Common
        , PGTyInfoMaps
        , PGColOidInfo(..)
        , PGTyInfo(..)
-       , getPGColTy
+       , resolveColTypes
        , ColVals
        , PreSetCols
        , MutateResp(..)
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
@@ -76,8 +77,8 @@ data PGTyInfo
 
 data PGColOidInfo
   = PGColOidInfo
-  { pcoiOid        :: PQ.Oid
-  , pcoiDimension  :: Integer
+  { pcoiOid       :: PQ.Oid
+  , pcoiDimension :: Integer
   } deriving (Show, Eq, Generic)
 
 instance Hashable PGColOidInfo
@@ -114,6 +115,13 @@ getPGColTy maps@(oidNameMap,nameTyMap) (PGColOidInfo oid dims) = do
     getTyOfOid  = (flip Map.lookup oidNameMap) >=> (flip Map.lookup nameTyMap)
     getSubTy = getPGColTy maps
 
+resolveColTypes
+  :: MonadError QErr m => PGTyInfoMaps -> [PGColOidInfo] -> m [PGColType]
+resolveColTypes maps tys =
+  forM tys $ \t -> onNothing (getPGColTy maps t) $ throw500 $ errMsg t
+  where
+    errMsg x =
+      "Could not find Postgres type for oid " <> T.pack (show $ pcoiOid x)
 
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGColOidInfo)
 $(deriveJSON

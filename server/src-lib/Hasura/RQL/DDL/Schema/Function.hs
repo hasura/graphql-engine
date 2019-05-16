@@ -2,9 +2,9 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Schema.PGType
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.RQL.DDL.Schema.PGType
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -63,8 +63,10 @@ validateFuncArgs args =
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
     invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
 
-mkFunctionInfo :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
-mkFunctionInfo qf rawFuncInfo = do
+mkFunctionInfo
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => PGTyInfoMaps -> QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+mkFunctionInfo tyMaps qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
   -- throw error if return type is not composite type
@@ -76,7 +78,7 @@ mkFunctionInfo qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  inpArgTyps <- toPGColTysWithCaching inpArgOids
+  inpArgTyps <- resolveColTypes tyMaps inpArgOids
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
@@ -92,8 +94,10 @@ mkFunctionInfo qf rawFuncInfo = do
 
 
 -- Build function info
-getFunctionInfo :: (QErrM m, CacheRWM m, MonadTx m) => QualifiedFunction -> m FunctionInfo
-getFunctionInfo qf@(QualifiedObject sn fn) = do
+getFunctionInfo
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => PGTyInfoMaps -> QualifiedFunction -> m FunctionInfo
+getFunctionInfo tyMaps qf@(QualifiedObject sn fn) = do
   -- fetch function details
   funcData <- liftTx $ Q.catchE defaultTxErrorHandler $
               Q.listQ $(Q.sqlFromFile "src-rsr/function_info.sql") (sn, fn) True
@@ -101,7 +105,7 @@ getFunctionInfo qf@(QualifiedObject sn fn) = do
   case funcData of
     []                              ->
       throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [Identity (Q.AltJ rawFuncInfo)] -> mkFunctionInfo qf rawFuncInfo
+    [Identity (Q.AltJ rawFuncInfo)] -> mkFunctionInfo tyMaps qf rawFuncInfo
     _                               ->
       throw400 NotSupported $
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
@@ -134,9 +138,9 @@ trackFunctionP1 (TrackFunction qf) = do
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => QualifiedFunction -> m ()
-trackFunctionP2Setup qf = do
-  fi <- withPathK "name" $ getFunctionInfo qf
+                     => PGTyInfoMaps -> QualifiedFunction -> m ()
+trackFunctionP2Setup tyMaps qf = do
+  fi <- withPathK "name" $ getFunctionInfo tyMaps qf
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -154,7 +158,8 @@ trackFunctionP2 qf = do
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL
-  trackFunctionP2Setup qf
+  tyMaps <- liftTx getPGTyInfoMap
+  trackFunctionP2Setup tyMaps qf
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
 

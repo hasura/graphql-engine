@@ -22,7 +22,7 @@ module Hasura.RQL.Types.SchemaCache
        , mkTableInfo
        , addTableToCache
        , modTableInCache
-       , modPGTyCache
+       -- , modPGTyCache
        , delTableFromCache
 
        , WithDeps
@@ -461,7 +461,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
-  , scTyMap             :: !PGTyCache
+  -- , scTyMap             :: !PGTyCache
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -525,17 +525,17 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty mempty
+  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
   sc <- askSchemaCache
   writeSchemaCache $ sc { scTables = tc }
 
-modPGTyCache :: (CacheRWM m) => PGTyCache -> m ()
-modPGTyCache tm = do
-  sc <- askSchemaCache
-  writeSchemaCache $ sc { scTyMap = tm }
+-- modPGTyCache :: (CacheRWM m) => PGTyCache -> m ()
+-- modPGTyCache tm = do
+--   sc <- askSchemaCache
+--   writeSchemaCache $ sc { scTyMap = tm }
 
 
 addTableToCache :: (QErrM m, CacheRWM m)
