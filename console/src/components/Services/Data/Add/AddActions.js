@@ -126,8 +126,6 @@ const createTableSql = () => {
     // add primary key
     if (pKeys.length > 0) {
       tableColumns += ', PRIMARY KEY (';
-      // tableColumns += '"' + pKeys.map((col) => (col)) + '"';
-      // tableColumns += pKeys.join(', ');
       pKeys.map(col => {
         tableColumns += '"' + col + '"' + ',';
       });

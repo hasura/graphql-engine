@@ -104,10 +104,12 @@ const defaultModifyState = {
   relAdd: {
     isActive: true,
     name: '',
-    tableName: '',
+    lTable: null,
+    lSchema: null,
     isObjRel: null,
     lcol: [],
     rTable: null,
+    rSchema: null,
     rcol: [],
     manualColumns: [],
     isManualExpanded: false,
