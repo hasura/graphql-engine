@@ -26,7 +26,7 @@ class AllowedQueriesList extends React.Component {
 
     const getQueryList = () => {
       if (allowedQueries.length === 0) {
-        return <b>No queries in allow-list yet</b>;
+        return <div>No queries in allow-list yet</div>;
       }
 
       return allowedQueries.map((query, i) => {
