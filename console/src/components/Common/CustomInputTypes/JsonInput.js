@@ -32,40 +32,47 @@ const JsonInput = props => {
   delete allProps.defaultValue;
   const [state, updateState] = useState(createInitialState(defaultValue));
   const { showEditorType, data } = state;
-  const updateData = newData => {
+  const updateData = (newData, currentState) => {
     return {
-      ...state,
+      ...currentState,
       data: newData,
     };
   };
-  const toggleEditorType = () => {
-    if (state.showEditorType === JSONKEY) {
+
+  const toggleEditorType = currentState => {
+    if (currentState.showEditorType === JSONKEY) {
       return {
-        ...state,
+        ...currentState,
         showEditorType: NORMALKEY,
       };
     }
     return {
-      ...state,
-      data: parseJSONData(state.data),
+      ...currentState,
+      data: parseJSONData(currentState.data),
       showEditorType: JSONKEY,
     };
   };
   const handleKeyUpEvent = e => {
     if ((e.ctrlKey || event.metaKey) && e.which === 32) {
-      updateState(toggleEditorType());
+      updateState(toggleEditorType);
     }
   };
 
+  const handleEditorExec = () => {
+    updateState(toggleEditorType);
+  };
+
   const handleInputChangeAndPropagate = e => {
-    updateState(updateData(e.target.value));
+    const val = e.target.value;
+    updateState(currentState => updateData(val, currentState));
     if (onChange) {
       onChange(e);
     }
   };
 
   const handleTextAreaChangeAndPropagate = (value, e) => {
-    updateState(updateData(value));
+    const val = value;
+    updateState(currentState => updateData(val, currentState));
     if (onChange) {
       onChange(e, value);
     }
@@ -91,7 +98,7 @@ const JsonInput = props => {
           {
             name: 'toggleEditor',
             bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
-            exec: () => updateState(toggleEditorType()),
+            exec: handleEditorExec,
           },
         ]}
       />
@@ -115,7 +122,7 @@ const JsonInput = props => {
             ? 'fa fa-compress '
             : 'fa fa-expand ') + styles.jsonButtonAlign
         }
-        onClick={() => updateState(toggleEditorType())}
+        onClick={() => updateState(toggleEditorType)}
       />
     </span>
   );
