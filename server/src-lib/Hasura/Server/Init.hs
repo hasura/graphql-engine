@@ -54,6 +54,7 @@ data RawServeOptions
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
+  , rsoConsoleAssetsDir   :: !(Maybe Text)
   , rsoEnableTelemetry    :: !(Maybe Bool)
   , rsoWsReadCookie       :: !Bool
   , rsoStringifyNum       :: !Bool
@@ -66,21 +67,22 @@ data RawServeOptions
 
 data ServeOptions
   = ServeOptions
-  { soPort            :: !Int
-  , soHost            :: !HostPreference
-  , soConnParams      :: !Q.ConnParams
-  , soTxIso           :: !Q.TxIsolation
-  , soAdminSecret     :: !(Maybe AdminSecret)
-  , soAuthHook        :: !(Maybe AuthHook)
-  , soJwtSecret       :: !(Maybe Text)
-  , soUnAuthRole      :: !(Maybe RoleName)
-  , soCorsConfig      :: !CorsConfig
-  , soEnableConsole   :: !Bool
-  , soEnableTelemetry :: !Bool
-  , soStringifyNum    :: !Bool
-  , soEnabledAPIs     :: !(Set.HashSet API)
-  , soLiveQueryOpts   :: !LQ.LQOpts
-  , soEnableAllowlist :: !Bool
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe Text)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soEnableAllowlist  :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -266,6 +268,7 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
+  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
@@ -274,7 +277,7 @@ mkServeOptions rso = do
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole
+                        unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
   where
 #ifdef DeveloperAPIs
@@ -544,6 +547,14 @@ enabledAPIsEnv =
   , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
   )
 
+consoleAssetsDirEnv :: (String, String)
+consoleAssetsDirEnv =
+  ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
+  , "A directory from which static assets required for console is served at"
+  ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
+  ++ " default docker image to disable loading assets from CDN."
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -764,6 +775,13 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
+parseConsoleAssetsDir :: Parser (Maybe Text)
+parseConsoleAssetsDir = optional $
+    option (eitherReader fromEnv)
+      ( long "console-assets-dir" <>
+        help (snd consoleAssetsDirEnv)
+      )
+
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
@@ -873,6 +891,7 @@ serveOptsToLog so =
                        , "unauth_role" J..= soUnAuthRole so
                        , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
+                       , "console_assets_dir" J..= soConsoleAssetsDir so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so

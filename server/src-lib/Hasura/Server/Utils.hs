@@ -25,6 +25,15 @@ import           Hasura.Prelude
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
+sqlHeader :: (T.Text, T.Text)
+sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
+
+htmlHeader :: (T.Text, T.Text)
+htmlHeader = ("Content-Type", "text/html; charset=utf-8")
+
+gzipHeader :: (T.Text, T.Text)
+gzipHeader = ("Content-Encoding", "gzip")
+
 userRoleHeader :: T.Text
 userRoleHeader = "x-hasura-role"
 
@@ -47,6 +56,9 @@ commonClientHeadersIgnored =
   , "Accept-Language", "Accept-Datetime"
   , "Cache-Control", "Connection", "DNT", "Content-Type"
   ]
+
+txtToBs :: T.Text -> B.ByteString
+txtToBs = TE.encodeUtf8
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
