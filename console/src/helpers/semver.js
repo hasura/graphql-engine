@@ -1,25 +1,8 @@
 const semver = require('semver');
 
+// list of feature launch versions
 const componentsSemver = {
-  eventsTab: '1.0.0-alpha16',
-  metadataReload: '1.0.0-alpha17',
-  eventRedeliver: '1.0.0-alpha17',
-  sqlAnalyze: '1.0.0-alpha25',
-  aggregationPerm: '1.0.0-alpha26',
-  supportColumnChangeTrigger: '1.0.0-alpha26',
-  analyzeApiChange: '1.0.0-alpha26',
-  insertPrefix: '1.0.0-alpha26',
-  insertPermRestrictColumns: '1.0.0-alpha28',
-  webhookEnvSupport: '1.0.0-alpha29',
-  schemaStitching: '1.0.0-alpha30',
-  permHideUpsertSection: '1.0.0-alpha32',
-  customFunctionSection: '1.0.0-alpha36',
-  triggerRetryTimeout: '1.0.0-alpha38',
-  permUpdatePresets: '1.0.0-alpha38',
-  tableColumnRename: '1.0.0-alpha39',
-  inconsistentState: '1.0.0-alpha43',
-  allowedQueries: '1.0.0-alpha46',
-  manualTriggers: '1.0.0-alpha46',
+  // feature: '1.0.1'
 };
 
 const getPreRelease = version => {
@@ -27,6 +10,7 @@ const getPreRelease = version => {
   if (!prerelease) {
     return '';
   }
+  // TODO: fix beta parsing
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];
@@ -94,5 +78,7 @@ const semverCheck = (component, serverVersion) => {
   }
   return false;
 };
+
+export { componentsSemver };
 
 export default semverCheck;

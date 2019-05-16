@@ -162,8 +162,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -188,8 +188,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -1054,7 +1054,7 @@ const isColumnUnique = (tableSchema, colName) => {
   );
 };
 
-const saveColumnChangesSql = (colName, column, allowRename) => {
+const saveColumnChangesSql = (colName, column) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
@@ -1064,7 +1064,7 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const unique = columnEdit.isUnique;
     const def = columnEdit.default || '';
     const comment = columnEdit.comment || '';
-    const newName = allowRename ? columnEdit.name : null;
+    const newName = columnEdit.name;
     const currentSchema = columnEdit.schemaName;
     // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
     let defWithQuotes;
@@ -1121,24 +1121,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */
