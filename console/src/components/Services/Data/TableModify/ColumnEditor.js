@@ -19,7 +19,6 @@ const ColumnEditor = ({
   onSubmit,
   dispatch,
   columnComment,
-  allowRename,
   columnProperties,
   selectedProperties,
   editColumn,
@@ -33,7 +32,9 @@ const ColumnEditor = ({
   const styles = require('./ModifyTable.scss');
 
   useEffect(() => {
-    dispatch(editColumn(colName, 'comment', columnComment));
+    if (columnComment) {
+      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+    }
   }, [columnComment]);
 
   // filter the datatypes where hasuraDatatype === null
@@ -136,20 +137,18 @@ const ColumnEditor = ({
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
-        {allowRename && (
-          <div className={`${styles.display_flex} form-group`}>
-            <label className="col-xs-2">Name</label>
-            <div className="col-xs-6">
-              <input
-                className="input-sm form-control"
-                value={selectedProperties[colName].name}
-                onChange={updateColumnName}
-                type="text"
-                data-test="edit-col-name"
-              />
-            </div>
+        <div className={`${styles.display_flex} form-group`}>
+          <label className="col-xs-2">Name</label>
+          <div className="col-xs-6">
+            <input
+              className="input-sm form-control"
+              value={selectedProperties[colName].name}
+              onChange={updateColumnName}
+              type="text"
+              data-test="edit-col-name"
+            />
           </div>
-        )}
+        </div>
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Type</label>
           <div className="col-xs-6">

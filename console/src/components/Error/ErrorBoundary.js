@@ -19,7 +19,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ hasError: true, info: info, error: error });
     // TODO logErrorToMyService(error, info);
     const { dispatch } = this.props;
-    dispatch(loadInconsistentObjects(null, true)).then(() => {
+    dispatch(loadInconsistentObjects(true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
         if (!window.location.pathname.includes('/metadata/status')) {
           this.setState({ hasError: false, info: null, error: null });

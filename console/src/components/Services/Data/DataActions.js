@@ -362,7 +362,7 @@ const loadSchema = () => (dispatch, getState) => {
         );
       }
       dispatch({ type: LOAD_SCHEMA, allSchemas: schemas });
-      dispatch(loadInconsistentObjects(null, false));
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));

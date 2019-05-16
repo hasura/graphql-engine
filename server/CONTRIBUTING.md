@@ -41,18 +41,21 @@ sudo apt install python3-pip
   ```
   cd console
   npm ci
+  npm run server-build
   cd ..
   ```
 - compile the server
   ```
   cd server
-  stack build --fast --flag graphql-engine:local-console
+  stack build --fast
   ```
 
 ### Run
 - Make sure postgres is running (Postgres >= 9.5)
 - Create a database on postgres
 - Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+
+Use `--enable-console --console-assets-dir ../console/static/dist` if you want console to be served.
 
 database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
 
