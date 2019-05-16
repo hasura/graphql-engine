@@ -7,6 +7,8 @@ import {
   deleteQuery
 } from './queries';
 
+const DEFAULT_PRIMARY_KEY = 'id';
+
 const cloneQuery = (query) => {
   return JSON.parse(JSON.stringify(query));
 };
@@ -29,14 +31,11 @@ export default (serverEndpoint, headers, config) => {
     } else {
       throw new Error(JSON.stringify({'error': 'Invalid table/schema resource'}));
     }
-
-    return {schema: schema, tableName: tableName};
-
+    return { schema, tableName };
   };
 
   const getPrimaryKey = (resource) => {
-
-    let primaryKey = 'id';
+    let primaryKey = DEFAULT_PRIMARY_KEY;
 
     if (config && config['primaryKey'][resource]) {
       primaryKey = config['primaryKey'][resource];
@@ -50,9 +49,7 @@ export default (serverEndpoint, headers, config) => {
 
     const tableSchema = getTableSchema(resource);
 
-    let schema = tableSchema.schema;
-
-    let tableName = tableSchema.tableName;
+    let { schema, tableName } = tableSchema;
 
     const primaryKey = getPrimaryKey(resource);
 
@@ -66,7 +63,6 @@ export default (serverEndpoint, headers, config) => {
         finalSelectQuery.args.limit = params.pagination.perPage;
         finalSelectQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
         finalSelectQuery.args.where = params.filter;
-        // finalSelectQuery.args.order_by = {column: params.sort.field, type: params.sort.order.toLowerCase()};
         finalSelectQuery.args.order_by = {column: primaryKey, type: params.sort.order.toLowerCase()};
         finalCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalCountQuery.args.where = {};
@@ -79,7 +75,6 @@ export default (serverEndpoint, headers, config) => {
         // select one
         finalQuery = cloneQuery(selectQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
-        // finalQuery.args.where = { id: { '$eq': params.id } };
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$eq': params.id };
         break;
@@ -90,8 +85,6 @@ export default (serverEndpoint, headers, config) => {
         finalQuery = cloneQuery(insertQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args.objects.push(params.data);
-        // id is mandatory
-        // createFields.push('id');
         createFields.push(primaryKey);
         finalQuery.args.returning = createFields;
         break;
@@ -102,11 +95,8 @@ export default (serverEndpoint, headers, config) => {
         finalQuery = cloneQuery(updateQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args['$set'] = params.data;
-        // finalQuery.args.where = { id: { '$eq': params.id }};
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$eq': params.id };
-        // id is mandatory
-        // updateFields.push('id');
         updateFields.push(primaryKey);
         finalQuery.args.returning = updateFields;
         break;
@@ -117,11 +107,8 @@ export default (serverEndpoint, headers, config) => {
         finalQuery = cloneQuery(updateQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args['$set'] = params.data;
-        // finalQuery.args.where = { 'id': { '$in': params.ids } };
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$in': params.ids };
-        // id is mandatory
-        // updateManyFields.push('id');
         updateManyFields.push(primaryKey);
         finalQuery.args.returning = updateManyFields;
         break;
@@ -131,11 +118,8 @@ export default (serverEndpoint, headers, config) => {
 
         finalQuery = cloneQuery(deleteQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
-        // finalQuery.args.where = { id: { '$eq': params.id }};
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$eq': params.id };
-        // id is mandatory
-        // deleteFields.push('id');
         deleteFields.push(primaryKey);
         finalQuery.args.returning = deleteFields;
         break;
@@ -143,18 +127,14 @@ export default (serverEndpoint, headers, config) => {
         // delete multiple
         finalQuery = cloneQuery(deleteQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
-        finalQuery.args.where = { 'id': { '$in': params.ids } };
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$in': params.id };
-        // id is mandatory
-        // finalQuery.args.returning = ['id'];
         finalQuery.args.returning = [primaryKey];
         break;
       case 'GET_MANY':
         // select multiple within where clause
         finalQuery = cloneQuery(selectQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
-        finalQuery.args.where = { 'id': { '$in': params.ids } };
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$in': params.ids };
         break;
@@ -167,7 +147,6 @@ export default (serverEndpoint, headers, config) => {
         finalManyQuery.args.limit = params.pagination.perPage;
         finalManyQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
         finalManyQuery.args.where = { [params.target]: params.id };
-        // finalManyQuery.args.order_by = {column: params.sort.field, type: params.sort.order.toLowerCase()};
         finalManyQuery.args.order_by = {column: primaryKey, type: params.sort.order.toLowerCase()};
         finalManyCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalManyCountQuery.args.where = {};
@@ -190,9 +169,9 @@ export default (serverEndpoint, headers, config) => {
     }
     const primaryKey = getPrimaryKey(resource);
 
-    if (primaryKey !== 'id') {
+    if (primaryKey !== DEFAULT_PRIMARY_KEY) {
       response[0].map((res) => {
-        res['id'] = res[primaryKey];
+        res[DEFAULT_PRIMARY_KEY] = res[primaryKey];
       });
     }
     switch (type) {
