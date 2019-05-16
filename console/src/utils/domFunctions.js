@@ -7,3 +7,12 @@ export const getMeParentNode = (node, selector) => {
   }
   return null;
 };
+
+export const getMeParentNodeByClass = (node, selector) => {
+  if (node && !node.documentElement) {
+    return node.classList.contains(selector)
+      ? node
+      : getMeParentNodeByClass(node.parentNode, selector);
+  }
+  return null;
+};

@@ -8,6 +8,8 @@ import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
 
+import { getMeParentNodeByClass } from '../../../../utils/domFunctions';
+
 class InsertItem extends Component {
   constructor() {
     super();
@@ -58,7 +60,12 @@ class InsertItem extends Component {
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
       const clicker = e => {
-        e.target.parentNode.click();
+        const checkboxLabel = getMeParentNodeByClass(e.target, 'radio-inline');
+        if (checkboxLabel) {
+          checkboxLabel.click();
+        } else {
+          e.target.parentNode.click();
+        }
         e.target.focus();
       };
       const colDefault = col.column_default;
@@ -75,11 +82,16 @@ class InsertItem extends Component {
         'data-test': `typed-input-${i}`,
         defaultValue: clone && colName in clone ? clone[colName] : '',
         onClick: clicker,
-        onChange: e => {
+        onChange: (e, val) => {
           if (isAutoIncrement) return;
           if (!isNullable && !hasDefault) return;
 
-          const textValue = e.target.value;
+          let textValue = '';
+          if (typeof val === 'string') {
+            textValue = val;
+          } else {
+            textValue = e.target.value;
+          }
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
@@ -258,8 +270,9 @@ class InsertItem extends Component {
                       return;
                     } else {
                       if (refs[colName].valueNode.props !== undefined) {
+                        console.log(refs[colName].valueNode.props);
                         inputValues[colName] =
-                          refs[colName].valueNode.refEditor.innerText;
+                          refs[colName].valueNode.props.value;
                       } else {
                         inputValues[colName] = refs[colName].valueNode.value;
                       }

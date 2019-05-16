@@ -354,7 +354,12 @@ class EditItem extends Component {
                       // default
                       return;
                     } else {
-                      inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
+                      if (refs[colName].valueNode.props) {
+                        inputValues[colName] =
+                          refs[colName].valueNode.props.value;
+                      } else {
+                        inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
+                      }
                     }
                   });
                   dispatch(editItem(tableName, inputValues));
