@@ -201,8 +201,8 @@ const AddRelationship = ({
     }
   This strips it down to either objRel or arrRel */
 
-  const relName = cachedRelationshipData.name
-    ? cachedRelationshipData.name
+  const relName = cachedRelationshipData.relName
+    ? cachedRelationshipData.relName
     : '';
 
   const column1 = [];

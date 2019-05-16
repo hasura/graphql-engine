@@ -8,7 +8,6 @@ import {
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
-import { findAllFromRel } from '../utils';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
 export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
@@ -96,6 +95,7 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
 };
 
 const generateRelationshipsQuery = relMeta => {
+  console.log(relMeta);
   if (relMeta.isObjRel) {
     const upQuery = {
       type: 'create_object_relationship',
@@ -227,21 +227,23 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
-  const { allSchemas } = getState().tables;
-  const currentSchema = getState().tables.currentSchema;
-  const tableName = getState().tables.currentTable;
-  const curTableSchema = allSchemas.find(
-    t => t.table_name === tableName && t.table_schema === currentSchema
-  );
-  const relConfig = findAllFromRel(allSchemas, curTableSchema, state);
-  const { upQuery, downQuery } = generateRelationshipsQuery(relConfig);
+  const { upQuery, downQuery } = generateRelationshipsQuery({
+    lTable: state.lTable,
+    lSchema: state.lSchema,
+    isObjRel: state.isObjRel,
+    relName: state.relName,
+    lcol: state.lcol,
+    rcol: state.rcol,
+    rTable: state.rTable,
+    rSchema: state.rSchema,
+  });
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${
-    state.name
-  }_table_${currentSchema}_${state.tableName}`;
+  const migrationName = `add_relationship_${state.name}_table_${
+    state.lSchema
+  }_${state.lTable}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
@@ -252,8 +254,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
       loadUntrackedRelations({
         tables: [
           {
-            table_schema: currentSchema,
-            table_name: state.tableName,
+            table_schema: state.lSchema,
+            table_name: state.lTable,
           },
         ],
       })
@@ -302,7 +304,7 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   const remoteSchema = getState().tables.modify.relAdd.manualRelInfo
     .remoteSchema;
   const isObjRel = state.isObjRel;
-  const name = state.name;
+  const name = state.relName;
   const lcol = state.lcol;
   const rcol = state.rcol;
   const columnMapping = {};

@@ -134,7 +134,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          name: relName,
+          relName: relName,
         },
       };
     case REL_SELECTION_CHANGED:
@@ -143,11 +143,13 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         relAdd: {
           ...modifyState.relAdd,
-          name: '',
-          tableName: selectedRel.tableName,
+          relName: '',
+          lTable: selectedRel.lTable,
+          lSchema: selectedRel.lSchema,
           isObjRel: selectedRel.isObjRel,
           lcol: selectedRel.lcol,
           rTable: selectedRel.rTable,
+          rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
         },
       };
