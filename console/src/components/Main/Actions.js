@@ -10,7 +10,7 @@ import {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
 } from '../Services/Data/DataActions';
-import semverCheck, { componentsSemver } from '../../helpers/semver';
+import { getFeaturesSupport } from '../../helpers/semver';
 import { changeRequestHeader } from '../Services/ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
@@ -31,23 +31,22 @@ const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
-const SET_SEMVER = 'Main/SET_SEMVER';
-const setSemverBulk = data => ({
-  type: SET_SEMVER,
+const SET_FEATURES_SUPPORT = 'Main/SET_FEATURES_SUPPORT';
+const setFeaturesSupport = data => ({
+  type: SET_FEATURES_SUPPORT,
   data,
 });
 
-const semverInit = () => {
+const featureSupportInit = () => {
   return (dispatch, getState) => {
     const { serverVersion } = getState().main;
     if (!serverVersion) {
       return;
     }
-    const semverObj = {};
-    Object.keys(componentsSemver).forEach(feature => {
-      semverObj[feature] = semverCheck(feature, serverVersion);
-    });
-    return dispatch(setSemverBulk(semverObj));
+
+    const featuresSupport = getFeaturesSupport(serverVersion);
+
+    return dispatch(setFeaturesSupport(featuresSupport));
   };
 };
 
@@ -95,7 +94,7 @@ const loadServerVersion = () => dispatch => {
   );
 };
 
-const checkServerUpdates = () => (dispatch, getState) => {
+const loadLatestServerVersion = () => (dispatch, getState) => {
   const url =
     Endpoints.updateCheck +
     '?agent=console&version=' +
@@ -305,10 +304,10 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
-    case SET_SEMVER:
+    case SET_FEATURES_SUPPORT:
       return {
         ...state,
-        semver: { ...action.data },
+        featuresSupport: { ...action.data },
       };
     default:
       return state;
@@ -328,6 +327,6 @@ export {
   LOGIN_ERROR,
   validateLogin,
   loadServerVersion,
-  checkServerUpdates,
-  semverInit,
+  loadLatestServerVersion,
+  featureSupportInit,
 };

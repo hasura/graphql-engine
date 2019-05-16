@@ -1,84 +1,31 @@
 const semver = require('semver');
 
 // list of feature launch versions
-const componentsSemver = {
-  // feature: '1.0.1'
+const featureVersions = {
+  // feature: 'v1.0.0'
 };
 
-const getPreRelease = version => {
-  const prerelease = semver.prerelease(version);
-  if (!prerelease) {
-    return '';
-  }
-  // TODO: fix beta parsing
-  if (prerelease.length === 1) {
-    const regex = /(alpha|beta)(\d+)/gm;
-    const str = prerelease[0];
-    const m = regex.exec(str);
-    if (m.length < 3) {
-      return '';
+export const getFeaturesSupport = serverVersion => {
+  const featuresSupport = {};
+
+  Object.keys(featureVersions).forEach(feature => {
+    try {
+      featuresSupport[feature] = semver.satisfies(
+        featureVersions[feature],
+        '>=' + serverVersion
+      );
+    } catch (e) {
+      console.log(e);
     }
-    return m.slice(1, 3);
-  }
-  return prerelease.slice(0, 2);
+  });
+
+  return featuresSupport;
 };
 
-const semverCheck = (component, serverVersion) => {
-  if (component in componentsSemver) {
-    const componentCoerce = semver.valid(componentsSemver[component]);
-    if (componentCoerce == null) {
-      return false;
-    }
-
-    const serverCoerce = semver.valid(serverVersion);
-    if (serverCoerce == null) {
-      return true;
-    }
-
-    switch (semver.compare(serverCoerce, componentCoerce)) {
-      case 0:
-        // check for prerelease tags
-        const componentPrerelease = getPreRelease(componentsSemver[component]);
-        const serverPrerelease = getPreRelease(serverVersion);
-        // If both component and server doesn't have a prerelease, return true
-        if (componentPrerelease.length === 0 && serverPrerelease.length === 0) {
-          return true;
-        }
-        // If component does't have a prerelease tag and server has a p rerelease
-        // tag, return false
-        if (componentPrerelease.length === 0 && serverPrerelease.length !== 0) {
-          return false;
-        }
-        // If server does't have a prerelease tag and component has a prerelease
-        // tag, return true
-        if (componentPrerelease.length !== 0 && serverPrerelease.length === 0) {
-          return true;
-        }
-        if (
-          componentPrerelease[0] === 'beta' &&
-          serverPrerelease[0] !== 'beta'
-        ) {
-          return false;
-        }
-        if (
-          parseInt(serverPrerelease[1], 10) >=
-          parseInt(componentPrerelease[1], 10)
-        ) {
-          return true;
-        }
-        return false;
-
-      case 1:
-        return true;
-      case -1:
-        return false;
-      default:
-        return false;
-    }
+export const versionGT = (version1, version2) => {
+  try {
+    return semver.gt(version1, version2);
+  } catch (e) {
+    console.log(e);
   }
-  return false;
 };
-
-export { componentsSemver };
-
-export default semverCheck;
