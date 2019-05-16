@@ -8,8 +8,7 @@ Allow-list for queries
 
 **Allow-list** is a list of safe queries (*GraphQL queries, mutations or subscriptions*) that is stored by
 GraphQL engine in its metadata. When enabled, it can be used to restrict GraphQL engine so that it
-executes **only** those queries that are present in the list. You can also modify the allow-list without actually
-enabling it on your instance.
+executes **only** those queries that are present in the list *(available after version beta.01)*.
 
 Adding or removing a query in allow-list
 ----------------------------------------
@@ -63,6 +62,8 @@ You can add or remove a query in the allow-list in two ways:
 
   * Allow-list is stored in the metadata. To version control the state of the list, you are required to export
     the metadata. See :doc:`Managing Hasura metadata <../migrations/manage-metadata>` for more details.
+
+  * You can modify the allow-list without actually enabling it on your instance.
 
 
 Enable allow-list
