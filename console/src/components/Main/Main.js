@@ -9,7 +9,7 @@ import Spinner from '../Common/Spinner/Spinner';
 import {
   loadServerVersion,
   loadLatestServerVersion,
-  featureSupportInit,
+  featureCompatibilityInit,
 } from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
@@ -23,7 +23,7 @@ import {
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
-import { versionGT } from '../../helpers/semver';
+import { versionGT } from '../../helpers/versionUtils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -45,7 +45,7 @@ class Main extends React.Component {
       .addEventListener('click', this.handleBodyClick);
 
     dispatch(loadServerVersion()).then(() => {
-      dispatch(featureSupportInit());
+      dispatch(featureCompatibilityInit());
 
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
