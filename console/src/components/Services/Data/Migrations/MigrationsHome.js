@@ -47,7 +47,7 @@ const MigrationsHome = ({ dispatch, migrationMode }) => {
       </div>
       <div className={styles.add_mar_top}>
         <b>Note</b>
-        <ul className={styles.remove_ul_left + ' ' + styles.add_mar_top_small}>
+        <ul className={styles.ul_left_small + ' ' + styles.add_mar_top_small}>
           <li>
             Recommend that you turn this off if you're working with an existing
             app or database.
