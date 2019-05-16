@@ -6,51 +6,58 @@ import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 
 const Sidebar = ({ location, metadata }) => {
+  const sectionsData = [];
+
+  sectionsData.push({
+    key: 'actions',
+    link: '/metadata/actions',
+    dataTestVal: 'metadata-actions-link',
+    title: 'Metadata Actions',
+  });
+
+  const consistentIcon =
+    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+
+  sectionsData.push({
+    key: 'status',
+    link: '/metadata/status',
+    dataTestVal: 'metadata-status-link',
+    title: (
+      <div className={styles.display_flex}>
+        Metadata Status
+        <span className={styles.add_mar_left}>{consistentIcon}</span>
+      </div>
+    ),
+  });
+
+  sectionsData.push({
+    key: 'allowed-queries',
+    link: '/metadata/allowed-queries',
+    dataTestVal: 'metadata-allowed-queries-link',
+    title: 'Allowed Queries',
+  });
+
   const currentLocation = location.pathname;
 
   const sections = [];
 
-  sections.push(
-    <li
-      role="presentation"
-      className={
-        currentLocation.includes('metadata/actions') ? styles.active : ''
-      }
-    >
-      <Link
-        className={styles.linkBorder}
-        to={'/metadata/actions'}
-        data-test="metadata-actions-link"
+  sectionsData.forEach(section => {
+    sections.push(
+      <li
+        role="presentation"
+        key={section.key}
+        className={currentLocation.includes(section.link) ? styles.active : ''}
       >
-        Actions
-      </Link>
-    </li>
-  );
-
-  let consistentIcon = <CheckIcon className={styles.add_mar_left_small} />;
-  if (metadata.inconsistentObjects.length > 0) {
-    consistentIcon = <CrossIcon className={styles.add_mar_left_small} />;
-  }
-
-  sections.push(
-    <li
-      role="presentation"
-      className={
-        currentLocation.includes('metadata/status') ? styles.active : ''
-      }
-    >
-      <Link
-        className={styles.linkBorder}
-        to={'/metadata/status'}
-        data-test="metadata-status-link"
-      >
-        <div className={styles.display_flex}>
-          Status
-          {consistentIcon}
-        </div>
-      </Link>
-    </li>
-  );
+        <Link
+          className={styles.linkBorder}
+          to={section.link}
+          data-test={section.dataTestVal}
+        >
+          {section.title}
+        </Link>
+      </li>
+    );
+  });
 
   const content = <ul>{sections}</ul>;
 

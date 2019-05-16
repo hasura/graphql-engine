@@ -19,6 +19,7 @@ import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
 
+import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
@@ -101,11 +102,15 @@ getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
+  -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc req = do
+getExecPlanPartial userInfo sc enableAL req = do
 
-  (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
+  -- check if query is in allowlist
+  when enableAL checkQueryInAllowlist
+
+  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -124,7 +129,19 @@ getExecPlanPartial userInfo sc req = do
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
+    role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
+
+    checkQueryInAllowlist =
+      -- only for non-admin roles
+      when (role /= adminRole) $ do
+        let notInAllowlist =
+              not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+        when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
+
+    modErr e =
+      let msg = "query is not in any of the allowlists"
+      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
@@ -144,12 +161,13 @@ getResolvedExecPlan
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
+  -> Bool
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  sc scVer reqUnparsed = do
+  enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -168,7 +186,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       opNameM queryStr plan planCache
     noExistingPlan = do
       req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc req
+      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation selSet ->

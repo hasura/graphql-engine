@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../Common/Button/Button';
-import { reloadMetadata } from './Actions';
+import Button from '../../../Common/Button/Button';
+import { reloadMetadata } from '../Actions';
 
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Common/Notification';
+} from '../../Common/Notification';
 
 class ReloadMetadata extends Component {
   constructor() {
@@ -17,7 +17,7 @@ class ReloadMetadata extends Component {
   render() {
     const { dispatch } = this.props;
     const { isReloading } = this.state;
-    const metaDataStyles = require('./Metadata.scss');
+    const metaDataStyles = require('../Metadata.scss');
     const reloadMetadataAndLoadInconsistentMetadata = () => {
       this.setState({ isReloading: true });
       dispatch(

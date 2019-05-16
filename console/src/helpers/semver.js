@@ -10,6 +10,7 @@ const getPreRelease = version => {
   if (!prerelease) {
     return '';
   }
+  // TODO: fix beta parsing
   if (prerelease.length === 1) {
     const regex = /(alpha|beta)(\d+)/gm;
     const str = prerelease[0];

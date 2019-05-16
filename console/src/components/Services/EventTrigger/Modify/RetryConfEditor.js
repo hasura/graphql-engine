@@ -6,7 +6,7 @@ import {
   setRetryTimeout,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class RetryConfEditor extends React.Component {
   setValues = () => {

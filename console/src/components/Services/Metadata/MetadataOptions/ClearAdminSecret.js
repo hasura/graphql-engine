@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { clearAdminSecretState, CONSOLE_ADMIN_SECRET } from '../../AppState';
-import globals from '../../../Globals';
+import { clearAdminSecretState, CONSOLE_ADMIN_SECRET } from '../../../AppState';
+import globals from '../../../../Globals';
 
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Common/Notification';
-import Button from '../../Common/Button/Button';
+} from '../../Common/Notification';
+import Button from '../../../Common/Button/Button';
 
 class ClearAdminSecret extends Component {
   constructor() {
@@ -16,7 +16,7 @@ class ClearAdminSecret extends Component {
     this.state.isClearing = false;
   }
   render() {
-    const metaDataStyles = require('./Metadata.scss');
+    const metaDataStyles = require('../Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
         <Button

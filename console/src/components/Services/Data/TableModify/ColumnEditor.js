@@ -32,7 +32,9 @@ const ColumnEditor = ({
   const styles = require('./ModifyTable.scss');
 
   useEffect(() => {
-    dispatch(editColumn(colName, 'comment', columnComment));
+    if (columnComment) {
+      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+    }
   }, [columnComment]);
 
   // filter the datatypes where hasuraDatatype === null
