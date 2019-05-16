@@ -60,7 +60,9 @@ const addExistingTableSql = () => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(loadUntrackedRelations()).then(() => {
         const newTable = getState().tables.allSchemas.find(
-          t => t.table_name === state.tableName.trim()
+          t =>
+            t.table_name === state.tableName.trim() &&
+            t.table_schema === currentSchema
         );
         const isTable = newTable.detail.table_type === 'BASE TABLE';
         if (isTable) {

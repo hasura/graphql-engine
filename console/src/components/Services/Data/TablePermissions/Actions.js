@@ -458,7 +458,9 @@ const applySamePermissionsBulk = tableSchema => {
 
     permApplyToList.map(applyTo => {
       const currTableSchema = allSchemas.find(
-        tSchema => tSchema.table_name === applyTo.table
+        tSchema =>
+          tSchema.table_name === applyTo.table &&
+          tSchema.table_schema === currentSchema
       );
       const currentPermPermission = currTableSchema.permissions.find(el => {
         return el.role_name === applyTo.role;
@@ -569,7 +571,9 @@ const permChangePermissions = changeType => {
     const role = permissionsState.role;
     const query = permissionsState.query;
 
-    const tableSchema = allSchemas.find(t => t.table_name === table);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === table && t.table_schema === currentSchema
+    );
     const currRolePermissions = tableSchema.permissions.find(
       p => p.role_name === role
     );

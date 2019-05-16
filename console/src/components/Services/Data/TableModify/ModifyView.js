@@ -71,7 +71,9 @@ class ModifyView extends Component {
 
     const styles = require('./ModifyTable.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    ); // eslint-disable-line no-unused-vars
     const tableComment = tableSchema.comment;
 
     let alert = null;

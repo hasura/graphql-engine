@@ -104,7 +104,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const { pkModify } = getState().tables.modify;
     // table schema
     const tableSchema = getState().tables.allSchemas.find(
-      ts => ts.table_name === tableName
+      ts => ts.table_name === tableName && ts.table_schema === schemaName
     );
     // form a list of selected PK columns
     let numSelectedPkColumns = 0;
@@ -156,8 +156,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
           sql: `
             alter table "${schemaName}"."${tableName}"
             add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-            ', '
-          )} );
+  ', '
+)} );
           `,
         },
       });
@@ -182,8 +182,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         sql: `
           alter table "${schemaName}"."${tableName}"
           add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-          ', '
-        )} );
+  ', '
+)} );
         `,
       });
     }
@@ -1111,7 +1111,8 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(
       getState().tables.allSchemas.find(
-        table => table.table_name === tableName
+        table =>
+          table.table_name === tableName && table.table_schema === currentSchema
       ),
       colName
     );
@@ -1152,24 +1153,24 @@ const saveColumnChangesSql = (colName, column, allowRename) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column default up/down migration */

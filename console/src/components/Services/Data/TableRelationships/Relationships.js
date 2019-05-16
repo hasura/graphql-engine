@@ -355,7 +355,9 @@ class Relationships extends Component {
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -466,6 +468,7 @@ class Relationships extends Component {
                   tableName={tableName}
                   currentSchema={currentSchema}
                   allSchemas={allSchemas}
+                  currentSchema={currentSchema}
                   cachedRelationshipData={relAdd}
                   dispatch={dispatch}
                 />

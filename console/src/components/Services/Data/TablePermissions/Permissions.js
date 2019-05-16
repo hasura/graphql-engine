@@ -73,11 +73,13 @@ class Permissions extends Component {
       this.checkSemVer(this.props.serverVersion);
     }
     this.props.dispatch({ type: RESET });
-    const currentSchema = this.props.allSchemas.find(
-      t => t.table_name === this.props.tableName
+    const currentTableSchema = this.props.allSchemas.find(
+      t =>
+        t.table_name === this.props.tableName &&
+        t.table_schema === this.props.currentSchema
     );
 
-    if (!currentSchema) {
+    if (!currentTableSchema) {
       alert('Invalid schema');
       return;
     }
@@ -86,7 +88,7 @@ class Permissions extends Component {
     this.props
       .dispatch(
         fetchViewInfoFromInformationSchema(
-          currentSchema.table_schema,
+          currentTableSchema.table_schema,
           this.props.tableName
         )
       )
@@ -1841,7 +1843,9 @@ class Permissions extends Component {
       }
     }
 
-    const tSchema = allSchemas.find(t => t.table_name === tableName);
+    const tSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
 
     const allRolesList = getAllRoles(allSchemas);
 
