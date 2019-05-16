@@ -21,6 +21,7 @@ import {
   FETCH_COLUMN_TYPE_CASTS,
   FETCH_COLUMN_TYPE_CASTS_FAIL,
   RESET,
+  SET_UNIQUE_KEYS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -569,6 +570,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         alterColumnOptionsFetchErr: action.data,
       };
 
+    case SET_UNIQUE_KEYS:
+      return {
+        ...modifyState,
+        uniqueKeyModify: action.keys,
+      };
     case UPDATE_MANUAL_REL_TABLE_LIST:
       return {
         ...modifyState,

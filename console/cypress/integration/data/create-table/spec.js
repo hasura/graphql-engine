@@ -140,7 +140,8 @@ export const passCTWithFK = () => {
   // Set tablename
   cy.get(getElementFromAlias('tableName'))
     .clear()
-    .type(getTableName(1, testName)); //   Set first column
+    .type(getTableName(1, testName));
+  //   Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
@@ -148,6 +149,11 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('column-1')).type(getColName(1));
   tableColumnTypeSelector('col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  // Set third column
+  cy.get(getElementFromAlias('column-2')).type(getColName(2));
+  tableColumnTypeSelector('col-type-2');
+  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Set foreign key
@@ -161,6 +167,18 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('foreign-key-0-rcol-1')).select(getColName(1));
   cy.get(getElementFromAlias('foreign-key-0-onUpdate-cascade')).check();
   cy.get(getElementFromAlias('foreign-key-0-onDelete-cascade')).check();
+
+  //set unique key 1
+  cy.get(getElementFromAlias('add-table-edit-unique-key-0')).click();
+  cy.get(getElementFromAlias('unique-key-0-column-0')).select('1');
+
+  //set unique key 2
+  cy.get(getElementFromAlias('add-table-edit-unique-key-1')).click();
+  cy.get(getElementFromAlias('unique-key-1-column-0')).select('1');
+  cy.get(getElementFromAlias('unique-key-1-column-1')).select('2');
+  cy.get(getElementFromAlias('unique-key-1-column-2')).select('0');
+  cy.get(getElementFromAlias('remove-uk-1-column-1')).click();
+
   //  Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);
@@ -168,6 +186,9 @@ export const passCTWithFK = () => {
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(1, testName)}/modify`
+  );
+  cy.get('div').contains(
+    `${getTableName(1, testName)}_${getColName(1)}_${getColName(0)}`
   );
   cy.get(getElementFromAlias(getTableName(1, testName)));
   //   Validate

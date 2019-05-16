@@ -70,6 +70,12 @@ const ColumnEditor = ({
       };
     },
   };
+  useEffect(() => {
+    if (columnComment) {
+      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+    }
+  }, [columnComment]);
+
   const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
     alterTypeOptions,
     colName
@@ -121,16 +127,6 @@ const ColumnEditor = ({
               bsClass={`col-type-${0} modify_select`}
               customStyle={customStyles}
             />
-            {/*
-            <select
-              value={selectedProperties[colName].type}
-              onChange={updateColumnType}
-              className="input-sm form-control"
-              disabled={columnProperties.pkConstraint}
-            >
-              {getAlternateTypeOptions(columnProperties.type)}
-            </select>
-            */}
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
@@ -153,9 +149,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={
-                selectedProperties[colName].uniqueConstraint ? 'true' : 'false'
-              }
+              value={selectedProperties[colName].isUnique}
               onChange={toggleColumnUnique}
               disabled={columnProperties.pkConstraint}
               data-test="edit-col-unique"

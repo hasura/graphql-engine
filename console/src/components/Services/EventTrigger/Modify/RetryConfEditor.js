@@ -81,7 +81,6 @@ class RetryConfEditor extends React.Component {
 
   render() {
     const { styles, dispatch, modifyTrigger } = this.props;
-    // const { save } = this.props;
     const retryConf = this.props.retryConf || {};
     const { supportRetryTimeout } = this.state;
     const collapsed = () => (

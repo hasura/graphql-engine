@@ -2,6 +2,11 @@
 title: "Set up a GraphQL client with Apollo"
 ---
 
+import GithubLink from "../src/GithubLink.js";
+import YoutubeEmbed from "../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/m3IAzTwoUUM" />
+
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
 Let's get started by installing apollo client & peer graphql dependenices:
@@ -11,6 +16,8 @@ $ npm install --save apollo-client react-apollo apollo-cache-inmemory apollo-lin
 ```
 
 Open `src/components/App.js` and add the following imports at the top:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
 
 ```javascript
 import React from 'react';
@@ -54,17 +61,22 @@ export default App;
 These are the required apollo dependenices to get started. Now let's define a function which will return apollo client with httplink and cache.
 
 ```javascript
-const createApolloClient = (authToken) => {
-  return new ApolloClient({
-    link: new HttpLink({
-      uri: 'https://learn.hasura.io/graphql',
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    }),
-    cache: new InMemoryCache(),
-  });
-};
+import ApolloClient from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+import { ApolloProvider } from 'react-apollo';
+
++ const createApolloClient = (authToken) => {
++  return new ApolloClient({
++    link: new HttpLink({
++      uri: 'https://learn.hasura.io/graphql',
++      headers: {
++        Authorization: `Bearer ${authToken}`
++      }
++    }),
++    cache: new InMemoryCache(),
++  });
++ };
 ```
 Create the apollo client inside `App` and pass the client prop to `<ApolloProvider>` component.
 

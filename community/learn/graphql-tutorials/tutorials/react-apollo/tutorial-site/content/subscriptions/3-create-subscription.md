@@ -2,9 +2,16 @@
 title: "Create Subscription and Render Result"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/yqL_PpEAU7E" />
+
 So let's define the graphql subscription to be used.
 
-Open `src/components/OnlineUsers/OnlineUsers.js` and add the following code, below the other imports
+Open `src/components/OnlineUsers/OnlineUsersWrapper.js` and add the following code, below the other imports
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/OnlineUsers/OnlineUsersWrapper.js" text="src/OnlineUsers/OnlineUsersWrapper.js" />
 
 ```javascript
 - import React, { Component } from "react";
@@ -78,11 +85,28 @@ class OnlineUsersWrapper extends Component {
 -     ]
 -   };
   }
+  render() {
+-   const onlineUsersList = [];
+-   this.state.onlineUsers.forEach((user, index) => {
+-     onlineUsersList.push(
+-       <OnlineUser
+-         key={index}
+-         index={index}
+-         user={user}
+-       />);
+-   });
+
+    return (
+      ...
+    );
+  }
+}
 
 ```
 
 How does this work?
 -------------------
+
 We are using the `<Subscription>` component which gives render props (similar to `<Query>` and `<Mutation>` components). The `data` prop gives the result of the realtime data for the query we have made.
 
 Refresh your react app and see yourself online! Don't be surprised; There could be other users online as well.

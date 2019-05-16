@@ -2,6 +2,11 @@
 title: "<Query> component"
 ---
 
+import GithubLink from "../../src/GithubLink.js";
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/60-y9jygWBA" />
+
 In this section, we will implement GraphQL Queries and integrate with the react UI.
 With Apollo Client, you can send queries in 2 different ways.
 
@@ -13,6 +18,8 @@ The recommended method is to use the render prop method, where you will just pas
 Great! Now let's define the graphql query to be used:
 
 Open `src/components/Todo/TodoPrivateList.js` and add the following code:
+
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/Todo/TodoPrivateList.js" text="src/components/Todo/TodoPrivateList.js" />
 
 ```javascript
 import React, { Component, Fragment } from "react";
@@ -38,9 +45,7 @@ What does this query do?
 ------------------------
 The query fetches `todos` with a simple condition; `is_public` must be false. We sort the todos descending by its `created_at` time according to the schema. We specify which fields we need for the todos node.
 
-[Try](https://learn.hasura.io/graphql/graphiql) out this query now!
-
-Great! The query is now ready, let's integrate it with our react code.
+The query is now ready, let's integrate it with our react code.
 
 ```javascript
 
@@ -142,9 +147,11 @@ class TodoPrivateList extends Component {
 +
 +    let filteredTodos = todos;
     if (this.state.filter === "active") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
+-     filteredTodos = this.state.todos.filter(todo => todo.is_completed !== true);
++     filteredTodos = todos.filter(todo => todo.is_completed !== true);
     } else if (this.state.filter === "completed") {
-      filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
+-     filteredTodos = this.state.todos.filter(todo => todo.is_completed === true);
++     filteredTodos = todos.filter(todo => todo.is_completed === true);
     }
 
     const todoList = [];

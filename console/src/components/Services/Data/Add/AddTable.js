@@ -5,8 +5,9 @@ import Helmet from 'react-helmet';
 import Button from '../../../Common/Button/Button';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
+import UniqueKeyWrapper from './UniqueKeyWrapper';
 
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 
 import TableName from './TableName';
 import TableColumns from './TableColumns';
@@ -26,6 +27,7 @@ import {
   setColUnique,
   setForeignKeys,
   addCol,
+  setUniqueKeys,
 } from './AddActions';
 
 import { fetchColumnTypes, RESET_COLUMN_TYPE_LIST } from '../DataActions';
@@ -262,6 +264,7 @@ class AddTable extends Component {
       primaryKeys,
       allSchemas,
       foreignKeys,
+      uniqueKeys,
       fkToggled,
       tableName,
       currentSchema,
@@ -273,7 +276,6 @@ class AddTable extends Component {
       dataTypes,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
-
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -359,6 +361,29 @@ class AddTable extends Component {
               dispatch={dispatch}
               setForeignKeys={setForeignKeys}
               fkToggled={fkToggled}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Unique Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.uniqueKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <UniqueKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              uniqueKeys={uniqueKeys}
+              dispatch={dispatch}
+              setUniqueKeys={setUniqueKeys}
             />
             <hr />
             <TableComment onChange={this.onTableCommentChange} />

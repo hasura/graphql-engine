@@ -9,14 +9,16 @@ import yaml
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
 '''
 
-def init_ws_conn(hge_ctx, ws_client):
-    payload = {}
-    if hge_ctx.hge_key is not None:
-        payload = {
-            'headers' : {
-                'X-Hasura-Admin-Secret': hge_ctx.hge_key
+def init_ws_conn(hge_ctx, ws_client, payload = None):
+    if payload is None:
+        payload = {}
+        if hge_ctx.hge_key is not None:
+            payload = {
+                'headers' : {
+                    'X-Hasura-Admin-Secret': hge_ctx.hge_key
+                }
             }
-        }
+
     init_msg = {
         'type': 'connection_init',
         'payload': payload,
@@ -251,4 +253,3 @@ class TestSubscriptionLiveQueries(object):
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/live_queries'
-

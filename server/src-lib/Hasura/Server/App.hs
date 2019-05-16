@@ -52,6 +52,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
+import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -103,16 +104,23 @@ data SchemaCacheRef
 getSCFromRef :: SchemaCacheRef -> IO SchemaCache
 getSCFromRef scRef = fst <$> readIORef (_scrCache scRef)
 
+logInconsObjs :: L.Logger -> [InconsistentMetadataObj] -> IO ()
+logInconsObjs logger objs =
+  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+
 withSCUpdate
   :: (MonadIO m, MonadError e m)
-  => SchemaCacheRef -> m (a, SchemaCache) -> m a
-withSCUpdate scr action = do
+  => SchemaCacheRef -> L.Logger -> m (a, SchemaCache) -> m a
+withSCUpdate scr logger action = do
   acquireLock
   (res, newSC) <- action `catchError` onError
-  -- update schemacache in IO reference
-  liftIO $ modifyIORef' cacheRef $
-    \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-  liftIO onChange
+  liftIO $ do
+    -- update schemacache in IO reference
+    modifyIORef' cacheRef $
+      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
+    -- log any inconsistent objects
+    logInconsObjs logger $ scInconsistentObjs newSC
+    onChange
   releaseLock
   return res
   where
@@ -124,6 +132,7 @@ withSCUpdate scr action = do
 data ServerCtx
   = ServerCtx
   { scPGExecCtx   :: PGExecCtx
+  , scConnInfo    :: Q.ConnInfo
   , scLogger      :: L.Logger
   , scCacheRef    :: SchemaCacheRef
   , scAuthMode    :: AuthMode
@@ -145,11 +154,29 @@ data HandlerCtx
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
+data APIResp
+  = JSONResp !EncJSON
+  | RawResp !T.Text !BL.ByteString -- content-type, body
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp j  -> encJToLBS j
+  RawResp _ b -> b
+
+mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
+mkAPIRespHandler = fmap JSONResp
+
 isMetadataEnabled :: ServerCtx -> Bool
 isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
 
 isGraphQLEnabled :: ServerCtx -> Bool
 isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
+
+isPGDumpEnabled :: ServerCtx -> Bool
+isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+
+isDeveloperAPIEnabled :: ServerCtx -> Bool
+isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a) => Handler a
@@ -193,10 +220,11 @@ logError userInfoM req reqBody sc qErr =
 mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
+  -> (QErr -> QErr)
   -> ServerCtx
-  -> Handler EncJSON
+  -> Handler APIResp
   -> ActionT m ()
-mkSpockAction qErrEncoder serverCtx handler = do
+mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let headers  = requestHeaders req
@@ -204,7 +232,7 @@ mkSpockAction qErrEncoder serverCtx handler = do
       manager = scManager serverCtx
 
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+  userInfo <- either (logAndThrow req reqBody False . qErrModifier) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
@@ -212,11 +240,12 @@ mkSpockAction qErrEncoder serverCtx handler = do
   result <- liftIO $ runReaderT (runExceptT handler) handlerState
   t2 <- liftIO getCurrentTime -- for measuring response time purposes
 
-  let resLBS = fmap encJToLBS result
+  -- apply the error modifier
+  let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx resLBS $ Just (t1, t2)
-  either (qErrToResp $ userRole userInfo == adminRole) resToResp resLBS
+  logResult (Just userInfo) req reqBody serverCtx (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
     logger = scLogger serverCtx
@@ -230,14 +259,19 @@ mkSpockAction qErrEncoder serverCtx handler = do
       logError Nothing req reqBody serverCtx qErr
       qErrToResp includeInternal qErr
 
-    resToResp resp = do
-      uncurry setHeader jsonHeader
-      lazyBytes resp
+    resToResp = \case
+      JSONResp j -> do
+        uncurry setHeader jsonHeader
+        lazyBytes $ encJToLBS j
+      RawResp ct b -> do
+        setHeader "content-type" ct
+        lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler EncJSON
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef dbActionReload) $
+  logger <- scLogger . hcServerCtx <$> ask
+  bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
     queryNeedsReload query
   where
     -- Hit postgres
@@ -273,6 +307,9 @@ v1Alpha1GQHandler query = do
   GH.runGQ pgExecCtx userInfo sqlGenCtx planCache
     sc scVer manager reqHeaders query reqBody
 
+v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1GQHandler = v1Alpha1GQHandler
+
 gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
 gqlExplainHandler query = do
   onlyAdmin
@@ -281,6 +318,13 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   GE.explainGQLQuery pgExecCtx sc sqlGenCtx query
+
+v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
+v1Alpha1PGDumpHandler b = do
+  onlyAdmin
+  ci <- scConnInfo . hcServerCtx <$> ask
+  output <- PGD.execPGDump b ci
+  return $ RawResp "application/sql" output
 
 newtype QueryParser
   = QueryParser { getQueryParser :: QualifiedTable -> Handler RQLQuery }
@@ -319,12 +363,12 @@ initErrExit e = do
 
 mkWaiApp
   :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
-  -> Q.PGPool -> HTTP.Manager -> AuthMode
+  -> Q.PGPool -> Q.ConnInfo -> HTTP.Manager -> AuthMode
   -> CorsConfig -> Bool -> Bool
   -> InstanceId -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -350,7 +394,7 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool httpManager mode corsCfg
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
-        serverCtx = ServerCtx pgExecCtx logger
+        serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
                     sqlGenCtx apis instanceId planCache lqState
 
@@ -375,13 +419,9 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
     -- Health check endpoint
     get "healthz" $ do
       sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
-      let reportOK = do
-            setStatus N.status200
-            lazyBytes "OK"
-          reportError = do
-            setStatus N.status500
-            lazyBytes "ERROR"
-      bool reportError reportOK $ null $ scInconsistentObjs sc
+      if null $ scInconsistentObjs sc
+        then setStatus N.status200 >> lazyBytes "OK"
+        else setStatus N.status500 >> lazyBytes "ERROR"
 
     get "v1/version" $ do
       uncurry setHeader jsonHeader
@@ -393,46 +433,75 @@ httpApp corsCfg serverCtx enableConsole enableTelemetry = do
       put    ("v1/template" <//> var) tmpltPutOrPostH
       delete ("v1/template" <//> var) tmpltGetOrDeleteH
 
-      post "v1/query" $ mkSpockAction encodeQErr serverCtx $ do
+      post "v1/query" $ mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         query <- parseBody
         v1QueryHandler query
 
       post ("api/1/table" <//> var <//> var) $ \tableName queryType ->
-        mkSpockAction encodeQErr serverCtx $
+        mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
         legacyQueryHandler (TableName tableName) queryType
 
-    when enableGraphQL $ do
-      post "v1alpha1/graphql/explain" $ mkSpockAction encodeQErr serverCtx $ do
-        expQuery <- parseBody
-        gqlExplainHandler expQuery
-
-      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr serverCtx $ do
+    when enablePGDump $
+      post "v1alpha1/pg_dump" $ mkSpockAction encodeQErr id serverCtx $ do
         query <- parseBody
-        v1Alpha1GQHandler query
+        v1Alpha1PGDumpHandler query
 
-#ifdef InternalAPIs
-    get "internal/plan_cache" $ do
-      respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-      json respJ
-    get "internal/subscriptions" $ do
-      respJ <- liftIO $ EL.dumpLiveQueriesState $ scLQState serverCtx
-      json respJ
-#endif
+    when enableGraphQL $ do
+      post "v1alpha1/graphql/explain" gqlExplainAction
+
+      post "v1alpha1/graphql" $ mkSpockAction GH.encodeGQErr id serverCtx $
+        mkAPIRespHandler $ do
+          query <- parseBody
+          v1Alpha1GQHandler query
+
+      post "v1/graphql/explain" gqlExplainAction
+
+      post "v1/graphql" $ mkSpockAction GH.encodeGQErr allMod200 serverCtx $
+        mkAPIRespHandler $ do
+          query <- parseBody
+          v1GQHandler query
+
+    when (isDeveloperAPIEnabled serverCtx) $ do
+      get "dev/plan_cache" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
+          return $ encJFromJValue respJ
+      get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+          return $ encJFromJValue respJ
+      get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
+        mkAPIRespHandler $ do
+          onlyAdmin
+          respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+          return $ encJFromJValue respJ
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError qErr
 
   where
+    -- all graphql errors should be of type 200
+    allMod200 qe = qe { qeStatus = N.status200 }
+
+    gqlExplainAction =
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
+        expQuery <- parseBody
+        gqlExplainHandler expQuery
+
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
+    enablePGDump = isPGDumpEnabled serverCtx
     tmpltGetOrDeleteH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ mkQTemplateAction tmpltName tmpltArgs
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
+        mkQTemplateAction tmpltName tmpltArgs
 
     tmpltPutOrPostH tmpltName = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr serverCtx $ do
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         bodyTmpltArgs <- parseBody
         mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 

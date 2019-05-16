@@ -240,6 +240,9 @@ data AnnSelG a v
   , _asnStrfyNum :: !Bool
   } deriving (Show, Eq)
 
+getPermLimit :: AnnSelG a v -> Maybe Int
+getPermLimit = _tpLimit . _asnPerm
+
 traverseAnnSimpleSel
   :: (Applicative f)
   => (a -> f b)
@@ -274,9 +277,9 @@ type AnnAggSel = AnnAggSelG S.SQLExp
 
 data AnnFnSelG s v
   = AnnFnSel
-  { _afFn        :: !QualifiedFunction
-  , _afFnArgs    :: ![v]
-  , _afSelect    :: !s
+  { _afFn     :: !QualifiedFunction
+  , _afFnArgs :: ![v]
+  , _afSelect :: !s
   } deriving (Show, Eq)
 
 traverseAnnFnSel

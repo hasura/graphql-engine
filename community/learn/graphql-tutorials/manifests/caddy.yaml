@@ -38,7 +38,7 @@ spec:
         volumeMounts:
         - name: caddy-certs-volume
           mountPath: /root/.caddy
-        - name: caddy-config 
+        - name: caddy-config
           mountPath: /caddy-config
       volumes:
       - name: caddy-certs-volume
@@ -79,4 +79,4 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: do-block-storage
+  storageClassName: standard

@@ -2,6 +2,10 @@
 title: "Remove todos - mutation"
 ---
 
+import YoutubeEmbed from "../../src/YoutubeEmbed.js";
+
+<YoutubeEmbed link="https://www.youtube.com/embed/ZPQ7mazzy_8" />
+
 In this part of the tutorial, you will learn how to remove existing todos by using GraphQL Mutations.
 
 Let's define a graphql query to do a mutation into todos.
@@ -14,6 +18,6 @@ mutation removeTodo ($id: Int!) {
 }
 ```
 
-[Try](https://learn.hasura.io/graphql/graphiql) this mutation in GraphiQL against the application database to see what the response looks like.
+[Try](https://learn.hasura.io/graphql/graphiql) this mutation in GraphiQL against the application database to see what the response looks like. You will also need to pass in the values for the variables.
 
 Let's now integrate this graphql mutation into our react app.

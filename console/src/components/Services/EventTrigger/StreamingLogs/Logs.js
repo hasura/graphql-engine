@@ -178,7 +178,7 @@ class StreamingLogs extends Component {
       responseData.push(parseRowData(r, 'response'));
 
       const getCellContent = col => {
-        const conditionalClassname = styles.tableCellCenterAligned;
+        const conditionalClassname = styles.tableCellCenterAlignedOverflow;
         if (r[col] === null) {
           return (
             <div className={conditionalClassname}>
