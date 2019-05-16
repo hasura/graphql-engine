@@ -468,7 +468,7 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
+  workflow_v20190516:
     jobs:
     - check_build_worthiness: *filter_only_vtags
     - build_console:
