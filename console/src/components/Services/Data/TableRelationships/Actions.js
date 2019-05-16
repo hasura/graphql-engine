@@ -8,6 +8,7 @@ import {
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
+import { findAllFromRel } from '../utils';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
 export const REL_SET_RTABLE = 'ModifyTable/REL_SET_RTABLE';
@@ -226,16 +227,14 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
+  const { allSchemas } = getState().tables;
   const currentSchema = getState().tables.currentSchema;
-  const { upQuery, downQuery } = generateRelationshipsQuery(
-    state.tableName,
-    state.name,
-    state.lcol,
-    state.rTable,
-    state.rcol,
-    state.isObjRel,
-    currentSchema
+  const tableName = getState().tables.currentTable;
+  const curTableSchema = allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === currentSchema
   );
+  const relConfig = findAllFromRel(allSchemas, curTableSchema, state);
+  const { upQuery, downQuery } = generateRelationshipsQuery(relConfig);
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
 
@@ -472,6 +471,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivObjectRel.relName] = true;
+        console.log('Called here 2');
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivObjectRel
         );
@@ -494,6 +494,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivArrayRel.relName] = true;
+        console.log('Called here 1');
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivArrayRel
         );
