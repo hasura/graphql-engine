@@ -13,7 +13,6 @@ const TableHeader = ({
   migrationMode,
   currentSchema,
   dispatch,
-  allowRename,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
@@ -74,7 +73,7 @@ const TableHeader = ({
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify' && allowRename}
+          editable={tabName === 'modify'}
           dispatch={dispatch}
           property="table"
         />

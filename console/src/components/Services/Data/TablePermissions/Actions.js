@@ -55,13 +55,11 @@ const permOpenEdit = (
   tableSchema,
   role,
   query,
-  insertPermColumnRestriction
 ) => ({
   type: PERM_OPEN_EDIT,
   tableSchema,
   role,
   query,
-  insertPermColumnRestriction,
 });
 const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
 const permSetFilterSameAs = filter => ({
@@ -124,7 +122,6 @@ const getBasePermissionsState = (
   tableSchema,
   role,
   query,
-  insertPermColumnRestriction
 ) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
@@ -142,12 +139,10 @@ const getBasePermissionsState = (
       // If the query is insert, transform set object if exists to an array
       if (q === 'insert' || q === 'update') {
         // If set is an object
-        if (insertPermColumnRestriction) {
-          if (!_permissions[q].columns) {
-            _permissions[q].columns = tableSchema.columns.map(
-              c => c.column_name
-            );
-          }
+        if (!_permissions[q].columns) {
+          _permissions[q].columns = tableSchema.columns.map(
+            c => c.column_name
+          );
         }
         if ('set' in _permissions[q]) {
           if (

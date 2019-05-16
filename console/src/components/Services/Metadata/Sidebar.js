@@ -5,43 +5,37 @@ import styles from '../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 
-const Sidebar = ({ location, semverChecks, metadata }) => {
+const Sidebar = ({ location, metadata }) => {
   const sectionsData = [];
 
-  if (semverChecks.supportMetadata) {
-    sectionsData.push({
-      key: 'actions',
-      link: '/metadata/actions',
-      dataTestVal: 'metadata-actions-link',
-      title: 'Metadata Actions',
-    });
-  }
+  sectionsData.push({
+    key: 'actions',
+    link: '/metadata/actions',
+    dataTestVal: 'metadata-actions-link',
+    title: 'Metadata Actions',
+  });
 
-  if (semverChecks.supportInconsistentMetadata) {
-    const consistentIcon =
-      metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+  const consistentIcon =
+    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
 
-    sectionsData.push({
-      key: 'status',
-      link: '/metadata/status',
-      dataTestVal: 'metadata-status-link',
-      title: (
-        <div className={styles.display_flex}>
-          Metadata Status
-          <span className={styles.add_mar_left}>{consistentIcon}</span>
-        </div>
-      ),
-    });
-  }
+  sectionsData.push({
+    key: 'status',
+    link: '/metadata/status',
+    dataTestVal: 'metadata-status-link',
+    title: (
+      <div className={styles.display_flex}>
+        Metadata Status
+        <span className={styles.add_mar_left}>{consistentIcon}</span>
+      </div>
+    ),
+  });
 
-  if (semverChecks.supportAllowedQueries) {
-    sectionsData.push({
-      key: 'allowed-queries',
-      link: '/metadata/allowed-queries',
-      dataTestVal: 'metadata-allowed-queries-link',
-      title: 'Allowed Queries',
-    });
-  }
+  sectionsData.push({
+    key: 'allowed-queries',
+    link: '/metadata/allowed-queries',
+    dataTestVal: 'metadata-allowed-queries-link',
+    title: 'Allowed Queries',
+  });
 
   const currentLocation = location.pathname;
 
