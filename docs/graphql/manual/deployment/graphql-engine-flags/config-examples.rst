@@ -130,14 +130,14 @@ You can tell Hasura to disable handling CORS entirely via the ``--disable-cors``
 flag. Hasura will not respond with CORS headers. You can use this option if
 you're already handling CORS on a reverse proxy etc.
 
-.. _console_assets_on_server:
+.. _console-assets-on-server:
 
-Load console assets from Server instead of CDN
+Load console assets from server instead of CDN
 ----------------------------------------------
 
-Starting with ``v1.0.0-beta01``, the static assets (js, css, fonts, img etc.)
+Starting with ``v1.0.0-beta.01``, the static assets (js, css, fonts, img etc.)
 required by the console are bundled with the Docker image published by Hasura.
-These files can be fount at ``/srv/console-assets``.
+These files can be found at ``/srv/console-assets``.
 
 If you're working in an environment with Hasura running locally and have no
 access to internet, you can configure server/console to load assets from the

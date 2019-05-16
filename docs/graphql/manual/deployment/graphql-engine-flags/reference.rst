@@ -163,11 +163,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--live-queries-fallback-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which cannot be multiplexed. Default: 1000 (1sec)
+     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+       which cannot be multiplexed. Default: 1000 (1sec)
 
    * - ``live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which can be multiplexed. Default: 1000 (1sec)
+     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+       which can be multiplexed. Default: 1000 (1sec)
 
    * - ``live-quries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
@@ -175,11 +177,13 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
-     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured allow-list. Default ``false``.
+     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
+       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.01)*
   
    * - ``console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
-     - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself instead of CDN. The assets are only bundled into the docker image for versions ``> v1.0.0-beta.01``. The flag will have no effect on older versions.
+     - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
+       instead of CDN. *(Available for versions > v1.0.0-beta.01)*
 
 .. note::
 
