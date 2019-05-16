@@ -9,6 +9,7 @@ import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
 import           Data.Aeson                             hiding (json)
 import           Data.IORef
+import           Data.String                            (fromString)
 import           Data.Time.Clock                        (UTCTime,
                                                          getCurrentTime)
 import           Network.Mime                           (defaultMimeLookup)
@@ -305,15 +306,21 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-consoleAssetsHandler :: Text -> FilePath -> Handler APIResp
+consoleAssetsHandler :: Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
     joinPath [T.unpack dir, path]
-  fileContents <- either throwException return eFileContents
-  return $ RawResp headers fileContents
+  either onError onSuccess eFileContents
   where
+    onSuccess c = do
+      mapM_ (uncurry setHeader) headers
+      lazyBytes c
+    onError :: IOException -> ActionT IO ()
+    onError e = do
+      setStatus N.status404
+      bytes $ fromString $ "not found: " <> show e
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -321,13 +328,10 @@ consoleAssetsHandler dir path = do
       Nothing -> (fn, [])
     mimeType = bsToTxt $ defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
-    throwException :: (MonadError QErr m) => IOException -> m a
-    throwException e = throw404 $ T.pack (show e)
 
-consoleHTMLHandler :: T.Text -> AuthMode -> Bool -> Maybe Text -> Handler APIResp
-consoleHTMLHandler path authMode enableTelemetry consoleAssetsDir = do
-  unless (null errs) $ throw500 $ T.pack errMsg
-  return $ RawResp [htmlHeader] (BL.fromStrict $ txtToBs res)
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
       -- variables required to render the template
@@ -557,11 +561,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         get ("console/assets" <//> wildcard) $ \path ->
-          mkSpockAction encodeQErr id serverCtx $ do
-            consoleAssetsHandler dir (T.unpack path)
+          consoleAssetsHandler dir (T.unpack path)
 
       -- serve console html
       get ("console" <//> wildcard) $ \path ->
-        mkSpockAction encodeQErr id serverCtx $ do
-          consoleHTMLHandler path (scAuthMode serverCtx)
-            enableTelemetry consoleAssetsDir
+        either (raiseGenericApiError . err500 Unexpected . T.pack) html $
+        mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
