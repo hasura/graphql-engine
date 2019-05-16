@@ -131,25 +131,26 @@ withSCUpdate scr logger action = do
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx    :: PGExecCtx
-  , scConnInfo     :: Q.ConnInfo
-  , scLogger       :: L.Logger
-  , scCacheRef     :: SchemaCacheRef
-  , scAuthMode     :: AuthMode
-  , scManager      :: HTTP.Manager
-  , scSQLGenCtx    :: SQLGenCtx
-  , scEnabledAPIs  :: S.HashSet API
-  , scInstanceId   :: InstanceId
-  , scPlanCache    :: E.PlanCache
-  , scLQState      :: EL.LiveQueriesState
+  { scPGExecCtx       :: !PGExecCtx
+  , scConnInfo        :: !Q.ConnInfo
+  , scLogger          :: !L.Logger
+  , scCacheRef        :: !SchemaCacheRef
+  , scAuthMode        :: !AuthMode
+  , scManager         :: !HTTP.Manager
+  , scSQLGenCtx       :: !SQLGenCtx
+  , scEnabledAPIs     :: !(S.HashSet API)
+  , scInstanceId      :: !InstanceId
+  , scPlanCache       :: !E.PlanCache
+  , scLQState         :: !EL.LiveQueriesState
+  , scEnableAllowlist :: !Bool
   }
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx  :: ServerCtx
-  , hcReqBody    :: BL.ByteString
-  , hcUser       :: UserInfo
-  , hcReqHeaders :: [N.Header]
+  { hcServerCtx  :: !ServerCtx
+  , hcReqBody    :: !BL.ByteString
+  , hcUser       :: !UserInfo
+  , hcReqHeaders :: ![N.Header]
   }
 
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
@@ -232,7 +233,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       manager = scManager serverCtx
 
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False) return userInfoE
+  userInfo <- either (logAndThrow req reqBody False . qErrModifier) return userInfoE
 
   let handlerState = HandlerCtx serverCtx reqBody userInfo headers
 
@@ -304,7 +305,8 @@ v1Alpha1GQHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx userInfo sqlGenCtx planCache
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
@@ -317,7 +319,8 @@ gqlExplainHandler query = do
   sc <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  GE.explainGQLQuery pgExecCtx sc sqlGenCtx query
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
@@ -362,13 +365,22 @@ initErrExit e = do
   exitFailure
 
 mkWaiApp
-  :: Q.TxIsolation -> L.LoggerCtx -> SQLGenCtx
-  -> Q.PGPool -> Q.ConnInfo -> HTTP.Manager -> AuthMode
-  -> CorsConfig -> Bool -> Bool
-  -> InstanceId -> S.HashSet API
+  :: Q.TxIsolation
+  -> L.LoggerCtx
+  -> SQLGenCtx
+  -> Bool
+  -> Q.PGPool
+  -> Q.ConnInfo
+  -> HTTP.Manager
+  -> AuthMode
+  -> CorsConfig
+  -> Bool
+  -> Bool
+  -> InstanceId
+  -> S.HashSet API
   -> EL.LQOpts
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
-mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
+mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole enableTelemetry instanceId apis
          lqOpts = do
     let pgExecCtx = PGExecCtx pool isoLevel
@@ -389,14 +401,14 @@ mkWaiApp isoLevel loggerCtx sqlGenCtx pool ci httpManager mode corsCfg
         logger = L.mkLogger loggerCtx
 
     lqState <- EL.initLiveQueriesState lqOpts pgExecCtx
-    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState
-                   cacheRef httpManager corsPolicy sqlGenCtx planCache
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef
+                   httpManager corsPolicy sqlGenCtx enableAL planCache
 
     let schemaCacheRef =
           SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
         serverCtx = ServerCtx pgExecCtx ci logger
                     schemaCacheRef mode httpManager
-                    sqlGenCtx apis instanceId planCache lqState
+                    sqlGenCtx apis instanceId planCache lqState enableAL
 
     spockApp <- spockAsApp $ spockT id $
                 httpApp corsCfg serverCtx enableConsole enableTelemetry

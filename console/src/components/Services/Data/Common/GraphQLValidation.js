@@ -6,7 +6,7 @@ const gqlTableErrorNotif = [
   '',
   {
     custom:
-      'Table name cannot contain special characters. It can have alphabets, numbers (cannot start with numbers) and _ (can start with _)',
+      'Table name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
   },
   'Error renaming table!',
 ];
@@ -17,7 +17,7 @@ const gqlColumnErrorNotif = [
   '',
   {
     custom:
-      'Column name cannot contain special characters. It can have alphabets, numbers (cannot start with numbers) and _ (can start with _)',
+      'Column name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
   },
   'Error renaming column!',
 ];
@@ -28,7 +28,7 @@ const gqlViewErrorNotif = [
   '',
   {
     custom:
-      'View name cannot contain special characters. It can have alphabets, numbers (cannot start with numbers) and _ (can start with _)',
+      'View name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
   },
   'Error renaming view!',
 ];
@@ -39,9 +39,19 @@ const gqlRelErrorNotif = [
   '',
   {
     custom:
-      'Relationship name cannot contain special characters. It can have alphabets, numbers (cannot start with numbers) and _ (can start with _)',
+      'Relationship name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
   },
   'Error renaming relationship!',
+];
+
+const gqlSchemaErrorNotif = [
+  'Error creating schema!',
+  'Schema name cannot contain special characters',
+  '',
+  {
+    custom:
+      'Schema name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+  },
 ];
 
 export default gqlPattern;
@@ -50,4 +60,5 @@ export {
   gqlViewErrorNotif,
   gqlColumnErrorNotif,
   gqlRelErrorNotif,
+  gqlSchemaErrorNotif,
 };

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION 
+CREATE OR REPLACE FUNCTION
   hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, op text, row_data json)
   RETURNS text AS $$
   DECLARE

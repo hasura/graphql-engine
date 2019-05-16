@@ -9,11 +9,14 @@ const useMetadataSemver = serverVersion => {
     supportInconsistentMetadata,
     setSupportInconsistentMetadata,
   ] = useState(false);
+  const [supportAllowedQueries, setSupportAllowedQueries] = useState(false);
+
   useEffect(() => {
     if (serverVersion) {
       setSupportMetadata(semverCheck('metadataReload', serverVersion));
     }
   }, [serverVersion]);
+
   useEffect(() => {
     if (serverVersion) {
       setSupportInconsistentMetadata(
@@ -21,28 +24,45 @@ const useMetadataSemver = serverVersion => {
       );
     }
   }, [serverVersion]);
+
+  useEffect(() => {
+    if (serverVersion) {
+      setSupportAllowedQueries(semverCheck('allowedQueries', serverVersion));
+    }
+  }, [serverVersion]);
+
   return {
     supportMetadata,
     supportInconsistentMetadata,
+    supportAllowedQueries,
   };
 };
 
 const Container = ({ location, serverVersion, children, metadata }) => {
-  const { supportMetadata, supportInconsistentMetadata } = useMetadataSemver(
-    serverVersion
-  );
+  const {
+    supportMetadata,
+    supportInconsistentMetadata,
+    supportAllowedQueries,
+  } = useMetadataSemver(serverVersion);
+
   if (!supportMetadata) {
     return null;
   }
+
   const sidebar = (
     <Sidebar
-      supportMetadata={supportMetadata}
-      supportInconsistentMetadata={supportInconsistentMetadata}
+      semverChecks={{
+        supportMetadata,
+        supportInconsistentMetadata,
+        supportAllowedQueries,
+      }}
       location={location}
       metadata={metadata}
     />
   );
+
   const helmet = 'Metadata | Hasura';
+
   const childrenWithProps = React.Children.map(children, child =>
     React.cloneElement(child, {
       supportMetadata,
@@ -50,6 +70,7 @@ const Container = ({ location, serverVersion, children, metadata }) => {
       metadata,
     })
   );
+
   return (
     <PageContainer helmet={helmet} leftContainer={sidebar}>
       {childrenWithProps}

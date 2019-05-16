@@ -4,8 +4,11 @@ import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
 import semverCheck from '../../../helpers/semver';
-import { filterSchema } from './metadataFilters';
-import { setConsistentSchema, setConsistentFunctions } from '../Data/DataActions';
+import { filterSchema } from './utils';
+import {
+  setConsistentSchema,
+  setConsistentFunctions,
+} from '../Data/DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -18,6 +21,12 @@ const DROP_INCONSISTENT_METADATA = 'Metadata/DROP_INCONSISTENT_METADATA';
 const DROPPED_INCONSISTENT_METADATA = 'Metadata/DROPPED_INCONSISTENT_METADATA';
 const DROPPING_INCONSISTENT_METADATA_FAILED =
   'Metadata/DROPPING_INCONSISTENT_METADATA_FAILED';
+
+const LOAD_ALLOWED_QUERIES = 'Metadata/LOAD_ALLOWED_QUERIES';
+const ADD_ALLOWED_QUERIES = 'Metadata/ADD_ALLOWED_QUERIES';
+const UPDATE_ALLOWED_QUERY = 'Metadata/UPDATE_ALLOWED_QUERY';
+const DELETE_ALLOWED_QUERY = 'Metadata/DELETE_ALLOWED_QUERY';
+const DELETE_ALLOW_LIST = 'Metadata/DELETE_ALLOW_LIST';
 
 const getInconsistentObjectsQuery = {
   type: 'get_inconsistent_metadata',
@@ -191,6 +200,254 @@ export const redirectToMetadataStatus = () => {
   };
 };
 
+const allowedQueriesCollection = 'allowed-queries';
+
+const loadAllowedQueriesQuery = () => ({
+  type: 'select',
+  args: {
+    table: {
+      name: 'hdb_query_collection',
+      schema: 'hdb_catalog',
+    },
+    columns: ['collection_defn'],
+    where: { collection_name: allowedQueriesCollection },
+  },
+});
+
+const createAllowListQuery = queries => {
+  const createAllowListCollectionQuery = () => ({
+    type: 'create_query_collection',
+    args: {
+      name: allowedQueriesCollection,
+      definition: {
+        queries: queries,
+      },
+    },
+  });
+
+  const addCollectionToAllowListQuery = () => ({
+    type: 'add_collection_to_allowlist',
+    args: {
+      collection: allowedQueriesCollection,
+    },
+  });
+
+  return {
+    type: 'bulk',
+    args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
+  };
+};
+
+const deleteAllowListQuery = () => ({
+  type: 'drop_query_collection',
+  args: {
+    collection: allowedQueriesCollection,
+    cascade: true,
+  },
+});
+
+const addAllowedQueryQuery = query => ({
+  type: 'add_query_to_collection',
+  args: {
+    collection_name: allowedQueriesCollection,
+    query_name: query.name,
+    query: query.query,
+  },
+});
+
+const addAllowedQueriesQuery = queries => {
+  const addQueries = queries.map(query => addAllowedQueryQuery(query));
+
+  return {
+    type: 'bulk',
+    args: addQueries,
+  };
+};
+
+const deleteAllowedQueryQuery = queryName => ({
+  type: 'drop_query_from_collection',
+  args: {
+    collection_name: allowedQueriesCollection,
+    query_name: queryName,
+  },
+});
+
+const updateAllowedQueryQuery = (queryName, newQuery) => ({
+  type: 'bulk',
+  args: [deleteAllowedQueryQuery(queryName), addAllowedQueryQuery(newQuery)],
+});
+
+export const loadAllowedQueries = () => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(loadAllowedQueriesQuery()),
+      })
+    ).then(
+      data => {
+        let queries;
+
+        const collection = data[0];
+        if (collection) {
+          queries = collection.collection_defn.queries;
+        } else {
+          queries = [];
+        }
+        dispatch({ type: LOAD_ALLOWED_QUERIES, data: queries });
+      },
+      error => {
+        console.error(error);
+        dispatch(showErrorNotification('Fetching allowed queries failed'));
+      }
+    );
+  };
+};
+
+export const addAllowedQueries = (queries, isEmptyList, callback) => {
+  return (dispatch, getState) => {
+    if (queries.length === 0) {
+      dispatch(showErrorNotification('No queries found'));
+
+      return;
+    }
+
+    const headers = getState().tables.dataHeaders;
+
+    const addQuery = isEmptyList
+      ? createAllowListQuery(queries)
+      : addAllowedQueriesQuery(queries);
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(addQuery),
+      })
+    ).then(
+      () => {
+        dispatch(
+          showSuccessNotification(
+            `${queries.length > 1 ? 'Queries' : 'Query'} added to allow-list`
+          )
+        );
+        dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
+        callback();
+      },
+      error => {
+        console.error(error);
+        dispatch(
+          showErrorNotification(
+            'Adding query to allow-list failed',
+            null,
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
+export const deleteAllowList = () => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(deleteAllowListQuery()),
+      })
+    ).then(
+      () => {
+        dispatch(
+          showSuccessNotification('Deleted all queries from allow-list')
+        );
+        dispatch({ type: DELETE_ALLOW_LIST });
+      },
+      error => {
+        console.error(error);
+        dispatch(
+          showErrorNotification(
+            'Deleting queries from allow-list failed',
+            null,
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
+export const deleteAllowedQuery = (queryName, isLastQuery) => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    const deleteQuery = isLastQuery
+      ? deleteAllowListQuery()
+      : deleteAllowedQueryQuery(queryName);
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(deleteQuery),
+      })
+    ).then(
+      () => {
+        dispatch(showSuccessNotification('Deleted query from allow-list'));
+        dispatch({ type: DELETE_ALLOWED_QUERY, data: queryName });
+      },
+      error => {
+        console.error(error);
+        dispatch(
+          showErrorNotification(
+            'Deleting query from allow-list failed',
+            null,
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
+export const updateAllowedQuery = (queryName, newQuery) => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(updateAllowedQueryQuery(queryName, newQuery)),
+      })
+    ).then(
+      () => {
+        dispatch(showSuccessNotification('Updated allow-list query'));
+        dispatch({ type: UPDATE_ALLOWED_QUERY, data: { queryName, newQuery } });
+      },
+      error => {
+        console.error(error);
+        dispatch(
+          showErrorNotification(
+            'Updating allow-list query failed',
+            null,
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
 export const metadataReducer = (state = defaultState, action) => {
   switch (action.type) {
     case LOAD_INCONSISTENT_OBJECTS:
@@ -225,6 +482,37 @@ export const metadataReducer = (state = defaultState, action) => {
       return {
         ...state,
         ongoingRequest: false,
+      };
+    case LOAD_ALLOWED_QUERIES:
+      return {
+        ...state,
+        allowedQueries: action.data,
+      };
+    case ADD_ALLOWED_QUERIES:
+      return {
+        ...state,
+        allowedQueries: [...state.allowedQueries, ...action.data],
+      };
+    case DELETE_ALLOW_LIST:
+      return {
+        ...state,
+        allowedQueries: [],
+      };
+    case DELETE_ALLOWED_QUERY:
+      return {
+        ...state,
+        allowedQueries: [
+          ...state.allowedQueries.filter(q => q.name !== action.data),
+        ],
+      };
+    case UPDATE_ALLOWED_QUERY:
+      return {
+        ...state,
+        allowedQueries: [
+          ...state.allowedQueries.map(q =>
+            q.name === action.data.queryName ? action.data.newQuery : q
+          ),
+        ],
       };
     default:
       return state;
