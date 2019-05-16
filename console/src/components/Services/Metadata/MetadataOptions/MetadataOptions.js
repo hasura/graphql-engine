@@ -112,15 +112,15 @@ const MetadataOptions = props => {
         <div className="clearfix" />
         <div className={styles.content_width}>
           Hasura metadata stores information about your tables, relationships,
-          permissions, etc. that is used to generate the GraphQL schema and API.{' '}
+          permissions, etc. that is used to generate the GraphQL schema and
+          API.&nbsp;
           <a
             href="https://docs.hasura.io/1.0/graphql/manual/how-it-works/metadata-schema.html"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Read more
+            <i>(Read more)</i>
           </a>
-          .
         </div>
       </div>
       {getMetadataImportExportSection()}
