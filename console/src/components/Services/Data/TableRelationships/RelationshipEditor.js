@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
 import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
@@ -60,14 +59,7 @@ class RelationshipEditor extends React.Component {
   };
 
   render() {
-    const {
-      dispatch,
-      tableName,
-      relName,
-      relConfig,
-      isObjRel,
-      allowRename,
-    } = this.props;
+    const { dispatch, tableName, relName, relConfig, isObjRel } = this.props;
 
     const { text, isEditting } = this.state;
     const { lcol, rtable, rcol } = relConfig;
@@ -86,16 +78,12 @@ class RelationshipEditor extends React.Component {
     const collapsed = () => (
       <div>
         <Button
-          color={allowRename ? 'white' : 'red'}
-          size={allowRename ? 'xs' : 'sm'}
-          onClick={allowRename ? this.toggleEditor : onDelete}
-          data-test={
-            allowRename
-              ? `relationship-toggle-editor-${relName}`
-              : `relationship-remove-${relName}`
-          }
+          color={'white'}
+          size={'xs'}
+          onClick={this.toggleEditor}
+          data-test={`relationship-toggle-editor-${relName}`}
         >
-          {allowRename ? 'Edit' : 'Remove'}
+          Edit
         </Button>
         &nbsp;
         <b>{relName}</b>

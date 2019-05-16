@@ -1,0 +1,135 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+.display-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.display-flex-spread {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.game-board {
+  width: 402px;
+  height: 402px;
+  margin-bottom: 20px;
+}
+
+.active {
+  background-color: #F8F9FA;
+}
+
+.inactive {
+  background-color: lightgray;
+}
+
+.black-border-thick {
+  border: 2px solid #565656;
+}
+
+.black-border {
+  border: 1px solid #565656;  
+}
+
+.margin-twenty {
+  margin: 20px;
+}
+
+.margin-bottom {
+  margin-bottom: 20px;
+}
+
+.margin-bottom-mid {
+  margin-bottom: 10px;
+}
+
+.margin-bottom-small {
+  margin-bottom: 5px;
+}
+
+.logs {
+  background-color: #F8F9FA;
+  padding: 10px;
+  height: 100px;
+  overflow: scroll;
+  margin: 0 auto;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-forbidden {
+  cursor: not-allowed;
+}
+
+.color-blue {
+  color: blue !important;
+}
+
+.grid-cell {
+  border: 6px solid #565656;
+  width: 134px;
+  height: 134px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 43px;
+}
+
+.width-300 {
+  width: 300px !important;
+}
+
+.width-400 {
+  width: 402px !important;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.text-align-center {
+  text-align: center;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .display-flex-center {
+    display: block;
+  }
+}

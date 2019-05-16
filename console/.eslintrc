@@ -78,6 +78,7 @@
     "jsx-a11y/anchor-is-valid": 0,
     "jsx-a11y/lang": 0,
     "jsx-a11y/alt-text": 0,
+    "jsx-a11y/no-autofocus": 0,
     "max-len": 0,
     "no-continue": 0
   },

@@ -31,7 +31,7 @@ spec:
               name: hasura-secret
               key: adminSecret
         - name: HASURA_GRAPHQL_AUTH_HOOK
-          value: "auth-webhook.default/webhook"
+          value: "http://auth-webhook.default/webhook"
         ports:
         - containerPort: 8080
           protocol: TCP

@@ -39,6 +39,7 @@ GET request
 If you configure your webhook to use ``GET``, then Hasura **will forward all client headers except**:
 
 - ``Content-Length``
+- ``Content-Type``
 - ``Content-MD5``
 - ``User-Agent``
 - ``Host``
