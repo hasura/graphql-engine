@@ -9,20 +9,22 @@ class TopBanner extends React.Component {
       <div className={'headerWrapper blueBgColor'}>
         <nav className="navbar navbar-default navbarDefault">
           <div className="container">
-            <div className="navbar-header">
-              <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <div className="navbar-header navbarHeader">
+              <div className={'logoWrapper'}>
+                <a href="https://hasura.io/" target="_blank" rel="noopener noreferrer"><img className={'img-responsive'} src={logo} alt={'Hasura logo'} /></a>
+              </div>
+              <button type="button" className="navbar-toggle collapsed navbarToggle" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 <span className="sr-only">Toggle navigation</span>
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
               </button>
-              <div className={'logoWrapper'}>
-                <a href="https://hasura.io/" target="_blank" rel="noopener noreferrer"><img className={'img-responsive'} src={logo} alt={'Hasura logo'} /></a>
-              </div>
             </div>
             <div id="navbar" className="navbar-collapse collapse">
               <ul className="nav navbar-nav navbar-right navBarWrapper">
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="frontend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">FRONTEND</a>
                   <div aria-labelledby="frontend" className="dropdown-menu dropdownMenu">
@@ -46,7 +48,7 @@ class TopBanner extends React.Component {
                             return (
                               <a href={item.url} target={'_blank'}>
                                 <li key={'frontend'+key} className={item.bgClassName}>
-                                  {item.name}
+                                    {item.name}
                                 </li>
                               </a>
                             );
@@ -63,6 +65,8 @@ class TopBanner extends React.Component {
                   </div>
                 </li>
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="mobile" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">MOBILE</a>
                   <div aria-labelledby="mobile" className="dropdown-menu dropdownMenu">
@@ -84,9 +88,11 @@ class TopBanner extends React.Component {
                         {mobileTutorial.map((item, key) => {
                           if(!item.comingSoon) {
                             return (
-                              <li key={'mobile'+ key} className={item.bgClassName}>
-                                {item.name}
-                              </li>
+                              <a href={item.url} target={'_blank'}>
+                                <li key={'mobile'+ key} className={item.bgClassName}>
+                                    {item.name}
+                                </li>
+                              </a>
                             );
                           } else {
                             return (
@@ -101,6 +107,8 @@ class TopBanner extends React.Component {
                   </div>
                 </li>
                 <li className="dropdown">
+                  <div className={'upArrow'}>
+                  </div>
                   {/* eslint-disable-next-line */}
                   <a id="backend" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">BACKEND</a>
                   <div aria-labelledby="backend" className="dropdown-menu dropdownMenu">
@@ -122,9 +130,11 @@ class TopBanner extends React.Component {
                         {backendTutorial.map((item, key) => {
                           if(!item.comingSoon) {
                             return (
-                              <li key={'backend'+key} className={item.bgClassName}>
-                                {item.name}
-                              </li>
+                              <a href={item.url} target={'_blank'}>
+                                <li key={'backend'+key} className={item.bgClassName}>
+                                    {item.name}
+                                </li>
+                              </a>
                             );
                           } else {
                             return (
