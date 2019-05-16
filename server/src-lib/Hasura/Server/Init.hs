@@ -4,6 +4,7 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query                as Q
 
 import           Options.Applicative
+import           Data.Char                        (toLower)
 
 import qualified Data.Aeson                       as J
 import qualified Data.HashSet                     as Set
@@ -61,6 +62,7 @@ data RawServeOptions
   , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
+  , rsoEnableAllowlist    :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -80,6 +82,7 @@ data ServeOptions
   , soStringifyNum     :: !Bool
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LQOpts
+  , soEnableAllowlist  :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -169,8 +172,8 @@ instance FromEnv LQ.RefetchInterval where
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
-  | t `elem` truthVals = Right True
-  | t `elem` falseVals = Right False
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
   | otherwise = Left errMsg
   where
     truthVals = ["true", "t", "yes", "y"]
@@ -272,9 +275,10 @@ mkServeOptions rso = do
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
+  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
-                        enableTelemetry strfyNum enabledAPIs lqOpts
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
@@ -406,6 +410,7 @@ serveCmdFooter =
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
+      , enableAllowlistEnv
       ]
 
     eventEnvs =
@@ -821,6 +826,12 @@ parseMxBatchSize =
       help (snd mxBatchSizeEnv)
     )
 
+parseEnableAllowlist :: Parser Bool
+parseEnableAllowlist =
+  switch ( long "enable-allowlist" <>
+           help (snd enableAllowlistEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -833,6 +844,12 @@ mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
   , "multiplexed live queries are split into batches of the specified \\
     \size. Default 100. "
+  )
+
+enableAllowlistEnv :: (String, String)
+enableAllowlistEnv =
+  ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST"
+  , "Only accept allowed GraphQL queries"
   )
 
 parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)
@@ -878,6 +895,7 @@ serveOptsToLog so =
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "enable_allowlist" J..= soEnableAllowlist so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

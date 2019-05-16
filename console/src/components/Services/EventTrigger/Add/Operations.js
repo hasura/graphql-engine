@@ -62,7 +62,7 @@ const Operations = ({
           </OverlayTrigger>
           &nbsp;&nbsp;
           <a
-            href="https://docs.hasura.io/graphql/manual/event-triggers/invoke-trigger-console.html"
+            href="https://docs.hasura.io/1.0/graphql/manual/event-triggers/invoke-trigger-console.html"
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -9,6 +9,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeConn
   , sendMsg
 
+  , AcceptWith(..)
   , OnConnH
   , OnCloseH
   , OnMessageH
@@ -51,6 +52,7 @@ data WSEvent
   | ERejected
   | EMessageReceived !TBS.TByteString
   | EMessageSent !TBS.TByteString
+  | EJwtExpired
   | ECloseReceived
   | ECloseSent !TBS.TByteString
   | EClosed
@@ -118,10 +120,17 @@ closeAll (WSServer (L.Logger writeLog) connMap) msg = do
     return conns
   void $ A.mapConcurrently (flip closeConn msg . snd) conns
 
-type AcceptWith a = (a, WS.AcceptRequest, Maybe (WSConn a -> IO ()))
+data AcceptWith a
+  = AcceptWith
+  { _awData        :: !a
+  , _awReq         :: !WS.AcceptRequest
+  , _awKeepAlive   :: !(Maybe (WSConn a -> IO ()))
+  , _awOnJwtExpiry :: !(Maybe (WSConn a -> IO ()))
+  }
+
 type OnConnH a    = WSId -> WS.RequestHead ->
                     IO (Either WS.RejectRequest (AcceptWith a))
-type OnCloseH a   = WS.ConnectionException -> WSConn a -> IO ()
+type OnCloseH a   = WSConn a -> IO ()
 type OnMessageH a = WSConn a -> BL.ByteString -> IO ()
 
 data WSHandlers a
@@ -149,7 +158,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pending
       WS.rejectRequestWith pendingConn rejectRequest
       writeLog $ WSLog wsId ERejected
 
-    onAccept wsId (a, acceptWithParams, keepAliveM) = do
+    onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
       conn  <- WS.acceptRequestWith pendingConn acceptWithParams
       writeLog $ WSLog wsId EAccepted
 
@@ -168,19 +177,23 @@ createServerApp (WSServer logger@(L.Logger writeLog) connMap) wsHandlers pending
         writeLog $ WSLog wsId $ EMessageSent $ TBS.fromLBS msg
 
       keepAliveRefM <- forM keepAliveM $ \action -> A.async $ action wsConn
+      onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> A.async $ action wsConn
 
-      -- terminates on WS.ConnectionException
-      let waitOnRefs = maybeToList keepAliveRefM <> [rcvRef, sendRef]
+      -- terminates on WS.ConnectionException and JWT expiry
+      let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
+                       <> [rcvRef, sendRef]
       res <- try $ A.waitAnyCancel waitOnRefs
 
       case res of
-        Left e  -> do
+        Left ( _ :: WS.ConnectionException) -> do
           writeLog $ WSLog (_wcConnId wsConn) ECloseReceived
-          onConnClose e wsConn
-        -- this will never happen as both the threads never finish
-        Right _ -> return ()
+          onConnClose wsConn
+        -- this will happen when jwt is expired
+        Right _ -> do
+          writeLog $ WSLog (_wcConnId wsConn) EJwtExpired
+          onConnClose wsConn
 
-    onConnClose e wsConn = do
+    onConnClose wsConn = do
       STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
-      _hOnClose wsHandlers e wsConn
+      _hOnClose wsHandlers wsConn
       writeLog $ WSLog (_wcConnId wsConn) EClosed

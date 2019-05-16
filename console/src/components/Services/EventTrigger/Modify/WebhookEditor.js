@@ -6,7 +6,7 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class WebhookEditor extends React.Component {
   setValues = () => {

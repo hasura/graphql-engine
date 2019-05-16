@@ -1,0 +1,62 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        account_id INTEGER NOT NULL,
+        company TEXT
+      );
+
+      INSERT INTO "user"
+        (name, account_id, company)
+      VALUES
+        ('clarke', 23, 'Symons'),
+        ('reckler', 2, NULL)
+      ;
+
+- type: track_table
+  args:
+    schema: public
+    name: user
+
+- type: create_select_permission
+  args:
+    table: user
+    role: user
+    permission:
+      filter: {}
+      columns: '*'
+
+- type: create_query_collection
+  args:
+    name: collection_1
+    comment: First query collection
+    definition:
+      queries:
+      - name: query_1
+        query: |
+          query {
+            user{
+              id
+              name
+              company
+            }
+          }
+      - name: query_2
+        query: |
+          query ($id: Int!){
+            user_by_pk(id: $id){
+              id
+              __typename
+              name
+              company
+            }
+          }
+
+- type: add_collection_to_allowlist
+  args:
+    collection: collection_1
