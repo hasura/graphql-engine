@@ -6,18 +6,22 @@ Authentication using webhooks
   :depth: 2
   :local:
 
+Introduction
+------------
+
 You can configure a webhook (see :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`)
 to authenticate all incoming requests to the Hasura GraphQL engine server.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/webhook-auth.png
 
-.. note::
-   Configuring webhook requires Hasura to run with an admin secret (``--admin-secret``).
-..   :doc:`Read more<config>`.
+You need to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the webhook to
+take effect.
 
+On a secured endpoint:
 
 - The configured webhook is  **called** when ``X-Hasura-Admin-Secret`` header is not found in the request.
-- The configured webhook is **ignored** when ``X-Hasura-Admin-Secret`` header is found in the request.
+- The configured webhook is **ignored** when ``X-Hasura-Admin-Secret`` header is found in the request and
+  admin access is granted.
 
 
 Spec for the webhook
