@@ -179,20 +179,18 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> ServerCtx
+  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> L.Logger
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult userInfoM req reqBody sc res qTime =
-  liftIO $ logger $ mkAccessLog userInfoM req (reqBody, res) qTime
-  where
-    logger = L.unLogger $ scLogger sc
+logResult userInfoM req reqBody logger res qTime =
+  liftIO $ (L.unLogger logger) $ mkAccessLog userInfoM req (reqBody, res) qTime
 
 logError
   :: MonadIO m
   => Maybe UserInfo -> Wai.Request
-  -> BL.ByteString -> ServerCtx -> QErr -> m ()
-logError userInfoM req reqBody sc qErr =
-  logResult userInfoM req reqBody sc (Left qErr) Nothing
+  -> BL.ByteString -> L.Logger -> QErr -> m ()
+logError userInfoM req reqBody logger qErr =
+  logResult userInfoM req reqBody logger (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -221,7 +219,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody serverCtx (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
@@ -233,7 +231,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       json $ qErrEncoder includeInternal qErr
 
     logAndThrow req reqBody includeInternal qErr = do
-      logError Nothing req reqBody serverCtx qErr
+      logError Nothing req reqBody logger qErr
       qErrToResp includeInternal qErr
 
     resToResp = \case
@@ -305,15 +303,19 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-consoleAssetsHandler :: Text -> FilePath -> Handler APIResp
-consoleAssetsHandler dir path = do
+consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
     joinPath [T.unpack dir, path]
-  fileContents <- either throwException return eFileContents
-  return $ RawResp headers fileContents
+  either onError onSuccess eFileContents
   where
+    onSuccess c = do
+      mapM_ (uncurry setHeader) headers
+      lazyBytes c
+    onError :: IOException -> ActionT IO ()
+    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -321,13 +323,10 @@ consoleAssetsHandler dir path = do
       Nothing -> (fn, [])
     mimeType = bsToTxt $ defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
-    throwException :: (MonadError QErr m) => IOException -> m a
-    throwException e = throw404 $ T.pack (show e)
 
-consoleHTMLHandler :: T.Text -> AuthMode -> Bool -> Maybe Text -> Handler APIResp
-consoleHTMLHandler path authMode enableTelemetry consoleAssetsDir = do
-  unless (null errs) $ throw500 $ T.pack errMsg
-  return $ RawResp [htmlHeader] (BL.fromStrict $ txtToBs res)
+mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
+  bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
       -- variables required to render the template
@@ -508,9 +507,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError qErr
+      raiseGenericApiError logger qErr
 
   where
+    logger = scLogger serverCtx
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
 
@@ -542,14 +542,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       v1QueryHandler $ RQExecuteQueryTemplate $
       ExecQueryTemplate (TQueryName tmpltName) tmpltArgs
 
-    raiseGenericApiError qErr = do
-      req <- request
-      reqBody <- liftIO $ strictRequestBody req
-      logError Nothing req reqBody serverCtx qErr
-      uncurry setHeader jsonHeader
-      setStatus $ qeStatus qErr
-      lazyBytes $ encode qErr
-
     serveApiConsole = do
       -- redirect / to /console
       get root $ redirect "console"
@@ -557,11 +549,18 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         get ("console/assets" <//> wildcard) $ \path ->
-          mkSpockAction encodeQErr id serverCtx $ do
-            consoleAssetsHandler dir (T.unpack path)
+          consoleAssetsHandler logger dir (T.unpack path)
 
       -- serve console html
       get ("console" <//> wildcard) $ \path ->
-        mkSpockAction encodeQErr id serverCtx $ do
-          consoleHTMLHandler path (scAuthMode serverCtx)
-            enableTelemetry consoleAssetsDir
+        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
+        mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
+
+raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
+raiseGenericApiError logger qErr = do
+  req <- request
+  reqBody <- liftIO $ strictRequestBody req
+  logError Nothing req reqBody logger qErr
+  uncurry setHeader jsonHeader
+  setStatus $ qeStatus qErr
+  lazyBytes $ encode qErr
