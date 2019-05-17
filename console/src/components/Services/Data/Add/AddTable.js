@@ -24,7 +24,6 @@ import {
   setColType,
   setColNullable,
   setColDefault,
-  setColUnique,
   setForeignKeys,
   addCol,
   setUniqueKeys,
@@ -108,9 +107,20 @@ class AddTable extends Component {
     dispatch(setColNullable(e.target.checked, i));
   };
 
-  onColUniqueChange = (i, e) => {
-    const { dispatch } = this.props;
-    dispatch(setColUnique(e.target.checked, i));
+  onColUniqueChange = (i, numUniqueKeys, isColumnUnique, _uindex) => {
+    const { dispatch, uniqueKeys } = this.props;
+    if (isColumnUnique) {
+      dispatch(
+        setUniqueKeys([
+          ...uniqueKeys.slice(0, _uindex),
+          ...uniqueKeys.slice(_uindex + 1),
+        ])
+      );
+    } else {
+      const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
+      newUniqueKeys[numUniqueKeys - 1] = [i];
+      dispatch(setUniqueKeys([...newUniqueKeys, []]));
+    }
   };
 
   setColDefaultValue = (i, isNullableChecked, e) => {
@@ -309,6 +319,7 @@ class AddTable extends Component {
             <TableName onChange={this.onTableNameChange.bind(this)} />
             <hr />
             <TableColumns
+              uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
               columns={columns}
               onRemoveColumn={this.onRemoveColumn}

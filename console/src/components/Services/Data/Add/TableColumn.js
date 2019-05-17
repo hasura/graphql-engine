@@ -37,7 +37,21 @@ const TableColumn = props => {
     onColNullableChange,
     onColUniqueChange,
     dataTypes: restTypes,
+    uniqueKeys,
   } = props;
+
+  let isColumnUnique = false;
+  let _uindex;
+  const numUniqueKeys = uniqueKeys.length;
+  for (let _i = numUniqueKeys - 1; _i >= 0; _i--) {
+    const key = uniqueKeys[_i];
+    if (key.length === 1) {
+      if (key[0] === i) {
+        isColumnUnique = true;
+        _uindex = _i;
+      }
+    }
+  }
 
   const handleColTypeChange = selectedOption => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
@@ -108,9 +122,15 @@ const TableColumn = props => {
       <label>Nullable</label>
       <input
         className={`${styles.inputCheckbox} form-control `}
-        checked={column.unique || false}
+        checked={isColumnUnique}
         type="checkbox"
-        onChange={onColUniqueChange.bind(undefined, i)}
+        onChange={onColUniqueChange.bind(
+          undefined,
+          i,
+          numUniqueKeys,
+          isColumnUnique,
+          _uindex
+        )}
         data-test={`unique-${i.toString()}`}
       />{' '}
       <label>Unique</label>
