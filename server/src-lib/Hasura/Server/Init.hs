@@ -186,10 +186,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-comitted" -> return Q.ReadCommitted
+    "read-committed" -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
     "serializable" -> return Q.ReadCommitted
-    _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
+    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
