@@ -29,9 +29,6 @@ Let's take a look at the different configuration options available to define a p
 rules are defined for each role, table, operation (*insert, select, update, delete*) by using the console
 or the :doc:`metadata APIs for permissions <../../api-reference/schema-metadata-api/permission>`.
 
-We'll list the different configuration operations available for defining permission rules and then take a
-look at how they're applicable to different operations.
-
 Operation permissions
 ---------------------
 
