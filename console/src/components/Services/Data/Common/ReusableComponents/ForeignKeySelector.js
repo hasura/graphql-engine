@@ -77,6 +77,7 @@ const ForeignKeySelector = ({
       newFks[index].refTableName = event.target.value;
       if (index + 1 === numOfFks && service === 'add-table') {
         newFks.push({
+          refSchemaName: 'public',
           refTableName: '',
           colMappings: [
             {

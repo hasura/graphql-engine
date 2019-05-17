@@ -38,7 +38,7 @@ const ForeignKeyEditor = ({
     schemasToBeFetched[efk.refSchemaName] = true;
   });
   existingForeignKeys.push({
-    refSchemaName: '',
+    refSchemaName: 'public',
     refTableName: '',
     onUpdate: 'restrict',
     onDelete: 'restrict',

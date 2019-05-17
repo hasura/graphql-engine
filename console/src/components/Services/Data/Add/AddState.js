@@ -5,7 +5,7 @@ const defaultState = {
   primaryKeys: [''],
   foreignKeys: [
     {
-      refSchemaName: '',
+      refSchemaName: 'public',
       refTableName: '',
       colMappings: [
         {
