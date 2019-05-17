@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
-import Button from '../../Common/Button/Button';
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import Button from '../../../Common/Button/Button';
 
 import {
   showSuccessNotification,
   showErrorNotification,
-} from '../Common/Notification';
+} from '../../Common/Notification';
 
 class ImportMetadata extends Component {
   constructor() {
@@ -84,7 +84,7 @@ class ImportMetadata extends Component {
       });
   }
   render() {
-    const metaDataStyles = require('./Metadata.scss');
+    const metaDataStyles = require('../Metadata.scss');
     return (
       <div className={metaDataStyles.display_inline}>
         <Button

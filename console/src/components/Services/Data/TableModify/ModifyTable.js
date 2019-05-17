@@ -24,53 +24,22 @@ import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
-import semverCheck from '../../../../helpers/semver';
 import styles from './ModifyTable.scss';
 
 class ModifyTable extends React.Component {
-  state = {
-    supportTableColumnRename: false,
-  };
-
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchTableComment(this.props.tableName));
     dispatch(fetchColumnTypes());
     dispatch(fetchColumnCasts());
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
-  }
-
   componentWillUnmount() {
     this.props.dispatch({
       type: RESET_COLUMN_TYPE_LIST,
     });
   }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   render() {
     const {
       tableName,
@@ -149,7 +118,6 @@ class ModifyTable extends React.Component {
           tabName="modify"
           migrationMode={migrationMode}
           currentSchema={currentSchema}
-          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -170,7 +138,6 @@ class ModifyTable extends React.Component {
               validTypeCasts={validTypeCasts}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
-              allowRename={this.state.supportTableColumnRename}
               columnComments={columnComments}
               dispatch={dispatch}
               currentSchema={currentSchema}

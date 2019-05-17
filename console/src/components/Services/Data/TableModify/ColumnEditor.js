@@ -22,15 +22,23 @@ const ColumnEditor = ({
   onSubmit,
   dispatch,
   columnComment,
-  allowRename,
   columnProperties,
   selectedProperties,
   editColumn,
   alterTypeOptions,
 }) => {
   const colName = columnProperties.name;
+
+  if (!selectedProperties[colName]) {
+    return null;
+  }
+
+  const styles = require('./ModifyTable.scss');
+
   useEffect(() => {
-    dispatch(editColumn(colName, 'comment', columnComment));
+    if (columnComment) {
+      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+    }
   }, [columnComment]);
 
   const getColumnType = () => {
@@ -41,11 +49,6 @@ const ColumnEditor = ({
     );
   };
   const columnTypePG = getColumnType();
-  if (!selectedProperties[colName]) {
-    return null;
-  }
-
-  const styles = require('./ModifyTable.scss');
 
   const customStyles = {
     dropdownIndicator: provided => {
@@ -70,11 +73,6 @@ const ColumnEditor = ({
       };
     },
   };
-  useEffect(() => {
-    if (columnComment) {
-      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
-    }
-  }, [columnComment]);
 
   const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
     alterTypeOptions,
@@ -103,20 +101,18 @@ const ColumnEditor = ({
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
-        {allowRename && (
-          <div className={`${styles.display_flex} form-group`}>
-            <label className="col-xs-2">Name</label>
-            <div className="col-xs-6">
-              <input
-                className="input-sm form-control"
-                value={selectedProperties[colName].name}
-                onChange={updateColumnName}
-                type="text"
-                data-test="edit-col-name"
-              />
-            </div>
+        <div className={`${styles.display_flex} form-group`}>
+          <label className="col-xs-2">Name</label>
+          <div className="col-xs-6">
+            <input
+              className="input-sm form-control"
+              value={selectedProperties[colName].name}
+              onChange={updateColumnName}
+              type="text"
+              data-test="edit-col-name"
+            />
           </div>
-        )}
+        </div>
         <div className={`${styles.display_flex} form-group`}>
           <label className="col-xs-2">Type</label>
           <div className="col-xs-6">

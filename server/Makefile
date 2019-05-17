@@ -16,14 +16,11 @@ build_output := /build/_server_output
 build:
 	stack build --fast --ghc-options '-j$(nproc)'
 
-build-local-console:
-	stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
-
 exec: build
 	stack exec graphql-engine -- serve
 
 exec-local-console: build-local-console
-	stack exec graphql-engine -- serve --enable-console
+	stack exec graphql-engine -- serve --enable-console --console-assets-dir ../console/static/dist
 
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(VERSION)" \

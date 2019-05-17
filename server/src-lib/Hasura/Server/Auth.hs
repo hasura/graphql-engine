@@ -214,11 +214,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-                  , "Accept-Language", "Accept-Datetime"
-                  , "Cache-Control", "Connection", "DNT"
-                  ]
+      n `notElem` commonClientHeadersIgnored
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
