@@ -9,7 +9,7 @@ Authentication using JWT
 Introduction
 ------------
 
-You can configure GraphQL engine to use JWT authorization mode to authorize all incoming requests to Hasura GraphQL engine server (*details of configuration can be found below*).
+You can configure GraphQL engine to use JWT authorization mode to authorize all incoming requests to Hasura GraphQL engine server.
 
 The idea is - Your auth server will return JWT tokens, which is decoded and
 verified by GraphQL engine to authorize and get metadata about the request
