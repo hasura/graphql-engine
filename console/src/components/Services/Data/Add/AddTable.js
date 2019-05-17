@@ -232,6 +232,7 @@ class AddTable extends Component {
       lastError,
       lastSuccess,
       internalError,
+      schemaList,
     } = this.props;
 
     const cols = columns.map((column, i) => {
@@ -480,6 +481,7 @@ class AddTable extends Component {
               dispatch={dispatch}
               setForeignKeys={setForeignKeys}
               fkToggled={fkToggled}
+              schemaList={schemaList}
             />
             <hr />
             <h4 className={styles.subheading_text}>
@@ -549,6 +551,7 @@ const mapStateToProps = state => ({
   ...state.addTable.table,
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
+  schemaList: state.tables.schemaList,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

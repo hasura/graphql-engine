@@ -225,6 +225,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
     const {
+      refSchemaName,
       refTableName,
       colMappings,
       onUpdate,
@@ -274,7 +275,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName ||
           generatedConstraintName}" foreign key (${lcols.join(
           ', '
-        )}) references "${schemaName}"."${refTableName}"(${rcols.join(
+        )}) references "${refSchemaName}"."${refTableName}"(${rcols.join(
           ', '
         )}) on update ${onUpdate} on delete ${onDelete};`,
       },
@@ -298,8 +299,10 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           )
             .map(lc => `"${lc}"`)
             .join(', ')}) references "${
-            oldConstraint.ref_table
-          }"(${Object.values(oldConstraint.column_mapping)
+            oldConstraint.ref_table_table_schema
+          }"."${oldConstraint.ref_table}"(${Object.values(
+            oldConstraint.column_mapping
+          )
             .map(rc => `"${rc}"`)
             .join(', ')}) on update ${
             pgConfTypes[oldConstraint.on_update]
@@ -382,8 +385,10 @@ const removeForeignKey = (index, tableSchema) => {
           )
             .map(lc => `"${lc}"`)
             .join(', ')}) references "${
-            oldConstraint.ref_table
-          }"(${Object.values(oldConstraint.column_mapping)
+            oldConstraint.ref_table_table_schema
+          }"."${oldConstraint.ref_table}"(${Object.values(
+            oldConstraint.column_mapping
+          )
             .map(rc => `"${rc}"`)
             .join(', ')}) on update ${
             pgConfTypes[oldConstraint.on_update]

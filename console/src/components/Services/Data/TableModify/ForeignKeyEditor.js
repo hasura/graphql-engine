@@ -11,13 +11,14 @@ import {
 } from '../Common/ReusableComponents/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
+import { loadSchema } from '../DataActions';
 
 const ForeignKeyEditor = ({
   tableSchema,
   allSchemas,
-  currentSchema,
   dispatch,
   fkModify,
+  schemaList,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -32,7 +33,12 @@ const ForeignKeyEditor = ({
     tableSchema,
     orderedColumns
   );
+  const schemasToBeFetched = {};
+  existingForeignKeys.forEach(efk => {
+    schemasToBeFetched[efk.refSchemaName] = true;
+  });
   existingForeignKeys.push({
+    refSchemaName: '',
     refTableName: '',
     onUpdate: 'restrict',
     onDelete: 'restrict',
@@ -40,21 +46,25 @@ const ForeignKeyEditor = ({
   });
   useEffect(() => {
     dispatch(setForeignKeys(existingForeignKeys));
+    dispatch(loadSchema({ schemas: Object.keys(schemasToBeFetched) }));
   }, []);
 
-  // Generate a list of reference tables and their columns
-  const refTables = {};
-  allSchemas.forEach(ts => {
-    if (ts.table_schema === currentSchema) {
-      refTables[ts.table_name] = ts.columns.map(c => c.column_name);
-    }
-  });
   const numFks = fkModify.length;
 
   // Map the foreign keys in the fkModify state and render
   return fkModify.map((fk, i) => {
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
+
+    // Generate a list of reference schemas and their columns
+    const refTables = {};
+    allSchemas.forEach(ts => {
+      if (ts.table_schema === fk.refSchemaName) {
+        refTables[ts.table_name] = ts.columns.map(c => c.column_name);
+      }
+    });
+
+    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
 
     const getFkConfigLabel = config => {
       let fkConfigLabel;
@@ -65,7 +75,6 @@ const ForeignKeyEditor = ({
           </span>
         );
       }
-
       return fkConfigLabel;
     };
 
@@ -82,6 +91,7 @@ const ForeignKeyEditor = ({
     // The content when the editor is expanded
     const expandedContent = () => (
       <ForeignKeySelector
+        schemaList={orderedSchemaList}
         refTables={refTables}
         foreignKey={fk}
         index={i}

@@ -37,6 +37,7 @@ class ModifyTable extends React.Component {
       pkModify,
       fkModify,
       uniqueKeyModify,
+      schemaList,
     } = this.props;
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
@@ -130,6 +131,7 @@ class ModifyTable extends React.Component {
               tableSchema={tableSchema}
               currentSchema={currentSchema}
               allSchemas={allSchemas}
+              schemaList={schemaList}
               dispatch={dispatch}
               fkModify={fkModify}
             />
@@ -183,6 +185,7 @@ const mapStateToProps = (state, ownProps) => ({
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 
