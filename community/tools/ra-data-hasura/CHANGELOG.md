@@ -1,3 +1,8 @@
+## 0.0.5 (May 16, 2019)
+
+- Feature: Support specifying primary keys other than id for tables using a config object 
+Example:  `const config = { 'primaryKey': {'author': 'name'} }`
+
 ## 0.0.4 (April 25, 2019)
 
 - Feature: Support multiple schemas using "." separator. 
