@@ -9,9 +9,7 @@ Authentication using JWT
 Introduction
 ------------
 
-You can configure JWT authorization mode (see :doc:`GraphQL server options
-<../../deployment/graphql-engine-flags/reference>`) to authorize all incoming
-requests to Hasura GraphQL engine server.
+You can configure GraphQL engine to use JWT authorization mode to authorize all incoming requests to Hasura GraphQL engine server (*details of configuration can be found below*).
 
 The idea is - Your auth server will return JWT tokens, which is decoded and
 verified by GraphQL engine to authorize and get metadata about the request
@@ -20,16 +18,19 @@ verified by GraphQL engine to authorize and get metadata about the request
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
 
+
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
 If current role is not specified in the request, then the default role is picked.
 If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 is used for the permissions system.
 
-You need to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT to
-take effect.
+.. admonition:: Prerequisite
+   
+   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
 
-On a secured endpoint:
+
+In JWT mode, on a secured endpoint:
 
 - JWT authentication is **enforced** when ``X-Hasura-Admin-Secret`` header is **not found** in the request.
 - JWT authentication is **skipped** when ``X-Hasura-Admin-Secret`` header **is found** in the request and

@@ -14,15 +14,15 @@ when GraphQL engine receives a request:
 As you can see from this:
 
 - **Authentication** is handled outside Hasura. Hasura delegates authentication and resolution of request
-  headers into session variables to your authentication service *(existing or new)*
+  headers into session variables to your authentication service *(existing or new)*.
 
   Your authentication service is required to pass a user's **role** information in the form of session
   variables like ``X-Hasura-Role``, etc. More often than not, you'll also need to pass user information
-  for your use-cases, like ``X-Hasura-User-Id``.
+  for your access-control use-cases, like ``X-Hasura-User-Id``, to build permission rules.
 
 - For **Authorization** or **Access Control**, Hasura helps you define granular role-based access control
-  rules for every field in your GraphQL schema (granular enough to control access to any row or
-  column in your database).
+  rules for every field in your GraphQL schema *(granular enough to control access to any row or
+  column in your database)*.
 
   Hasura uses the role/user information in the session variables and the actual query itself to validate
   the query against the rules defined by you. If the query/operation is allowed, it generates a SQL
