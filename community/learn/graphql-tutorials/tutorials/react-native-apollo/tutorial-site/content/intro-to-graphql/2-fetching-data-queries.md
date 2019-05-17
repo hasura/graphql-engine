@@ -101,7 +101,7 @@ and their profile information (which is just their name for now):
 
 ## Adding parameters (arguments) to GraphQL queries
 
-In most API calls, you usually use paramters. For example, to specify what data you're fetching.
+In most API calls, you usually use parameters. For example, to specify what data you're fetching.
 If you're familiar with making `GET` calls, you would have used a query parameter. For example,
 to fetch only 10 todos you might have made this API calls: `GET /api/todos?limit=10`.
 

@@ -49,6 +49,14 @@ userIdHeader = "x-hasura-user-id"
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
 txtToBs :: T.Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
