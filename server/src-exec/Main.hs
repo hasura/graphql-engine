@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications       #-}
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -77,6 +77,7 @@ parseHGECommand =
                 <*> parseUnAuthRole
                 <*> parseCorsConfig
                 <*> parseEnableConsole
+                <*> parseConsoleAssetsDir
                 <*> parseEnableTelemetry
                 <*> parseWsReadCookie
                 <*> parseStringifyNum
@@ -84,6 +85,7 @@ parseHGECommand =
                 <*> parseMxRefetchInt
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
+                <*> parseEnableAllowlist
 
 
 parseArgs :: IO HGEOptions
@@ -121,8 +123,8 @@ main =  do
       pgLogger = mkPGLogger logger
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
-                mJwtSecret mUnAuthRole corsCfg enableConsole
-                enableTelemetry strfyNum enabledAPIs lqOpts) -> do
+                mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
+                enableTelemetry strfyNum enabledAPIs lqOpts enableAL) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
 
       initTime <- Clock.getCurrentTime
@@ -145,8 +147,9 @@ main =  do
       initRes <- initialise pool sqlGenCtx logger httpManager
 
       (app, cacheRef, cacheInitTime) <-
-        mkWaiApp isoL loggerCtx sqlGenCtx pool ci httpManager am
-          corsCfg enableConsole enableTelemetry instanceId enabledAPIs lqOpts
+        mkWaiApp isoL loggerCtx sqlGenCtx enableAL pool ci httpManager am
+          corsCfg enableConsole consoleAssetsDir enableTelemetry
+          instanceId enabledAPIs lqOpts
 
       -- log inconsistent schema objects
       inconsObjs <- scInconsistentObjs <$> getSCFromRef cacheRef

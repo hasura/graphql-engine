@@ -44,7 +44,7 @@ class Common extends React.Component {
 
     const graphqlurl = (
       <Tooltip id="tooltip-cascade">
-        Remote GraphQL server’s URL. E.g. https://my-domain/v1alpha1/graphql
+        Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
       </Tooltip>
     );
 

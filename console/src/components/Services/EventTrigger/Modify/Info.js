@@ -1,5 +1,5 @@
 import React from 'react';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 const Info = ({ triggerName, tableName, schemaName, styles }) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>

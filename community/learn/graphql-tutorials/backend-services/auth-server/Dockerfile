@@ -6,12 +6,12 @@ RUN chown node:node /opt/app
 
 WORKDIR /opt/app
 
-COPY --chown=node:node package.json .
+COPY package.json .
 
 USER node
 
 RUN npm install
 
-COPY --chown=node:node . .
+COPY . .
 
 CMD npm start
