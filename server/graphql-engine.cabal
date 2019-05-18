@@ -189,7 +189,6 @@ library
                      , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.QueryTemplate
                      , Hasura.RQL.DDL.Schema.Table
-                     , Hasura.RQL.DDL.Schema.PGType
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Diff

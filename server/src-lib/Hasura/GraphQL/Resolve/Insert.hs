@@ -109,9 +109,6 @@ traverseInsObj rim (gName, annVal) defVal@(AnnInsObj cols objRels arrRels) =
           colVal = fromMaybe (PGColValue (pgColTyOid colty) PGNull) mColVal
       return (AnnInsObj ((col, colty, colVal):cols) objRels arrRels)
 
-    -- AGArray (G.ListType gty) mVals -> do
-    --   undefined
-
     _ -> do
       objM <- asObjectM annVal
       -- if relational insert input is 'null' then ignore

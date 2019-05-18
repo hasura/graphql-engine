@@ -93,5 +93,6 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![CatalogFKey]
   , _cmAllowlistCollections :: ![CollectionDef]
+  , _cmPgTypeInfos          :: ![PGTyInfo]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

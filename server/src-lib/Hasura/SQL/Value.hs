@@ -378,17 +378,6 @@ pgValFromJVal = iresToEither . ifromJSON
 pattern PGGeogVal :: GeometryWithCRS -> PGBaseColValue
 pattern PGGeogVal x = PGValKnown (PGValGeo x)
 
-
--- txtEncWithGeoVal :: PGColValue -> S.SQLExp
--- txtEncWithGeoVal = fromEncPGVal . txtEncodePGValG undefined
---   where
---     txtEncGeoJson v = bool id applyGeomFromGeoJson (isGeoTy v) $
---                       fromEncPGVal $ txtEncodePGVal' v
-
---     isGeoTy v = case v of
---       (PGGeogVal _) -> True
---       _             -> False
-
 applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
 applyGeomFromGeoJson v = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 

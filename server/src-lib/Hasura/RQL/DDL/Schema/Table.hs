@@ -14,7 +14,6 @@ import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.PGType
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
@@ -365,17 +364,17 @@ buildSchemaCacheG withSetup = do
   -- clean hdb_views
   when withSetup $ liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
   -- reset the current schemacache
-  tyMaps <- liftTx getPGTyInfoMap
   writeSchemaCache emptySchemaCache
   hMgr <- askHttpManager
   sqlGenCtx <- askSQLGenCtx
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs tyInfos
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
+      tyMaps = mkPGTyMaps tyInfos
 
   -- tables
   tables' <- forM tables $ traverse (resolveColType tyMaps)

@@ -19,13 +19,11 @@ module Hasura.GraphQL.Resolve.InputValue
 import           Hasura.Prelude
 
 import qualified Data.Text                      as T
-import qualified Data.Vector                    as V
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 withNotNull
@@ -149,39 +147,3 @@ asPGColTextM
 asPGColTextM val = do
   pgColValM <- fmap _apvValue <$> asPGColValM val
   mapM onlyText pgColValM
-
--- resolveToPGColVal
---   :: (MonadError QErr m)
---   => AnnInpVal -> m (PGColType, PGColValue)
--- resolveToPGColVal annInpVal =
---   case _aivValue annInpVal of
---     AGPGVal colTy Nothing -> return (colTy, nullVal colTy)
---     AGPGVal colTy (Just val)  -> return (colTy, val)
---     AGEnum _ _            -> throw500 "Enum is not supported for ColVal"
---     AGObject _ _          -> throw500 "Object is not supported for ColVal"
---     AGArray (G.ListType lt) Nothing -> do
---       let colTy = asScalarColType $ getBaseTy lt
---       return (colTy, nullVal colTy)
---     AGArray (G.ListType lt) (Just vals) -> do
---       undefined
---   where
---     nullVal ty = PGColValue (pgColTyOid ty) PGNull
-
--- resolveArrayInput
---   :: MonadError QErr m
---   => G.GType -> [AnnInpVal] -> m PGColValue
--- resolveArrayInput gTy inpVals = do
---   case gTy of
---     G.TypeNamed _ nt -> do
---       vals <- mapM asPGVal inpVals
---       let elemOid = pgColTyOid $ asScalarColType nt
---           valVect = V.fromList vals
---       return $ PGColValue undefined $ PGValArray elemOid valVect
---     G.TypeList _ (G.ListType lt) -> do
---       undefined
---   where
---     asPGVal v = case _aivValue v of
---       AGPGVal _ (Just val) -> return val
---       AGPGVal colTy Nothing -> throw500 $ "unexpected null for ty "
---                            <> T.pack (show colTy)
---       _ -> tyMismatch "pgvalue" v

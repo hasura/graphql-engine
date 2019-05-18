@@ -8,7 +8,8 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
-    'allowlist_collections', allowlist.item
+    'allowlist_collections', allowlist.item,
+    'pg_type_infos', types.items
   )
 from
   (
@@ -197,4 +198,7 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-  ) as allowlist
+  ) as allowlist,
+  (
+    select json_agg(row_to_json(q)) as items from hdb_catalog.hdb_type_info q
+  ) as types

@@ -3,7 +3,6 @@ module Hasura.RQL.DDL.Schema.Function where
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.PGType
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -119,7 +118,7 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
+trackFunctionP2Setup :: (QErrM m, CacheRWM m)
                      => PGTyInfoMaps -> QualifiedFunction -> RawFuncInfo -> m ()
 trackFunctionP2Setup tyMaps qf rawfi = do
   fi <- mkFunctionInfo tyMaps qf rawfi
@@ -151,7 +150,6 @@ trackFunctionP2 qf = do
       "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
   tyMaps <- liftTx getPGTyInfoMap
   trackFunctionP2Setup tyMaps qf rawfi
--- >>>>>>> master
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
   where
@@ -163,6 +161,13 @@ trackFunctionP2 qf = do
              WHERE function_schema = $1
                AND function_name = $2
            |] (sn, fn) True
+
+getPGTyInfoMap :: Q.TxE QErr PGTyInfoMaps
+getPGTyInfoMap = do
+  mkPGTyMaps . map (Q.getAltJ . runIdentity) <$>
+    Q.listQE defaultTxErrorHandler [Q.sql|
+      SELECT row_to_json(q) FROM hdb_catalog.hdb_type_info q
+    |] () True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
