@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms #-}
 module Hasura.SQL.Types where
 
@@ -9,9 +8,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Aeson.Casing
 import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.TH
 import           Data.String                (fromString)
 import           Instances.TH.Lift          ()
 import qualified Language.Haskell.TH.Syntax as TH
@@ -173,6 +172,9 @@ publicSchema = SchemaName "public"
 
 catalogSchema :: SchemaName
 catalogSchema = SchemaName "pg_catalog"
+
+hdbViewsSchema :: SchemaName
+hdbViewsSchema = SchemaName "hdb_views"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
@@ -417,13 +419,13 @@ getArrayBaseTy :: PGColType -> Maybe PGColType
 getArrayBaseTy x = case pgColTyDetails (getUdt x) of
   PGTyArray b -> case pgColTyDetails b of
     PGTyArray{} -> getArrayBaseTy b
-    _ -> Just b
+    _           -> Just b
   _ -> Nothing
 
 getPGTyArrDim :: PGColType -> Int
 getPGTyArrDim colTy = case pgColTyDetails (getUdt colTy) of
-  PGTyArray bTy  -> 1 + getPGTyArrDim bTy
-  _              -> 0
+  PGTyArray bTy -> 1 + getPGTyArrDim bTy
+  _             -> 0
 
 data PGColType
   = PGColType
@@ -520,8 +522,14 @@ isArrType colTy = case pgColTyDetails (getUdt colTy) of
 pattern PGGeomTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
 pattern PGGeomTy a b c = PGColType a b c (PGTyBase PGGeometry)
 
+pattern PGGeogTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
+pattern PGGeogTy a b c = PGColType a b c (PGTyBase PGGeography)
+
 pattern PGJSONTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
 pattern PGJSONTy a b c = PGColType a b c (PGTyBase PGJSON)
+
+pattern PGJSONBTy :: QualifiedType -> AnnType -> PQ.Oid -> PGColType
+pattern PGJSONBTy a b c = PGColType a b c (PGTyBase PGJSONB)
 
 --any numeric, string, date/time, network, or enum type, or arrays of these types
 isComparableType :: PGColType -> Bool
@@ -568,4 +576,10 @@ isBigNum' = \case
   PGBigSerial -> True
   PGNumeric   -> True
   PGDouble    -> True
+  _           -> False
+
+isGeoType :: PGBaseColType -> Bool
+isGeoType = \case
+  PGGeometry  -> True
+  PGGeography -> True
   _           -> False

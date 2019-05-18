@@ -1,16 +1,28 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
+  , showVars
+  , RootSelSet(..)
   , getTypedOp
-  , GraphQLRequest
   , QueryParts (..)
   , getQueryParts
+  , getAnnVarVals
+
+  , isQueryInAllowlist
+
+  , VarPGTypes
+  , AnnPGVarVals
+  , getAnnPGVarVals
+  , Field(..)
+  , SelSet
   ) where
 
+import           Data.Aeson.Internal                    (JSONPathElement (..))
 import           Data.Has
 import           Hasura.Prelude
-import           Data.Aeson.Internal                    (JSONPathElement(..))
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as HS
+import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
@@ -19,7 +31,11 @@ import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.QueryCollection
 
+import           Hasura.SQL.Types                       (PGColType)
+import           Hasura.SQL.Value                       (PGColValue,
+                                                         parsePGValue)
 
 data QueryParts
   = QueryParts
@@ -56,20 +72,21 @@ getTypedOp opNameM selSets opDefs =
 
 -- For all the variables defined there will be a value in the final map
 -- If no default, not in variables and nullable, then null value
-getVarVals
+getAnnVarVals
   :: ( MonadReader r m, Has TypeMap r
      , MonadError QErr m
      )
   => [G.VariableDefinition]
   -> VariableValues
-  -> m VarValsMap
-getVarVals varDefsL inpVals = do
+  -> m AnnVarVals
+getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
 
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
     throwVE $ "the following variables are defined more than once: " <>
     showVars dups
 
-  let unexpectedVars = filter (not . (`Map.member` varDefs)) $ Map.keys inpVals
+  let unexpectedVars =
+        filter (not . (`Map.member` varDefs)) $ Map.keys inpVals
 
   unless (null unexpectedVars) $
     throwVE $ "unexpected variables in variableValues: " <>
@@ -82,17 +99,50 @@ getVarVals varDefsL inpVals = do
     when (isObjTy baseTyInfo) $ throwVE $ objTyErrMsg baseTy
 
     let defM' = bool defM (defM <|> Just G.VCNull) $ G.isNotNull ty
-    let inpValM = Map.lookup var inpVals
-    when (isNothing inpValM && isNothing defM' && G.isNotNull ty) $ throwVE $ "expecting a value for non-null type: " <> G.showGT ty <> " in variableValues"
-    return (ty,defM',inpValM)
+        inpValM = Map.lookup var inpVals
+
+    when (isNothing defM' && isNothing inpValM) $ throwVE $
+      "expecting a value for non-nullable variable: " <>
+      showVars [var] <>
+      " of type: " <> G.showGT ty <>
+      " in variableValues"
+    return $ AnnVarVal ty defM' inpValM
   where
     objTyErrMsg namedTy =
       "variables can only be defined on input types"
       <> "(enums, scalars, input objects), but "
       <> showNamedTy namedTy <> " is an object type"
 
-    showVars :: (Functor f, Foldable f) => f G.Variable -> Text
-    showVars = showNames . fmap G.unVariable
+showVars :: (Functor f, Foldable f) => f G.Variable -> Text
+showVars = showNames . fmap G.unVariable
+
+type VarPGTypes = Map.HashMap G.Variable PGColType
+type AnnPGVarVals = Map.HashMap G.Variable (PGColType, PGColValue)
+
+-- this is in similar spirit to getAnnVarVals, however
+-- here it is much simpler and can get rid of typemap requirement
+-- combine the two if possible
+getAnnPGVarVals
+  :: (MonadError QErr m)
+  => VarPGTypes
+  -> Maybe VariableValues
+  -> m AnnPGVarVals
+getAnnPGVarVals varTypes varValsM =
+  flip Map.traverseWithKey varTypes $ \varName varType -> do
+    let unexpectedVars = filter
+          (not . (`Map.member` varTypes)) $ Map.keys varVals
+    unless (null unexpectedVars) $
+      throwVE $ "unexpected variables in variableValues: " <>
+      showVars unexpectedVars
+    varVal <- onNothing (Map.lookup varName varVals) $
+      throwVE $ "expecting a value for non-nullable variable: " <>
+      showVars [varName] <>
+      -- TODO: we don't have the graphql type
+      -- " of type: " <> T.pack (show varType) <>
+      " in variableValues"
+    (varType,) <$> runAesonParser (parsePGValue varType) varVal
+  where
+    varVals = fromMaybe Map.empty varValsM
 
 validateFrag
   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
@@ -105,28 +155,24 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
     "fragments can only be defined on object types"
   return $ FragDef n objTyInfo selSet
 
+data RootSelSet
+  = RQuery !SelSet
+  | RMutation !SelSet
+  | RSubscription !Field
+  deriving (Show, Eq)
+
 -- {-# SCC validateGQ #-}
 validateGQ
   :: (MonadError QErr m, MonadReader GCtx m)
   -- => GraphQLRequest
   => QueryParts
-  -> m (G.OperationType, SelSet)
+  -> m RootSelSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
 
-  -- get the operation that needs to be evaluated
-  --opDef <- getTypedOp opNameM selSets opDefs
-
   ctx <- ask
-  -- -- get the operation root
-  -- opRoot <- case G._todType opDef of
-  --   G.OperationTypeQuery        -> return $ _gQueryRoot ctx
-  --   G.OperationTypeMutation     ->
-  --     onNothing (_gMutRoot ctx) $ throwVE "no mutations exist"
-  --   G.OperationTypeSubscription ->
-  --     onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
 
   -- annotate the variables of this operation
-  varVals <- getVarVals (G._todVariableDefinitions opDef) $
+  varVals <- getAnnVarVals (G._todVariableDefinitions opDef) $
                 fromMaybe Map.empty varValsM
 
   -- annotate the fragments
@@ -141,10 +187,16 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   selSet <- flip runReaderT valCtx $ pathFromRoot $ denormSelSet [] opRoot $
             G._todSelectionSet opDef
 
-  when (G._todType opDef == G.OperationTypeSubscription && length selSet > 1) $
-    throwVE "subscription must select only one top level field"
-
-  return (G._todType opDef, selSet)
+  case G._todType opDef of
+    G.OperationTypeQuery -> return $ RQuery selSet
+    G.OperationTypeMutation -> return $ RMutation selSet
+    G.OperationTypeSubscription ->
+      case Seq.viewl selSet of
+        Seq.EmptyL     -> throw500 "empty selset for subscription"
+        fld Seq.:< rst -> do
+          unless (null rst) $
+            throwVE "subscription must select only one top level field"
+          return $ RSubscription fld
 
 pathFromRoot :: (MonadError QErr m) => m a -> m a
 pathFromRoot f = f `catchError` (throwError . fromRoot)
@@ -152,11 +204,17 @@ pathFromRoot f = f `catchError` (throwError . fromRoot)
     fromRoot q = q { qePath = frp $ qePath q}
       where frp = reverse . takeWhile (/= Key "$") . reverse
 
+isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
+isQueryInAllowlist q = HS.member gqlQuery
+  where
+    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
+               unGQLExecDoc q
+
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)
-  => GraphQLRequest
+  => GQLReqParsed
   -> m QueryParts
-getQueryParts (GraphQLRequest opNameM q varValsM) = do
+getQueryParts (GQLReq opNameM q varValsM) = do
   -- get the operation that needs to be evaluated
   opDef <- getTypedOp opNameM selSets opDefs
   ctx <- ask
@@ -170,4 +228,4 @@ getQueryParts (GraphQLRequest opNameM q varValsM) = do
       onNothing (_gSubRoot ctx) $ throwVE "no subscriptions exist"
   return $ QueryParts opDef opRoot fragDefsL varValsM
   where
-    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGraphQLQuery q
+    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q

@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -33,7 +36,7 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultSetState = {
+const defaultPresetsState = {
   insert: {
     key: '',
     value: '',
@@ -49,12 +52,11 @@ const defaultQueryPermissions = {
     allow_upsert: true,
     set: {},
     columns: [],
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.insert,
+        ...defaultPresetsState.insert,
       },
     ],
-    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -66,12 +68,11 @@ const defaultQueryPermissions = {
     columns: [],
     filter: {},
     set: {},
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.update,
+        ...defaultPresetsState.update,
       },
     ],
-    isSetConfigChecked: false,
   },
   delete: {
     filter: {},
@@ -89,13 +90,18 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
-  fkAdd: {
-    refTable: '',
-    pairs: [],
-    lcol: '',
-    rcol: '',
-    fkCheckBox: false,
-  },
+  columnEdit: {},
+  pkEdit: [''],
+  pkModify: [''],
+  fkModify: [
+    {
+      refTableName: '',
+      colMappings: [{ '': '' }],
+      onDelete: 'restrict',
+      onUpdate: 'restrict',
+    },
+  ],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',
@@ -149,7 +155,7 @@ const defaultState = {
   untrackedSchemas: [],
   information_schema: [],
   tableComment: null,
-  columnComment: null,
+  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
@@ -166,5 +172,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultSetState,
+  defaultPresetsState,
 };

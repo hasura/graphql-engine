@@ -10,7 +10,8 @@ import {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
 } from '../Services/Data/DataActions';
-import { changeRequestHeader } from '../ApiExplorer/Actions';
+import semverCheck, { componentsSemver } from '../../helpers/semver';
+import { changeRequestHeader } from '../Services/ApiExplorer/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -29,6 +30,26 @@ const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
 const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
+
+const SET_SEMVER = 'Main/SET_SEMVER';
+const setSemverBulk = data => ({
+  type: SET_SEMVER,
+  data,
+});
+
+const semverInit = () => {
+  return (dispatch, getState) => {
+    const { serverVersion } = getState().main;
+    if (!serverVersion) {
+      return;
+    }
+    const semverObj = {};
+    Object.keys(componentsSemver).forEach(feature => {
+      semverObj[feature] = semverCheck(feature, serverVersion);
+    });
+    return dispatch(setSemverBulk(semverObj));
+  };
+};
 
 const loadMigrationStatus = () => dispatch => {
   const url = Endpoints.hasuractlMigrateSettings;
@@ -237,7 +258,6 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         serverVersion: null,
       };
-
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
         ...state,
@@ -285,7 +305,11 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
-
+    case SET_SEMVER:
+      return {
+        ...state,
+        semver: { ...action.data },
+      };
     default:
       return state;
   }
@@ -305,4 +329,5 @@ export {
   validateLogin,
   loadServerVersion,
   checkServerUpdates,
+  semverInit,
 };

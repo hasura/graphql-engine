@@ -6,18 +6,38 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString.Builder as BB
 import qualified Data.Text               as T
-import qualified Data.Vector             as V
 import qualified Hasura.SQL.DML          as S
 
-data MutFld
+data MutFldG v
   = MCount
   | MExp !T.Text
-  | MRet ![(FieldName, AnnFld)]
+  | MRet ![(FieldName, AnnFldG v)]
   deriving (Show, Eq)
 
-type MutFlds = [(T.Text, MutFld)]
+traverseMutFld
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldG a
+  -> f (MutFldG b)
+traverseMutFld f = \case
+  MCount    -> pure MCount
+  MExp t    -> pure $ MExp t
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
+
+type MutFld = MutFldG S.SQLExp
+
+type MutFldsG v = [(T.Text, MutFldG v)]
+
+traverseMutFlds
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutFldsG a
+  -> f (MutFldsG b)
+traverseMutFlds f =
+  traverse (traverse (traverseMutFld f))
+
+type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutFlds -> Bool
 hasNestedFld = any isNestedMutFld
@@ -36,8 +56,8 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (PGColInfo col colTy _) -> Just (col, colTy)
-    _                            -> Nothing
+    FCol (PGColInfoG col colTy _) _ -> Just (col, colTy)
+    _                               -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -45,7 +65,7 @@ pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 pgColsToSelFlds :: [PGColInfo] -> [(FieldName, AnnFld)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo)
+  \pgColInfo -> (fromPGCol $ pgiName pgColInfo, FCol pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColInfo] -> MutFlds
 mkDefaultMutFlds = \case
@@ -88,13 +108,6 @@ mkSelWith qt cte mutFlds singleObj strfyNum =
     jsonBuildObjArgs =
       flip concatMap mutFlds $
       \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj strfyNum mutFld]
-
-encodeJSONVector :: (a -> BB.Builder) -> V.Vector a -> BB.Builder
-encodeJSONVector builder xs
-  | V.null xs = BB.char7 '[' <> BB.char7 ']'
-  | otherwise = BB.char7 '[' <> builder (V.unsafeHead xs) <>
-                V.foldr go (BB.char7 ']') (V.unsafeTail xs)
-    where go v b  = BB.char7 ',' <> builder v <> b
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

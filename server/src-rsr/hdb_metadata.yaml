@@ -207,7 +207,7 @@ args:
           schema: hdb_catalog
           name: event_triggers
         column_mapping:
-          trigger_id : id
+          trigger_name : name
 
 - type: create_array_relationship
   args:
@@ -221,7 +221,7 @@ args:
           schema: hdb_catalog
           name: event_log
         column_mapping:
-          id : trigger_id
+          name : trigger_name
 
 - type: create_object_relationship
   args:
@@ -279,3 +279,13 @@ args:
         column_mapping:
           return_type_schema: table_schema
           return_type_name: table_name
+
+- type: track_table
+  args:
+    name: hdb_query_collection
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_allowlist
+    schema: hdb_catalog

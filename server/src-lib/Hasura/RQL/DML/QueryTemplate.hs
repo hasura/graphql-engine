@@ -3,10 +3,10 @@ module Hasura.RQL.DML.QueryTemplate
   , runExecQueryTemplate
   ) where
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning     (encodeJSONVector)
 import           Hasura.RQL.GBoolExp          (txtRHSBuilder)
 import           Hasura.RQL.Instances         ()
 import           Hasura.RQL.Types
@@ -26,10 +26,8 @@ import           Data.Aeson.Types
 import           Instances.TH.Lift            ()
 import           Language.Haskell.TH.Syntax   (Lift)
 
-import qualified Data.ByteString.Builder      as BB
 import qualified Data.HashMap.Strict          as M
 import qualified Data.Sequence                as DS
-import qualified Data.Vector                  as V
 
 type TemplateArgs = M.HashMap TemplateParam Value
 
@@ -53,9 +51,9 @@ getParamValue params (TemplateParamConf paramName paramVal) =
 
 data QueryTProc
   = QTPInsert !(R.InsertQueryP1, DS.Seq Q.PrepArg)
-  | QTPSelect !(R.AnnSel, DS.Seq Q.PrepArg)
-  | QTPUpdate !(R.UpdateQueryP1, DS.Seq Q.PrepArg)
-  | QTPDelete !(R.DeleteQueryP1, DS.Seq Q.PrepArg)
+  | QTPSelect !(R.AnnSimpleSel, DS.Seq Q.PrepArg)
+  | QTPUpdate !(R.AnnUpd, DS.Seq Q.PrepArg)
+  | QTPDelete !(R.AnnDel, DS.Seq Q.PrepArg)
   | QTPCount !(RC.CountQueryP1, DS.Seq Q.PrepArg)
   | QTPBulk ![QueryTProc]
   deriving (Show, Eq)
@@ -97,13 +95,21 @@ convQT
   -> QueryT
   -> m QueryTProc
 convQT args qt = case qt of
-  QTInsert q -> fmap QTPInsert $ liftDMLP1 $
-                R.convInsertQuery decodeParam binRHSBuilder q
-  QTSelect q -> fmap QTPSelect $ liftDMLP1 $
-                mkSelQWithArgs q args >>= R.convSelectQuery f
-  QTUpdate q -> fmap QTPUpdate $ liftDMLP1 $ R.validateUpdateQueryWith f q
-  QTDelete q -> fmap QTPDelete $ liftDMLP1 $ R.validateDeleteQWith f q
-  QTCount q  -> fmap QTPCount $ liftDMLP1 $ RC.validateCountQWith f q
+  QTInsert q ->
+    fmap QTPInsert $ liftDMLP1 $
+    R.convInsertQuery decodeParam sessVarFromCurrentSetting binRHSBuilder q
+  QTSelect q ->
+    fmap QTPSelect $ liftDMLP1 $ mkSelQWithArgs q args
+    >>= R.convSelectQuery sessVarFromCurrentSetting f
+  QTUpdate q ->
+    fmap QTPUpdate $ liftDMLP1 $
+    R.validateUpdateQueryWith sessVarFromCurrentSetting f q
+  QTDelete q ->
+    fmap QTPDelete $ liftDMLP1 $
+    R.validateDeleteQWith sessVarFromCurrentSetting f q
+  QTCount q  ->
+    fmap QTPCount $ liftDMLP1 $
+    RC.validateCountQWith sessVarFromCurrentSetting f q
   QTBulk q   -> fmap QTPBulk $ mapM (convQT args) q
   where
     decodeParam val = do
@@ -122,7 +128,7 @@ execQueryTemplateP1 (ExecQueryTemplate qtn args) = do
 
 execQueryTP2
   :: (QErrM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
-  => QueryTProc -> m RespBody
+  => QueryTProc -> m EncJSON
 execQueryTP2 qtProc = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   case qtProc of
@@ -131,15 +137,12 @@ execQueryTP2 qtProc = do
     QTPUpdate qp -> liftTx $ R.updateQueryToTx strfyNum qp
     QTPDelete qp -> liftTx $ R.deleteQueryToTx strfyNum qp
     QTPCount qp  -> RC.countQToTx qp
-    QTPBulk qps  -> do
-      respList <- mapM execQueryTP2 qps
-      let bsVector = V.fromList respList
-      return $ BB.toLazyByteString $ encodeJSONVector BB.lazyByteString bsVector
+    QTPBulk qps  -> encJFromList <$> mapM execQueryTP2 qps
 
 runExecQueryTemplate
   :: ( QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m
      )
-  => ExecQueryTemplate -> m RespBody
+  => ExecQueryTemplate -> m EncJSON
 runExecQueryTemplate q =
   execQueryTemplateP1 q >>= execQueryTP2

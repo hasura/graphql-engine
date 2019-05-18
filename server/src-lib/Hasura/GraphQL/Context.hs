@@ -16,7 +16,6 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 
-
 type OpCtxMap = Map.HashMap G.Name OpCtx
 
 data InsOpCtx
@@ -29,7 +28,7 @@ data SelOpCtx
   = SelOpCtx
   { _socTable   :: !QualifiedTable
   , _socHeaders :: ![T.Text]
-  , _socFilter  :: !AnnBoolExpSQL
+  , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
 
@@ -37,7 +36,7 @@ data SelPkOpCtx
   = SelPkOpCtx
   { _spocTable   :: !QualifiedTable
   , _spocHeaders :: ![T.Text]
-  , _spocFilter  :: !AnnBoolExpSQL
+  , _spocFilter  :: !AnnBoolExpPartialSQL
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
@@ -45,7 +44,7 @@ data FuncQOpCtx
   = FuncQOpCtx
   { _fqocTable    :: !QualifiedTable
   , _fqocHeaders  :: ![T.Text]
-  , _fqocFilter   :: !AnnBoolExpSQL
+  , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
   , _fqocFunction :: !QualifiedFunction
   , _fqocArgs     :: !FuncArgSeq
@@ -55,17 +54,17 @@ data UpdOpCtx
   = UpdOpCtx
   { _uocTable      :: !QualifiedTable
   , _uocHeaders    :: ![T.Text]
-  , _uocFilter     :: !AnnBoolExpSQL
-  , _uocPresetCols :: !PreSetCols
-  , _uocUniqCols   :: !(Maybe [PGColInfo])
+  , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocPresetCols :: !PreSetColsPartial
+  , _uocAllCols    :: ![PGColInfo]
   } deriving (Show, Eq)
 
 data DelOpCtx
   = DelOpCtx
-  { _docTable    :: !QualifiedTable
-  , _docHeaders  :: ![T.Text]
-  , _docFilter   :: !AnnBoolExpSQL
-  , _docUniqCols :: !(Maybe [PGColInfo])
+  { _docTable   :: !QualifiedTable
+  , _docHeaders :: ![T.Text]
+  , _docFilter  :: !AnnBoolExpPartialSQL
+  , _docAllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
 data OpCtx
@@ -170,7 +169,8 @@ mkHsraEnumTyInfo descM ty enumVals =
   EnumTyInfo descM ty enumVals HasuraType
 
 mkHsraScalarTyInfo :: PGColType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing (G.Name $ pgColTyToScalar ty) HasuraType
+mkHsraScalarTyInfo ty =
+  ScalarTyInfo Nothing (G.Name $ pgColTyToScalar ty) (Just ty) HasuraType
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
@@ -196,15 +196,25 @@ mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
   G.NamedType . mkCompExpName
 
+-- TODO(shahidhk) this should ideally be st_d_within_geometry
 {-
 input st_d_within_input {
   distance: Float!
   from: geometry!
 }
 -}
+stDWithinGeometryInpTy :: G.NamedType
+stDWithinGeometryInpTy = G.NamedType "st_d_within_input"
 
-stDWithinInpTy :: G.NamedType
-stDWithinInpTy = G.NamedType "st_d_within_input"
+{-
+input st_d_within_geography_input {
+  distance: Float!
+  from: geography!
+  use_spheroid: Bool!
+}
+-}
+stDWithinGeographyInpTy :: G.NamedType
+stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
 
 
 --- | make compare expression input type
@@ -216,8 +226,13 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
   , bool [] (map (mkPGTy $ baseTy PGText) stringOps) isStringTy
   , bool [] (map (mkPGTy colTy) arrOps) isArrTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
-  , bool [] (stDWithinOpInpVal : map geomOpToInpVal geomOps) isGeometryTy
-  , [mkPGTyInpVal Nothing "_is_null" $ baseTy PGBoolean]
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
+             map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
+  , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
+             map geoOpToInpVal geoOps) isGeographyType
+  , [ InpValInfo Nothing "_is_null" Nothing (Just $ PTCol $ baseTy PGBoolean) $
+       G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"
+    ]
   ]) HasuraType
   where
     arrOfCol = PTArr . PTCol
@@ -280,18 +295,28 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
         )
       ]
 
-    -- Geometry related ops
-    stDWithinOpInpVal =
-      InpValInfo (Just stDWithinDesc) "_st_d_within" Nothing Nothing $ G.toGT stDWithinInpTy
-    stDWithinDesc =
-      "is the column within a distance from a geometry value"
+    stDWithinGeoOpInpVal ty =
+      InpValInfo (Just stDWithinGeoDesc) "_st_d_within" Nothing Nothing $ G.toGT ty
+    stDWithinGeoDesc =
+      "is the column within a distance from a " <> colTyDesc <> " value"
 
-    isGeometryTy = case bTy of
+    -- Geometry related ops
+    isGeometryType = case bTy of
       Just PGGeometry -> True
       _               -> False
 
-    geomOpToInpVal (op, desc) =
-      mkPGTyInpVal (Just desc) op $ baseTy PGGeometry
+    -- Geography related ops
+    isGeographyType = case bTy of
+      Just PGGeography -> True
+      _                -> False
+
+    geoOpToInpVal (op, desc) =
+      InpValInfo (Just desc) op Nothing (Just $ PTCol colTy) $ G.toGT $ mkScalarTy colTy
+
+    colTyDesc = G.Description $ T.pack $ show colTy
+
+    -- operators applicable only to geometry types
+    geomOps :: [(G.Name, G.Description)]
     geomOps =
       [
         ( "_st_contains"
@@ -303,9 +328,6 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       , ( "_st_equals"
         , "is the column equal to given geometry value. Directionality is ignored"
         )
-      , ( "_st_intersects"
-        , "does the column spatially intersect the given geometry value"
-        )
       , ( "_st_overlaps"
         , "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value"
         )
@@ -314,6 +336,14 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
         )
       , ( "_st_within"
         , "is the column contained in the given geometry value"
+        )
+      ]
+
+    -- operators applicable to geometry and geography types
+    geoOps =
+      [
+        ( "_st_intersects"
+        , "does the column spatially intersect the given " <> colTyDesc <> " value"
         )
       ]
 
@@ -366,7 +396,8 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
-                            , TIInpObj <$> stDWithinInpM
+                            , TIInpObj <$> stDWithinGeometryInpM
+                            , TIInpObj <$> stDWithinGeographyInpM
                             ] <>
                   scalarTys <> compTys <> defaultTypes
   -- for now subscription root is query root
@@ -376,6 +407,7 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
     TyAgg tyInfos fldInfos scalars ordByEnums = tyAgg
     colTys    = Set.toList $ Set.fromList $ map pgiType $
                   lefts $ Map.elems fldInfos
+    colTyDets = map pgColTyDetails colTys
     mkMutRoot =
       mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
       mapFromL _fiName
@@ -391,15 +423,29 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          InpValInfo (Just "name of the type") "name" Nothing Nothing
-          $ G.toGT $ G.toNT $ G.NamedType "String"
+          mkPGTyInpValNT (Just "name of the type") "name" $ baseTy PGText
+            -- $ G.toGT $ G.toNT $ G.NamedType "String"
           ]
 
-    stDWithinInpM = bool Nothing (Just stDWithinInp) (PGTyBase PGGeometry `elem` map pgColTyDetails colTys)
-    stDWithinInp =
-      mkHsraInpTyInfo Nothing stDWithinInpTy $ fromInpValL
+    -- _st_d_within has to stay with geometry type
+    stDWithinGeometryInpM =
+      bool Nothing (Just $ stDWithinGeomInp) (PGTyBase PGGeometry `elem` colTyDets)
+    -- _st_d_within_geography is created for geography type
+    stDWithinGeographyInpM =
+      bool Nothing (Just $ stDWithinGeogInp) (PGTyBase PGGeography `elem` colTyDets)
+
+    stDWithinGeomInp =
+      mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
       [ mkPGTyInpValNT Nothing "from" $ baseTy PGGeometry
       , mkPGTyInpValNT Nothing "distance" $ baseTy PGFloat
+      ]
+    stDWithinGeogInp =
+      mkHsraInpTyInfo Nothing stDWithinGeographyInpTy $ fromInpValL
+      [ mkPGTyInpValNT Nothing "from" $ baseTy PGGeography
+      , mkPGTyInpValNT Nothing "distance" $ baseTy PGFloat
+      , InpValInfo Nothing "use_spheroid"
+        (Just $ G.VCBoolean True) (Just $ PTCol $ baseTy PGBoolean) $
+        G.toGT $ mkPGColGTy $ baseTy PGBoolean
       ]
 
 emptyGCtx :: GCtx

@@ -12,12 +12,21 @@ import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
-import { save, setDefaults } from './Actions';
+import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
 
 class Modify extends React.Component {
   componentDidMount() {
-    this.props.dispatch(setDefaults());
+    const { dispatch } = this.props;
+    dispatch(setDefaults());
   }
+
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: RESET_MODIFY_STATE,
+    });
+  }
+
   render() {
     const {
       modifyTriggerName,
@@ -65,7 +74,6 @@ class Modify extends React.Component {
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
             schemaName={currentTrigger.schema_name}
-            triggerId={currentTrigger.id}
             styles={styles}
           />
           <WebhookEditor

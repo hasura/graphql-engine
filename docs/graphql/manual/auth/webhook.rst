@@ -9,7 +9,7 @@ Authorization using webhooks
 You can configure a webhook (see :doc:`GraphQL engine server options <../deployment/graphql-engine-flags/reference>`)
 to authenticate all incoming requests to the Hasura GraphQL engine server.
 
-.. image:: ../../../img/graphql/manual/auth/webhook-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/webhook-auth.png
 
 .. note::
    Configuring webhook requires Hasura to run with an admin secret (``--admin-secret``).
@@ -39,6 +39,7 @@ GET request
 If you configure your webhook to use ``GET``, then Hasura **will forward all client headers except**:
 
 - ``Content-Length``
+- ``Content-Type``
 - ``Content-MD5``
 - ``User-Agent``
 - ``Host``

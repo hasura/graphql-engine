@@ -4,10 +4,14 @@
 module Hasura.RQL.Types.SchemaCache
        ( TableCache
        , SchemaCache(..)
+       , SchemaCacheVer
+       , initSchemaCacheVer
+       , incSchemaCacheVer
        , emptySchemaCache
-       , TableInfo(..)
+       , TableInfoG(..)
+       , TableInfo
+       , TableInfoR
        , TableConstraint(..)
-       , getUniqCols
        , ConstraintType(..)
        , ViewInfo(..)
        , isMutable
@@ -19,7 +23,6 @@ module Hasura.RQL.Types.SchemaCache
        , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
-       , mkTableInfo
        , addTableToCache
        , modTableInCache
        -- , modPGTyCache
@@ -31,14 +34,16 @@ module Hasura.RQL.Types.SchemaCache
        , CacheRWM(..)
 
        , FieldInfoMap
-       , FieldInfo(..)
+       , FieldInfoG(..)
+       , FieldInfo
        , fieldInfoToEither
        , partitionFieldInfos
        , partitionFieldInfosWith
        , getCols
        , getRels
 
-       , PGColInfo(..)
+       , PGColInfoG(..)
+       , PGColInfo
        , isPGColInfo
        , getColInfos
        , RelInfo(..)
@@ -47,6 +52,7 @@ module Hasura.RQL.Types.SchemaCache
        , addRelToCache
 
        , delColFromCache
+       , updColInCache
        , delRelFromCache
 
        , RolePermInfo(..)
@@ -66,7 +72,7 @@ module Hasura.RQL.Types.SchemaCache
        , DelPermInfo(..)
        , addPermToCache
        , delPermFromCache
-       , PreSetCols
+       , PreSetColsPartial
 
        , QueryTemplateInfo(..)
        , addQTemplateToCache
@@ -100,6 +106,7 @@ module Hasura.RQL.Types.SchemaCache
        , delFunctionFromCache
 
        , PGTyCache
+       , replaceAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -108,10 +115,12 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.RQL.Types.Subscribe
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -165,16 +174,18 @@ getColInfos cols allColInfos =
 
 type WithDeps a = (a, [SchemaDependency])
 
-data FieldInfo
-  = FIColumn !PGColInfo
+data FieldInfoG a
+  = FIColumn !(PGColInfoG a)
   | FIRelationship !RelInfo
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "detail"
                  }
-  ''FieldInfo)
+  ''FieldInfoG)
+
+type FieldInfo = FieldInfoG PGColType
 
 fieldInfoToEither :: FieldInfo -> Either PGColInfo RelInfo
 fieldInfoToEither (FIColumn l)       = Left l
@@ -190,7 +201,8 @@ partitionFieldInfosWith fns =
   where
     biMapEither (f1, f2) = either (Left . f1) (Right . f2)
 
-type FieldInfoMap = M.HashMap FieldName FieldInfo
+type FieldInfoMapG a = M.HashMap FieldName (FieldInfoG a)
+type FieldInfoMap = FieldInfoMapG PGColType
 
 getCols :: FieldInfoMap -> [PGColInfo]
 getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
@@ -204,9 +216,10 @@ isPGColInfo _            = False
 
 data InsPermInfo
   = InsPermInfo
-  { ipiView            :: !QualifiedTable
-  , ipiCheck           :: !AnnBoolExpSQL
-  , ipiSet             :: !PreSetCols
+  { ipiCols            :: !(HS.HashSet PGCol)
+  , ipiView            :: !QualifiedTable
+  , ipiCheck           :: !AnnBoolExpPartialSQL
+  , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -216,7 +229,7 @@ data SelPermInfo
   = SelPermInfo
   { spiCols            :: !(HS.HashSet PGCol)
   , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpSQL
+  , spiFilter          :: !AnnBoolExpPartialSQL
   , spiLimit           :: !(Maybe Int)
   , spiAllowAgg        :: !Bool
   , spiRequiredHeaders :: ![T.Text]
@@ -228,8 +241,8 @@ data UpdPermInfo
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
-  , upiFilter          :: !AnnBoolExpSQL
-  , upiSet             :: !PreSetCols
+  , upiFilter          :: !AnnBoolExpPartialSQL
+  , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -238,7 +251,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 data DelPermInfo
   = DelPermInfo
   { dpiTable           :: !QualifiedTable
-  , dpiFilter          :: !AnnBoolExpSQL
+  , dpiFilter          :: !AnnBoolExpPartialSQL
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq)
 
@@ -262,8 +275,7 @@ type RolePermInfoMap = M.HashMap RoleName RolePermInfo
 
 data EventTriggerInfo
  = EventTriggerInfo
-   { etiId          :: !TriggerId
-   , etiName        :: !TriggerName
+   { etiName        :: !TriggerName
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
@@ -317,31 +329,9 @@ data TableConstraint
   = TableConstraint
   { tcType :: !ConstraintType
   , tcName :: !ConstraintName
-  , tcCols :: ![PGCol]
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
-getUniqCols :: [PGColInfo] -> [TableConstraint] -> Maybe [PGColInfo]
-getUniqCols allCols = travConstraints
-  where
-    colsNotNull = all (not . pgiIsNullable)
-
-    travConstraints []    = Nothing
-    travConstraints (h:t) =
-      let cols = getColInfos (tcCols h) allCols
-      in case tcType h of
-           CTPRIMARYKEY -> Just cols
-           CTUNIQUE     -> if colsNotNull cols then Just cols
-                           else travConstraints t
-           _            -> travConstraints t
-
-getAllPkeyCols :: [TableConstraint] -> [PGCol]
-getAllPkeyCols constraints =
-  flip concatMap constraints $
-    \c -> case tcType c of
-      CTPRIMARYKEY -> tcCols c
-      _            -> []
 
 data ViewInfo
   = ViewInfo
@@ -363,33 +353,35 @@ mutableView qt f mVI operation =
   unless (isMutable f mVI) $ throw400 NotSupported $
   "view " <> qt <<> " is not " <> operation
 
-data TableInfo
-  = TableInfo
+data TableInfoG a
+  = TableInfoG
   { tiName                  :: !QualifiedTable
   , tiSystemDefined         :: !Bool
-  , tiFieldInfoMap          :: !FieldInfoMap
+  , tiFieldInfoMap          :: !(FieldInfoMapG a)
   , tiRolePermInfoMap       :: !RolePermInfoMap
-  , tiUniqOrPrimConstraints :: ![TableConstraint]
+  , tiUniqOrPrimConstraints :: ![ConstraintName]
   , tiPrimaryKeyCols        :: ![PGCol]
   , tiViewInfo              :: !(Maybe ViewInfo)
   , tiEventTriggerInfoMap   :: !EventTriggerInfoMap
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfoG)
 
-mkTableInfo
-  :: QualifiedTable
-  -> Bool
-  -> [TableConstraint]
-  -> [PGColInfo]
-  -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined uniqCons cols mVI =
-  TableInfo tn isSystemDefined colMap (M.fromList [])
-    uniqCons pCols mVI (M.fromList [])
-  where
-    pCols = getAllPkeyCols uniqCons
-    colMap     = M.fromList $ map f cols
-    f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
+type TableInfo = TableInfoG PGColType
+type TableInfoR = TableInfoG PGColOidInfo
+
+instance (FromJSON a) => FromJSON (TableInfoG a) where
+  parseJSON = withObject "TableInfo" $ \o -> do
+    name <- o .: "name"
+    columns <- o .: "columns"
+    pkeyCols <- o .: "primary_key_columns"
+    constraints <- o .: "constraints"
+    viewInfoM <- o .:? "view_info"
+    isSystemDefined <- o .:? "is_system_defined" .!= False
+    let colMap = M.fromList $ flip map columns $
+                 \c -> (fromPGCol $ pgiName c, FIColumn c)
+    return $ TableInfoG name isSystemDefined colMap mempty
+                       constraints pkeyCols viewInfoM mempty
 
 data FunctionType
   = FTVOLATILE
@@ -452,16 +444,29 @@ removeFromDepMap :: SchemaObjId -> DepMap -> DepMap
 removeFromDepMap =
   M.delete
 
+newtype SchemaCacheVer
+  = SchemaCacheVer { unSchemaCacheVer :: Word64 }
+  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+
+initSchemaCacheVer :: SchemaCacheVer
+initSchemaCacheVer = SchemaCacheVer 0
+
+incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
+incSchemaCacheVer (SchemaCacheVer prev) =
+  SchemaCacheVer $ prev + 1
+
 data SchemaCache
   = SchemaCache
   { scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   -- , scTyMap             :: !PGTyCache
+  , scInconsistentObjs  :: ![InconsistentMetadataObj]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -525,7 +530,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty
+  SchemaCache M.empty M.empty M.empty HS.empty
+              M.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -641,6 +647,14 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+updColInCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColInfo
+  -> QualifiedTable -> m ()
+updColInCache cn ci tn = do
+  delColFromCache cn tn
+  addColToCache cn ci tn
 
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
@@ -797,6 +811,15 @@ data TemplateParamInfo
   { tpiName    :: !TemplateParam
   , tpiDefault :: !(Maybe Value)
   } deriving (Show, Eq)
+
+replaceAllowlist
+  :: (CacheRWM m)
+  => QueryList -> m ()
+replaceAllowlist qList = do
+  sc <- askSchemaCache
+  let allowlist = HS.fromList $
+        map (queryWithoutTypeNames . getGQLQuery . _lqQuery) qList
+  writeSchemaCache sc{scAllowlist = allowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

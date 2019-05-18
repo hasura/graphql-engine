@@ -88,9 +88,9 @@ uFromItem fromItem = case fromItem of
   S.FIIden iden ->
     S.FIIden <$> return iden
   S.FIFunc f args alM -> do
-    newArgs <- mapM uSqlExp args
-    newAls <- mapM addAlias alM
-    return $ S.FIFunc f newArgs newAls
+    S.FIFunc f <$> mapM uSqlExp args <*> mapM addAlias alM
+  S.FIUnnest args als cols ->
+    S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
     -- idens to empty based on correlation
@@ -98,6 +98,11 @@ uFromItem fromItem = case fromItem of
     newSel <- restoringIdens $ uSelect sel
     newAls <- addAlias al
     return $ S.FISelect isLateral newSel newAls
+  S.FIValues (S.ValuesExp tups) als mCols -> do
+    newValExp <- fmap S.ValuesExp $
+                 forM tups $ \(S.TupleExp ts) ->
+                               S.TupleExp <$> mapM uSqlExp ts
+    return $ S.FIValues newValExp als mCols
   S.FIJoin joinExp ->
     S.FIJoin <$> uJoinExp joinExp
 
@@ -173,7 +178,7 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
-  S.SETuples l                  ->
+  S.SETuple (S.TupleExp l)     ->
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   where

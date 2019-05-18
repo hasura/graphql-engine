@@ -53,5 +53,6 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Server configuration <graphql-engine-flags/index>
    Server logs <logging>
    securing-graphql-endpoint
+   allow-list
    postgres-permissions
    Updating GraphQL engine <updating>

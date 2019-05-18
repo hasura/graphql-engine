@@ -1,0 +1,38 @@
+{
+  "name": "my-new-project",
+  "main": "node_modules/expo/AppEntry.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "eject": "expo eject",
+    "eslint": "eslint .",
+    "eslintfix": "eslint . --fix"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@expo/samples": "2.1.1",
+    "@expo/vector-icons": "^10.0.1",
+    "apollo-boost": "^0.3.1",
+    "apollo-link-ws": "^1.0.17",
+    "apollo-utilities": "^1.2.1",
+    "expo": "32.0.0",
+    "graphql": "^14.2.1",
+    "jwt-decode": "^2.2.0",
+    "react": "16.5.0",
+    "react-apollo": "^2.5.5",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
+    "react-native-vector-icons": "^6.4.2",
+    "react-navigation": "^3.9.0",
+    "subscriptions-transport-ws": "^0.9.16"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.16.0",
+    "eslint-plugin-react": "^7.12.4",
+    "jest-expo": "32.0.0"
+  }
+}

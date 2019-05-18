@@ -1,5 +1,5 @@
 description: Updated person data using _delete_key operator
-url: /v1alpha1/graphql
+url: /v1/graphql
 response:
   data:
     update_person:
@@ -13,7 +13,7 @@ response:
 status: 200
 query:
   query: |
-    mutation update_person($value: jsonb) {
+    mutation update_person {
       update_person(
         where: {id: {_eq: 3}},
         _delete_key: {

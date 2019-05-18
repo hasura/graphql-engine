@@ -1,6 +1,6 @@
   #Inserting data into test_types table
 - description: Inserts data into test_types table with various postgres types
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   response:
     data:
       insert_test_types:
@@ -58,7 +58,6 @@
       mutation insert_test_types
       ( $json: json
       , $jsonb: jsonb
-      , $compositeComplex: complex
       ) {
         insert_test_types(
           objects: [
@@ -146,14 +145,3 @@
           }
         }
       }
-- description: Delete the inserted rows in test_types table
-  url: /v1/query
-  status: 200
-  query:
-    type: run_sql
-    args:
-      sql: |
-        delete from test_types;
-        SELECT setval('test_types_c10_bigserial_seq', 1, FALSE);
-        SELECT setval('test_types_c9_serial_seq', 1, FALSE);
-        SELECT setval('test_types_c8_smallserial_seq', 1, FALSE);

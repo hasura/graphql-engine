@@ -1,9 +1,15 @@
 - description: User cannot access remarks column
-  url: /v1alpha1/graphql
-  status: 400
+  url: /v1/graphql
+  status: 200
   headers:
     X-Hasura-Role: user
     X-Hasura-User-Id: '1'
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.author.selectionSet.remarks_internal
+        code: validation-failed
+      message: "field \"remarks_internal\" not found in type: 'author'"
   query:
     query: |
       query {
@@ -14,7 +20,7 @@
         }
       }
 - description: Admin can access remarks column
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     data:

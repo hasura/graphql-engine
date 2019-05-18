@@ -13,6 +13,7 @@ import           Instances.TH.Lift       ()
 import qualified Data.ByteString.Builder as BB
 import qualified Data.Sequence           as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.GBoolExp
@@ -72,10 +73,11 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => SessVarBldr m
+  -> (PGColType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   tableInfo <- askTabInfo qt
 
   -- Check if select is allowed
@@ -92,11 +94,14 @@ validateCountQWith prepValBuilder (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp' colInfoMap selPerm be prepValBuilder
+    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+
+  resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
+                     spiFilter selPerm
 
   return $ CountQueryP1
     qt
-    (spiFilter selPerm, annSQLBoolExp)
+    (resolvedSelFltr, annSQLBoolExp)
     mDistCols
   where
     selNecessaryMsg =
@@ -109,15 +114,15 @@ validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
-  liftDMLP1 . validateCountQWith binRHSBuilder
+  liftDMLP1 . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
 
 countQToTx
   :: (QErrM m, MonadTx m)
-  => (CountQueryP1, DS.Seq Q.PrepArg) -> m RespBody
+  => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
 countQToTx (u, p) = do
   qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
           (Q.fromBuilder countSQL) (toList p) True
-  return $ BB.toLazyByteString $ encodeCount qRes
+  return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
     encodeCount (Q.SingleRow (Identity c)) =
@@ -125,6 +130,6 @@ countQToTx (u, p) = do
 
 runCount
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
-  => CountQuery -> m RespBody
+  => CountQuery -> m EncJSON
 runCount q =
   validateCountQ q >>= countQToTx

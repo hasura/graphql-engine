@@ -16,43 +16,15 @@ import {
 import { ordinalColSort } from '../utils';
 import { setTable, fetchTableComment } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import semverCheck from '../../../../helpers/semver';
 
 class ModifyView extends Component {
-  state = {
-    supportTableColumnRename: false,
-  };
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
     dispatch(fetchTableComment(this.props.tableName));
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   modifyViewDefinition = viewName => {
     // fetch the definition
@@ -105,23 +77,37 @@ class ModifyView extends Component {
 
     const columns = tableSchema.columns.sort(ordinalColSort);
     const columnEditors = columns.map((c, i) => {
-      const btnText = '-';
       const bg = '';
       return (
         <div key={i} className={bg}>
           <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <Button disabled="disabled" size="xs" color="yellow">
-                  {btnText}
+            <div className={`row + ${styles.add_mar_bottom}`}>
+              <h5>
+                <Button disabled="disabled" size="xs">
+                  -
                 </Button>{' '}
-                &nbsp; {c.column_name}
+                &nbsp; <b>{c.column_name}</b>
               </h5>
             </div>
           </div>
         </div>
       );
     });
+
+    const modifyBtn = (
+      <Button
+        type="submit"
+        color="yellow"
+        size="sm"
+        className={styles.add_mar_right}
+        onClick={() => {
+          this.modifyViewDefinition(tableName);
+        }}
+        data-test="modify-view"
+      >
+        Modify
+      </Button>
+    );
 
     const untrackBtn = (
       <Button
@@ -138,6 +124,23 @@ class ModifyView extends Component {
         data-test="untrack-view"
       >
         Untrack View
+      </Button>
+    );
+
+    const deleteBtn = (
+      <Button
+        type="submit"
+        color="red"
+        size="sm"
+        onClick={() => {
+          const isOk = confirm('Are you sure');
+          if (isOk) {
+            dispatch(deleteViewSql(tableName));
+          }
+        }}
+        data-test="delete-view"
+      >
+        Delete view
       </Button>
     );
 
@@ -219,7 +222,6 @@ class ModifyView extends Component {
           tabName="modify"
           currentSchema={currentSchema}
           migrationMode={migrationMode}
-          allowRename={this.state.supportTableColumnRename}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
@@ -229,7 +231,6 @@ class ModifyView extends Component {
             {columnEditors}
             <br />
             <h4>View Definition:</h4>
-
             <AceEditor
               mode="sql"
               theme="github"
@@ -242,33 +243,9 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            <Button
-              type="submit"
-              color="yellow"
-              size="sm"
-              className={styles.add_mar_right}
-              onClick={() => {
-                this.modifyViewDefinition(tableName);
-              }}
-              data-test="modify-view"
-            >
-              Modify
-            </Button>
+            {modifyBtn}
             {untrackBtn}
-            <Button
-              type="submit"
-              color="red"
-              size="sm"
-              onClick={() => {
-                const isOk = confirm('Are you sure');
-                if (isOk) {
-                  dispatch(deleteViewSql(tableName));
-                }
-              }}
-              data-test="delete-view"
-            >
-              Delete view
-            </Button>
+            {deleteBtn}
             <br />
             <br />
           </div>

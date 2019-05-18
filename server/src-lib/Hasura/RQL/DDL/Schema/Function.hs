@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Function where
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (isValidName, showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.PGType
@@ -42,7 +43,7 @@ data RawFuncInfo
   , rfiInputArgNames    :: ![T.Text]
   , rfiReturnsTable     :: !Bool
   } deriving (Show, Eq)
-$(deriveFromJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
 
 mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
 mkFunctionArgs tys argNames =
@@ -64,8 +65,7 @@ validateFuncArgs args =
     invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
 
 mkFunctionInfo
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => PGTyInfoMaps -> QualifiedFunction -> RawFuncInfo -> m FunctionInfo
+  :: QErrM m => PGTyInfoMaps ->  QualifiedFunction -> RawFuncInfo -> m FunctionInfo
 mkFunctionInfo tyMaps qf rawFuncInfo = do
   -- throw error if function has variadic arguments
   when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
@@ -78,7 +78,7 @@ mkFunctionInfo tyMaps qf rawFuncInfo = do
   -- throw error if function type is VOLATILE
   when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
 
-  inpArgTyps <- resolveColTypes tyMaps inpArgOids
+  inpArgTyps <- forM inpArgOids $ resolveColType tyMaps
   let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
   validateFuncArgs funcArgs
 
@@ -91,24 +91,6 @@ mkFunctionInfo tyMaps qf rawFuncInfo = do
     RawFuncInfo hasVariadic funTy retSn retN retTyTyp
                 retSet inpArgOids inpArgNames returnsTab
                 = rawFuncInfo
-
-
--- Build function info
-getFunctionInfo
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => PGTyInfoMaps -> QualifiedFunction -> m FunctionInfo
-getFunctionInfo tyMaps qf@(QualifiedObject sn fn) = do
-  -- fetch function details
-  funcData <- liftTx $ Q.catchE defaultTxErrorHandler $
-              Q.listQ $(Q.sqlFromFile "src-rsr/function_info.sql") (sn, fn) True
-
-  case funcData of
-    []                              ->
-      throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [Identity (Q.AltJ rawFuncInfo)] -> mkFunctionInfo tyMaps qf rawFuncInfo
-    _                               ->
-      throw400 NotSupported $
-      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
 saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
@@ -138,9 +120,9 @@ trackFunctionP1 (TrackFunction qf) = do
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
 
 trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => PGTyInfoMaps -> QualifiedFunction -> m ()
-trackFunctionP2Setup tyMaps qf = do
-  fi <- withPathK "name" $ getFunctionInfo tyMaps qf
+                     => PGTyInfoMaps -> QualifiedFunction -> RawFuncInfo -> m ()
+trackFunctionP2Setup tyMaps qf rawfi = do
+  fi <- mkFunctionInfo tyMaps qf rawfi
   let retTable = fiReturnType fi
       err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
   sc <- askSchemaCache
@@ -148,7 +130,7 @@ trackFunctionP2Setup tyMaps qf = do
   addFunctionToCache fi
 
 trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
-                => QualifiedFunction -> m RespBody
+                => QualifiedFunction -> m EncJSON
 trackFunctionP2 qf = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
@@ -158,16 +140,35 @@ trackFunctionP2 qf = do
     "function name " <> qf <<> " is not in compliance with GraphQL spec"
   -- check for conflicts in remote schema
   GS.checkConflictingNode defGCtx funcNameGQL
+  -- fetch function info
+  functionInfos <- liftTx fetchFuncDets
+  rawfi <- case functionInfos of
+    []      ->
+      throw400 NotExists $ "no such function exists in postgres : " <>> qf
+    [rawfi] -> return rawfi
+    _       ->
+      throw400 NotSupported $
+      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
   tyMaps <- liftTx getPGTyInfoMap
-  trackFunctionP2Setup tyMaps qf
+  trackFunctionP2Setup tyMaps qf rawfi
+-- >>>>>>> master
   liftTx $ saveFunctionToCatalog qf False
   return successMsg
+  where
+    QualifiedObject sn fn = qf
+    fetchFuncDets = map (Q.getAltJ . runIdentity) <$>
+      Q.listQE defaultTxErrorHandler [Q.sql|
+            SELECT function_info
+              FROM hdb_catalog.hdb_function_info_agg
+             WHERE function_schema = $1
+               AND function_name = $2
+           |] (sn, fn) True
 
 runTrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
      , UserInfoM m
      )
-  => TrackFunction -> m RespBody
+  => TrackFunction -> m EncJSON
 runTrackFunc q = do
   trackFunctionP1 q
   trackFunctionP2 $ tfName q
@@ -181,7 +182,7 @@ runUntrackFunc
   :: ( QErrM m, CacheRWM m, MonadTx m
      , UserInfoM m
      )
-  => UnTrackFunction -> m RespBody
+  => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
   adminOnly
   void $ askFunctionInfo qf

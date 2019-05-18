@@ -11,9 +11,9 @@ module Hasura.GraphQL.Validate.Types
   , UnionTyInfo(..)
   , FragDef(..)
   , FragDefMap
---  , AnnVarVals
-  , VarVal
-  , VarValsMap
+  , AnnVarVals
+  , AnnVarVal(..)
+  , AnnInpVal(..)
   , EnumTyInfo(..)
   , EnumValInfo(..)
   , InpObjFldMap
@@ -30,6 +30,7 @@ module Hasura.GraphQL.Validate.Types
   , isIFaceTy
   , getPossibleObjTypes'
   , getObjTyM
+  , getInpObjTyM
   , getUnionTyM
   , mkPGColGTy
   , mkScalarTy
@@ -37,6 +38,8 @@ module Hasura.GraphQL.Validate.Types
   , pgColTyToScalar
   , pgColValToAnnGVal
   , pgTyAnnToGTy
+  -- , asScalarColType
+  -- , gTyToPgTyAnn
   , getNamedTy
   , mkTyInfoMap
   , mkPGTyInpVal
@@ -56,6 +59,7 @@ module Hasura.GraphQL.Validate.Types
   , GQLColTyMap
   , PGColTyAnn(..)
   , qualTyToScalar
+  , stripTypenames
   , module Hasura.GraphQL.Utils
   ) where
 
@@ -63,6 +67,8 @@ import           Hasura.Prelude
 import           Instances.TH.Lift             ()
 
 import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
@@ -125,6 +131,16 @@ pgTyAnnToGTy :: PGColTyAnn -> G.GType
 pgTyAnnToGTy (PTCol colTy) = mkPGColGTy colTy
 pgTyAnnToGTy (PTArr p)     = G.toGT $ G.toLT $ G.toNT $ pgTyAnnToGTy p
 
+-- asScalarColType :: G.NamedType -> PGColType
+-- asScalarColType nt =
+--   Map.lookupDefault defTy (nt, 0) defaultPGColTyMap
+--   where
+--     defTy = baseTy $ txtToPgBaseColTy $ G.unName $ G.unNamedType nt
+
+-- gTyToPgTyAnn :: G.GType -> PGColTyAnn
+-- gTyToPgTyAnn (G.TypeNamed _ nt)              = PTCol $ asScalarColType nt
+-- gTyToPgTyAnn (G.TypeList _ (G.ListType gTy)) = PTArr $ gTyToPgTyAnn gTy
+
 data InpValInfo
   = InpValInfo
   { _iviDesc    :: !(Maybe G.Description)
@@ -141,13 +157,16 @@ instance EquatableGType InpValInfo where
 fromInpValDef :: G.InputValueDefinition -> GQLColTyMap -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) gctm =
   InpValInfo descM n defM pgTy ty
-  where pgTy = fmap PTCol $ Map.lookup (getBaseTy ty, getArrDim ty) gctm
+  where pgTy = PTCol <$> Map.lookup (getBaseTy ty, getArrDim ty) gctm
 
 mkPGTyInpVal :: Maybe G.Description -> G.Name -> PGColType -> InpValInfo
-mkPGTyInpVal desc name colTy = InpValInfo desc name Nothing (Just $ PTCol colTy) $ mkPGColGTy colTy
+mkPGTyInpVal desc name colTy =
+  InpValInfo desc name Nothing (Just $ PTCol colTy) $ mkPGColGTy colTy
 
 mkPGTyInpValNT :: Maybe G.Description -> G.Name -> PGColType -> InpValInfo
-mkPGTyInpValNT desc name colTy = InpValInfo desc name Nothing (Just $ PTCol colTy) $ G.toNT $ mkPGColGTy colTy 
+mkPGTyInpValNT desc name colTy =
+  InpValInfo desc name Nothing (Just $ PTCol colTy) $
+  G.toNT $ mkPGColGTy colTy
 
 type ParamMap = Map.HashMap G.Name InpValInfo
 
@@ -304,9 +323,10 @@ fromInpObjTyDef (G.InputObjectTypeDefinition descM n _ inpFlds) gctm loc =
 
 data ScalarTyInfo
   = ScalarTyInfo
-  { _stiDesc :: !(Maybe G.Description)
-  , _stiType :: !G.Name
-  , _stiLoc  :: !TypeLoc
+  { _stiDesc  :: !(Maybe G.Description)
+  , _stiType  :: !G.Name
+  , _stiColTy :: !(Maybe PGColType)
+  , _stiLoc   :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 instance EquatableGType ScalarTyInfo where
@@ -318,7 +338,9 @@ fromScalarTyDef
   -> TypeLoc
   -> Either Text ScalarTyInfo
 fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc
-  = return $ ScalarTyInfo descM n loc
+  = return $ ScalarTyInfo descM n colTyM loc
+  where
+    colTyM = Map.lookup (G.NamedType n, 0) defaultPGColTyMap
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -357,6 +379,11 @@ getObjTyM :: TypeInfo -> Maybe ObjTyInfo
 getObjTyM = \case
   (TIObj t) -> return t
   _         -> Nothing
+
+getInpObjTyM :: TypeInfo -> Maybe InpObjTyInfo
+getInpObjTyM = \case
+  (TIInpObj t) -> Just t
+  _            -> Nothing
 
 getUnionTyM :: TypeInfo -> Maybe UnionTyInfo
 getUnionTyM = \case
@@ -496,7 +523,7 @@ validateIsSubType tyMap subFldTy supFldTy = do
       subTyInfo <- extrTyInfo tyMap subTy
       supTyInfo <- extrTyInfo tyMap supTy
       isSubTypeBase subTyInfo supTyInfo
-    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) -> do
+    (G.TypeList _ (G.ListType sub), G.TypeList _ (G.ListType sup) ) ->
       validateIsSubType tyMap sub sup
     _ -> throwError $ showIsListTy subFldTy <> " Type " <> G.showGT subFldTy <>
       " cannot be a sub-type of " <> showIsListTy supFldTy <> " Type " <> G.showGT supFldTy
@@ -582,7 +609,7 @@ fromTyDef tyDef gctm loc = case tyDef of
 
 fromSchemaDoc :: G.SchemaDocument -> GQLColTyMap -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) pctm loc = do
-  tyMap <- fmap mkTyInfoMap $ mapM (\x -> fromTyDef x pctm loc) tyDefs
+  tyMap <- mkTyInfoMap <$> mapM (\x -> fromTyDef x pctm loc) tyDefs
   validateTypeMap tyMap
   return tyMap
 
@@ -610,7 +637,7 @@ type GQLColTyMap = Map.HashMap (G.NamedType,ArrDim) PGColType
 
 defaultPGColTyMap :: GQLColTyMap
 defaultPGColTyMap = Map.fromList $
-  map (\(x,y) -> ( (G.NamedType $ G.Name x,0), baseTy y)) $
+  map (\(x,y) -> ( (G.NamedType $ G.Name x,0), baseTy y))
   [ ("Int"    , PGInteger)
   , ("Float"  , PGFloat  )
   , ("String" , PGText   )
@@ -658,19 +685,34 @@ data FragDef
 
 type FragDefMap = Map.HashMap G.Name FragDef
 
-type VarVal = (G.GType, Maybe G.DefaultValue, Maybe J.Value)
+type AnnVarVals = Map.HashMap G.Variable AnnVarVal
 
-type VarValsMap =
-  Map.HashMap G.Variable VarVal
+data AnnVarVal
+  = AnnVarVal
+  { _avvType   :: !G.GType
+  , _avvDefVal :: !(Maybe G.DefaultValue)
+  , _avvValue  :: !(Maybe J.Value)
+  } deriving (Show, Eq)
 
-type AnnGObject = OMap.InsOrdHashMap G.Name AnnGValue
+data AnnInpVal
+  = AnnInpVal
+  { _aivType     :: !G.GType
+  , _aivVariable :: !(Maybe G.Variable)
+  , _aivValue    :: !AnnGValue
+  } deriving (Show, Eq)
+
+type AnnGObject = OMap.InsOrdHashMap G.Name AnnInpVal
 
 data AnnGValue
   = AGPGVal !PGColType !(Maybe PGColValue)
   | AGEnum !G.NamedType !(Maybe G.EnumValue)
   | AGObject !G.NamedType !(Maybe AnnGObject)
-  | AGArray !G.ListType !(Maybe [AnnGValue])
+  | AGArray !G.ListType !(Maybe [AnnInpVal])
   deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+  ''AnnInpVal
+ )
 
 instance J.ToJSON AnnGValue where
   -- toJSON (AGScalar ty valM) =
@@ -702,3 +744,30 @@ getAnnInpValTy = \case
   AGEnum nt _    -> G.TypeNamed (G.Nullability True) nt
   AGObject nt _  -> G.TypeNamed (G.Nullability True) nt
   AGArray nt _   -> G.TypeList  (G.Nullability True) nt
+
+stripTypenames :: [G.ExecutableDefinition] -> [G.ExecutableDefinition]
+stripTypenames = map filterExecDef
+  where
+    filterExecDef = \case
+      G.ExecutableDefinitionOperation opDef  ->
+        G.ExecutableDefinitionOperation $ filterOpDef opDef
+      G.ExecutableDefinitionFragment fragDef ->
+        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
+        in G.ExecutableDefinitionFragment fragDef{G._fdSelectionSet = newSelset}
+
+    filterOpDef  = \case
+      G.OperationDefinitionTyped typeOpDef ->
+        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
+        in G.OperationDefinitionTyped typeOpDef{G._todSelectionSet = newSelset}
+      G.OperationDefinitionUnTyped selset ->
+        G.OperationDefinitionUnTyped $ filterSelSet selset
+
+    filterSelSet = mapMaybe filterSel
+    filterSel s = case s of
+      G.SelectionField f ->
+        if G._fName f == "__typename"
+        then Nothing
+        else
+          let newSelset = filterSelSet $ G._fSelectionSet f
+          in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
+      _                  -> Just s

@@ -11,6 +11,10 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   -webkit-margin-after: 0;
 }
 
+.error_text {
+  color: #dc3545;
+}
+
 .graphSpinner {
   font-size: 40px;
   text-align: center;
@@ -34,6 +38,10 @@ select::-moz-focus-inner {
 }
 
 option::-moz-focus-inner { border: 0; outline: 0 }
+
+table {
+  font-size: 14px;
+}
 
 table thead tr th {
   background-color: #F2F2F2 !important;
@@ -83,21 +91,8 @@ table thead tr th {
         background-color: #f0f0f0;
         width: 100%;
         word-wrap: break-word;
-        padding: 15px 0px;
-        padding-left: 20px;
+        padding: 15px 0 15px 20px;
         display: block;
-      }
-    }
-
-    li:hover {
-      transition: color 0.5s;
-      cursor: pointer;
-      text-decoration: none;
-
-      a {
-        text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
       }
     }
 
@@ -117,8 +112,6 @@ table thead tr th {
 
       a {
         text-decoration: none;
-        padding: 15px 0px;
-        padding-left: 20px;
         background-color: #FFF3D5;
         display: inline-block;
       }
@@ -396,10 +389,20 @@ input {
   padding-right: 0 !important;
 }
 
+.padding_top_20 {
+  padding-top: 20px;
+}
+.margin_bottom_20 {
+  margin-bottom: 20px;
+}
+
 .remove_margin_bottom {
   margin-bottom: 0 !important;
 }
 
+.remove_padding_left {
+  padding-left: 0 !important;
+}
 .remove_margin {
   margin: 0 !important;
 }
@@ -446,11 +449,11 @@ input {
   margin-left: 5px;
 }
 
-.mar_small_neg_left {
+.mar_neg_left {
   margin-left: -10px;
 }
 
-.mar_small_neg_left_1 {
+.mar_small_neg_left {
   margin-left: -5px;
 }
 
@@ -507,6 +510,10 @@ input {
   margin-right: 20px !important;
 }
 
+.add_mar_right_mid {
+  margin-right: 10px !important;
+}
+
 .add_mar_right_small {
   margin-right: 5px !important;
 }
@@ -517,6 +524,10 @@ input {
 
 .add_mar_left_small {
   margin-left: 5px;
+}
+
+.add_mar_left_mid {
+  margin-left: 10px;
 }
 
 .add_mar_small {
@@ -548,7 +559,7 @@ code {
 }
 
 .padd_bottom_small {
-  padding-bottom: 4px;
+  padding-bottom: 5px;
 }
 
 .padd_top_small {
@@ -563,16 +574,8 @@ code {
   padding-bottom: 10px !important;
 }
 
-.ul_padd_left {
-  -webkit-padding-start: 15px;
-}
-
 .add_pad_bottom {
   padding-bottom: 20px;
-}
-
-.add_pad_top {
-  padding-top: 10px;
 }
 
 .add_padd_bottom {
@@ -583,16 +586,26 @@ code {
   padding-right: 15px;
 }
 
+.padd_top {
+  padding-top: 20px !important;
+}
+
+
 .clear_fix {
   clear: both;
 }
 
-.remove_ul_left {
+.ul_left_small {
   -webkit-padding-start: 15px;
 }
 
-.padd_top {
-  padding-top: 20px !important;
+.subsection {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.disabled {
+  color: #999;
 }
 
 .select_option_height {
@@ -877,22 +890,15 @@ code {
 .inline_block {
   display: inline-block;
   padding-right: 20px;
-  padding-bottom: 0 !important;
 
   .header_path_btn {
     margin-right: 0 !important;
   }
 }
 
-/*Newly added for remote schema page*/
 .headerText {
   font-size: 24px;
   font-weight: bold;
-  padding-bottom: 20px;
-}
-
-.addPaddRight {
-  padding-right: 30px;
 }
 
 .subHeaderText {
@@ -916,13 +922,6 @@ code {
 .fontWeightBold {
   font-weight: 600;
 }
-
-.noPadd {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-/*Newly added for remote schema page*/
 
 .heading_text {
   font-size: 18px;
@@ -1249,7 +1248,7 @@ code {
 }
 
 .graphQLHeight {
-  height: 100vh;
+  height: 72vh;
   margin-bottom: 50px;
 }
 
@@ -1257,9 +1256,69 @@ code {
   margin-right: 20px;
 }
 
+.wd750 {
+  width: 750px;
+}
+
+.iconCheck {
+  color: green;
+  font-size: 20px;
+}
+
+.iconCross {
+  color: #d9534f;
+  font-size: 20px;
+}
+
+.errorBanner {
+  top: 0;
+  z-index: 1000;
+}
+
+.fontStyleNormal {
+  font-style: normal;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.wd50percent {
+  width: 50%;
+}
+
+.alertDanger {
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
+  top: 0;
+  z-index: 1000;
+}
+.pkEditorWrapper {
+  width: 325px;
+  text-align: left;
+}
+
+.pkEditorExpandedTextWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;  
+}
+
+.pkEditorExpandedText {
+  width: 325px;
+}
+
+.wd100Percent {
+  width: 100% !important;
+}
 
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;
+

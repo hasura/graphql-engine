@@ -6,7 +6,7 @@ Merge remote GraphQL schemas with GraphQL Engine's Postgres-based schema to quer
 * Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API
 * Fetching disparate data from other sources (*e.g. from a weather API or another database*)
 
-To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/graphql-servers)) and merge its schema with GraphQL Engine's.
+To support custom business logic, you'll need to create a custom GraphQL server (see [boilerplates](community/boilerplates/remote-schemas)) and merge its schema with GraphQL Engine's.
 
 ![remote schems architecture](assets/remote-schemas-arch.png)
 
@@ -69,7 +69,6 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 * Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the exact same name and structure will be available.
 * Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
 * Subscriptions on remote GraphQL server are not supported.
-* Interfaces are not supported - if a remote schema has interfaces, an error will be thrown if you try to merge it.
 
 These limitations will be addressed in upcoming versions.
 
@@ -77,4 +76,8 @@ These limitations will be addressed in upcoming versions.
 
 Read the complete [documentation](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
 
+## Translations
 
+This document is available in the following translations:
+
+- [French :fr:](translations/remote-schemas.french.md)

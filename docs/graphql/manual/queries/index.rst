@@ -31,7 +31,7 @@ Auto-generated query field schema
       order_by:  [author_order_by!]
     ): [author]
 
-See the :doc:`Query API reference <../api-reference/query>` for the full specifications
+See the :doc:`Query API reference <../api-reference/graphql-api/query>` for the full specifications
 
 .. note::
 

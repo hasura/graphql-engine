@@ -25,7 +25,7 @@ parseOpExp
   -> FieldInfoMap
   -> PGColInfo
   -> (T.Text, Value) -> m (OpExpG a)
-parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
+parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
   case opStr of
     "$eq"            -> parseEq
     "_eq"            -> parseEq
@@ -91,21 +91,22 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
     -- "_has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
     -- "$has_keys_all"  -> jsonbOnlyOp $ AHasKeysAll <$> parseVal
 
-    -- geometry type
+    -- geometry types
     "_st_contains"   -> parseGeometryOp ASTContains
     "$st_contains"   -> parseGeometryOp ASTContains
     "_st_crosses"    -> parseGeometryOp ASTCrosses
     "$st_crosses"    -> parseGeometryOp ASTCrosses
     "_st_equals"     -> parseGeometryOp ASTEquals
     "$st_equals"     -> parseGeometryOp ASTEquals
-    "_st_intersects" -> parseGeometryOp ASTIntersects
-    "$st_intersects" -> parseGeometryOp ASTIntersects
     "_st_overlaps"   -> parseGeometryOp ASTOverlaps
     "$st_overlaps"   -> parseGeometryOp ASTOverlaps
     "_st_touches"    -> parseGeometryOp ASTTouches
     "$st_touches"    -> parseGeometryOp ASTTouches
     "_st_within"     -> parseGeometryOp ASTWithin
     "$st_within"     -> parseGeometryOp ASTWithin
+    -- geometry and geography types
+    "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
+    "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
     "_st_d_within"   -> parseSTDWithinObj
     "$st_d_within"   -> parseSTDWithinObj
 
@@ -167,13 +168,24 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
       _                -> throwError $ buildMsg colTy [baseTy PGJSONB]
 
     parseGeometryOp f =
-      geometryOnlyOp colTy >> f <$> parseOne
+      geometryOp colTy >> f <$> parseOne
+    parseGeometryOrGeographyOp f =
+      geometryOrGeographyOp colTy >> f <$> parseOne
 
-    parseSTDWithinObj = do
-      WithinOp distVal fromVal <- parseVal
-      dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
-      from <- withPathK "from" $ parser colTy fromVal
-      return $ ASTDWithin $ WithinOp dist from
+    parseSTDWithinObj = case colTy of
+      PGGeomTy{} -> do
+        DWithinGeomOp distVal fromVal <- parseVal
+        dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
+        from <- withPathK "from" $ parser colTy fromVal
+        return $ ASTDWithinGeom $ DWithinGeomOp dist from
+      PGGeogTy{} -> do
+        DWithinGeogOp distVal fromVal sphVal <- parseVal
+        dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
+        from <- withPathK "from" $ parser colTy fromVal
+        useSpheroid <- withPathK "use_spheroid" $
+                       parser (baseTy PGBoolean) sphVal
+        return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
+      _ -> throwError $ buildMsg colTy [baseTy PGGeometry, baseTy PGGeography]
 
     decodeAndValidateRhsCol =
       parseVal >>= validateRhsCol
@@ -186,9 +198,13 @@ parseOpExp parser fim (PGColInfo cn colTy _) (opStr, val) = withErrPath $
              "incompatible column types : " <> cn <<> ", " <>> rhsCol
         else return rhsCol
 
-    geometryOnlyOp (PGGeomTy{}) = return ()
-    geometryOnlyOp ty =
+    geometryOp PGGeomTy{} = return ()
+    geometryOp ty =
       throwError $ buildMsg ty [baseTy PGGeometry]
+    geometryOrGeographyOp PGGeomTy{} = return ()
+    geometryOrGeographyOp PGGeogTy{} = return ()
+    geometryOrGeographyOp ty =
+      throwError $ buildMsg ty [baseTy PGGeometry, baseTy PGGeography]
 
     parseWithTy ty = parser ty val
     parseOne = parseWithTy colTy
@@ -265,10 +281,8 @@ annColExp
 annColExp valueParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (JSONColInfo{}) ->
-      throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    -- FIColumn (PGColInfo _ PGJSONB _) ->
-    --   throwError (err400 UnexpectedPayload "JSONB column can not be part of where clause")
+    FIColumn JSONColInfo{} ->
+      throw400 UnexpectedPayload "JSON column can not be part of where clause"
     FIColumn pgi ->
       AVCol pgi <$> parseOpExps valueParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
@@ -290,7 +304,7 @@ convBoolRhs' tq =
 convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
-  AVCol (PGColInfo cn _ _) opExps -> do
+  AVCol (PGColInfoG cn _ _) opExps -> do
     let bExps = map (mkColCompExp tableQual cn) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -349,14 +363,16 @@ mkColCompExp qual lhsCol = \case
   AHasKeysAny keys -> S.BECompare S.SHasKeysAny lhs $ toTextArray keys
   AHasKeysAll keys -> S.BECompare S.SHasKeysAll lhs $ toTextArray keys
 
-  ASTContains val              -> mkGeomOpBe "ST_Contains" val
-  ASTCrosses val               -> mkGeomOpBe "ST_Crosses" val
-  ASTEquals val                -> mkGeomOpBe "ST_Equals" val
-  ASTIntersects val            -> mkGeomOpBe "ST_Intersects" val
-  ASTOverlaps val              -> mkGeomOpBe "ST_Overlaps" val
-  ASTTouches val               -> mkGeomOpBe "ST_Touches" val
-  ASTWithin val                -> mkGeomOpBe "ST_Within" val
-  ASTDWithin (WithinOp r val)  -> applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTContains val   -> mkGeomOpBe "ST_Contains" val
+  ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
+  ASTEquals val     -> mkGeomOpBe "ST_Equals" val
+  ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
+  ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
+  ASTTouches val    -> mkGeomOpBe "ST_Touches" val
+  ASTWithin val     -> mkGeomOpBe "ST_Within" val
+
+  ASTDWithinGeom (DWithinGeomOp r val)      -> applySQLFn "ST_DWithin" [lhs, val, r]
+  ASTDWithinGeog (DWithinGeogOp r val sph)  -> applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
   ANISNULL         -> S.BENull lhs
   ANISNOTNULL      -> S.BENotNull lhs
@@ -370,6 +386,8 @@ mkColCompExp qual lhsCol = \case
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
 
+    txtEncoder' = fromEncPGVal . txtEncodePGVal'
+
     toTextArray arr =
       S.SETyAnn (S.SEArray $ map (txtEncoder' . PGValKnown . PGValText) arr) textArrType
 
@@ -382,9 +400,11 @@ mkColCompExp qual lhsCol = \case
 
 getColExpDeps :: QualifiedTable -> AnnBoolExpFld a -> [SchemaDependency]
 getColExpDeps tn = \case
-  AVCol colInfo _ ->
+  AVCol colInfo opExps ->
     let cn = pgiName colInfo
-    in [SchemaDependency (SOTableObj tn (TOCol cn)) "on_type"]
+        depColsInOpExp = mapMaybe opExpDepCol opExps
+        allDepCols = cn:depColsInOpExp
+    in map (mkColDep "on_type" tn) allDepCols
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo

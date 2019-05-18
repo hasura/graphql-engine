@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
+  , updateSCWithGCtx
   , GCtxMap
   , getGCtx
   , GCtx(..)
@@ -65,7 +66,7 @@ instance Has TypeMap RemoteGCtx where
   getter = _rgTypes
   modifier f ctx = ctx { _rgTypes = f $ _rgTypes ctx }
 
-type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpSQL, Maybe Int, Bool)
+type SelField = Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int, Bool)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -73,14 +74,17 @@ qualObjectToName = G.Name . snakeCaseQualObject
 isValidObjectName :: (ToTxt a) => QualifiedObject a -> Bool
 isValidObjectName = isValidName . qualObjectToName
 
+isValidCol :: PGCol -> Bool
+isValidCol = isValidName . G.Name . getPGColTxt
+
+isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
+isValidRel rn rt = isValidName (G.Name $ getRelTxt rn)
+                          && isValidObjectName rt
+
 isValidField :: FieldInfo -> Bool
 isValidField = \case
-  FIColumn (PGColInfo col _ _) -> isColEligible col
-  FIRelationship (RelInfo rn _ _ remTab _) -> isRelEligible rn remTab
-  where
-    isColEligible = isValidName . G.Name . getPGColTxt
-    isRelEligible rn rt = isValidName (G.Name $ getRelTxt rn)
-                          && isValidObjectName rt
+  FIColumn (PGColInfoG col _ _) -> isValidCol col
+  FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed view =
@@ -98,9 +102,9 @@ getValidCols = fst . validPartitionFieldInfoMap
 getValidRels :: FieldInfoMap -> [RelInfo]
 getValidRels = snd . validPartitionFieldInfoMap
 
-mkValidConstraints :: [TableConstraint] -> [TableConstraint]
+mkValidConstraints :: [ConstraintName] -> [ConstraintName]
 mkValidConstraints =
-  filter (isValidName . G.Name . getConstraintTxt . tcName)
+  filter (isValidName . G.Name . getConstraintTxt)
 
 isRelNullable :: FieldInfoMap -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
@@ -150,10 +154,6 @@ mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy =
   G.NamedType . qualObjectToName
 
-mkTableColTy :: QualifiedTable -> G.NamedType
-mkTableColTy tn =
-  G.NamedType $ qualObjectToName tn <> "_columns"
-
 mkTableAggTy :: QualifiedTable -> G.NamedType
 mkTableAggTy tn =
   G.NamedType $ qualObjectToName tn <> "_aggregate"
@@ -169,9 +169,21 @@ mkTableColAggFldsTy op tn =
 mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
 
+-- Support argument params for PG columns
+mkPGColParams :: PGColType -> ParamMap
+mkPGColParams = \case
+  PGJSONBTy{} -> jsonParams
+  PGJSONTy{}  -> jsonParams
+  _       -> Map.empty
+  where
+    pathDesc = "JSON select path"
+    jsonParams = Map.fromList
+      [ (G.Name "path", mkPGTyInpVal (Just pathDesc) "path" $ baseTy PGText)
+      ]
+
 mkPGColFld :: PGColInfo -> ObjFldInfo
-mkPGColFld (PGColInfo colName colTy isNullable) =
-  mkHsraObjFldInfo Nothing n Map.empty (Just $ PTCol colTy) ty
+mkPGColFld (PGColInfoG colName colTy isNullable) =
+  mkHsraObjFldInfo Nothing n (mkPGColParams colTy)  (Just $ PTCol colTy) ty
   where
     n  = G.Name $ getPGColTxt colName
     ty = bool notNullTy nullTy isNullable
@@ -260,26 +272,6 @@ mkTableObj tn allowedFlds =
     mkRelFld' (relInfo, allowAgg, _, _, isNullable) =
       mkRelFld allowAgg relInfo isNullable
     desc = G.Description $ "columns and relationships of " <>> tn
-
-{-
-type table_columns {
-  col1: colty1
-  .
-  .
-  coln: coltyn
-}
--}
-
-mkTableColObj
-  :: QualifiedTable
-  -> [PGColInfo]
-  -> ObjTyInfo
-mkTableColObj tn allowedCols =
-  mkHsraObjTyInfo (Just desc) (mkTableColTy tn) Set.empty $
-  mapFromL _fiName flds
-  where
-    flds = map mkPGColFld allowedCols
-    desc = G.Description $ "columns of " <>> tn
 
 {-
 type table_aggregate {
@@ -399,7 +391,7 @@ mkSelFldPKey tn cols =
     fldName = mkTableByPkName tn
     args = fromInpValL $ map colInpVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal (PGColInfo n typ _) =
+    colInpVal (PGColInfoG n typ _) =
       InpValInfo Nothing (mkColName n) Nothing (Just $ PTCol typ) $ G.toGT $ G.toNT $ mkScalarTy typ
 
 {-
@@ -503,9 +495,8 @@ type table_mutation_response {
 mkMutRespObj
   :: QualifiedTable
   -> Bool -- is sel perm defined
-  -> Bool -- is nested allowed
   -> ObjTyInfo
-mkMutRespObj tn sel nestAlwd =
+mkMutRespObj tn sel =
   mkHsraObjTyInfo (Just objDesc) (mkMutRespTy tn) Set.empty $ mapFromL _fiName
     $ affectedRowsFld : bool [] [returningFld] sel
   where
@@ -517,10 +508,9 @@ mkMutRespObj tn sel nestAlwd =
         desc = "number of affected rows by the mutation"
     returningFld =
       mkHsraObjFldInfo (Just desc) "returning" Map.empty Nothing $
-        G.toGT $ G.toNT $ G.toLT $ G.toNT retTy
+        G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
-        retTy = bool (mkTableColTy tn) (mkTableTy tn) nestAlwd
 
 -- table_bool_exp
 mkBoolExpInp
@@ -553,16 +543,15 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      Left (PGColInfo colName colTy _) ->
+      Left (PGColInfoG colName colTy _) ->
         mk (mkColName colName) Nothing (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
         mk (G.Name $ getRelTxt relName) Nothing (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
-mkPGColInp (PGColInfo colName colTy _) =
-  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing (Just $ PTCol colTy) $
-  mkPGColGTy colTy
-  --G.toGT $ mkScalarTy colTy
+mkPGColInp (PGColInfoG colName colTy _) =
+  InpValInfo Nothing (G.Name $ getPGColTxt colName) Nothing
+    (Just $ PTCol colTy) $ mkPGColGTy colTy
 
 {-
 input function_args {
@@ -743,21 +732,22 @@ mkUpdArrOpInp tn cols = bool arrUpdsInpObjs [] $ null arrCols
 
     arrUpdsInpObjs =  map mkInpTy arrUpdOps
 
-    mkInpTy (opName, desc, f) = mkHsraInpTyInfo (Just desc) (mkArrOpTy tn opName) $
-      fromInpValL $ mapMaybe (mkInpVal f) arrCols
+    mkInpTy (opName, desc, f) = mkHsraInpTyInfo (Just desc)
+      (mkArrOpTy tn opName) $ fromInpValL $ mapMaybe (mkInpVal f) arrCols
 
-    mkInpVal f col = fmap (mkPGTyInpVal Nothing $ G.Name $ getPGColTxt $ pgiName col) $ f (pgiType col)
+    mkInpVal f col =
+      mkPGTyInpVal Nothing (G.Name $ getPGColTxt $ pgiName col) <$> f (pgiType col)
 
 arrUpdOps :: [(G.Name, G.Description, PGColType -> Maybe PGColType)]
 arrUpdOps =
   [ ( "_append_array"
     , "append existing array value of filtered columns with new array value"
-    , Just . id
+    , Just
     )
 
   , ( "_prepend_array"
     , "prepend existing array value of filtered columns with new array value"
-    , Just . id
+    , Just
     )
 
   , ( "_append_element"
@@ -999,18 +989,13 @@ input table_insert_input {
 -}
 
 mkInsInp
-  :: QualifiedTable -> InsCtx -> InpObjTyInfo
-mkInsInp tn insCtx =
+  :: QualifiedTable -> [PGColInfo] -> RelationInfoMap -> InpObjTyInfo
+mkInsInp tn insCols relInfoMap =
   mkHsraInpTyInfo (Just desc) (mkInsInpTy tn) $ fromInpValL $
-  map mkPGColInp insCols <> bool [] relInps alwNestedIns
+  map mkPGColInp insCols <> relInps
   where
     desc = G.Description $
       "input type for inserting data into table " <>> tn
-    alwNestedIns = isJust $ icUniqCols insCtx
-    cols = icColumns insCtx
-    setCols = Map.keys $ icSet insCtx
-    insCols = flip filter cols $ \ci -> pgiName ci `notElem` setCols
-    relInfoMap = icRelations insCtx
 
     relInps = flip map (Map.toList relInfoMap) $
       \(relName, relInfo) ->
@@ -1291,10 +1276,8 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
 
 mkGCtxRole'
   :: QualifiedTable
-  -- all columns
-  -> [PGColInfo]
-  -- insert perm
-  -> Maybe (InsCtx, Bool)
+  -- insert permission
+  -> Maybe ([PGColInfo], RelationInfoMap)
   -- select permission
   -> Maybe (Bool, [SelField])
   -- update cols
@@ -1304,24 +1287,22 @@ mkGCtxRole'
   -- primary key columns
   -> [PGColInfo]
   -- constraints
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> Maybe ViewInfo
   -- all functions
   -> [FunctionInfo]
   -> TyAgg
-mkGCtxRole' tn allCols insPermM selPermM updColsM
+mkGCtxRole' tn insPermM selPermM updColsM
             delPermM pkeyCols constraints viM funcs =
 
   TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
   where
 
     ordByCtx = fromMaybe Map.empty ordByCtxM
-    upsertPerm = or $ fmap snd insPermM
-    alwNestMutFld = isJust $ getUniqCols allCols constraints
-    constNames = map tcName constraints
-    isUpsertable = upsertable constNames upsertPerm $ isJust viM
+    upsertPerm = isJust updColsM
+    isUpsertable = upsertable constraints upsertPerm $ isJust viM
     updatableCols = maybe [] (map pgiName) updColsM
-    onConflictTypes = mkOnConflictTypes tn constNames updatableCols isUpsertable
+    onConflictTypes = mkOnConflictTypes tn constraints updatableCols isUpsertable
     jsonOpTys = fromMaybe [] updJSONOpInpObjTysM
     arrOpTys  = fromMaybe [] updArrOpInpObjTysM
     relInsInpObjTys = maybe [] (map TIInpObj) $
@@ -1337,7 +1318,6 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
       [ TIInpObj <$> boolExpInpObjM
       , TIInpObj <$> ordByInpObjM
       , TIObj <$> selObjM
-      , TIObj <$> selColObjM
       ]
     aggQueryTypes = map TIObj aggObjs <> map TIInpObj aggOrdByInps
 
@@ -1355,7 +1335,6 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
     fieldMap = Map.unions $ catMaybes
                [ insInpObjFldsM, updSetInpObjFldsM
                , boolExpInpObjFldsM , selObjFldsM
-               , selColObjFldsM
                ]
     scalars = Set.unions [selByPkScalarSet, funcArgScalarSet]
 
@@ -1363,14 +1342,12 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
     mkColFldMap ty cols = Map.fromList $ flip map cols $
       \c -> ((ty, mkColName $ pgiName c), Left c)
 
-    insCtxM = fst <$> insPermM
-    insColsM = icColumns <$> insCtxM
     -- insert input type
-    insInpObjM = mkInsInp tn <$> insCtxM
+    insInpObjM = uncurry (mkInsInp tn) <$> insPermM
     -- column fields used in insert input object
-    insInpObjFldsM = mkColFldMap (mkInsInpTy tn) <$> insColsM
+    insInpObjFldsM = (mkColFldMap (mkInsInpTy tn) . fst) <$> insPermM
     -- relationship input objects
-    relInsInpObjsM = const (mkRelInsInps tn isUpsertable) <$> insCtxM
+    relInsInpObjsM = const (mkRelInsInps tn isUpsertable) <$> insPermM
     -- update set input type
     updSetInpObjM = mkUpdSetInp tn <$> updColsM
     -- update increment input type
@@ -1423,18 +1400,14 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
     -- mut resp obj
     mutRespObjM =
       if isMut
-      then Just $ mkMutRespObj tn (isJust selFldsM) alwNestMutFld
+      then Just $ mkMutRespObj tn $ isJust selFldsM
       else Nothing
 
-    isMut = (isJust insColsM || isJust updColsM || isJust delPermM)
+    isMut = (isJust insPermM || isJust updColsM || isJust delPermM)
             && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
     selObjM = mkTableObj tn <$> selFldsM
-    -- table columns obj
-    selColObjM = if not alwNestMutFld then
-                   (mkTableColObj tn . lefts) <$> selFldsM
-                 else Nothing
 
     -- aggregate objs and order by inputs
     (aggObjs, aggOrdByInps) = case selPermM of
@@ -1466,10 +1439,6 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
-    -- the fields used in table_columns object
-    selColObjFldsM = if not alwNestMutFld then
-                       (mkColFldMap (mkTableColTy tn) . lefts) <$> selFldsM
-                     else Nothing
     -- the scalar set for table_by_pk arguments
     selByPkScalarSet = Set.fromList $ map pgiType pkeyCols
 
@@ -1481,18 +1450,19 @@ mkGCtxRole' tn allCols insPermM selPermM updColsM
 getRootFldsRole'
   :: QualifiedTable
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> FieldInfoMap
   -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
-  -> Maybe (AnnBoolExpSQL, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([PGCol], PreSetCols, AnnBoolExpSQL, [T.Text]) -- update filter
-  -> Maybe (AnnBoolExpSQL, [T.Text]) -- delete filter
+  -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
+  -> Maybe ([PGCol], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
+  -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> RootFlds
 getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
   RootFlds mFlds
   where
+    allCols = getCols fields
     mFlds = mapFromL (either _fiName _fiName . snd) $
       funcQueries <>
       funcAggQueries <>
@@ -1512,21 +1482,19 @@ getRootFldsRole' tn primCols constraints fields funcs insM selM updM delM viM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
 
     colInfos = fst $ validPartitionFieldInfoMap fields
-    constNames = map tcName constraints
-    uniqCols = getUniqCols colInfos constraints
     getInsDet (hdrs, upsertPerm) =
-      let isUpsertable = upsertable constNames upsertPerm $ isJust viM
+      let isUpsertable = upsertable constraints upsertPerm $ isJust viM
       in ( OCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
          , Right $ mkInsMutFld tn isUpsertable
          )
 
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
-      ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols uniqCols
+      ( OCUpdate $ UpdOpCtx tn hdrs updFltr preSetCols allCols
       , Right $ mkUpdMutFld tn $ getColInfos updCols colInfos
       )
 
     getDelDet (delFltr, hdrs) =
-      ( OCDelete $ DelOpCtx tn hdrs delFltr uniqCols
+      ( OCDelete $ DelOpCtx tn hdrs delFltr allCols
       , Right $ mkDelMutFld tn
       )
     getSelDet (selFltr, pLimit, hdrs, _) =
@@ -1603,10 +1571,9 @@ mkInsCtx
   -> TableCache
   -> FieldInfoMap
   -> InsPermInfo
-  -> Maybe [PGColInfo]
   -> Maybe UpdPermInfo
   -> m InsCtx
-mkInsCtx role tableCache fields insPermInfo uniqCols updPermM = do
+mkInsCtx role tableCache fields insPermInfo updPermM = do
   relTupsM <- forM rels $ \relInfo -> do
     let remoteTable = riRTable relInfo
         relName = riName relInfo
@@ -1614,12 +1581,12 @@ mkInsCtx role tableCache fields insPermInfo uniqCols updPermM = do
     let insPermM = getInsPerm remoteTableInfo role
         viewInfoM = tiViewInfo remoteTableInfo
     return $ bool Nothing (Just (relName, relInfo)) $
-      isInsertable insPermM viewInfoM
+      isInsertable insPermM viewInfoM && isValidRel relName remoteTable
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-  return $ InsCtx iView cols setCols relInfoMap updPermForIns uniqCols
+  return $ InsCtx iView allCols setCols relInfoMap updPermForIns
   where
-    cols = getValidCols fields
+    allCols = getCols fields
     rels = getValidRels fields
     iView = ipiView insPermInfo
     setCols = ipiSet insPermInfo
@@ -1635,23 +1602,23 @@ mkAdminInsCtx
   => QualifiedTable
   -> TableCache
   -> FieldInfoMap
-  -> Maybe [PGColInfo]
   -> m InsCtx
-mkAdminInsCtx tn tc fields uniqCols = do
+mkAdminInsCtx tn tc fields = do
   relTupsM <- forM rels $ \relInfo -> do
     let remoteTable = riRTable relInfo
         relName = riName relInfo
     remoteTableInfo <- getTabInfo tc remoteTable
     let viewInfoM = tiViewInfo remoteTableInfo
     return $ bool Nothing (Just (relName, relInfo)) $
-      isMutable viIsInsertable viewInfoM
+      isMutable viIsInsertable viewInfoM && isValidRel relName remoteTable
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-      updPerm = UpdPermForIns (map pgiName cols) noFilter Map.empty
+      updPerm = UpdPermForIns updCols noFilter Map.empty
 
-  return $ InsCtx tn cols Map.empty relInfoMap (Just updPerm) uniqCols
+  return $ InsCtx tn allCols Map.empty relInfoMap (Just updPerm)
   where
-    cols = getValidCols fields
+    allCols = getCols fields
+    updCols = map pgiName $ getValidCols fields
     rels = getValidRels fields
 
 mkGCtxRole
@@ -1660,7 +1627,7 @@ mkGCtxRole
   -> QualifiedTable
   -> FieldInfoMap
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> RoleName
@@ -1668,18 +1635,21 @@ mkGCtxRole
   -> m (TyAgg, RootFlds, InsCtxMap)
 mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
   selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
-  tabInsCtxM <- forM (_permIns permInfo) $ \ipi -> do
-    tic <- mkInsCtx role tableCache fields ipi uniqCols $ _permUpd permInfo
-    return (tic, isJust $ _permUpd permInfo)
-  let updColsM = filterColInfos . upiCols <$> _permUpd permInfo
-      tyAgg = mkGCtxRole' tn allCols tabInsCtxM selPermM updColsM
+  tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
+    ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
+    let permCols = flip getColInfos allCols $
+                   filter isValidCol $ Set.toList $ ipiCols ipi
+    return (ctx, (permCols, icRelations ctx))
+  let insPermM = snd <$> tabInsInfoM
+      insCtxM = fst <$> tabInsInfoM
+      updColsM = filterColInfos . upiCols <$> _permUpd permInfo
+      tyAgg = mkGCtxRole' tn insPermM selPermM updColsM
               (void $ _permDel permInfo) pColInfos constraints viM funcs
       rootFlds = getRootFldsRole tn pCols constraints fields funcs viM permInfo
-      insCtxMap = maybe Map.empty (Map.singleton tn) $ fmap fst tabInsCtxM
+      insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
   return (tyAgg, rootFlds, insCtxMap)
   where
     allCols = getCols fields
-    uniqCols = getUniqCols allCols constraints
     colInfos = getValidCols fields
     pColInfos = getColInfos pCols allCols
     filterColInfos allowedSet =
@@ -1688,7 +1658,7 @@ mkGCtxRole tableCache tn fields pCols constraints funcs viM role permInfo = do
 getRootFldsRole
   :: QualifiedTable
   -> [PGCol]
-  -> [TableConstraint]
+  -> [ConstraintName]
   -> FieldInfoMap
   -> [FunctionInfo]
   -> Maybe ViewInfo
@@ -1720,16 +1690,15 @@ mkGCtxMapTable
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- Map.traverseWithKey
        (mkGCtxRole tableCache tn fields pkeyCols validConstraints tabFuncs viewInfo) rolePerms
-  adminInsCtx <- mkAdminInsCtx tn tableCache fields $ getUniqCols allCols constraints
-  let adminCtx = mkGCtxRole' tn allCols (Just (adminInsCtx, True))
+  adminInsCtx <- mkAdminInsCtx tn tableCache fields
+  let adminCtx = mkGCtxRole' tn (Just (colInfos, icRelations adminInsCtx))
                  (Just (True, selFlds)) (Just colInfos) (Just ())
                  pkeyColInfos validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
   return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
-    TableInfo tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
+    TableInfoG tn _ fields rolePerms constraints pkeyCols viewInfo _ = tabInfo
     validConstraints = mkValidConstraints constraints
-    allCols = getCols fields
     colInfos = getValidCols fields
     validColNames = map pgiName colInfos
     pkeyColInfos = getColInfos pkeyCols colInfos
@@ -1744,9 +1713,8 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       (Just (validColNames, mempty, noFilter, [])) (Just (noFilter, []))
       viewInfo
 
-noFilter :: AnnBoolExpSQL
+noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
-
 
 checkSchemaConflicts
   :: (MonadError QErr m)
@@ -1803,10 +1771,10 @@ checkSchemaConflicts gCtx remoteCtx = do
 
     hQRName = G.NamedType "query_root"
     hMRName = G.NamedType "mutation_root"
-    tyMsg ty = "types: [" <> namesToTxt ty <>
-               "] already exist in current graphql schema"
-    nodesMsg n = "nodes : [" <> namesToTxt n <>
-                 "] already exist in current graphql schema"
+    tyMsg ty = "types: [ " <> namesToTxt ty <>
+               " ] have mismatch with current graphql schema. HINT: Types must be same."
+    nodesMsg n = "top-level nodes: [ " <> namesToTxt n <>
+                 " ] already exist in current graphql schema. HINT: Top-level nodes can't be same."
     namesToTxt = T.intercalate ", " . map G.unName
     builtinNodes = ["__type", "__schema", "__typename"]
     builtinTy = [ "__Directive"
@@ -1861,6 +1829,12 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
+updateSCWithGCtx
+  :: (MonadError QErr m)
+  => SchemaCache -> m SchemaCache
+updateSCWithGCtx sc = do
+  gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
+  return $ sc {scGCtxMap = gCtxMap}
 
 getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do

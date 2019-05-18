@@ -10,6 +10,8 @@ import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
 import           Hasura.Server.Utils             (duplicates)
 
+import           Data.Has
+
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.HashMap.Strict.InsOrd      as OMap
@@ -23,7 +25,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
-newtype P a = P { unP :: Maybe (Either G.Variable a)}
+newtype P a = P { unP :: Maybe (Either (G.Variable, AnnVarVal) a)}
 
 pNull :: (Monad m) => m (P a)
 pNull = return $ P Nothing
@@ -33,24 +35,22 @@ pVal = return . P . Just . Right
 
 resolveVar
   :: ( MonadError QErr m
-     , MonadReader ValidationCtx m)
-  => G.Variable -> m VarVal
+     , MonadReader ValidationCtx m
+     )
+  => G.Variable -> m AnnVarVal
 resolveVar var = do
   varVals <- _vcVarVals <$> ask
-  -- TODO typecheck
   onNothing (Map.lookup var varVals) $
     throwVE $ "no such variable defined in the operation: "
     <> showName (G.unVariable var)
-  where
-    typeCheck expectedTy actualTy = case (expectedTy, actualTy) of
-      -- named types
-      (G.TypeNamed _ eTy, G.TypeNamed _ aTy) -> eTy == aTy
-      -- list types
-      (G.TypeList _ eTy, G.TypeList _ aTy) -> typeCheck (G.unListType eTy) (G.unListType aTy)
-      (_, _) -> False
 
-pVar :: (Monad m) => G.Variable -> m (P a)
-pVar var = return . P . Just . Left $ var
+pVar
+  :: ( MonadError QErr m
+     , MonadReader ValidationCtx m)
+  => G.Variable -> m (P a)
+pVar var = do
+  annInpVal <- resolveVar var
+  return . P . Just $ Left (var, annInpVal)
 
 data InputValueParser a m
   = InputValueParser
@@ -97,7 +97,9 @@ toJValue = \case
     toTup (G.ObjectFieldG f v) = (f,) <$> toJValue v
 
 valueParser
-  :: MonadError QErr m
+  :: ( MonadError QErr m
+     , MonadReader ValidationCtx m
+     )
   => InputValueParser G.Value m
 valueParser =
   InputValueParser pScalar pList pObject pEnum
@@ -118,7 +120,6 @@ valueParser =
     pObject G.VNull              = pNull
     pObject _                    = throwVE "expecting an object"
 
-
     -- scalar json
     pScalar (G.VVariable var) = pVar var
     pScalar G.VNull           = pNull
@@ -137,8 +138,10 @@ pPrintValueC = \case
   G.VCBoolean b                    -> bool "false" "true"  b
   G.VCNull                         -> "null"
   G.VCEnum (G.EnumValue n)         -> G.unName n
-  G.VCList (G.ListValueG vals)     -> withSquareBraces $ T.intercalate ", " $ map pPrintValueC vals
-  G.VCObject (G.ObjectValueG objs) -> withCurlyBraces $ T.intercalate ", " $ map ppObjFld objs
+  G.VCList (G.ListValueG vals)     -> withSquareBraces $ T.intercalate ", " $
+                                      map pPrintValueC vals
+  G.VCObject (G.ObjectValueG objs) -> withCurlyBraces $ T.intercalate ", " $
+                                      map ppObjFld objs
   where
     ppObjFld (G.ObjectFieldG f v) = G.unName f <> ": " <> pPrintValueC v
     withSquareBraces t = "[" <> t <> "]"
@@ -187,9 +190,7 @@ constValueParser =
     pScalar v               = pVal $ toJValueC v
 
 validateObject
-  :: ( MonadReader ValidationCtx m
-     , MonadError QErr m
-     )
+  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> InpObjTyInfo -> [(G.Name, a)] -> m AnnGObject
 validateObject valParser tyInfo flds = do
@@ -200,134 +201,176 @@ validateObject valParser tyInfo flds = do
     <> ", the following fields are duplicated: "
     <> showNames dups
 
-  -- check fields with not null types
-  forM_ (Map.toList $ _iotiFields tyInfo) $
+  -- make default values object
+  defValObj <- fmap (OMap.fromList . catMaybes) $
+    forM (Map.toList $ _iotiFields tyInfo) $
     \(fldName, inpValInfo) -> do
       let ty = _iviType inpValInfo
+          tyAnn = _iviPGTyAnn inpValInfo
           isNotNull = G.isNotNull ty
+          defValM = _iviDefVal inpValInfo
+          hasDefVal = isJust defValM
           fldPresent = fldName `elem` inpFldNames
-      when (not fldPresent && isNotNull) $ throwVE $
-        "field " <> G.unName fldName <> " of type " <> G.showGT ty
-        <> " is required, but not found"
 
-  fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
+      when (not fldPresent && isNotNull && not hasDefVal) $
+        throwVE $ "field " <> G.unName fldName <> " of type "
+                  <> G.showGT ty <> " is required, but not found"
+
+      convDefValM <-
+        validateInputValue constValueParser ty tyAnn `mapM` defValM
+      return $ (fldName,) <$> convDefValM
+
+  -- compute input values object
+  inpValObj <- fmap OMap.fromList $ forM flds $ \(fldName, fldVal) ->
     withPathK (G.unName fldName) $ do
       fldInfo <- getInpFieldInfo tyInfo fldName
-      convFldVal <- validateInputValue valParser (_iviType fldInfo) (_iviPGTyAnn fldInfo) fldVal
+      convFldVal <- validateInputValue valParser (_iviType fldInfo)
+                    (_iviPGTyAnn fldInfo) fldVal
       return (fldName, convFldVal)
+
+  return $ inpValObj `OMap.union` defValObj
 
   where
     inpFldNames = map fst flds
     dups = duplicates inpFldNames
 
 validateNamedTypeVal
-  :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+  :: ( MonadReader r m, Has TypeMap r
+     , MonadError QErr m
+     )
   => InputValueParser a m
-  -> Maybe PGColTyAnn
-  -> G.NamedType -> a -> m AnnGValue
-validateNamedTypeVal inpValParser pgTyAnn nt val = do
+  -> (G.Nullability, G.NamedType) -> Maybe PGColTyAnn -> a -> m AnnInpVal
+validateNamedTypeVal inpValParser (nullability, nt) tyAnn val = do
   tyInfo <- getTyInfo nt
   case tyInfo of
     -- this should never happen
     TIObj _ ->
       throwUnexpTypeErr "object"
+    -- this should never happen
     TIIFace _ ->
       throwUnexpTypeErr "interface"
+    -- this should never happen
     TIUnion _ ->
       throwUnexpTypeErr "union"
     TIInpObj ioti ->
-      withVarVal pgTyAnn (getObject inpValParser) val $
+      withParsed gType tyAnn (getObject inpValParser) val $
       fmap (AGObject nt) . mapM (validateObject inpValParser ioti)
     TIEnum eti ->
-      withVarVal pgTyAnn (getEnum inpValParser) val $
+      withParsed gType tyAnn (getEnum inpValParser) val $
       fmap (AGEnum nt) . mapM (validateEnum eti)
-    TIScalar (ScalarTyInfo _ t _)->
-      throwUnexpNoPGTyErr t
+    TIScalar (ScalarTyInfo _ t colTyM _) -> do
+      colTy <- onNothing colTyM $ throwUnexpNoPGTyErr t
+      withParsed gType tyAnn (getScalar inpValParser) val $
+        fmap (AGPGVal colTy) . mapM (validateScalar colTy)
   where
     throwUnexpTypeErr ty = throw500 $ "unexpected " <> ty <> " type info for: "
       <> showNamedTy nt
-    throwUnexpNoPGTyErr ty = throw500 $ "No PGColType annotation found for scalar type " <> (G.unName ty)
+    throwUnexpNoPGTyErr ty = throw500 $
+      "PGColType not found for scalar type " <> G.unName ty
     validateEnum enumTyInfo enumVal  =
       if Map.member enumVal (_etiValues enumTyInfo)
       then return enumVal
       else throwVE $ "unexpected value " <>
            showName (G.unEnumValue enumVal) <>
            " for enum: " <> showNamedTy nt
+    validateScalar pgColTy =
+      runAesonParser (parsePGValue pgColTy)
+    gType = G.TypeNamed nullability nt
 
 validateList
-  :: (MonadError QErr m, MonadReader ValidationCtx m)
+  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
-  -> G.ListType
+  -> (G.Nullability, G.ListType)
   -> Maybe PGColTyAnn
   -> a
-  -> m AnnGValue
-validateList inpValParser listTy pgTyAnn val =
-  withVarVal pgTyAnn (getList inpValParser) val $ \lM -> do
-    let baseTy = G.unListType listTy
+  -> m AnnInpVal
+validateList inpValParser (nullability, listTy) pgTyAnn val =
+  withParsed ty pgTyAnn (getList inpValParser) val $ \lM -> do
+    let bTy = G.unListType listTy
     AGArray listTy <$>
-      mapM (indexedMapM (validateInputValue inpValParser baseTy pgTyAnn)) lM
-
--- validateNonNull
---   :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
---   => InputValueParser a m
---   -> G.NonNullType
---   -> a
---   -> m AnnGValue
--- validateNonNull inpValParser nonNullTy val = do
---   parsedVal <- case nonNullTy of
---     G.NonNullTypeNamed nt -> validateNamedTypeVal inpValParser nt val
---     G.NonNullTypeList lt  -> validateList inpValParser lt val
---   when (hasNullVal parsedVal) $
---     throwVE $ "unexpected null value for type: " <> G.showGT (G.TypeNonNull nonNullTy)
---   return parsedVal
+      mapM (indexedMapM (validateInputValue inpValParser bTy pgTyAnn)) lM
+  where
+    ty = G.TypeList nullability listTy
 
 validateInputValue
-  :: (MonadError QErr m, MonadReader ValidationCtx m)
+  :: (MonadError QErr m, MonadReader r m, Has TypeMap r)
   => InputValueParser a m
   -> G.GType
   -> Maybe PGColTyAnn
   -> a
-  -> m AnnGValue
+  -> m AnnInpVal
 validateInputValue inpValParser ty Nothing val =
   case ty of
-    G.TypeNamed _ nt -> validateNamedTypeVal inpValParser Nothing nt val
-    G.TypeList _ lt  -> validateList inpValParser lt Nothing val
+    G.TypeNamed nullability nt ->
+      validateNamedTypeVal inpValParser (nullability, nt) Nothing val
+    G.TypeList nullability lt  ->
+      validateList inpValParser (nullability, lt) Nothing val
 validateInputValue inpValParser ty (Just pgTyAnn) val =
   case (pgTyAnn,ty) of
     (PTCol colTy,_) ->
-      withVarVal (Just pgTyAnn) (getScalar inpValParser) val $
+      withParsed ty (Just pgTyAnn) (getScalar inpValParser) val $
       fmap (AGPGVal colTy) . mapM (validatePGVal colTy)
-    (PTArr pgElemTyAnn,G.TypeList _ lt) ->
-      validateList inpValParser lt (Just pgElemTyAnn) val
+    (PTArr pgElemTyAnn,G.TypeList nullability lt) ->
+      validateList inpValParser (nullability, lt) (Just pgElemTyAnn) val
     _ ->
       throw500 $ "Invalid Postgres column type annotation " <> T.pack (show pgTyAnn)
       <> " for GraphQL type " <> T.pack (show ty)
   where validatePGVal pct = runAesonParser (parsePGValue pct)
 
-withVarVal
-  :: (MonadReader ValidationCtx m
-     , MonadError QErr m)
-  => (Maybe PGColTyAnn)
+withParsed
+  :: (MonadError QErr m, Has TypeMap r, MonadReader r m)
+  => G.GType
+  -> Maybe PGColTyAnn
   -> (val -> m (P specificVal))
   -> val
   -> (Maybe specificVal -> m AnnGValue)
-  -> m AnnGValue
-withVarVal pgTy valParser val fn = do
+  -> m AnnInpVal
+withParsed expectedTy tyAnn valParser val fn = do
   parsedVal <- valParser val
   case unP parsedVal of
-    Nothing            -> fn Nothing
-    Just (Right a)     -> fn $ Just a
-    Just (Left var) -> withPathKeys ["$","variables",G.unName $ G.unVariable var] $ do
-      -- TODO Remove defaulting to Null and allow withVarVal to return (Maybe AnnGValue)
-      (ty,defM,inpValM) <- resolveVar var
-      let defM' = defM <|> Just G.VCNull
-      annDefM' <- withPathK "defaultValue" $
-        mapM (validateInputValue constValueParser ty pgTy) defM'
-      annInpValM <- mapM (validateInputValue jsonParser ty pgTy) inpValM
-      let annValM = annInpValM <|> annDefM'
-      onNothing annValM $ throwVE $ "expecting a value for non-null type: "
-        <> G.showGT ty <> " in variableValues"
+    Nothing              ->
+      if G.isNullable expectedTy
+      then AnnInpVal expectedTy Nothing <$> fn Nothing
+      else throwVE $ "null value found for non-nullable type: "
+           <> G.showGT expectedTy
+    Just (Right v)       -> AnnInpVal expectedTy Nothing <$> fn (Just v)
+    Just (Left (var, varVal)) -> do
+      let varTxt = G.unName $ G.unVariable var
+          AnnVarVal ty defM inpValM = varVal
+      withPathKeys ["$","variableValues", G.unName $ G.unVariable var] $ do
+        unless (isTypeAllowed expectedTy ty) $
+          throwVE $ "variable " <> varTxt
+          <> " of type " <> G.showGT ty
+          <> " is used in position expecting " <> G.showGT expectedTy
+        annValM <- do
+          annInpValM <- mapM (validateInputValue jsonParser ty tyAnn) inpValM
+          case annInpValM of
+            Nothing -> withPathK "defaultValue" $
+                       mapM (validateInputValue constValueParser ty tyAnn) defM
+            Just a  -> return $ Just a
+        v <- onNothing annValM $ throwVE $
+             "expecting a value for non-null type: " <> G.showGT ty
+             <> " in variableValues"
+        return $ v { _aivVariable = Just var }
   where
-    withPathKeys []     = id
-    withPathKeys (x:xs) = withPathK x . withPathKeys xs
+    -- is the type 'ofType' allowed at a position of type 'atType'
+    -- Examples:
+    -- . a! is allowed at a
+    -- . [a!]! is allowed at [a]
+    -- . but 'a' is not allowed at 'a!'
+    isTypeAllowed ofType atType =
+      case (ofType, atType) of
+        (G.TypeNamed ofTyN ofNt, G.TypeNamed atTyN atNt) ->
+          checkNullability ofTyN atTyN && (ofNt == atNt)
+        (G.TypeList ofTyN ofLt, G.TypeList atTyN atLt)  ->
+          checkNullability ofTyN atTyN &&
+          isTypeAllowed (G.unListType ofLt) (G.unListType atLt)
+        _ -> False
+
+    -- only when 'atType' is non nullable and 'ofType' is nullable,
+    -- this check fails
+    checkNullability (G.Nullability ofNullable) (G.Nullability atNullable) =
+      case (ofNullable, atNullable) of
+        (True, _)      -> True
+        (False, False) -> True
+        (False, True)  -> False

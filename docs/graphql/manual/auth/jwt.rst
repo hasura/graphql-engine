@@ -15,7 +15,7 @@ verified by GraphQL engine to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
 
-.. image:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -26,9 +26,9 @@ is used for the permissions system.
 .. note::
    Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
 
-   - The authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
+   - JWT authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
      **not found** in the request.
-   - The authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
+   - JWT authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
      found** in the request.
 
 ..   :doc:`Read more<config>`.
@@ -99,7 +99,7 @@ request.
 
 .. code-block:: http
 
-   POST /v1alpha1/graphql HTTP/1.1
+   POST /v1/graphql HTTP/1.1
    Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
    X-Hasura-Role: editor
 
@@ -138,7 +138,8 @@ public keys are not yet supported.
 ``key``
 ^^^^^^^
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
-  "abcdef...").
+  "abcdef..."). The key must be long enough for the algorithm chosen,
+  (e.g. for HS256 it must be at least 32 characters long).
 - In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
@@ -177,7 +178,7 @@ inside which the Hasura specific claims will be present. E.g. - ``https://mydoma
 
 
 ``claims_format``
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 This is an optional field, with only the following possible values:
 - ``json``
 - ``stringified_json``
@@ -385,8 +386,8 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. image:: ../../../img/graphql/manual/auth/jwt-config-generated.png
-   :scale: 50 %
+.. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+   :width: 75%
 
 **See:**
 

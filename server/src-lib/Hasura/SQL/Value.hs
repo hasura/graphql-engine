@@ -39,6 +39,9 @@ pattern PGBoolVal o b <- PGColValue o (PGValBase (PGValKnown (PGValBoolean b)))
 pattern PGTxtVal :: PQ.Oid -> Text -> PGColValue
 pattern PGTxtVal o x = PGColValue o (PGValBase (PGValKnown (PGValText x)))
 
+pattern PGVarcharVal :: PQ.Oid -> Text -> PGColValue
+pattern PGVarcharVal o x = PGColValue o (PGValBase (PGValKnown (PGValVarchar x)))
+
 data PGColValue'
   = PGValBase      !PGBaseColValue
   | PGValDomain    !PGColValue
@@ -91,8 +94,8 @@ toPGBinVal (PGColValue oid x) = fmap (PGColValueBin oid) $ case x of
   PGValComposite _   -> Nothing
   PGValRange _       -> Nothing
   PGValEnum _        -> Nothing
-  PGValDomain b      -> fmap PGValDomainBin $ toPGBinVal b
-  PGValArray eOid v  -> fmap (PGValArrayBin eOid) $ mapM toPGBinVal v
+  PGValDomain b      -> PGValDomainBin <$> toPGBinVal b
+  PGValArray eOid v  -> PGValArrayBin eOid <$> mapM toPGBinVal v
   PGValBase b        -> case b of
                         PGValKnown kb  -> Just (PGValBaseBin kb)
                         PGValUnknown{} -> Nothing
@@ -100,46 +103,69 @@ toPGBinVal (PGColValue oid x) = fmap (PGColValueBin oid) $ case x of
 --binTyM :: PGColValue -> Maybe PGColValueBin
 --binTyM
 
-txtEncoderG :: (PGBaseColValue -> S.SQLExp) -> PGColValue -> S.SQLExp
-txtEncoderG f (PGColValue _ x) = case x of
-  PGValBase b      -> f b
-  PGValDomain b    -> txtEncoder b
-  PGValComposite a -> S.SELit a
-  PGValRange a     -> S.SELit a
-  PGValEnum a      -> S.SELit a
-  PGValArray _ as  -> S.SEArray $ map (txtEncoderG f) $ V.toList as
-  PGNull           -> S.SEUnsafe "NULL"
+data TxtEncodedPGVal
+  = TENull
+  | TELit !Text
+  | TEArray ![TxtEncodedPGVal]
+  deriving (Show, Eq, Generic)
+
+instance Hashable TxtEncodedPGVal
+
+instance ToJSON TxtEncodedPGVal where
+  toJSON = \case
+    TENull  -> Null
+    TELit t -> String t
+    TEArray l -> toJSON l
+
+fromEncPGVal :: TxtEncodedPGVal -> S.SQLExp
+fromEncPGVal = \case
+  TENull -> S.SEUnsafe "NULL"
+  TELit t -> S.SELit t
+  TEArray l -> S.SEArray $ map fromEncPGVal l
 
 txtEncoder :: PGColValue -> S.SQLExp
-txtEncoder = txtEncoderG txtEncoder'
+txtEncoder = fromEncPGVal . txtEncodePGVal
 
-txtEncoder' :: PGBaseColValue -> S.SQLExp
-txtEncoder' (PGValKnown colVal) = case colVal of
-  PGValInteger i  -> S.SELit $ T.pack $ show i
-  PGValSmallInt i -> S.SELit $ T.pack $ show i
-  PGValBigInt i   -> S.SELit $ T.pack $ show i
-  PGValFloat f    -> S.SELit $ T.pack $ show f
-  PGValDouble d   -> S.SELit $ T.pack $ show d
-  PGValNumeric sc -> S.SELit $ T.pack $ show sc
-  PGValBoolean b  -> S.SELit $ bool "false" "true" b
-  PGValChar t     -> S.SELit $ T.pack $ show t
-  PGValVarchar t  -> S.SELit t
-  PGValText t     -> S.SELit t
-  PGValDate d     -> S.SELit $ T.pack $ showGregorian d
+txtEncodePGValG
+  :: (PGBaseColValue -> TxtEncodedPGVal) -> PGColValue -> TxtEncodedPGVal
+txtEncodePGValG f (PGColValue _ x) = case x of
+  PGValBase b      -> f b
+  PGValDomain b    -> txtEncodePGVal b
+  PGValComposite a -> TELit a
+  PGValRange a     -> TELit a
+  PGValEnum a      -> TELit a
+  PGValArray _ as  -> TEArray $ map (txtEncodePGValG f) $ V.toList as
+  PGNull           -> TENull
+
+txtEncodePGVal :: PGColValue -> TxtEncodedPGVal
+txtEncodePGVal = txtEncodePGValG txtEncodePGVal'
+
+txtEncodePGVal' :: PGBaseColValue -> TxtEncodedPGVal
+txtEncodePGVal' (PGValKnown colVal) = case colVal of
+  PGValInteger i  -> TELit $ T.pack $ show i
+  PGValSmallInt i -> TELit $ T.pack $ show i
+  PGValBigInt i   -> TELit $ T.pack $ show i
+  PGValFloat f    -> TELit $ T.pack $ show f
+  PGValDouble d   -> TELit $ T.pack $ show d
+  PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValBoolean b  -> TELit $ bool "false" "true" b
+  PGValChar t     -> TELit $ T.pack $ show t
+  PGValVarchar t  -> TELit t
+  PGValText t     -> TELit t
+  PGValDate d     -> TELit $ T.pack $ showGregorian d
   PGValTimeStampTZ u ->
-    S.SELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
-    S.SELit $ T.pack (show tod ++ timeZoneOffsetString tz)
+    TELit $ T.pack (show tod ++ timeZoneOffsetString tz)
   --PGNull _ ->
   --  S.SEUnsafe "NULL"
-  PGValJSON (Q.JSON j)    -> S.SELit $ TL.toStrict $
+  PGValJSON (Q.JSON j)    -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
-  PGValJSONB (Q.JSONB j)  -> S.SELit $ TL.toStrict $
+  PGValJSONB (Q.JSONB j)  -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
-  PGValGeo o    -> S.SELit $ TL.toStrict $
+  PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
-txtEncoder' (PGValUnknown t) = S.SELit t
-
+txtEncodePGVal' (PGValUnknown t) = TELit t
 
 paTxtEncBase :: PGBCKnown -> (PQ.Oid, T.Text)
 paTxtEncBase c = case c of
@@ -183,7 +209,7 @@ paTxtEnc (PGColValue oid v) = case v of
     asPGArr a = curly $ T.intercalate "," $ map encAndDoubleQuote a
     encAndDoubleQuote x =
       let TxtEncInfo _ q enc = paTxtEnc x in
-          bool id doubleQuoted q $ enc
+          bool id doubleQuoted q enc
     doubleQuoted a = "\"" <> escaped a  <> "\""
     escaped a = T.replace "\"" "\\\"" $ T.replace "\\" "\\\\" a
     curly a = "{" <> a <> "}"
@@ -295,20 +321,20 @@ parsePGValue pct val = case pgColTyDetails pct of
     parseAsVal g v =
       let oid = pgColTyOid pct
           asVal = PGColValue oid . g in
-      fmap asVal $ parseJSON v
+      asVal <$> parseJSON v
     parseAsComposite = parseAsVal PGValComposite
     parseAsEnum      = parseAsVal PGValEnum
     parseAsRange     = parseAsVal PGValRange
     parseAsArray bct v = allowPGEncStr $ (flip $ withArray "[PGColValue]") v $ \a -> do
       let elemOid = maybe (pgColTyOid bct) pgTyOid $ getArrayBaseTy pct
           asArr = PGColValue (pgTyOid pct) . PGValArray elemOid
-      fmap asArr $ mapM (parsePGValue bct) a
+      asArr <$> mapM (parsePGValue bct) a
 
     asUnknown bct v = PGColValue (pgColTyOid bct) $ PGValBase $ PGValUnknown v
 
     parseAsBase bct v = allowPGEncStr $
       let asBaseColVal = PGColValue (pgTyOid pct) . PGValBase in
-      fmap asBaseColVal $ parsePGValue' bct v
+      asBaseColVal <$> parsePGValue' bct v
 
     allowPGEncStr :: AT.Parser PGColValue -> AT.Parser PGColValue
     allowPGEncStr f = case val of
@@ -353,20 +379,21 @@ pattern PGGeogVal :: GeometryWithCRS -> PGBaseColValue
 pattern PGGeogVal x = PGValKnown (PGValGeo x)
 
 
-txtEncWithGeoVal :: PGColValue -> S.SQLExp
-txtEncWithGeoVal = txtEncoderG txtEncGeoJson
-  where
-    txtEncGeoJson v = bool id applyGeomFromGeoJson (isGeoTy v) $ txtEncoder' v
+-- txtEncWithGeoVal :: PGColValue -> S.SQLExp
+-- txtEncWithGeoVal = fromEncPGVal . txtEncodePGValG undefined
+--   where
+--     txtEncGeoJson v = bool id applyGeomFromGeoJson (isGeoTy v) $
+--                       fromEncPGVal $ txtEncodePGVal' v
 
-    isGeoTy v = case v of
-      (PGGeogVal _) -> True
-      _             -> False
+--     isGeoTy v = case v of
+--       (PGGeogVal _) -> True
+--       _             -> False
 
 applyGeomFromGeoJson :: S.SQLExp -> S.SQLExp
 applyGeomFromGeoJson v = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
 
 applyAsGeoJSON :: S.SQLExp -> S.SQLExp
-applyAsGeoJSON expn = 
+applyAsGeoJSON expn =
   S.SEFnApp "ST_AsGeoJSON"
   [ expn
   , S.SEUnsafe "15" -- max decimal digits
@@ -416,9 +443,9 @@ withGeom ty@(PGColType _ _ _ d) = case d of
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
-  S.annotateExp txtVal ty
+  S.annotateExp ty txtVal
   where
-    txtVal = txtEncWithGeoVal val
+    txtVal = withGeom ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGColValue _ x) = case x of
@@ -427,7 +454,7 @@ pgColValueToInt (PGColValue _ x) = case x of
   _               -> Nothing
 
 pgColValueToInt' :: PGBaseColValue -> Maybe Int
-pgColValueToInt' (PGValUnknown{}) = Nothing
+pgColValueToInt' PGValUnknown{} = Nothing
 pgColValueToInt' (PGValKnown x)   = case x of
   (PGValInteger i)  -> Just $ fromIntegral i
   (PGValSmallInt i) -> Just $ fromIntegral i

@@ -13,14 +13,16 @@ module Hasura.GraphQL.Resolve.InputValue
   , withArrayM
   , parseMany
   , asPGColText
+  , asPGColTextM
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Text                      as T
+import qualified Data.Vector                    as V
+import qualified Language.GraphQL.Draft.Syntax  as G
 
-import           Hasura.GraphQL.Utils
+import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -34,98 +36,152 @@ withNotNull nt v =
   "unexpected null for a value of type " <> showNamedTy nt
 
 tyMismatch
-  :: (MonadError QErr m) => Text -> AnnGValue -> m a
+  :: (MonadError QErr m) => Text -> AnnInpVal -> m a
 tyMismatch expectedTy v =
   throw500 $ "expected " <> expectedTy <> ", found " <>
-  getAnnInpValKind v <> " for value of type " <>
-  G.showGT (getAnnInpValTy v)
+  getAnnInpValKind (_aivValue v) <> " for value of type " <>
+  G.showGT (_aivType v)
 
 asPGColValM
   :: (MonadError QErr m)
-  => AnnGValue -> m (Maybe (PGColType, PGColValue))
-asPGColValM = \case
-  AGPGVal colTy valM -> return $ fmap (colTy,) valM
-  v            -> tyMismatch "pgvalue" v
+  => AnnInpVal -> m (Maybe AnnPGVal)
+asPGColValM annInpVal = case val of
+  AGPGVal colTy valM ->
+    return $ fmap (AnnPGVal varM (G.isNullable ty) colTy) valM
+  _                   ->
+    tyMismatch "pgvalue" annInpVal
+  where
+    AnnInpVal ty varM val = annInpVal
 
 asPGColVal
   :: (MonadError QErr m)
-  => AnnGValue -> m (PGColType, PGColValue)
-asPGColVal = \case
-  AGPGVal colTy (Just val) -> return (colTy, val)
-  AGPGVal colTy Nothing ->
+  => AnnInpVal -> m AnnPGVal
+asPGColVal v = case _aivValue v of
+  AGPGVal colTy (Just val) ->
+    return $ AnnPGVal (_aivVariable v) (G.isNullable (_aivType v)) colTy val
+  AGPGVal colTy Nothing    ->
     throw500 $ "unexpected null for ty "
     <> T.pack (show colTy)
-  v            -> tyMismatch "pgvalue" v
+  _            -> tyMismatch "pgvalue" v
 
 asEnumVal
   :: (MonadError QErr m)
-  => AnnGValue -> m (G.NamedType, G.EnumValue)
-asEnumVal = \case
+  => AnnInpVal -> m (G.NamedType, G.EnumValue)
+asEnumVal v = case _aivValue v of
   AGEnum ty (Just val) -> return (ty, val)
   AGEnum ty Nothing ->
     throw500 $ "unexpected null for ty " <> showNamedTy ty
-  v              -> tyMismatch "enum" v
+  _              -> tyMismatch "enum" v
 
 withObject
   :: (MonadError QErr m)
-  => (G.NamedType -> AnnGObject -> m a) -> AnnGValue -> m a
-withObject fn v = case v of
+  => (G.NamedType -> AnnGObject -> m a) -> AnnInpVal -> m a
+withObject fn v = case _aivValue v of
   AGObject nt (Just obj) -> fn nt obj
-  AGObject nt Nothing  ->
+  AGObject _ Nothing     ->
     throw500 $ "unexpected null for ty"
-    <> G.showGT (G.TypeNamed (G.Nullability True) nt)
-  _               -> tyMismatch "object" v
+    <> G.showGT (_aivType v)
+  _                      -> tyMismatch "object" v
 
 asObject
   :: (MonadError QErr m)
-  => AnnGValue -> m AnnGObject
+  => AnnInpVal -> m AnnGObject
 asObject = withObject (\_ o -> return o)
 
 withObjectM
   :: (MonadError QErr m)
-  => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnGValue -> m a
-withObjectM fn v = case v of
+  => (G.NamedType -> Maybe AnnGObject -> m a) -> AnnInpVal -> m a
+withObjectM fn v = case _aivValue v of
   AGObject nt objM -> fn nt objM
   _                -> tyMismatch "object" v
 
 asObjectM
   :: (MonadError QErr m)
-  => AnnGValue -> m (Maybe AnnGObject)
+  => AnnInpVal -> m (Maybe AnnGObject)
 asObjectM = withObjectM (\_ o -> return o)
 
 withArrayM
   :: (MonadError QErr m)
-  => (G.ListType -> Maybe [AnnGValue] -> m a) -> AnnGValue -> m a
-withArrayM fn v = case v of
+  => (G.ListType -> Maybe [AnnInpVal] -> m a) -> AnnInpVal -> m a
+withArrayM fn v = case _aivValue v of
   AGArray lt listM -> fn lt listM
   _                -> tyMismatch "array" v
 
 withArray
   :: (MonadError QErr m)
-  => (G.ListType -> [AnnGValue] -> m a) -> AnnGValue -> m a
-withArray fn v = case v of
+  => (G.ListType -> [AnnInpVal] -> m a) -> AnnInpVal -> m a
+withArray fn v = case _aivValue v of
   AGArray lt (Just l) -> fn lt l
-  AGArray lt Nothing  -> throw500 $ "unexpected null for ty"
-                         <> G.showGT (G.TypeList (G.Nullability True) lt)
+  AGArray _ Nothing   -> throw500 $ "unexpected null for ty"
+                         <> G.showGT (_aivType v)
   _                   -> tyMismatch "array" v
 
 asArray
   :: (MonadError QErr m)
-  => AnnGValue -> m [AnnGValue]
+  => AnnInpVal -> m [AnnInpVal]
 asArray = withArray (\_ vals -> return vals)
 
 parseMany
   :: (MonadError QErr m)
-  => (AnnGValue -> m a) -> AnnGValue -> m (Maybe [a])
-parseMany fn v = case v of
+  => (AnnInpVal -> m a) -> AnnInpVal -> m (Maybe [a])
+parseMany fn v = case _aivValue v of
   AGArray _ arrM -> mapM (mapM fn) arrM
   _              -> tyMismatch "array" v
 
+onlyText
+  :: (MonadError QErr m)
+  => PGColValue -> m Text
+onlyText = \case
+  PGTxtVal _ t     -> return t
+  PGVarcharVal _ t -> return t
+  _           -> throw500 "expecting text for asPGColText"
+
 asPGColText
   :: (MonadError QErr m)
-  => AnnGValue -> m Text
+  => AnnInpVal -> m Text
 asPGColText val = do
-  (_, pgColVal) <- asPGColVal val
-  case pgColVal of
-    (PGTxtVal _ t) -> return t
-    _           -> throw500 "expecting text for asPGColText"
+  pgColVal <- _apvValue <$> asPGColVal val
+  onlyText pgColVal
+
+asPGColTextM
+  :: (MonadError QErr m)
+  => AnnInpVal -> m (Maybe Text)
+asPGColTextM val = do
+  pgColValM <- fmap _apvValue <$> asPGColValM val
+  mapM onlyText pgColValM
+
+-- resolveToPGColVal
+--   :: (MonadError QErr m)
+--   => AnnInpVal -> m (PGColType, PGColValue)
+-- resolveToPGColVal annInpVal =
+--   case _aivValue annInpVal of
+--     AGPGVal colTy Nothing -> return (colTy, nullVal colTy)
+--     AGPGVal colTy (Just val)  -> return (colTy, val)
+--     AGEnum _ _            -> throw500 "Enum is not supported for ColVal"
+--     AGObject _ _          -> throw500 "Object is not supported for ColVal"
+--     AGArray (G.ListType lt) Nothing -> do
+--       let colTy = asScalarColType $ getBaseTy lt
+--       return (colTy, nullVal colTy)
+--     AGArray (G.ListType lt) (Just vals) -> do
+--       undefined
+--   where
+--     nullVal ty = PGColValue (pgColTyOid ty) PGNull
+
+-- resolveArrayInput
+--   :: MonadError QErr m
+--   => G.GType -> [AnnInpVal] -> m PGColValue
+-- resolveArrayInput gTy inpVals = do
+--   case gTy of
+--     G.TypeNamed _ nt -> do
+--       vals <- mapM asPGVal inpVals
+--       let elemOid = pgColTyOid $ asScalarColType nt
+--           valVect = V.fromList vals
+--       return $ PGColValue undefined $ PGValArray elemOid valVect
+--     G.TypeList _ (G.ListType lt) -> do
+--       undefined
+--   where
+--     asPGVal v = case _aivValue v of
+--       AGPGVal _ (Just val) -> return val
+--       AGPGVal colTy Nothing -> throw500 $ "unexpected null for ty "
+--                            <> T.pack (show colTy)
+--       _ -> tyMismatch "pgvalue" v

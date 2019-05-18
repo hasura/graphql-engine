@@ -1,5 +1,5 @@
 description: Select author and their articles
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
@@ -23,7 +23,7 @@ response:
       - latest
 query:
   query: |
-    query ($tags: jsonb) {
+    query {
       article (
       where: { tags: {_contains: "latest"}}
       ) {

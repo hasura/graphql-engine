@@ -83,7 +83,7 @@ export const query = graphql`
 
 - Run the app:
   ```bash
-  HASURA_GRAPHQL_URL=https://my-app.herokuapp.com/v1alpha1/graphql npm run develop
+  HASURA_GRAPHQL_URL=https://my-app.herokuapp.com/v1/graphql npm run develop
   ```
 - Test the app
   Visit [http://localhost:8000](http://localhost:8000) to view the app

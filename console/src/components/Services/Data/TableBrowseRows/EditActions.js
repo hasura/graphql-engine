@@ -1,10 +1,10 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';

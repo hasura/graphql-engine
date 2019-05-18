@@ -278,8 +278,7 @@ $$;
 
 CREATE TABLE hdb_catalog.event_triggers
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT UNIQUE,
+  name TEXT PRIMARY KEY,
   type TEXT NOT NULL,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
@@ -294,7 +293,6 @@ CREATE TABLE hdb_catalog.event_log
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
-  trigger_id TEXT NOT NULL,
   trigger_name TEXT NOT NULL,
   payload JSONB NOT NULL,
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
@@ -305,7 +303,7 @@ CREATE TABLE hdb_catalog.event_log
   next_retry_at TIMESTAMP
 );
 
-CREATE INDEX ON hdb_catalog.event_log (trigger_id);
+CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -370,14 +368,28 @@ SELECT
   END AS return_type_type,
   p.proretset AS returns_set,
   ( SELECT
-      COALESCE(json_agg(pt.typname), '[]')
+      COALESCE(json_agg(q.type_info), '[]')
     FROM
       (
-        unnest(
-          COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
-        ) WITH ORDINALITY pat(oid, ordinality)
-        LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
-      )
+        SELECT
+          json_build_object(
+            'oid', pat.oid::int,
+            'dimension',
+            case
+              when pt.oid IS NOT NULL then 1
+              else 0
+            end,
+            'name', format_type(pat.oid, null)
+          ) AS type_info,
+          pat.ordinality
+        FROM
+          UNNEST(
+              COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+          ) WITH ORDINALITY pat(oid, ordinality)
+          LEFT OUTER JOIN
+            pg_type pt ON (pt.typarray = pat.oid)
+        ORDER BY pat.ordinality ASC
+      ) q
    ) AS input_arg_types,
   to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names
 FROM
@@ -433,4 +445,184 @@ LANGUAGE plpgsql;
 CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON hdb_catalog.hdb_schema_update_event
   FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.hdb_schema_update_event_notifier();
 
+CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
+select
+  tables.table_name as table_name,
+  tables.table_schema as table_schema,
+  coalesce(columns.columns, '[]') as columns,
+  coalesce(pk.columns, '[]') as primary_key_columns,
+  coalesce(constraints.constraints, '[]') as constraints,
+  coalesce(views.view_info, 'null') as view_info
+from
+  information_schema.tables as tables
+  left outer join (
+    select
+      c.table_name,
+      c.table_schema,
+      json_agg(
+        json_build_object(
+          'name',
+          column_name,
+          'type',
+          json_build_object(
+            'oid',
+            ty.oid :: int ,
+            -- 'sqlName',
+            -- pg_catalog.format_type(td.atttypid, td.atttypmod),
+            'dimension',
+            td.attndims
+          ),
+          'is_nullable',
+          is_nullable :: boolean
+        )
+      ) as columns
+    from
+      information_schema.columns c
+      left outer join (
+        select pc.relnamespace,
+               pc.relname,
+               pa.attname,
+               pa.attndims,
+               pa.atttypid,
+               pa.atttypmod
+          from pg_attribute pa
+                 left join pg_class pc
+                     on pa.attrelid = pc.oid
+      ) td on
+      ( c.table_schema::regnamespace::oid = td.relnamespace
+      AND c.table_name = td.relname
+      AND c.column_name = td.attname
+      )
+      left outer join pg_type ty
+                     on td.atttypid = ty.oid
+    group by
+      c.table_schema,
+      c.table_name
+  ) columns on (
+    tables.table_schema = columns.table_schema
+    AND tables.table_name = columns.table_name
+  )
+  left outer join (
+    select * from hdb_catalog.hdb_primary_key
+  ) pk on (
+    tables.table_schema = pk.table_schema
+    AND tables.table_name = pk.table_name
+  )
+  left outer join (
+    select
+      c.table_schema,
+      c.table_name,
+      json_agg(constraint_name) as constraints
+    from
+      information_schema.table_constraints c
+    where
+      c.constraint_type = 'UNIQUE'
+      or c.constraint_type = 'PRIMARY KEY'
+    group by
+      c.table_schema,
+      c.table_name
+  ) constraints on (
+    tables.table_schema = constraints.table_schema
+    AND tables.table_name = constraints.table_name
+  )
+  left outer join (
+    select
+      table_schema,
+      table_name,
+      json_build_object(
+        'is_updatable',
+        (is_updatable::boolean OR is_trigger_updatable::boolean),
+        'is_deletable',
+        (is_updatable::boolean OR is_trigger_deletable::boolean),
+        'is_insertable',
+        (is_insertable_into::boolean OR is_trigger_insertable_into::boolean)
+      ) as view_info
+    from
+      information_schema.views v
+  ) views on (
+    tables.table_schema = views.table_schema
+    AND tables.table_name = views.table_name
+  )
+);
 
+CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
+  SELECT
+    function_name,
+    function_schema,
+    row_to_json (
+      (
+        SELECT
+          e
+          FROM
+              (
+                SELECT
+                  has_variadic,
+                  function_type,
+                  return_type_schema,
+                  return_type_name,
+                  return_type_type,
+                  returns_set,
+                  input_arg_types,
+                  input_arg_names,
+                  exists(
+                    SELECT
+                      1
+                      FROM
+                          information_schema.tables
+                     WHERE
+                table_schema = return_type_schema
+            AND table_name = return_type_name
+                  ) AS returns_table
+              ) AS e
+      )
+    ) AS "function_info"
+    FROM
+        hdb_catalog.hdb_function_agg
+);
+
+CREATE OR REPLACE FUNCTION
+  hdb_catalog.insert_event_log(schema_name text, table_name text, trigger_name text, op text, row_data json)
+  RETURNS text AS $$
+  DECLARE
+    id text;
+    payload json;
+    session_variables json;
+    server_version_num int;
+  BEGIN
+    id := gen_random_uuid();
+    server_version_num := current_setting('server_version_num');
+    IF server_version_num >= 90600 THEN
+      session_variables := current_setting('hasura.user', 't');
+    ELSE
+      BEGIN
+        session_variables := current_setting('hasura.user');
+      EXCEPTION WHEN OTHERS THEN
+                  session_variables := NULL;
+      END;
+    END IF;
+    payload := json_build_object(
+      'op', op,
+      'data', row_data,
+      'session_variables', session_variables
+    );
+    INSERT INTO hdb_catalog.event_log
+                (id, schema_name, table_name, trigger_name, payload)
+    VALUES
+    (id, schema_name, table_name, trigger_name, payload);
+    RETURN id;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE hdb_catalog.hdb_query_collection
+(
+  collection_name TEXT PRIMARY KEY,
+  collection_defn JSONB NOT NULL,
+  comment TEXT NULL,
+  is_system_defined boolean default false
+);
+
+CREATE TABLE hdb_catalog.hdb_allowlist
+(
+  collection_name TEXT UNIQUE
+    REFERENCES hdb_catalog.hdb_query_collection(collection_name)
+);
