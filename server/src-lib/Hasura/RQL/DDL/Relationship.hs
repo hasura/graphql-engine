@@ -324,8 +324,10 @@ getRequiredFkey col fkeySet preCondition =
            "more than one foreign key constraint exists on the given column"
   where
     filterFkeys = HS.toList $ HS.filter filterFn fkeySet
-    filterFn k =
-      preCondition k && isJust (HM.lookup col $ _cfkColumnMapping k)
+    filterFn k = preCondition k && hasColumn k && hasOneColumnInMap k
+
+    hasColumn k = isJust $ HM.lookup col $ _cfkColumnMapping k
+    hasOneColumnInMap k = length (HM.toList $ _cfkColumnMapping k) == 1
 
 fetchTableFkeys :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
 fetchTableFkeys qt@(QualifiedObject sn tn) = do
