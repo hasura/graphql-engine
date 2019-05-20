@@ -327,7 +327,7 @@ getRequiredFkey col fkeySet preCondition =
     filterFn k = preCondition k && hasColumn k && hasOneColumnInMap k
 
     hasColumn k = isJust $ HM.lookup col $ _cfkColumnMapping k
-    hasOneColumnInMap k = length (HM.toList $ _cfkColumnMapping k) == 1
+    hasOneColumnInMap k = HM.size (_cfkColumnMapping k) == 1
 
 fetchTableFkeys :: QualifiedTable -> Q.TxE QErr (HS.HashSet CatalogFKey)
 fetchTableFkeys qt@(QualifiedObject sn tn) = do
