@@ -20,7 +20,6 @@ module Hasura.RQL.Types.SchemaCache
        , onlyComparableCols
        , isUniqueOrPrimary
        , isForeignKey
-       , mkTableInfo
        , addTableToCache
        , modTableInCache
        , delTableFromCache
@@ -47,6 +46,7 @@ module Hasura.RQL.Types.SchemaCache
        , addRelToCache
 
        , delColFromCache
+       , updColInCache
        , delRelFromCache
 
        , RolePermInfo(..)
@@ -99,6 +99,7 @@ module Hasura.RQL.Types.SchemaCache
        , askFunctionInfo
        , delFunctionFromCache
 
+       , replaceAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -110,6 +111,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
@@ -352,19 +354,18 @@ data TableInfo
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
 
-mkTableInfo
-  :: QualifiedTable
-  -> Bool
-  -> [ConstraintName]
-  -> [PGColInfo]
-  -> [PGCol]
-  -> Maybe ViewInfo -> TableInfo
-mkTableInfo tn isSystemDefined uniqCons cols pCols mVI =
-  TableInfo tn isSystemDefined colMap (M.fromList [])
-    uniqCons pCols mVI (M.fromList [])
-  where
-    colMap     = M.fromList $ map f cols
-    f colInfo = (fromPGCol $ pgiName colInfo, FIColumn colInfo)
+instance FromJSON TableInfo where
+  parseJSON = withObject "TableInfo" $ \o -> do
+    name <- o .: "name"
+    columns <- o .: "columns"
+    pkeyCols <- o .: "primary_key_columns"
+    constraints <- o .: "constraints"
+    viewInfoM <- o .:? "view_info"
+    isSystemDefined <- o .:? "is_system_defined" .!= False
+    let colMap = M.fromList $ flip map columns $
+                 \c -> (fromPGCol $ pgiName c, FIColumn c)
+    return $ TableInfo name isSystemDefined colMap mempty
+                       constraints pkeyCols viewInfoM mempty
 
 data FunctionType
   = FTVOLATILE
@@ -442,6 +443,7 @@ data SchemaCache
   { scTables            :: !TableCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
   , scRemoteResolvers   :: !RemoteSchemaMap
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
@@ -511,7 +513,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache M.empty M.empty M.empty HS.empty
+              M.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -621,6 +624,14 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+updColInCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColInfo
+  -> QualifiedTable -> m ()
+updColInCache cn ci tn = do
+  delColFromCache cn tn
+  addColToCache cn ci tn
 
 data PermAccessor a where
   PAInsert :: PermAccessor InsPermInfo
@@ -777,6 +788,15 @@ data TemplateParamInfo
   { tpiName    :: !TemplateParam
   , tpiDefault :: !(Maybe Value)
   } deriving (Show, Eq)
+
+replaceAllowlist
+  :: (CacheRWM m)
+  => QueryList -> m ()
+replaceAllowlist qList = do
+  sc <- askSchemaCache
+  let allowlist = HS.fromList $
+        map (queryWithoutTypeNames . getGQLQuery . _lqQuery) qList
+  writeSchemaCache sc{scAllowlist = allowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

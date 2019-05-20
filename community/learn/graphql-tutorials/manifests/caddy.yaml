@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: caddy
+  name: caddy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: caddy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: caddy
+    spec:
+      containers:
+      - image: abiosoft/caddy:0.11.5
+        command:
+        - caddy
+        - -conf
+        - /caddy-config/Caddyfile
+        imagePullPolicy: IfNotPresent
+        name: caddy
+        ports:
+        - containerPort: 80
+          protocol: TCP
+          name: http
+        - containerPort: 443
+          protocol: TCP
+          name: https
+        volumeMounts:
+        - name: caddy-certs-volume
+          mountPath: /root/.caddy
+        - name: caddy-config
+          mountPath: /caddy-config
+      volumes:
+      - name: caddy-certs-volume
+        persistentVolumeClaim:
+          claimName: caddy-pvc
+      - name: caddy-config
+        configMap:
+          name: caddy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: caddy
+  name: caddy
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    name: http
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+    name: https
+  selector:
+    app: caddy
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: caddy-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard

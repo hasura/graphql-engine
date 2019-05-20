@@ -1,3 +1,5 @@
+import sanitize from 'sanitize-filename';
+
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -6,14 +8,17 @@ import viewReducer from './TableBrowseRows/ViewActions';
 import editReducer from './TableBrowseRows/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
 import { getAllUnTrackedRelations } from './TableRelationships/Actions';
-import { showErrorNotification, showSuccessNotification } from './Notification';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import {
   filterInconsistentMetadata,
   loadInconsistentObjects,
-} from './Metadata/Actions';
+} from '../Metadata/Actions';
 import globals from '../../../Globals';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -357,7 +362,7 @@ const loadSchema = () => (dispatch, getState) => {
         );
       }
       dispatch({ type: LOAD_SCHEMA, allSchemas: schemas });
-      dispatch(loadInconsistentObjects(null, false));
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load schema ' + JSON.stringify(error));
@@ -548,7 +553,7 @@ const makeMigrationCall = (
   };
 
   const migrationBody = {
-    name: migrationName,
+    name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
   };

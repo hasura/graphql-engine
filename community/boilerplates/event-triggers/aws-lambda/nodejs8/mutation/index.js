@@ -21,7 +21,7 @@ mutation updateNoteRevision ($noteId: Int!, $data: String!) {
 exports.handler = async (event) => {
   try {
     const qv = { noteId: event.body.event.data.old.id, data: event.body.event.data.old.note };
-    const result = await fetch(hgeEndpoint + '/v1alpha1/graphql', {
+    const result = await fetch(hgeEndpoint + '/v1/graphql', {
       method: 'POST',
       body: JSON.stringify({ query: query, variables: qv }),
       headers: { 'Content-Type': 'application/json', 'x-hasura-access-key': accessKey },

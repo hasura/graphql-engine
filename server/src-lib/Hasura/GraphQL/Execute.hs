@@ -19,6 +19,7 @@ import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
 
+import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
@@ -40,6 +41,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (bsToTxt, commonClientHeadersIgnored)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -100,11 +102,15 @@ getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
+  -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc req = do
+getExecPlanPartial userInfo sc enableAL req = do
 
-  (gCtx, _)  <- flip runStateT sc $ getGCtx (userRole userInfo) gCtxRoleMap
+  -- check if query is in allowlist
+  when enableAL checkQueryInAllowlist
+
+  (gCtx, _)  <- flip runStateT sc $ getGCtx role gCtxRoleMap
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -123,7 +129,19 @@ getExecPlanPartial userInfo sc req = do
     VT.RemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
+    role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
+
+    checkQueryInAllowlist =
+      -- only for non-admin roles
+      when (role /= adminRole) $ do
+        let notInAllowlist =
+              not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+        when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
+
+    modErr e =
+      let msg = "query is not in any of the allowlists"
+      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
@@ -143,12 +161,13 @@ getResolvedExecPlan
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
+  -> Bool
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  sc scVer reqUnparsed = do
+  enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -158,7 +177,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
       EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx queryVars subsPlan
+        ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -167,7 +186,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       opNameM queryStr plan planCache
     noExistingPlan = do
       req      <- toParsed reqUnparsed
-      partialExecPlan <- getExecPlanPartial userInfo sc req
+      partialExecPlan <- getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet, varDefs) ->
         case rootSelSet of
           VQ.RMutation selSet ->
@@ -327,7 +346,14 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
       clientHdrs = bool [] filteredHeaders fwdClientHdrs
-      options    = wreqOptions manager (userInfoToHdrs ++ clientHdrs ++ confHdrs)
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      finalHdrs  = foldr Map.union Map.empty hdrMaps
+      options    = wreqOptions manager (Map.toList finalHdrs)
 
   res  <- liftIO $ try $ Wreq.postWith options (show url) q
   resp <- either httpThrow return res
@@ -339,10 +365,11 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
     httpThrow err = throw500 $ T.pack . show $ err
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                 userInfoToList userInfo
-    filteredHeaders = flip filter reqHdrs $ \(n, _) ->
-      n `notElem` [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-                  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-                  , "Accept-Language", "Accept-Datetime"
-                  , "Cache-Control", "Connection", "DNT"
-                  ]
+                     userInfoToList userInfo
+    filteredHeaders = filterUserVars $ flip filter reqHdrs $ \(n, _) ->
+      n `notElem` commonClientHeadersIgnored
+
+    filterUserVars hdrs =
+      let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
+      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+         filter (not . isUserVar . fst) txHdrs

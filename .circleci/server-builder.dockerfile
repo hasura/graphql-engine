@@ -3,12 +3,17 @@
 FROM debian:stretch-20190228-slim
 
 ARG docker_ver="17.09.0-ce"
-ARG resolver="lts-13.12"
+ARG resolver="lts-13.20"
 ARG stack_ver="1.9.3"
+ARG postgres_ver="11"
 
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
-    && apt-get install -y curl g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip \
+    && apt-get -y install curl gnupg2 \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && apt-get -y update \
+    && apt-get install -y g++ gcc libc6-dev libpq-dev libffi-dev libgmp-dev make xz-utils zlib1g-dev git gnupg upx netcat python3 python3-pip postgresql-client-${postgres_ver} postgresql-client-common \
     && curl -Lo /tmp/docker-${docker_ver}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${docker_ver}.tgz \
     && tar -xz -C /tmp -f /tmp/docker-${docker_ver}.tgz \
     && mv /tmp/docker/* /usr/bin \

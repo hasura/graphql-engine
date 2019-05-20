@@ -7,6 +7,7 @@ nproc    := $(shell nproc)
 # TODO: needs to be replaced with something like yq
 stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
 packager_ver := 20190326
+pg_dump_ver := 11
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
 
@@ -15,14 +16,11 @@ build_output := /build/_server_output
 build:
 	stack build --fast --ghc-options '-j$(nproc)'
 
-build-local-console:
-	stack build --fast --flag graphql-engine:local-console --ghc-options '-j$(nproc)'
-
 exec: build
 	stack exec graphql-engine -- serve
 
 exec-local-console: build-local-console
-	stack exec graphql-engine -- serve --enable-console
+	stack exec graphql-engine -- serve --enable-console --console-assets-dir ../console/static/dist
 
 image: $(project).cabal
 	docker build -t "$(registry)/$(project):$(VERSION)" \
@@ -59,6 +57,7 @@ ci-image:
 	docker cp $(build_dir)/$(project)/$(project) dummy:/root/
 	docker run --rm --volumes-from dummy $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
 	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
+	cp /usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump packaging/build/rootfs/bin/pg_dump
 	upx packaging/build/rootfs/bin/$(project)
 	docker build -t $(registry)/$(project):$(VERSION) packaging/build/
 

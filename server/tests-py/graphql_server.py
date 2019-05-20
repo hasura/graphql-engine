@@ -578,6 +578,35 @@ class EchoGraphQL(RequestHandler):
         return Response(HTTPStatus.OK, respDict,
                     {'Content-Type': 'application/json'})
 
+
+class HeaderTest(graphene.ObjectType):
+    wassup = graphene.String(arg=graphene.String(default_value='world'))
+
+    def resolve_wassup(self, info, arg):
+        headers = info.context
+        print('recvd headers: ', headers)
+        if not (headers.get_all('x-hasura-test') == ['abcd'] and
+                headers.get_all('x-hasura-role') == ['user'] and
+                headers.get_all('x-hasura-user-id') == ['abcd1234'] and
+                headers.get_all('content-type') == ['application/json'] and
+                headers.get_all('Authorization') == ['Bearer abcdef']):
+            raise Exception('headers dont match')
+
+        return "Hello " + arg
+
+header_test_schema = graphene.Schema(query=HeaderTest)
+
+class HeaderTestGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = header_test_schema.execute(request.json['query'],
+                                         context=request.headers)
+        return mkJSONResp(res)
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
@@ -597,7 +626,8 @@ handlers = MkHandlers({
     '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
     '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
     '/default-value-echo-graphql' : EchoGraphQL,
-    '/person-graphql': PersonGraphQL
+    '/person-graphql': PersonGraphQL,
+    '/header-graphql': HeaderTestGraphQL
 })
 
 

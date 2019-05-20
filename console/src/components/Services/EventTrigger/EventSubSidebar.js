@@ -97,7 +97,7 @@ const EventSubSidebar = ({
       searchInput={getSearchInput()}
       heading={`Event Triggers (${triggerList.length})`}
       addLink={'/events/manage/triggers/add'}
-      addLabel={'Add'}
+      addLabel={'Create'}
       addTestString={'sidebar-add-table'}
       childListTestString={'table-links'}
     >

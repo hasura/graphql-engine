@@ -94,7 +94,7 @@ Delete all objects
 ------------------
 
 You can delete all objects in a table using the ``{}`` expression as the ``where`` argument. ``{}`` basically
-evaluates to ``true``
+evaluates to ``true`` for all objects
 
 **Example:** Delete all articles:
 

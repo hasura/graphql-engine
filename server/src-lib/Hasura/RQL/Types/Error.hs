@@ -27,6 +27,7 @@ module Hasura.RQL.Types.Error
          -- Modify error messages
        , modifyErr
        , modifyErrAndSet500
+       , modifyQErr
 
          -- Attach context
        , withPathK
@@ -85,6 +86,8 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
+  -- Websocket/Subscription errors
+  | StartFailed
   deriving (Eq)
 
 instance Show Code where
@@ -121,6 +124,7 @@ instance Show Code where
     JWTInvalidKey         -> "invalid-jwt-key"
     RemoteSchemaError     -> "remote-schema-error"
     RemoteSchemaConflicts -> "remote-schema-conflicts"
+    StartFailed           -> "start-failed"
 
 data QErr
   = QErr

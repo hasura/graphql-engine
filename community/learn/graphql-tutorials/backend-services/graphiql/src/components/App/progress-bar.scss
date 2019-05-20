@@ -1,0 +1,79 @@
+.alertDanger
+{
+  position: sticky;
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -o-sticky;
+  position: -ms-sticky;
+  top: 0;
+  z-index: 1000;
+}
+.notifModalDialog {
+  width: 800px;
+  margin: 30px auto;
+  right: 100px;
+  top: -15px;
+}
+:global {
+  @keyframes react-progress-spinner {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .react-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    visibility: visible;
+    opacity: 1;
+    transition: all 400ms;
+    z-index: 9999;
+    &.react-progress-bar-on-top {
+      height: 100%;
+    }
+    &.react-progress-bar-hide {
+      opacity: 0;
+      visibility: hidden;
+      z-index: -10;
+    }
+  }
+
+  .react-progress-bar-percent {
+    height: 2px;
+    background: #e8694d;
+    box-shadow: 0 2px 5px #d3291c, 0 2px 5px #d3291c;
+    transition: all 200ms ease;
+  }
+
+  .react-progress-bar-spinner {
+    display: block;
+    position: fixed;
+    top: 15px;
+  }
+
+  .react-progress-bar-spinner-left {
+    left: 15px;
+    right: auto;
+  }
+
+  .react-progress-bar-spinner-right {
+    left: auto;
+    right: 15px;
+  }
+
+  .react-progress-bar-spinner-icon {
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border: solid 2px transparent;
+    border-top-color: #d3291c;
+    border-left-color: #d3291c;
+    border-radius: 50%;
+    animation: react-progress-spinner 400ms linear infinite;
+  }
+}

@@ -6,7 +6,7 @@ Using serverless functions
   :depth: 1
   :local:
 
-You can use serverless functions along with Hasura event triggers to design an async business workflow without
+You can use serverless functions along with Event Triggers to design an async business workflow without
 having to manage any dedicated infrastructure.
 
 As Hasura event triggers can deliver database events to any webhook, serverless functions can be perfect candidates
@@ -96,7 +96,7 @@ Our AWS Lambda code looks like this:
             body: "success"
         };
         const qv = {noteId: request.data.old.id, data: request.data.old.note};
-        fetch(hgeEndpoint + '/v1alpha1/graphql', {
+        fetch(hgeEndpoint + '/v1/graphql', {
             method: 'POST',
             body: JSON.stringify({query: query, variables: qv}),
             headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': adminSecret},

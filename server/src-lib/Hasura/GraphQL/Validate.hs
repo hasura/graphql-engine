@@ -7,6 +7,8 @@ module Hasura.GraphQL.Validate
   , getQueryParts
   , getAnnVarVals
 
+  , isQueryInAllowlist
+
   , VarPGTypes
   , AnnPGVarVals
   , getAnnPGVarVals
@@ -18,6 +20,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as HS
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -28,9 +31,11 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.QueryCollection
 
-import           Hasura.SQL.Types (PGColType)
-import           Hasura.SQL.Value (PGColValue, parsePGValue)
+import           Hasura.SQL.Types                       (PGColType)
+import           Hasura.SQL.Value                       (PGColValue,
+                                                         parsePGValue)
 
 data QueryParts
   = QueryParts
@@ -74,7 +79,7 @@ getAnnVarVals
   => [G.VariableDefinition]
   -> VariableValues
   -> m AnnVarVals
-getAnnVarVals varDefsL inpVals = do
+getAnnVarVals varDefsL inpVals = withPathK "variableValues" $ do
 
   varDefs <- onLeft (mkMapWith G._vdVariable varDefsL) $ \dups ->
     throwVE $ "the following variables are defined more than once: " <>
@@ -96,7 +101,7 @@ getAnnVarVals varDefsL inpVals = do
     annDefM <- withPathK "defaultValue" $
                mapM (validateInputValue constValueParser ty) defM'
     let inpValM = Map.lookup var inpVals
-    annInpValM <- withPathK "variableValues" $
+    annInpValM <- withPathK (G.unName $ G.unVariable var) $
                   mapM (validateInputValue jsonParser ty) inpValM
     let varValM = annInpValM <|> annDefM
     onNothing varValM $ throwVE $
@@ -194,6 +199,12 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           unless (null rst) $
             throwVE "subscription must select only one top level field"
           return $ RSubscription fld
+
+isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
+isQueryInAllowlist q = HS.member gqlQuery
+  where
+    gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
+               unGQLExecDoc q
 
 getQueryParts
   :: ( MonadError QErr m, MonadReader GCtx m)

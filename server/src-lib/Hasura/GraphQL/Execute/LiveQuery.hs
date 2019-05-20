@@ -69,9 +69,9 @@ data LiveQueriesState
   }
 
 dumpLiveQueriesState
-  :: LiveQueriesState -> IO J.Value
-dumpLiveQueriesState (LiveQueriesState mx fallback _) = do
-  mxJ <- LQM.dumpLiveQueriesState mx
+  :: Bool -> LiveQueriesState -> IO J.Value
+dumpLiveQueriesState extended (LiveQueriesState mx fallback _) = do
+  mxJ <- LQM.dumpLiveQueriesState extended mx
   fallbackJ <- LQF.dumpLiveQueriesState fallback
   return $ J.object
     [ "fallback" J..= fallbackJ
@@ -207,10 +207,11 @@ subsOpFromPGAST pgExecCtx reqUnparsed varDefs (fldAls, astUnresolved) = do
       (astResolved, annVarVals) <-
         flip runStateT mempty $ GR.traverseQueryRootFldAST
         toMultiplexedQueryVar astUnresolved
-      let mxOpCtx = LQM.mkMxOpCtx userInfo reqUnparsed fldAls $
+      let mxOpCtx = LQM.mkMxOpCtx (userRole userInfo)
+                    (GH._grQuery reqUnparsed) fldAls $
                     GR.toPGQuery astResolved
       txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-      let mxOp = (mxOpCtx, txtEncodedVars)
+      let mxOp = (mxOpCtx, userVars userInfo, txtEncodedVars)
       return (LQMultiplexed mxOp, Just $ SubsPlan mxOpCtx varTypes)
 
     -- fallback tx subscription
@@ -274,10 +275,11 @@ subsOpFromPlan
      , MonadIO m
      )
   => PGExecCtx
+  -> UserVars
   -> Maybe GH.VariableValues
   -> SubsPlan
   -> m LiveQueryOp
-subsOpFromPlan pgExecCtx varValsM (SubsPlan mxOpCtx varTypes) = do
+subsOpFromPlan pgExecCtx usrVars varValsM (SubsPlan mxOpCtx varTypes) = do
   annVarVals <- GV.getAnnPGVarVals varTypes varValsM
   txtEncodedVars <- validateAnnVarValsOnPg pgExecCtx annVarVals
-  return $ LQMultiplexed (mxOpCtx, txtEncodedVars)
+  return $ LQMultiplexed (mxOpCtx, usrVars, txtEncodedVars)

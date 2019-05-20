@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Data/Metadata/Actions';
+} from '../Services/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
 import { Link } from 'react-router';
@@ -19,7 +19,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ hasError: true, info: info, error: error });
     // TODO logErrorToMyService(error, info);
     const { dispatch } = this.props;
-    dispatch(loadInconsistentObjects(null, true)).then(() => {
+    dispatch(loadInconsistentObjects(true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
         if (!window.location.pathname.includes('/metadata/status')) {
           this.setState({ hasError: false, info: null, error: null });
@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component {
                 <div>
                   You can report this issue on our{' '}
                   <a href="https://github.com/hasura/graphql-engine/issues">
-                    Github
+                    GitHub
                   </a>{' '}
                   or chat with us on{' '}
                   <a href="http://discord.gg/hasura">Discord</a>

@@ -25,8 +25,10 @@ const VALIDATION_ERROR = 'AddTrigger/VALIDATION_ERROR';
 const UPDATE_TABLE_LIST = 'AddTrigger/UPDATE_TABLE_LIST';
 const TOGGLE_COLUMNS = 'AddTrigger/TOGGLE_COLUMNS';
 const TOGGLE_ALL_COLUMNS = 'AddTrigger/TOGGLE_ALL_COLUMNS';
-const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
-const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
+const TOGGLE_OPERATION = 'AddTrigger/TOGGLE_OPERATION';
+const TOGGLE_ENABLE_MANUAL_CONFIG = 'AddTrigger/TOGGLE_ENABLE_MANUAL_CONFIG';
+// const TOGGLE_QUERY_TYPE_SELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_SELECTED';
+// const TOGGLE_QUERY_TYPE_DESELECTED = 'AddTrigger/TOGGLE_QUERY_TYPE_DESELECTED';
 const REMOVE_HEADER = 'AddTrigger/REMOVE_HEADER';
 const SET_HEADERKEY = 'AddTrigger/SET_HEADERKEY';
 const SET_HEADERTYPE = 'AddTrigger/SET_HEADERTYPE';
@@ -102,6 +104,9 @@ const createTrigger = () => {
     // operation definition
     if (currentState.selectedOperations.insert) {
       payload.args.insert = { columns: currentState.operations.insert };
+    }
+    if ('enableManual' in currentState) {
+      payload.args.enable_manual = currentState.enableManual;
     }
     if (currentState.selectedOperations.update) {
       payload.args.update = { columns: currentState.operations.update };
@@ -196,28 +201,8 @@ const loadTableList = schemaName => {
     dispatch(fetchTableListBySchema(schemaName, UPDATE_TABLE_LIST));
 };
 
-const operationToggleColumn = (
-  column,
-  operation,
-  supportColumnChangeFeature
-) => {
+const operationToggleColumn = (column, operation) => {
   return (dispatch, getState) => {
-    if (supportColumnChangeFeature) {
-      if (operation === 'update') {
-        const currentOperations = getState().addTrigger.operations;
-        const currentCols = currentOperations[operation];
-        // check if column is in currentCols. if not, push
-        const isExists = currentCols.includes(column);
-        let finalCols = currentCols;
-        if (isExists) {
-          finalCols = currentCols.filter(col => col !== column);
-        } else {
-          finalCols.push(column);
-        }
-        dispatch({ type: TOGGLE_COLUMNS, cols: finalCols, op: operation });
-      }
-      return;
-    }
     const currentOperations = getState().addTrigger.operations;
     const currentCols = currentOperations[operation];
     // check if column is in currentCols. if not, push
@@ -232,28 +217,22 @@ const operationToggleColumn = (
   };
 };
 
-const operationToggleAllColumns = (
-  columns,
-  supportListeningToColumnsUpdate
-) => {
+const operationToggleAllColumns = columns => {
   return dispatch => {
-    if (supportListeningToColumnsUpdate) {
-      dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
-    } else {
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'insert' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'update' });
-      dispatch({ type: TOGGLE_COLUMNS, cols: columns, op: 'delete' });
-    }
+    dispatch({ type: TOGGLE_ALL_COLUMNS, cols: columns });
   };
 };
 
-const setOperationSelection = (type, isChecked) => {
+const setOperationSelection = type => {
   return dispatch => {
+    dispatch({ type: TOGGLE_OPERATION, data: type });
+    /*
     if (isChecked) {
       dispatch({ type: TOGGLE_QUERY_TYPE_SELECTED, data: type });
     } else {
       dispatch({ type: TOGGLE_QUERY_TYPE_DESELECTED, data: type });
     }
+    */
   };
 };
 
@@ -388,6 +367,21 @@ const addTriggerReducer = (state = defaultState, action) => {
           update: action.cols,
         },
       };
+    case TOGGLE_OPERATION:
+      return {
+        ...state,
+        selectedOperations: {
+          ...state.selectedOperations,
+          [action.data]: !state.selectedOperations[action.data],
+        },
+      };
+
+    case TOGGLE_ENABLE_MANUAL_CONFIG:
+      return {
+        ...state,
+        enableManual: !state.enableManual,
+      };
+    /*
     case TOGGLE_QUERY_TYPE_SELECTED:
       const selectedOperations = state.selectedOperations;
       selectedOperations[action.data] = true;
@@ -396,6 +390,7 @@ const addTriggerReducer = (state = defaultState, action) => {
       const deselectedOperations = state.selectedOperations;
       deselectedOperations[action.data] = false;
       return { ...state, selectedOperations: { ...deselectedOperations } };
+    */
     case UPDATE_WEBHOOK_URL_TYPE:
       return {
         ...state,
@@ -427,5 +422,6 @@ export {
   setOperationSelection,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
+  TOGGLE_ENABLE_MANUAL_CONFIG,
 };
 export { validationError };

@@ -4,8 +4,6 @@ import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector'
 import { getForeignKeyConfig } from '../Common/ReusableComponents/utils';
 import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 
-import styles from '../../../Common/TableCommon/Table.scss';
-
 const ForeignKeyWrapper = ({
   foreignKeys,
   allSchemas,
@@ -75,24 +73,13 @@ const ForeignKeyWrapper = ({
       collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
     }
 
-    const collapsedLabel = () => (
-      <div>
-        <div className="container-fluid">
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              {collapsedLabelText}
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
+    const collapsedLabel = () => <div>{collapsedLabelText}</div>;
 
     const expandedLabel = () => {
       return (
-        <h5 className={styles.padd_bottom}>
+        <div>
           <b>{fkConfig}</b>
-        </h5>
+        </div>
       );
     };
 
@@ -115,7 +102,7 @@ const ForeignKeyWrapper = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}`}>
+      <div key={`foreign-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

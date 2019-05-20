@@ -164,6 +164,9 @@ newtype SchemaName
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
 
+hdbViewsSchema :: SchemaName
+hdbViewsSchema = SchemaName "hdb_views"
+
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
 

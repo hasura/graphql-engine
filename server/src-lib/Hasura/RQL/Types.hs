@@ -108,9 +108,12 @@ askTabInfoFromTrigger trn = do
     errMsg = "event trigger " <> trn <<> " does not exist"
 
 askEventTriggerInfo
-  :: (QErrM m)
-  => EventTriggerInfoMap -> TriggerName -> m EventTriggerInfo
-askEventTriggerInfo etim trn = liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
+  :: (QErrM m, CacheRM m)
+  => TriggerName -> m EventTriggerInfo
+askEventTriggerInfo trn = do
+  ti <- askTabInfoFromTrigger trn
+  let etim = tiEventTriggerInfoMap ti
+  liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
     errMsg = "event trigger " <> trn <<> " does not exist"
 

@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-13.16
+resolver: lts-13.20
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
@@ -15,7 +15,7 @@ extra-deps:
 - git: https://github.com/hasura/pg-client-hs.git
   commit: 85f9c2c15e4fa09f2e2a86dbb23149b5256bdd34
 - git: https://github.com/hasura/graphql-parser-hs.git
-  commit: ff95d9a96aa5ef9e5390f8712958e4118e3831f6
+  commit: 39d175c5c7bca35ec04d13c92a39f600bd6413cf
 - ginger-0.8.4.0
 
 # extra dep for pg-client-hs
@@ -23,7 +23,7 @@ extra-deps:
 
 - primitive-extras-0.7.1
 - stm-hamt-1.2.0.2
-- stm-containers-1.1.0.2
+- stm-containers-1.1.0.4
 
 - reroute-0.5.0.0
 - Spock-core-0.13.0.0

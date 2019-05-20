@@ -12,7 +12,7 @@ import pytest
 from validate import check_query_f, check_query
 
 
-def mk_add_remote_q(name, url):
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False):
     return {
         "type": "add_remote_schema",
         "args": {
@@ -20,7 +20,8 @@ def mk_add_remote_q(name, url):
             "comment": "testing " + name,
             "definition": {
                 "url": url,
-                "forward_client_headers": False
+                "headers": headers,
+                "forward_client_headers": client_hdrs
             }
         }
     }
@@ -66,6 +67,7 @@ class TestRemoteSchemaBasic:
 
     def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
+
 
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
@@ -234,6 +236,42 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
         assert st_code == 200, resp
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "person-graphql"}})
+        assert st_code == 200, resp
+
+    def test_remote_schema_forward_headers(self, hge_ctx):
+        """
+        test headers from client and conf and resolved info gets passed
+        correctly to remote schema, and no duplicates are sent. this test just
+        tests if the remote schema returns success or not. checking of header
+        duplicate logic is in the remote schema server
+        """
+        conf_hdrs = [{'name': 'x-hasura-test', 'value': 'abcd'}]
+        add_remote = mk_add_remote_q('header-graphql',
+                                     'http://localhost:5000/header-graphql',
+                                     headers=conf_hdrs, client_hdrs=True)
+        st_code, resp = hge_ctx.v1q(add_remote)
+        assert st_code == 200, resp
+        q = {'query': '{ wassup }'}
+        hdrs = {
+            'x-hasura-test': 'xyzz',
+            'x-hasura-role': 'user',
+            'x-hasura-user-id': 'abcd1234',
+            'content-type': 'application/json',
+            'Authorization': 'Bearer abcdef',
+        }
+        if hge_ctx.hge_key:
+            hdrs['x-hasura-admin-secret'] = hge_ctx.hge_key
+
+        resp = hge_ctx.http.post(hge_ctx.hge_url+'/v1alpha1/graphql', json=q,
+                                 headers=hdrs)
+        print(resp.status_code, resp.json())
+        assert resp.status_code == 200
+        res = resp.json()
+        assert 'data' in res
+        assert res['data']['wassup'] == 'Hello world'
+
+        hge_ctx.v1q({'type': 'remove_remote_schema',
+                     'args': {'name': 'header-graphql'}})
         assert st_code == 200, resp
 
 
