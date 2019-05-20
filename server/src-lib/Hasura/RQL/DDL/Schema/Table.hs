@@ -18,6 +18,7 @@ import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Utils                (matchRegex)
 import           Hasura.SQL.Types
 
@@ -342,7 +343,8 @@ buildSchemaCacheG withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions qTemplates
-    eventTriggers remoteSchemas functions fkeys' <- liftTx fetchCatalogData
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs
+    <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
 
@@ -413,7 +415,7 @@ buildSchemaCacheG withSetup = do
       subTableP2Setup qt etc
       allCols <- getCols . tiFieldInfoMap <$> askTabInfo qt
       when withSetup $ liftTx $
-        mkTriggerQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
+        mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
   forM_ functions $ \(CatalogFunction qf rawfiM) -> do
@@ -425,6 +427,9 @@ buildSchemaCacheG withSetup = do
       rawfi <- onNothing rawfiM $
         throw400 NotExists $ "no such function exists in postgres : " <>> qf
       trackFunctionP2Setup qf rawfi
+
+  -- allow list
+  replaceAllowlist $ concatMap _cdQueries allowlistDefs
 
   -- build GraphQL context
   GS.buildGCtxMap
@@ -576,8 +581,8 @@ execWithMDCheck (RunSQL t cascade _) = do
           let tn = tiName ti
               cols = getCols $ tiFieldInfoMap ti
           forM_ (M.toList $ tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-            let opsDef = etiOpsDef eti
-            liftTx $ mkTriggerQ trn tn cols strfyNum opsDef
+            let fullspec = etiOpsDef eti
+            liftTx $ mkAllTriggersQ trn tn cols strfyNum fullspec
 
   bool withoutReload withReload reloadRequired
 

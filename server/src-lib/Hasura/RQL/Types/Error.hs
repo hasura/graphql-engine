@@ -26,6 +26,7 @@ module Hasura.RQL.Types.Error
          -- Modify error messages
        , modifyErr
        , modifyErrAndSet500
+       , modifyQErr
 
          -- Attach context
        , withPathK

@@ -104,6 +104,7 @@ module Hasura.RQL.Types.SchemaCache
        , askFunctionInfo
        , delFunctionFromCache
 
+       , replaceAllowlist
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -116,6 +117,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
@@ -460,6 +462,7 @@ data SchemaCache
   , scFunctions         :: !FunctionCache
   , scQTemplates        :: !QTemplateCache
   , scRemoteSchemas     :: !RemoteSchemaMap
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
@@ -528,7 +531,8 @@ delQTemplateFromCache qtn = do
 
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
-  SchemaCache (M.fromList []) M.empty (M.fromList []) M.empty M.empty GC.emptyGCtx mempty []
+  SchemaCache M.empty M.empty M.empty M.empty
+              HS.empty M.empty GC.emptyGCtx mempty []
 
 modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
@@ -824,6 +828,15 @@ delRemoteSchemaFromCache name = do
     throw500 $ "remote schema with name " <> name
     <<> " not found in cache"
   writeSchemaCache sc {scRemoteSchemas = M.delete name rmSchemas}
+
+replaceAllowlist
+  :: (CacheRWM m)
+  => QueryList -> m ()
+replaceAllowlist qList = do
+  sc <- askSchemaCache
+  let allowlist = HS.fromList $
+        map (queryWithoutTypeNames . getGQLQuery . _lqQuery) qList
+  writeSchemaCache sc{scAllowlist = allowlist}
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjs = getDependentObjsWith (const True)

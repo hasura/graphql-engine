@@ -101,7 +101,7 @@ const loadTriggers = () => (dispatch, getState) => {
         type: LOAD_TRIGGER_LIST,
         triggerList: consistentTriggers || data[0],
       });
-      dispatch(loadInconsistentObjects(null, false));
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -345,7 +345,7 @@ const redeliverEvent = eventId => (dispatch, getState) => {
     method: 'POST',
     headers: dataHeaders(getState),
     body: JSON.stringify({
-      type: 'deliver_event',
+      type: 'redeliver_event',
       args: {
         event_id: eventId,
       },

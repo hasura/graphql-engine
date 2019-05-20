@@ -37,7 +37,7 @@ const typeDefs = gql`
 function getProfileInfo(user_id){
     const headers = {'Authorization': 'Bearer '+process.env.AUTH0_MANAGEMENT_API_TOKEN};
     console.log(headers);
-    return fetch(process.env.AUTH0_DOMAIN + '/api/v2/users/'+user_id,{ headers: headers})
+    return fetch('https://' + process.env.AUTH0_DOMAIN + '/api/v2/users/'+user_id,{ headers: headers})
         .then(response => response.json())
 }
 

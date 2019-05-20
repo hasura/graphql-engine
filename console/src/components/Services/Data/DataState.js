@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -98,6 +101,7 @@ const defaultModifyState = {
       onUpdate: 'restrict',
     },
   ],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',

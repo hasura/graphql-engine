@@ -13,8 +13,8 @@ body
 }
 .noPadd
 {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 .mb-20
 {
@@ -232,7 +232,15 @@ ul
 .notifyWrapper button:focus, .notifyWrapper input:focus {
   outline: none;
 }
-
+.upArrow
+{
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+  display: none;
+}
 .subscribe_form {
   input {
     background-color: #353535;
@@ -289,6 +297,16 @@ ul
     background-color: transparent;
     border: 0;
     margin-bottom: -1px;
+    .navbarHeader
+    {
+      flex: 1;
+      .navbarToggle
+      {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+      }
+    }
+
   }
   .logoWrapper
   {
@@ -304,7 +322,15 @@ ul
   {
     li
     {
-      padding: 20px;
+      padding: 10px 20px;
+      position: relative;
+      .upArrow
+      {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -2px;
+      }
       a
       {
         font-family: 'Raleway';
@@ -312,14 +338,14 @@ ul
         font-weight: 700;
         text-transform: uppercase;
         padding: 0;
-        color: #ffffff;
+        color: #ffffff !important;
         opacity: 0.5;
         &:hover
         {
-          background-color: transparent;
+          background-color: transparent !important;
           opacity: 1;
           outline: none;
-          color: #ffffff;
+          color: #ffffff !important;
         }
         &:focus
         {
@@ -333,6 +359,7 @@ ul
         border-radius: 2px;
         top: 42px;
         padding: 15px 10px;
+        border: 0 !important;
         .dropdownMenuBgImg
         {
           position: absolute;
@@ -340,6 +367,10 @@ ul
           top: 0;
           height: 100%;
           overflow: hidden;
+          img
+          {
+            height: 100%;
+          }
         }
         .menuTitle
         {
@@ -352,6 +383,15 @@ ul
         }
         .dropdownUl
         {
+          a
+          {
+            li
+            {
+              padding: 13px 0;
+              padding-left: 35px;
+              border-bottom: 1px solid #ededed;
+            }
+          }
           li
           {
             padding: 13px 0;
@@ -363,6 +403,11 @@ ul
             background-repeat: no-repeat;
             background-size: 21px 21px;
             background-position: left;
+            a
+            {
+              color: #2b0785;
+              opacity: 1;
+            }
             .circle
             {
               width: 5px;
@@ -387,11 +432,12 @@ ul
           li:hover
           {
             color: #505050;
-            font-weight: 500;
-          }
-          li:last-child
-          {
-            border-bottom: 0;
+            font-weight: 700;
+            a
+            {
+              color: #505050 !important;
+              font-weight: 700;
+            }
           }
           .comingSoonHover, .comingSoonHover:hover
           {
@@ -410,6 +456,17 @@ ul
         }
       }
     }
+    .open
+    {
+      a {
+        opacity: 1 !important;
+      }
+      .upArrow
+      {
+        display: block;
+      }
+    }
+
     .active
     {
       a, span
@@ -488,7 +545,7 @@ ul
   background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-purple.svg');
   &:hover
   {
-    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.svg');
+    background-image: url('https://graphql-engine-cdn.hasura.io/learn-hasura/assets/homepage/ios-original.png');
   }
 }
 .androidBg
@@ -549,12 +606,33 @@ ul
 }
 .navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover
 {
-  background-color: transparent;
-  color: #fff;
+  background-color: transparent !important;
+  color: #fff !important;
 }
 .navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover
 {
-  background-color: transparent;
+  background-color: transparent !important;
+}
+.flexBoxWrapper
+{
+  display: flex;
+  list-style: none;
+  flex-wrap: wrap;
+  clear: both;
+  .flexContainer
+  {
+    display: flex;
+    .flexList
+    {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      .flexAlign
+      {
+        flex: 1 0 auto;
+      }
+    }
+  }
 }
 .topBannerWrapper
 {
@@ -585,7 +663,7 @@ ul
     text-align: center;
     img
     {
-      width: 70%;
+      width: 100%;
       display: inline-block;
     }
   }
@@ -754,7 +832,7 @@ ul
       border-radius: 2px;
       box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.16);
       background-color: #ffffff;
-      padding-bottom: 8px;
+      padding-bottom: 10px;
       .willLearnHeader
       {
         border-radius: 2px;
@@ -769,11 +847,17 @@ ul
         display: flex;
         align-items: center;
         color: #2b0785;
+        span
+        {
+          font-size: 16px;
+          font-weight: 400;
+          margin-left: 6px;
+        }
       }
       .listWrapper
       {
         display: flex;
-        padding: 8px 0;
+        padding: 10px 0;
         .tick
         {
           padding-right: 8px;
@@ -930,9 +1014,24 @@ ul
     margin: 0 auto;
     margin-bottom: 20px;
   }
+  .subscribe_form {
+    button
+    {
+      font-size: 12px;
+    }
+  }
   .headerWrapper
   {
     padding-top: 15px;
+    .navbarDefault
+    {
+      .navbarHeader
+      {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+    }
     .navBarWrapper
     {
       li
@@ -945,6 +1044,10 @@ ul
           background-color: #fff;
           position: relative;
           top: 10px;
+          .menuTitle
+          {
+            padding-bottom: 0;
+          }
           .dropdownMenuBgImg
           {
             display: none;
@@ -966,7 +1069,7 @@ ul
     }
     .logoWrapper
     {
-      text-align: center;
+      text-align: left;
       padding-left: 15px;
       img
       {
@@ -1067,6 +1170,15 @@ ul
       .willLearnList
       {
         margin-top: 30px;
+        .willLearnHeader
+        {
+          font-size: 16px;
+          padding: 0 15px;
+          span
+          {
+            font-size: 12px;
+          }
+        }
       }
     }
   }

@@ -9,6 +9,9 @@
   //margin-top: 25px;
 }
 
+.tableContainerModified {
+}
+
 .schemaWrapper {
   width: 100%;
 
@@ -141,10 +144,6 @@ a.expanded {
     display: inline-block;
   }
 
-  .remove_ul_left {
-
-  }
-
   .select {
     display: inline-block;
     width: 300px;
@@ -202,8 +201,13 @@ a.expanded {
 
 .tableCellCenterAligned {
   text-align: center;
+  overflow: unset !important;
 }
-
+.tableCellCenterAlignedOverflow
+{
+  text-align: center;
+  overflow: hidden !important;
+}
 .tableCellExpanded {
   white-space: normal;
 }
@@ -214,4 +218,3 @@ a.expanded {
     padding-bottom: 3px;
   }
 }
-

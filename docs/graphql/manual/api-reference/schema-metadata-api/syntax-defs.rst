@@ -427,3 +427,34 @@ RemoteSchemaDef
       ],
       "forward_client_headers": boolean
    }
+
+.. _CollectionName:
+
+CollectionName
+^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _QueryName:
+
+QueryName
+^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _CollectionQuery:
+
+CollectionQuery
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "name": String,
+       "query": String
+   }

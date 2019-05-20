@@ -47,6 +47,8 @@ Or you can specify following options *(only via flags)*
   -d, --dbname             Database name to connect to
 
 
+.. _command-flags:
+
 Command flags
 ^^^^^^^^^^^^^
 
@@ -158,15 +160,30 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - ``HASURA_GRAPHQL_ENABLED_APIS``
      - Comma separated list of APIs (options: ``metadata``, ``graphql``, ``pgdump``) to be enabled.
        (default: ``metadata,graphql,pgdump``)
+
    * - ``--live-queries-fallback-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which cannot be multiplexed. Default: 1000 (1sec)
+     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+       which cannot be multiplexed. Default: 1000 (1sec)
+
    * - ``live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries which can be multiplexed. Default: 1000 (1sec)
-   * - ``live-quries-multiplexed-batch-size``
+     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+       which can be multiplexed. Default: 1000 (1sec)
+
+   * - ``live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
      - multiplexed live queries are split into batches of the specified size. Default 100. 
+
+   * - ``enable-allowlist``
+     - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
+     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
+       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.01)*
+  
+   * - ``console-assets-dir``
+     - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
+     - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
+       instead of CDN. *(Available for versions > v1.0.0-beta.01)*
 
 .. note::
 

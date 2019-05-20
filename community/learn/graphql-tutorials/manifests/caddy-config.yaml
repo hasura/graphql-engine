@@ -11,7 +11,19 @@ data:
       }
 
       redir 301 {
+        /graphql/react-native/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/react-native-boilerplate/boilerplate.zip
+      }
+
+      redir 301 {
         /graphql/vue/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/vue-boilerplate/boilerplate.zip
+      }
+
+      redir 301 {
+        /graphql/ios/boilerplate.zip https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/ios-boilerplate/boilerplate.zip
+      }
+
+      redir 301 {
+        /graphql/react-native/ /graphql/react-native/introduction
       }
 
       redir 301 {
@@ -20,6 +32,10 @@ data:
 
       redir 301 {
         /graphql/vue/ /graphql/vue/introduction
+      }
+
+      redir 301 {
+        /graphql/ios/ /graphql/ios/introduction
       }
       
       redir 301 {
@@ -59,9 +75,13 @@ data:
 
       proxy /graphql/hasura hasura-backend
 
+      proxy /graphql/react-native react-native-apollo
+
       proxy /graphql/react react-apollo
 
       proxy /graphql/vue vue-apollo
+
+      proxy /graphql/ios ios-apollo
       
       proxy /graphql hasura/v1alpha1/graphql {
         without /graphql

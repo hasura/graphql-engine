@@ -12,6 +12,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.QueryTemplate
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
@@ -72,12 +73,21 @@ data RQLQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
-  | RQDeliverEvent       !DeliverEventQuery
+  | RQRedeliverEvent     !RedeliverEventQuery
+  | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateQueryTemplate !CreateQueryTemplate
   | RQDropQueryTemplate !DropQueryTemplate
   | RQExecuteQueryTemplate !ExecQueryTemplate
   | RQSetQueryTemplateComment !SetQueryTemplateComment
+
+  -- query collections, allow list related
+  | RQCreateQueryCollection !CreateCollection
+  | RQDropQueryCollection !DropCollection
+  | RQAddQueryToCollection !AddQueryToCollection
+  | RQDropQueryFromCollection !DropQueryFromCollection
+  | RQAddCollectionToAllowlist !CollectionReq
+  | RQDropCollectionFromAllowlist !CollectionReq
 
   | RQRunSql !RunSQL
 
@@ -171,61 +181,69 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
 
 queryNeedsReload :: RQLQuery -> Bool
 queryNeedsReload qi = case qi of
-  RQAddExistingTableOrView _   -> True
-  RQTrackTable _               -> True
-  RQUntrackTable _             -> True
-  RQTrackFunction _            -> True
-  RQUntrackFunction _          -> True
+  RQAddExistingTableOrView _      -> True
+  RQTrackTable _                  -> True
+  RQUntrackTable _                -> True
+  RQTrackFunction _               -> True
+  RQUntrackFunction _             -> True
 
-  RQCreateObjectRelationship _ -> True
-  RQCreateArrayRelationship  _ -> True
-  RQDropRelationship  _        -> True
-  RQSetRelationshipComment  _  -> False
-  RQRenameRelationship _       -> True
+  RQCreateObjectRelationship _    -> True
+  RQCreateArrayRelationship  _    -> True
+  RQDropRelationship  _           -> True
+  RQSetRelationshipComment  _     -> False
+  RQRenameRelationship _          -> True
 
-  RQCreateInsertPermission _   -> True
-  RQCreateSelectPermission _   -> True
-  RQCreateUpdatePermission _   -> True
-  RQCreateDeletePermission _   -> True
+  RQCreateInsertPermission _      -> True
+  RQCreateSelectPermission _      -> True
+  RQCreateUpdatePermission _      -> True
+  RQCreateDeletePermission _      -> True
 
-  RQDropInsertPermission _     -> True
-  RQDropSelectPermission _     -> True
-  RQDropUpdatePermission _     -> True
-  RQDropDeletePermission _     -> True
-  RQSetPermissionComment _     -> False
+  RQDropInsertPermission _        -> True
+  RQDropSelectPermission _        -> True
+  RQDropUpdatePermission _        -> True
+  RQDropDeletePermission _        -> True
+  RQSetPermissionComment _        -> False
 
-  RQGetInconsistentMetadata _  -> False
-  RQDropInconsistentMetadata _ -> True
+  RQGetInconsistentMetadata _     -> False
+  RQDropInconsistentMetadata _    -> True
 
-  RQInsert _                   -> False
-  RQSelect _                   -> False
-  RQUpdate _                   -> False
-  RQDelete _                   -> False
-  RQCount _                    -> False
+  RQInsert _                      -> False
+  RQSelect _                      -> False
+  RQUpdate _                      -> False
+  RQDelete _                      -> False
+  RQCount _                       -> False
 
-  RQAddRemoteSchema _          -> True
-  RQRemoveRemoteSchema _       -> True
-  RQReloadRemoteSchema _       -> True
+  RQAddRemoteSchema _             -> True
+  RQRemoveRemoteSchema _          -> True
+  RQReloadRemoteSchema _          -> True
 
-  RQCreateEventTrigger _       -> True
-  RQDeleteEventTrigger _       -> True
-  RQDeliverEvent _             -> False
+  RQCreateEventTrigger _          -> True
+  RQDeleteEventTrigger _          -> True
+  RQRedeliverEvent _              -> False
+  RQInvokeEventTrigger _          -> False
 
-  RQCreateQueryTemplate _      -> True
-  RQDropQueryTemplate _        -> True
-  RQExecuteQueryTemplate _     -> False
-  RQSetQueryTemplateComment _  -> False
+  RQCreateQueryTemplate _         -> True
+  RQDropQueryTemplate _           -> True
+  RQExecuteQueryTemplate _        -> False
+  RQSetQueryTemplateComment _     -> False
 
-  RQRunSql _                   -> True
+  RQCreateQueryCollection _       -> True
+  RQDropQueryCollection _         -> True
+  RQAddQueryToCollection _        -> True
+  RQDropQueryFromCollection _     -> True
+  RQAddCollectionToAllowlist _    -> True
+  RQDropCollectionFromAllowlist _ -> True
 
-  RQReplaceMetadata _          -> True
-  RQExportMetadata _           -> False
-  RQClearMetadata _            -> True
-  RQReloadMetadata _           -> True
+  RQRunSql _                      -> True
 
-  RQDumpInternalState _        -> False
+  RQReplaceMetadata _             -> True
+  RQExportMetadata _              -> False
+  RQClearMetadata _               -> True
+  RQReloadMetadata _              -> True
 
-  RQBulk qs                    -> any queryNeedsReload qs
+  RQDumpInternalState _           -> False
+
+  RQBulk qs                       -> any queryNeedsReload qs
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -236,7 +254,7 @@ runQueryM
 runQueryM rq = runQueryM' rq <* rebuildGCtx
   where
     rebuildGCtx = when (queryNeedsReload rq) $
-                  withPathK "args" $ buildGCtxMapWithRS
+                  withPathK "args" buildGCtxMapWithRS
 
 runQueryM'
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -284,12 +302,20 @@ runQueryM' rq = withPathK "args" $ case rq of
 
   RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
   RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
-  RQDeliverEvent q             -> runDeliverEvent q
+  RQRedeliverEvent q           -> runRedeliverEvent q
+  RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
   RQCreateQueryTemplate q      -> runCreateQueryTemplate q
   RQDropQueryTemplate q        -> runDropQueryTemplate q
   RQExecuteQueryTemplate q     -> runExecQueryTemplate q
   RQSetQueryTemplateComment q  -> runSetQueryTemplateComment q
+
+  RQCreateQueryCollection q        -> runCreateCollection q
+  RQDropQueryCollection q          -> runDropCollection q
+  RQAddQueryToCollection q         -> runAddQueryToCollection q
+  RQDropQueryFromCollection q      -> runDropQueryFromCollection q
+  RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
+  RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
 
   RQReplaceMetadata q          -> runReplaceMetadata q
   RQClearMetadata q            -> runClearMetadata q
