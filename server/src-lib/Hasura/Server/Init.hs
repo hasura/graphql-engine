@@ -4,6 +4,7 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query                as Q
 
 import           Options.Applicative
+import           Data.Char                        (toLower)
 
 import qualified Data.Aeson                       as J
 import qualified Data.HashSet                     as Set
@@ -53,6 +54,7 @@ data RawServeOptions
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
+  , rsoConsoleAssetsDir   :: !(Maybe Text)
   , rsoEnableTelemetry    :: !(Maybe Bool)
   , rsoWsReadCookie       :: !Bool
   , rsoStringifyNum       :: !Bool
@@ -60,24 +62,27 @@ data RawServeOptions
   , rsoMxRefetchInt       :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
+  , rsoEnableAllowlist    :: !Bool
   } deriving (Show, Eq)
 
 data ServeOptions
   = ServeOptions
-  { soPort            :: !Int
-  , soHost            :: !HostPreference
-  , soConnParams      :: !Q.ConnParams
-  , soTxIso           :: !Q.TxIsolation
-  , soAdminSecret     :: !(Maybe AdminSecret)
-  , soAuthHook        :: !(Maybe AuthHook)
-  , soJwtSecret       :: !(Maybe Text)
-  , soUnAuthRole      :: !(Maybe RoleName)
-  , soCorsConfig      :: !CorsConfig
-  , soEnableConsole   :: !Bool
-  , soEnableTelemetry :: !Bool
-  , soStringifyNum    :: !Bool
-  , soEnabledAPIs     :: !(Set.HashSet API)
-  , soLiveQueryOpts   :: !LQ.LQOpts
+  { soPort             :: !Int
+  , soHost             :: !HostPreference
+  , soConnParams       :: !Q.ConnParams
+  , soTxIso            :: !Q.TxIsolation
+  , soAdminSecret      :: !(Maybe AdminSecret)
+  , soAuthHook         :: !(Maybe AuthHook)
+  , soJwtSecret        :: !(Maybe Text)
+  , soUnAuthRole       :: !(Maybe RoleName)
+  , soCorsConfig       :: !CorsConfig
+  , soEnableConsole    :: !Bool
+  , soConsoleAssetsDir :: !(Maybe Text)
+  , soEnableTelemetry  :: !Bool
+  , soStringifyNum     :: !Bool
+  , soEnabledAPIs      :: !(Set.HashSet API)
+  , soLiveQueryOpts    :: !LQ.LQOpts
+  , soEnableAllowlist  :: !Bool
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -167,8 +172,8 @@ instance FromEnv LQ.RefetchInterval where
 
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
-  | t `elem` truthVals = Right True
-  | t `elem` falseVals = Right False
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
   | otherwise = Left errMsg
   where
     truthVals = ["true", "t", "yes", "y"]
@@ -263,15 +268,17 @@ mkServeOptions rso = do
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
                    fst enableConsoleEnv
+  consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
+  enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole
-                        enableTelemetry strfyNum enabledAPIs lqOpts
+                        unAuthRole corsCfg enableConsole consoleAssetsDir
+                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,DEVELOPER]
@@ -403,6 +410,7 @@ serveCmdFooter =
       , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
+      , enableAllowlistEnv
       ]
 
     eventEnvs =
@@ -537,6 +545,14 @@ enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
   , "List of comma separated list of allowed APIs. (default: metadata,graphql,pgdump)"
+  )
+
+consoleAssetsDirEnv :: (String, String)
+consoleAssetsDirEnv =
+  ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
+  , "A directory from which static assets required for console is served at"
+  ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
+  ++ " default docker image to disable loading assets from CDN."
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -759,6 +775,13 @@ parseEnableConsole =
            help (snd enableConsoleEnv)
          )
 
+parseConsoleAssetsDir :: Parser (Maybe Text)
+parseConsoleAssetsDir = optional $
+    option (eitherReader fromEnv)
+      ( long "console-assets-dir" <>
+        help (snd consoleAssetsDirEnv)
+      )
+
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
   option (eitherReader parseStrAsBool)
@@ -803,6 +826,12 @@ parseMxBatchSize =
       help (snd mxBatchSizeEnv)
     )
 
+parseEnableAllowlist :: Parser Bool
+parseEnableAllowlist =
+  switch ( long "enable-allowlist" <>
+           help (snd enableAllowlistEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -815,6 +844,12 @@ mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
   , "multiplexed live queries are split into batches of the specified \\
     \size. Default 100. "
+  )
+
+enableAllowlistEnv :: (String, String)
+enableAllowlistEnv =
+  ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST"
+  , "Only accept allowed GraphQL queries"
   )
 
 parseFallbackRefetchInt :: Parser (Maybe LQ.RefetchInterval)
@@ -856,9 +891,11 @@ serveOptsToLog so =
                        , "unauth_role" J..= soUnAuthRole so
                        , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
+                       , "console_assets_dir" J..= soConsoleAssetsDir so
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "enable_allowlist" J..= soEnableAllowlist so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

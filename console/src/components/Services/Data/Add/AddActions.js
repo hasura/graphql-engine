@@ -21,6 +21,7 @@ const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
 const SET_PK = 'AddTable/SET_PK';
 const SET_FKS = 'AddTable/SET_FKS';
+const SET_UNIQUE_KEYS = 'AddTable/SET_UNIQUE_KEYS';
 const TOGGLE_FK = 'AddTable/TOGGLE_FK';
 const CLEAR_FK_TOGGLE = 'AddTable/CLEAR_FK_TOGGLE';
 const MAKING_REQUEST = 'AddTable/MAKING_REQUEST';
@@ -62,6 +63,12 @@ const setColUnique = (isUnique, index) => ({
   isUnique,
   index,
 });
+
+const setUniqueKeys = keys => ({
+  type: SET_UNIQUE_KEYS,
+  data: keys,
+});
+
 const addCol = () => ({ type: ADD_COL });
 const setPk = pks => ({ type: SET_PK, pks });
 const setForeignKeys = fks => ({
@@ -85,7 +92,7 @@ const createTableSql = () => {
     dispatch(showSuccessNotification('Creating Table...'));
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
-    const { foreignKeys } = state;
+    const { foreignKeys, uniqueKeys } = state;
     // validations
     if (state.tableName.trim() === '') {
       alert('Table name cannot be empty');
@@ -102,9 +109,6 @@ const createTableSql = () => {
       // check if column is nullable
       if (!currentCols[i].nullable) {
         tableColumns += 'NOT NULL';
-      }
-      if (currentCols[i].unique) {
-        tableColumns += ' UNIQUE';
       }
       // check if column has a default value
       if (
@@ -169,6 +173,18 @@ const createTableSql = () => {
         )
       );
     }
+
+    const numUniqueConstraints = uniqueKeys.length;
+    if (numUniqueConstraints > 0) {
+      uniqueKeys.forEach(uk => {
+        if (!uk.length) {
+          return;
+        }
+        const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
+        tableColumns = `${tableColumns}, UNIQUE (${uniqueColumns.join(', ')})`;
+      });
+    }
+
     // const sqlCreateTable = 'CREATE TABLE ' + '\'' + state.tableName.trim() + '\'' + '(' + tableColumns + ')';
     const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
     let sqlCreateTable =
@@ -331,6 +347,14 @@ const addTableReducer = (state = defaultState, action) => {
         })
         .filter(pki => Boolean(pki));
 
+      const uniqueKeys = state.uniqueKeys.map(uk => {
+        const newUniqueKey = uk.map(c => {
+          if (c > action.index) return c - 1;
+          if (c < action.index) return c;
+        });
+        return [...newUniqueKey];
+      });
+
       return {
         ...state,
         columns: [
@@ -338,6 +362,7 @@ const addTableReducer = (state = defaultState, action) => {
           ...state.columns.slice(action.index + 1),
         ],
         primaryKeys: [...primaryKeys, ''],
+        uniqueKeys: [...uniqueKeys],
       };
     case SET_COLNAME:
       const i = action.index;
@@ -426,6 +451,11 @@ const addTableReducer = (state = defaultState, action) => {
         ...state,
         fkToggled: null,
       };
+    case SET_UNIQUE_KEYS:
+      return {
+        ...state,
+        uniqueKeys: action.data,
+      };
     default:
       return state;
   }
@@ -446,6 +476,7 @@ export {
   addCol,
   setPk,
   setForeignKeys,
+  setUniqueKeys,
   createTableSql,
   toggleFk,
   clearFkToggle,

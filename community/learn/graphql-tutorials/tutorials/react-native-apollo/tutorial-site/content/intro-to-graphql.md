@@ -61,11 +61,11 @@ This is one of the key-reasons that makes GraphQL a joy to work with!
 
 - **Avoid over-fetching**: You avoid fetching more data than you need because you
   can specify the exact **fields** you need.
-- **Prevent multipe API calls**: In case you need more data, you can also avoid
+- **Prevent multiple API calls**: In case you need more data, you can also avoid
   making multiple calls to your API. In the case above, you don't need to make
   2 API calls to fetch `user` and `address` separately.
 - **Lesser communication with API developers**: Sometimes to fetch the exact data
-  you need, especially if you need to fetch more data and want to avoid multipe API
+  you need, especially if you need to fetch more data and want to avoid multiple API
   calls, you will need to ask your API developers to build a new API. With GraphQL,
   your work is *independent* of the API team! This allows you to work faster on your
   app.
