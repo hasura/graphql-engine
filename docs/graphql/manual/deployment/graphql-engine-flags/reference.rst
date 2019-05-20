@@ -178,12 +178,12 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
-       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.01)*
+       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.1)*
   
    * - ``console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
-       instead of CDN. *(Available for versions > v1.0.0-beta.01)*
+       instead of CDN. *(Available for versions > v1.0.0-beta.1)*
 
 .. note::
 
