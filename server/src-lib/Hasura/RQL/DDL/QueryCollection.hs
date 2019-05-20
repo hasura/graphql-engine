@@ -54,7 +54,7 @@ runCreateCollection cc = do
     CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   adminOnly
@@ -65,7 +65,8 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     <> queryName <<> " already exists in collection " <>> collName
 
   let collDef = CollectionDef $ qList <> pure listQ
-  liftTx $ updateCollectionDefCatalog collName collDef
+  collInAllowlist <- liftTx $ updateCollectionDefCatalog collName collDef
+  when collInAllowlist refreshAllowlist
   return successMsg
   where
     listQ = ListedQuery queryName query
@@ -91,7 +92,7 @@ runDropCollection (DropCollection collName cascade) = do
   return successMsg
 
 runDropQueryFromCollection
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, UserInfoM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   adminOnly
@@ -101,7 +102,8 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
     <> queryName <<> " not found in collection " <>> collName
   let collDef = CollectionDef $ flip filter qList $
                                 \q -> _lqName q /= queryName
-  liftTx $ updateCollectionDefCatalog collName collDef
+  collInAllowlist <- liftTx $ updateCollectionDefCatalog collName collDef
+  when collInAllowlist refreshAllowlist
   return successMsg
 
 runAddCollectionToAllowlist
@@ -193,14 +195,22 @@ delCollectionFromCatalog name =
   |] (Identity name) True
 
 updateCollectionDefCatalog
-  :: CollectionName -> CollectionDef -> Q.TxE QErr ()
-updateCollectionDefCatalog collName def =
+  :: CollectionName -> CollectionDef -> Q.TxE QErr Bool
+updateCollectionDefCatalog collName def = do
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|
     UPDATE hdb_catalog.hdb_query_collection
        SET collection_defn = $1
      WHERE collection_name = $2
   |] (Q.AltJ def, collName) True
+
+  -- Check whether collection present in allowlist
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+       SELECT EXISTS (
+          SELECT 1 FROM hdb_catalog.hdb_allowlist WHERE collection_name = $1
+                     )
+    |] (Identity collName) True
 
 addCollectionToAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
 addCollectionToAllowlistCatalog collName =
