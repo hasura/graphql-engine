@@ -171,7 +171,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which can be multiplexed. Default: 1000 (1sec)
 
-   * - ``live-quries-multiplexed-batch-size``
+   * - ``live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
      - multiplexed live queries are split into batches of the specified size. Default 100. 
 
