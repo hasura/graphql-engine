@@ -71,7 +71,7 @@ metadata from server:
 
 .. code-block:: bash
 
-   # (available after version alpha45)
+   # (available after version v1.0.0-alpha45)
    # create migration files (note that this will only export public schema from postgres)
    hasura migrate create "init" --from-server
 
