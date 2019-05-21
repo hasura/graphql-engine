@@ -5,7 +5,7 @@ import { getMeParentNode } from '../../../utils/domFunctions';
 
 const styles = require('./Dropdown.scss');
 
-const ComponentData = ({ options, dismiss }) => {
+const ComponentData = ({ options, dismiss, position }) => {
   /*
    * options is a list which has the following
    *  content: html inside each row
@@ -30,7 +30,15 @@ const ComponentData = ({ options, dismiss }) => {
       </li>
     );
   });
-  return <ul className={styles.dropdown_wrapper + ' ' + styles.dropdownBottom}>{generateOptions}</ul>;
+
+  const dropdownPositionStyle =
+    position === 'bottom' ? styles.dropdownBottom : styles.dropdownRight;
+
+  return (
+    <ul className={styles.dropdown_wrapper + ' ' + dropdownPositionStyle}>
+      {generateOptions}
+    </ul>
+  );
 };
 
 const attachEventListener = updateToggle => {

@@ -461,7 +461,7 @@ class AddTable extends Component {
               <Dropdown
                 testId={'frequently-used-columns'}
                 options={frequentlyUsedColumnsOptions()}
-                position="right"
+                position="bottom"
                 key={'frequently-used-columns'}
                 keyPrefix={'frequently-used-columns'}
               >
