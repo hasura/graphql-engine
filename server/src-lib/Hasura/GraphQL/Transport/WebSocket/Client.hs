@@ -40,7 +40,8 @@ sendStopMsg conn msg =
   WS.sendTextData conn $ J.encode $ WS.CMStop msg
 
 mkGraphqlProxy
-  :: WS.WSConn a
+  :: L.Logger
+  -> WS.WSConn a
   -> STM.TVar WSConnState
   -> RemoteSchemaName
   -> Maybe WS.ConnParams -- connection params in conn_init from the client
@@ -48,33 +49,46 @@ mkGraphqlProxy
   -> WS.StartMsg -- the start msg
   -> ThreadId    -- The receive client threadId
   -> WS.ClientApp ()
-mkGraphqlProxy wsConn stRef rn hdrs opId payload threadId destConn = do
+mkGraphqlProxy (L.Logger logger) wsConn stRef rn hdrs opId payload threadId destConn = do
   -- setup initial connection protocol
-  setupInitialGraphqlProto destConn
+  setupInitialProto destConn
   let newState = WebsocketProxyState threadId destConn [(wsId, opId)]
   updateState stRef rn newState
-
-  -- setting up the proxy from remote to hasura
+  -- setup the proxy from remote to hasura
   proxy destConn srcConn
   where
     wsId    = WS._wcConnId wsConn
     srcConn = WS._wcConnRaw wsConn
 
     proxy recvConn sendConn =
-      --TODO: protocol level proxying
       forever $ do
         msg <- WS.receiveData recvConn
-        sendMsg sendConn msg
+        case J.eitherDecode' msg of
+          Left e -> parseMsgErr e
+          Right msgTy -> case msgTy of
+            WS.SMT_GQL_CONNECTION_ACK        -> sendMsg sendConn msg
+            WS.SMT_GQL_CONNECTION_KEEP_ALIVE -> sendMsg sendConn msg
+            WS.SMT_GQL_CONNECTION_ERROR      -> sendMsg sendConn msg
+            WS.SMT_GQL_DATA                  -> sendMsg sendConn msg
+            WS.SMT_GQL_ERROR                 -> sendMsg sendConn msg
+            WS.SMT_GQL_COMPLETE -> do
+              sendMsg sendConn msg
+              -- close this client connection
+              killThread threadId
 
     sendMsg :: WS.Connection -> BL.ByteString -> IO ()
     sendMsg = WS.sendTextData
 
     -- send an init message with the same payload recieved, and then send the
     -- payload as it is (assuming this is the start msg)
-    setupInitialGraphqlProto conn = do
+    setupInitialProto conn = do
       sendInit conn hdrs
       WS.sendTextData conn $ J.encode $ WS.CMStart payload
 
+    parseMsgErr err = do
+      let opDet = ODQueryErr $ err400 UnexpectedPayload $ T.pack err
+      logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
+        (Just "failed to parse server msg from remote") Nothing
 
 runGqlClient'
   :: L.Logger
@@ -86,11 +100,11 @@ runGqlClient'
   -> Maybe WS.ConnParams
   -> WS.StartMsg
   -> ExceptT QErr IO ()
-runGqlClient' (L.Logger logger) url wsConn stRef rn opId hdrs payload = do
+runGqlClient' lgr@(L.Logger logger) url wsConn stRef rn opId hdrs payload = do
   host <- maybe (throw500 "empty hostname for websocket conn") return mHost
   void $ liftIO $ forkIO $ do
     tid <- myThreadId
-    let gqClient = mkGraphqlProxy wsConn stRef rn hdrs opId payload tid
+    let gqClient = mkGraphqlProxy lgr wsConn stRef rn hdrs opId payload tid
     res <- try $ WS.runClient host port path gqClient
     onLeft res $ \e -> do
       let err = T.pack $ show (e :: SomeException)
@@ -158,6 +172,7 @@ getWsProxyState ref rn = do
   st <- liftIO $ STM.readTVarIO ref
   return $ getStateData st >>= (Map.lookup rn . _cisRemoteConn)
 
+
 -- given a websocket id (WSId), close connections to that remote from
 -- WSConnState
 -- and updates state :: modifies IORef
@@ -183,7 +198,6 @@ stopRemote
 stopRemote (L.Logger logger) wsState opId = do
   liftIO $ logger $ L.debugT "stopping the remote.."
   let (WebsocketProxyState thrId wsConn ops) = wsState
-  --remoteConn <- maybe (throwError wsConnErr) return wsConn
   liftIO $ sendStopMsg wsConn $ WS.StopMsg opId
   -- remaing operations
   let remOps = filter (\(_, oId) -> oId /= opId) ops

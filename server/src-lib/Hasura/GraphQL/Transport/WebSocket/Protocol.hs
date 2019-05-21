@@ -5,6 +5,7 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , StopMsg(..)
   , ClientMsg(..)
   , ServerMsg(..)
+  , ServerMsgType(..)
   , encodeServerMsg
   , DataMsg(..)
   , ErrorMsg(..)
@@ -33,10 +34,9 @@ data StartMsg
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 
-data StopMsg
-  = StopMsg
-  { _stId :: OperationId
-  } deriving (Show, Eq)
+newtype StopMsg
+  = StopMsg { _stId :: OperationId }
+  deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
 
 data ClientMsg
@@ -46,10 +46,9 @@ data ClientMsg
   | CMConnTerm
   deriving (Show, Eq)
 
-data ConnParams
-  = ConnParams
-  { _cpHeaders :: Maybe (Map.HashMap Text Text)
-  } deriving (Show, Eq)
+newtype ConnParams
+  = ConnParams { _cpHeaders :: Maybe (Map.HashMap Text Text) }
+  deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)
 
 instance J.FromJSON ClientMsg where
@@ -83,7 +82,7 @@ data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
   , _dmPayload :: !GQResp
-  }
+  } deriving (Show)
 
 data ErrorMsg
   = ErrorMsg
@@ -127,6 +126,18 @@ instance Show ServerMsgType where
 
 instance J.ToJSON ServerMsgType where
   toJSON = J.toJSON . show
+
+instance J.FromJSON ServerMsgType where
+  parseJSON = J.withObject "ServerMsgType" $ \obj -> do
+    ty <- obj J..: "type"
+    case ty of
+      "connection_ack"   -> pure SMT_GQL_CONNECTION_ACK
+      "ka"               -> pure SMT_GQL_CONNECTION_KEEP_ALIVE
+      "connection_error" -> pure SMT_GQL_CONNECTION_ERROR
+      "data"             -> pure SMT_GQL_DATA
+      "error"            -> pure SMT_GQL_ERROR
+      "complete"         -> pure SMT_GQL_COMPLETE
+      _                  -> fail $ "unexpected type for ServerMsgType: " <> ty
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
