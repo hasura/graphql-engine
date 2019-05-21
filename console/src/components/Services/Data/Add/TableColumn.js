@@ -10,21 +10,12 @@ import {
 } from '../Common/utils';
 
 /* Custom style object for searchable select box */
-const customStyles = {
-  container: provided => ({
-    ...provided,
-  }),
-  dropdownIndicator: provided => {
-    return {
-      ...provided,
-      padding: '5px',
-    };
+const customSelectBoxStyles = {
+  dropdownIndicator: {
+    padding: '5px',
   },
-  singleValue: provided => {
-    return {
-      ...provided,
-      color: '#555555',
-    };
+  singleValue: {
+    color: '#555555',
   },
 };
 
@@ -99,7 +90,7 @@ const TableColumn = props => {
           onChange={handleColTypeChange}
           value={column.type && columnTypeValueMap[column.type]}
           bsClass={`col-type-${i} add_table_column_selector`}
-          customStyle={customStyles}
+          styleOverrides={customSelectBoxStyles}
         />
       </span>
       <input

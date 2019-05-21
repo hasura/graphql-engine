@@ -29,9 +29,21 @@ const SearchableSelectBox = ({
   onChange,
   value,
   bsClass,
-  customStyle,
+  styleOverrides,
 }) => {
   /* Select element style customization */
+
+  const customStyles = {};
+  if (styleOverrides) {
+    Object.keys(styleOverrides).forEach(comp => {
+      customStyles[comp] = provided => {
+        return {
+          ...provided,
+          ...styleOverrides[comp],
+        };
+      };
+    });
+  }
 
   return (
     <Select
@@ -42,7 +54,7 @@ const SearchableSelectBox = ({
       options={options}
       onChange={onChange}
       value={value}
-      styles={customStyle}
+      styles={customStyles}
     />
   );
 };

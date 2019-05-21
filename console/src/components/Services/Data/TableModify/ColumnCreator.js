@@ -98,14 +98,6 @@ const useColumnEditor = (dispatch, tableName) => {
   };
 };
 
-/*
-const alterTypeOptions = dataTypes.map((datatype, index) => (
-  <option value={datatype.value} key={index} title={datatype.description}>
-    {datatype.name}
-  </option>
-));
-*/
-
 const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
   const {
     colName,
@@ -122,31 +114,21 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
     0
   );
 
-  const customStyles = {
-    container: provided => ({
-      ...provided,
+  const customSelectBoxStyles = {
+    container: {
       width: '186px',
-    }),
-    dropdownIndicator: provided => {
-      return {
-        ...provided,
-        padding: '5px',
-      };
     },
-    placeholder: provided => {
-      return {
-        ...provided,
-        top: '44%',
-        fontSize: '12px',
-      };
+    dropdownIndicator: {
+      padding: '5px',
     },
-    singleValue: provided => {
-      return {
-        ...provided,
-        fontSize: '12px',
-        top: '44%',
-        color: '#555555',
-      };
+    placeholder: {
+      top: '44%',
+      fontSize: '12px',
+    },
+    singleValue: {
+      fontSize: '12px',
+      top: '44%',
+      color: '#555555',
     },
   };
 
@@ -169,7 +151,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
             onChange={colType.onChange}
             value={colType.value && columnTypeValueMap[colType.value]}
             bsClass={`col-type-${0} modify_select`}
-            customStyle={customStyles}
+            styleOverrides={customSelectBoxStyles}
           />
         </span>
         <input

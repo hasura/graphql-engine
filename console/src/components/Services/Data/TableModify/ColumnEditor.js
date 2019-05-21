@@ -50,27 +50,18 @@ const ColumnEditor = ({
   };
   const columnTypePG = getColumnType();
 
-  const customStyles = {
-    dropdownIndicator: provided => {
-      return {
-        ...provided,
-        padding: '5px',
-      };
+  const customSelectBoxStyles = {
+    dropdownIndicator: {
+      padding: '5px',
     },
-    placeholder: provided => {
-      return {
-        ...provided,
-        top: '44%',
-        fontSize: '12px',
-      };
+    placeholder: {
+      top: '44%',
+      fontSize: '12px',
     },
-    singleValue: provided => {
-      return {
-        ...provided,
-        fontSize: '12px',
-        top: '44%',
-        color: '#555555',
-      };
+    singleValue: {
+      fontSize: '12px',
+      top: '44%',
+      color: '#555555',
     },
   };
 
@@ -121,7 +112,7 @@ const ColumnEditor = ({
               onChange={updateColumnType}
               value={columnTypePG && alterOptionsValueMap[columnTypePG]}
               bsClass={`col-type-${0} modify_select`}
-              customStyle={customStyles}
+              styleOverrides={customSelectBoxStyles}
             />
           </div>
         </div>
