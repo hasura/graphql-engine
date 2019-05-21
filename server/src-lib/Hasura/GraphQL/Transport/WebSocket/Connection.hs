@@ -50,25 +50,20 @@ data WSConnState
 type RemoteConnState
   = Map.HashMap RemoteSchemaName WebsocketProxyState
 
-type WebsocketProxyState = WebsocketProxyStateG ()
-
-data WebsocketProxyStateG a
+data WebsocketProxyState
   = WebsocketProxyState
   { _wpsRunClientThread :: !ThreadId
-  -- TODO: change Maybe. Why Maybe?
-  , _wpsRemoteConn      :: !(Maybe WS.Connection)
+  , _wpsRemoteConn      :: !WS.Connection
   , _wpsOperations      :: ![GOperationId]
   }
 
-instance Show (WebsocketProxyStateG a) where
-  show (WebsocketProxyState thrdId wscon ops) =
+instance Show WebsocketProxyState where
+  show (WebsocketProxyState thrdId _ ops) =
     "WebsocketProxyState { "
     ++ "_wpsRunClientThread = " ++ show thrdId
-    ++ ", _wpsRemoteConn = " ++ wsconD
+    ++ ", _wpsRemoteConn = <WebsocketConn>"
     ++ ", _wpsOperations = " ++ show ops
     ++ " }"
-    where
-      wsconD = maybe "Nothing" (const "Just <WebsocketConn>") wscon
 
 findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe WebsocketProxyState
 findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
