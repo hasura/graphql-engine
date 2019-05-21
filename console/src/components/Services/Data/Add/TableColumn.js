@@ -80,14 +80,14 @@ const TableColumn = props => {
     <div key={i} className={`${styles.display_flex} form-group`}>
       <input
         type="text"
-        className={`${styles.input} form-control ${styles.add_mar_right}`}
+        className={`${styles.input} form-control`}
         value={column.name}
         placeholder="column_name"
         onChange={onColumnChange.bind(undefined, i, column.nullable || false)}
         data-test={`column-${i}`}
       />
       <span
-        className={`${styles.select} ${styles.select200}`}
+        className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
         <SearchableSelectBox
