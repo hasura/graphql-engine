@@ -19,7 +19,7 @@ import qualified Data.Yaml.TH                as Y
 import qualified Database.PG.Query           as Q
 
 curCatalogVer :: T.Text
-curCatalogVer = "15"
+curCatalogVer = "17"
 
 migrateMetadata
   :: ( MonadTx m
@@ -91,6 +91,16 @@ setAsSystemDefinedFor9 =
             SET is_system_defined = 'true'
             WHERE table_schema = 'hdb_catalog'
              AND  table_name = 'hdb_version';
+           |]
+
+setAsSystemDefinedFor16 :: MonadTx m => m ()
+setAsSystemDefinedFor16 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_query_collection';
            |]
 
 getCatalogVersion
@@ -286,6 +296,37 @@ from14To15 = liftTx $ do
     $(Q.sqlFromFile "src-rsr/migrate_from_14_to_15.sql")
   return ()
 
+from15To16
+  :: ( MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , CacheRWM m
+     , UserInfoM m
+     , MonadIO m
+     )
+  => m ()
+from15To16 = do
+  -- Migrate database
+  Q.Discard () <- liftTx $ Q.multiQE defaultTxErrorHandler
+    $(Q.sqlFromFile "src-rsr/migrate_from_15_to_16.sql")
+  -- Migrate metadata
+  migrateMetadata False migrateMetadataFrom13
+  -- Set as system defined
+  setAsSystemDefinedFor16
+  where
+    migrateMetadataFrom13 =
+      $(unTypeQ (Y.decodeFile "src-rsr/migrate_metadata_from_15_to_16.yaml" :: Q (TExp RQLQuery)))
+
+from16To17 :: MonadTx m => m ()
+from16To17 =
+  liftTx $ Q.catchE defaultTxErrorHandler $
+  Q.multiQ [Q.sql|
+            UPDATE hdb_catalog.hdb_table
+            SET is_system_defined = 'true'
+            WHERE table_schema = 'hdb_catalog'
+             AND  table_name = 'hdb_allowlist';
+           |]
+
 migrateCatalog
   :: ( MonadTx m
      , CacheRWM m
@@ -298,7 +339,8 @@ migrateCatalog
 migrateCatalog migrationTime = do
   preVer <- getCatalogVersion
   if | preVer == curCatalogVer ->
-         return "already at the latest version"
+         return $ "already at the latest version. current version: "
+                   <> show curCatalogVer
      | preVer == "0.8" -> from08ToCurrent
      | preVer == "1"   -> from1ToCurrent
      | preVer == "2"   -> from2ToCurrent
@@ -314,11 +356,17 @@ migrateCatalog migrationTime = do
      | preVer == "12"  -> from12ToCurrent
      | preVer == "13"  -> from13ToCurrent
      | preVer == "14"  -> from14ToCurrent
+     | preVer == "15"  -> from15ToCurrent
+     | preVer == "16"  -> from16ToCurrent
      | otherwise -> throw400 NotSupported $
                     "unsupported version : " <> preVer
   where
-    from14ToCurrent = from14To15 >> postMigrate
-    
+    from16ToCurrent = from16To17 >> postMigrate
+
+    from15ToCurrent = from15To16 >> from16ToCurrent
+
+    from14ToCurrent = from14To15 >> from15ToCurrent
+
     from13ToCurrent = from13To14 >> from14ToCurrent
 
     from12ToCurrent = from12To13 >> from13ToCurrent

@@ -7,7 +7,7 @@ Restrict access to certain fields
   :local:
 
 If you want to restrict access to sensitive fields in a table, you can either use views to expose only the safe fields
-or :ref:`restrict access via permissions <restrict_columns>`.
+or :ref:`restrict access via permissions <col-level-permissions>`.
 
 The following section describes setting up a view for this purpose.
 

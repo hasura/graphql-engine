@@ -122,15 +122,16 @@ sendMsg wsConn =
 -- >>>>>>> 935eaf22115573845cdf6906f67842167a5d13d2
 data WSServerEnv
   = WSServerEnv
-  { _wseLogger     :: !L.Logger
-  , _wseRunTx      :: !PGExecCtx
-  , _wseLiveQMap   :: !LQ.LiveQueriesState
-  , _wseGCtxMap    :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
-  , _wseHManager   :: !H.Manager
-  , _wseCorsPolicy :: !CorsPolicy
-  , _wseSQLCtx     :: !SQLGenCtx
-  , _wseQueryCache :: !E.PlanCache
-  , _wseServer     :: !WSServer
+  { _wseLogger          :: !L.Logger
+  , _wseRunTx           :: !PGExecCtx
+  , _wseLiveQMap        :: !LQ.LiveQueriesState
+  , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
+  , _wseHManager        :: !H.Manager
+  , _wseCorsPolicy      :: !CorsPolicy
+  , _wseSQLCtx          :: !SQLGenCtx
+  , _wseQueryCache      :: !E.PlanCache
+  , _wseServer          :: !WSServer
+  , _wseEnableAllowlist :: !Bool
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -240,7 +241,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
 
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx sc scVer q
+               planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
     E.GExPHasura resolvedOp ->
@@ -297,7 +298,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
           sendCompleted
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
-      sqlGenCtx planCache _ = serverEnv
+      sqlGenCtx planCache _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
@@ -470,14 +471,15 @@ createWSServerEnv
   -> H.Manager
   -> CorsPolicy
   -> SQLGenCtx
+  -> Bool
   -> E.PlanCache
   -> IO WSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
-  corsPolicy sqlGenCtx planCache = do
+  corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- STM.atomically $ WS.createWSServer logger
   return $ WSServerEnv logger
     pgExecCtx lqState cacheRef
-    httpManager corsPolicy sqlGenCtx planCache wsServer
+    httpManager corsPolicy sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
 createWSServerApp authMode serverEnv =

@@ -35,6 +35,7 @@ import {
 } from '../TableRelationships/Actions';
 import globals from '../../../../Globals';
 import { getRelDef } from '../TableRelationships/utils';
+import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 const appPrefix = globals.urlPrefix + '/data';
@@ -45,6 +46,8 @@ class Schema extends Component {
 
     this.state = {
       isExporting: false,
+      createSchemaOpen: false,
+      schemaNameEdit: '',
     };
 
     // Initialize this table
@@ -90,17 +93,19 @@ class Schema extends Component {
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
-    const handleSchemaChange = e => {
-      const updatedSchema = e.target.value;
-
-      dispatch(push(`${appPrefix}/schema/${updatedSchema}`));
+    const updateCurrentSchema = schemaName => {
+      dispatch(push(`${appPrefix}/schema/${schemaName}`));
 
       Promise.all([
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
         dispatch(fetchDataInit()),
         dispatch(fetchFunctionInit()),
         dispatch(loadUntrackedRelations()),
       ]);
+    };
+
+    const handleSchemaChange = e => {
+      updateCurrentSchema(e.target.value);
     };
 
     /***********/
@@ -182,6 +187,85 @@ class Schema extends Component {
         return <option key={s.schema_name}>{s.schema_name}</option>;
       });
 
+      const getCreateSchemaSection = () => {
+        const { createSchemaOpen, schemaNameEdit } = this.state;
+
+        const handleCreateNewClick = () => {
+          this.setState({ createSchemaOpen: true });
+        };
+
+        const handleSchemaNameChange = e => {
+          this.setState({ schemaNameEdit: e.target.value });
+        };
+
+        const handleCreateClick = () => {
+          const successCb = () => {
+            updateCurrentSchema(schemaNameEdit.trim());
+            this.setState({
+              schemaNameEdit: '',
+              createSchemaOpen: false,
+            });
+          };
+          dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
+        };
+
+        const handleCancelCreateNewSchema = () => {
+          this.setState({
+            createSchemaOpen: false,
+          });
+        };
+
+        const closedCreateSection = (
+          <Button
+            color="white"
+            size="xs"
+            onClick={handleCreateNewClick}
+            title="Create new schema"
+          >
+            <i className="fa fa-plus" aria-hidden="true" />
+          </Button>
+        );
+
+        const openCreateSection = (
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div className={styles.display_inline}>
+              <input
+                type="text"
+                value={schemaNameEdit}
+                onChange={handleSchemaNameChange}
+                placeholder="schema_name"
+                className={'form-control input-sm ' + styles.display_inline}
+              />
+            </div>
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCreateClick}
+              className={styles.add_mar_left_mid}
+            >
+              Create
+            </Button>
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCancelCreateNewSchema}
+              className={styles.add_mar_left_mid}
+            >
+              Cancel
+            </Button>
+          </div>
+        );
+
+        return createSchemaOpen ? openCreateSection : closedCreateSection;
+      };
+
+      const handleDelete = () => {
+        const successCb = () => {
+          updateCurrentSchema('public');
+        };
+        dispatch(deleteCurrentSchema(successCb));
+      };
+
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
@@ -193,6 +277,23 @@ class Schema extends Component {
             >
               {schemaOptions}
             </select>
+          </div>
+          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+            <div className={styles.display_inline}>
+              <Button
+                color="white"
+                size="xs"
+                onClick={handleDelete}
+                title="Delete current schema"
+              >
+                <i className="fa fa-trash" aria-hidden="true" />
+              </Button>
+            </div>
+            <div
+              className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
+            >
+              {getCreateSchemaSection()}
+            </div>
           </div>
         </div>
       );
@@ -238,7 +339,9 @@ class Schema extends Component {
 
           untrackedTablesList.push(
             <div className={styles.padd_bottom} key={`untracked-${i}`}>
-              <div className={styles.inline_block}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
                 <Button
                   data-test={`add-track-table-${table.table_name}`}
                   className={`${styles.display_inline}`}
@@ -249,7 +352,7 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.inline_block}>{table.table_name}</div>
+              <div className={styles.display_inline}>{table.table_name}</div>
             </div>
           );
         });
@@ -337,7 +440,9 @@ class Schema extends Component {
 
           untrackedRelList.push(
             <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-              <div className={styles.inline_block}>
+              <div
+                className={`${styles.display_inline} ${styles.add_mar_right}`}
+              >
                 <Button
                   className={styles.display_inline}
                   color="white"
@@ -347,7 +452,7 @@ class Schema extends Component {
                   Track
                 </Button>
               </div>
-              <div className={styles.inline_block}>
+              <div className={styles.display_inline}>
                 <span>
                   {relFrom} &rarr; {relTo}
                 </span>
@@ -427,7 +532,7 @@ class Schema extends Component {
                   >
                     <div
                       className={`${styles.display_inline} ${
-                        styles.padd_right
+                        styles.add_mar_right
                       }`}
                     >
                       <Button
@@ -437,16 +542,15 @@ class Schema extends Component {
                         } btn btn-xs btn-default`}
                         onClick={e => {
                           e.preventDefault();
+
                           dispatch(addExistingFunction(p.function_name));
                         }}
                       >
                         Track
                       </Button>
                     </div>
-                    <div
-                      className={`${styles.padd_right} ${styles.inline_block}`}
-                    >
-                      {p.function_name}
+                    <div className={styles.display_inline}>
+                      <span>{p.function_name}</span>
                     </div>
                   </div>
                 ))}
@@ -492,7 +596,7 @@ class Schema extends Component {
       //           >
       //             <div
       //               className={`${styles.padd_right} ${
-      //                 styles.inline_block
+      //                 styles.display_inline
       //               }`}
       //             >
       //               {p.function_name}
@@ -517,7 +621,7 @@ class Schema extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Schema - Data | Hasura" />
           <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.inline_block}`}>
+            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
               Schema
             </h2>
             {getCreateBtn()}

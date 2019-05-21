@@ -432,6 +432,32 @@ if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
 
 fi
 
+# allowlist queries test
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+unset HASURA_GRAPHQL_JWT_SECRET
+unset HASURA_GRAPHQL_ENABLE_ALLOWLIST
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ALLOWLIST QUERIES ########> \n"
+export HASURA_GRAPHQL_ENABLE_ALLOWLIST=true
+TEST_TYPE="allowlist-queries"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-allowlist-queries test_allowlist_queries.py
+
+kill_hge_servers
+unset HASURA_GRAPHQL_ENABLE_ALLOWLIST
+
+run_hge_with_args serve --enable-allowlist
+wait_for_port 8080
+
+pytest -n  1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-allowlist-queries test_allowlist_queries.py
+
+kill_hge_servers
+
+# end allowlist queries test
 
 # horizontal scale test
 unset HASURA_GRAPHQL_AUTH_HOOK

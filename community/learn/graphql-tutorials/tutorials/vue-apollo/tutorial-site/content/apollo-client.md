@@ -9,7 +9,7 @@ import YoutubeEmbed from "../src/YoutubeEmbed.js";
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `axios` or `fetch` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
-Let's get started by installing apollo client & peer graphql dependenices:
+Let's get started by installing apollo client & peer graphql dependencies:
 
 ```bash
 $ npm install --save vue-apollo graphql apollo-client apollo-link-http apollo-cache-inmemory graphql-tag
@@ -64,7 +64,7 @@ Open `src/main.js` and add the following code to create an ApolloClient instance
 
 ```
 
-These are the required apollo dependenices to get started. We have also written a simple utility to get token information to construct the headers.
+These are the required apollo dependencies to get started. We have also written a simple utility to get token information to construct the headers.
 
 ## Install VueApollo Plugin
 

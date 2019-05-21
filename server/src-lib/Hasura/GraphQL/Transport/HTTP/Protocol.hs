@@ -18,32 +18,25 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                              as J
-import qualified Data.Aeson.Casing                       as J
-import qualified Data.Aeson.TH                           as J
-import qualified Data.ByteString.Lazy                    as BL
-import qualified Data.HashMap.Strict                     as Map
-import qualified Data.Text.Lazy                          as TL
-import qualified Language.GraphQL.Draft.Parser           as G
-import qualified Language.GraphQL.Draft.Printer.LazyText as GLP
-import qualified Language.GraphQL.Draft.Syntax           as G
+import           Language.GraphQL.Draft.Instances ()
+
+import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.HashMap.Strict              as Map
+import qualified Language.GraphQL.Draft.Parser    as G
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
   deriving (Ord, Show, Eq, Hashable)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON = J.withText "GQLExecDoc" $ \t ->
-    case G.parseExecutableDoc t of
-      Left _  -> fail "parsing the graphql query failed"
-      Right q -> return $ GQLExecDoc $ G.getExecutableDefinitions q
+  parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
-  toJSON = J.String
-         . TL.toStrict
-         . GLP.renderExecutableDoc
-         . G.ExecutableDocument
-         . unGQLExecDoc
+  toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
