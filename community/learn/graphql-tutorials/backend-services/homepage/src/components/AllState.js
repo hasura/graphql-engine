@@ -104,7 +104,7 @@ const learnFrontend = [
     list: 'Managing Local Cache after a GraphQL Mutation',
   },
   {
-    list: 'Optismistic UI updates for responsive user experience',
+    list: 'Optimistic UI updates for responsive user experience',
   },
   {
     list: 'Using Subscriptions',
