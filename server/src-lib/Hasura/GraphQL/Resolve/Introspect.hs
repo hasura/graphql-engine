@@ -99,7 +99,7 @@ getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
    tyInfo :: TypeMap <- asks getter
    return $ sortOn _otiName $
-     Map.elems $ getPossibleObjTypes' tyInfo aot
+     Map.elems $ getPossibleObjTypes tyInfo aot
 
 -- 4.5.2.3
 unionR

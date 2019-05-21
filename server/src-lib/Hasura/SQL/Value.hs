@@ -28,7 +28,7 @@ import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
 
 
-data PGColValue = PGColValue !PQ.Oid PGColValue'
+data PGColValue = PGColValue !PQ.Oid PGColValueDet
   deriving (Show, Eq)
 
 type PGElemOid = PQ.Oid
@@ -42,7 +42,7 @@ pattern PGTxtVal o x = PGColValue o (PGValBase (PGValKnown (PGValText x)))
 pattern PGVarcharVal :: PQ.Oid -> Text -> PGColValue
 pattern PGVarcharVal o x = PGColValue o (PGValBase (PGValKnown (PGValVarchar x)))
 
-data PGColValue'
+data PGColValueDet
   = PGValBase      !PGBaseColValue
   | PGValDomain    !PGColValue
   | PGValArray     !PGElemOid !(V.Vector PGColValue)
@@ -78,11 +78,11 @@ data PGBCKnown
   | PGValGeo !GeometryWithCRS
   deriving (Show, Eq)
 
-data PGColValueBin = PGColValueBin PQ.Oid PGColValueBin'
+data PGColValueBin = PGColValueBin PQ.Oid PGColValueBinDet
 
 type ElemOid = PQ.Oid
 
-data PGColValueBin'
+data PGColValueBinDet
   = PGValBaseBin   !PGBCKnown
   | PGValDomainBin !PGColValueBin
   | PGValArrayBin  ElemOid !(V.Vector PGColValueBin)
@@ -138,10 +138,11 @@ txtEncodePGValG f (PGColValue _ x) = case x of
   PGNull           -> TENull
 
 txtEncodePGVal :: PGColValue -> TxtEncodedPGVal
-txtEncodePGVal = txtEncodePGValG txtEncodePGVal'
+txtEncodePGVal = txtEncodePGValG txtEncodePGValBase
 
-txtEncodePGVal' :: PGBaseColValue -> TxtEncodedPGVal
-txtEncodePGVal' (PGValKnown colVal) = case colVal of
+txtEncodePGValBase :: PGBaseColValue -> TxtEncodedPGVal
+txtEncodePGValBase (PGValUnknown t)    = TELit t
+txtEncodePGValBase (PGValKnown colVal) = case colVal of
   PGValInteger i  -> TELit $ T.pack $ show i
   PGValSmallInt i -> TELit $ T.pack $ show i
   PGValBigInt i   -> TELit $ T.pack $ show i
@@ -157,15 +158,12 @@ txtEncodePGVal' (PGValKnown colVal) = case colVal of
     TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
     TELit $ T.pack (show tod ++ timeZoneOffsetString tz)
-  --PGNull _ ->
-  --  S.SEUnsafe "NULL"
   PGValJSON (Q.JSON j)    -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
   PGValJSONB (Q.JSONB j)  -> TELit $ TL.toStrict $
     AE.encodeToLazyText j
   PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
-txtEncodePGVal' (PGValUnknown t) = TELit t
 
 paTxtEncBase :: PGBCKnown -> (PQ.Oid, T.Text)
 paTxtEncBase c = case c of
@@ -317,18 +315,22 @@ parsePGValue pct val = case pgColTyDetails pct of
   PGTyRange{}     -> parseAsRange val
   PGTyBase pbct   -> parseAsBase pbct val
   where
-    parseAsVal :: (FromJSON a) => (a -> PGColValue') -> Value -> AT.Parser PGColValue
     parseAsVal g v =
       let oid = pgColTyOid pct
           asVal = PGColValue oid . g in
       asVal <$> parseJSON v
+
     parseAsComposite = parseAsVal PGValComposite
+
     parseAsEnum      = parseAsVal PGValEnum
+
     parseAsRange     = parseAsVal PGValRange
-    parseAsArray bct v = allowPGEncStr $ (flip $ withArray "[PGColValue]") v $ \a -> do
-      let elemOid = maybe (pgColTyOid bct) pgTyOid $ getArrayBaseTy pct
-          asArr = PGColValue (pgTyOid pct) . PGValArray elemOid
-      asArr <$> mapM (parsePGValue bct) a
+
+    parseAsArray bct v =
+      allowPGEncStr $ (flip $ withArray "[PGColValue]") v $ \arr -> do
+        let elemOid = maybe (pgColTyOid bct) pgTyOid $ getArrayBaseTy pct
+            asArr = PGColValue (pgTyOid pct) . PGValArray elemOid
+        asArr <$> mapM (parsePGValue bct) arr
 
     asUnknown bct v = PGColValue (pgColTyOid bct) $ PGValBase $ PGValUnknown v
 
@@ -390,51 +392,49 @@ applyAsGeoJSON expn =
   ] Nothing
   `S.SETyAnn` jsonType
 
-applyAsGeoJSONArr :: S.SQLExp -> S.SQLExp
-applyAsGeoJSONArr v =
+withGeoJSONArr :: (S.SQLExp -> S.SQLExp) -> S.SQLExp -> S.SQLExp
+withGeoJSONArr f v =
   S.SESelect S.mkSelect
-  { S.selExtr =
-    [ flip S.Extractor Nothing $ S.SEFnApp "array_agg" [applyAsGeoJSON $ S.SEIden $ toIden unnestF] Nothing
-    ]
-  , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualUnnestF [v]]
-  } `S.SETyAnn` jsonArrType
+  { S.selExtr = pure $ flip S.Extractor Nothing $ S.SEFnApp "array_agg"
+                [f $ S.mkQIdenExp unnestTab unnestCol]
+                Nothing
+  , S.selFrom = Just $ S.FromExp $ pure $ S.FIUnnest [v]
+                (S.Alias unnestTab) [S.SEIden unnestCol]
+  }
   where
-    qualUnnestF = QualifiedObject catalogSchema unnestF
-    unnestF = FunctionName "unnest"
+    unnestCol = Iden "unnest_col"
+    unnestTab = Iden "unnest_tab"
+
+applyAsGeoJSONArr :: S.SQLExp -> S.SQLExp
+applyAsGeoJSONArr =
+  flip S.SETyAnn jsonArrType . withGeoJSONArr applyAsGeoJSON
 
 toPrepParam :: Int -> PGColType -> S.SQLExp
-toPrepParam i ty = withGeom ty $ S.SEPrep i
+toPrepParam i ty = withGeoVal ty $ S.SEPrep i
 
-withGeom :: PGColType -> S.SQLExp -> S.SQLExp
-withGeom ty@(PGColType _ _ _ d) = case d of
-  PGTyBase x -> bool id applyGeomFromGeoJson $ isBaseTyGeo x
+withGeoVal :: PGColType -> S.SQLExp -> S.SQLExp
+withGeoVal ty = case dets of
+  PGTyBase x  -> bool id applyGeomFromGeoJson $ isBaseTyGeo x
   PGTyArray{} -> case getArrayBaseTy ty of
-    Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $ isBaseTyGeo b
-    _ -> id
-  _ -> id
+    Just (PGColType _ _ _ (PGTyBase b)) -> bool id applyArrGeomFromGeoJson $
+                                           isBaseTyGeo b
+    _                                   -> id
+  _           -> id
   where
+    dets = pgColTyDetails ty
     isBaseTyGeo b =
       case b of
         PGGeometry  -> True
         PGGeography -> True
         _           -> False
-    applyArrGeomFromGeoJson v =
-      S.SESelect $ S.mkSelect
-      { S.selExtr =
-        [ flip S.Extractor Nothing $ S.SEFnApp "array_agg" [applyGeomFromGeoJson $ S.SEIden $ toIden unnestF] Nothing
-        ]
-      , S.selFrom = Just $ S.FromExp [S.mkFuncFromItem qualUnnestF [v]]
-      }
-    qualUnnestF =
-      QualifiedObject catalogSchema unnestF
-    unnestF =
-      FunctionName "unnest"
+
+    applyArrGeomFromGeoJson = withGeoJSONArr applyGeomFromGeoJson
 
 toTxtValue :: PGColType -> PGColValue -> S.SQLExp
 toTxtValue ty val =
   S.annotateExp ty txtVal
   where
-    txtVal = withGeom ty $ txtEncoder val
+    txtVal = withGeoVal ty $ txtEncoder val
 
 pgColValueToInt :: PGColValue -> Maybe Int
 pgColValueToInt (PGColValue _ x) = case x of

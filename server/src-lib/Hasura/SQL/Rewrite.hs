@@ -87,7 +87,7 @@ uFromItem fromItem = case fromItem of
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
-  S.FIFunc f args alM -> do
+  S.FIFunc f args alM ->
     S.FIFunc f <$> mapM uSqlExp args <*> mapM addAlias alM
   S.FIUnnest args als cols ->
     S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols

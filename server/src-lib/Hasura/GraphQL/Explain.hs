@@ -62,7 +62,7 @@ resolveVal userInfo = \case
     txtConverter annPGVal
   RS.UVSessVar colTy sessVar -> do
     sessVarVal <- getSessVarVal userInfo sessVar
-    return $ S.annotateExp colTy $ withGeom colTy $
+    return $ S.annotateExp colTy $ withGeoVal colTy $
       S.SELit sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
 

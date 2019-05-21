@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Hasura.GraphQL.Validate.Types
   ( InpValInfo(..)
   , ParamMap
@@ -28,7 +27,7 @@ module Hasura.GraphQL.Validate.Types
   , TypeInfo(..)
   , isObjTy
   , isIFaceTy
-  , getPossibleObjTypes'
+  , getPossibleObjTypes
   , getObjTyM
   , getInpObjTyM
   , getUnionTyM
@@ -130,16 +129,6 @@ data PGColTyAnn
 pgTyAnnToGTy :: PGColTyAnn -> G.GType
 pgTyAnnToGTy (PTCol colTy) = mkPGColGTy colTy
 pgTyAnnToGTy (PTArr p)     = G.toGT $ G.toLT $ G.toNT $ pgTyAnnToGTy p
-
--- asScalarColType :: G.NamedType -> PGColType
--- asScalarColType nt =
---   Map.lookupDefault defTy (nt, 0) defaultPGColTyMap
---   where
---     defTy = baseTy $ txtToPgBaseColTy $ G.unName $ G.unNamedType nt
-
--- gTyToPgTyAnn :: G.GType -> PGColTyAnn
--- gTyToPgTyAnn (G.TypeNamed _ nt)              = PTCol $ asScalarColType nt
--- gTyToPgTyAnn (G.TypeList _ (G.ListType gTy)) = PTArr $ gTyToPgTyAnn gTy
 
 data InpValInfo
   = InpValInfo
@@ -298,7 +287,8 @@ instance Semigroup UnionTyInfo where
          }
 
 fromUnionTyDef :: G.UnionTypeDefinition -> UnionTyInfo
-fromUnionTyDef (G.UnionTypeDefinition descM n _ mt) = UnionTyInfo descM (G.NamedType n) $ Set.fromList mt
+fromUnionTyDef (G.UnionTypeDefinition descM n _ mt) =
+  UnionTyInfo descM (G.NamedType n) $ Set.fromList mt
 
 type InpObjFldMap = Map.HashMap G.Name InpValInfo
 
@@ -356,15 +346,17 @@ data AsObjType
   | AOTIFace IFaceTyInfo
   | AOTUnion UnionTyInfo
 
-getPossibleObjTypes' :: TypeMap -> AsObjType -> Map.HashMap G.NamedType ObjTyInfo
-getPossibleObjTypes' _ (AOTObj obj) = toObjMap [obj]
-getPossibleObjTypes' tyMap (AOTIFace i) = toObjMap $ mapMaybe previewImplTypeM $ Map.elems tyMap
+getPossibleObjTypes :: TypeMap -> AsObjType -> Map.HashMap G.NamedType ObjTyInfo
+getPossibleObjTypes tyMap = \case
+  AOTObj obj -> toObjMap [obj]
+  AOTIFace i -> toObjMap $ mapMaybe (previewImplTypeM i) $ Map.elems tyMap
+  AOTUnion u -> toObjMap $ mapMaybe (extrObjTyInfoM tyMap) $
+                Set.toList $ _utiMemberTypes u
   where
-    previewImplTypeM = \case
+    previewImplTypeM i = \case
       TIObj objTyInfo -> bool Nothing (Just objTyInfo) $
          _ifName i `elem` _otiImplIFaces objTyInfo
       _               -> Nothing
-getPossibleObjTypes' tyMap (AOTUnion u) = toObjMap $ mapMaybe (extrObjTyInfoM tyMap) $ Set.toList $ _utiMemberTypes u
 
 toObjMap :: [ObjTyInfo] -> Map.HashMap G.NamedType ObjTyInfo
 toObjMap objs = foldr (\o -> Map.insert (_otiName o) o) Map.empty objs
@@ -426,16 +418,20 @@ showSPTxt :: SchemaPath -> Text
 showSPTxt p = showSPTxt' p <> showSP p
 
 validateIFace :: MonadError Text f => IFaceTyInfo -> f ()
-validateIFace (IFaceTyInfo _ n flds) = do
-  when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for interface " <> showNamedTy n
+validateIFace (IFaceTyInfo _ n flds) =
+  when (isFldListEmpty flds) $ throwError $
+  "List of fields cannot be empty for interface " <> showNamedTy n
 
 validateObj :: TypeMap -> ObjTyInfo -> Either Text ()
 validateObj tyMap objTyInfo@(ObjTyInfo _ n _ flds) = do
-  when (isFldListEmpty flds) $ throwError $ "List of fields cannot be empty for " <> objTxt
-  mapM_ (extrIFaceTyInfo' >=> validateIFaceImpl objTyInfo) $ _otiImplIFaces objTyInfo
+  when (isFldListEmpty flds) $
+    throwError $ "List of fields cannot be empty for " <> objTxt
+  mapM_ (extrIFaceTyInfo' >=> validateIFaceImpl objTyInfo) $
+    _otiImplIFaces objTyInfo
   where
     extrIFaceTyInfo' t = withObjTxt $ extrIFaceTyInfo tyMap t
-    withObjTxt x = x `catchError` \e -> throwError $ e <> " implemented by " <> objTxt
+    withObjTxt x =
+      x `catchError` \e -> throwError $ e <> " implemented by " <> objTxt
     objTxt = "Object type " <> showNamedTy n
     validateIFaceImpl = implmntsIFace tyMap
 
@@ -449,8 +445,13 @@ validateUnion tyMap (UnionTyInfo _ un mt) = do
   where
     valIsObjTy mn = case Map.lookup mn tyMap of
       Just (TIObj t) -> return t
-      Nothing -> throwError $ "Could not find type " <> showNamedTy mn <> ", which is defined as a member type of Union " <> showNamedTy un
-      _ -> throwError $ "Union type " <> showNamedTy un <> " can only include object types. It cannot include " <> showNamedTy mn
+      Nothing -> throwError $ "Could not find type "
+                 <> showNamedTy mn
+                 <> ", which is defined as a member type of Union "
+                 <> showNamedTy un
+      _      -> throwError $ "Union type " <> showNamedTy un
+                <> " can only include object types. It cannot include "
+                <> showNamedTy mn
 
 implmntsIFace :: TypeMap -> ObjTyInfo -> IFaceTyInfo -> Either Text ()
 implmntsIFace tyMap objTyInfo iFaceTyInfo = do
@@ -505,7 +506,9 @@ extrTyInfo tyMap tn = maybe
   return
   $ Map.lookup tn tyMap
 
-extrIFaceTyInfo :: MonadError Text m => Map.HashMap G.NamedType TypeInfo -> G.NamedType -> m IFaceTyInfo
+extrIFaceTyInfo
+  :: MonadError Text m
+  => Map.HashMap G.NamedType TypeInfo -> G.NamedType -> m IFaceTyInfo
 extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
   Just (TIIFace i) -> return i
   _ -> throwError $ "Could not find interface " <> showNamedTy tn
@@ -515,7 +518,8 @@ extrObjTyInfoM tyMap tn = case Map.lookup tn tyMap of
   Just (TIObj o) -> return o
   _              -> Nothing
 
-validateIsSubType :: Map.HashMap G.NamedType TypeInfo -> G.GType -> G.GType -> Either Text ()
+validateIsSubType
+  :: Map.HashMap G.NamedType TypeInfo -> G.GType -> G.GType -> Either Text ()
 validateIsSubType tyMap subFldTy supFldTy = do
   checkNullMismatch subFldTy supFldTy
   case (subFldTy,supFldTy) of
@@ -541,7 +545,10 @@ isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
   _ -> unless (subTyInfo == supTyInfo) notSubTyErr
   where
     showTy = showNamedTy . getNamedTy
-    notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
+    notSubTyErr = throwError $ "Type "
+                  <> showTy subTyInfo
+                  <> " is not a sub type of "
+                  <> showTy supTyInfo
 
 pgColTyToScalar :: PGColType -> Text
 pgColTyToScalar t = case (pgColTyName udt, pgColTyDetails udt) of
@@ -668,8 +675,7 @@ defaultDirectives =
   [mkDirective "skip", mkDirective "include"]
   where
     mkDirective n = DirectiveInfo Nothing n args dirLocs
-    args = Map.singleton "if" $ mkPGTyInpValNT Nothing "if" $
-           baseTy PGBoolean
+    args = Map.singleton "if" $ mkPGTyInpValNT Nothing "if" boolColTy
     dirLocs = map G.DLExecutable
               [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
 

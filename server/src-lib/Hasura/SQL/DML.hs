@@ -266,9 +266,6 @@ data SQLExp
   | SECount !CountType
   deriving (Show, Eq)
 
--- withTyAnn :: PGColType -> SQLExp -> SQLExp
--- withTyAnn colTy v = SETyAnn v $ AnnType $ T.pack $ show colTy
-
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 

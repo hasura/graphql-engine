@@ -180,17 +180,18 @@ mkCompExpName colTy =
   G.Name $ colTyTxt colTy  <> "_comparison_exp"
   where
     colTyTxt t = case pgColTyDetails t of
-      PGTyBase b
-        -> T.pack (show b)
-      PGTyDomain b
-        -> colTyTxt b
-      _
-        -> case getArrayBaseTy t of
-             Nothing -> qualTyToScalar (pgColTyName t)
-             -- Array type
-             Just b  -> case pgColTyDetails b of
-                PGTyBase bb -> T.pack $ show bb <> "_" <> show (getPGTyArrDim t) <> "d"
-                _          -> qualTyToScalar (pgColTyName b)
+      PGTyBase b   -> T.pack (show b)
+      PGTyDomain b -> colTyTxt b
+      _            -> asArray t
+
+    asArray t = case getArrayBaseTy t of
+      Nothing -> qualTyToScalar $ pgColTyName t
+        -- Array type
+      Just b  -> case pgColTyDetails b of
+        PGTyBase bb -> T.pack $ show bb <> "_"
+                       <> show (getPGTyArrDim t) <> "d"
+        _           -> qualTyToScalar (pgColTyName b)
+
 
 mkCompExpTy :: PGColType -> G.NamedType
 mkCompExpTy =
@@ -219,22 +220,23 @@ stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
 
 --- | make compare expression input type
 mkCompExpInp :: PGColType -> InpObjTyInfo
-mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
+mkCompExpInp colTy =
   InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
   [ map (mkPGTy colTy) typedOps
   , map (mk (Just $ arrOfCol colTy) $ G.toLT colGQLTy) listOps
-  , bool [] (map (mkPGTy $ baseTy PGText) stringOps) isStringTy
+  , bool [] (map (mkPGTy textColTy) stringOps) isStringTy
   , bool [] (map (mkPGTy colTy) arrOps) isArrTy
   , bool [] (map jsonbOpToInpVal jsonbOps) isJsonbTy
   , bool [] (stDWithinGeoOpInpVal stDWithinGeometryInpTy :
              map geoOpToInpVal (geoOps ++ geomOps)) isGeometryType
   , bool [] (stDWithinGeoOpInpVal stDWithinGeographyInpTy :
              map geoOpToInpVal geoOps) isGeographyType
-  , [ InpValInfo Nothing "_is_null" Nothing (Just $ PTCol $ baseTy PGBoolean) $
-       G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"
+  , [ InpValInfo Nothing "_is_null" Nothing (Just $ PTCol boolColTy) $
+      mkPGColGTy boolColTy
     ]
   ]) HasuraType
   where
+    colDtls = pgColTyDetails colTy
     arrOfCol = PTArr . PTCol
     tyDesc = mconcat
       [ "expression to compare columns of type "
@@ -274,23 +276,23 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
     jsonbOpToInpVal (op, pgTy, desc) = InpValInfo (Just desc) op Nothing (Just pgTy) $ pgTyAnnToGTy pgTy
     jsonbOps =
       [ ( "_contains"
-        , PTCol $ baseTy PGJSONB
+        , PTCol jsonbColTy
         , "does the column contain the given json value at the top level"
         )
       , ( "_contained_in"
-        , PTCol $ baseTy PGJSONB
+        , PTCol jsonbColTy
         , "is the column contained in the given json value"
         )
       , ( "_has_key"
-        , PTCol $ baseTy PGText
+        , PTCol textColTy
         , "does the string exist as a top-level key in the column"
         )
       , ( "_has_keys_any"
-        , PTArr $ PTCol $ baseTy PGText
+        , PTArr $ PTCol textColTy
         , "do any of these strings exist as top-level keys in the column"
         )
       , ( "_has_keys_all"
-        , PTArr $ PTCol $ baseTy PGText
+        , PTArr $ PTCol textColTy
         , "do all of these strings exist as top-level keys in the column"
         )
       ]
@@ -311,7 +313,8 @@ mkCompExpInp colTy@(PGColType _  _ _ colDtls) =
       _                -> False
 
     geoOpToInpVal (op, desc) =
-      InpValInfo (Just desc) op Nothing (Just $ PTCol colTy) $ G.toGT $ mkScalarTy colTy
+      InpValInfo (Just desc) op Nothing (Just $ PTCol colTy) $
+      G.toGT $ mkScalarTy colTy
 
     colTyDesc = G.Description $ T.pack $ show colTy
 
@@ -423,29 +426,28 @@ mkGCtx tyAgg (RootFlds flds) insCtxMap =
                 G.toGT $ G.NamedType "__Type"
       where
         typeFldArgs = mapFromL _iviName [
-          mkPGTyInpValNT (Just "name of the type") "name" $ baseTy PGText
-            -- $ G.toGT $ G.toNT $ G.NamedType "String"
+          mkPGTyInpValNT (Just "name of the type") "name" textColTy
           ]
 
     -- _st_d_within has to stay with geometry type
     stDWithinGeometryInpM =
-      bool Nothing (Just $ stDWithinGeomInp) (PGTyBase PGGeometry `elem` colTyDets)
+      bool Nothing (Just stDWithinGeomInp) (PGTyBase PGGeometry `elem` colTyDets)
     -- _st_d_within_geography is created for geography type
     stDWithinGeographyInpM =
-      bool Nothing (Just $ stDWithinGeogInp) (PGTyBase PGGeography `elem` colTyDets)
+      bool Nothing (Just stDWithinGeogInp) (PGTyBase PGGeography `elem` colTyDets)
 
     stDWithinGeomInp =
       mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
-      [ mkPGTyInpValNT Nothing "from" $ baseTy PGGeometry
-      , mkPGTyInpValNT Nothing "distance" $ baseTy PGFloat
+      [ mkPGTyInpValNT Nothing "from" geometryColTy
+      , mkPGTyInpValNT Nothing "distance" floatColTy
       ]
     stDWithinGeogInp =
       mkHsraInpTyInfo Nothing stDWithinGeographyInpTy $ fromInpValL
-      [ mkPGTyInpValNT Nothing "from" $ baseTy PGGeography
-      , mkPGTyInpValNT Nothing "distance" $ baseTy PGFloat
+      [ mkPGTyInpValNT Nothing "from" geographyColTy
+      , mkPGTyInpValNT Nothing "distance" floatColTy
       , InpValInfo Nothing "use_spheroid"
-        (Just $ G.VCBoolean True) (Just $ PTCol $ baseTy PGBoolean) $
-        G.toGT $ mkPGColGTy $ baseTy PGBoolean
+        (Just $ G.VCBoolean True) (Just $ PTCol boolColTy) $
+        G.toGT $ mkPGColGTy boolColTy
       ]
 
 emptyGCtx :: GCtx

@@ -178,7 +178,7 @@ mkPGColParams = \case
   where
     pathDesc = "JSON select path"
     jsonParams = Map.fromList
-      [ (G.Name "path", mkPGTyInpVal (Just pathDesc) "path" $ baseTy PGText)
+      [ (G.Name "path", mkPGTyInpVal (Just pathDesc) "path" textColTy)
       ]
 
 mkPGColFld :: PGColInfo -> ObjFldInfo
@@ -198,8 +198,8 @@ mkPGColFld (PGColInfoG colName colTy isNullable) =
 mkSelArgs :: QualifiedTable -> [InpValInfo]
 mkSelArgs tn =
   [ InpValInfo (Just whereDesc) "where" Nothing Nothing $ G.toGT $ mkBoolExpTy tn
-  , mkPGTyInpVal (Just limitDesc) "limit" $ baseTy PGInteger
-  , mkPGTyInpVal (Just offsetDesc) "offset" $ baseTy PGInteger
+  , mkPGTyInpVal (Just limitDesc) "limit" integerColTy
+  , mkPGTyInpVal (Just offsetDesc) "offset" integerColTy
   , InpValInfo (Just orderByDesc) "order_by" Nothing Nothing $ G.toGT $ G.toLT $ G.toNT $
     mkOrdByTy tn
   , InpValInfo (Just distinctDesc) "distinct_on" Nothing Nothing $ G.toGT $ G.toLT $
@@ -315,13 +315,13 @@ mkTableAggFldsObj tn numCols compCols =
     desc = G.Description $
       "aggregate fields of " <>> tn
 
-    countFld = mkHsraPGTyObjFld Nothing "count" countParams $ baseTy PGInteger
+    countFld = mkHsraPGTyObjFld Nothing "count" countParams integerColTy
 
     countParams = fromInpValL [countColInpVal, distinctInpVal]
 
     countColInpVal = InpValInfo Nothing "columns" Nothing Nothing $ G.toGT $
                      G.toLT $ G.toNT $ mkSelColumnInpTy tn
-    distinctInpVal = mkPGTyInpVal Nothing "distinct" $ baseTy PGBoolean
+    distinctInpVal = mkPGTyInpVal Nothing "distinct" boolColTy
 
     numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
     compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
@@ -503,7 +503,7 @@ mkMutRespObj tn sel =
     objDesc = G.Description $
       "response of any mutation on the table " <>> tn
     affectedRowsFld =
-      mkHsraPGTyObjFld (Just desc) "affected_rows" Map.empty $ baseTy PGInteger
+      mkHsraPGTyObjFld (Just desc) "affected_rows" Map.empty integerColTy
       where
         desc = "number of affected rows by the mutation"
     returningFld =
@@ -784,12 +784,13 @@ mkUpdJSONOpInp tn cols = bool inpObjs [] $ null jsonbCols
     deleteKeyInpObj =
       mkHsraInpTyInfo (Just deleteKeyDesc) (mkJSONOpTy tn deleteKeyOp) $
       fromInpValL $ map deleteKeyInpVal jsonbColNames
-    deleteKeyInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) $ baseTy PGText
+    deleteKeyInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) textColTy
 
     deleteElemInpObj =
       mkHsraInpTyInfo (Just deleteElemDesc) (mkJSONOpTy tn deleteElemOp) $
       fromInpValL $ map deleteElemInpVal jsonbColNames
-    deleteElemInpVal c = mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) $ baseTy PGInteger
+    deleteElemInpVal c =
+      mkPGTyInpVal Nothing (G.Name $ getPGColTxt c) integerColTy
 
     deleteAtPathInpObj =
       mkHsraInpTyInfo (Just deleteAtPathDesc) (mkJSONOpTy tn deleteAtPathOp) $
@@ -1424,7 +1425,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
 
     getNumCols = onlyNumCols . lefts
     getCompCols = onlyComparableCols . lefts
-    onlyFloat = const $ baseTy PGFloat
+    onlyFloat = const floatColTy
 
     mkTypeMaker "sum" = id
     mkTypeMaker _     = onlyFloat

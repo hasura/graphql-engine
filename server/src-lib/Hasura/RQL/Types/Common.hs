@@ -58,7 +58,7 @@ $(deriveJSON (aesonDrop 4 camelCase) ''PGDomBaseTyInfo )
 
 type PGCompTyFldMap = [Map.HashMap PGTyFldName PGColOidInfo]
 
-data PGTyInfo'
+data PGTyInfoDet
   = PGTBase
   | PGTRange
   | PGTPseudo
@@ -73,7 +73,7 @@ data PGTyInfo
   { ptiName    :: !QualifiedType
   , ptiOid     :: !PQ.Oid
   , ptiSqlName :: !AnnType
-  , ptiDetail  :: !PGTyInfo'
+  , ptiDetail  :: !PGTyInfoDet
   } deriving (Show, Eq)
 
 data PGColOidInfo
@@ -125,21 +125,13 @@ resolveColType tyMaps ty =
   onNothing (getPGColTy tyMaps ty) $ throw500 $
       "Could not find Postgres type for oid " <> T.pack (show $ pcoiOid ty)
 
--- resolveColTypes
---   :: MonadError QErr m => PGTyInfoMaps -> [PGColOidInfo] -> m [PGColType]
--- resolveColTypes maps tys =
---   forM tys $ \t -> onNothing (getPGColTy maps t) $ throw500 $ errMsg t
---   where
---     errMsg x =
---       "Could not find Postgres type for oid " <> T.pack (show $ pcoiOid x)
-
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGColOidInfo)
 $(deriveJSON
   (aesonDrop 4 snakeCase)
     { constructorTagModifier = snakeCase . drop 3
     , sumEncoding = TaggedObject "type" "detail"
     }
-  ''PGTyInfo')
+  ''PGTyInfoDet)
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGTyInfo)
 
 data PGColInfoG a

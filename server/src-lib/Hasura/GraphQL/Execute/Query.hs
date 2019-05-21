@@ -188,7 +188,7 @@ prepareWithPlan = \case
     addPrepArg argNum $ binEncoder colVal
     return $ toPrepParam argNum colTy
   R.UVSessVar colTy sessVar ->
-    return $ S.annotateExp colTy $ withGeom colTy $
+    return $ S.annotateExp colTy $ withGeoVal colTy $
       S.SEOpApp (S.SQLOp "->>")
       [S.SEPrep 1, S.SELit $ T.toLower sessVar]
   R.UVSQL sqlExp -> return sqlExp

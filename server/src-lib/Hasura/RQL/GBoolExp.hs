@@ -81,8 +81,8 @@ parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
     "$is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
     "_is_contained_by" -> jsonbOrArrOp $ AContainedIn <$> parseOne
 
-    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
-    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy (baseTy PGText)
+    "_has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy textColTy
+    "$has_key"       -> jsonbOnlyOp $ AHasKey <$> parseWithTy textColTy
 
     --FIXME:- Parse a session variable as text array values
     --TODO:- Add following commented operators after fixing above said
@@ -165,7 +165,7 @@ parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
 
     jsonbOnlyOp m = case pgColTyDetails colTy of
       PGTyBase PGJSONB -> m
-      _                -> throwError $ buildMsg colTy [baseTy PGJSONB]
+      _                -> throwError $ buildMsg colTy [jsonbColTy]
 
     parseGeometryOp f =
       geometryOp colTy >> f <$> parseOne
@@ -175,17 +175,16 @@ parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
     parseSTDWithinObj = case colTy of
       PGGeomTy{} -> do
         DWithinGeomOp distVal fromVal <- parseVal
-        dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
+        dist <- withPathK "distance" $ parser floatColTy distVal
         from <- withPathK "from" $ parser colTy fromVal
         return $ ASTDWithinGeom $ DWithinGeomOp dist from
       PGGeogTy{} -> do
         DWithinGeogOp distVal fromVal sphVal <- parseVal
-        dist <- withPathK "distance" $ parser (baseTy PGFloat) distVal
+        dist <- withPathK "distance" $ parser floatColTy distVal
         from <- withPathK "from" $ parser colTy fromVal
-        useSpheroid <- withPathK "use_spheroid" $
-                       parser (baseTy PGBoolean) sphVal
+        useSpheroid <- withPathK "use_spheroid" $ parser boolColTy sphVal
         return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-      _ -> throwError $ buildMsg colTy [baseTy PGGeometry, baseTy PGGeography]
+      _ -> throwError $ buildMsg colTy [geometryColTy, geographyColTy]
 
     decodeAndValidateRhsCol =
       parseVal >>= validateRhsCol
@@ -200,11 +199,11 @@ parseOpExp parser fim (PGColInfoG cn colTy _) (opStr, val) = withErrPath $
 
     geometryOp PGGeomTy{} = return ()
     geometryOp ty =
-      throwError $ buildMsg ty [baseTy PGGeometry]
+      throwError $ buildMsg ty [geometryColTy]
     geometryOrGeographyOp PGGeomTy{} = return ()
     geometryOrGeographyOp PGGeogTy{} = return ()
     geometryOrGeographyOp ty =
-      throwError $ buildMsg ty [baseTy PGGeometry, baseTy PGGeography]
+      throwError $ buildMsg ty [geometryColTy, geographyColTy]
 
     parseWithTy ty = parser ty val
     parseOne = parseWithTy colTy
@@ -239,12 +238,13 @@ buildMsg ty expTys =
 
 textOnlyOp :: MonadError QErr m => PGColType -> m ()
 textOnlyOp colTy = case  pgColTyDetails colTy of
-  PGTyBase b -> textOnlyOp' b
+  PGTyBase b -> textOnlyOpBase b
   _          -> onlyTxtTyErr
   where
-    textOnlyOp' PGText    = return ()
-    textOnlyOp' PGVarchar = return ()
-    textOnlyOp' _         = onlyTxtTyErr
+    textOnlyOpBase PGText    = return ()
+    textOnlyOpBase PGVarchar = return ()
+    textOnlyOpBase _         = onlyTxtTyErr
+
     onlyTxtTyErr = throwError $ buildMsg colTy $ baseTy <$> [PGVarchar, PGText]
 
 -- This convoluted expression instead of col = val
@@ -386,10 +386,10 @@ mkColCompExp qual lhsCol = \case
     mkQCol = S.SEQIden . S.QIden qual . toIden
     lhs = mkQCol lhsCol
 
-    txtEncoder' = fromEncPGVal . txtEncodePGVal'
+    txtEncoderBase = fromEncPGVal . txtEncodePGValBase
 
-    toTextArray arr =
-      S.SETyAnn (S.SEArray $ map (txtEncoder' . PGValKnown . PGValText) arr) textArrType
+    toTextArray arr = flip S.SETyAnn textArrType $ S.SEArray $
+                      flip map arr $ txtEncoderBase . PGValKnown . PGValText
 
     mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 

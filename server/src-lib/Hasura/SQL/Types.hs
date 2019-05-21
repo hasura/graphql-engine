@@ -454,6 +454,27 @@ baseTy b = PGColType qualfdType (AnnType name) (pgBaseTyOid b)$ PGTyBase b
     qualfdType = QualifiedObject (SchemaName "pg_catalog") (PGTyName name)
     name = T.pack $ show b
 
+integerColTy :: PGColType
+integerColTy = baseTy PGInteger
+
+boolColTy :: PGColType
+boolColTy = baseTy PGBoolean
+
+textColTy :: PGColType
+textColTy = baseTy PGText
+
+jsonbColTy :: PGColType
+jsonbColTy = baseTy PGJSONB
+
+floatColTy :: PGColType
+floatColTy = baseTy PGFloat
+
+geometryColTy :: PGColType
+geometryColTy = baseTy PGGeometry
+
+geographyColTy :: PGColType
+geographyColTy = baseTy PGGeography
+
 arrTyOfBaseQ :: PGBaseColType -> TH.Q TH.Exp
 arrTyOfBaseQ bct = case arrTyOfBase bct of
   Nothing -> fail $ "Could not find array type for base type " <> show bct
@@ -506,13 +527,13 @@ pgBaseTyOid (PGUnknown _) = PTI.auto
 
 
 isIntegerType :: PGColType -> Bool
-isIntegerType = onBaseUDT False isIntegerType'
+isIntegerType = onBaseUDT False isIntegerTypeBase
 
 isNumType :: PGColType -> Bool
-isNumType = onBaseUDT False isNumType'
+isNumType = onBaseUDT False isNumTypeBase
 
 isJSONBType :: PGColType -> Bool
-isJSONBType = onBaseUDT False isJSONBType'
+isJSONBType = onBaseUDT False isJSONBTypeBase
 
 isArrType :: PGColType -> Bool
 isArrType colTy = case pgColTyDetails (getUdt colTy) of
@@ -535,7 +556,7 @@ pattern PGJSONBTy a b c = PGColType a b c (PGTyBase PGJSONB)
 isComparableType :: PGColType -> Bool
 isComparableType t = case pgColTyDetails (getUdt t) of
   PGTyArray a  -> isComparableType a
-  PGTyBase   b -> isComparableType' b
+  PGTyBase   b -> isComparableTypeBase b
   PGTyEnum{}   -> True
   _            -> False
 
@@ -545,41 +566,35 @@ onBaseUDT def f t = case pgColTyDetails (getUdt t) of
   PGTyBase   b -> f b
   _            -> def
 
-isIntegerType' :: PGBaseColType -> Bool
-isIntegerType' PGInteger  = True
-isIntegerType' PGSmallInt = True
-isIntegerType' PGBigInt   = True
-isIntegerType' _          = False
+isIntegerTypeBase :: PGBaseColType -> Bool
+isIntegerTypeBase PGInteger  = True
+isIntegerTypeBase PGSmallInt = True
+isIntegerTypeBase PGBigInt   = True
+isIntegerTypeBase _          = False
 
-isNumType' :: PGBaseColType -> Bool
-isNumType' PGFloat   = True
-isNumType' PGDouble  = True
-isNumType' PGNumeric = True
-isNumType' ty        = isIntegerType' ty
+isNumTypeBase :: PGBaseColType -> Bool
+isNumTypeBase PGFloat   = True
+isNumTypeBase PGDouble  = True
+isNumTypeBase PGNumeric = True
+isNumTypeBase ty        = isIntegerTypeBase ty
 
-isJSONBType' :: PGBaseColType -> Bool
-isJSONBType' PGJSONB = True
-isJSONBType' _       = False
+isJSONBTypeBase :: PGBaseColType -> Bool
+isJSONBTypeBase PGJSONB = True
+isJSONBTypeBase _       = False
 
-isComparableType' :: PGBaseColType -> Bool
-isComparableType' PGJSON        = False
-isComparableType' PGJSONB       = False
-isComparableType' PGGeometry    = False
-isComparableType' PGGeography   = False
-isComparableType' PGBoolean     = False
-isComparableType' (PGUnknown _) = False
-isComparableType' _             = True
+isComparableTypeBase :: PGBaseColType -> Bool
+isComparableTypeBase PGJSON        = False
+isComparableTypeBase PGJSONB       = False
+isComparableTypeBase PGGeometry    = False
+isComparableTypeBase PGGeography   = False
+isComparableTypeBase PGBoolean     = False
+isComparableTypeBase (PGUnknown _) = False
+isComparableTypeBase _             = True
 
-isBigNum' :: PGBaseColType -> Bool
-isBigNum' = \case
+isBigNumBase :: PGBaseColType -> Bool
+isBigNumBase = \case
   PGBigInt    -> True
   PGBigSerial -> True
   PGNumeric   -> True
   PGDouble    -> True
-  _           -> False
-
-isGeoType :: PGBaseColType -> Bool
-isGeoType = \case
-  PGGeometry  -> True
-  PGGeography -> True
   _           -> False

@@ -25,7 +25,6 @@ module Hasura.RQL.Types.SchemaCache
        , isForeignKey
        , addTableToCache
        , modTableInCache
-       -- , modPGTyCache
        , delTableFromCache
 
        , WithDeps
@@ -47,7 +46,6 @@ module Hasura.RQL.Types.SchemaCache
        , isPGColInfo
        , getColInfos
        , RelInfo(..)
-       -- , addFldToCache
        , addColToCache
        , addRelToCache
 
@@ -537,12 +535,6 @@ modTableCache :: (CacheRWM m) => TableCache -> m ()
 modTableCache tc = do
   sc <- askSchemaCache
   writeSchemaCache $ sc { scTables = tc }
-
--- modPGTyCache :: (CacheRWM m) => PGTyCache -> m ()
--- modPGTyCache tm = do
---   sc <- askSchemaCache
---   writeSchemaCache $ sc { scTyMap = tm }
-
 
 addTableToCache :: (QErrM m, CacheRWM m)
                 => TableInfo -> m ()
