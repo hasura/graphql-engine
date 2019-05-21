@@ -192,7 +192,7 @@ export const passCreateUniqueKey = () => {
   cy.get(getElementFromAlias('unique-key-0-column-0')).select('0');
   cy.get(getElementFromAlias('unique-key-0-column-1')).select('1');
   cy.get(getElementFromAlias('modify-table-unique-key-0-save')).click();
-  cy.wait(5000);
+  cy.wait(10000);
   cy.get('div').contains(
     `${getTableName(0, testName)}_id_${getColName(0)}_key`
   );
@@ -202,14 +202,14 @@ export const passModifyUniqueKey = () => {
   cy.get(getElementFromAlias('modify-table-edit-unique-key-0')).click();
   cy.get(getElementFromAlias('remove-uk-0-column-0')).click();
   cy.get(getElementFromAlias('modify-table-unique-key-0-save')).click();
-  cy.wait(5000);
+  cy.wait(10000);
   cy.get('div').contains(`${getTableName(0, testName)}_${getColName(0)}_key`);
 };
 
 export const passRemoveUniqueKey = () => {
   cy.get(getElementFromAlias('modify-table-edit-unique-key-0')).click();
   cy.get(getElementFromAlias('modify-table-unique-key-0-remove')).click();
-  cy.wait(5000);
+  cy.wait(10000);
 };
 
 export const passMTDeleteCol = () => {
