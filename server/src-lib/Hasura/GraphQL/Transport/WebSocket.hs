@@ -46,7 +46,12 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server     as WS
 import qualified Hasura.Logging                                as L
 
 type OperationMap
-  = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
+  = STMMap.Map OperationId SubscriptionOperation --(LQ.LiveQueryId, Maybe OperationName)
+
+data SubscriptionOperation
+  = SOHasura !(LQ.LiveQueryId, Maybe OperationName)
+  | SORemote !RemoteOperation
+  --deriving (Show, Eq)
 
 data ErrRespType
   = ERTLegacy
@@ -253,7 +258,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
       E.ExOpSubs lqOp -> do
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
-          STMMap.insert (lqId, _grOperationName q) opId opMap
+          STMMap.insert (SOHasura (lqId, _grOperationName q)) opId opMap
         logOpEv ODStarted
 
     execQueryOrMut action = do
@@ -370,20 +375,8 @@ onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
   -- probably wrap the whole thing in a single tx?
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
-  case opM of
-    Just (lqId, opNameM) -> do
-      logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
-      LQ.removeLiveQuery lqMap lqId
-    Nothing    -> return ()
+  mapM_ stopOperation opM
   STM.atomically $ STMMap.delete opId opMap
-
-  connState <- liftIO $ STM.readTVarIO stateR
-  let stData = getStateData connState
-  onJust stData $ \(ConnInitState _ _ connMap _) ->
-    onJust (findOperationId connMap (wsId, opId)) $ \(rn, wsState) -> do
-      eNewState <- runExceptT $ WS.stopRemote logger wsState opId
-      either preExecErr (WS.updateState stateR rn) eNewState
-
   where
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
@@ -391,24 +384,21 @@ onStop serverEnv wsConn (StopMsg opId) = do
     wsId   = WS.getWSId wsConn
     stateR = _wscState $ WS.getData wsConn
 
-    preExecErr qErr = do
-      logOpEv $ ODQueryErr qErr
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ encodeQErr False qErr
-
-    logOpEv opDet =
-      logWSEvent logger wsConn $ EOperation opId Nothing opDet
+    stopOperation op = case op of
+      SOHasura (lqId, opNameM) -> do
+        logWSEvent logger wsConn $ EOperation opId opNameM ODStopped
+        LQ.removeLiveQuery lqMap lqId
+      SORemote remOp -> do
+        connState <- liftIO $ STM.readTVarIO stateR
+        let stData = getStateData connState
+        onJust stData $ \(ConnInitState _ _ connMap _) ->
+          onJust (findOperationId connMap (wsId, opId)) $ \(rn, _) ->
+            WS.stopRemote logger stateR remOp rn opId
 
 logWSEvent
   :: (MonadIO m)
   => L.Logger -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
--- <<<<<<< HEAD
---   userInfoME <- liftIO $ IORef.readIORef userInfoR
---   let userInfoM = case userInfoME of
---         CSInitialised (ConnInitState userInfo _ _) -> return $ userVars userInfo
---         _                        -> Nothing
---   liftIO $ logger $ WSLog wsId userInfoM wsEv Nothing
--- =======
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
         CSInitialised (ConnInitState userInfo _ _ jwtM) ->
@@ -425,13 +415,6 @@ onConnInit
   :: (MonadIO m)
   => L.Logger -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
--- <<<<<<< HEAD
---   headers <- mkHeaders <$> liftIO (IORef.readIORef (_wscState $ WS.getData wsConn))
---   res <- runExceptT $ getUserInfo logger manager headers authMode
---   case res of
---     Left e  -> do
---       liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
--- =======
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscState $ WS.getData wsConn))
   res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
   case res of
@@ -441,11 +424,6 @@ onConnInit logger manager wsConn authMode connParamsM = do
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
--- <<<<<<< HEAD
---     Right userInfo -> do
---       liftIO $ IORef.writeIORef (_wscState $ WS.getData wsConn) $
---         CSInitialised (ConnInitState userInfo headers Map.empty)
--- =======
     Right (userInfo, expTimeM) -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscState $ WS.getData wsConn) $
         --CSInitialised userInfo expTimeM paramHeaders
@@ -475,9 +453,11 @@ onClose
 onClose logger lqMap wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
-  void $ A.forConcurrently operations $ \(_, (lqId, _)) ->
-    LQ.removeLiveQuery lqMap lqId
-  WS.closeRemote logger (_wscState $ WS._wcExtraData wsConn) wsId
+  void $ A.forConcurrently operations $ \(_, op) ->
+    case op of
+      SOHasura (lqId, _) -> LQ.removeLiveQuery lqMap lqId
+      SORemote _ ->
+        WS.closeRemote logger (_wscState $ WS._wcExtraData wsConn) wsId
   where
     opMap = _wscOpMap $ WS.getData wsConn
     wsId  = WS.getWSId wsConn

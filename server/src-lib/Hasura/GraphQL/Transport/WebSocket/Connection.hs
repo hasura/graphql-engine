@@ -48,35 +48,35 @@ data WSConnState
   deriving (Show)
 
 type RemoteConnState
-  = Map.HashMap RemoteSchemaName WebsocketProxyState
+  = Map.HashMap RemoteSchemaName RemoteOperation
 
-data WebsocketProxyState
-  = WebsocketProxyState
+data RemoteOperation
+  = RemoteOperation
   { _wpsRunClientThread :: !ThreadId
   , _wpsRemoteConn      :: !WS.Connection
   , _wpsOperations      :: ![GOperationId]
   }
 
-instance Show WebsocketProxyState where
-  show (WebsocketProxyState thrdId _ ops) =
+instance Show RemoteOperation where
+  show (RemoteOperation thrdId _ ops) =
     "WebsocketProxyState { "
     ++ "_wpsRunClientThread = " ++ show thrdId
     ++ ", _wpsRemoteConn = <WebsocketConn>"
     ++ ", _wpsOperations = " ++ show ops
     ++ " }"
 
-findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe WebsocketProxyState
+findRemoteName :: RemoteConnState -> RemoteSchemaName -> Maybe RemoteOperation
 findRemoteName connMap rn = snd <$> find ((==) rn . fst) (Map.toList connMap)
 
 findOperationId
   :: RemoteConnState -> GOperationId
-  -> Maybe (RemoteSchemaName, WebsocketProxyState)
+  -> Maybe (RemoteSchemaName, RemoteOperation)
 findOperationId connMap opId =
   find (elem opId . _wpsOperations . snd) $ Map.toList connMap
 
 findWebsocketId
   :: RemoteConnState -> WSId
-  -> Maybe (RemoteSchemaName, WebsocketProxyState)
+  -> Maybe (RemoteSchemaName, RemoteOperation)
 findWebsocketId connMap wsId =
   find (elem wsId . map fst . _wpsOperations . snd) $ Map.toList connMap
 
