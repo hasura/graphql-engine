@@ -10,10 +10,12 @@ import qualified Control.Concurrent.Async                    as A
 import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.Lens                             as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -25,8 +27,8 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
+import           Control.Lens                                ((^?))
 import           Data.ByteString                             (ByteString)
-import qualified Data.IORef                                  as IORef
 
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
@@ -285,8 +287,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
               payload rsi opDef
-      either postExecErr sendSuccResp resp
+      either postExecErr sendRemoteSucc resp
       sendCompleted
+
+    sendRemoteSucc resp = do
+      let respBs = encJToBS resp
+      case respBs ^? J.key "data" of
+        Just val -> sendSuccResp $ encJFromJValue val
+        Nothing  -> postExecErr $ err500 Unexpected $
+                    "Failed parsing GraphQL response from remote: "
+                    <> bsToTxt respBs
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ enableAL = serverEnv

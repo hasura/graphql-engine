@@ -40,6 +40,7 @@ library
                      , mtl
                      , aeson
                      , aeson-casing
+                     , lens-aeson
                      , unordered-containers
                      , template-haskell
                      , hashable
