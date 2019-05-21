@@ -61,7 +61,9 @@ const setColNullable = (isNull, index) => ({
 });
 
 const setFreqUsedColumn = column => (dispatch, getState) => {
-  const columns = JSON.parse(JSON.stringify(getState().addTable.table.columns));
+  const tableState = JSON.parse(JSON.stringify(getState().addTable.table));
+  const { columns } = tableState;
+  let newPks = tableState.primaryKeys;
   const newColumn = {
     name: column.name,
     type: column.type,
@@ -71,17 +73,24 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     newColumn.default = { __type: 'value', value: column.default };
   }
 
+  if (column.primary) {
+    newPks = [...newPks.slice(0, newPks.length - 1)];
+  }
+
   const numExistingCols = columns.length;
   if (
     !columns[numExistingCols - 1].name &&
     !columns[numExistingCols - 1].type
   ) {
     columns[numExistingCols - 1] = newColumn;
+    newPks = [...newPks, (numExistingCols - 1).toString(), ''];
   } else {
     columns.push(newColumn);
+    newPks = [...newPks, numExistingCols.toString(), ''];
   }
   columns.push({ name: '', type: '', nullable: false });
   dispatch({ type: SET_COLUMNS_BULK, columns });
+  dispatch({ type: SET_PK, pks: newPks });
 };
 
 const setColUnique = (isUnique, index) => ({

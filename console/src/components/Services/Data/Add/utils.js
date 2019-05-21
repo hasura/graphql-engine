@@ -6,6 +6,13 @@ export const frequentlyUsedColumns = [
     primary: true,
   },
   {
+    name: 'id',
+    type: 'uuid',
+    typeText: 'UUID',
+    primary: true,
+    default: 'gen_random_uuid()',
+  },
+  {
     name: 'created_at',
     type: 'timestamp with time zone',
     typeText: 'timestamp',
