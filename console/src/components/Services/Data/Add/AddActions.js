@@ -83,14 +83,20 @@ const setFreqUsedColumn = column => (dispatch, getState) => {
     !columns[numExistingCols - 1].type
   ) {
     columns[numExistingCols - 1] = newColumn;
-    newPks = [...newPks, (numExistingCols - 1).toString(), ''];
+    if (column.primary) {
+      newPks = [...newPks.slice(0, newPks.length - 1), (numExistingCols - 1).toString(), ''];
+    }
   } else {
     columns.push(newColumn);
-    newPks = [...newPks, numExistingCols.toString(), ''];
+    if (column.primary) {
+      newPks = [...newPks.slice(0, newPks.length - 1), numExistingCols.toString(), ''];
+    }
   }
   columns.push({ name: '', type: '', nullable: false });
   dispatch({ type: SET_COLUMNS_BULK, columns });
-  dispatch({ type: SET_PK, pks: newPks });
+  if (column.primary) {
+    dispatch({ type: SET_PK, pks: newPks });
+  }
 };
 
 const setColUnique = (isUnique, index) => ({
