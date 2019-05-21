@@ -172,19 +172,6 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
             customStyle={customStyles}
           />
         </span>
-        {/*
-        <select
-          className={`${styles.select} input-sm form-control`}
-          data-test="data-type"
-          {...colType}
-        >
-          <option disabled value="">
-            -- type --
-          </option>
-          {alterTypeOptions}
-        </select>
-        */}
-
         <input
           type="checkbox"
           className={`${styles.input} ${styles.nullable} input-sm form-control`}

@@ -66,12 +66,6 @@ const dataTypes = [
     hasuraDatatype: 'boolean',
   },
   {
-    name: 'JSON',
-    value: 'json',
-    description: 'textual JSON data',
-    hasuraDatatype: 'json',
-  },
-  {
     name: 'JSONB',
     value: 'jsonb',
     description: 'binary format JSON data',
