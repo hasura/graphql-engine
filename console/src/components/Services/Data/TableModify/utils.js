@@ -1,4 +1,4 @@
-import { getDataTypeInfo } from '../Add/utils';
+import { getDataTypeInfo } from '../Common/utils';
 
 const convertArrayToJson = (arr, keyIndex = 0) => {
   const converted = {};

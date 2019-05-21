@@ -3,7 +3,11 @@ import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import { commonDataTypes } from '../utils';
-import { getDataOptions, getPlaceholder, getDefaultValue } from './utils';
+import {
+  getDataOptions,
+  getPlaceholder,
+  getDefaultValue,
+} from '../Common/utils';
 
 /* Custom style object for searchable select box */
 const customStyles = {

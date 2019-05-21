@@ -5,7 +5,7 @@ import { commonDataTypes } from '../utils';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 
-import { getDataOptions } from '../Add/utils';
+import { getDataOptions } from '../Common/utils';
 
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';

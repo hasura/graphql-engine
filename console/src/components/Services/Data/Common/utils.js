@@ -1,4 +1,4 @@
-import { aggCategory, pgCategoryCode } from '../Common/PgInfo';
+import { aggCategory, pgCategoryCode } from './PgInfo';
 
 const getDataTypeInfo = (row, categoryInfo, colId) => {
   const columnTypeValueMap = {};
