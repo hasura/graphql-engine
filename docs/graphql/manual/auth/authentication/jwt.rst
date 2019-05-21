@@ -1,21 +1,23 @@
-Authorization using JWT
-=======================
+Authentication using JWT
+========================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-You can configure JWT authorization mode (see :doc:`GraphQL server options
-<../deployment/graphql-engine-flags/reference>`) to authorize all incoming
-requests to Hasura GraphQL engine server.
+Introduction
+------------
+
+You can configure GraphQL engine to use JWT authorization mode to authorize all incoming requests to Hasura GraphQL engine server.
 
 The idea is - Your auth server will return JWT tokens, which is decoded and
 verified by GraphQL engine to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
 
-.. thumbnail:: ../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
+
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -23,15 +25,16 @@ If current role is not specified in the request, then the default role is picked
 If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 is used for the permissions system.
 
-.. note::
-   Configuring JWT requires Hasura to run with an admin secret (``--admin-secret``).
+.. admonition:: Prerequisite
+   
+   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
 
-   - JWT authorization is **enforced** when ``X-Hasura-Admin-Secret`` header is
-     **not found** in the request.
-   - JWT authorization is **skipped** when ``X-Hasura-Admin-Secret`` header **is
-     found** in the request.
 
-..   :doc:`Read more<config>`.
+In JWT mode, on a secured endpoint:
+
+- JWT authentication is **enforced** when ``X-Hasura-Admin-Secret`` header is **not found** in the request.
+- JWT authentication is **skipped** when ``X-Hasura-Admin-Secret`` header **is found** in the request and
+  admin access is granted.
 
 
 TL;DR
@@ -332,7 +335,7 @@ If you are using Firebase and Hasura, use this config:
 Auth0
 ^^^^^
 
-Refer the :doc:`Auth0 JWT Integration guide <../guides/integrations/auth0-jwt>` for a full integration guide
+Refer the :doc:`Auth0 JWT Integration guide <../../guides/integrations/auth0-jwt>` for a full integration guide
 with Auth0
 
 Auth0 publishes their JWK under:
@@ -386,9 +389,17 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. thumbnail:: ../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
 
-**See:**
+Auth JWT Examples
+-----------------
 
-- :doc:`Auth JWT examples <jwt-examples>`
+Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
+repositories to get started.
+
+- `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
+  A todo app that uses Hasura GraphQL Engine and Auth0 JWT
+
+- `Firebase JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt>`__:
+  Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode

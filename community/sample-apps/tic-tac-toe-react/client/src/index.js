@@ -11,7 +11,7 @@ console.log(process.env);
 const GRAPHQL_ENGINE_URL = process.env.REACT_APP_GRAPHQL_ENGINE_URL || `${window.location.host}/v1alpha1/graphql`;
 
 const link = new WebSocketLink({
-  uri: `ws://${GRAPHQL_ENGINE_URL}`,
+  uri: `wss://${GRAPHQL_ENGINE_URL}`,
   options: {
     reconnect: true
   }
