@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import dataTypes from '../Common/DataTypes';
+import { commonDataTypes } from '../utils';
 import { getDataOptions, getPlaceholder, getDefaultValue } from './utils';
 
 /* Custom style object for searchable select box */
@@ -57,7 +57,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    dataTypes,
+    commonDataTypes,
     restTypes,
     i
   );

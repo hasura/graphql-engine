@@ -33,11 +33,11 @@ const getDataTypeInfo = (row, categoryInfo, colId) => {
  *  1) Type -> grouped option
  *  2) returns array of `grouped` options
  * */
-const getDataOptions = (dataTypes, restTypes, identifier) => {
+const getDataOptions = (commonDataTypes, restTypes, identifier) => {
   let columnTypeValueMap = {};
   const columnDataTypes = [];
   const mainOpts = [];
-  dataTypes.forEach((d, dKey) => {
+  commonDataTypes.forEach((d, dKey) => {
     mainOpts.push({
       value: d.value,
       label: d.name,

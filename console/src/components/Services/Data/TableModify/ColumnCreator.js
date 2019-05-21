@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import dataTypes from '../Common/DataTypes';
+import { commonDataTypes } from '../utils';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 
@@ -117,7 +117,7 @@ const ColumnCreator = ({ dispatch, tableName, dataTypes: restTypes = [] }) => {
   } = useColumnEditor(dispatch, tableName);
 
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    dataTypes,
+    commonDataTypes,
     restTypes,
     0
   );
