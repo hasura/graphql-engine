@@ -30,7 +30,7 @@ const ComponentData = ({ options, dismiss }) => {
       </li>
     );
   });
-  return <ul className={styles.dropdown_wrapper}>{generateOptions}</ul>;
+  return <ul className={styles.dropdown_wrapper + ' ' + styles.dropdownBottom}>{generateOptions}</ul>;
 };
 
 const attachEventListener = updateToggle => {

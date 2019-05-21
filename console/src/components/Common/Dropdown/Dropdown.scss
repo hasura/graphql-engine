@@ -14,10 +14,8 @@
       box-shadow: 7px 7px 20px 0 rgba(0, 0, 0, 0.32);
       background-color: #ffffff;
       color: yellow;
-      top: -12px;
-      left: 35px;
       -webkit-padding-start: 0px;
-      z-index: 100000000;
+      z-index: 10;
       li {
         display: flex;
         align-items: center;
@@ -37,14 +35,33 @@
         border-bottom: none;
       }
     }
-    .dropdown_wrapper:before {
+    .dropdownRight
+    {
+      top: -12px;
+      left: 35px;
+    }
+    .dropdownBottom
+    {
+      top: 38px;
+      left: 0;
+    }
+    .dropdownRight:before, .dropdownBottom:before {
     	content: "";
     	position: absolute;
     	border: solid 5px transparent;
-      border-right-color: white;
       z-index: 10000;
+    }
+    .dropdownRight:before
+    {
+      border-right-color: white;
       left: -10px;
       top: 17px;
+    }
+    .dropdownBottom:before
+    {
+      border-bottom-color: white;
+      top: -10px;
+      left: 20px;
     }
   }
 }
