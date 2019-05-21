@@ -30,6 +30,7 @@ import {
   createTableSql,
   addCol,
   setUniqueKeys,
+  setFreqUsedColumn,
 } from './AddActions';
 
 import {
@@ -49,6 +50,8 @@ import gqlPattern, {
 } from '../Common/GraphQLValidation';
 
 import styles from '../../../Common/TableCommon/Table.scss';
+import { frequentlyUsedColumns, getFrequentlyUsedColumn } from './utils';
+import Dropdown from '../../../Common/Dropdown/Dropdown';
 
 /*
 const typeDescriptionDict = convertListToDictUsingKV(
@@ -408,6 +411,23 @@ class AddTable extends Component {
       createBtnText = 'Created! Redirecting...';
     }
 
+    const frequentlyUsedColumnsOptions = () => {
+      return frequentlyUsedColumns.map(fuc => {
+        const { title, subTitle } = getFrequentlyUsedColumn(fuc);
+        return {
+          content: (
+            <div>
+              <div>
+                <b>{title}</b>
+              </div>
+              <div>{subTitle}</div>
+            </div>
+          ),
+          onClick: () => dispatch(setFreqUsedColumn(fuc)),
+        };
+      });
+    };
+
     return (
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${
@@ -437,6 +457,19 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>Columns</h4>
             {cols}
+            <div>
+              <Dropdown
+                testId={'frequently-used-columns'}
+                options={frequentlyUsedColumnsOptions()}
+                position="right"
+                key={'frequently-used-columns'}
+                keyPrefix={'frequently-used-columns'}
+              >
+                <Button color="white" size="sm">
+                  + Frequently used columns
+                </Button>
+              </Dropdown>
+            </div>
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;

@@ -2,38 +2,35 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { getMeParentNode } from '../../../utils/domFunctions';
-import Button from '../Button/Button';
 
 const styles = require('./Dropdown.scss');
 
-const ComponentData = ({ options }) => {
+const ComponentData = ({ options, dismiss }) => {
   /*
-   * options is an object which has following keys
-   *  callbackArguments [array]: Arguments to be sent to the onClick function
-   *  buttonText: Fills the action button text
-   *  displayText: Fills non actionable text
-   *  testId: Fills `data-test` attribute
-   *  onClick: Function to be called when clicked
+   * options is a list which has the following
+   *  content: html inside each row
+   *  onClick (optional): An onClick handler for each row. If this is undefined, the row is not clicable
    * */
-  const generateOptions = () => {
-    return options.map((o, i) => (
-      <li key={i} data-test={o.testId}>
-        <Button
-          color="white"
-          size="xs"
-          data-test={`run_manual_trigger_${o.testId}`}
-          onClick={() => o.onClick.apply(undefined, o.callbackArguments)}
-        >
-          {o.buttonText}
-        </Button>
-        {`${o.displayText}`}
-      </li>
-    ));
-  };
+
   /*
     TODO: Implement position API
   */
-  return <ul className={styles.dropdown_wrapper}>{generateOptions()}</ul>;
+  const generateOptions = options.map(o => {
+    const liStyle = o.onClick ? styles.cursorPointer : '';
+    const onClick = {};
+    if (o.onClick) {
+      onClick.onClick = () => {
+        o.onClick();
+        dismiss();
+      };
+    }
+    return (
+      <li className={liStyle} {...onClick}>
+        {o.content}
+      </li>
+    );
+  });
+  return <ul className={styles.dropdown_wrapper}>{generateOptions}</ul>;
 };
 
 const attachEventListener = updateToggle => {
@@ -46,7 +43,7 @@ const removeEventListener = updateToggle => {
   document.removeEventListener('click', updateToggle);
 };
 
-/* Accepts:
+/* Accepts
  *  keyPrefix: Prefixes keys with the value
  *  testId: Tag the component with this keyPrefix. This can be consumed in tests
  *  *children*: Dropdown is tied to this element. Dropdown state is toggled based on clicks to this element.
@@ -56,8 +53,14 @@ const removeEventListener = updateToggle => {
  * */
 const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
   const [isOpen, updateState] = useState(false);
-  const showDropdown = () =>
-    isOpen && <ComponentData position={position} options={options} />;
+  const showDropdown = dismissCallback =>
+    isOpen && (
+      <ComponentData
+        position={position}
+        options={options}
+        dismiss={dismissCallback}
+      />
+    );
 
   const nodeId = `data-dropdown-element_${testId}`;
 
@@ -75,8 +78,8 @@ const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
       updateState(!d);
     }
   };
-  const onClick = e => {
-    e.stopPropagation();
+
+  const toggle = () => {
     /*
      * If the dropdown is not open, attach event on body
      * */
@@ -90,6 +93,9 @@ const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
         attachEventListener(cb(true));
     }
   };
+
+  const dismissDropdown = () => updateState(false);
+
   return (
     <div
       key={`${keyPrefix}_wrapper`}
@@ -97,12 +103,15 @@ const Dropdown = ({ keyPrefix, testId, children, options, position }) => {
       className={styles.data_dropdown_wrapper}
       data-element={nodeId}
     >
-      <span key={`${keyPrefix}_children_wrapper`}>
+      <div
+        className={styles.dataDropdown}
+        key={`${keyPrefix}_children_wrapper`}
+      >
         <span key={`${keyPrefix}_children`}>
-          {React.cloneElement(children, { onClick: onClick })}
+          {React.cloneElement(children, { onClick: toggle })}
         </span>
-        {showDropdown()}
-      </span>
+        {showDropdown(dismissDropdown)}
+      </div>
     </div>
   );
 };

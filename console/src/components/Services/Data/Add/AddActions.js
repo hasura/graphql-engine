@@ -12,6 +12,7 @@ const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
 const SET_TABLECOMMENT = 'AddTable/SET_TABLECOMMENT';
 const REMOVE_COLUMN = 'AddTable/REMOVE_COLUMN';
+const SET_COLUMNS_BULK = 'AddTable/SET_COLUMNS_BULK';
 const SET_COLNAME = 'AddTable/SET_COLNAME';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
 const SET_COLDEFAULT = 'AddTable/SET_COLDEFAULT';
@@ -58,6 +59,31 @@ const setColNullable = (isNull, index) => ({
   isNull,
   index,
 });
+
+const setFreqUsedColumn = column => (dispatch, getState) => {
+  const columns = JSON.parse(JSON.stringify(getState().addTable.table.columns));
+  const newColumn = {
+    name: column.name,
+    type: column.type,
+    nullable: false,
+  };
+  if (column.default) {
+    newColumn.default = { __type: 'value', value: column.default };
+  }
+
+  const numExistingCols = columns.length;
+  if (
+    !columns[numExistingCols - 1].name &&
+    !columns[numExistingCols - 1].type
+  ) {
+    columns[numExistingCols - 1] = newColumn;
+  } else {
+    columns.push(newColumn);
+  }
+  columns.push({ name: '', type: '', nullable: false });
+  dispatch({ type: SET_COLUMNS_BULK, columns });
+};
+
 const setColUnique = (isUnique, index) => ({
   type: SET_COLUNIQUE,
   isUnique,
@@ -456,6 +482,11 @@ const addTableReducer = (state = defaultState, action) => {
         ...state,
         uniqueKeys: action.data,
       };
+    case SET_COLUMNS_BULK:
+      return {
+        ...state,
+        columns: action.columns,
+      };
     default:
       return state;
   }
@@ -480,5 +511,6 @@ export {
   createTableSql,
   toggleFk,
   clearFkToggle,
+  setFreqUsedColumn,
 };
 export { resetValidation, validationError };

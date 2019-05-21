@@ -1,11 +1,14 @@
+@import "../Common.scss";
+
 .data_dropdown_wrapper {
   display: inline-block;
-  // cursor: pointer;
-  span {
+  width: 100%;
+  .dataDropdown {
     position: relative;
+    width: 100%;
     .dropdown_wrapper {
       border-radius: 5px;
-      width: 175px;
+      width: auto;
       position: absolute;
       padding-inline-start: 0px;
       box-shadow: 7px 7px 20px 0 rgba(0, 0, 0, 0.32);
