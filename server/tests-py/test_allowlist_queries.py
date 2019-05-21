@@ -24,6 +24,11 @@ class TestAllowlistQueries(DefaultTestSelectQueries):
     def test_query_as_admin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_as_admin.yaml', transport)
 
+    def test_update_query(self, hge_ctx, transport):
+        # test only for http
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + '/update_query.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/allowlist'
