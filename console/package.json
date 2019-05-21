@@ -89,7 +89,7 @@
     "react-redux": "^5.0.6",
     "react-router": "^3.2.0",
     "react-router-redux": "^4.0.8",
-    "react-select": "^2.4.2",
+    "react-select": "^2.4.3",
     "react-table": "^6.8.6",
     "react-tabs": "^2.1.0",
     "react-toggle": "^4.0.2",
