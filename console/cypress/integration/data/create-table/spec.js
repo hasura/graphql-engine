@@ -1,4 +1,5 @@
 import {
+  tableColumnTypeSelector,
   getElementFromAlias,
   getTableName,
   getColName,
@@ -34,7 +35,10 @@ export const failCTWithoutColumns = () => {
 export const failCTWithoutPK = () => {
   //   Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   //   Click on create
   cy.get(getElementFromAlias('table-create')).click();
   //   Check for an error
@@ -48,7 +52,10 @@ export const failCTWithoutPK = () => {
 export const failCTDuplicateColumns = () => {
   //   Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-1')).select('serial');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //   Click on create
@@ -65,12 +72,41 @@ export const failCTDuplicateColumns = () => {
   validateCT(getTableName(0, testName), 'failure');
 };
 
+export const failCTDuplicatePrimaryKey = () => {
+  //   Set second column
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type(getColName(1));
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
+  //   Set primary key
+  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
+  cy.get(getElementFromAlias('primary-key-select-1')).select('0');
+  cy.on('window:alert', str => {
+    expect(
+      str ===
+        `You key [${getColName(
+          0
+        )}] is already present in the current set of primary keys.`
+    ).to.be.true;
+  });
+  //   Check if the route didn't change
+  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  //   Validate
+  validateCT(getTableName(0, testName), 'failure');
+};
+
 export const failCTWrongDefaultValue = () => {
   //   Set second column
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   cy.get(getElementFromAlias('col-default-1')).type('qwerty');
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -87,7 +123,10 @@ export const passCT = () => {
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('text');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
   cy.get(getElementFromAlias('col-default-1')).clear();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -114,13 +153,22 @@ export const passCTWithFK = () => {
     .type(getTableName(1, testName));
   //   Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(1));
-  cy.get(getElementFromAlias('col-type-1')).select('text');
+  tableColumnTypeSelector('col-type-1');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
   // Set third column
   cy.get(getElementFromAlias('column-2')).type(getColName(2));
-  cy.get(getElementFromAlias('col-type-2')).select('text');
+  tableColumnTypeSelector('col-type-2');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
 
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
@@ -170,7 +218,10 @@ export const failCTDuplicateTable = () => {
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   //   Set column
   cy.get(getElementFromAlias('column-0')).type(getColName(1));
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   //   Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create

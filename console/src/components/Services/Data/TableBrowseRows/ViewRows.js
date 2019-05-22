@@ -207,13 +207,7 @@ const ViewRows = ({
 
           return (
             <Button
-              className={
-                styles.tableActionBtn +
-                ' ' +
-                styles.add_mar_right_small +
-                ' ' +
-                styles.remove_margin_right
-              }
+              className={styles.add_mar_right_small}
               color="white"
               size="xs"
               onClick={disabled ? disabledOnClick : handleClick}
