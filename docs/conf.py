@@ -39,7 +39,7 @@ CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
 
 # GraphiQL defaults
-GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1alpha1/graphql"
+GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")

@@ -6,7 +6,6 @@ import { Link } from 'react-router';
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
 import { LISTING_SCHEMA, UPDATE_TRACKED_FUNCTIONS } from './DataActions';
-import semverCheck from '../../../helpers/semver';
 
 const appPrefix = '/data';
 
@@ -22,13 +21,15 @@ const DataSubSidebar = ({
   dispatch,
   location,
   currentFunction,
-  serverVersion,
+  metadata,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
   const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
   const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
 
-  const handleFunc = semverCheck('customFunctionSection', serverVersion);
+  if (metadata.ongoingRequest) {
+    return null;
+  }
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
@@ -55,7 +56,7 @@ const DataSubSidebar = ({
         type="text"
         onChange={tableSearch.bind(this)}
         className="form-control"
-        placeholder={`search table/view${handleFunc ? '/function' : ''}`}
+        placeholder="search table/view/function"
         data-test="search-tables"
       />
     );
@@ -216,6 +217,7 @@ const mapStateToProps = state => {
     listedFunctions: state.tables.listedFunctions,
     currentFunction: state.functions.functionName,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    metadata: state.metadata,
   };
 };
 

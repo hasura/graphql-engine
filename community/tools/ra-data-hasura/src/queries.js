@@ -7,7 +7,7 @@ const bulkQuery = {
 const selectQuery = {
   type: 'select',
   args: {
-    table: '',
+    table: {'schema': '', 'name': ''},
     columns: ['*']
   }
 };
@@ -15,15 +15,15 @@ const selectQuery = {
 const countQuery = {
   type: 'count',
   args: {
-    table: '',
-    where: { id: { '$ne': null }}
+    table: {'schema': '', 'name': ''},
+    where: {}
   }
 };
 
 const insertQuery = {
   type: 'insert',
   args: {
-    table: '',
+    table: {'schema': '', 'name': ''},
     objects: [],
     returning: []
   }
@@ -32,7 +32,7 @@ const insertQuery = {
 const updateQuery = {
   type: 'update',
   args: {
-    table: '',
+    table: {'schema': '', 'name': ''},
     $set: {},
     where: {},
     returning: []
@@ -42,7 +42,8 @@ const updateQuery = {
 const deleteQuery = {
   type: 'delete',
   args: {
-    table: '',
+    table: {'schema': '', 'name': ''},
+    $set: {},
     where: {},
     returning: []
   }

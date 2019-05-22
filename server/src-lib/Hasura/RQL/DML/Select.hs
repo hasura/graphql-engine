@@ -1,9 +1,12 @@
 module Hasura.RQL.DML.Select
   ( selectP2
-  , selectAggP2
-  , funcQueryTx
+  , selectQuerySQL
+  , selectAggQuerySQL
+  , mkFuncSelectSimple
+  , mkFuncSelectAgg
   , convSelectQuery
   , getSelectDeps
+  , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
   , runSelect
   )
@@ -17,13 +20,13 @@ import qualified Data.HashSet                   as HS
 import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.EncJSON
 
 import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
@@ -103,10 +106,11 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (FieldInfoMap, SelPermInfo)
+  => SessVarBldr m
+  -> (FieldInfoMap, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
-convOrderByElem (flds, spi) = \case
+convOrderByElem sessVarBldr (flds, spi) = \case
   OCPG fldName -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
@@ -137,17 +141,19 @@ convOrderByElem (flds, spi) = \case
           ," and can't be used in 'order_by'"
           ]
         (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        AOCObj relInfo (spiFilter relSpi) <$>
-          convOrderByElem (relFim, relSpi) rest
+        resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSpi
+        AOCObj relInfo resolvedSelFltr <$>
+          convOrderByElem sessVarBldr (relFim, relSpi) rest
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => FieldInfoMap  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
+  -> SessVarBldr m
   -> (PGColType -> Value -> m S.SQLExp)
-  -> m AnnSel
-convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
+  -> m AnnSimpleSel
+convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
@@ -155,7 +161,8 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
       return (fromPGCol pgCol, FCol colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
-      annRel <- convExtRel fieldInfoMap relName mAlias relSelQ prepValBuilder
+      annRel <- convExtRel fieldInfoMap relName mAlias
+                relSelQ sessVarBldr prepValBldr
       return ( fromRel $ fromMaybe relName mAlias
              , either FObj FArr annRel
              )
@@ -165,11 +172,11 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \be ->
     withPathK "where" $
-    convBoolExp' fieldInfoMap selPermInfo be prepValBuilder
+    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
-    convOrderByElem (fieldInfoMap, selPermInfo)
+    convOrderByElem sessVarBldr (fieldInfoMap, selPermInfo)
 
   let annOrdByM = NE.nonEmpty =<< annOrdByML
 
@@ -177,8 +184,11 @@ convSelectQ fieldInfoMap selPermInfo selQ prepValBuilder = do
   withPathK "limit" $ mapM_ onlyPositiveInt mQueryLimit
   withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
+  resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
+                     spiFilter selPermInfo
+
   let tabFrom = TableFrom (spiTable selPermInfo) Nothing
-      tabPerm = TablePerm (spiFilter selPermInfo) mPermLimit
+      tabPerm = TablePerm resolvedSelFltr mPermLimit
       tabArgs = TableArgs wClause annOrdByM mQueryLimit
                 (S.intToSQLExp <$> mQueryOffset) Nothing
 
@@ -208,15 +218,16 @@ convExtRel
   -> RelName
   -> Maybe RelName
   -> SelectQExt
+  -> SessVarBldr m
   -> (PGColType -> Value -> m S.SQLExp)
   -> m (Either ObjSel ArrSel)
-convExtRel fieldInfoMap relName mAlias selQ prepValBuilder = do
+convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
   let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
-  annSel <- convSelectQ relCIM relSPI selQ prepValBuilder
+  annSel <- convSelectQ relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
@@ -249,7 +260,7 @@ partAnnFlds flds =
   FExp _ -> Nothing
 
 getSelectDeps
-  :: AnnSel
+  :: AnnSimpleSel
   -> [SchemaDependency]
 getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
   mkParentDep tn
@@ -280,49 +291,59 @@ getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
 
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => SessVarBldr m
+  -> (PGColType -> Value -> m S.SQLExp)
   -> SelectQuery
-  -> m AnnSel
-convSelectQuery prepArgBuilder (DMLQuery qt selQ) = do
+  -> m AnnSimpleSel
+convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
   extSelQ <- resolveStar (tiFieldInfoMap tabInfo) selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ (tiFieldInfoMap tabInfo) selPermInfo extSelQ prepArgBuilder
+  convSelectQ (tiFieldInfoMap tabInfo) selPermInfo
+    extSelQ sessVarBldr prepArgBuilder
 
-funcQueryTx
-  :: S.FromItem -> QualifiedFunction -> QualifiedTable
-  -> TablePerm -> TableArgs -> Bool
-  -> (Either TableAggFlds AnnFlds, DS.Seq Q.PrepArg)
-  -> Q.TxE QErr EncJSON
-funcQueryTx frmItem fn tn tabPerm tabArgs strfyNum (eSelFlds, p) =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList p) True
-  where
-    sqlBuilder = toSQL $
-      mkFuncSelectWith fn tn tabPerm tabArgs strfyNum eSelFlds frmItem
+mkFuncSelectSimple
+  :: AnnFnSelSimple
+  -> Q.Query
+mkFuncSelectSimple annFnSel =
+  Q.fromBuilder $ toSQL $
+  mkFuncSelectWith (mkSQLSelect False) annFnSel
 
-selectAggP2 :: (AnnAggSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-selectAggP2 (sel, p) =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
-  where
-    selectSQL = toSQL $ mkAggSelect sel
+mkFuncSelectAgg
+  :: AnnFnSelAgg
+  -> Q.Query
+mkFuncSelectAgg annFnSel =
+  Q.fromBuilder $ toSQL $
+  mkFuncSelectWith mkAggSelect annFnSel
 
-selectP2 :: Bool -> (AnnSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =
   encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect asSingleObject sel
 
+selectQuerySQL :: Bool -> AnnSimpleSel -> Q.Query
+selectQuerySQL asSingleObject sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect asSingleObject sel
+
+selectAggQuerySQL :: AnnAggSel -> Q.Query
+selectAggQuerySQL =
+  Q.fromBuilder . toSQL . mkAggSelect
+
+asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler query args True
+
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => SelectQuery -> m (AnnSel, DS.Seq Q.PrepArg)
+  => SelectQuery -> m (AnnSimpleSel, DS.Seq Q.PrepArg)
 phaseOne =
-  liftDMLP1 . convSelectQuery binRHSBuilder
+  liftDMLP1 . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
 
-phaseTwo :: (MonadTx m) => (AnnSel, DS.Seq Q.PrepArg) -> m EncJSON
+phaseTwo :: (MonadTx m) => (AnnSimpleSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 False
 

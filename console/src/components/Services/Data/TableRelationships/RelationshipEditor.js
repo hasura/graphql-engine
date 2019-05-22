@@ -1,9 +1,8 @@
-/* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
-import { getRelationshipLine } from './utils';
+import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import styles from '../TableModify/ModifyTable.scss';
 
@@ -60,17 +59,13 @@ class RelationshipEditor extends React.Component {
   };
 
   render() {
-    const {
-      dispatch,
-      tableName,
-      relName,
-      relConfig,
-      isObjRel,
-      tableStyles,
-      allowRename,
-    } = this.props;
+    const { dispatch, tableName, relName, relConfig, isObjRel } = this.props;
+
     const { text, isEditting } = this.state;
     const { lcol, rtable, rcol } = relConfig;
+
+    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+
     const onDelete = e => {
       e.preventDefault();
       const isOk = confirm('Are you sure?');
@@ -83,28 +78,24 @@ class RelationshipEditor extends React.Component {
     const collapsed = () => (
       <div>
         <Button
-          color={allowRename ? 'white' : 'red'}
-          size={allowRename ? 'xs' : 'sm'}
-          onClick={allowRename ? this.toggleEditor : onDelete}
-          data-test={
-            allowRename
-              ? `relationship-toggle-editor-${relName}`
-              : `relationship-remove-${relName}`
-          }
+          color={'white'}
+          size={'xs'}
+          onClick={this.toggleEditor}
+          data-test={`relationship-toggle-editor-${relName}`}
         >
-          {allowRename ? 'Edit' : 'Remove'}
+          Edit
         </Button>
         &nbsp;
         <b>{relName}</b>
         <div className={tableStyles.relationshipTopPadding}>
-          {getRelationshipLine(isObjRel, lcol, rcol, rtable)}
+          {getRelDef(isObjRel, lcol, rcol, tableName, rtable)}
         </div>
       </div>
     );
 
     const expanded = () => (
       <div className={styles.activeEdit}>
-        <div className={tableStyles.add_mar_top}>
+        <div>
           <Button
             color="white"
             size="xs"
@@ -115,7 +106,7 @@ class RelationshipEditor extends React.Component {
           </Button>
         </div>
         <div className={tableStyles.relationshipTopPadding}>
-          <div>{getRelationshipLine(isObjRel, lcol, rcol, rtable)}</div>
+          <div>{getRelDef(isObjRel, lcol, rcol, tableName, rtable)}</div>
           <input
             onChange={this.handleTextChange}
             className={`form-control ${styles.add_mar_top_small}`}

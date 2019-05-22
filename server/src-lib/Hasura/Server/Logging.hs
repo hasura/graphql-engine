@@ -4,6 +4,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
+  , mkInconsMetadataLog
   , mkAccessLog
   , getRequestHeader
   , WebHookLog(..)
@@ -12,36 +13,39 @@ module Hasura.Server.Logging
   , VerboseLogging(..)
   ) where
 
-import           Crypto.Hash            (Digest, SHA1, hash)
+import           Crypto.Hash                 (Digest, SHA1, hash)
 import           Data.Aeson
-import           Data.Bits              (shift, (.&.))
-import           Data.ByteString.Char8  (ByteString)
-import qualified Data.ByteString.Lazy   as BL
-import           Data.Int               (Int64)
-import           Data.List              (find)
-import qualified Data.TByteString       as TBS
-import qualified Data.Text              as T
-import qualified Data.Text.Encoding     as TE
+import           Data.Bits                   (shift, (.&.))
+import           Data.ByteString.Char8       (ByteString)
+import qualified Data.ByteString.Lazy        as BL
+import           Data.Int                    (Int64)
+import           Data.List                   (find)
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as TE
 import           Data.Time.Clock
-import           Data.Word              (Word32)
+import           Data.Word                   (Word32)
 import           Debug.Trace
-import           Network.Socket         (SockAddr (..))
-import           Network.Wai            (Request (..))
-import           System.ByteOrder       (ByteOrder (..), byteOrder)
-import           Text.Printf            (printf)
+import           Network.Socket              (SockAddr (..))
+import           Network.Wai                 (Request (..))
+import           System.ByteOrder            (ByteOrder (..), byteOrder)
+import           Text.Printf                 (printf)
 
-import qualified Data.Aeson             as J
-import qualified Data.ByteString.Char8  as BS
-import qualified Data.CaseInsensitive   as CI
-import qualified Network.HTTP.Types     as N
+import qualified Data.Aeson                  as J
+import qualified Data.ByteString.Char8       as BS
+import qualified Data.CaseInsensitive        as CI
+import qualified Network.HTTP.Types          as N
 
-import qualified Hasura.GraphQL.Explain as GE
+import qualified Hasura.GraphQL.Explain      as GE
 import           Hasura.HTTP
-import qualified Hasura.Logging         as L
+import qualified Hasura.Logging              as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 --import           Hasura.RQL.Types.Error
 --import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
 
 
@@ -79,6 +83,28 @@ instance ToJSON PGLog where
 instance L.ToEngineLog PGLog where
   toEngineLog pgLog =
     (plLogLevel pgLog, "pg-client", toJSON pgLog)
+
+data MetadataLog
+  = MetadataLog
+  { mlLogLevel :: !L.LogLevel
+  , mlMessage  :: !T.Text
+  , mlInfo     :: !Value
+  } deriving (Show, Eq)
+
+instance ToJSON MetadataLog where
+  toJSON (MetadataLog _ msg infoVal) =
+    object [ "message" .= msg
+           , "info" .= infoVal
+           ]
+
+instance L.ToEngineLog MetadataLog where
+  toEngineLog ml =
+    (mlLogLevel ml, "metadata", toJSON ml)
+
+mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog objs =
+  MetadataLog L.LevelWarn "Inconsistent Metadata!" $
+    object [ "objects" .= objs]
 
 data WebHookLog
   = WebHookLog
@@ -179,13 +205,13 @@ ravenLogGen verLog (reqBody, res) sc sqlGenCtx userInfoM =
                  else Nothing
 
     genedSql :: Maybe Text
-    genedSql = do
-      -- try to parse the query as graphql explain query, log nothing if parsing fails
-      req <- J.decode reqBody
-      userInfo <- userInfoM
-      x <- runExceptT $ GE.genSql sc sqlGenCtx req userInfo
-      traceM $ show x
-      either (const Nothing) (Just . T.intercalate "\n") x
+    genedSql = undefined
+      -- -- try to parse the query as graphql explain query, log nothing if parsing fails
+      -- req <- J.decode reqBody
+      -- userInfo <- userInfoM
+      -- x <- runExceptT $ GE.genSql sc sqlGenCtx req userInfo
+      -- traceM $ show x
+      -- either (const Nothing) (Just . T.intercalate "\n") x
 
 mkAccessLog
   :: VerboseLogging

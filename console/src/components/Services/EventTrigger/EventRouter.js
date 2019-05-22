@@ -4,7 +4,7 @@ import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
 
 import {
-  schemaConnector,
+  landingConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
@@ -44,7 +44,7 @@ const makeEventRouter = (
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
-        <Route path="triggers" component={schemaConnector(connect)} />
+        <Route path="triggers" component={landingConnector(connect)} />
         <Route
           path="triggers/:trigger/processed"
           component={processedEventsConnector(connect)}
@@ -89,10 +89,12 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
     const {
       triggers: { triggerList },
     } = store.getState();
+
     if (triggerList.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadTriggers())]).then(
       () => {
         cb();
@@ -104,14 +106,17 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requireProcessedEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { processedEvents },
     } = store.getState();
+
     if (processedEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadProcessedEvents())]).then(
       () => {
         cb();
@@ -123,14 +128,17 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requirePendingEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { pendingEvents },
     } = store.getState();
+
     if (pendingEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadPendingEvents())]).then(
       () => {
         cb();
@@ -142,14 +150,17 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const requireRunningEvents = (nextState, replaceState, cb) => {
     const {
       triggers: { runningEvents },
     } = store.getState();
+
     if (runningEvents.length) {
       cb();
       return;
     }
+
     Promise.all([store.dispatch(loadRunningEvents())]).then(
       () => {
         cb();
@@ -161,6 +172,7 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       }
     );
   };
+
   const migrationRedirects = (nextState, replaceState, cb) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
@@ -169,6 +181,7 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState(globals.urlPrefix + '/events/manage');
@@ -176,6 +189,7 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
     }
     cb();
   };
+
   return {
     makeEventRouter: makeEventRouter(
       connect,

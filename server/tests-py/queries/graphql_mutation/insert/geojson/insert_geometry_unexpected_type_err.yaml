@@ -1,11 +1,11 @@
 description: Insert landmarks
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues[0].location
+      path: $.variableValues.landmarks[0].location
     message: 'unexpected geometry type: Random'
 query:
   variables:

@@ -1,5 +1,5 @@
 // import GraphiQL parts
-import GraphiQLWrapper from './src/components/ApiExplorer/GraphiQLWrapper';
+import GraphiQLWrapper from './src/components/ApiExplorer/GraphiQLWrapper/GraphiQLWrapper';
 
 // import Data Tab parts
 import dataRouter from './src/components/Services/Data/DataRouter';

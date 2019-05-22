@@ -7,7 +7,7 @@ import {
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import suggestedRelationshipsRaw from './autoRelations';
 
 export const REL_SET_TYPE = 'ModifyTable/REL_SET_TYPE';
@@ -20,6 +20,8 @@ export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
 export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
+export const UPDATE_MANUAL_REL_TABLE_LIST =
+  'ModifyTable/UPDATE_MANUAL_REL_TABLE_LIST';
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
@@ -45,7 +47,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: oldName,
           new_name: newName,
         },
@@ -55,7 +60,10 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
       {
         type: 'rename_relationship',
         args: {
-          table: tableName,
+          table: {
+            name: tableName,
+            schema: currentSchema,
+          },
           name: newName,
           new_name: oldName,
         },

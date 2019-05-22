@@ -12,7 +12,6 @@ const ViewHeader = ({
   currentSchema,
   migrationMode,
   dispatch,
-  allowRename,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
@@ -65,7 +64,7 @@ const ViewHeader = ({
           currentValue={tableName}
           save={saveViewNameChange}
           loading={false}
-          editable={tabName === 'modify' && allowRename}
+          editable={tabName === 'modify'}
           dispatch={dispatch}
           property="view"
         />
@@ -73,7 +72,7 @@ const ViewHeader = ({
           <ul className="nav nav-pills">
             <li
               role="presentation"
-              className={tabName === 'view' ? styles.active : ''}
+              className={tabName === 'browse' ? styles.active : ''}
             >
               <Link
                 to={

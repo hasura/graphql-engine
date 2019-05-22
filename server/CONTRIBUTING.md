@@ -41,18 +41,21 @@ sudo apt install python3-pip
   ```
   cd console
   npm ci
+  npm run server-build
   cd ..
   ```
 - compile the server
   ```
   cd server
-  stack build --fast --flag graphql-engine:local-console
+  stack build --fast
   ```
 
 ### Run
 - Make sure postgres is running (Postgres >= 9.5)
 - Create a database on postgres
 - Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+
+Use `--enable-console --console-assets-dir ../console/static/dist` if you want console to be served.
 
 database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
 
@@ -106,7 +109,7 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
 ```
 cd tests-py
-pytest -vv --hge-url=http://127.0.0.1:8080 --pg-url=<database_url>
+pytest --hge-urls http://127.0.0.1:8080 --pg-urls <database_url> -vv
 ```
 
 ### Create Pull Request

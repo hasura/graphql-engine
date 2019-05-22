@@ -282,6 +282,9 @@ data SQLExp
   | SECount !CountType
   deriving (Show, Eq)
 
+withTyAnn :: PGColType -> SQLExp -> SQLExp
+withTyAnn colTy v = SETyAnn v $ AnnType $ T.pack $ show colTy
+
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
@@ -342,10 +345,6 @@ intToSQLExp :: Int -> SQLExp
 intToSQLExp =
   SEUnsafe . T.pack . show
 
-annotateExp :: SQLExp -> PGColType -> SQLExp
-annotateExp sqlExp =
-  SETyAnn sqlExp . AnnType . T.pack . show
-
 data Extractor = Extractor !SQLExp !(Maybe Alias)
                deriving (Show, Eq)
 
@@ -403,6 +402,7 @@ data FromItem
   = FISimple !QualifiedTable !(Maybe Alias)
   | FIIden !Iden
   | FIFunc !QualifiedFunction ![SQLExp] !(Maybe Alias)
+  | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
@@ -425,6 +425,9 @@ instance ToSQL FromItem where
     toSQL iden
   toSQL (FIFunc qf args mal) =
     toSQL qf <> paren (", " <+> args) <-> toSQL mal
+  -- unnest(expressions) alias(columns)
+  toSQL (FIUnnest args als cols) =
+    "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
   toSQL (FIValues valsExp al mCols) =

@@ -3,6 +3,21 @@ const defaultState = {
   tableComment: null,
   columns: [{ name: '', type: '', nullable: false }],
   primaryKeys: [''],
+  foreignKeys: [
+    {
+      refTableName: '',
+      colMappings: [
+        {
+          column: '',
+          refColumn: '',
+        },
+      ],
+      onUpdate: 'restrict',
+      onDelete: 'restrict',
+    },
+  ],
+  uniqueKeys: [[]],
+  fkToggled: null,
   ongoingRequest: false,
   lastError: null,
   internalError: null,

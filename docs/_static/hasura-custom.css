@@ -85,7 +85,7 @@ ul {
 
 [role="main"] {
   width: 90% !important;
-  max-width: 800px !important;
+  /*max-width: 800px !important;*/
   border: none !important;
   padding-bottom: 0 !important;
   padding-left: 15px !important;
@@ -159,6 +159,7 @@ ul {
 
 #docs-content .docutils {
   color: #6f6f6f;
+  word-break: break-word;
 }
 
 #docs-content .docutils.literal {
@@ -189,6 +190,10 @@ article ol ol {
 .schema {
   display: inline-block;
   width: 60%;
+}
+
+.highlight pre {
+  white-space: pre;
 }
 
 /*** random overrides END ***/
@@ -831,7 +836,7 @@ article ol ol {
     position: absolute;
     z-index: 10;
     width: 90% !important;
-    max-width: 800px !important;
+    /*max-width: 800px !important;*/
     left: 0;
     right: 0;
     margin: 0 auto;

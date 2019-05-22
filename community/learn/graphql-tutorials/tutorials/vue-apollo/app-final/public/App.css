@@ -1,0 +1,652 @@
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
+@import url("https://fonts.googleapis.com/css?family=Raleway:400,600,700");
+body {
+  background-color: #f7f7f7 !important;
+  font-family: "Open Sans" !important;
+  font-weight: 400 !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-size: 14px !important;
+  font-family: sans-serif !important;
+}
+/* Landing section */
+.wd10 {
+  width: 10%;
+  display: inline-block;
+}
+.wd90 {
+  width: 90%;
+  display: inline-block;
+}
+.removePaddBottom {
+  padding-bottom: 0 !important;
+}
+.gradientBgColor {
+  background-color: #a0b4cc;
+  /* Safari 4-5, Chrome 1-9 */
+  background: -webkit-gradient(
+    linear,
+    0% 0%,
+    0% 100%,
+    from(#a0b4cc),
+    to(#c2a899)
+  );
+  /* Safari 5.1, Chrome 10+ */
+  background: -webkit-linear-gradient(top, #a0b4cc, #c2a899);
+  /* Firefox 3.6+ */
+  background: -moz-linear-gradient(top, #a0b4cc, #c2a899);
+  /* IE 10 */
+  background: -ms-linear-gradient(top, #a0b4cc, #c2a899);
+  /* Opera 11.10+ */
+  background: -o-linear-gradient(top, #a0b4cc, #c2a899);
+}
+.minHeight {
+  width: 100%;
+  height: 100vh;
+}
+.headerWrapper {
+  padding: 30px 0;
+  display: flex;
+  align-items: center;
+  height: 15vh;
+  padding-left: 75px;
+}
+.headerDescription {
+  font-size: 20px;
+  color: #fff;
+  font-family: "Raleway";
+  font-weight: 700;
+  flex: 1;
+}
+.headerDescription a {
+  color: #fff;
+}
+.headerDescription a:hover {
+  text-decoration: none;
+  border-bottom: 1px solid #fff;
+}
+.loginBtn {
+  text-align: right;
+  padding-right: 75px;
+}
+.loginBtn button {
+  background-color: #f93c18;
+  padding: 10px 30px;
+  border: 0;
+  color: #fff;
+  font-family: "raleway";
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 25px;
+  text-transform: uppercase;
+}
+.loginBtn button:hover {
+  background-color: #e0270e;
+}
+.loginBtn button:focus {
+  outline: none;
+}
+.mainWrapper {
+  padding-left: 75px;
+  width: 100%;
+  float: left;
+  height: 85vh;
+  display: flex;
+  align-items: center;
+}
+.description {
+  font-size: 16px;
+  padding-bottom: 10px;
+}
+.appstackWrapper {
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 30px;
+  -webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  width: 100%;
+  float: left;
+  color: #606060;
+}
+.arrow {
+  position: absolute;
+  right: -100px;
+  top: 10px;
+  z-index: 1;
+}
+.arrow img {
+  width: 120px;
+  display: inline-block;
+}
+.appStack {
+  width: 100%;
+  float: left;
+  padding-bottom: 20px;
+}
+.appStack i {
+  font-size: 16px;
+}
+.appStackIconWrapper {
+  width: 100%;
+  float: left;
+  display: flex;
+  align-items: center;
+}
+.appStackIcon img {
+  width: 80%;
+}
+.footer {
+  padding-top: 10px;
+  text-align: center;
+  clear: both;
+  font-size: 14px;
+  color: #3c3737;
+}
+.footer a {
+  color: #3c3737;
+}
+.footer a:hover {
+  text-decoration: none;
+  border-bottom: 1px solid #3c3737;
+}
+.footer i {
+  color: #b51d04;
+  margin: 0 5px;
+}
+.tutorialImg {
+  position: absolute;
+  right: 0;
+  text-align: right;
+}
+.tutorialImg img {
+  width: 95%;
+  display: inline-block;
+}
+/* Landing section */
+.wd95 {
+  width: 95%;
+  margin: 0 auto;
+}
+.navheader {
+  width: 100%;
+}
+.navbar {
+  padding: 5px 10px !important;
+  background-color: #f8f8f8;
+  border-color: #e7e7e7;
+  display: flex;
+  align-items: center;
+}
+.navBrand {
+  padding-top: 0px;
+  font-size: 14px !important;
+  height: auto !important;
+  margin-right: 10px;
+  padding-bottom: 3.125px;
+  padding-left: 15px;
+  padding-right: 15px;
+  color: #777 !important;
+  flex: 1;
+  height: 50px;
+  padding: 15px 15px;
+}
+.navBarAlign
+{
+  text-align: right;
+  justify-content: flex-end;
+}
+.logoutBtn {
+  float: right !important;
+  font-size: 10px !important;
+  padding: 3.75px 7.5px !important;
+}
+.header {
+  background-color: #4f5050;
+  padding: 20px;
+  font-size: 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #cbcbcb;
+  max-height: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.noPadd {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.grayBgColor {
+  background-color: #efeded;
+}
+.removePaddRight {
+  padding-right: 0;
+}
+.todoWrapper {
+  width: 100%;
+  position: relative;
+}
+.sectionHeader {
+  font-size: 18px;
+  font-weight: 400;
+  padding-bottom: 20px;
+}
+.addPaddTopBottom {
+  padding: 30px 0;
+}
+.commonBorRight {
+  border-right: 1px solid #ccc;
+}
+.formInput {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.formInput input {
+  height: 60px;
+  padding: 16px 16px 16px 60px;
+  border: none;
+  background-color: #fff;
+  width: 100%;
+  -webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  opacity: 0.6;
+}
+.formInput input:focus {
+  outline: none;
+}
+.downArrow {
+  position: absolute;
+  left: 15px;
+  font-size: 25px;
+  opacity: 0.6;
+}
+.todoListwrapper {
+  border-top: 1px solid #e6e6e6;
+  -webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+}
+.todoListwrapper ul {
+  -webkit-padding-start: 0px;
+  -moz-padding-start: 0px;
+  margin-bottom: 0;
+}
+.todoListwrapper ul li {
+  list-style-type: none;
+  min-height: 60px;
+  max-height: 60px;
+  /* overflow: auto; */
+  display: flex;
+  font-size: 14px;
+  align-items: center;
+  border-bottom: 1px solid #ededed;
+  background-color: #fff;
+  position: relative;
+}
+.closeBtn {
+  background-color: transparent;
+  border: none;
+  color: #cc9a9a;
+  position: absolute;
+  right: 15px;
+  padding: 0;
+  font-size: 25px;
+}
+.closeBtn i {
+  font-size: 20px;
+}
+.closeBtn:hover {
+  color: #af5b5e;
+}
+.closeBtn:focus {
+  outline: none;
+}
+.labelContent {
+  padding-left: 1px;
+  color: #777;
+  width: calc(100% - 128px);
+  max-height: 60px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+}
+.view {
+  width: 28px;
+  height: 28px;
+  margin: 0 15px;
+}
+.footerList {
+  height: 60px;
+  background-color: #fff;
+  border-bottom: 1px solid #ededed;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  margin-bottom: 30px;
+}
+.footerList:before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 50px;
+  overflow: hidden;
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 8px 0 -3px #f6f6f6,
+    0 9px 1px -3px rgba(0, 0, 0, 0.2), 0 16px 0 -6px #f6f6f6,
+    0 17px 2px -6px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 8px 0 -3px #f6f6f6,
+    0 9px 1px -3px rgba(0, 0, 0, 0.2), 0 16px 0 -6px #f6f6f6,
+    0 17px 2px -6px rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 8px 0 -3px #f6f6f6,
+    0 9px 1px -3px rgba(0, 0, 0, 0.2), 0 16px 0 -6px #f6f6f6,
+    0 17px 2px -6px rgba(0, 0, 0, 0.2);
+}
+.footerList ul {
+  -webkit-padding-start: 0px;
+  -moz-padding-start: 0px;
+  margin-bottom: 0;
+  padding-left: 20px;
+  z-index: 1;
+}
+.footerList ul li {
+  list-style-type: none;
+  display: inline-block;
+}
+.footerList ul li a {
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #777;
+  cursor: pointer;
+}
+.footerList ul li a.selected {
+  border-color: rgba(175, 47, 47, 0.2);
+}
+.clearComp {
+  background-color: transparent;
+  border: none;
+  color: #777;
+  position: absolute;
+  right: 15px;
+  padding: 0;
+}
+.clearComp:focus {
+  outline: none;
+}
+.todoMainWrapper {
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+}
+.displayBlock {
+  display: block;
+}
+.removeMarBottom {
+  margin-bottom: 0;
+}
+.sliderMenu {
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+  padding: 30px;
+}
+.sliderHeader {
+  padding-bottom: 20px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.userInfo {
+  padding: 10px 0;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+}
+.userInfo:hover {
+  background-color: #e0e0e0;
+}
+.userImg {
+  text-align: center;
+  padding-right: 10px;
+}
+.userImg i {
+  font-size: 20px;
+}
+.userImg img {
+  width: 30px;
+}
+/*Custom  Checkbox */
+.round {
+  position: relative;
+}
+
+.round label {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 28px;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 28px;
+  min-width: 28px;
+}
+
+.round label:after {
+  border: 2px solid #66bb6a;
+  border-top: none;
+  border-right: none;
+  content: "";
+  height: 6px;
+  left: 7px;
+  opacity: 0;
+  position: absolute;
+  top: 8px;
+  transform: rotate(-45deg);
+  width: 12px;
+}
+
+.round input[type="checkbox"] {
+  visibility: hidden;
+}
+
+.round input[type="checkbox"]:checked + label {
+  background-color: #fff;
+  border-color: #66bb6a;
+}
+.removePaddLeft {
+  padding-left: 0;
+}
+.removePaddLeft {
+}
+.round input[type="checkbox"]:checked + label:after {
+  opacity: 1;
+}
+.loadMoreSection {
+  list-style-type: none;
+  height: 30px;
+  display: -ms-flexbox;
+  display: flex;
+  font-size: 14px;
+  -ms-flex-align: center;
+  align-items: center;
+  border-bottom: 1px solid #ededed;
+  background-color: #e6ecf0;
+  position: relative;
+  justify-content: center;
+  cursor: pointer;
+}
+.userInfoPublic {
+  background-color: #dfe3e6;
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+  margin-right: 10px;
+  background-color: #dfe3e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.footerWrapper {
+  background-color: #a5b9cc;
+  padding: 10px 0;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1;
+  font-size: 14px;
+  font-weight: bold;
+}
+.footerWrapper a {
+  color: #1d4060;
+}
+.footerWrapper a:hover {
+  color: #406282;
+}
+.footerWrapper span i {
+  margin-left: 5px;
+}
+.footerWrapper a i {
+  margin-left: 5px;
+}
+.footerWrapper .footerLinkPadd {
+  margin-left: 20px;
+}
+.footerWrapper .adminSecret button {
+  background-color: #a5b9cc;
+  border: 0;
+  padding-right: 0;
+}
+.overlay {
+  position: fixed;
+  display: block;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ddd;
+  z-index: 2;
+}
+
+.overlay .overlay-content {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  font-size: 18px;
+  text-align: center;
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+}
+
+.overlay .overlay-heading {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.overlay .overlay-message {
+  color: #5f5f5f;
+}
+
+.overlay .overlay-action {
+  margin-top: 10px;
+}
+.login-btn
+{
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42857143;
+  text-align: center;
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #2e6da4;
+  border-radius: 4px;
+}
+.login-btn:hover
+{
+  color: #fff;
+  background-color: #286090;
+  border-color: #204d74;
+}
+.navBarAlign button
+{
+  padding: 3.75px 7.5px;
+  font-size: 14px;
+}
+button:focus
+{
+  outline: none;
+}
+@media (max-width: 767px) {
+  .headerWrapper {
+    display: block !important;
+  }
+  .headerDescription {
+    text-align: center;
+    padding-bottom: 10px;
+  }
+  .loginBtn {
+    display: flex;
+    justify-content: center;
+  }
+}
+@media (max-width: 991px) {
+  .sliderMenu {
+    height: auto;
+  }
+  .labelContent {
+    display: block;
+  }
+  .addPaddTopBottom {
+    padding: 0px 0;
+  }
+  .sliderHeader,
+  .userInfo {
+    width: 95%;
+    margin: 0 auto;
+  }
+  .headerWrapper {
+    display: flex;
+    padding: 15px 0;
+    padding-left: 0;
+    height: auto;
+  }
+  .mainWrapper {
+    padding-left: 0;
+    height: auto;
+  }
+  .minHeight {
+    height: auto;
+    min-height: 100vh;
+  }
+  .loginBtn {
+    padding-right: 0;
+    padding-bottom: 15px;
+  }
+  .appstackWrapper {
+    padding: 20px;
+  }
+  .appStack {
+    display: flex;
+  }
+  .flexWidth {
+    flex: 1;
+  }
+  .description {
+    padding-left: 10px;
+  }
+  .appStackIconWrapper {
+    padding-left: 10px;
+  }
+}

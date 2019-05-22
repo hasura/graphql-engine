@@ -71,9 +71,9 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { icCheck   :: !BoolExp
-  , icSet     :: !(Maybe ColVals)
-  , icColumns :: !(Maybe PermColSpec)
+  { ipCheck   :: !BoolExp
+  , ipSet     :: !(Maybe ColVals)
+  , ipColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -86,7 +86,6 @@ buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
   QualifiedObject hdbViewsSchema $ TableName
   (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
-    hdbViewsSchema = SchemaName "hdb_views"
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn
 
@@ -106,7 +105,8 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo -> Maybe ColVals -> m (PreSetCols, [Text], [SchemaDependency])
+  => TableInfo -> Maybe ColVals
+  -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   setColsSQL <- withPathK "set" $
     fmap HM.fromList $ forM (HM.toList setObj) $ \(pgCol, val) -> do
@@ -128,7 +128,8 @@ buildInsPermInfo
   => TableInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "permission" $ do
+buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
+  withPathK "permission" $ do
   (be, beDeps) <- withPathK "check" $
     -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
     procBoolExp tn fieldInfoMap chk
@@ -136,25 +137,20 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) = withPathK "per
   (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
   let reqHdrs = fltrHeaders `union` setHdrs
       deps = mkParentDep tn : beDeps ++ setColDeps
-  preSetCols <- HM.union setColsSQL <$> nonInsColVals
-  return (InsPermInfo vn be preSetCols reqHdrs, deps)
+      insColsWithoutPresets = insCols \\ HM.keys setColsSQL
+  return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
     fieldInfoMap = tiFieldInfoMap tabInfo
     tn = tiName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiName $ getCols fieldInfoMap
-    nonInsCols = case mCols of
-      Nothing   -> return []
-      Just cols -> do
-        let insCols = convColSpec fieldInfoMap cols
-        withPathK "columns" $
-          indexedForM_ insCols $ \c -> void $ askPGType fieldInfoMap c ""
-        return $ allCols \\ insCols
-    nonInsColVals = S.mkColDefValMap <$> nonInsCols
+    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
-buildInsInfra tn (InsPermInfo vn be _ _) = do
-  trigFnQ <- buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") be
+buildInsInfra tn (InsPermInfo _ vn be _ _) = do
+  resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
+  trigFnQ <- buildInsTrigFn vn tn $
+    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False

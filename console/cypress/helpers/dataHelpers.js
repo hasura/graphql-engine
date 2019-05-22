@@ -28,6 +28,14 @@ export const getColName = i => `apic_test_column_${i}`;
 export const getTableName = (i, testName = '') =>
   `apic_test_table_${testName}_${i}`;
 export const getElementFromAlias = alias => `[data-test=${alias}]`;
+export const getElementFromClassName = cn => `.${cn}`;
+export const tableColumnTypeSelector = alias => {
+  cy.get(`${getElementFromAlias(alias)}`)
+    .children('div')
+    .click()
+    .find('input')
+    .focus();
+};
 export const makeDataAPIUrl = dataApiUrl => `${dataApiUrl}/v1/query`;
 export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   method: 'POST',

@@ -29,7 +29,7 @@ The following are example queries for different sorting use cases:
 Sorting objects
 ---------------
 
-Fetch list of authors sorted by their names in an ascending order:
+**Example:** Fetch list of authors sorted by their names in an ascending order:
 
 .. graphiql::
   :view_only:
@@ -73,6 +73,8 @@ Fetch list of authors sorted by their names in an ascending order:
         ]
       }
     }
+
+.. _nested_sort:
 
 Sorting nested objects
 ----------------------
