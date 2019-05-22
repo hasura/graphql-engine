@@ -315,7 +315,8 @@ FROM
           ), 
           NULL
         )
-      ) AS permissions 
+      ) AS permissions,
+      row_to_json(isc_views.*) AS view_info
     from 
       information_schema.tables AS ist 
       LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
@@ -357,12 +358,15 @@ FROM
       LEFT OUTER JOIN hdb_catalog.hdb_relationship AS hdb_rel ON hdb_rel.table_schema = ist.table_schema 
       and hdb_rel.table_name = ist.table_name 
       LEFT OUTER JOIN hdb_catalog.hdb_permission_agg AS hdb_perm ON hdb_perm.table_schema = ist.table_schema 
-      and hdb_perm.table_name = ist.table_name 
+      and hdb_perm.table_name = ist.table_name
+      LEFT OUTER JOIN information_schema.views AS isc_views ON isc_views.table_schema = ist.table_schema
+      and isc_views.table_name = ist.table_name
     ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
       ist.table_name, 
       ist.*, 
+      isc_views.*,
       row_to_json(hdb_pk.*):: JSONB, 
       hdb_table.table_name
   ) AS info

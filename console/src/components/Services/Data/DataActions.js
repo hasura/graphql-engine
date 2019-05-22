@@ -363,39 +363,6 @@ const fetchSchemaList = () => (dispatch, getState) => {
   );
 };
 
-const fetchViewInfoFromInformationSchema = (schemaName, viewName) => (
-  dispatch,
-  getState
-) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'views',
-          schema: 'information_schema',
-        },
-        columns: [
-          'is_updatable',
-          'is_insertable_into',
-          'is_trigger_updatable',
-          'is_trigger_deletable',
-          'is_trigger_insertable_into',
-        ],
-        where: {
-          table_name: viewName,
-          table_schema: schemaName,
-        },
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options));
-};
-
 const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 /* **********Shared functions between table actions********* */
@@ -654,7 +621,6 @@ export {
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
-  fetchViewInfoFromInformationSchema,
   fetchTrackedFunctions,
   UPDATE_TRACKED_FUNCTIONS,
   initQueries,
