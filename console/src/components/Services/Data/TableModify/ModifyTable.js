@@ -2,8 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 
-// import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
-
 import {
   deleteTableSql,
   untrackTableSql,
@@ -94,20 +92,6 @@ class ModifyTable extends React.Component {
         Delete table
       </Button>
     );
-
-    /*
-    const customStyles = {
-      container: provided => ({
-        ...provided,
-      }),
-      dropdownIndicator: provided => {
-        return {
-          ...provided,
-          padding: '4px',
-        };
-      },
-    };
-    */
 
     // if (tableSchema.primary_key.columns > 0) {}
     return (
