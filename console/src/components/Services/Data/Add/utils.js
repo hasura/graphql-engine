@@ -16,13 +16,6 @@ export const frequentlyUsedColumns = [
     name: 'created_at',
     type: 'timestamp with time zone',
     typeText: 'timestamp',
-    primary: true,
-    default: 'now()',
-  },
-  {
-    name: 'created_at',
-    type: 'timestamp with time zone',
-    typeText: 'timestamp',
     primary: false,
     default: 'now()',
   },
