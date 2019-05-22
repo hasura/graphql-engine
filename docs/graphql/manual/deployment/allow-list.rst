@@ -8,7 +8,7 @@ Allow-list for queries
 
 **Allow-list** is a list of safe queries (*GraphQL queries, mutations or subscriptions*) that is stored by
 GraphQL engine in its metadata. When enabled, it can be used to restrict GraphQL engine so that it
-executes **only** those queries that are present in the list *(available after version beta.01)*.
+executes **only** those queries that are present in the list *(available after version v1.0.0-beta.1)*.
 
 Adding or removing a query in allow-list
 ----------------------------------------
