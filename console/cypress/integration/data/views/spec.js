@@ -1,4 +1,8 @@
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import {
+  getElementFromAlias,
+  baseUrl,
+  tableColumnTypeSelector,
+} from '../../../helpers/dataHelpers';
 
 import {
   setMetaData,
@@ -17,7 +21,10 @@ export const Createtable = (name, dict) => {
   const values = Object.keys(dict).map(k => dict[k]);
   for (let i = 0; i < keys.length; i += 1) {
     cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
-    cy.get(getElementFromAlias(`col-type-${i}`)).select(values[i]);
+    tableColumnTypeSelector(`col-type-${i}`);
+    cy.get(getElementFromAlias(`data_test_column_type_value_${values[i]}`))
+      .first()
+      .click();
   }
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
   cy.get(getElementFromAlias('table-create')).click();
@@ -32,21 +39,21 @@ export const Createtable = (name, dict) => {
 
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('comment', {
-    id: 'Integer',
-    user_id: 'Integer',
-    article_id: 'Integer',
-    comment: 'Text',
+    id: 'integer',
+    user_id: 'integer',
+    article_id: 'integer',
+    comment: 'text',
   });
 };
 

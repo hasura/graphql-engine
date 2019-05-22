@@ -25,6 +25,8 @@ import {
   getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
+import { fetchColumnCastsQuery, convertArrayToJson } from './utils';
+
 const DELETE_PK_WARNING =
   'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
 
@@ -49,6 +51,8 @@ const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
 const SAVE_FOREIGN_KEY = 'ModifyTable/SAVE_FOREIGN_KEY';
 const REMOVE_FOREIGN_KEY = 'ModifyTable/REMOVE_FOREIGN_KEY';
 
+const FETCH_COLUMN_TYPE_CASTS = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS';
+const FETCH_COLUMN_TYPE_CASTS_FAIL = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS_FAIL';
 const SET_UNIQUE_KEYS = 'ModifyTable/SET_UNIQUE_KEYS';
 const SAVE_UNIQUE_KEY = 'ModifyTable/SAVE_UNIQUE_KEY';
 const REMOVE_UNIQUE_KEY = 'ModifyTable/REMOVE_UNIQUE_KEY';
@@ -1664,6 +1668,46 @@ const saveColumnChangesSql = (colName, column) => {
   };
 };
 
+const fetchColumnCasts = () => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const reqQuery = {
+      type: 'run_sql',
+      args: {
+        sql: fetchColumnCastsQuery,
+      },
+    };
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(reqQuery),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS,
+          data: convertArrayToJson(data.result.slice(1)),
+        });
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching column casts information',
+            'Kindly reach out to us in case you face this issue again',
+            error,
+            error
+          )
+        );
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS_FAIL,
+          data: error,
+        });
+      }
+    );
+  };
+};
+
 const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
   return (dispatch, getState) => {
     dispatch({ type: REMOVE_UNIQUE_KEY });
@@ -1850,6 +1894,8 @@ const saveUniqueKey = (
 };
 
 export {
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
   SET_COLUMN_EDIT,
@@ -1891,6 +1937,7 @@ export {
   setForeignKeys,
   saveForeignKeys,
   removeForeignKey,
+  fetchColumnCasts,
   setUniqueKeys,
   removeUniqueKey,
   saveUniqueKey,

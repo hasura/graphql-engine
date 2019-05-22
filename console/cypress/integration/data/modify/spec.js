@@ -1,4 +1,5 @@
 import {
+  tableColumnTypeSelector,
   baseUrl,
   getTableName,
   getColName,
@@ -18,7 +19,11 @@ export const passMTCreateTable = () => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(getElementFromAlias('col-type-0')).select('Integer');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('col-type-0')).select('Integer');
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
@@ -106,7 +111,11 @@ export const failMTWithoutColType = () => {
 export const Addcolumnnullable = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(3));
-  cy.get(getElementFromAlias('data-type')).select('Text');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('data-type')).select('Text');
   cy.get(getElementFromAlias('nullable-checkbox')).uncheck({ force: true });
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(2500);
@@ -121,7 +130,12 @@ export const Addcolumnnullable = () => {
 export const Addcolumnname = name => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(name);
-  cy.get(getElementFromAlias('data-type')).select('integer');
+
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5000);
@@ -131,7 +145,11 @@ export const Addcolumnname = name => {
 export const passMTAddColumn = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(0));
-  cy.get(getElementFromAlias('data-type')).select('integer');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5000);
   // cy.get('.notification-success').click();
@@ -287,14 +305,14 @@ export const Createtable = (name, dict) => {
 
 export const Createtables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'Integer', name: 'Text' });
+  Createtable('author', { id: 'integer', name: 'Text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   Createtable('article', {
-    id: 'Integer',
-    title: 'Text',
-    Content: 'Text',
-    author_id: 'Integer',
-    rating: 'Integer',
+    id: 'integer',
+    title: 'text',
+    Content: 'text',
+    author_id: 'integer',
+    rating: 'integer',
   });
 };
 

@@ -1,13 +1,19 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
+
 import {
   deleteTableSql,
   untrackTableSql,
   RESET,
+  fetchColumnCasts,
   setUniqueKeys,
 } from '../TableModify/ModifyActions';
-import { setTable } from '../DataActions';
+import {
+  setTable,
+  fetchColumnTypes,
+  RESET_COLUMN_TYPE_LIST,
+} from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
 import ColumnCreator from './ColumnCreator';
@@ -23,8 +29,14 @@ class ModifyTable extends React.Component {
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
+    dispatch(fetchColumnTypes());
+    dispatch(fetchColumnCasts());
   }
-
+  componentWillUnmount() {
+    this.props.dispatch({
+      type: RESET_COLUMN_TYPE_LIST,
+    });
+  }
   render() {
     const {
       tableName,
@@ -36,6 +48,8 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      dataTypes,
+      validTypeCasts,
       uniqueKeyModify,
       schemaList,
     } = this.props;
@@ -83,6 +97,7 @@ class ModifyTable extends React.Component {
       </Button>
     );
 
+    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
@@ -109,6 +124,7 @@ class ModifyTable extends React.Component {
             />
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
+              validTypeCasts={validTypeCasts}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
               dispatch={dispatch}
@@ -116,7 +132,11 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>Add a new column</h4>
-            <ColumnCreator dispatch={dispatch} tableName={tableName} />
+            <ColumnCreator
+              dispatch={dispatch}
+              tableName={tableName}
+              dataTypes={dataTypes}
+            />
             <hr />
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
@@ -185,6 +205,9 @@ const mapStateToProps = (state, ownProps) => ({
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
+  dataTypes: state.tables.columnDataTypes,
+  validTypeCasts: state.tables.modify.alterColumnOptions,
+  columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
