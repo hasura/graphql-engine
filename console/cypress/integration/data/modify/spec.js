@@ -185,12 +185,14 @@ export const passModifyPkey = () => {
   cy.get(getElementFromAlias('remove-pk-column-1')).click();
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
   cy.get(getElementFromAlias('modify-table-close-pks')).click();
+  cy.wait(3000);
 };
 
 export const passCreateUniqueKey = () => {
   cy.get(getElementFromAlias('modify-table-edit-unique-key-0')).click();
   cy.get(getElementFromAlias('unique-key-0-column-0')).select('0');
   cy.get(getElementFromAlias('unique-key-0-column-1')).select('1');
+  cy.wait(1000);
   cy.get(getElementFromAlias('modify-table-unique-key-0-save')).click();
   cy.wait(5000);
   cy.get('div').contains(
