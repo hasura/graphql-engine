@@ -49,7 +49,7 @@ mkGraphqlProxy
   -> WS.StartMsg -- the start msg
   -> ThreadId    -- The receive client threadId
   -> WS.ClientApp ()
-mkGraphqlProxy (L.Logger logger) wsConn stRef rn hdrs opId payload threadId destConn = do
+mkGraphqlProxy logger wsConn stRef rn hdrs opId payload threadId destConn = do
   -- setup initial connection protocol
   setupInitialProto destConn
   let newState = RemoteOperation threadId destConn [(wsId, opId)]
@@ -87,7 +87,7 @@ mkGraphqlProxy (L.Logger logger) wsConn stRef rn hdrs opId payload threadId dest
 
     parseMsgErr err = do
       let opDet = ODQueryErr $ err400 UnexpectedPayload $ T.pack err
-      logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
+      L.unLogger logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
         (Just "failed to parse server msg from remote") Nothing
 
 runGqlClient'
@@ -100,16 +100,16 @@ runGqlClient'
   -> Maybe WS.ConnParams
   -> WS.StartMsg
   -> ExceptT QErr IO ()
-runGqlClient' lgr@(L.Logger logger) url wsConn stRef rn opId hdrs payload = do
+runGqlClient' logger url wsConn stRef rn opId hdrs payload = do
   host <- maybe (throw500 "empty hostname for websocket conn") return mHost
   void $ liftIO $ forkIO $ do
     tid <- myThreadId
-    let gqClient = mkGraphqlProxy lgr wsConn stRef rn hdrs opId payload tid
+    let gqClient = mkGraphqlProxy logger wsConn stRef rn hdrs opId payload tid
     res <- try $ WS.runClient host port path gqClient
     onLeft res $ \e -> do
       let err = T.pack $ show (e :: SomeException)
           opDet = ODQueryErr $ err500 Unexpected err
-      logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
+      L.unLogger logger $ WSLog wsId Nothing (EOperation opId Nothing opDet)
         (Just "exception from runClient thread") Nothing
   where
     uriAuth = URI.uriAuthority url
@@ -133,18 +133,15 @@ runGqlClient
 runGqlClient logger url wsConn stRef rn opId hdrs startMsg = do
   mState <- getWsProxyState stRef rn
   case mState of
-    Nothing ->
-      runGqlClient' logger url wsConn stRef rn opId hdrs startMsg
+    Nothing -> runGqlClient' logger url wsConn stRef rn opId hdrs startMsg
     Just st -> do
-      -- send init message and the raw message on the existing conn
+      -- send the raw message on the existing conn
       let wsconn   = _wpsRemoteConn st
           opids    = _wpsOperations st
           wsId     = WS._wcConnId wsConn
           newState = st { _wpsOperations = opids ++ [(wsId, opId)] }
-      --conn <- maybe (throwError wsConnErr) return wsconn
       liftIO $ do
         updateState stRef rn newState
-        -- sendInit conn hdrs
         -- send only start message on existing connection
         WS.sendTextData wsconn $ J.encode startMsg
 

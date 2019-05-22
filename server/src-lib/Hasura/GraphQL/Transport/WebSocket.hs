@@ -53,11 +53,6 @@ data SubscriptionOperation
   | SORemote !RemoteOperation
   --deriving (Show, Eq)
 
-data ErrRespType
-  = ERTLegacy
-  | ERTGraphqlCompliant
-  deriving (Show)
-
 data WSConnData
   = WSConnData
   -- the role and headers are set only on connection_init message
@@ -69,6 +64,11 @@ data WSConnData
   , _wscErrRespTy :: !ErrRespType
   }
 
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
@@ -77,49 +77,6 @@ sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn =
   liftIO . WS.sendMsg wsConn . encodeServerMsg
 
--- <<<<<<< HEAD
--- =======
--- data OpDetail
---   = ODStarted
---   | ODProtoErr !Text
---   | ODQueryErr !QErr
---   | ODCompleted
---   | ODStopped
---   deriving (Show, Eq)
--- $(J.deriveToJSON
---   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
---                    , J.sumEncoding = J.TaggedObject "type" "detail"
---                    }
---   ''OpDetail)
-
--- data WSEvent
---   = EAccepted
---   | ERejected !QErr
---   | EConnErr !ConnErrMsg
---   | EOperation !OperationId !(Maybe OperationName) !OpDetail
---   | EClosed
---   deriving (Show, Eq)
--- $(J.deriveToJSON
---   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
---                    , J.sumEncoding = J.TaggedObject "type" "detail"
---                    }
---   ''WSEvent)
-
--- data WSLog
---   = WSLog
---   { _wslWebsocketId :: !WS.WSId
---   , _wslUser        :: !(Maybe UserVars)
---   , _wslJwtExpiry   :: !(Maybe TC.UTCTime)
---   , _wslEvent       :: !WSEvent
---   , _wslMsg         :: !(Maybe Text)
---   } deriving (Show, Eq)
--- $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
-
--- instance L.ToEngineLog WSLog where
---   toEngineLog wsLog =
---     (L.LevelInfo, "ws-handler", J.toJSON wsLog)
-
--- >>>>>>> 935eaf22115573845cdf6906f67842167a5d13d2
 data WSServerEnv
   = WSServerEnv
   { _wseLogger          :: !L.Logger
