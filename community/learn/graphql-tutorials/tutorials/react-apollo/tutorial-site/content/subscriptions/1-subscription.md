@@ -15,9 +15,9 @@ When we had initially set up Apollo, we used Apollo Boost to install the require
 
 Now we need to update our `ApolloClient` instance to point to the subscription server.
 
-Open `src/App.js` and update the following imports:
+Open `src/components/App.js` and update the following imports:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/App.js" text="src/App.js" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/react-apollo/app-final/src/components/App.js" text="src/components/App.js" />
 
 ```javascript
 - import { HttpLink } from 'apollo-link-http';
