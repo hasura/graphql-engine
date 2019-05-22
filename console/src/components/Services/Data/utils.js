@@ -179,3 +179,93 @@ export const getTableName = t => {
   }
   return '';
 };
+
+export const commonDataTypes = [
+  {
+    name: 'Integer',
+    value: 'integer',
+    description: 'signed four-byte integer',
+    hasuraDatatype: 'integer',
+  },
+  {
+    name: 'Integer (auto-increment)',
+    value: 'serial',
+    description: 'autoincrementing four-byte integer',
+    hasuraDatatype: null,
+  },
+  {
+    name: 'UUID',
+    value: 'uuid',
+    description: 'universal unique identifier',
+    hasuraDatatype: 'uuid',
+  },
+  {
+    name: 'Big Integer',
+    value: 'bigint',
+    description: 'signed eight-byte integer',
+    hasuraDatatype: 'bigint',
+  },
+  {
+    name: 'Big Integer (auto-increment)',
+    value: 'bigserial',
+    description: 'autoincrementing eight-byte integer',
+    hasuraDatatype: null,
+  },
+  {
+    name: 'Text',
+    value: 'text',
+    description: 'variable-length character string',
+    hasuraDatatype: 'text',
+  },
+  {
+    name: 'Numeric',
+    value: 'numeric',
+    description: 'exact numeric of selected precision',
+    hasuraDatatype: 'numeric',
+  },
+  {
+    name: 'Date',
+    value: 'date',
+    description: 'calendar date (year, month, day)',
+    hasuraDatatype: 'date',
+  },
+  {
+    name: 'Timestamp',
+    value: 'timestamptz',
+    description: 'date and time, including time zone',
+    hasuraDatatype: 'timestamp with time zone',
+  },
+  {
+    name: 'Time',
+    value: 'timetz',
+    description: 'time of day (no time zone)',
+    hasuraDatatype: 'time with time zone',
+  },
+  {
+    name: 'Boolean',
+    value: 'boolean',
+    description: 'logical Boolean (true/false)',
+    hasuraDatatype: 'boolean',
+  },
+  {
+    name: 'JSONB',
+    value: 'jsonb',
+    description: 'binary format JSON data',
+    hasuraDatatype: 'jsonb',
+  },
+];
+
+export const fetchColumnTypesQuery = `
+SELECT 
+  string_agg(t.typname, ',') as "Type Name",
+  string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
+  string_agg(pg_catalog.obj_description(t.oid, 'pg_type'), ':') as "Descriptions",
+  t.typcategory
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))                                              
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)                                              
+  AND pg_catalog.pg_type_is_visible(t.oid)
+  AND t.typname != 'unknown'
+  AND t.typcategory != 'P'
+GROUP BY t.typcategory;`;

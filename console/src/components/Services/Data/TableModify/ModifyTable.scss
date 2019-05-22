@@ -47,6 +47,11 @@
   margin-right: 10px;
 }
 
+.column_type_select {
+  width: 200px;
+  font-size: 12px;
+}
+
 .modifyMinWidth {
   min-width: 735px;
 }
@@ -250,7 +255,7 @@ hr {
   background: #fff;
   border: 1px solid #ccc;
   margin-bottom: 15px;
-  overflow: auto;
+  // overflow: auto;
 
   .editPermsHeading {
     font-weight: bold;
