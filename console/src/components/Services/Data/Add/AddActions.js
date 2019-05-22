@@ -1,4 +1,5 @@
 import defaultState from './AddState';
+
 import _push from '../push';
 import { loadSchema, makeMigrationCall } from '../DataActions';
 import {
@@ -30,6 +31,10 @@ const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 
+/*
+ * For any action dispatched, the ability to notify the renderer that something is happening
+ * */
+
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
@@ -46,11 +51,10 @@ const setColDefault = (colDefault, index, isNull) => ({
   index,
   isNull,
 });
-const setColType = (coltype, index, isNull) => ({
+const setColType = (coltype, index) => ({
   type: SET_COLTYPE,
   coltype,
   index,
-  isNull,
 });
 const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
 const setColNullable = (isNull, index) => ({
@@ -383,7 +387,6 @@ const addTableReducer = (state = defaultState, action) => {
           {
             ...state.columns[ij],
             type: action.coltype,
-            nullable: action.isNull,
           },
           ...state.columns.slice(ij + 1),
         ],
