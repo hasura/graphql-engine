@@ -8,7 +8,7 @@ import YoutubeEmbed from "../src/YoutubeEmbed.js";
 
 In this part of the tutorial, we are going to define access control rules for each of the models that we created.
 
-Access control rules helps in restricting querying on a table based on certain conditions.
+Access control rules help in restricting querying on a table based on certain conditions.
 
 In this realtime todo app use-case, we need to restrict all querying only for logged in users. Also certain columns in tables do not need to be exposed to the user.
 

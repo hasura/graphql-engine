@@ -53,7 +53,7 @@ query {
 
 In this query, you are able to fetch users and for each user, you are fetching the todos (multiple) written by that user. Since a user can have multiple todos, this would be an array relationship.
 
-Relationships can be captured by foreign key constraints. Foreign key constraints ensures that there are no dangling data.
+Relationships can be captured by foreign key constraints. Foreign key constraints ensure that there are no dangling data.
 Hasura Console automatically suggests relationships based on these constraints.
 
 Though the constraints are optional, it is recommended to enforce these constraints for data consistency.

@@ -18,7 +18,7 @@ of your backend "mutating" or changing, just like typical `'POST'`,
 
 ## Basic mutations
 Since we're using Hasura for our GraphQL API, we get mutations for
-insert, updates or deletes that we can use in our app.
+inserts, updates or deletes that we can use in our app.
 
 Let's try these mutations out in the context of a todo app to see
 what mutations look like. Mutations that you get from another GraphQL

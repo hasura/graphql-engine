@@ -8,7 +8,7 @@ However, learning new things always takes time and without getting your hands di
 
 So, we put together a powerful and concise course that will introduce you to GraphQL and integrating GraphQL into your frontend stack, in the shortest amount of time possible.
 
-We will explore the fundamentals of GraphQL and the especially things that make GraphQL suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
+We will explore the fundamentals of GraphQL and the things that make GraphQL especially suitable for modern applications, like its realtime capabilities! The course is light on opinions so that once you grok the fundamentals you can go on to choose your favorite libraries, tools and tailor your workflow.
 
 ## Key topics and takeways:
 
@@ -19,7 +19,7 @@ We will explore the fundamentals of GraphQL and the especially things that make 
 - Integrating GraphQL mutations in your app to change data on the server
 - Updating local state after a GraphQL mutation (TextInput) using Apollo cache
 - Automatic updates to local state and UI after mutations
-- Using subscriptions with a subscriptions components
+- Using subscriptions with subscription components
 - Building a real-time feed with notifications using mutations and subscriptions
 
 ## What will we be building?

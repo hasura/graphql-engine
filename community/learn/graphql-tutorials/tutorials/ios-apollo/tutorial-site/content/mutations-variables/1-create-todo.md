@@ -4,7 +4,7 @@ title: "Create todos - mutation"
 
 In this part of the tutorial, you will learn how to create new todos by using GraphQL Mutations.
 
-Let's define a graphql query to do a mutation into todos.
+Let's define a graphql mutation to perform insert into todos.
 
 ```graphql
 mutation addTodo($todo: String!, $isPublic: Boolean!) {

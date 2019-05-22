@@ -14,7 +14,7 @@ With Apollo Client, you can send queries in 3 different ways.
 2. Using `$apollo`
 3. Using Apollo Components
 
-The recommended method is to use the apollo object, where you will just pass your GraphQL query in the apollo component options and it will fetch the data automatically and will present it in the component data. Each one of them will become a `smart query`.
+The recommended method is to use the apollo object, where you will just pass your GraphQL query in the apollo component options and it will fetch the data automatically and will present it in the component data. Each one of them will become a `smart query`. A smart query will be executed automatically when the component is mounted and the response data will be available for the component to consume.
 
 Great! Now let's define the graphql query to be used:
 
