@@ -20,7 +20,9 @@ export const passMTCreateTable = () => {
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('col-type-0')).select('Integer');
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
   cy.get(getElementFromAlias('table-create')).click();
@@ -110,7 +112,9 @@ export const Addcolumnnullable = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(3));
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('data-type')).select('Text');
   cy.get(getElementFromAlias('nullable-checkbox')).uncheck({ force: true });
   cy.get(getElementFromAlias('add-column-button')).click();
@@ -128,7 +132,9 @@ export const Addcolumnname = name => {
   cy.get(getElementFromAlias('column-name')).type(name);
 
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('data-type')).select('integer');
 
   cy.get(getElementFromAlias('add-column-button')).click();
@@ -140,7 +146,9 @@ export const passMTAddColumn = () => {
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('data-type')).select('integer');
   cy.get(getElementFromAlias('add-column-button')).click();
   cy.wait(5000);

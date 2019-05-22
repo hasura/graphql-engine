@@ -33,9 +33,9 @@ export const Createtable = (name, fields) => {
     if (fields.hasOwnProperty(key)) {
       cy.get(getElementFromAlias(`column-${i}`)).type(key);
       tableColumnTypeSelector(`col-type-${i}`);
-      cy.get(
-        getElementFromAlias(`data_test_column_type_value_${fields[key]}`)
-      ).click();
+      cy.get(getElementFromAlias(`data_test_column_type_value_${fields[key]}`))
+        .first()
+        .click();
       // cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
       i++;
     }

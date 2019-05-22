@@ -27,9 +27,9 @@ const setColumns = () => {
     // Select column type
     tableColumnTypeSelector(`col-type-${i}`);
     // cy.get(getElementFromAlias(`col-type-${i}`)).click();
-    cy.get(
-      getElementFromAlias(`data_test_column_type_value_${dataTypes[i]}`)
-    ).click();
+    cy.get(getElementFromAlias(`data_test_column_type_value_${dataTypes[i]}`))
+      .first()
+      .click();
     // cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
 
     if (i === dataTypes.indexOf('text')) {
@@ -117,7 +117,9 @@ export const passSearchTables = () => {
   // Select column type
   // cy.get(getElementFromAlias('col-type-0')).select('integer');
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create
@@ -435,11 +437,15 @@ export const checkViewRelationship = () => {
   cy.get(getElementFromAlias('column-0')).type('id');
   tableColumnTypeSelector('col-type-0');
   // cy.get(getElementFromAlias('col-type-0')).click();
-  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   cy.get(getElementFromAlias('column-1')).type('someID');
   tableColumnTypeSelector('col-type-1');
   // cy.get(getElementFromAlias('col-type-1')).click();
-  cy.get(getElementFromAlias('data_test_column_type_value_integer')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');

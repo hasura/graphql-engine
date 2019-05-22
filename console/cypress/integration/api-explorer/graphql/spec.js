@@ -35,13 +35,17 @@ export const createTestTable = () => {
     .type('id');
   // cy.get(getElementFromAlias('col-type-0')).click();
   tableColumnTypeSelector('col-type-0');
-  cy.get(getElementFromAlias('data_test_column_type_value_serial')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   // cy.get(getElementFromAlias('col-type-0')).select('serial');
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type('name');
   tableColumnTypeSelector('col-type-1');
-  cy.get(getElementFromAlias('data_test_column_type_value_text')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first()
+    .click();
 
   // cy.get(getElementFromAlias('col-type-1')).select('text');
   //   Set primary key

@@ -22,10 +22,9 @@ export const Createtable = (name, dict) => {
   for (let i = 0; i < keys.length; i += 1) {
     cy.get(getElementFromAlias(`column-${i}`)).type(keys[i]);
     tableColumnTypeSelector(`col-type-${i}`);
-    cy.get(
-      getElementFromAlias(`data_test_column_type_value_${values[i]}`)
-    ).click();
-    // cy.get(getElementFromAlias(`col-type-${i}`)).select(values[i]);
+    cy.get(getElementFromAlias(`data_test_column_type_value_${values[i]}`))
+      .first()
+      .click();
   }
   cy.get(getElementFromAlias('primary-key-select-0')).select('id');
   cy.get(getElementFromAlias('table-create')).click();
