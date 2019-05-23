@@ -136,7 +136,7 @@ Testing scalability & reliability for live-queries with websockets has been a ch
    - There are 0 errors in the payload received
    - Avg latency from time of creation of event to receipt on the client is less than 1000ms
 
-<img alt="testing-architecture" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/test-architecture.png" style="width: 70%; min-width: 400px;" />
+<img alt="testing-architecture" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/test-architecture.png" width="700px" />
 
 ## Benefits of this approach
 Hasura makes live-queries easy and accessible. The notion of queries is easily extended to live-queries without any extra effort on the part of the developer using GraphQL queries. This is the most important thing for us.
