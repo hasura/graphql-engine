@@ -11,8 +11,8 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import {
   untrackedTip,
   untrackedRelTip,
-  trackableFunctions,
-  // nonTrackableFunctions,
+  trackableFunctionsTip,
+  nonTrackableFunctionsTip,
 } from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import {
@@ -57,7 +57,7 @@ class Schema extends Component {
       currentSchema,
       dispatch,
       functionsList,
-      // nonTrackableFunctionsList, // Not used right now, will be used in future
+      nonTrackableFunctions,
       trackedFunctions,
     } = this.props;
 
@@ -146,82 +146,109 @@ class Schema extends Component {
       });
 
       const getCreateSchemaSection = () => {
-        const { createSchemaOpen, schemaNameEdit } = this.state;
+        let createSchemaSection = null;
 
-        const handleCreateNewClick = () => {
-          this.setState({ createSchemaOpen: true });
-        };
+        if (migrationMode) {
+          const { createSchemaOpen, schemaNameEdit } = this.state;
 
-        const handleSchemaNameChange = e => {
-          this.setState({ schemaNameEdit: e.target.value });
-        };
+          const handleCreateNewClick = () => {
+            this.setState({ createSchemaOpen: true });
+          };
 
-        const handleCreateClick = () => {
-          const successCb = () => {
-            updateCurrentSchema(schemaNameEdit.trim());
+          const handleSchemaNameChange = e => {
+            this.setState({ schemaNameEdit: e.target.value });
+          };
+
+          const handleCreateClick = () => {
+            const successCb = () => {
+              updateCurrentSchema(schemaNameEdit.trim());
+              this.setState({
+                schemaNameEdit: '',
+                createSchemaOpen: false,
+              });
+            };
+            dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
+          };
+
+          const handleCancelCreateNewSchema = () => {
             this.setState({
-              schemaNameEdit: '',
               createSchemaOpen: false,
             });
           };
-          dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
-        };
 
-        const handleCancelCreateNewSchema = () => {
-          this.setState({
-            createSchemaOpen: false,
-          });
-        };
+          const closedCreateSection = (
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleCreateNewClick}
+              title="Create new schema"
+            >
+              <i className="fa fa-plus" aria-hidden="true" />
+            </Button>
+          );
 
-        const closedCreateSection = (
-          <Button
-            color="white"
-            size="xs"
-            onClick={handleCreateNewClick}
-            title="Create new schema"
-          >
-            <i className="fa fa-plus" aria-hidden="true" />
-          </Button>
-        );
-
-        const openCreateSection = (
-          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-            <div className={styles.display_inline}>
-              <input
-                type="text"
-                value={schemaNameEdit}
-                onChange={handleSchemaNameChange}
-                placeholder="schema_name"
-                className={'form-control input-sm ' + styles.display_inline}
-              />
+          const openCreateSection = (
+            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+              <div className={styles.display_inline}>
+                <input
+                  type="text"
+                  value={schemaNameEdit}
+                  onChange={handleSchemaNameChange}
+                  placeholder="schema_name"
+                  className={'form-control input-sm ' + styles.display_inline}
+                />
+              </div>
+              <Button
+                color="white"
+                size="xs"
+                onClick={handleCreateClick}
+                className={styles.add_mar_left_mid}
+              >
+                Create
+              </Button>
+              <Button
+                color="white"
+                size="xs"
+                onClick={handleCancelCreateNewSchema}
+                className={styles.add_mar_left_mid}
+              >
+                Cancel
+              </Button>
             </div>
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCreateClick}
-              className={styles.add_mar_left_mid}
-            >
-              Create
-            </Button>
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCancelCreateNewSchema}
-              className={styles.add_mar_left_mid}
-            >
-              Cancel
-            </Button>
-          </div>
-        );
+          );
 
-        return createSchemaOpen ? openCreateSection : closedCreateSection;
+          createSchemaSection = createSchemaOpen
+            ? openCreateSection
+            : closedCreateSection;
+        }
+
+        return createSchemaSection;
       };
 
-      const handleDelete = () => {
-        const successCb = () => {
-          updateCurrentSchema('public');
-        };
-        dispatch(deleteCurrentSchema(successCb));
+      const getDeleteSchemaBtn = () => {
+        let deleteSchemaBtn = null;
+
+        if (migrationMode) {
+          const handleDelete = () => {
+            const successCb = () => {
+              updateCurrentSchema('public');
+            };
+            dispatch(deleteCurrentSchema(successCb));
+          };
+
+          deleteSchemaBtn = (
+            <Button
+              color="white"
+              size="xs"
+              onClick={handleDelete}
+              title="Delete current schema"
+            >
+              <i className="fa fa-trash" aria-hidden="true" />
+            </Button>
+          );
+        }
+
+        return deleteSchemaBtn;
       };
 
       return (
@@ -237,16 +264,7 @@ class Schema extends Component {
             </select>
           </div>
           <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-            <div className={styles.display_inline}>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleDelete}
-                title="Delete current schema"
-              >
-                <i className="fa fa-trash" aria-hidden="true" />
-              </Button>
-            </div>
+            <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
             <div
               className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
             >
@@ -465,7 +483,7 @@ class Schema extends Component {
             >
               Untracked custom functions
             </h4>
-            <OverlayTrigger placement="right" overlay={trackableFunctions}>
+            <OverlayTrigger placement="right" overlay={trackableFunctionsTip}>
               <i className="fa fa-info-circle" aria-hidden="true" />
             </OverlayTrigger>
           </div>
@@ -515,49 +533,52 @@ class Schema extends Component {
     };
 
     const getNonTrackableFunctionsSection = () => {
-      const nonTrackableFuncList = null;
+      let nonTrackableFuncList = null;
 
-      // if (nonTrackableFunctionsList.length > 0) {
-      //   nonTrackableFuncList = (
-      //     <div
-      //       className={styles.add_mar_top}
-      //       key={'non-trackable-custom-functions-content'}
-      //     >
-      //       <div>
-      //         <h4
-      //           className={`${styles.subheading_text} ${
-      //             styles.heading_tooltip
-      //           }`}
-      //         >
-      //         Non trackable custom functions
-      //         </h4>
-      //         <OverlayTrigger
-      //           placement="right"
-      //           overlay={nonTrackableFunctions}
-      //         >
-      //           <i className="fa fa-info-circle" aria-hidden="true" />
-      //         </OverlayTrigger>
-      //       </div>
-      //       <div className={`${styles.padd_left_remove} col-xs-12`}>
-      //         {nonTrackableFunctionsList.map((p, i) => (
-      //           <div
-      //             className={styles.padd_bottom}
-      //             key={`${i}untracked-function`}
-      //           >
-      //             <div
-      //               className={`${styles.padd_right} ${
-      //                 styles.display_inline
-      //               }`}
-      //             >
-      //               {p.function_name}
-      //             </div>
-      //           </div>
-      //         ))}
-      //       </div>
-      //       <div className={styles.clear_fix} />
-      //     </div>
-      //   );
-      // }
+      if (nonTrackableFunctions.length > 0) {
+        const heading = (
+          <div>
+            <h4
+              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
+            >
+              Non trackable custom functions
+            </h4>
+            <OverlayTrigger
+              placement="right"
+              overlay={nonTrackableFunctionsTip}
+            >
+              <i className="fa fa-info-circle" aria-hidden="true" />
+            </OverlayTrigger>
+          </div>
+        );
+
+        nonTrackableFuncList = (
+          <div
+            className={styles.add_mar_top}
+            key={'non-trackable-custom-functions'}
+          >
+            <CollapsibleToggle title={heading} isOpen>
+              <div className={`${styles.padd_left_remove} col-xs-12`}>
+                {nonTrackableFunctions.map((p, i) => (
+                  <div
+                    className={styles.padd_bottom}
+                    key={`${i}untracked-function`}
+                  >
+                    <div
+                      className={`${styles.padd_right} ${
+                        styles.display_inline
+                      }`}
+                    >
+                      {p.function_name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.clear_fix} />
+            </CollapsibleToggle>
+          </div>
+        );
+      }
 
       return nonTrackableFuncList;
     };
@@ -580,7 +601,7 @@ class Schema extends Component {
           {getUntrackedTablesSection()}
           {getUntrackedRelationsSection()}
           {getUntrackedFunctionsSection()}
-          {getNonTrackableFunctionsSection()}
+          {false && getNonTrackableFunctionsSection()}
         </div>
       </div>
     );
@@ -602,7 +623,7 @@ const mapStateToProps = state => ({
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   functionsList: [...state.tables.postgresFunctions],
-  nonTrackableFunctionsList: [...state.tables.nonTrackablePostgresFunctions],
+  nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });

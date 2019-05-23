@@ -148,6 +148,7 @@ const initQueries = {
         'returns_set',
       ],
       where: {
+        // TODO: set correct where
         function_schema: '',
         has_variadic: false,
         returns_set: true,
