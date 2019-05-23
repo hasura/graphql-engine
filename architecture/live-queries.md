@@ -126,7 +126,7 @@ Please do note that we have drivers internally for other event based methods and
 ## Testing
 Testing scalability & reliability for live-queries with websockets has been a challenge. It took us a few weeks to build the testing suite and the infra automation tooling. This is what the setup looks like:
 
-1. A nodejs script that runs a large number of GraphQL live-query clients and logs events in memory which are later ingested into a database. [github](https://github.com/hasura/subscription-benchmark)
+1. A nodejs script that runs a large number of GraphQL live-query clients and logs events in memory which are later ingested into a database. [\[github\]](https://github.com/hasura/subscription-benchmark)
 
 1. A script that creates a write load on the database that causes changes across all clients running their live queries (1 million rows are updated every second)
 
