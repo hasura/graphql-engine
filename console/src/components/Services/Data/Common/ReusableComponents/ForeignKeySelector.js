@@ -50,17 +50,17 @@ const ForeignKeySelector = ({
           onChange={dispatchSetRefSchema}
         >
           {// default unselected option
-          refSchemaName === '' && (
-            <option value={''} disabled>
-              {'-- reference schema --'}
-            </option>
-          )}
+            refSchemaName === '' && (
+              <option value={''} disabled>
+                {'-- reference schema --'}
+              </option>
+            )}
           {// all reference schema options
-          schemaList.map((rs, j) => (
-            <option key={j} value={rs}>
-              {rs}
-            </option>
-          ))}
+            schemaList.map((rs, j) => (
+              <option key={j} value={rs}>
+                {rs}
+              </option>
+            ))}
         </select>
       </div>
     );
@@ -75,9 +75,9 @@ const ForeignKeySelector = ({
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
       newFks[index].refTableName = event.target.value;
-      if (index + 1 === numOfFks && service === 'add-table') {
+      if (service === 'add-table' && index + 1 === numOfFks) {
         newFks.push({
-          refSchemaName: 'public',
+          refSchemaName: '',
           refTableName: '',
           colMappings: [
             {
@@ -105,19 +105,19 @@ const ForeignKeySelector = ({
           disabled={!refSchemaName}
         >
           {// default unselected option
-          refTableName === '' && (
-            <option value={''} disabled>
-              {'-- reference table --'}
-            </option>
-          )}
-          {// all reference table options
-          Object.keys(refTables)
-            .sort()
-            .map((rt, j) => (
-              <option key={j} value={rt}>
-                {rt}
+            refTableName === '' && (
+              <option value={''} disabled>
+                {'-- reference table --'}
               </option>
-            ))}
+            )}
+          {// all reference table options
+            Object.keys(refTables)
+              .sort()
+              .map((rt, j) => (
+                <option key={j} value={rt}>
+                  {rt}
+                </option>
+              ))}
         </select>
       </div>
     );

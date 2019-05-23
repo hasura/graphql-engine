@@ -38,7 +38,7 @@ const ForeignKeyEditor = ({
     schemasToBeFetched[efk.refSchemaName] = true;
   });
   existingForeignKeys.push({
-    refSchemaName: 'public',
+    refSchemaName: '',
     refTableName: '',
     onUpdate: 'restrict',
     onDelete: 'restrict',
@@ -55,6 +55,8 @@ const ForeignKeyEditor = ({
   return fkModify.map((fk, i) => {
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
+
+    fk.refSchemaName = fk.refSchemaName || tableSchema.table_schema;
 
     // Generate a list of reference schemas and their columns
     const refTables = {};

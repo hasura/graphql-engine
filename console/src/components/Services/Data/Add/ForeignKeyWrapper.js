@@ -7,6 +7,7 @@ import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 const ForeignKeyWrapper = ({
   foreignKeys,
   allSchemas,
+  currentSchema,
   columns,
   dispatch,
   fkToggled,
@@ -29,6 +30,8 @@ const ForeignKeyWrapper = ({
   return foreignKeys.map((fk, i) => {
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
     const isLast = i + 1 === numFks;
+
+    fk.refSchemaName = fk.refSchemaName || currentSchema;
 
     // Generate a list of reference tables and their columns
     const refTables = {};

@@ -95,7 +95,7 @@ const defaultModifyState = {
   pkModify: [''],
   fkModify: [
     {
-      refSchemaName: 'public',
+      refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
       onDelete: 'restrict',
