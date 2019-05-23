@@ -1,4 +1,4 @@
-# A million active live queries on Postgres
+# Scaling to 1 million active GraphQL subscriptions (live queries)
 
 Hasura is a GraphQL engine on Postgres that provides instant GraphQL APIs with authorization. Read more at [hasura.io](https://hasura.io) and on [github.com/hasura/graphql-engine](https://github.com/hasura/graphql-engine).
 
