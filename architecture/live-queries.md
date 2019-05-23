@@ -10,7 +10,7 @@ This document describes Hasura's architecture which lets you scale to handle a m
 Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second creating a new result per client. Hasura is the GraphQL API provider (with authorization).
 The test: How many concurrent live subscriptions (clients) can Hasura handle? Does Hasura scale vertically and/or horizontally?
 
-<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png" width="50%" />
+<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png" style="width: 50%; min-width: 400px;" />
 
 ![single-instance-results](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/single-instance-fs8.png)
 
