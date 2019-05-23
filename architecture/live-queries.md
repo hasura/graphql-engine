@@ -35,11 +35,11 @@ GraphQL makes it easy for app developers to query for precisely the data they wa
 
 For example, let’s say we’re building a food delivery app. Here’s what the schema might look like on Postgres:
 
-<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/pg-schema.png" alt="postgres schema for food delivery app" width="60%" />
+<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/pg-schema.png" alt="postgres schema for food delivery app" style="width: 60%; min-width: 400px;" />
 
 For an app screen showing a “order status” for the current user for their order, a GraphQL query would fetch the latest order status and the location of the agent delivering the order.
 
-<img alt="order-graphql-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/basic-query-fs8.png" width="70%" />
+<img alt="order-graphql-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/basic-query-fs8.png" style="width: 70%; min-width: 400px;" />
 
 Underneath it, this query is sent as a string to a webserver that parses it, applies authorization rules and makes appropriate calls to things like databases to fetch the data for the app. It sends this data, in the exact shape that was requested, as a JSON.
 
@@ -47,7 +47,7 @@ Enter live-queries: Live queries is the idea of being able to subscribe to the l
 
 On the surface this is a perfect fit with GraphQL because GraphQL clients support subscriptions that take care of dealing with messy websocket connections. Converting a query to a live query might look as simple as replacing the word query with subscription for the client. That is, if the GraphQL server can implement it.
 
-<img alt="order-subscription-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/subscription-query-fs8.png" width="70%" />
+<img alt="order-subscription-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/subscription-query-fs8.png" style="width: 70%; min-width: 400px;" />
 
 ## Implementing GraphQL live-queries
 
@@ -59,7 +59,7 @@ Secondly, building a webserver to handle websockets in a scalable way is also so
 
 To understand why refetching a GraphQL query is hard, let’s look at how a GraphQL query is typically processed:
 
-<img alt="graphql-resolvers" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/resolvers-fs8.png" width="70%" />
+<img alt="graphql-resolvers" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/resolvers-fs8.png" style="width: 70%; min-width: 400px;" />
 
 The authorization + data fetching logic has to run for each “node” in the GraphQL query. This is scary, because even a slightly large query fetching a collection could bring down the database quite easily. The N+1 query problem, also common with badly implemented ORMs, is bad for your database and makes it hard to optimally query Postgres. Data loader type patterns can alleviate the problem, but will still query the underlying Postgres database multiple times (reduces to as many nodes in the GraphQL query from as many items in the response).
 
@@ -136,7 +136,7 @@ Testing scalability & reliability for live-queries with websockets has been a ch
    - There are 0 errors in the payload received
    - Avg latency from time of creation of event to receipt on the client is less than 1000ms
 
-<img alt="testing-architecture" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/test-architecture.png" width="70%" />
+<img alt="testing-architecture" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/test-architecture.png" style="width: 70%; min-width: 400px;" />
 
 ## Benefits of this approach
 Hasura makes live-queries easy and accessible. The notion of queries is easily extended to live-queries without any extra effort on the part of the developer using GraphQL queries. This is the most important thing for us.
