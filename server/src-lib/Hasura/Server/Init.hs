@@ -3,8 +3,8 @@ module Hasura.Server.Init where
 
 import qualified Database.PG.Query                as Q
 
-import           Options.Applicative
 import           Data.Char                        (toLower)
+import           Options.Applicative
 
 import qualified Data.Aeson                       as J
 import qualified Data.HashSet                     as Set
@@ -50,7 +50,7 @@ data RawServeOptions
   , rsoTxIso              :: !(Maybe Q.TxIsolation)
   , rsoAdminSecret        :: !(Maybe AdminSecret)
   , rsoAuthHook           :: !RawAuthHook
-  , rsoJwtSecret          :: !(Maybe Text)
+  , rsoJwtSecret          :: !(Maybe JWTConfig)
   , rsoUnAuthRole         :: !(Maybe RoleName)
   , rsoCorsConfig         :: !(Maybe CorsConfig)
   , rsoEnableConsole      :: !Bool
@@ -63,7 +63,7 @@ data RawServeOptions
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
-  , rsoVerboseLogging  :: !VerboseLogging
+  , rsoVerboseLogging     :: !VerboseLogging
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -74,7 +74,7 @@ data ServeOptions
   , soTxIso            :: !Q.TxIsolation
   , soAdminSecret      :: !(Maybe AdminSecret)
   , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe Text)
+  , soJwtSecret        :: !(Maybe JWTConfig)
   , soUnAuthRole       :: !(Maybe RoleName)
   , soCorsConfig       :: !CorsConfig
   , soEnableConsole    :: !Bool
@@ -84,7 +84,7 @@ data ServeOptions
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LQOpts
   , soEnableAllowlist  :: !Bool
-  , soVerboseLogging  :: !VerboseLogging
+  , soVerboseLogging   :: !VerboseLogging
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -172,6 +172,9 @@ instance FromEnv LQ.BatchSize where
 instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap LQ.refetchIntervalFromMilli . readEither
 
+instance FromEnv JWTConfig where
+  fromEnv = readJson
+
 parseStrAsBool :: String -> Either String Bool
 parseStrAsBool t
   | map toLower t `elem` truthVals = Right True
@@ -230,6 +233,10 @@ withEnvBool bVal envVar =
       mEnvVal <- considerEnv envVar
       maybe (return False) return mEnvVal
 
+withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
+withEnvJwtConf jVal envVar =
+  maybe (considerEnv envVar) returnJust jVal
+
 mkHGEOptions :: RawHGEOptions -> WithEnv HGEOptions
 mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   HGEOptionsG <$> connInfo <*> cmd
@@ -264,7 +271,7 @@ mkServeOptions rso = do
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnv (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <- withEnvBool (rsoEnableConsole rso) $
@@ -562,7 +569,7 @@ consoleAssetsDirEnv =
 
 verboseLoggingEnv :: (String, String)
 verboseLoggingEnv =
-  ( "HASURA_GRAPHQL_VERBOSE_LOGGING"
+  ( "HASURA_GRAPHQL_ENABLE_VERBOSE_LOGS"
   , "Enable verbose logging (default: false)"
   )
 
@@ -726,6 +733,9 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "DEVELOPER" -> Right DEVELOPER
           _          -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer"
 
+readJson :: (J.FromJSON a) => String -> Either String a
+readJson = J.eitherDecodeStrict . txtToBs . T.pack
+
 
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
@@ -743,14 +753,14 @@ parseWebHook =
                     help (snd authHookModeEnv)
                   )
 
-
-parseJwtSecret :: Parser (Maybe Text)
+parseJwtSecret :: Parser (Maybe JWTConfig)
 parseJwtSecret =
-  optional $ strOption
-             ( long "jwt-secret" <>
-               metavar "<JSON CONFIG>" <>
-               help (snd jwtSecretEnv)
-             )
+  optional $
+    option (eitherReader readJson)
+    ( long "jwt-secret" <>
+      metavar "<JSON CONFIG>" <>
+      help (snd jwtSecretEnv)
+    )
 
 jwtSecretHelp :: String
 jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
@@ -821,10 +831,9 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
-
-parseVerboseLogging :: Parser VerboseLogging
-parseVerboseLogging = VerboseLogging <$>
-  switch ( long "verbose-logging" <>
+parseEnableVerboseLog :: Parser VerboseLogging
+parseEnableVerboseLog = VerboseLogging <$>
+  switch ( long "enable-verbose-log" <>
            help (snd verboseLoggingEnv)
          )
 
@@ -855,15 +864,15 @@ parseEnableAllowlist =
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \\
-    \live queries which can be multiplexed. Default: 1000 (1sec)"
+  , "results will only be sent once in this interval (in milliseconds) for "
+  <> "live queries which can be multiplexed. Default: 1000 (1sec)"
   )
 
 mxBatchSizeEnv :: (String, String)
 mxBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE"
-  , "multiplexed live queries are split into batches of the specified \\
-    \size. Default 100. "
+  , "multiplexed live queries are split into batches of the specified "
+  <> "size. Default 100. "
   )
 
 enableAllowlistEnv :: (String, String)
@@ -884,8 +893,8 @@ parseFallbackRefetchInt =
 fallbackRefetchDelayEnv :: (String, String)
 fallbackRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL"
-  , "results will only be sent once in this interval (in milliseconds) for \\
-    \live queries which cannot be multiplexed. Default: 1000 (1sec)"
+  , "results will only be sent once in this interval (in milliseconds) for "
+  <> "live queries which cannot be multiplexed. Default: 1000 (1sec)"
   )
 
 -- Init logging related
@@ -902,12 +911,13 @@ connInfoToLog (Q.ConnInfo host port user _ db _ retries) =
 
 serveOptsToLog :: ServeOptions -> StartupLog
 serveOptsToLog so =
-  StartupLog L.LevelInfo "serve_options" infoVal
+  StartupLog L.LevelInfo "server_configuration" infoVal
   where
     infoVal = J.object [ "port" J..= soPort so
                        , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
+                       , "jwt_secret" J..= (J.toJSON <$> soJwtSecret so)
                        , "unauth_role" J..= soUnAuthRole so
                        , "cors_config" J..= soCorsConfig so
                        , "enable_console" J..= soEnableConsole so
@@ -916,7 +926,7 @@ serveOptsToLog so =
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
                        , "enable_allowlist" J..= soEnableAllowlist so
-                       , "verbose_logging" J..= soVerboseLogging so
+                       , "enable_verbose_log" J..= soVerboseLogging so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog

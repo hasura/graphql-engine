@@ -86,7 +86,7 @@ parseHGECommand =
                 <*> parseMxBatchSize
                 <*> parseFallbackRefetchInt
                 <*> parseEnableAllowlist
-                <*> parseVerboseLogging
+                <*> parseEnableVerboseLog
 
 
 parseArgs :: IO HGEOptions
