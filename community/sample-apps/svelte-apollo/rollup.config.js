@@ -33,13 +33,6 @@ export default {
 		// https://github.com/rollup/rollup-plugin-commonjs
 		resolve({browser: true}),
 		commonjs(),
-		/*
-		commonjs({
-      		namedExports: {
-        		'node_modules/subscriptions-transport-ws/dist/client.js': ['SubscriptionClient']
-      		}
-    	}),
-    	*/
 		replace({
       		'process.env.NODE_ENV': JSON.stringify('development'),
     	}),
