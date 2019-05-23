@@ -338,14 +338,15 @@ verifyJwt ctx (RawJWT rawJWT) = do
 instance A.ToJSON JWTConfig where
   toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt) =
     case keyOrUrl of
-         Left _    -> A.object $ ("key" A..= A.String "** JWK **"):obj
-         Right url -> A.object $ ("jwk_url" A..= url):obj
+         Left _    -> mkObj ("key" A..= A.String "** JWK **")
+         Right url -> mkObj ("jwk_url" A..= url)
     where
-      obj = [ "type" A..= ty
-            , "claims_namespace" A..= claimNs
-            , "claims_format" A..= claimsFmt
-            , "audience" A..= aud
-            ]
+      mkObj item = A.object [ "type" A..= ty
+                            , "claims_namespace" A..= claimNs
+                            , "claims_format" A..= claimsFmt
+                            , "audience" A..= aud
+                            , item
+                            ]
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
