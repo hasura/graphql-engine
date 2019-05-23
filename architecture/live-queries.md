@@ -1,12 +1,16 @@
 # A million active live queries on Postgres
 
-Hasura exposes real-time 'live queries' for clients (over GraphQL). For example, a food ordering app can use a live query to show the status of an order. This document describes the Hasura architecture which lets you scale to handle a million active live queries.
+Hasura is a GraphQL engine on Postgres that provides instant GraphQL APIs with authorization. Read more at [hasura.io](https://hasura.io) and on [github.com/hasura/graphql-engine](https://github.com/hasura/graphql-engine).
+
+Hasura allows 'live queries' for clients (over GraphQL subscriptions). For example, a food ordering app can use a live query to show the status of an order.
+
+This document describes the Hasura architecture which lets you scale to handle a million active live queries.
 
 ## TL;DR:
 Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second creating a new result per client. Hasura is the GraphQL API provider (with authorization).
 The test: How many concurrent live subscriptions (clients) can Hasura handle? Does Hasura scale vertically and/or horizontally?
 
-![main-image](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png)
+<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png" width=400px />
 
 ### Single instance
 
