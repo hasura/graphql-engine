@@ -13,39 +13,30 @@ module Hasura.Server.Logging
   , VerboseLogging(..)
   ) where
 
-import           Crypto.Hash                 (Digest, SHA1, hash)
 import           Data.Aeson
-import           Data.Bits                   (shift, (.&.))
-import           Data.ByteString.Char8       (ByteString)
-import qualified Data.ByteString.Lazy        as BL
-import           Data.Int                    (Int64)
-import           Data.List                   (find)
-import qualified Data.TByteString            as TBS
-import qualified Data.Text                   as T
-import qualified Data.Text.Encoding          as TE
+import           Data.Bits             (shift, (.&.))
+import           Data.ByteString.Char8 (ByteString)
+import qualified Data.ByteString.Lazy  as BL
+import           Data.Int              (Int64)
+import           Data.List             (find)
+import qualified Data.TByteString      as TBS
+import qualified Data.Text             as T
 import           Data.Time.Clock
-import           Data.Word                   (Word32)
-import           Debug.Trace
-import           Network.Socket              (SockAddr (..))
-import           Network.Wai                 (Request (..))
-import           System.ByteOrder            (ByteOrder (..), byteOrder)
-import           Text.Printf                 (printf)
+import           Data.Word             (Word32)
+import           Network.Socket        (SockAddr (..))
+import           Network.Wai           (Request (..))
+import           System.ByteOrder      (ByteOrder (..), byteOrder)
+import           Text.Printf           (printf)
 
-import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Char8       as BS
-import qualified Data.CaseInsensitive        as CI
-import qualified Network.HTTP.Types          as N
+import qualified Data.Aeson            as J
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.CaseInsensitive  as CI
+import qualified Network.HTTP.Types    as N
 
-import qualified Hasura.GraphQL.Explain      as GE
 import           Hasura.HTTP
-import qualified Hasura.Logging              as L
+import qualified Hasura.Logging        as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
---import           Hasura.RQL.Types.Error
---import           Hasura.RQL.Types.Permission
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Metadata
-import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils
 
 
@@ -141,7 +132,7 @@ data AccessLog
   , alDetail       :: !(Maybe Value)
   , alRequestId    :: !(Maybe T.Text)
   , alHasuraUser   :: !(Maybe UserVars)
-  , alQueryHash    :: !(Maybe T.Text)
+  -- , alQueryHash    :: !(Maybe T.Text)
   , alResponseSize :: !(Maybe Int64)
   , alResponseTime :: !(Maybe Double)
   } deriving (Show, Eq)
@@ -151,7 +142,7 @@ instance L.ToEngineLog AccessLog where
     (L.LevelInfo, "http-log", toJSON accessLog)
 
 instance ToJSON AccessLog where
-  toJSON (AccessLog st met src path hv det reqId hUser qh rs rt) =
+  toJSON (AccessLog st met src path hv det reqId hUser rs rt) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
@@ -160,7 +151,7 @@ instance ToJSON AccessLog where
            , "detail" .= det
            , "request_id" .= reqId
            , "user" .= hUser
-           , "query_hash" .= qh
+           -- , "query_hash" .= qh
            , "response_size" .= rs
            , "query_execution_time" .= rt
            ]
@@ -182,10 +173,10 @@ instance ToJSON LogDetail where
 ravenLogGen
   :: VerboseLogging
   -> (BL.ByteString, Either QErr BL.ByteString)
-  -> SchemaCache -> SQLGenCtx -> Maybe UserInfo
-  -> (N.Status, Maybe Value, Maybe T.Text, Maybe Int64)
-ravenLogGen verLog (reqBody, res) sc sqlGenCtx userInfoM =
-  (status, toJSON <$> logDetail, Just qh, Just size)
+  -- -> SchemaCache -> SQLGenCtx -> Maybe UserInfo
+  -> (N.Status, Maybe Value, Maybe Int64)
+ravenLogGen verLog (reqBody, res) =
+  (status, toJSON <$> logDetail, Just size)
   where
     status = either qeStatus (const N.status200) res
     logDetail = either (Just . qErrToLogDetail) (const logVerbose) res
@@ -195,23 +186,12 @@ ravenLogGen verLog (reqBody, res) sc sqlGenCtx userInfoM =
 
     size = BL.length $ either encode id res
 
-    qh = T.pack . show $ sha1 reqBody
-
-    sha1 :: BL.ByteString -> Digest SHA1
-    sha1 = hash . BL.toStrict
-
     logVerbose = if unVerboseLogging verLog
                  then Just $ LogDetail reqBodyTxt Nothing genedSql
                  else Nothing
 
     genedSql :: Maybe Text
-    genedSql = undefined
-      -- -- try to parse the query as graphql explain query, log nothing if parsing fails
-      -- req <- J.decode reqBody
-      -- userInfo <- userInfoM
-      -- x <- runExceptT $ GE.genSql sc sqlGenCtx req userInfo
-      -- traceM $ show x
-      -- either (const Nothing) (Just . T.intercalate "\n") x
+    genedSql = Nothing
 
 mkAccessLog
   :: VerboseLogging
@@ -219,10 +199,8 @@ mkAccessLog
   -> Request
   -> (BL.ByteString, Either QErr BL.ByteString)
   -> Maybe (UTCTime, UTCTime)
-  -> SchemaCache
-  -> SQLGenCtx
   -> AccessLog
-mkAccessLog verLog userInfoM req r mTimeT sc sqlGenCtx =
+mkAccessLog verLog userInfoM req r mTimeT =
   AccessLog
   { alStatus       = status
   , alMethod       = bsToTxt $ requestMethod req
@@ -233,14 +211,12 @@ mkAccessLog verLog userInfoM req r mTimeT sc sqlGenCtx =
   , alRequestId    = bsToTxt <$> getRequestId req
   , alHasuraUser   = userVars <$> userInfoM
   , alResponseSize = size
-  , alResponseTime = realToFrac <$> diffTime
-  , alQueryHash    = queryHash
+  , alResponseTime = diffTime
+  -- , alQueryHash    = queryHash
   }
   where
-    (status, mDetail, queryHash, size) = ravenLogGen verLog r sc sqlGenCtx userInfoM
-    diffTime = case mTimeT of
-      Nothing       -> Nothing
-      Just (t1, t2) -> Just $ diffUTCTime t2 t1
+    (status, mDetail, size) = ravenLogGen verLog r
+    diffTime = fmap (realToFrac . uncurry diffUTCTime) mTimeT
 
 getSourceFromSocket :: Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . remoteHost
@@ -259,7 +235,7 @@ requestIdHeader :: T.Text
 requestIdHeader = "x-request-id"
 
 getRequestId :: Request -> Maybe ByteString
-getRequestId = getRequestHeader $ TE.encodeUtf8 requestIdHeader
+getRequestId = getRequestHeader $ txtToBs requestIdHeader
 
 getRequestHeader :: ByteString -> Request -> Maybe ByteString
 getRequestHeader hdrName req = snd <$> mHeader

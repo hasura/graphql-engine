@@ -15,7 +15,6 @@ import           Network.Mime                           (defaultMimeLookup)
 import           Network.Wai                            (requestHeaders,
                                                          strictRequestBody)
 import           System.Exit                            (exitFailure)
-
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core
 
@@ -40,6 +39,7 @@ import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.PGDump                   as PGD
 
 import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
@@ -53,7 +53,6 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
-import qualified Hasura.Server.PGDump                   as PGD
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -180,28 +179,21 @@ buildQCtx = do
 
 logResult
   :: (MonadIO m)
-  => Maybe UserInfo -> Wai.Request -> BL.ByteString -> L.Logger
+  => L.Logger -> VerboseLogging
+  -> Maybe UserInfo -> Wai.Request -> BL.ByteString
   -> Either QErr BL.ByteString -> Maybe (UTCTime, UTCTime)
   -> m ()
--- <<<<<<< HEAD
--- logResult userInfoM req reqBody sc res qTime = do
---   scache <- liftIO $ readIORef $ _scrCache $ scCacheRef sc
---   liftIO $ logger $ mkAccessLog verbose userInfoM req (reqBody, res) qTime scache
---     (SQLGenCtx strfyNum)
---   where
---     verbose = scVerboseLogging sc
---     logger = L.unLogger $ scLogger sc
---     strfyNum = scStringifyNum sc
--- =======
-logResult userInfoM req reqBody logger res qTime =
-  liftIO $ (L.unLogger logger) $ mkAccessLog userInfoM req (reqBody, res) qTime
+logResult logger verbose userInfoM req reqBody res qTime =
+  liftIO $ L.unLogger logger $
+    mkAccessLog verbose userInfoM req (reqBody, res) qTime
 
 logError
   :: MonadIO m
-  => Maybe UserInfo -> Wai.Request
-  -> BL.ByteString -> L.Logger -> QErr -> m ()
-logError userInfoM req reqBody logger qErr =
-  logResult userInfoM req reqBody logger (Left qErr) Nothing
+  => L.Logger -> VerboseLogging
+  -> Maybe UserInfo -> Wai.Request
+  -> BL.ByteString -> QErr -> m ()
+logError logger verbose userInfoM req reqBody qErr =
+  logResult logger verbose userInfoM req reqBody (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m)
@@ -230,11 +222,13 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  logResult logger verboseLog (Just userInfo) req reqBody (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
-    logger = scLogger serverCtx
+    logger     = scLogger serverCtx
+    verboseLog = scVerboseLogging serverCtx
+
     -- encode error response
     qErrToResp :: (MonadIO m) => Bool -> QErr -> ActionCtxT ctx m b
     qErrToResp includeInternal qErr = do
@@ -242,7 +236,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       json $ qErrEncoder includeInternal qErr
 
     logAndThrow req reqBody includeInternal qErr = do
-      logError Nothing req reqBody logger qErr
+      logError logger verboseLog Nothing req reqBody qErr
       qErrToResp includeInternal qErr
 
     resToResp = \case
@@ -314,8 +308,8 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
-consoleAssetsHandler logger dir path = do
+consoleAssetsHandler :: L.Logger -> VerboseLogging -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler logger verbose dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <- liftIO $ try $ BL.readFile $
@@ -326,7 +320,7 @@ consoleAssetsHandler logger dir path = do
       mapM_ (uncurry setHeader) headers
       lazyBytes c
     onError :: IOException -> ActionT IO ()
-    onError = raiseGenericApiError logger . err404 NotFound . T.pack . show
+    onError = raiseGenericApiError logger verbose . err404 NotFound . T.pack . show
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -336,7 +330,7 @@ consoleAssetsHandler logger dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 mkConsoleHTML :: T.Text -> AuthMode -> Bool -> Maybe Text -> Either String T.Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir = do
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   bool (Left errMsg) (Right res) $ null errs
   where
     (errs, res) = M.checkedSubstitute consoleTmplt $
@@ -453,8 +447,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
     -- API Console and Root Dir
-    when (enableConsole && enableMetadata) $ do
-      serveApiConsole
+    when (enableConsole && enableMetadata) serveApiConsole
 
     -- Health check endpoint
     get "healthz" $ do
@@ -520,10 +513,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError logger qErr
+      raiseGenericApiError logger verboseLog qErr
 
   where
     logger = scLogger serverCtx
+    verboseLog = scVerboseLogging serverCtx
+
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = N.status200 }
 
@@ -562,18 +557,18 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         get ("console/assets" <//> wildcard) $ \path ->
-          consoleAssetsHandler logger dir (T.unpack path)
+          consoleAssetsHandler logger verboseLog dir (T.unpack path)
 
       -- serve console html
       get ("console" <//> wildcard) $ \path ->
-        either (raiseGenericApiError logger . err500 Unexpected . T.pack) html $
+        either (raiseGenericApiError logger verboseLog . err500 Unexpected . T.pack) html $
         mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
 
-raiseGenericApiError :: L.Logger -> QErr -> ActionT IO ()
-raiseGenericApiError logger qErr = do
+raiseGenericApiError :: L.Logger -> VerboseLogging -> QErr -> ActionT IO ()
+raiseGenericApiError logger verbose qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  logError Nothing req reqBody logger qErr
+  logError logger verbose Nothing req reqBody qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr
