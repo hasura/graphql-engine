@@ -2,17 +2,15 @@
 
 Hasura is a GraphQL engine on Postgres that provides instant GraphQL APIs with authorization. Read more at [hasura.io](https://hasura.io) and on [github.com/hasura/graphql-engine](https://github.com/hasura/graphql-engine).
 
-Hasura allows 'live queries' for clients (over GraphQL subscriptions). For example, a food ordering app can use a live query to show the status of an order.
+Hasura allows 'live queries' for clients (over GraphQL subscriptions). For example, a food ordering app can use a live query to show the live-status of an order for a particular user.
 
-This document describes the Hasura architecture which lets you scale to handle a million active live queries.
+This document describes Hasura's architecture which lets you scale to handle a million active live queries.
 
 ## TL;DR:
 Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second creating a new result per client. Hasura is the GraphQL API provider (with authorization).
 The test: How many concurrent live subscriptions (clients) can Hasura handle? Does Hasura scale vertically and/or horizontally?
 
-<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png" width=400px />
-
-### Single instance
+<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png" width="50%" />
 
 ![single-instance-results](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/single-instance-fs8.png)
 
@@ -22,9 +20,14 @@ The test: How many concurrent live subscriptions (clients) can Hasura handle? Do
 | 2xCPU, 4GB RAM | 10000 | 73% |
 | 4xCPU, 8GB RAM | 20000 | 90% |
 
-### Horizontal scalability
+<img alt="results-horizontally-scaled" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/horizontal-scalability.png" width="80%" />
 
-![results-horizontally-scaled](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/horizontal-scalability-fs8.png)
+At 1 million live queries, Postgres is under about 28% load with peak number of connections being around 850.
+
+Notes on test setup:
+- AWS RDS postgres, Fargate, ELB were used with their default configurations and without any tuning.
+- RDS Postgres: 16xCPU, 64GB RAM, Postgres 11
+- Hasura running on Fargate: 4xCPU, 8GB RAM
 
 ## GraphQL and subscriptions
 
@@ -32,11 +35,11 @@ GraphQL makes it easy for app developers to query for precisely the data they wa
 
 For example, let’s say we’re building a food delivery app. Here’s what the schema might look like on Postgres:
 
-![food-order-schema](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/pg-schema-fs8.png)
+<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/pg-schema.png" alt="postgres schema for food delivery app" width="60%" />
 
-For an app screen showing a “live order status” for the current user for their order, a GraphQL query would fetch the latest order status and the location of the agent delivering the order.
+For an app screen showing a “order status” for the current user for their order, a GraphQL query would fetch the latest order status and the location of the agent delivering the order.
 
-![order-graphql-query](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/basic-query-fs8.png)
+<img alt="order-graphql-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/basic-query-fs8.png" width="70%" />
 
 Underneath it, this query is sent as a string to a webserver that parses it, applies authorization rules and makes appropriate calls to things like databases to fetch the data for the app. It sends this data, in the exact shape that was requested, as a JSON.
 
@@ -44,7 +47,7 @@ Enter live-queries: Live queries is the idea of being able to subscribe to the l
 
 On the surface this is a perfect fit with GraphQL because GraphQL clients support subscriptions that take care of dealing with messy websocket connections. Converting a query to a live query might look as simple as replacing the word query with subscription for the client. That is, if the GraphQL server can implement it.
 
-![order-subscription-query](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/subscription-query-fs8.png)
+<img alt="order-subscription-query" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/subscription-query-fs8.png" width="70%" />
 
 ## Implementing GraphQL live-queries
 
@@ -56,13 +59,13 @@ Secondly, building a webserver to handle websockets in a scalable way is also so
 
 To understand why refetching a GraphQL query is hard, let’s look at how a GraphQL query is typically processed:
 
-![graphql-resolvers](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/resolvers-fs8.png)
+<img alt="graphql-resolvers" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/resolvers-fs8.png" width="70%" />
 
 The authorization + data fetching logic has to run for each “node” in the GraphQL query. This is scary, because even a slightly large query fetching a collection could bring down the database quite easily. The N+1 query problem, also common with badly implemented ORMs, is bad for your database and makes it hard to optimally query Postgres. Data loader type patterns can alleviate the problem, but will still query the underlying Postgres database multiple times (reduces to as many nodes in the GraphQL query from as many items in the response).
 
 For live queries, this problem becomes worse, because each client’s query will translate into an independent refetch. Even though the queries are the “same”, since the authorization rules create different session variables, independent fetches are required for each client.
 
-### The Hasura approach
+### Hasura approach
 Is it possible to do better? What if declarative mapping from the data models to the GraphQL schema could be used to create a single SQL query to the database? This would avoid multiple hits to the database, whether there are a large number of items in the response or the number of nodes in the GraphQL query are large.
 
 #### Idea #1: “Compile” a GraphQL query to a single SQL query
@@ -133,9 +136,9 @@ Testing scalability & reliability for live-queries with websockets has been a ch
    - There are 0 errors in the payload received
    - Avg latency from time of creation of event to receipt on the client is less than 1000ms
 
-![testing-architecture](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/hasura-arch-test-fs8.png)
+<img alt="testing-architecture" src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/test-architecture.png" width="70%" />
 
-## Benefits of the Hasura approach
+## Benefits of this approach
 Hasura makes live-queries easy and accessible. The notion of queries is easily extended to live-queries without any extra effort on the part of the developer using GraphQL queries. This is the most important thing for us.
 
 1. Expressive/featureful live queries with full support for Postgres operators/aggregations/views/functions etc
@@ -143,7 +146,7 @@ Hasura makes live-queries easy and accessible. The notion of queries is easily e
 1. Vertical & Horizontal scaling
 1. Works on all cloud/database vendors
 
-## Work ahead:
+## Future work:
+Reduce load on Postgres by:
 1. Mapping events to active live queries
 1. Incremental computation of result set
-1. Improve the number of live queries that a single instance can handle
