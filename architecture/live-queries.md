@@ -116,7 +116,7 @@ We experimented with several methods of capturing events from the underlying Pos
 2. WAL: Reliable stream, but LR slots are expensive which makes horizontal scaling hard, and are often not available on managed database vendors. Heavy write loads can pollute the WAL and will need throttling at the application layer.
 
 After these experiments, we’ve currently fallen back to interval based polling to refetch queries. So instead of refetching when there is an appropriate event, we refetch the query based on a time interval. There were two major reasons for doing this:
-1. Mapping database events to a live query for a particular client is possible to some extent when the declarative permissions and the conditions used in the live queries are trivial (like order_id = 1 and user_id = cookie.session_id) but becomes intractable for anything complicated (say the query uses ‘status’ ILIKE ‘failed_%’). The declarative permissions can also sometimes span across tables.
+1. Mapping database events to a live query for a particular client is possible to some extent when the declarative permissions and the conditions used in the live queries are trivial (like `order_id` = 1 and `user_id` = cookie.`session_id`) but becomes intractable for anything complicated (say the query uses `'status' ILIKE 'failed_%'`). The declarative permissions can also sometimes span across tables.
 2. For any application unless the write throughput is very small, you’ll end up throttling/debouncing events over an interval anyway.
 
 The tradeoff with this approach is latency when write-loads are small. Refetching can be done immediately, instead after X ms. This can be alleviated quite easily, by tuning the refetch interval and the batch size appropriately. So far we have focussed on removing the most expensive bottleneck first, the query refetching. That said, we will continue to look at improvements in the months to come, especially to use event dependency (in cases where it is applicable) to potentially reduce the number of live queries that are refetched every interval.
@@ -124,9 +124,9 @@ The tradeoff with this approach is latency when write-loads are small. Refetchin
 Please do note that we have drivers internally for other event based methods and would love to work with you if you have a use-case where the current approach does not suffice. Hit us up on our discord, and we’ll help you run benchmarks and figure out the best way to proceed!
 
 ## Testing
-Testing scalability & reliability for live-queries with websockets has been a challenge. It took us a few weeks to build the testing suite itself and this is what the setup looks like:
+Testing scalability & reliability for live-queries with websockets has been a challenge. It took us a few weeks to build the testing suite and the infra automation tooling. This is what the setup looks like:
 
-1. A nodejs script that runs a large number of GraphQL live-query clients and logs events in memory which are later ingested into a database.
+1. A nodejs script that runs a large number of GraphQL live-query clients and logs events in memory which are later ingested into a database. [github](https://github.com/hasura/subscription-benchmark)
 
 1. A script that creates a write load on the database that causes changes across all clients running their live queries (1 million rows are updated every second)
 
