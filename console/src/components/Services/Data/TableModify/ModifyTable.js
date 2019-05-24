@@ -13,7 +13,6 @@ import {
 } from '../TableModify/ModifyActions';
 import {
   setTable,
-  fetchTableComment,
   fetchColumnTypes,
   RESET_COLUMN_TYPE_LIST,
 } from '../DataActions';
@@ -25,13 +24,13 @@ import TableCommentEditor from './TableCommentEditor';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import styles from './ModifyTable.scss';
+import { replace } from 'react-router-redux';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchTableComment(this.props.tableName));
     dispatch(fetchColumnTypes());
     dispatch(fetchColumnCasts());
   }
@@ -47,8 +46,6 @@ class ModifyTable extends React.Component {
       dispatch,
       migrationMode,
       currentSchema,
-      tableComment,
-      columnComments,
       tableCommentEdit,
       columnEdit,
       pkModify,
@@ -56,11 +53,19 @@ class ModifyTable extends React.Component {
       dataTypes,
       validTypeCasts,
       uniqueKeyModify,
+      schemaList,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+    if (!tableSchema) {
+      dispatch(replace('/404'));
+      return null;
+    }
+    const tableComment = tableSchema.comment;
 
     const untrackBtn = (
       <Button
@@ -119,6 +124,7 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
+              isTable
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
@@ -127,7 +133,6 @@ class ModifyTable extends React.Component {
               dataTypeIndexMap={dataTypeIndexMap}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
-              columnComments={columnComments}
               dispatch={dispatch}
               currentSchema={currentSchema}
             />
@@ -152,6 +157,7 @@ class ModifyTable extends React.Component {
               tableSchema={tableSchema}
               currentSchema={currentSchema}
               allSchemas={allSchemas}
+              schemaList={schemaList}
               dispatch={dispatch}
               fkModify={fkModify}
             />
@@ -182,8 +188,6 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  tableComment: PropTypes.string.isRequired,
-  columnComments: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -204,14 +208,13 @@ const mapStateToProps = (state, ownProps) => ({
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
-  tableComment: state.tables.tableComment,
-  columnComments: state.tables.columnComments,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
   fkModify: state.tables.modify.fkModify,
   dataTypes: state.tables.columnDataTypes,
   validTypeCasts: state.tables.modify.alterColumnOptions,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
+  schemaList: state.tables.schemaList,
   ...state.tables.modify,
 });
 

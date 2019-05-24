@@ -6,10 +6,8 @@
 
 .tableContainer {
   overflow: auto;
-  //margin-top: 25px;
-}
-
-.tableContainerModified {
+  width: 95%;
+  padding-right: 5px; // removes scrollbar if width is enough
 }
 
 .schemaWrapper {
@@ -199,11 +197,12 @@ a.expanded {
   text-align: center;
   overflow: unset !important;
 }
-.tableCellCenterAlignedOverflow
-{
+
+.tableCellCenterAlignedOverflow {
   text-align: center;
   overflow: hidden !important;
 }
+
 .tableCellExpanded {
   white-space: normal;
 }

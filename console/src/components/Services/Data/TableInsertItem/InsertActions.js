@@ -26,8 +26,9 @@ const insertItem = (tableName, colValues) => {
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
     const state = getState();
+    const { currentSchema } = state.tables;
     const columns = state.tables.allSchemas.find(
-      x => x.table_name === tableName
+      t => t.table_name === tableName && t.table_schema === currentSchema
     ).columns;
     let error = false;
     let errorMessage = '';

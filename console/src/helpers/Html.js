@@ -27,7 +27,7 @@ export default class Html extends Component {
           <link
             rel="icon"
             type="image/svg+xml"
-            href="/rstatic/favicon_green.svg"
+            href="/rstatic/favicon_green.png"
           />
           {Object.keys(assets.styles).map((style, key) => (
             <link

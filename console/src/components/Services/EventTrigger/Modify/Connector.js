@@ -10,7 +10,6 @@ const mapStateToProps = (state, ownProps) => {
     serverVersion: state.main.serverVersion,
     migrationMode: state.main.migrationMode,
     currentSchema: state.tables.currentSchema,
-    tableSchemas: state.triggers.tableSchemas,
   };
 };
 
