@@ -121,12 +121,12 @@ const JsonInput = props => {
     );
   };
 
-  const renderHtml =
+  const editor =
     showEditorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
   return (
     <span className="json_input_editor">
-      <label>{renderHtml}</label>
+      <label>{editor}</label>
       <i
         key="icon_json_editor"
         className={

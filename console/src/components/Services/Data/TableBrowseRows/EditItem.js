@@ -15,8 +15,6 @@ import {
   DATE,
   BOOLEAN,
   UUID,
-  // JSONDTYPE,
-  // JSONB,
   TIMESTAMP,
   TIMETZ,
 } from '../utils';
@@ -354,12 +352,10 @@ class EditItem extends Component {
                       // default
                       return;
                     } else {
-                      if (refs[colName].valueNode.props) {
-                        inputValues[colName] =
-                          refs[colName].valueNode.props.value;
-                      } else {
-                        inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
-                      }
+                      inputValues[colName] =
+                        refs[colName].valueNode.props !== undefined
+                          ? refs[colName].valueNode.props.value
+                          : refs[colName].valueNode.value;
                     }
                   });
                   dispatch(editItem(tableName, inputValues));

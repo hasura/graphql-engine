@@ -8,7 +8,7 @@ import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
 
-import { getMeParentNodeByClass } from '../../../../utils/domFunctions';
+import { getParentNodeByClass } from '../../../../utils/domFunctions';
 
 class InsertItem extends Component {
   constructor() {
@@ -60,7 +60,7 @@ class InsertItem extends Component {
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
       const clicker = e => {
-        const checkboxLabel = getMeParentNodeByClass(e.target, 'radio-inline');
+        const checkboxLabel = getParentNodeByClass(e.target, 'radio-inline');
         if (checkboxLabel) {
           checkboxLabel.click();
         } else {
@@ -86,12 +86,8 @@ class InsertItem extends Component {
           if (isAutoIncrement) return;
           if (!isNullable && !hasDefault) return;
 
-          let textValue = '';
-          if (typeof val === 'string') {
-            textValue = val;
-          } else {
-            textValue = e.target.value;
-          }
+          const textValue = typeof val === 'string' ? val : e.target.value;
+
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
@@ -269,13 +265,10 @@ class InsertItem extends Component {
                       // default
                       return;
                     } else {
-                      if (refs[colName].valueNode.props !== undefined) {
-                        console.log(refs[colName].valueNode.props);
-                        inputValues[colName] =
-                          refs[colName].valueNode.props.value;
-                      } else {
-                        inputValues[colName] = refs[colName].valueNode.value;
-                      }
+                      inputValues[colName] =
+                        refs[colName].valueNode.props !== undefined
+                          ? refs[colName].valueNode.props.value
+                          : refs[colName].valueNode.value;
                     }
                   });
                   dispatch(insertItem(tableName, inputValues)).then(() => {
