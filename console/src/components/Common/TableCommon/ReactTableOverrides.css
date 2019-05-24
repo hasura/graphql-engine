@@ -54,7 +54,7 @@
 .ReactTable .rt-table .rt-thead .rt-td {
   padding-left: 20px !important;
   padding-right: 20px !important;
-  border-right: 1px solid rgba(0,0,0,0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .ReactTable .rt-table .rt-thead .rt-th.collapsed,
@@ -66,11 +66,11 @@
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
   padding: 8px;
-  border-right: 1px solid rgba(0,0,0,0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
 }
-.ReactTable .rt-th, .ReactTable .rt-td
-{
+.ReactTable .rt-th,
+.ReactTable .rt-td {
   overflow: unset !important;
 }
 .ReactTable .rt-th .ellipsis,
@@ -105,8 +105,7 @@
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd:hover {
   background-color: #ebf7de;
 }
-.ReactTable .rt-table
-{
+.ReactTable .rt-table {
   overflow: unset;
 }
 .ReactTable .rt-table .rt-tbody {
