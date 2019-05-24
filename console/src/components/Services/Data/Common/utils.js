@@ -1,13 +1,44 @@
 import { aggCategory, pgCategoryCode } from './PgInfo';
 
+const splitDbRow = row => {
+  /* Splits comma seperated type names
+   * Splits comma seperated type display names
+   * Splits comma seperated type descriptions
+   * */
+  return {
+    typInfo: row[0].split(','),
+    typDisplayName: row[1].split(','),
+    typDescription: row[2].split(':'),
+  };
+};
+
+/*
+ * Returns a map of all data types and their source info
+ * Example:
+ *  For text: text text "variable-length string, no limit specified"
+ * */
+
+const getAllDataTypeMap = allDataTypes => {
+  const dTIndex = {};
+  allDataTypes.forEach(dataTypes => {
+    const { typInfo, typDisplayName, typDescription } = splitDbRow(dataTypes);
+
+    typInfo.forEach((currentType, typIndex) => {
+      dTIndex[currentType] = [
+        typInfo[typIndex],
+        typDisplayName[typIndex],
+        typDescription[typIndex],
+      ];
+    });
+  });
+  return dTIndex;
+};
+
 const getDataTypeInfo = (row, categoryInfo, colId) => {
   const columnTypeValueMap = {};
-  // Splits comma seperated type names
-  const typInfo = row[0].split(',');
-  // Splits comma seperated type display names
-  const typDisplayName = row[1].split(',');
-  // Splits comma seperated type descriptions
-  const typDescription = row[2].split(':');
+
+  const { typInfo, typDisplayName, typDescription } = splitDbRow(row);
+
   // Create option object for every valid type
   const currTypeObj = typInfo.map((t, i) => {
     const optObj = {
@@ -100,4 +131,10 @@ const getDefaultValue = column => {
   return ('default' in column && column.default.value) || '';
 };
 
-export { getDataOptions, getPlaceholder, getDefaultValue, getDataTypeInfo };
+export {
+  getDataOptions,
+  getPlaceholder,
+  getDefaultValue,
+  getDataTypeInfo,
+  getAllDataTypeMap,
+};
