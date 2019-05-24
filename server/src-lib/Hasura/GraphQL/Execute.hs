@@ -143,11 +143,12 @@ getExecPlanPartial userInfo sc enableAL req = do
       let msg = "query is not in any of the allowlists"
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
+
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
 -- to be executed
 data ExecOp
-  = ExOpQuery !LazyRespTx
+  = ExOpQuery !LazyRespTx (Maybe EQ.GeneratedSql)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
 
@@ -176,6 +177,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     Just plan -> GExPHasura <$> case plan of
       EP.RPQuery queryPlan ->
         ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
+                  <*> pure Nothing
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
@@ -192,10 +194,10 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           VQ.RMutation selSet ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
-            (queryTx, planM) <- getQueryOp gCtx sqlGenCtx
-                                userInfo selSet varDefs
+            (queryTx, planM, genSql) <- getQueryOp gCtx sqlGenCtx
+                                        userInfo selSet varDefs
             mapM_ (addPlanToCache . EP.RPQuery) planM
-            return $ ExOpQuery queryTx
+            return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
             (lqOp, planM) <- getSubsOp pgExecCtx gCtx sqlGenCtx
                              userInfo reqUnparsed varDefs fld
@@ -238,7 +240,7 @@ getQueryOp
   -> UserInfo
   -> VQ.SelSet
   -> [G.VariableDefinition]
-  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan)
+  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSql)
 getQueryOp gCtx sqlGenCtx userInfo fields varDefs =
   runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet varDefs fields
 

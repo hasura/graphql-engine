@@ -296,7 +296,8 @@ v1Alpha1GQHandler query = do
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
+  logger   <- scLogger . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx logger userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler GH.GQLReqUnparsed EncJSON

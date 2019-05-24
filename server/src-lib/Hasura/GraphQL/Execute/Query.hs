@@ -2,6 +2,8 @@ module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
   , queryOpFromPlan
   , ReusableQueryPlan
+  , GeneratedSql
+  , encodeSql
   ) where
 
 import           Data.Has
@@ -30,6 +32,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (bsToTxt)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -134,6 +137,36 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
     planTx (PGPlan q _ prepMap) =
       asSingleRowJsonResp q $ withUserVars usrVars $ IntMap.elems prepMap
 
+
+type GeneratedSql =
+  [(G.Alias, Either (PGPlan, UserVars) B.ByteString)]
+
+encodeSql :: GeneratedSql -> J.Value
+encodeSql sql =
+  jValFromAssocList $
+    map (\(a, q) -> (alName a, either encP (J.String . bsToTxt) q)) sql
+  where
+    alName = G.unName . G.unAlias
+    encP (pgPlan, usrVars) = J.object [ "query" J..= J.toJSON pgPlan
+                                      , "user_vars" J..= J.toJSON usrVars
+                                      ]
+
+    jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+
+
+-- turn the current plan into a list of aliases and `Q.Query`s so as to generate
+-- them later
+mkCurPlanSql
+  :: UserVars
+  -> QueryPlan
+  -> GeneratedSql
+mkCurPlanSql usrVars (QueryPlan _ fldPlans) =
+ flip map fldPlans $ \(alias, fldPlan) ->
+    (,) alias $ case fldPlan of
+          RFPRaw resp        -> Right resp
+          RFPPostgres pgPlan ->
+            Left ( pgPlan, usrVars )
+
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
 withUserVars usrVars l =
   Q.toPrepVal (Q.AltJ usrVars):l
@@ -208,7 +241,7 @@ convertQuerySelSet
      )
   => [G.VariableDefinition]
   -> V.SelSet
-  -> m (LazyRespTx, Maybe ReusableQueryPlan)
+  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSql)
 convertQuerySelSet varDefs fields = do
   usrVars <- asks (userVars . getter)
   fldPlans <- forM (toList fields) $ \fld -> do
@@ -225,7 +258,8 @@ convertQuerySelSet varDefs fields = do
     return (V._fAlias fld, fldPlan)
   let queryPlan     = QueryPlan varDefs fldPlans
       reusablePlanM = getReusablePlan queryPlan
-  return (mkCurPlanTx usrVars queryPlan, reusablePlanM)
+  let sql = mkCurPlanSql usrVars queryPlan
+  return (mkCurPlanTx usrVars queryPlan, reusablePlanM, sql)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
