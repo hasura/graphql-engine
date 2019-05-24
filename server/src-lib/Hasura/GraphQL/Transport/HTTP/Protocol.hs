@@ -18,24 +18,15 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                              as J
-import qualified Data.Aeson.Casing                       as J
-import qualified Data.Aeson.TH                           as J
-import qualified Data.ByteString.Lazy                    as BL
-import qualified Data.HashMap.Strict                     as Map
-import qualified Data.Text.Lazy                          as TL
-import           Language.GraphQL.Draft.Instances        ()
-import qualified Language.GraphQL.Draft.Parser           as G
-import qualified Language.GraphQL.Draft.Printer.LazyText as GP
-import qualified Language.GraphQL.Draft.Syntax           as G
+import           Language.GraphQL.Draft.Instances ()
 
-import qualified Data.Aeson                              as J
-import qualified Data.Aeson.Casing                       as J
-import qualified Data.Aeson.TH                           as J
-import qualified Data.ByteString.Lazy                    as BL
-import qualified Data.HashMap.Strict                     as Map
-import qualified Language.GraphQL.Draft.Parser           as G
-import qualified Language.GraphQL.Draft.Syntax           as G
+import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.HashMap.Strict              as Map
+import qualified Language.GraphQL.Draft.Parser    as G
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }

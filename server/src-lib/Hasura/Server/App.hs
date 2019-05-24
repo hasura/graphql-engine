@@ -130,16 +130,8 @@ data HandlerCtx
   , hcReqHeaders :: ![N.Header]
   }
 
-type Handler query = ExceptT QErr (ReaderT HandlerCtx (StateT (Maybe query) IO))
-
-data APIResp
-  = JSONResp !EncJSON
-  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
-
-apiRespToLBS :: APIResp -> BL.ByteString
-apiRespToLBS = \case
-  JSONResp j -> encJToLBS j
-  RawResp _ b -> b
+type Handler query result =
+  ExceptT QErr (ReaderT HandlerCtx (StateT (Maybe query) IO)) result
 
 mkApiMetrics :: Maybe a -> Maybe (ApiMetrics a)
 mkApiMetrics = fmap (flip ApiMetrics Nothing)
@@ -193,9 +185,7 @@ logResult
   -> m ()
 logResult logger verbose userInfoM httpReq req res qTime =
   liftIO $ L.unLogger logger $
-    mkAccessLog verbose userInfoM httpReq (apiRespToLBS <$> res) q qTime
-  where
-    q = maybe Nothing (\r -> Just $ ApiMetrics r Nothing) req
+    mkAccessLog verbose userInfoM httpReq res (mkApiMetrics req) qTime
 
 logError
   :: (MonadIO m, ToJSON a)
@@ -209,19 +199,12 @@ logError logger verbose userInfoM httpReq req qErr =
   let err = (Left qErr :: Either QErr APIResp)
   in logResult logger verbose userInfoM httpReq req err Nothing
 
--- resToApiMetrics :: Either QErr (APIResp a) -> Maybe (ApiMetrics a)
--- resToApiMetrics = \case
---   Left e -> Nothing
---   Right resp -> case resp of
---     JSONResp _ m -> m
---     RawResp _ _  -> Nothing
 
 mkSpockAction
   :: (MonadIO m, ToJSON s)
   => (Bool -> QErr -> Value)
   -> (QErr -> QErr)
   -> ServerCtx
-  -- -> Handler APIResp
   -> Handler s APIResp
   -> ActionT m ()
 mkSpockAction qErrEncoder qErrModifier serverCtx handler = do

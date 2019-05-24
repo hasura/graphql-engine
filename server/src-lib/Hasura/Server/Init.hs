@@ -569,7 +569,7 @@ consoleAssetsDirEnv =
 
 verboseLoggingEnv :: (String, String)
 verboseLoggingEnv =
-  ( "HASURA_GRAPHQL_ENABLE_VERBOSE_LOGS"
+  ( "HASURA_GRAPHQL_ENABLE_VERBOSE_LOG"
   , "Enable verbose logging (default: false)"
   )
 

@@ -44,10 +44,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Logging                       as SL
--- uniquely identifies an operation
---type GOperationId = (WS.WSId, OperationId)
 
---type TxRunner = LazyRespTx -> IO (Either QErr EncJSON)
 
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)

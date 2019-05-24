@@ -24,6 +24,15 @@ import qualified Text.Regex.TDFA.ByteString   as TDFA
 import           Hasura.EncJSON
 import           Hasura.Prelude
 
+data APIResp
+  = JSONResp !EncJSON
+  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp j  -> encJToLBS j
+  RawResp _ b -> b
+
 data ApiMetrics a
   = ApiMetrics
   { amQuery        :: !a

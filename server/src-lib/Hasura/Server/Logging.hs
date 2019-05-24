@@ -31,7 +31,6 @@ import           Text.Printf           (printf)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy  as BL
 import qualified Data.CaseInsensitive  as CI
-import qualified Data.TByteString      as TBS
 import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as N
 
@@ -164,45 +163,12 @@ instance L.ToEngineLog AccessLog where
   toEngineLog accessLog =
     (L.LevelInfo, "http-log", toJSON accessLog)
 
-data LogDetail
-  = LogDetail
-  { _ldQuery        :: !(Maybe TBS.TByteString)
-  , _ldError        :: !(Maybe Value)
-  , _ldGeneratedSql :: !(Maybe Text)
-  } deriving (Show, Eq)
-
-instance ToJSON LogDetail where
-  toJSON (LogDetail q e sql) =
-    object [ "request"  .= q
-           , "error" .= e
-           , "sql" .= sql
-           ]
-
-ravenLogGen
-  :: VerboseLogging
-  -> Either QErr BL.ByteString
-  -> Maybe (ApiMetrics a)
-  -> Maybe (UTCTime , UTCTime)
-  -> (Maybe a, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
-ravenLogGen verLog res extraInfo mTimeT =
-  (query, status, err, diffTime, Just size)
-  where
-    status = either qeStatus (const N.status200) res
-    size = BL.length $ either encode id res
-    err = either Just (const Nothing) res
-    diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
-    q = amQuery <$> extraInfo
-    query = case res of
-      Left _  -> q
-      Right _ -> bool Nothing q (unVerboseLogging verLog)
-
-
 mkAccessLog
   :: (ToJSON a)
   => VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
   -> Request
-  -> Either QErr BL.ByteString
+  -> Either QErr APIResp
   -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
@@ -226,6 +192,25 @@ mkAccessLog verLog userInfoM req res extraInfo mTimeT =
   where
     (query, status, err, respTime, respSize) =
       ravenLogGen verLog res extraInfo mTimeT
+
+ravenLogGen
+  :: VerboseLogging
+  -> Either QErr APIResp
+  -> Maybe (ApiMetrics a)
+  -> Maybe (UTCTime , UTCTime)
+  -> (Maybe a, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
+ravenLogGen verLog res extraInfo mTimeT =
+  (query, status, err, diffTime, Just size)
+  where
+    status = either qeStatus (const N.status200) res
+    size = BL.length $ either encode apiRespToLBS res
+    err = either Just (const Nothing) res
+    diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
+    q = amQuery <$> extraInfo
+    query = case res of
+      Left _  -> q
+      Right _ -> bool Nothing q (unVerboseLogging verLog)
+
 
 getSourceFromSocket :: Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . remoteHost
