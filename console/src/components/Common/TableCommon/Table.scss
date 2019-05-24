@@ -6,6 +6,8 @@
 
 .tableContainer {
   overflow: auto;
+  width: 95%;
+  padding-right: 5px; // removes scrollbar if width is enough
 }
 
 .schemaWrapper {
