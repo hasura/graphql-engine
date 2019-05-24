@@ -259,18 +259,20 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
 
     const migrationUp = [];
+    const generatedConstraintName = generateFKConstraintName(
+      tableName,
+      lcols,
+      tableSchema.foreign_key_constraints
+    );
+
     if (constraintName) {
-      const generatedConstraintName = generateFKConstraintName(
-          tableName,
-          lcols,
-          tableSchema.foreign_key_constraints
-      );
-      const migrationUpAlterFKeySql =`
+      // foreign key already exists, alter the foreign key
+      const migrationUpAlterFKeySql = `
              alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
-             add constraint "${constraintName || generatedConstraintName}" foreign key (${lcols.join(
-                 ', '
+             add constraint "${constraintName}" foreign key (${lcols.join(
+               ', '
              )}) references "${schemaName}"."${refTableName}"(${rcols.join(
-                 ', '
+               ', '
              )}) on update ${onUpdate} on delete ${onDelete};
       `;
 
@@ -280,14 +282,31 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           sql: migrationUpAlterFKeySql,
         },
       });
+    } else {
+      // foreign key not found, create a new one
+      const migrationUpCreateFKeySql = `
+           alter table "${schemaName}"."${tableName}"
+           add constraint "${generatedConstraintName}" foreign key (${lcols.join(
+             ', '
+           )}) references "${schemaName}"."${refTableName}"(${rcols.join(
+             ', '
+           )}) on update ${onUpdate} on delete ${onDelete};
+      `;
+      migrationUp.push({
+        type: 'run_sql',
+        args: {
+          sql: migrationUpCreateFKeySql,
+        },
+      });
     }
 
     const migrationDown = [];
 
     if (constraintName) {
+      // when foreign key is altered
       const oldConstraint = tableSchema.foreign_key_constraints[index];
       const migrationDownAlterFKeySql = `
-          alter table "${schemaName}"."${tableName}" drop constraint "${constraintName || generatedConstraintName}",
+          alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
             add constraint "${constraintName}" foreign key (${Object.keys(
               oldConstraint.column_mapping
             )
@@ -307,7 +326,20 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           sql: migrationDownAlterFKeySql,
         },
       });
+    } else {
+      // when foreign key is created
+      const migrationDownDeleteFKeySql = `
+          alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}"
+      `;
+
+      migrationDown.push({
+        type: 'run_sql',
+        args: {
+          sql: migrationDownDeleteFKeySql,
+        },
+      });
     }
+
     const migrationName = `set_fk_${schemaName}_${tableName}_${lcols.join(
       '_'
     )}`;
