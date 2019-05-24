@@ -8,10 +8,9 @@ const JSONKEY = 'json';
 
 const parseJSONData = data => {
   try {
-    if (typeof data === 'object') {
-      return JSON.stringify(data, null, 4);
-    }
-    return JSON.stringify(JSON.parse(data), null, 4);
+    return typeof data === 'object'
+      ? JSON.stringify(data)
+      : JSON.stringify(JSON.parse(data));
   } catch (e) {
     return data;
   }
@@ -41,16 +40,10 @@ const JsonInput = props => {
   };
 
   const toggleEditorType = currentState => {
-    if (currentState.showEditorType === JSONKEY) {
-      return {
-        ...currentState,
-        showEditorType: NORMALKEY,
-      };
-    }
     return {
       ...currentState,
-      data: parseJSONData(currentState.data),
-      showEditorType: JSONKEY,
+      showEditorType:
+        currentState.showEditorType === JSONKEY ? NORMALKEY : JSONKEY,
     };
   };
 
