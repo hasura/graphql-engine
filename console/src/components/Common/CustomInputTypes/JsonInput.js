@@ -6,11 +6,11 @@ const styles = require('./JsonInput.scss');
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
 
-const parseJSONData = data => {
+const parseJSONData = (data, editorType) => {
   try {
-    return typeof data === 'object'
-      ? JSON.stringify(data)
-      : JSON.stringify(JSON.parse(data));
+    const dataObject = typeof data === 'object' ? data : JSON.parse(data);
+
+    return JSON.stringify(dataObject, null, editorType === JSONKEY ? 4 : 0);
   } catch (e) {
     return data;
   }
@@ -18,8 +18,8 @@ const parseJSONData = data => {
 
 const createInitialState = data => {
   const initialState = {
-    showEditorType: NORMALKEY,
-    data: parseJSONData(data),
+    editorType: NORMALKEY,
+    data: parseJSONData(data, NORMALKEY),
   };
   return initialState;
 };
@@ -30,7 +30,7 @@ const JsonInput = props => {
   const allProps = { ...standardProps };
   delete allProps.defaultValue;
   const [state, updateState] = useState(createInitialState(defaultValue));
-  const { showEditorType, data } = state;
+  const { editorType, data } = state;
 
   const updateData = (newData, currentState) => {
     return {
@@ -40,10 +40,13 @@ const JsonInput = props => {
   };
 
   const toggleEditorType = currentState => {
+    const nextEditorType =
+      currentState.editorType === JSONKEY ? NORMALKEY : JSONKEY;
+
     return {
       ...currentState,
-      showEditorType:
-        currentState.showEditorType === JSONKEY ? NORMALKEY : JSONKEY,
+      data: parseJSONData(currentState.data, nextEditorType),
+      editorType: nextEditorType,
     };
   };
 
@@ -114,8 +117,7 @@ const JsonInput = props => {
     );
   };
 
-  const editor =
-    showEditorType === JSONKEY ? getJsonEditor() : getNormalEditor();
+  const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
   return (
     <span className="json_input_editor">
@@ -125,7 +127,7 @@ const JsonInput = props => {
         className={
           'fa ' +
           styles.jsonToggleButton +
-          (showEditorType === JSONKEY ? ' fa-compress' : ' fa-expand')
+          (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
         }
         onClick={() => updateState(toggleEditorType)}
       />
