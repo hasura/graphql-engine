@@ -15,7 +15,13 @@ export const Operators = [
   { name: 'not similar', value: '$nsimilar' },
 ];
 
-export const Integers = ['serial', 'integer', 'bigserial', 'smallint', 'bigint'];
+export const Integers = [
+  'serial',
+  'integer',
+  'bigserial',
+  'smallint',
+  'bigint',
+];
 
 export const Reals = ['float4', 'float8', 'numeric'];
 

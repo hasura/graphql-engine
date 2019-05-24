@@ -148,6 +148,67 @@ const convertDateTimeToLocale = dateTime => {
   return new Date(dateTime + 'Z').toLocaleString('en-US', options);
 };
 
+const getEventTriggersQuery = (triggerNames) => {
+  let whereQuery = '';
+  const triggerLength = triggerNames.length;
+  if (triggerLength !== 0) {
+    // append to whereQuery
+    whereQuery = 'where';
+    triggerNames.forEach((triggerName, index) => {
+      whereQuery = whereQuery + ` hdb_et.name='${triggerName}'`;
+      if ((index + 1) !== triggerLength) {
+        whereQuery = whereQuery + ' and';
+      }
+    });
+  }
+  const runSql = `select 
+  COALESCE(
+    json_agg(
+      row_to_json(info)
+    ), 
+    '[]' :: JSON
+  ) AS event_triggers 
+FROM 
+  (
+    select 
+      hdb_et.name, 
+      hdb_et.type, 
+      hdb_et.schema_name AS table_schema, 
+      hdb_et.table_name, 
+      hdb_et.configuration, 
+      to_jsonb(
+        array_remove(
+          array_agg(
+            DISTINCT row_to_json(isc) :: JSONB
+          ), 
+          NULL
+        )
+      ) AS columns, 
+      row_to_json(hdb_pk.*) :: JSONB AS primary_key 
+    from 
+      hdb_catalog.event_triggers AS hdb_et 
+      JOIN hdb_catalog.hdb_table AS hdb_table ON hdb_table.table_schema = hdb_et.schema_name 
+      and hdb_table.table_name = hdb_et.table_name 
+      JOIN information_schema.columns AS isc ON isc.table_schema = hdb_table.table_schema 
+      and isc.table_name = hdb_table.table_name 
+      LEFT OUTER JOIN hdb_catalog.hdb_primary_key AS hdb_pk ON hdb_pk.table_schema = hdb_table.table_schema 
+      and hdb_pk.table_name = hdb_table.table_name
+    ${whereQuery}
+    GROUP BY 
+      hdb_et.name, 
+      row_to_json(hdb_pk.*):: JSONB 
+    ORDER BY 
+      hdb_et.name ASC NULLS LAST
+  ) AS info
+`;
+  return {
+    type: 'run_sql',
+    args: {
+      sql: runSql,
+    },
+  };
+};
+
 export {
   ordinalColSort,
   findTableFromRel,
@@ -157,4 +218,5 @@ export {
   escapeRegExp,
   getTableColumns,
   convertDateTimeToLocale,
+  getEventTriggersQuery,
 };

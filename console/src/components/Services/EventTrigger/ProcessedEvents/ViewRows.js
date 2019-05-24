@@ -30,14 +30,13 @@ const ViewRows = ({
   curPath,
   curDepth,
   activePath,
-  triggerList,
+  currentTrigger,
   dispatch,
   isView,
   count,
   expandedRow,
 }) => {
   const styles = require('../TableCommon/EventTable.scss');
-  const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
   // Am I a single row display
@@ -71,7 +70,7 @@ const ViewRows = ({
       if (!isView && hasPrimaryKeys) {
         pkClause.id = row.id;
       } else {
-        triggerSchema.map(k => {
+        currentTrigger.map(k => {
           pkClause[k] = row[k];
         });
       }
@@ -172,7 +171,7 @@ const ViewRows = ({
         <FilterQuery
           curQuery={curQuery}
           whereAnd={wheres}
-          triggerSchema={triggerSchema}
+          triggerSchema={currentTrigger}
           orderBy={orderBy}
           limit={limit}
           dispatch={dispatch}
@@ -306,7 +305,9 @@ const ViewRows = ({
                 }
                 if (col === 'created_at') {
                   const formattedDate = convertDateTimeToLocale(r.created_at);
-                  return formattedDate;
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();

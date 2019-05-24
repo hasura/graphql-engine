@@ -164,7 +164,7 @@ class ViewTable extends Component {
         ongoingRequest={ongoingRequest}
         lastError={lastError}
         lastSuccess={lastSuccess}
-        triggerList={triggerList}
+        currentTrigger={currentTrigger}
         curDepth={0}
         count={count}
         dispatch={dispatch}
@@ -211,7 +211,7 @@ ViewTable.propTypes = {
 const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
-    triggerList: state.triggers.processedEvents,
+    triggerList: state.triggers.triggerList,
     migrationMode: state.main.migrationMode,
     ...state.triggers.view,
   };

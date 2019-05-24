@@ -3,18 +3,14 @@ import React, { Component } from 'react';
 import AceEditor from 'react-ace';
 import ViewHeader from '../TableBrowseRows/ViewHeader';
 import {
-  activateCommentEdit,
-  updateCommentInput,
-  saveTableCommentSql,
-} from './ModifyActions';
-import {
   fetchViewDefinition,
   deleteViewSql,
   untrackTableSql,
   RESET,
 } from './ModifyActions';
+import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 
 class ModifyView extends Component {
@@ -23,7 +19,6 @@ class ModifyView extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
-    dispatch(fetchTableComment(this.props.tableName));
   }
 
   modifyViewDefinition = viewName => {
@@ -42,14 +37,16 @@ class ModifyView extends Component {
       lastSuccess,
       dispatch,
       currentSchema,
-      tableComment,
       tableCommentEdit,
       migrationMode,
     } = this.props;
 
     const styles = require('./ModifyTable.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    ); // eslint-disable-line no-unused-vars
+    const tableComment = tableSchema.comment;
 
     let alert = null;
     if (ongoingRequest) {
@@ -144,76 +141,6 @@ class ModifyView extends Component {
       </Button>
     );
 
-    const editCommentClicked = () => {
-      dispatch(activateCommentEdit(true, tableComment));
-    };
-    const commentEdited = e => {
-      dispatch(updateCommentInput(e.target.value));
-    };
-    const commentEditSave = () => {
-      dispatch(saveTableCommentSql(false));
-    };
-    const commentEditCancel = () => {
-      dispatch(activateCommentEdit(false, null));
-    };
-    const commentText = tableComment ? tableComment.result[1] : null;
-    let commentHtml = (
-      <div className={styles.add_pad_bottom}>
-        <div className={styles.commentText}>Add a comment</div>
-        <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
-        </div>
-      </div>
-    );
-    if (commentText && !tableCommentEdit.enabled) {
-      commentHtml = (
-        <div>
-          <div className={styles.commentText + ' alert alert-warning'}>
-            {commentText}
-          </div>
-          <div onClick={editCommentClicked} className={styles.commentEdit}>
-            <i className="fa fa-edit" />
-          </div>
-        </div>
-      );
-    } else if (tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <input
-            onChange={commentEdited}
-            className={'form-control ' + styles.commentInput}
-            type="text"
-            value={tableCommentEdit.value}
-            defaultValue={tableComment.result[1]}
-          />
-          <div
-            onClick={commentEditSave}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Save
-          </div>
-          <div
-            onClick={commentEditCancel}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Cancel
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className={styles.container + ' container-fluid'}>
         <ViewHeader
@@ -226,7 +153,12 @@ class ModifyView extends Component {
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
           <div className={'col-xs-8 ' + styles.padd_left_remove}>
-            {commentHtml}
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              isTable={false}
+              dispatch={dispatch}
+            />
             <h4 className={styles.subheading_text}>Columns</h4>
             {columnEditors}
             <br />
@@ -261,7 +193,6 @@ ModifyView.propTypes = {
   tableName: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  tableComment: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
@@ -276,7 +207,6 @@ const mapStateToProps = (state, ownProps) => {
     allSchemas: state.tables.allSchemas,
     sql: state.rawSQL.sql,
     currentSchema: state.tables.currentSchema,
-    tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.modify,

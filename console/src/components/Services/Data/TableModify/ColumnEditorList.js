@@ -9,7 +9,6 @@ import {
   resetColumnEdit,
   editColumn,
 } from '../TableModify/ModifyActions';
-import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
@@ -20,8 +19,6 @@ const ColumnEditorList = ({
   currentSchema,
   columnEdit,
   dispatch,
-  columnComments,
-  //
   validTypeCasts,
   dataTypeIndexMap,
 }) => {
@@ -148,7 +145,7 @@ const ColumnEditorList = ({
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={columnComments[col.column_name]}
+          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
@@ -158,7 +155,6 @@ const ColumnEditorList = ({
 
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
-      dispatch(fetchColumnComment(tableName, colName));
     };
 
     const editorCollapseCallback = () => {
