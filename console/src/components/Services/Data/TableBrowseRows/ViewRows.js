@@ -772,9 +772,7 @@ const ViewRows = ({
       <hr />
       <div className="row">
         <div className="col-xs-12">
-          <div className={styles.tableContainerModified}>
-            {renderTableBody()}
-          </div>
+          <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
           <br />
           <div>{getChildComponent()}</div>
