@@ -1,0 +1,52 @@
+type: bulk
+args:
+
+# To model this:
+
+# query {
+#   profiles {
+#     id
+#     message {
+#       id
+#       msg
+#     }
+#   }
+# }
+
+#Profile table
+- type: run_sql
+  args:
+    sql: |
+      create table profiles (
+          id serial primary key,
+          name text unique
+      );
+- type: run_sql
+  args:
+    sql: |
+      insert into profiles (name) values
+      ( 'alice' ),
+      ( 'bob' )
+- type: track_table
+  args:
+    schema: public
+    name: profiles
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: http://localhost:5000/messages-graphql
+      forward_client_headers: false
+
+- type: create_remote_relationship
+  args:
+    name: author_obj_rel_manual
+    table: profiles
+    hasura_fields:
+      - profile_id
+    remote_schema: my-remote-schema
+    remote_field: messages
+    remote_arguments:
+      where:
+        _eq: "$profile_id"
