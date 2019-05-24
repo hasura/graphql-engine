@@ -305,7 +305,9 @@ const ViewRows = ({
                 }
                 if (col === 'created_at') {
                   const formattedDate = convertDateTimeToLocale(r.created_at);
-                  return formattedDate;
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();
