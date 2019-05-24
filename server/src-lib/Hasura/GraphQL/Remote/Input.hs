@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
 
 -- | Input object types.
@@ -33,7 +34,7 @@ newtype RemoteArguments =
     } deriving (Show, Eq, Lift)
 
 instance ToJSON RemoteArguments where
-  toJSON = error "TODO: ToJSON: RemoteArguments"
+  toJSON (RemoteArguments fields) = fieldsToObject fields
 
 instance FromJSON RemoteArguments where
   parseJSON = parseRemoteArguments
@@ -107,3 +108,22 @@ parseValue =
       pure (either GraphQL.VFloat GraphQL.VInt (floatingOrInteger scientific))
     Aeson.Bool !bool -> pure (GraphQL.VBoolean bool)
     Aeson.Null -> pure GraphQL.VNull
+
+fieldsToObject :: [GraphQL.ObjectFieldG GraphQL.Value] -> Aeson.Value
+fieldsToObject =
+  Aeson.Object .
+  HM.fromList .
+  map (\(GraphQL.ObjectFieldG {_ofName=GraphQL.Name name, _ofValue}) -> (name, valueToValue _ofValue))
+
+valueToValue :: GraphQL.Value -> Aeson.Value
+valueToValue =
+  \case
+    (GraphQL.VVariable (GraphQL.Variable v)) -> toJSON ("$" <> v)
+    (GraphQL.VInt i) -> toJSON i
+    (GraphQL.VFloat f) -> toJSON f
+    (GraphQL.VString (GraphQL.StringValue s)) -> toJSON s
+    (GraphQL.VBoolean b) -> toJSON b
+    GraphQL.VNull -> Aeson.Null
+    (GraphQL.VEnum s) -> toJSON s
+    (GraphQL.VList (GraphQL.ListValueG list)) -> toJSON (map valueToValue list)
+    (GraphQL.VObject (GraphQL.ObjectValueG xs)) -> fieldsToObject xs
