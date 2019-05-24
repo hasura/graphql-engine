@@ -21,3 +21,4 @@ export const Reals = ['float4', 'float8', 'numeric'];
 
 export const Numerics = [...Integers, ...Reals];
 
+export const defaultDataTypeToCast = 'text';
