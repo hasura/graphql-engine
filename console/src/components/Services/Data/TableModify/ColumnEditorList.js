@@ -10,6 +10,7 @@ import {
   editColumn,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
+import { defaultDataTypeToCast } from '../constants';
 
 import styles from './ModifyTable.scss';
 
@@ -19,6 +20,7 @@ const ColumnEditorList = ({
   columnEdit,
   dispatch,
   validTypeCasts,
+  dataTypeIndexMap,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -122,10 +124,21 @@ const ColumnEditorList = ({
       );
     };
 
+    const getValidTypeCasts = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      if (lowerUdtName in validTypeCasts) {
+        return validTypeCasts[lowerUdtName];
+      }
+      return [
+        ...dataTypeIndexMap[lowerUdtName],
+        ...dataTypeIndexMap[defaultDataTypeToCast],
+      ];
+    };
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={validTypeCasts[col.udt_name]}
+          alterTypeOptions={getValidTypeCasts(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}

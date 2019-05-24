@@ -2,6 +2,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 
+import { getAllDataTypeMap } from '../Common/utils';
+
 import {
   deleteTableSql,
   untrackTableSql,
@@ -53,6 +55,9 @@ class ModifyTable extends React.Component {
       uniqueKeyModify,
       schemaList,
     } = this.props;
+
+    const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
+
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
     );
@@ -125,6 +130,7 @@ class ModifyTable extends React.Component {
             <h4 className={styles.subheading_text}>Columns</h4>
             <ColumnEditorList
               validTypeCasts={validTypeCasts}
+              dataTypeIndexMap={dataTypeIndexMap}
               tableSchema={tableSchema}
               columnEdit={columnEdit}
               dispatch={dispatch}
