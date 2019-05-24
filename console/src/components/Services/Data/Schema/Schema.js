@@ -46,6 +46,11 @@ class Schema extends Component {
       createSchemaOpen: false,
       schemaNameEdit: '',
     };
+
+    this.props.dispatch(fetchFunctionInit());
+    this.props.dispatch(
+      loadUntrackedRelations({ schemas: [this.props.currentSchema] })
+    );
   }
 
   render() {
