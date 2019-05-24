@@ -134,7 +134,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''WSLog)
 
 instance L.ToEngineLog WSLog where
   toEngineLog wsLog =
-    (L.LevelInfo, "ws-handler", J.toJSON wsLog)
+    (L.LevelInfo, "websocket-log", J.toJSON wsLog)
 
 data WSServerEnv
   = WSServerEnv

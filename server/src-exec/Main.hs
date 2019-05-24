@@ -125,7 +125,8 @@ main =  do
   case hgeCmd of
     HCServe so@(ServeOptions port host cp isoL mAdminSecret mAuthHook
                 mJwtSecret mUnAuthRole corsCfg enableConsole consoleAssetsDir
-                enableTelemetry strfyNum enabledAPIs lqOpts enableAL verboseLogging) -> do
+                enableTelemetry strfyNum enabledAPIs lqOpts enableAL
+                verboseLogging) -> do
       let sqlGenCtx = SQLGenCtx strfyNum
 
       initTime <- Clock.getCurrentTime

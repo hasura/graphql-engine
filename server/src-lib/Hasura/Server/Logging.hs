@@ -11,16 +11,16 @@ module Hasura.Server.Logging
   , WebHookLogger
   , HttpException
   , VerboseLogging(..)
+  , ApiMetrics(..)
   ) where
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Bits             (shift, (.&.))
 import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Lazy  as BL
 import           Data.Int              (Int64)
 import           Data.List             (find)
-import qualified Data.TByteString      as TBS
-import qualified Data.Text             as T
 import           Data.Time.Clock
 import           Data.Word             (Word32)
 import           Network.Socket        (SockAddr (..))
@@ -28,21 +28,23 @@ import           Network.Wai           (Request (..))
 import           System.ByteOrder      (ByteOrder (..), byteOrder)
 import           Text.Printf           (printf)
 
-import qualified Data.Aeson            as J
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy  as BL
 import qualified Data.CaseInsensitive  as CI
+import qualified Data.TByteString      as TBS
+import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as N
 
 import           Hasura.HTTP
-import qualified Hasura.Logging        as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 
+import qualified Hasura.Logging        as L
 
 newtype VerboseLogging
   = VerboseLogging { unVerboseLogging :: Bool }
-  deriving (Show, Eq, Generic, J.ToJSON)
+  deriving (Show, Eq, Generic, ToJSON)
 
 data StartupLog
   = StartupLog
@@ -122,43 +124,49 @@ instance ToJSON WebHookLog where
 
 type WebHookLogger = WebHookLog -> IO ()
 
-data AccessLog
-  = AccessLog
-  { alStatus       :: !N.Status
-  , alMethod       :: !T.Text
-  , alSource       :: !T.Text
-  , alPath         :: !T.Text
-  , alHttpVersion  :: !N.HttpVersion
-  , alDetail       :: !(Maybe Value)
-  , alRequestId    :: !(Maybe T.Text)
-  , alHasuraUser   :: !(Maybe UserVars)
-  -- , alQueryHash    :: !(Maybe T.Text)
-  , alResponseSize :: !(Maybe Int64)
-  , alResponseTime :: !(Maybe Double)
+data HttpLog
+  = HttpLog
+  { hlStatus      :: !N.Status
+  , hlMethod      :: !T.Text
+  , hlSource      :: !T.Text
+  , hlPath        :: !T.Text
+  , hlHttpVersion :: !N.HttpVersion
   } deriving (Show, Eq)
 
-instance L.ToEngineLog AccessLog where
-  toEngineLog accessLog =
-    (L.LevelInfo, "http-log", toJSON accessLog)
-
-instance ToJSON AccessLog where
-  toJSON (AccessLog st met src path hv det reqId hUser rs rt) =
+instance ToJSON HttpLog where
+  toJSON (HttpLog st met src path hv) =
     object [ "status" .= N.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
            , "http_version" .= show hv
-           , "detail" .= det
-           , "request_id" .= reqId
-           , "user" .= hUser
-           -- , "query_hash" .= qh
-           , "response_size" .= rs
-           , "query_execution_time" .= rt
            ]
+
+data OperationLog
+  = OperationLog
+  {  olRequestId         :: !(Maybe T.Text)
+  , olUserVars           :: !(Maybe UserVars)
+  , olResponseSize       :: !(Maybe Int64)
+  , olQueryExecutionTime :: !(Maybe Double)
+  , olQuery              :: !(Maybe Value)
+  , olError              :: !(Maybe Value)
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''OperationLog)
+
+data AccessLog
+  = AccessLog
+  { alHttpInfo  :: !HttpLog
+  , alOperation :: !OperationLog
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 2 snakeCase) ''AccessLog)
+
+instance L.ToEngineLog AccessLog where
+  toEngineLog accessLog =
+    (L.LevelInfo, "http-log", toJSON accessLog)
 
 data LogDetail
   = LogDetail
-  { _ldQuery        :: !TBS.TByteString
+  { _ldQuery        :: !(Maybe TBS.TByteString)
   , _ldError        :: !(Maybe Value)
   , _ldGeneratedSql :: !(Maybe Text)
   } deriving (Show, Eq)
@@ -172,51 +180,52 @@ instance ToJSON LogDetail where
 
 ravenLogGen
   :: VerboseLogging
-  -> (BL.ByteString, Either QErr BL.ByteString)
-  -- -> SchemaCache -> SQLGenCtx -> Maybe UserInfo
-  -> (N.Status, Maybe Value, Maybe Int64)
-ravenLogGen verLog (reqBody, res) =
-  (status, toJSON <$> logDetail, Just size)
+  -> Either QErr BL.ByteString
+  -> Maybe (ApiMetrics a)
+  -> Maybe (UTCTime , UTCTime)
+  -> (Maybe a, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
+ravenLogGen verLog res extraInfo mTimeT =
+  (query, status, err, diffTime, Just size)
   where
     status = either qeStatus (const N.status200) res
-    logDetail = either (Just . qErrToLogDetail) (const logVerbose) res
-    reqBodyTxt = TBS.fromLBS reqBody
-    qErrToLogDetail qErr =
-      LogDetail reqBodyTxt (Just $ toJSON qErr) Nothing
-
     size = BL.length $ either encode id res
+    err = either Just (const Nothing) res
+    diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
+    q = amQuery <$> extraInfo
+    query = case res of
+      Left _  -> q
+      Right _ -> bool Nothing q (unVerboseLogging verLog)
 
-    logVerbose = if unVerboseLogging verLog
-                 then Just $ LogDetail reqBodyTxt Nothing genedSql
-                 else Nothing
-
-    genedSql :: Maybe Text
-    genedSql = Nothing
 
 mkAccessLog
-  :: VerboseLogging
+  :: (ToJSON a)
+  => VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
   -> Request
-  -> (BL.ByteString, Either QErr BL.ByteString)
+  -> Either QErr BL.ByteString
+  -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
-mkAccessLog verLog userInfoM req r mTimeT =
-  AccessLog
-  { alStatus       = status
-  , alMethod       = bsToTxt $ requestMethod req
-  , alSource       = bsToTxt $ getSourceFromFallback req
-  , alPath         = bsToTxt $ rawPathInfo req
-  , alHttpVersion  = httpVersion req
-  , alDetail       = mDetail
-  , alRequestId    = bsToTxt <$> getRequestId req
-  , alHasuraUser   = userVars <$> userInfoM
-  , alResponseSize = size
-  , alResponseTime = diffTime
-  -- , alQueryHash    = queryHash
-  }
+mkAccessLog verLog userInfoM req res extraInfo mTimeT =
+  let http = HttpLog
+             { hlStatus       = status
+             , hlMethod       = bsToTxt $ requestMethod req
+             , hlSource       = bsToTxt $ getSourceFromFallback req
+             , hlPath         = bsToTxt $ rawPathInfo req
+             , hlHttpVersion  = httpVersion req
+             }
+      op = OperationLog
+           { olRequestId    = bsToTxt <$> getRequestId req
+           , olUserVars     = userVars <$> userInfoM
+           , olResponseSize = respSize
+           , olQueryExecutionTime = respTime
+           , olQuery = toJSON <$> query
+           , olError = toJSON <$> err
+           }
+  in AccessLog http op
   where
-    (status, mDetail, size) = ravenLogGen verLog r
-    diffTime = fmap (realToFrac . uncurry diffUTCTime) mTimeT
+    (query, status, err, respTime, respSize) =
+      ravenLogGen verLog res extraInfo mTimeT
 
 getSourceFromSocket :: Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . remoteHost

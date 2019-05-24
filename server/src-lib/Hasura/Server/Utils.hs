@@ -11,6 +11,7 @@ import           System.Exit
 import           System.Process
 
 import qualified Data.ByteString              as B
+import qualified Data.ByteString.Lazy         as BL
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import qualified Data.Text.Encoding.Error     as TE
@@ -20,7 +21,14 @@ import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
+
+data ApiMetrics a
+  = ApiMetrics
+  { amQuery        :: !a
+  , amGeneratedSql :: !(Maybe Text)
+  }
 
 jsonHeader :: (T.Text, T.Text)
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
