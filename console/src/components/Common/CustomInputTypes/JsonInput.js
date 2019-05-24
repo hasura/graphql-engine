@@ -116,7 +116,7 @@ const JsonInput = props => {
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
-        className={allProps.className + ' ' + styles.jsonInput}
+        className={allProps.className + ' ' + styles.jsonNormalInput}
       />
     );
   };
@@ -131,7 +131,7 @@ const JsonInput = props => {
         key="icon_json_editor"
         className={
           'fa ' +
-          styles.jsonButtonAlign +
+          styles.jsonToggleButton +
           (showEditorType === JSONKEY ? ' fa-compress' : ' fa-expand')
         }
         onClick={() => updateState(toggleEditorType)}
