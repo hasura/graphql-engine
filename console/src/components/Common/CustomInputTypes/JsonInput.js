@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
-const styles = require('../Common.scss');
+const styles = require('./JsonInput.scss');
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
@@ -32,6 +32,7 @@ const JsonInput = props => {
   delete allProps.defaultValue;
   const [state, updateState] = useState(createInitialState(defaultValue));
   const { showEditorType, data } = state;
+
   const updateData = (newData, currentState) => {
     return {
       ...currentState,
@@ -52,6 +53,7 @@ const JsonInput = props => {
       showEditorType: JSONKEY,
     };
   };
+
   const handleKeyUpEvent = e => {
     if ((e.ctrlKey || event.metaKey) && e.which === 32) {
       updateState(toggleEditorType);
@@ -78,8 +80,8 @@ const JsonInput = props => {
     }
   };
 
-  const renderHtml =
-    showEditorType === JSONKEY ? (
+  const getJsonEditor = () => {
+    return (
       <AceEditor
         key="ace_json_editor"
         {...allProps}
@@ -102,7 +104,11 @@ const JsonInput = props => {
           },
         ]}
       />
-    ) : (
+    );
+  };
+
+  const getNormalEditor = () => {
+    return (
       <input
         key="input_json_editor"
         {...allProps}
@@ -110,17 +116,23 @@ const JsonInput = props => {
         value={data}
         onChange={handleInputChangeAndPropagate}
         onKeyUp={handleKeyUpEvent}
+        className={allProps.className + ' ' + styles.jsonInput}
       />
     );
+  };
+
+  const renderHtml =
+    showEditorType === JSONKEY ? getJsonEditor() : getNormalEditor();
+
   return (
     <span className="json_input_editor">
       <label>{renderHtml}</label>
       <i
         key="icon_json_editor"
         className={
-          (state.showEditorType === JSONKEY
-            ? 'fa fa-compress '
-            : 'fa fa-expand ') + styles.jsonButtonAlign
+          'fa ' +
+          styles.jsonButtonAlign +
+          (showEditorType === JSONKEY ? ' fa-compress' : ' fa-expand')
         }
         onClick={() => updateState(toggleEditorType)}
       />

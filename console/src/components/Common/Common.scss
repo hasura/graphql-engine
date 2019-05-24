@@ -49,16 +49,6 @@ table thead tr th {
   font-weight: 600 !important;
 }
 
-.jsonButtonAlign {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100;
-  opacity: 0.3;
-  &:hover {
-    opacity: 1.0;
-  }
-}
 .pageSidebar {
   height: calc(100vh - 50px);
   overflow: auto;
