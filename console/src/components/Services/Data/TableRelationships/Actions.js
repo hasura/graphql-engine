@@ -95,7 +95,6 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
 };
 
 const generateRelationshipsQuery = relMeta => {
-  console.log(relMeta);
   if (relMeta.isObjRel) {
     const upQuery = {
       type: 'create_object_relationship',
@@ -473,7 +472,6 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivObjectRel.relName] = true;
-        console.log('Called here 2');
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivObjectRel
         );
@@ -496,7 +494,6 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivArrayRel.relName] = true;
-        console.log('Called here 1');
         const { upQuery, downQuery } = generateRelationshipsQuery(
           indivArrayRel
         );
