@@ -239,7 +239,7 @@ FROM
       ist.table_name, 
       obj_description(
         (
-          ist.table_schema || '.' || ist.table_name
+          quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
         ):: regclass, 
         'pg_class'
       ) as comment, 
@@ -261,11 +261,11 @@ FROM
                     SELECT 
                       (
                         (
-                          ist.table_schema || '.' || ist.table_name
+                          quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
                         ):: text
                       ):: regclass :: oid
                   ) 
-                  AND c.relname = isc.table_name
+                  AND c.relname = ist.table_name
               )
             )
           ), 

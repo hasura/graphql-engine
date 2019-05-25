@@ -133,7 +133,7 @@ export const createView = (viewName, tableName) => {
   const reqBody = {
     type: 'run_sql',
     args: {
-      sql: `create view ${viewName} as select * from ${tableName}`,
+      sql: `create view "${viewName}" as select * from "${tableName}"`,
     },
   };
   cy.window().then(win => {
