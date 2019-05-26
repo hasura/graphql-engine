@@ -57,7 +57,7 @@ class TaskFragment : Fragment(), TaskAdapter.TaskItemClickListener {
         var root = inflater.inflate(R.layout.task_todos, container, false)
         var removeAllCompleted: Button = root.removeAllCompleted
         removeAllCompleted.setOnClickListener {
-            removeAllCompletedCloud()
+            removeAllCompleted()
         }
         return root
     }
@@ -69,10 +69,10 @@ class TaskFragment : Fragment(), TaskAdapter.TaskItemClickListener {
     }
 
     fun refreshData() {
-        updateTabs(listItems!!)
+        updateTabs()
     }
 
-    fun updateTabs(listItems: MutableList<GetMyTodosQuery.Todo>) {
+    fun updateTabs() {
         filteredListItems = listItems
         when (completeStatus) {
             ALL -> getFilteredData(filteredListItems)
@@ -114,6 +114,11 @@ class TaskFragment : Fragment(), TaskAdapter.TaskItemClickListener {
         removeTodoMutationCloud(taskId)
     }
 
+    private fun removeAllCompleted() {
+        removeAllCompletedCloud()
+    }
+
+
     companion object {
         const val ALL = "ALL"
         const val ACTIVE = "ACTIVE"
@@ -148,8 +153,8 @@ class TaskFragment : Fragment(), TaskAdapter.TaskItemClickListener {
             override fun onResponse(@NotNull response: Response<GetMyTodosQuery.Data>) {
                 // Changing UI must be on UI thread
                 Log.d("Todo", response.data().toString() )
-                listItems = response.data()?.todos()
-                activity?.runOnUiThread { updateTabs(listItems!!) }
+                listItems = response.data()?.todos()?.toMutableList()
+                activity?.runOnUiThread { updateTabs() }
             }
         })
     }
@@ -282,8 +287,8 @@ class TaskFragment : Fragment(), TaskAdapter.TaskItemClickListener {
             }
 
             override fun onResponse(response: Response<GetMyTodosQuery.Data>) {
-                listItems = response.data()?.todos()
-                activity?.runOnUiThread { updateTabs(listItems!!) }
+                listItems = response.data()?.todos()?.toMutableList()
+                activity?.runOnUiThread { updateTabs() }
             }
         })
     }

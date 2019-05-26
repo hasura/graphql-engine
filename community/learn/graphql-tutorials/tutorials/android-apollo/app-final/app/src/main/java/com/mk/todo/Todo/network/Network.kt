@@ -24,7 +24,6 @@ private val GRAPHQL_ENDPOINT: String = "https://learn.hasura.io/graphql"
 private val GRAPHQL_WEBSOCKET_ENDPOINT: String = "wss://learn.hasura.io/graphql"
 
 private val SQL_CACHE_NAME = "mktodo"
-private var apolloClient: ApolloClient? = null
 
 
 class Network {
