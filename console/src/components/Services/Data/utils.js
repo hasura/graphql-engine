@@ -208,10 +208,6 @@ export const fetchTrackedTableListQuery = options => {
         'table_schema',
         'table_name',
         {
-          name: 'detail',
-          columns: ['*'],
-        },
-        {
           name: 'primary_key',
           columns: ['*'],
         },
@@ -368,7 +364,8 @@ FROM
   (
     select 
       ist.table_schema, 
-      ist.table_name, 
+      ist.table_name,
+      ist.table_type,
       obj_description(
         (
           quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
@@ -401,11 +398,12 @@ FROM
     from 
       information_schema.tables AS ist 
       LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
-      and isc.table_name = ist.table_name 
+      and isc.table_name = ist.table_name
     ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
-      ist.table_name
+      ist.table_name,
+      ist.table_type
   ) AS info
 `;
   return {
@@ -433,7 +431,6 @@ export const mergeLoadSchemaData = (
       return;
     }
     infoSchema[index].is_table_tracked = true;
-    infoSchema[index].detail = trackedTableInfo.detail;
     infoSchema[index].primary_key = trackedTableInfo.primary_key;
     infoSchema[index].relationships = trackedTableInfo.relationships;
     infoSchema[index].permissions = trackedTableInfo.permissions;

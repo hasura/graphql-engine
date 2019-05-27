@@ -64,7 +64,7 @@ const addExistingTableSql = () => {
             t.table_name === state.tableName.trim() &&
             t.table_schema === currentSchema
         );
-        const isTable = newTable.detail.table_type === 'BASE TABLE';
+        const isTable = newTable.table_type === 'BASE TABLE';
         if (isTable) {
           dispatch(
             _push(
