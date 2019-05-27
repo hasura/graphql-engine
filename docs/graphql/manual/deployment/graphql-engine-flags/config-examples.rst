@@ -135,7 +135,7 @@ you're already handling CORS on a reverse proxy etc.
 Load console assets from server instead of CDN
 ----------------------------------------------
 
-Starting with ``v1.0.0-beta.01``, the static assets (js, css, fonts, img etc.)
+Starting with ``v1.0.0-beta.1``, the static assets (js, css, fonts, img etc.)
 required by the console are bundled with the Docker image published by Hasura.
 These files can be found at ``/srv/console-assets``.
 

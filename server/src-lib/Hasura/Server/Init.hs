@@ -186,10 +186,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-comitted" -> return Q.ReadCommitted
+    "read-committed" -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.ReadCommitted
-    _ -> Left "Only expecting read-comitted / repeatable-read / serializable"
+    "serializable" -> return Q.Serializable
+    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
@@ -443,13 +443,14 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Number of conns that need to be opened to Postgres (default: 50)"
+  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of conns that need to be opened to Postgres (default: 1)")
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
+  )
 
 pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =

@@ -44,6 +44,7 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
   return tableSchema.foreign_key_constraints.map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
+    fk.refSchemaName = fkc.ref_table_table_schema;
     fk.onUpdate = pgConfTypes[fkc.on_update];
     fk.onDelete = pgConfTypes[fkc.on_delete];
     fk.constraintName = fkc.constraint_name;

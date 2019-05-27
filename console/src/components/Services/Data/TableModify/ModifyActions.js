@@ -1,10 +1,10 @@
 import requestAction from '../../../../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
+  loadUntrackedRelations,
   handleMigrationErrors,
   makeMigrationCall,
-  LOAD_UNTRACKED_RELATIONS,
-  fetchTableComment,
+  LOAD_SCHEMA,
 } from '../DataActions';
 import _push from '../push';
 import { SET_SQL } from '../RawSQL/Actions';
@@ -14,7 +14,6 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlViewErrorNotif,
@@ -25,6 +24,8 @@ import {
   generateFKConstraintName,
   getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
+
+import { fetchColumnCastsQuery, convertArrayToJson } from './utils';
 
 const DELETE_PK_WARNING =
   'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
@@ -50,6 +51,8 @@ const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
 const SAVE_FOREIGN_KEY = 'ModifyTable/SAVE_FOREIGN_KEY';
 const REMOVE_FOREIGN_KEY = 'ModifyTable/REMOVE_FOREIGN_KEY';
 
+const FETCH_COLUMN_TYPE_CASTS = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS';
+const FETCH_COLUMN_TYPE_CASTS_FAIL = 'ModifyTable/FETCH_COLUMN_TYPE_CASTS_FAIL';
 const SET_UNIQUE_KEYS = 'ModifyTable/SET_UNIQUE_KEYS';
 const SAVE_UNIQUE_KEY = 'ModifyTable/SAVE_UNIQUE_KEY';
 const REMOVE_UNIQUE_KEY = 'ModifyTable/REMOVE_UNIQUE_KEY';
@@ -110,7 +113,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const { pkModify } = getState().tables.modify;
     // table schema
     const tableSchema = getState().tables.allSchemas.find(
-      ts => ts.table_name === tableName
+      ts => ts.table_name === tableName && ts.table_schema === schemaName
     );
     // form a list of selected PK columns
     let numSelectedPkColumns = 0;
@@ -226,6 +229,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
     const {
+      refSchemaName,
       refTableName,
       colMappings,
       onUpdate,
@@ -275,7 +279,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         sql: `alter table "${schemaName}"."${tableName}" add constraint "${constraintName ||
           generatedConstraintName}" foreign key (${lcols.join(
           ', '
-        )}) references "${schemaName}"."${refTableName}"(${rcols.join(
+        )}) references "${refSchemaName}"."${refTableName}"(${rcols.join(
           ', '
         )}) on update ${onUpdate} on delete ${onDelete};`,
       },
@@ -299,8 +303,10 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           )
             .map(lc => `"${lc}"`)
             .join(', ')}) references "${
-            oldConstraint.ref_table
-          }"(${Object.values(oldConstraint.column_mapping)
+            oldConstraint.ref_table_table_schema
+          }"."${oldConstraint.ref_table}"(${Object.values(
+            oldConstraint.column_mapping
+          )
             .map(rc => `"${rc}"`)
             .join(', ')}) on update ${
             pgConfTypes[oldConstraint.on_update]
@@ -383,8 +389,10 @@ const removeForeignKey = (index, tableSchema) => {
           )
             .map(lc => `"${lc}"`)
             .join(', ')}) references "${
-            oldConstraint.ref_table
-          }"(${Object.values(oldConstraint.column_mapping)
+            oldConstraint.ref_table_table_schema
+          }"."${oldConstraint.ref_table}"(${Object.values(
+            oldConstraint.column_mapping
+          )
             .map(rc => `"${rc}"`)
             .join(', ')}) on update ${
             pgConfTypes[oldConstraint.on_update]
@@ -496,8 +504,7 @@ const changeTableOrViewName = (isTable, oldName, newName, callback) => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg,
-      true
+      errorMsg
     );
   };
 };
@@ -531,7 +538,9 @@ const deleteTableSql = tableName => {
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
-      dispatch(_push('/'));
+      dispatch(loadUntrackedRelations()).then(() => {
+        dispatch(_push('/'));
+      });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -547,7 +556,8 @@ const deleteTableSql = tableName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -584,16 +594,37 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
+      // Combine foreign_key_constraints and opp_foreign_key_constraints to get merged table data
+      const tableData = [];
       const allSchemas = getState().tables.allSchemas;
-      const untrackedRelations = getAllUnTrackedRelations(
-        allSchemas,
-        currentSchema
-      ).bulkRelTrack;
-      dispatch({
-        type: LOAD_UNTRACKED_RELATIONS,
-        untrackedRelations: untrackedRelations,
+      const schemaInfo = allSchemas.find(
+        schema =>
+          schema.table_name === tableName &&
+          schema.table_schema === currentSchema
+      );
+      schemaInfo.foreign_key_constraints.forEach(fk_obj => {
+        tableData.push({
+          table_name: fk_obj.ref_table,
+          table_schema: fk_obj.ref_table_table_schema,
+        });
       });
-      dispatch(_push('/'));
+      schemaInfo.opp_foreign_key_constraints.forEach(fk_obj => {
+        tableData.push({
+          table_name: fk_obj.table_name,
+          table_schema: fk_obj.table_schema,
+        });
+      });
+      tableData.push({
+        table_schema: currentSchema,
+        table_name: tableName,
+      });
+      dispatch(
+        loadUntrackedRelations({
+          tables: tableData,
+        })
+      ).then(() => {
+        dispatch(_push('/'));
+      });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -609,7 +640,8 @@ const untrackTableSql = tableName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -1024,9 +1056,27 @@ const saveTableCommentSql = isTable => {
     const errorMsg = 'Updating comment failed';
 
     const customOnSuccess = () => {
-      dispatch(fetchTableComment(tableName)).then(() => {
-        dispatch(activateCommentEdit(false, null));
+      // Instead of calling loadSchema, update only the table comment in the state.
+      // get existing state and filter out with table name and table schema.
+      // update the comment and set in the state.
+      const existingSchemas = getState().tables.allSchemas.filter(
+        schemaInfo =>
+          !(
+            schemaInfo.table_name !== tableName &&
+            schemaInfo.table_schema !== currentSchema
+          )
+      );
+      const currentSchemaInfo = getState().tables.allSchemas.find(
+        schemaInfo =>
+          schemaInfo.table_name === tableName &&
+          schemaInfo.table_schema === currentSchema
+      );
+      currentSchemaInfo.comment = updatedComment;
+      dispatch({
+        type: LOAD_SCHEMA,
+        allSchemas: existingSchemas.concat(currentSchemaInfo),
       });
+      dispatch(activateCommentEdit(false, null));
     };
     const customOnError = () => {};
 
@@ -1040,7 +1090,8 @@ const saveTableCommentSql = isTable => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -1076,11 +1127,12 @@ const saveColumnChangesSql = (colName, column) => {
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
     const originalColDefault = column.column_default; // null or "value"
-    const originalColComment = getState().tables.columnComments[colName]; // null or "value"
+    const originalColComment = column.comment; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(
       getState().tables.allSchemas.find(
-        table => table.table_name === tableName
+        table =>
+          table.table_name === tableName && table.table_schema === currentSchema
       ),
       colName
     );
@@ -1616,6 +1668,46 @@ const saveColumnChangesSql = (colName, column) => {
   };
 };
 
+const fetchColumnCasts = () => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+    const reqQuery = {
+      type: 'run_sql',
+      args: {
+        sql: fetchColumnCastsQuery,
+      },
+    };
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(reqQuery),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS,
+          data: convertArrayToJson(data.result.slice(1)),
+        });
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching column casts information',
+            'Kindly reach out to us in case you face this issue again',
+            error,
+            error
+          )
+        );
+        return dispatch({
+          type: FETCH_COLUMN_TYPE_CASTS_FAIL,
+          data: error,
+        });
+      }
+    );
+  };
+};
+
 const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
   return (dispatch, getState) => {
     dispatch({ type: REMOVE_UNIQUE_KEY });
@@ -1802,6 +1894,8 @@ const saveUniqueKey = (
 };
 
 export {
+  FETCH_COLUMN_TYPE_CASTS,
+  FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
   SET_COLUMN_EDIT,
@@ -1843,6 +1937,7 @@ export {
   setForeignKeys,
   saveForeignKeys,
   removeForeignKey,
+  fetchColumnCasts,
   setUniqueKeys,
   removeUniqueKey,
   saveUniqueKey,

@@ -81,6 +81,11 @@ class WebhookEditor extends React.Component {
           }
           testId="webhook"
         />
+        <br />
+        <small>
+          Note: Specifying the webhook URL via an environmental variable is
+          recommended if you have different URLs for multiple environments.
+        </small>
       </div>
     );
 
