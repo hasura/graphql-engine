@@ -169,8 +169,7 @@ class ViewTable extends Component {
     }
     // Is this a view
     const isView =
-      schemas.find(s => s.table_name === tableName).detail.table_type !==
-      'BASE TABLE';
+      schemas.find(s => s.table_name === tableName).table_type !== 'BASE TABLE';
 
     // Are there any expanded columns
     const viewRows = (
