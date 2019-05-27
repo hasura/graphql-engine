@@ -42,7 +42,7 @@ export const getPlaceholder = type => {
 };
 
 export const tabNameMap = {
-  view: 'Browse Rows',
+  browse: 'Browse Rows',
   insert: 'Insert Row',
   modify: 'Modify',
   relationships: 'Relationships',
