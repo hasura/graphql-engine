@@ -132,7 +132,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
-     - Number of conns that need to be opened to Postgres (default: 1)
+     - Number of stripes to use with Postgres (default: 1)
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
