@@ -7,8 +7,9 @@ Hasura allows 'live queries' for clients (over GraphQL subscriptions). For examp
 This document describes Hasura's architecture which lets you scale to handle a million active live queries.
 
 ## TL;DR:
-Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second creating a new result per client. Hasura is the GraphQL API provider (with authorization).
-The test: How many concurrent live subscriptions (clients) can Hasura handle? Does Hasura scale vertically and/or horizontally?
+**The setup:** Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second (ensuring a new result pushed per client). Hasura is the GraphQL API provider (with authorization).
+
+**The test:** How many concurrent live subscriptions (clients) can Hasura handle? Does Hasura scale vertically and/or horizontally?
 
 <img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/main-image-fs8.png"  width="500px" />
 
@@ -24,10 +25,10 @@ The test: How many concurrent live subscriptions (clients) can Hasura handle? Do
 
 At 1 million live queries, Postgres is under about 28% load with peak number of connections being around 850.
 
-Notes on test setup:
+Notes on configuration:
 - AWS RDS postgres, Fargate, ELB were used with their default configurations and without any tuning.
 - RDS Postgres: 16xCPU, 64GB RAM, Postgres 11
-- Hasura running on Fargate: 4xCPU, 8GB RAM
+- Hasura running on Fargate (4xCPU, 8GB RAM per instance) with default configurations
 
 ## GraphQL and subscriptions
 
