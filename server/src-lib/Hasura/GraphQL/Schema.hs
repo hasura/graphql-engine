@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
   , GCtxMap
-  , buildGCtxMap
+  , buildGCtxMapPG
   , getGCtx
   , GCtx(..)
   , OpCtx(..)
@@ -1764,10 +1764,11 @@ mkGCtxMap tableCache functionCache = do
     tableFltr ti = not (tiSystemDefined ti)
                    && isValidObjectName (tiName ti)
 
-buildGCtxMap
+-- | build GraphQL schema from postgres tables and functions
+buildGCtxMapPG
   :: (QErrM m, CacheRWM m)
   => m ()
-buildGCtxMap = do
+buildGCtxMapPG = do
   sc <- askSchemaCache
   gCtxMap <- mkGCtxMap (scTables sc) (scFunctions sc)
   writeSchemaCache sc {scGCtxMap = gCtxMap}

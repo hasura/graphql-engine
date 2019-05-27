@@ -254,7 +254,7 @@ runQueryM
 runQueryM rq = runQueryM' rq <* rebuildGCtx
   where
     rebuildGCtx = when (queryNeedsReload rq) $
-                  withPathK "args" buildGCtxMapWithRS
+                  withPathK "args" buildGCtxMap
 
 runQueryM'
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m

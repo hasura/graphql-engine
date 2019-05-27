@@ -431,8 +431,8 @@ buildSchemaCacheG withSetup = do
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
 
-  -- build GraphQL context
-  GS.buildGCtxMap
+  -- build GraphQL context with tables and functions
+  GS.buildGCtxMapPG
 
   -- remote schemas
   forM_ remoteSchemas resolveSingleRemoteSchema

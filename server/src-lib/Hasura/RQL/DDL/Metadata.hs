@@ -289,7 +289,7 @@ applyQP2 (ReplaceMetadata tables templates mFunctions mSchemas mCollections mAll
       indexedMapM_ (void . DRS.addRemoteSchemaP2) schemas
 
   -- build GraphQL Context with Remote schemas
-  DRS.buildGCtxMapWithRS
+  DRS.buildGCtxMap
 
   return successMsg
 
