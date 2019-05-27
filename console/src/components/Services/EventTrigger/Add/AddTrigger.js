@@ -429,7 +429,7 @@ class AddTrigger extends Component {
                 {allSchemas.map(t => {
                   if (
                     t.table_schema === schemaName &&
-                    t.detail.table_type === 'BASE TABLE'
+                    t.table_type === 'BASE TABLE'
                   ) {
                     return (
                       <option key={t.table_name} value={t.table_name}>

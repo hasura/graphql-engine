@@ -122,7 +122,7 @@ class DataSubSidebar extends React.Component {
             ) {
               activeTableClass = styles.activeTable;
             }
-            if (tables[tableName].detail.table_type === 'BASE TABLE') {
+            if (tables[tableName].table_type === 'BASE TABLE') {
               return (
                 <li className={activeTableClass} key={i}>
                   <Link
