@@ -215,7 +215,11 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 const loadSchema = configOptions => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   let allSchemas = getState().tables.allSchemas;
-  if (!configOptions || (!configOptions.schemas && !configOptions.tables)) {
+  if (
+    !configOptions ||
+    ((!configOptions.schemas || configOptions.schemas.length === 0) &&
+      !configOptions.tables)
+  ) {
     configOptions = {
       schemas: [getState().tables.currentSchema],
     };
