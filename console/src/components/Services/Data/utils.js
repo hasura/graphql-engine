@@ -208,10 +208,6 @@ export const fetchTrackedTableListQuery = options => {
         'table_schema',
         'table_name',
         {
-          name: 'detail',
-          columns: ['*'],
-        },
-        {
           name: 'primary_key',
           columns: ['*'],
         },
@@ -369,7 +365,8 @@ FROM
   (
     select 
       ist.table_schema, 
-      ist.table_name, 
+      ist.table_name,
+      ist.table_type,
       obj_description(
         (
           quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
@@ -398,15 +395,20 @@ FROM
               AND c.relname = isc.table_name
           )
         )
-      ) AS columns 
+      ) AS columns,
+      row_to_json(isc_views) as view_info
     from 
       information_schema.tables AS ist 
       LEFT OUTER JOIN information_schema.columns AS isc ON isc.table_schema = ist.table_schema 
       and isc.table_name = ist.table_name 
+      LEFT OUTER JOIN information_schema.views AS isc_views ON isc_views.table_schema = ist.table_schema
+      and isc_views.table_name = ist.table_name
     ${whereQuery} 
     GROUP BY 
       ist.table_schema, 
-      ist.table_name
+      ist.table_name,
+      ist.table_type,
+      isc_views.*
   ) AS info
 `;
   return {
@@ -437,8 +439,9 @@ export const mergeLoadSchemaData = (
 
     const _columns = infoSchemaTableInfo.columns;
     const _comment = infoSchemaTableInfo.comment;
+    const _tableType = infoSchemaTableInfo.table_type;
+    const _viewInfo = infoSchemaTableInfo.view_info; // TODO: get from v1/query
 
-    let _detail = {};
     let _primaryKey = null;
     let _relationships = [];
     let _permissions = [];
@@ -447,7 +450,6 @@ export const mergeLoadSchemaData = (
     let _refFkConstraints = [];
 
     if (_isTableTracked) {
-      _detail = trackedTableInfo.detail;
       _primaryKey = trackedTableInfo.primary_key;
       _relationships = trackedTableInfo.relationships;
       _permissions = trackedTableInfo.permissions;
@@ -467,17 +469,17 @@ export const mergeLoadSchemaData = (
     const _mergedInfo = {
       table_schema: _tableSchema,
       table_name: _tableName,
+      table_type: _tableType,
       is_table_tracked: _isTableTracked,
       columns: _columns,
       comment: _comment,
-      detail: _detail,
       primary_key: _primaryKey,
       relationships: _relationships,
       permissions: _permissions,
       unique_constraints: _uniqueConstraints,
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
-      view_info: null, //TODO
+      view_info: _viewInfo,
     };
 
     _mergedTableData.push(_mergedInfo);
