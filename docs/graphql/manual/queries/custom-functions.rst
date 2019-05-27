@@ -115,8 +115,8 @@ First install the `pg_trgm <https://www.postgresql.org/docs/current/pgtrgm.html>
 Next create a GIN (or GIST) index in your database for the columns you'll be querying:
 
 .. code-block:: sql
-      
-  CREATE INDEX address_gin_idx ON property 
+
+  CREATE INDEX address_gin_idx ON property
   USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
 
 And finally create the custom SQL function in the Hasura console:
@@ -127,7 +127,7 @@ And finally create the custom SQL function in the Hasura console:
   RETURNS SETOF property AS $$
       SELECT *
       FROM property
-      WHERE 
+      WHERE
         search <% (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)
       ORDER BY
         similarity(search, (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)) DESC
@@ -187,7 +187,7 @@ Say you have 2 tables, for user and landmark location data, with the following d
 popular spatial database extension,* `PostGIS <https://postgis.net/>`__):
 
 .. code-block:: sql
-      
+
   -- User location data
   CREATE TABLE user_location (
     user_id INTEGER PRIMARY KEY,
@@ -211,7 +211,7 @@ doesn't exist, let's first create this table and then create our location search
 - create and track the following table:
 
   .. code-block:: sql
-      
+
       -- SETOF table
 
       CREATE TABLE user_landmarks (
@@ -224,10 +224,10 @@ doesn't exist, let's first create this table and then create our location search
 
   .. code-block:: plpgsql
 
-      -- function returns a list of landmarks near a user based on the 
-      -- input arguments distance_kms and userid
+      -- function returns a list of landmarks near a user based on the
+      -- input arguments distance_kms (default: 2) and userid
 
-      CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer)
+      CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
       RETURNS SETOF user_landmarks AS $$
         SELECT  A.user_id, A.location,
         (SELECT json_agg(row_to_json(B)) FROM landmark B
@@ -294,6 +294,58 @@ function in our GraphQL API as follows:
       }
     }
 
+.. note::
+
+   If you Omit an argument in ``args`` input field then server executes SQL function without the argument.
+   Hence, the function uses default value of that argument.
+
+Search nearby landmarks with ``distance_kms`` default value which is 2 kms.
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      search_landmarks_near_user(
+        args: {userid: 3}
+      ){
+        user_id
+        location
+        nearby_landmarks
+      }
+    }
+  :response:
+    {
+      "data": {
+        "search_landmarks_near_user": [
+          {
+            "user_id": 3,
+            "location": {
+              "type": "Point",
+              "crs": {
+                "type": "name",
+                "properties": {
+                  "name": "urn:ogc:def:crs:EPSG::4326"
+                }
+              },
+              "coordinates": [
+                12.9406589,
+                77.6185572
+              ]
+            },
+            "nearby_landmarks": [
+              {
+                "id": 3,
+                "name": "blue tokai",
+                "type": "coffee shop",
+                "location": "0101000020E61000004E74A785DCF22940BE44060399665340"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
 Aggregations on custom functions
 ********************************
 
@@ -320,7 +372,7 @@ As with tables, arguments like ``where``, ``limit``, ``order_by``, ``offset``, e
 function-based queries.
 
 **For example**, limit the number of articles returned by the function defined in the text-search example above:
-    
+
 .. code-block:: graphql
 
     query {
