@@ -258,15 +258,10 @@ export const fetchTrackedTableListQuery = options => {
   return query;
 };
 
-const generateWhereQuery = options => {
-  let whereQuery = '';
+const generateWhereClause = options => {
+  let whereClause = '';
+
   const whereCondtions = [];
-  if (
-    (options.schemas && options.schemas.length !== 0) ||
-    (options.tables && options.tables.length !== 0)
-  ) {
-    whereQuery = 'where';
-  }
   if (options.schemas) {
     options.schemas.forEach(schemaName => {
       whereCondtions.push(`(ist.table_schema='${schemaName}')`);
@@ -281,17 +276,23 @@ const generateWhereQuery = options => {
       );
     });
   }
+
+  if (whereCondtions.length > 0) {
+    whereClause = 'where';
+  }
+
   whereCondtions.forEach((whereInfo, index) => {
-    whereQuery = whereQuery + ` ${whereInfo}`;
+    whereClause = whereClause + ` ${whereInfo}`;
     if (index + 1 !== whereCondtions.length) {
-      whereQuery = whereQuery + ' or';
+      whereClause = whereClause + ' or';
     }
   });
-  return whereQuery;
+
+  return whereClause;
 };
 
-export const fetchTrackedtableFkQuery = options => {
-  const whereQuery = generateWhereQuery(options);
+export const fetchTrackedTableFkQuery = options => {
+  const whereQuery = generateWhereClause(options);
 
   const runSql = `select 
   COALESCE(
@@ -322,8 +323,8 @@ FROM
   };
 };
 
-export const fetchTrackedtableReferencedFkQuery = options => {
-  const whereQuery = generateWhereQuery(options);
+export const fetchTrackedTableReferencedFkQuery = options => {
+  const whereQuery = generateWhereClause(options);
 
   const runSql = `select 
   COALESCE(
@@ -355,7 +356,7 @@ FROM
 };
 
 export const fetchTableListQuery = options => {
-  const whereQuery = generateWhereQuery(options);
+  const whereQuery = generateWhereClause(options);
 
   const runSql = `select 
   COALESCE(

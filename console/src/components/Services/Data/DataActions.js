@@ -22,8 +22,8 @@ import {
 import globals from '../../../Globals';
 
 import {
-  fetchTrackedtableReferencedFkQuery,
-  fetchTrackedtableFkQuery,
+  fetchTrackedTableReferencedFkQuery,
+  fetchTrackedTableFkQuery,
   fetchTableListQuery,
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
@@ -245,8 +245,8 @@ const loadSchema = configOptions => (dispatch, getState) => {
     args: [
       fetchTableListQuery(configOptions),
       fetchTrackedTableListQuery(configOptions), // v1/query
-      fetchTrackedtableFkQuery(configOptions),
-      fetchTrackedtableReferencedFkQuery(configOptions),
+      fetchTrackedTableFkQuery(configOptions),
+      fetchTrackedTableReferencedFkQuery(configOptions),
     ],
   };
   const options = {
