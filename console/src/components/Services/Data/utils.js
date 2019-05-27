@@ -417,42 +417,72 @@ FROM
 };
 
 export const mergeLoadSchemaData = (
-  infoSchema,
-  hdbtableData,
+  infoSchemaTableData,
+  hdbTableData,
   fkData,
   refFkData
 ) => {
-  infoSchema.forEach((tableInfo, index) => {
-    const trackedTableInfo = hdbtableData.find(
-      t =>
-        t.table_schema === tableInfo.table_schema &&
-        t.table_name === tableInfo.table_name
+  const _mergedTableData = [];
+
+  infoSchemaTableData.forEach(infoSchemaTableInfo => {
+    const _tableSchema = infoSchemaTableInfo.table_schema;
+    const _tableName = infoSchemaTableInfo.table_name;
+
+    const trackedTableInfo = hdbTableData.find(
+      t => t.table_schema === _tableSchema && t.table_name === _tableName
     );
-    if (!trackedTableInfo) {
-      infoSchema[index].is_table_tracked = false;
-      return;
+
+    const _isTableTracked = trackedTableInfo ? true : false;
+
+    const _columns = infoSchemaTableInfo.columns;
+    const _comment = infoSchemaTableInfo.comment;
+
+    let _detail = {};
+    let _primaryKey = null;
+    let _relationships = [];
+    let _permissions = [];
+    let _uniqueConstraints = [];
+    let _fkConstraints = [];
+    let _refFkConstraints = [];
+
+    if (_isTableTracked) {
+      _detail = trackedTableInfo.detail;
+      _primaryKey = trackedTableInfo.primary_key;
+      _relationships = trackedTableInfo.relationships;
+      _permissions = trackedTableInfo.permissions;
+      _uniqueConstraints = trackedTableInfo.unique_constraints;
+
+      _fkConstraints = fkData.filter(
+        fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
+      );
+
+      _refFkConstraints = refFkData.filter(
+        fk =>
+          fk.ref_table_table_schema === _tableSchema &&
+          fk.ref_table === _tableName
+      );
     }
-    infoSchema[index].is_table_tracked = true;
-    infoSchema[index].detail = trackedTableInfo.detail;
-    infoSchema[index].primary_key = trackedTableInfo.primary_key;
-    infoSchema[index].relationships = trackedTableInfo.relationships;
-    infoSchema[index].permissions = trackedTableInfo.permissions;
-    infoSchema[index].unique_constraints = trackedTableInfo.unique_constraints;
 
-    infoSchema[index].foreign_key_constraints = fkData.filter(
-      t =>
-        t.table_schema === tableInfo.table_schema &&
-        t.table_name === tableInfo.table_name
-    );
+    const _mergedInfo = {
+      table_schema: _tableSchema,
+      table_name: _tableName,
+      is_table_tracked: _isTableTracked,
+      columns: _columns,
+      comment: _comment,
+      detail: _detail,
+      primary_key: _primaryKey,
+      relationships: _relationships,
+      permissions: _permissions,
+      unique_constraints: _uniqueConstraints,
+      foreign_key_constraints: _fkConstraints,
+      opp_foreign_key_constraints: _refFkConstraints,
+      view_info: null, //TODO
+    };
 
-    infoSchema[index].opp_foreign_key_constraints = refFkData.filter(
-      t =>
-        t.ref_table_table_schema === tableInfo.table_schema &&
-        t.ref_table === tableInfo.table_name
-    );
+    _mergedTableData.push(_mergedInfo);
   });
 
-  return infoSchema;
+  return _mergedTableData;
 };
 
 export const commonDataTypes = [
