@@ -43,6 +43,19 @@ export default (serverEndpoint, headers, config) => {
     return primaryKey;
   };
 
+  const addFilters = (where, filter) => {
+    if (!filter) return where;
+
+    const filterKeys = Object.keys(filter);
+    if (filterKeys.length === 0) return where;
+
+    const whereCopy = Object.assign(where)
+    filterKeys.forEach((key) => {
+      whereCopy[key] = filter[key];
+    });
+    return whereCopy;
+  };
+
   const convertDataRequestToHTTP = (type, resource, params) => {
     const options = {};
     let finalQuery = {};
@@ -67,6 +80,7 @@ export default (serverEndpoint, headers, config) => {
         finalCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalCountQuery.args.where = {};
         finalCountQuery.args.where[primaryKey] = { '$ne': null };
+        finalCountQuery.args.where = addFilters(finalCountQuery.args.where, params.filter);
         finalQuery = cloneQuery(bulkQuery);
         finalQuery.args.push(finalSelectQuery);
         finalQuery.args.push(finalCountQuery);
@@ -137,6 +151,7 @@ export default (serverEndpoint, headers, config) => {
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args.where = {};
         finalQuery.args.where[primaryKey] = { '$in': params.ids };
+        finalQuery.args.where = addFilters(finalQuery.args.where, params.filter);
         break;
       case 'GET_MANY_REFERENCE':
         // select multiple with relations
@@ -147,10 +162,12 @@ export default (serverEndpoint, headers, config) => {
         finalManyQuery.args.limit = params.pagination.perPage;
         finalManyQuery.args.offset = (params.pagination.page * params.pagination.perPage) - params.pagination.perPage;
         finalManyQuery.args.where = { [params.target]: params.id };
+        finalManyQuery.args.where = addFilters(finalManyQuery.args.where, params.filter);
         finalManyQuery.args.order_by = {column: primaryKey, type: params.sort.order.toLowerCase()};
         finalManyCountQuery.args.table = {'name': tableName, 'schema': schema};;
         finalManyCountQuery.args.where = {};
         finalManyCountQuery.args.where[primaryKey] = { '$ne': null };
+        finalManyCountQuery.args.where = addFilters(finalManyQuery.args.where, params.filter);
         finalQuery = cloneQuery(bulkQuery);
         finalQuery.args.push(finalManyQuery);
         finalQuery.args.push(finalManyCountQuery);
