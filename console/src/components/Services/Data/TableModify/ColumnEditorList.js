@@ -21,13 +21,14 @@ const ColumnEditorList = ({
   dispatch,
   validTypeCasts,
   dataTypeIndexMap,
-  pkLength,
 }) => {
   const tableName = tableSchema.table_name;
 
+  let pkLength = 0;
   const columnPKConstraints = {};
   if (tableSchema.primary_key) {
     pkLength = tableSchema.primary_key.columns.length;
+
     tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;
     });
@@ -57,7 +58,11 @@ const ColumnEditorList = ({
       type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      isUnique: columnUniqueConstraints[colName] ? true : false,
+      isUnique:
+        (columnPKConstraints[colName] && pkLength === 1) ||
+        columnUniqueConstraints[colName]
+          ? true
+          : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
     };
@@ -151,7 +156,6 @@ const ColumnEditorList = ({
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
-          pkLength={pkLength}
         />
       );
     };

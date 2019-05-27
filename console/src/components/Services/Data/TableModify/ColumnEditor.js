@@ -26,9 +26,9 @@ const ColumnEditor = ({
   selectedProperties,
   editColumn,
   alterTypeOptions,
-  pkLength,
 }) => {
   const colName = columnProperties.name;
+
   if (!selectedProperties[colName]) {
     return null;
   }
@@ -136,10 +136,7 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={
-                selectedProperties[colName].isUnique ||
-                (columnProperties.pkConstraint && pkLength === 1)
-              }
+              value={selectedProperties[colName].isUnique}
               onChange={toggleColumnUnique}
               disabled={columnProperties.pkConstraint}
               data-test="edit-col-unique"
