@@ -10,7 +10,6 @@ import qualified Control.Concurrent.Async                    as A
 import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.Lens                             as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
@@ -27,7 +26,6 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
-import           Control.Lens                                ((^?))
 import           Data.ByteString                             (ByteString)
 
 import           Hasura.EncJSON
@@ -136,6 +134,21 @@ data WSServerEnv
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
   }
+
+data RemoteGQResp
+  = RGRDataResp !J.Value
+  | RGRErrResp ![J.Value]
+
+instance J.FromJSON RemoteGQResp where
+  parseJSON = J.withObject "RemoteGQResp" $ \obj -> do
+    mVal <- obj J..:? "data"
+    case mVal of
+      Just dat -> return $ RGRDataResp dat
+      Nothing -> do
+        mErrs <- obj J..:? "errors"
+        case mErrs of
+          Just val -> return $ RGRErrResp val
+          Nothing  -> fail "not a valid GraphQL response"
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
@@ -290,28 +303,15 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either postExecErr sendRemoteResp resp
       sendCompleted
 
-    sendRemoteResp resp = do
-      let respBs = encJToBS resp
-      when (not $ isValidGqlResp respBs) $ do
-        logOpEv $ ODQueryErr $ invalidGqlErr respBs
-        postExecErr $ invalidGqlErr respBs
+    sendRemoteResp resp =
+      case J.eitherDecodeStrict (encJToBS resp) of
+        Left e -> postExecErr $ invalidGqlErr $ T.pack e
+        Right res -> case res of
+          RGRDataResp val -> sendSuccResp $ encJFromJValue val
+          RGRErrResp errs -> remotePostExecErr errs
 
-      case J.decodeStrict respBs of
-        Just jVal -> do
-          let res = J.encode $ J.object [ "type" J..= ("data" :: Text)
-                                        , "id" J..= opId
-                                        , "payload" J..= (jVal :: J.Value)
-                                        ]
-          liftIO $ WS.sendMsg wsConn res
-        Nothing  -> do
-          logOpEv $ ODQueryErr $ invalidGqlErr respBs
-          postExecErr $ invalidGqlErr respBs
-
-    invalidGqlErr resp = err500 Unexpected $
-      "Failed parsing GraphQL response from remote: " <> bsToTxt resp
-
-    isValidGqlResp resp =
-      isJust $ (resp ^? J.key "data") <|> (resp ^? J.key "errors")
+    invalidGqlErr err = err500 Unexpected $
+      "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ enableAL = serverEnv
@@ -341,6 +341,9 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
         GQExecError $ pure $ errFn False qErr
+
+    remotePostExecErr jVal =
+      sendMsg wsConn $ SMData $ DataMsg opId $ GQExecError jVal
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
