@@ -7,19 +7,19 @@
 
     <fragment
             android:id="@+id/navigation_todos"
-            android:name="com.mk.todo.Todo.ui.todos.TodosFragment"
+            android:name="com.hasura.todo.Todo.ui.todos.TodosFragment"
             android:label="@string/title_todos"
     />
 
     <fragment
             android:id="@+id/navigation_feed_public"
-            android:name="com.mk.todo.Todo.ui.feed.FeedFragment"
+            android:name="com.hasura.todo.Todo.ui.feed.FeedFragment"
             android:label="@string/title_feed_public"
     />
 
     <fragment
             android:id="@+id/navigation_online"
-            android:name="com.mk.todo.Todo.ui.online.OnlineFragment"
+            android:name="com.hasura.todo.Todo.ui.online.OnlineFragment"
             android:label="@string/title_online"
     />
 </navigation>

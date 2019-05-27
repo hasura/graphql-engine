@@ -6,7 +6,7 @@ import GithubLink from '../../src/GithubLink.js'
 
 Now let's do the integration part. Open `TaskFragment.kt` and add the following code at the bottom of the file:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/mk/todo/Todo/ui/todos/TaskFragment.kt" text="TaskFragment.kt" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/hasura/todo/Todo/ui/todos/TaskFragment.kt" text="TaskFragment.kt" />
 
 ```kotlin
     private fun toggleTodoMutationCloud(todoId: Int, completeFlag: Boolean){

@@ -10,7 +10,7 @@ Now we need to update our `ApolloClient` instance to point to the subscription s
 
 Open `Network.kt` and update the following:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/mk/todo/Todo/network/Network.kt" text="Network.kt" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/hasura/todo/Todo/network/Network.kt" text="Network.kt" />
 
 ```kotlin
 

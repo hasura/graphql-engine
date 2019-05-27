@@ -24,7 +24,7 @@ The goal is to update every few seconds from the client that you are online. Ide
 
 Open `OnlineFragment.kt` and add the following functions and define a variable `updateLastSeenTimer` of type `Timer`.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/mk/todo/Todo/ui/online/OnlineFragment.kt" text="OnlineFragment.kt" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/hasura/todo/Todo/ui/online/OnlineFragment.kt" text="OnlineFragment.kt" />
 
 ```kotlin
 +   private lateinit var updateLastSeenTimer: Timer

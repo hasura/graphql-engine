@@ -8,7 +8,7 @@ Let's define the graphql query to be used:
 
 Open `FeedFragment.kt` and add the following variable and initialize in `onCreate` and `onPause`.
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/mk/todo/Todo/ui/feed/FeedFragment.kt" text="FeedFragment.kt" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/java/com/hasura/todo/Todo/ui/feed/FeedFragment.kt" text="FeedFragment.kt" />
 
 ```kotin
 

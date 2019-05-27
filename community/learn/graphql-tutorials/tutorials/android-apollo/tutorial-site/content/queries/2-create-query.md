@@ -12,7 +12,7 @@ Apollo android generates code from queries and mutations contained in `.graphql`
 
 Create a new file at the graphql folder `api.graphql` and add the following code:
 
-<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/graphql/com/mk/todo/api.graphql" text="api.graphql" />
+<GithubLink link="https://github.com/hasura/graphql-engine/blob/master/community/learn/graphql-tutorials/tutorials/android-apollo/app-final/app/src/main/graphql/com/hasura/todo/api.graphql" text="api.graphql" />
 
 ```swift
 
