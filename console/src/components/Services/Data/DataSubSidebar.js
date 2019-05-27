@@ -4,8 +4,6 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
-import { UPDATE_TRACKED_FUNCTIONS } from './DataActions';
-
 const appPrefix = '/data';
 
 class DataSubSidebar extends React.Component {
@@ -13,51 +11,34 @@ class DataSubSidebar extends React.Component {
     super();
 
     this.tableSearch = this.tableSearch.bind(this);
-    this.setTrackedTables = this.setTrackedTables.bind(this);
     this.state = {
       trackedTables: [],
-      tableList: [],
+      searchInput: '',
     };
   }
 
-  componentDidMount() {
-    const { currentSchema, schema } = this.props;
-    this.setTrackedTables(currentSchema, schema);
+  static getDerivedStateFromProps(props) {
+    const { currentSchema, schema } = props;
+    const trackedTables = schema.filter(
+      table => table.is_table_tracked && table.table_schema === currentSchema
+    );
+    return {
+      trackedTables: trackedTables,
+    };
   }
 
   shouldComponentUpdate(nextProps) {
-    const { currentSchema, schema } = this.props;
-    if (
-      currentSchema !== nextProps.currentSchema ||
-      schema !== nextProps.schema
-    ) {
-      this.setTrackedTables(nextProps.currentSchema, nextProps.schema);
+    if (nextProps.metadata.ongoingRequest) {
+      return false;
     }
     return true;
   }
 
-  setTrackedTables(currentSchema, schema) {
-    const trackedTables = schema.filter(
-      table => table.is_table_tracked && table.table_schema === currentSchema
-    );
-    this.setState({
-      trackedTables: trackedTables,
-      tableList: trackedTables,
-    });
-  }
-
   tableSearch(e) {
     const searchTerm = e.target.value;
-
-    this.state.tableList = this.state.trackedTables.filter(
-      t => t.table_name.indexOf(searchTerm) !== -1
-    );
-
-    const matchedFuncs = this.props.functionsList.filter(
-      f => f.function_name.indexOf(searchTerm) !== -1
-    );
-
-    this.props.dispatch({ type: UPDATE_TRACKED_FUNCTIONS, data: matchedFuncs });
+    this.setState({
+      searchInput: searchTerm,
+    });
   }
 
   render() {
@@ -66,22 +47,24 @@ class DataSubSidebar extends React.Component {
     const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
     const {
       functionsList,
-      listedFunctions,
       currentTable,
       currentSchema,
       migrationMode,
       location,
       currentFunction,
-      metadata,
     } = this.props;
 
-    if (metadata.ongoingRequest) {
-      return null;
-    }
-
-    const { trackedTables, tableList } = this.state;
+    const { trackedTables, searchInput } = this.state;
 
     const trackedTablesLength = trackedTables.length;
+
+    const tableList = trackedTables.filter(
+      t => t.table_name.indexOf(searchInput) !== -1
+    );
+
+    const listedFunctions = functionsList.filter(
+      f => f.function_name.indexOf(searchInput) !== -1
+    );
 
     const getSearchInput = () => {
       return (

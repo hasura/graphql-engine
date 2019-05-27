@@ -36,7 +36,6 @@ const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
 const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
 const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
-const UPDATE_TRACKED_FUNCTIONS = 'Data/UPDATE_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
@@ -593,13 +592,6 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         trackedFunctions: action.data,
-        listedFunctions: action.data,
-      };
-
-    case UPDATE_TRACKED_FUNCTIONS:
-      return {
-        ...state,
-        listedFunctions: [...action.data],
       };
     case LOAD_SCHEMA:
       // remove duplicates
@@ -634,7 +626,6 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         trackedFunctions: action.data,
-        listedFunctions: action.data,
       };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
@@ -711,7 +702,6 @@ export {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
   fetchTrackedFunctions,
-  UPDATE_TRACKED_FUNCTIONS,
   initQueries,
   LOAD_SCHEMA,
   setConsistentSchema,
