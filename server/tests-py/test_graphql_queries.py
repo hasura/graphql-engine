@@ -379,6 +379,9 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_query_get_test_uuid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
 
+    def test_query_my_add(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
