@@ -27,8 +27,6 @@ const ColumnEditorList = ({
 
   const columnPKConstraints = {};
   if (tableSchema.primary_key) {
-    // calculating number of primary keys for issue #1468
-    // showing unique: false for primary key column is confusing
     pkLength = tableSchema.primary_key.columns.length;
     tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;

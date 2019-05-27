@@ -137,9 +137,8 @@ const ColumnEditor = ({
             <select
               className="input-sm form-control"
               value={
-                columnProperties.pkConstraint && pkLength === 1
-                  ? !selectedProperties[colName].isUnique
-                  : selectedProperties[colName].isUnique
+                selectedProperties[colName].isUnique ||
+                (columnProperties.pkConstraint && pkLength === 1)
               }
               onChange={toggleColumnUnique}
               disabled={columnProperties.pkConstraint}
