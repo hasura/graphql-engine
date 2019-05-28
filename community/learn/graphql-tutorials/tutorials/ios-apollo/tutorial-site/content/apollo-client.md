@@ -6,7 +6,7 @@ import GithubLink from '../src/GithubLink.js'
 
 Apollo gives a neat abstraction layer and an interface to your GraphQL server. You don't need to worry about constructing your queries with request body, headers and options, that you might have done with `AFNetworking` or `NWConnection` say. You can directly write queries and mutations in GraphQL and they will automatically be sent to your server via your apollo client instance.
 
-Let's get started by installing apollo client framework & peer graphql dependenices:
+Let's get started by installing apollo client framework & peer graphql dependencies:
 
 - Add github `"apollostack/apollo-ios"` to your Cartfile.
 - Run `carthage update`

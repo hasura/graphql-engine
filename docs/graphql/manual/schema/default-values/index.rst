@@ -16,8 +16,8 @@ the following ways:
   depend on other fields passed in the input. e.g. set ``submission_time`` of an online quiz as 1 hour from the
   ``start_time``.
 - :doc:`Role based column presets <column-presets>`: set up presets, using session variables or fixed values, that are
-  applied when a new row is created with a particular :doc:`user role <../../auth/roles-variables>`. e.g. set a
-  ``user_id`` field automatically from a session variable/Authorization header.
+  applied when a new row is created with a particular :doc:`user role <../../auth/authorization/roles-variables>`.
+  e.g. set a ``user_id`` field automatically from a session variable/Authorization header.
 
 .. toctree::
   :maxdepth: 1

@@ -266,7 +266,8 @@ const ViewRows = ({
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAlignedOverflow;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
                   conditionalClassname = styles.tableCellExpanded;
@@ -283,7 +284,9 @@ const ViewRows = ({
                 }
                 if (col === 'created_at') {
                   const formattedDate = convertDateTimeToLocale(r.created_at);
-                  return formattedDate;
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();

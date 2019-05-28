@@ -6,7 +6,7 @@ This is an auth webhook for authenticating requests to the Hasura GraphQL engine
 
 Once you have deployed this webhook, you can use it along with the GraphQL engine. You have to set the webhook URL as an environment variable in the docker container that runs the GraphQL engine.
 
-*[Read the docs](https://docs.hasura.io/1.0/graphql/manual/auth/webhook.html).*
+*[Read the docs](https://docs.hasura.io/1.0/graphql/manual/auth/authentication/webhook.html).*
 
 #### Local instructions
 

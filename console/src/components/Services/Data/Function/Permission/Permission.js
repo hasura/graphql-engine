@@ -13,6 +13,12 @@ import globals from '../../../../../Globals';
 const prefixUrl = globals.urlPrefix + appPrefix;
 
 import { fetchCustomFunction } from '../customFunctionReducer';
+import {
+  loadUntrackedRelations,
+  UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
+  setTable,
+} from '../../DataActions';
 
 class Permission extends React.Component {
   componentDidMount() {
@@ -33,6 +39,8 @@ class Permission extends React.Component {
       setOffTableSchema,
     } = this.props.functions;
 
+    const { dispatch } = this.props;
+
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
     const permissionTableUrl = `${appPrefix}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
 
@@ -50,6 +58,20 @@ class Permission extends React.Component {
         url: appPrefix + '/schema/' + schema,
       },
     ];
+
+    const onClickPerm = () => {
+      if (schema !== setOffTableSchema) {
+        Promise.all([
+          dispatch({
+            type: UPDATE_CURRENT_SCHEMA,
+            currentSchema: setOffTableSchema,
+          }),
+          dispatch(loadUntrackedRelations()),
+          dispatch(fetchFunctionInit()),
+          dispatch(setTable(setOffTable)),
+        ]);
+      }
+    };
 
     if (functionName) {
       breadCrumbs.push({
@@ -86,6 +108,7 @@ class Permission extends React.Component {
           <Link
             to={permissionTableUrl}
             data-test="custom-function-permission-link"
+            onClick={onClickPerm}
           >
             here
           </Link>
