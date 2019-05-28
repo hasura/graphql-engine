@@ -135,21 +135,6 @@ data WSServerEnv
   , _wseEnableAllowlist :: !Bool
   }
 
-data RemoteGQResp
-  = RGRDataResp !J.Value
-  | RGRErrResp ![J.Value]
-
-instance J.FromJSON RemoteGQResp where
-  parseJSON = J.withObject "RemoteGQResp" $ \obj -> do
-    mVal <- obj J..:? "data"
-    case mVal of
-      Just dat -> return $ RGRDataResp dat
-      Nothing -> do
-        mErrs <- obj J..:? "errors"
-        case mErrs of
-          Just val -> return $ RGRErrResp val
-          Nothing  -> fail "not a valid GraphQL response"
-
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
@@ -305,10 +290,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     sendRemoteResp resp =
       case J.eitherDecodeStrict (encJToBS resp) of
-        Left e -> postExecErr $ invalidGqlErr $ T.pack e
-        Right res -> case res of
-          RGRDataResp val -> sendSuccResp $ encJFromJValue val
-          RGRErrResp errs -> remotePostExecErr errs
+        Left e    -> postExecErr $ invalidGqlErr $ T.pack e
+        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
 
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
@@ -340,10 +323,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ errFn False qErr
-
-    remotePostExecErr jVal =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQExecError jVal
+        GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
@@ -355,7 +335,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
+      sendMsg wsConn $ SMData $ DataMsg opId $
+        GRHasura $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -365,7 +346,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $ DataMsg opId resp
+      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
+        DataMsg opId (GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
