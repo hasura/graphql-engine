@@ -284,6 +284,7 @@ class AddTable extends Component {
       lastSuccess,
       internalError,
       dataTypes,
+      schemaList,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
     const getCreateBtnText = () => {
@@ -372,6 +373,7 @@ class AddTable extends Component {
               dispatch={dispatch}
               setForeignKeys={setForeignKeys}
               fkToggled={fkToggled}
+              schemaList={schemaList}
             />
             <hr />
             <h4 className={styles.subheading_text}>
@@ -434,6 +436,7 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   dataTypes: state.tables.columnDataTypes,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
+  schemaList: state.tables.schemaList,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

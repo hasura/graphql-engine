@@ -10,12 +10,11 @@ import {
   relTypeChange,
   addRelViewMigrate,
   REL_SET_MANUAL_COLUMNS,
-  UPDATE_MANUAL_REL_TABLE_LIST,
 } from './Actions';
 import {
-  fetchTableListBySchema,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
+  loadSchema,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 
@@ -38,9 +37,10 @@ class AddManualRelationship extends Component {
       data: this.props.currentSchema,
     });
     this.props.dispatch(
-      fetchTableListBySchema(
-        this.props.currentSchema,
-        UPDATE_MANUAL_REL_TABLE_LIST
+      loadSchema(
+        {
+          schemas: [this.props.currentSchema],
+        }
       )
     );
   }
@@ -60,7 +60,11 @@ class AddManualRelationship extends Component {
       data: [],
     });
     this.props.dispatch(
-      fetchTableListBySchema(e.target.value, UPDATE_MANUAL_REL_TABLE_LIST)
+      loadSchema(
+        {
+          schemas: [e.target.value],
+        }
+      )
     );
   }
   onRelNameChange(e) {
@@ -95,9 +99,10 @@ class AddManualRelationship extends Component {
       manualColumns,
       manualRelInfo,
       titleInfo,
+      currentSchema,
     } = this.props;
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(t => t.table_name === tableName && t.table_schema === currentSchema);
     return (
       <div>
         <div className={styles.subheading_text}> {titleInfo} </div>
@@ -184,11 +189,15 @@ class AddManualRelationship extends Component {
               data-test="remote-table"
             >
               <option key="default_table">Remote Table</option>
-              {manualRelInfo.tables.map((s, i) => (
-                <option key={i} value={s.table_name}>
-                  {s.table_name}
-                </option>
-              ))}
+              {allSchemas.map((s, i) => {
+                if (s.table_schema === manualRelInfo.remoteSchema) {
+                  return (
+                    <option key={i} value={s.table_name}>
+                      {s.table_name}
+                    </option>
+                  );
+                }
+              })}
             </select>
           </div>
           <span> -> </span>
