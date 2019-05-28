@@ -164,9 +164,9 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         args: {
           sql: `
             alter table "${schemaName}"."${tableName}"
-            add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-  ', '
-)} );
+            add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns
+            .map(pkc => `"${pkc}"`)
+            .join(', ')} );
           `,
         },
       });
@@ -190,9 +190,9 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         type: 'run_sql',
         sql: `
           alter table "${schemaName}"."${tableName}"
-          add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-  ', '
-)} );
+          add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns
+          .map(pkc => `"${pkc}"`)
+          .join(', ')} );
         `,
       });
     }
@@ -1173,24 +1173,24 @@ const saveColumnChangesSql = (colName, column) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
