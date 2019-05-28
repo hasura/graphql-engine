@@ -3,7 +3,7 @@ import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
-import { filterSchema } from './utils';
+import { filterSchema, reloadMetadataVersionSym } from './utils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
@@ -35,6 +35,15 @@ const getInconsistentObjectsQuery = {
 const reloadCacheQuery = {
   type: 'reload_metadata',
   args: {},
+};
+
+const updateReloadRemoteCacheQuery = remoteSchemaName => {
+  return {
+    type: 'reload_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
 };
 
 const reloadCacheAndGetInconsistentObjectsQuery = {
@@ -103,6 +112,50 @@ export const loadInconsistentObjects = (
           dispatch(setConsistentSchema(filteredSchema));
           dispatch(setConsistentFunctions(filteredFunctions));
         }
+        if (successCb) {
+          successCb();
+        }
+      },
+      error => {
+        console.error(error);
+        dispatch({ type: LOAD_METADATA_ERROR });
+        if (failureCb) {
+          failureCb(error);
+        }
+      }
+    );
+  };
+};
+
+/* Reloads only remote schema metadata */
+
+export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
+  return (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+    const { featuresCompatibility } = getState().main;
+    let reloadQuery = {};
+
+    if (
+      reloadMetadataVersionSym in featuresCompatibility &&
+      featuresCompatibility[reloadMetadataVersionSym]
+    ) {
+      reloadQuery = {
+        ...updateReloadRemoteCacheQuery(remoteSchemaName),
+      };
+    } else {
+      reloadQuery = {
+        ...reloadCacheQuery,
+      };
+    }
+    dispatch({ type: LOADING_METADATA });
+    return dispatch(
+      requestAction(endpoints.query, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(reloadQuery),
+      })
+    ).then(
+      () => {
         if (successCb) {
           successCb();
         }

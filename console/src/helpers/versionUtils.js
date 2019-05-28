@@ -3,6 +3,7 @@ const semver = require('semver');
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'
+  reloadMetaDataApiChange: 'v1.0.0-beta.3',
 };
 
 export const getFeaturesCompatibility = serverVersion => {
@@ -14,7 +15,7 @@ export const getFeaturesCompatibility = serverVersion => {
     Object.keys(featureLaunchVersions).forEach(feature => {
       featuresCompatibility[feature] =
         isPullRequest ||
-        semver.satisfies(featureLaunchVersions[feature], '>=' + serverVersion);
+        semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
     });
   } catch (e) {
     console.error(e);
@@ -28,5 +29,6 @@ export const versionGT = (version1, version2) => {
     return semver.gt(version1, version2);
   } catch (e) {
     console.error(e);
+    return false;
   }
 };
