@@ -330,6 +330,7 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)
   => L.Logger
+  -> L.VerboseLogging
   -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
@@ -339,7 +340,7 @@ execRemoteGQ
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
-execRemoteGQ logger manager userInfo reqHdrs q req rsi opDef = do
+execRemoteGQ logger verbose manager userInfo reqHdrs q req rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
@@ -356,7 +357,7 @@ execRemoteGQ logger manager userInfo reqHdrs q req rsi opDef = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   -- log the graphql query
-  liftIO $ logGraphqlQuery logger $ mkQueryLog q Nothing
+  liftIO $ logGraphqlQuery logger verbose $ mkQueryLog q Nothing
   res  <- liftIO $ try $ Wreq.postWith options (show url) req
   resp <- either httpThrow return res
   return $ encJFromLBS $ resp ^. Wreq.responseBody

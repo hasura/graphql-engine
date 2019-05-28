@@ -15,6 +15,7 @@ module Hasura.Logging
   , LoggerCtx(..)
   , mkLoggerCtx
   , cleanLoggerCtx
+  , VerboseLogging(..)
   ) where
 
 import           Hasura.Prelude
@@ -55,6 +56,10 @@ instance J.ToJSON LogLevel where
     LevelWarn    -> "warn"
     LevelError   -> "error"
     LevelOther t -> t
+
+newtype VerboseLogging
+  = VerboseLogging { unVerboseLogging :: Bool }
+  deriving (Show, Eq, Generic, J.ToJSON)
 
 data EngineLog
   = EngineLog

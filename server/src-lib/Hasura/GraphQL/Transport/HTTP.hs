@@ -19,6 +19,7 @@ runGQ
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> L.Logger
+  -> L.VerboseLogging
   -> UserInfo
   -> SQLGenCtx
   -> Bool
@@ -30,33 +31,34 @@ runGQ
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pgExecCtx logger userInfo sqlGenCtx enableAL planCache sc scVer
+runGQ pgExecCtx logger verbose userInfo sqlGenCtx enableAL planCache sc scVer
   manager reqHdrs req rawReq = do
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pgExecCtx logger req userInfo resolvedOp
+      runHasuraGQ pgExecCtx logger verbose req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ logger manager userInfo reqHdrs req rawReq rsi opDef
+      E.execRemoteGQ logger verbose manager userInfo reqHdrs req rawReq rsi opDef
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> L.Logger
+  -> L.VerboseLogging
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pgExecCtx logger query userInfo resolvedOp = do
+runHasuraGQ pgExecCtx logger verbose query userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ mkQueryLog query genSql
+      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog query genSql
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
+      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog query Nothing
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

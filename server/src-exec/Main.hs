@@ -186,9 +186,8 @@ main =  do
 
       finishTime <- Clock.getCurrentTime
       let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-      unLogger logger $
-        mkGenericStrLog "server" $
-        "starting API server, took " <> show @Double apiInitTime <> "s"
+      unLogger logger $ mkGenericLog "server" $
+        StartupTimeInfo "starting API server" apiInitTime
       Warp.runSettings warpSettings app
 
     HCExport -> do

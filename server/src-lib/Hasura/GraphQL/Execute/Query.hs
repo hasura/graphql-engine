@@ -139,7 +139,7 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
 
 
 type GeneratedSql =
-  [(G.Alias, Either (PGPlan, UserVars) B.ByteString)]
+  [(G.Alias, Either (Q.Query, [Q.PrepArg]) B.ByteString)]
 
 encodeSql :: GeneratedSql -> J.Value
 encodeSql sql =
@@ -147,32 +147,24 @@ encodeSql sql =
     map (\(a, q) -> (alName a, either encP (J.String . bsToTxt) q)) sql
   where
     alName = G.unName . G.unAlias
-    encP (pgPlan, usrVars) = J.object [ "query" J..= J.toJSON pgPlan
-                                      , "user_vars" J..= J.toJSON usrVars
-                                      ]
-
+    encP (q, prepArgs) =
+      J.object [ "query" J..= Q.getQueryText q
+               , "prepared_arguments" J..= fmap prepArgsJVal prepArgs
+               ]
     jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+    prepArgsJVal (_, arg) = fmap (bsToTxt . fst) arg
 
 
--- turn the current plan into a list of aliases and `Q.Query`s so as to generate
--- them later
+-- turn the list of `RootFieldPlan` into a list of aliases and `Q.Query`s
 mkRootFldPlanToSql :: UserVars -> [(G.Alias, RootFieldPlan)] -> GeneratedSql
 mkRootFldPlanToSql usrVars fldPlans =
  flip map fldPlans $ \(alias, fldPlan) ->
     (,) alias $ case fldPlan of
-          RFPRaw resp        -> Right resp
-          RFPPostgres pgPlan ->
-            Left ( pgPlan, usrVars )
+          RFPRaw resp                      -> Right resp
+          RFPPostgres (PGPlan q _ prepMap) -> Left (q, prepArgs prepMap)
+  where
+    prepArgs argMap = withUserVars usrVars $ IntMap.elems argMap
 
--- convert QueryPlan to GeneratedSql
-mkCurPlanSql :: UserVars -> QueryPlan -> GeneratedSql
-mkCurPlanSql usrVars (QueryPlan _ fldPlans) =
-  mkRootFldPlanToSql usrVars fldPlans
-
--- convert ReusableQueryPlan to GeneratedSql
-mkReusablePlanSql :: UserVars -> ReusableQueryPlan -> GeneratedSql
-mkReusablePlanSql usrVars (ReusableQueryPlan _ rootPlans) =
-  mkRootFldPlanToSql usrVars rootPlans
 
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
 withUserVars usrVars l =
@@ -265,7 +257,7 @@ convertQuerySelSet varDefs fields = do
     return (V._fAlias fld, fldPlan)
   let queryPlan     = QueryPlan varDefs fldPlans
       reusablePlanM = getReusablePlan queryPlan
-  let sql = mkCurPlanSql usrVars queryPlan
+  let sql = mkRootFldPlanToSql usrVars fldPlans
   return (mkCurPlanTx usrVars queryPlan, reusablePlanM, sql)
 
 -- use the existing plan and new variables to create a pg query
@@ -275,12 +267,12 @@ queryOpFromPlan
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSql)
-queryOpFromPlan usrVars varValsM p@(ReusableQueryPlan varTypes fldPlans) = do
+queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return $ encJFromBS resp
           RFPPostgres pgPlan -> liftTx $ withPlan usrVars pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
-  let sql = mkReusablePlanSql usrVars p
+  let sql = mkRootFldPlanToSql usrVars fldPlans
   return (tx, sql)

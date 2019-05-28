@@ -13,8 +13,14 @@ import           Hasura.Prelude
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 
-logGraphqlQuery :: (MonadIO m) => L.Logger -> QueryLog -> m ()
-logGraphqlQuery logger = liftIO . L.unLogger logger
+logGraphqlQuery
+  :: (MonadIO m)
+  => L.Logger
+  -> L.VerboseLogging
+  -> QueryLog
+  -> m ()
+logGraphqlQuery logger verbose =
+  when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger
 
 mkQueryLog :: GQLReqUnparsed -> Maybe EQ.GeneratedSql -> QueryLog
 mkQueryLog req sql = QueryLog (Just req) (EQ.encodeSql <$> sql)

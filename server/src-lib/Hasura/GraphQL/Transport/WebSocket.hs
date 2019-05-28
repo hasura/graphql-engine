@@ -44,7 +44,6 @@ import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
-import qualified Hasura.Server.Logging                       as SL
 
 
 type OperationMap
@@ -146,7 +145,7 @@ data WSServerEnv
   , _wseQueryCache      :: !E.PlanCache
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
-  , _wseVerboseLogging  :: !SL.VerboseLogging
+  , _wseVerboseLogging  :: !L.VerboseLogging
   }
 
 onConn :: L.Logger -> CorsPolicy -> WS.OnConnH WSConnData
@@ -264,24 +263,23 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   where
     runHasuraGQ :: GQLReqUnparsed -> UserInfo -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ query userInfo = \case
-      E.ExOpQuery opTx genSql -> do
-        -- log the generated SQL and the graphql query
-        liftIO $ logGraphqlQuery logger $ mkQueryLog query genSql
-        execQueryOrMut $ runLazyTx' pgExecCtx opTx
-      E.ExOpMutation opTx -> do
-        -- log the graphql query
-        liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
-        execQueryOrMut $ runLazyTx pgExecCtx $ withUserInfo userInfo opTx
+      E.ExOpQuery opTx genSql ->
+        execQueryOrMut query genSql $ runLazyTx' pgExecCtx opTx
+      E.ExOpMutation opTx ->
+        execQueryOrMut query Nothing $
+          runLazyTx pgExecCtx $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
+        liftIO $ logGraphqlQuery logger verboseLog $ mkQueryLog query Nothing
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
         logOpEv ODStarted
 
-    execQueryOrMut action = do
+    execQueryOrMut query genSql action = do
       logOpEv ODStarted
+      -- log the generated SQL and the graphql query
+      liftIO $ logGraphqlQuery logger verboseLog $ mkQueryLog query genSql
       resp <- liftIO $ runExceptT action
       either postExecErr sendSuccResp resp
       sendCompleted
@@ -302,8 +300,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         const $ withComplete $ preExecErr $
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ logger httpMgr userInfo reqHdrs
-              q payload rsi opDef
+      resp <- runExceptT $ E.execRemoteGQ logger verboseLog httpMgr userInfo
+              reqHdrs q payload rsi opDef
       either postExecErr sendSuccResp resp
       sendCompleted
 
@@ -316,7 +314,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       logWSEvent logger wsConn $ EOperation opDet
       where
         opDet = OperationDetails opId (_grOperationName q) opTy gq
-        gq = bool Nothing (Just q) $ SL.unVerboseLogging verboseLog
+        gq = bool Nothing (Just q) $ L.unVerboseLogging verboseLog
 
     getErrFn errTy =
       case errTy of
@@ -472,7 +470,7 @@ createWSServerEnv
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
-  -> SL.VerboseLogging
+  -> L.VerboseLogging
   -> IO WSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
   corsPolicy sqlGenCtx enableAL planCache verboseLog = do

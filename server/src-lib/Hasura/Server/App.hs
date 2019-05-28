@@ -119,7 +119,7 @@ data ServerCtx
   , scPlanCache       :: !E.PlanCache
   , scLQState         :: !EL.LiveQueriesState
   , scEnableAllowlist :: !Bool
-  , scVerboseLogging  :: !VerboseLogging
+  , scVerboseLogging  :: !L.VerboseLogging
   }
 
 data HandlerCtx
@@ -176,7 +176,7 @@ buildQCtx = do
 logResult
   :: (MonadIO m, ToJSON a)
   => L.Logger
-  -> VerboseLogging
+  -> L.VerboseLogging
   -> Maybe UserInfo
   -> Wai.Request
   -> Maybe a
@@ -190,7 +190,7 @@ logResult logger verbose userInfoM httpReq req res qTime =
 logError
   :: (MonadIO m, ToJSON a)
   => L.Logger
-  -> VerboseLogging
+  -> L.VerboseLogging
   -> Maybe UserInfo
   -> Wai.Request
   -> Maybe a
@@ -297,7 +297,8 @@ v1Alpha1GQHandler query = do
   planCache <- scPlanCache . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
   logger   <- scLogger . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx logger userInfo sqlGenCtx enableAL planCache
+  verbose  <- scVerboseLogging . hcServerCtx <$> ask
+  GH.runGQ pgExecCtx logger verbose userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler GH.GQLReqUnparsed EncJSON
@@ -320,7 +321,7 @@ v1Alpha1PGDumpHandler b = do
   output <- PGD.execPGDump b ci
   return $ RawResp [sqlHeader] output
 
-consoleAssetsHandler :: L.Logger -> VerboseLogging -> Text -> FilePath -> ActionT IO ()
+consoleAssetsHandler :: L.Logger -> L.VerboseLogging -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger verbose dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
@@ -411,7 +412,7 @@ mkWaiApp
   -> InstanceId
   -> S.HashSet API
   -> EL.LQOpts
-  -> VerboseLogging
+  -> L.VerboseLogging
   -> IO (Wai.Application, SchemaCacheRef, Maybe UTCTime)
 mkWaiApp isoLevel loggerCtx sqlGenCtx enableAL pool ci httpManager mode corsCfg
          enableConsole consoleAssetsDir enableTelemetry instanceId apis lqOpts
@@ -578,7 +579,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         either (raiseGenericApiError logger verboseLog . err500 Unexpected . T.pack) html $
         mkConsoleHTML path (scAuthMode serverCtx) enableTelemetry consoleAssetsDir
 
-raiseGenericApiError :: L.Logger -> VerboseLogging -> QErr -> ActionT IO ()
+raiseGenericApiError :: L.Logger -> L.VerboseLogging -> QErr -> ActionT IO ()
 raiseGenericApiError logger verbose qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req

@@ -10,7 +10,6 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
-  , VerboseLogging(..)
   , ApiMetrics(..)
   ) where
 
@@ -40,10 +39,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 
 import qualified Hasura.Logging        as L
-
-newtype VerboseLogging
-  = VerboseLogging { unVerboseLogging :: Bool }
-  deriving (Show, Eq, Generic, ToJSON)
 
 data StartupLog
   = StartupLog
@@ -165,7 +160,7 @@ instance L.ToEngineLog AccessLog where
 
 mkAccessLog
   :: (ToJSON a)
-  => VerboseLogging
+  => L.VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
   -> Request
   -> Either QErr APIResp
@@ -194,7 +189,7 @@ mkAccessLog verLog userInfoM req res extraInfo mTimeT =
       ravenLogGen verLog res extraInfo mTimeT
 
 ravenLogGen
-  :: VerboseLogging
+  :: L.VerboseLogging
   -> Either QErr APIResp
   -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime , UTCTime)
@@ -209,7 +204,7 @@ ravenLogGen verLog res extraInfo mTimeT =
     q = amQuery <$> extraInfo
     query = case res of
       Left _  -> q
-      Right _ -> bool Nothing q (unVerboseLogging verLog)
+      Right _ -> bool Nothing q (L.unVerboseLogging verLog)
 
 
 getSourceFromSocket :: Request -> ByteString

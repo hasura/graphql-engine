@@ -4,9 +4,12 @@ module Hasura.Server.Init where
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
+import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
 import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.TH                    as J
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
@@ -23,7 +26,6 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-import           Network.Wai.Handler.Warp
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -31,6 +33,13 @@ newtype InstanceId
 
 mkInstanceId :: IO InstanceId
 mkInstanceId = InstanceId . UUID.toText <$> UUID.nextRandom
+
+data StartupTimeInfo
+  = StartupTimeInfo
+  { _stiMessage   :: !Text
+  , _stiTimeTaken :: !Double
+  }
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
 
 data RawConnParams
   = RawConnParams
@@ -63,7 +72,7 @@ data RawServeOptions
   , rsoMxBatchSize        :: !(Maybe LQ.BatchSize)
   , rsoFallbackRefetchInt :: !(Maybe LQ.RefetchInterval)
   , rsoEnableAllowlist    :: !Bool
-  , rsoVerboseLogging     :: !VerboseLogging
+  , rsoVerboseLogging     :: !L.VerboseLogging
   } deriving (Show, Eq)
 
 data ServeOptions
@@ -84,7 +93,7 @@ data ServeOptions
   , soEnabledAPIs      :: !(Set.HashSet API)
   , soLiveQueryOpts    :: !LQ.LQOpts
   , soEnableAllowlist  :: !Bool
-  , soVerboseLogging   :: !VerboseLogging
+  , soVerboseLogging   :: !L.VerboseLogging
   } deriving (Show, Eq)
 
 data RawConnInfo =
@@ -113,6 +122,8 @@ data API
   | PGDUMP
   | DEVELOPER
   deriving (Show, Eq, Read, Generic)
+$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower})
+  ''API)
 
 instance Hashable API
 
@@ -284,8 +295,8 @@ mkServeOptions rso = do
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  verboseLogging <- VerboseLogging <$>
-                    withEnvBool (unVerboseLogging $ rsoVerboseLogging rso)
+  verboseLogging <- L.VerboseLogging <$>
+                    withEnvBool (L.unVerboseLogging $ rsoVerboseLogging rso)
                                 (fst verboseLoggingEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
@@ -831,8 +842,8 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
-parseEnableVerboseLog :: Parser VerboseLogging
-parseEnableVerboseLog = VerboseLogging <$>
+parseEnableVerboseLog :: Parser L.VerboseLogging
+parseEnableVerboseLog = L.VerboseLogging <$>
   switch ( long "enable-verbose-log" <>
            help (snd verboseLoggingEnv)
          )
@@ -914,6 +925,8 @@ serveOptsToLog so =
   StartupLog L.LevelInfo "server_configuration" infoVal
   where
     infoVal = J.object [ "port" J..= soPort so
+                       , "server_host" J..= show (soHost so)
+                       -- , "transaction_isolation" J..= show (soTxIso so)
                        , "admin_secret_set" J..= isJust (soAdminSecret so)
                        , "auth_hook" J..= (ahUrl <$> soAuthHook so)
                        , "auth_hook_mode" J..= (show . ahType <$> soAuthHook so)
@@ -925,12 +938,18 @@ serveOptsToLog so =
                        , "enable_telemetry" J..= soEnableTelemetry so
                        , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
                        , "stringify_numeric_types" J..= soStringifyNum so
+                       , "enabled_apis" J..= soEnabledAPIs so
+                       , "live_query_options" J..= soLiveQueryOpts so
                        , "enable_allowlist" J..= soEnableAllowlist so
                        , "enable_verbose_log" J..= soVerboseLogging so
                        ]
 
 mkGenericStrLog :: T.Text -> String -> StartupLog
 mkGenericStrLog k msg =
+  StartupLog L.LevelInfo k $ J.toJSON msg
+
+mkGenericLog :: (J.ToJSON a) => Text -> a -> StartupLog
+mkGenericLog k msg =
   StartupLog L.LevelInfo k $ J.toJSON msg
 
 inconsistentMetadataLog :: SchemaCache -> StartupLog
