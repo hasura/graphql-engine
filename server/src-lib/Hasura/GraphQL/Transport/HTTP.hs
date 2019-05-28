@@ -2,20 +2,17 @@ module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   ) where
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
-import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 
 runGQ
@@ -39,44 +36,30 @@ runGQ pgExecCtx logger userInfo sqlGenCtx enableAL planCache sc scVer
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pgExecCtx logger userInfo resolvedOp
+      runHasuraGQ pgExecCtx logger req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
+      E.execRemoteGQ logger manager userInfo reqHdrs req rawReq rsi opDef
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> L.Logger
+  -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pgExecCtx logger userInfo resolvedOp = do
+runHasuraGQ pgExecCtx logger query userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
-      -- log the generated SQL
-      onJust genSql $ \genSql' ->
-        liftIO $ logQueryDetails logger $ mkQueryLog genSql'
+      -- log the generated SQL and the graphql query
+      liftIO $ logGraphqlQuery logger $ mkQueryLog query genSql
       runLazyTx' pgExecCtx tx
-    E.ExOpMutation tx ->
+    E.ExOpMutation tx -> do
+      -- log the generated SQL and the graphql query
+      liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
   resp <- liftEither respE
   return $ encodeGQResp $ GQSuccess $ encJToLBS resp
-
-logQueryDetails :: (MonadIO m) => L.Logger -> QueryLog -> m ()
-logQueryDetails logger = liftIO . L.unLogger logger
-
-mkQueryLog :: EQ.GeneratedSql -> QueryLog
-mkQueryLog sql = QueryLog Nothing (Just $ EQ.encodeSql sql)
-
-data QueryLog
-  = QueryLog
-  { _qlQuery        :: !(Maybe GQLReqUnparsed)
-  , _qlGeneratedSql :: !(Maybe J.Value)
-  }
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''QueryLog)
-
-instance L.ToEngineLog QueryLog where
-  toEngineLog ql = (L.LevelInfo, "query-log", J.toJSON ql)

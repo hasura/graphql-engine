@@ -156,16 +156,23 @@ encodeSql sql =
 
 -- turn the current plan into a list of aliases and `Q.Query`s so as to generate
 -- them later
-mkCurPlanSql
-  :: UserVars
-  -> QueryPlan
-  -> GeneratedSql
-mkCurPlanSql usrVars (QueryPlan _ fldPlans) =
+mkRootFldPlanToSql :: UserVars -> [(G.Alias, RootFieldPlan)] -> GeneratedSql
+mkRootFldPlanToSql usrVars fldPlans =
  flip map fldPlans $ \(alias, fldPlan) ->
     (,) alias $ case fldPlan of
           RFPRaw resp        -> Right resp
           RFPPostgres pgPlan ->
             Left ( pgPlan, usrVars )
+
+-- convert QueryPlan to GeneratedSql
+mkCurPlanSql :: UserVars -> QueryPlan -> GeneratedSql
+mkCurPlanSql usrVars (QueryPlan _ fldPlans) =
+  mkRootFldPlanToSql usrVars fldPlans
+
+-- convert ReusableQueryPlan to GeneratedSql
+mkReusablePlanSql :: UserVars -> ReusableQueryPlan -> GeneratedSql
+mkReusablePlanSql usrVars (ReusableQueryPlan _ rootPlans) =
+  mkRootFldPlanToSql usrVars rootPlans
 
 withUserVars :: UserVars -> [Q.PrepArg] -> [Q.PrepArg]
 withUserVars usrVars l =
@@ -267,12 +274,13 @@ queryOpFromPlan
   => UserVars
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
-  -> m LazyRespTx
-queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
+  -> m (LazyRespTx, GeneratedSql)
+queryOpFromPlan usrVars varValsM p@(ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- GV.getAnnPGVarVals varTypes varValsM
   let tx = fmap encJFromAssocList $ forM fldPlans $ \(alias, fldPlan) -> do
         fldResp <- case fldPlan of
           RFPRaw resp        -> return $ encJFromBS resp
           RFPPostgres pgPlan -> liftTx $ withPlan usrVars pgPlan validatedVars
         return (G.unName $ G.unAlias alias, fldResp)
-  return tx
+  let sql = mkReusablePlanSql usrVars p
+  return (tx, sql)

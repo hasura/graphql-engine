@@ -33,6 +33,7 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -46,10 +47,10 @@ import           Hasura.Server.Utils                    (bsToTxt, commonClientHe
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
+import qualified Hasura.Logging                         as L
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -148,7 +149,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 -- queries and mutations it is just a transaction
 -- to be executed
 data ExecOp
-  = ExOpQuery !LazyRespTx (Maybe EQ.GeneratedSql)
+  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSql)
   | ExOpMutation !LazyRespTx
   | ExOpSubs !EL.LiveQueryOp
 
@@ -175,9 +176,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> GExPHasura <$> case plan of
-      EP.RPQuery queryPlan ->
-        ExOpQuery <$> EQ.queryOpFromPlan usrVars queryVars queryPlan
-                  <*> pure Nothing
+      EP.RPQuery queryPlan -> do
+        (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+        return $ ExOpQuery tx (Just genSql)
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.subsOpFromPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> noExistingPlan
@@ -328,15 +329,17 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
 
 execRemoteGQ
   :: (MonadIO m, MonadError QErr m)
-  => HTTP.Manager
+  => L.Logger
+  -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
+  -> GQLReqUnparsed
   -> BL.ByteString
   -- ^ the raw request string
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
-execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
+execRemoteGQ logger manager userInfo reqHdrs q req rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
@@ -352,7 +355,9 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
       finalHdrs  = foldr Map.union Map.empty hdrMaps
       options    = wreqOptions manager (Map.toList finalHdrs)
 
-  res  <- liftIO $ try $ Wreq.postWith options (show url) q
+  -- log the graphql query
+  liftIO $ logGraphqlQuery logger $ mkQueryLog q Nothing
+  res  <- liftIO $ try $ Wreq.postWith options (show url) req
   resp <- either httpThrow return res
   return $ encJFromLBS $ resp ^. Wreq.responseBody
 

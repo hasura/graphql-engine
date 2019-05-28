@@ -242,6 +242,7 @@ library
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Resolve.ContextTypes
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP

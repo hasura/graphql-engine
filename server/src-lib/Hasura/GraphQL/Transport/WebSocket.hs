@@ -29,6 +29,7 @@ import           Control.Concurrent                          (threadDelay)
 import           Data.ByteString                             (ByteString)
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Prelude
@@ -257,18 +258,23 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   execPlan <- either (withComplete . preExecErr) return execPlanE
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ userInfo resolvedOp
+      runHasuraGQ q userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       runRemoteGQ userInfo reqHdrs opDef rsi
   where
-    runHasuraGQ :: UserInfo -> E.ExecOp -> ExceptT () IO ()
-    runHasuraGQ userInfo = \case
-      E.ExOpQuery opTx _ ->
+    runHasuraGQ :: GQLReqUnparsed -> UserInfo -> E.ExecOp -> ExceptT () IO ()
+    runHasuraGQ query userInfo = \case
+      E.ExOpQuery opTx genSql -> do
+        -- log the generated SQL and the graphql query
+        liftIO $ logGraphqlQuery logger $ mkQueryLog query genSql
         execQueryOrMut $ runLazyTx' pgExecCtx opTx
-      E.ExOpMutation opTx ->
-        execQueryOrMut $ runLazyTx pgExecCtx $
-        withUserInfo userInfo opTx
+      E.ExOpMutation opTx -> do
+        -- log the graphql query
+        liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
+        execQueryOrMut $ runLazyTx pgExecCtx $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
+        -- log the graphql query
+        liftIO $ logGraphqlQuery logger $ mkQueryLog query Nothing
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
@@ -296,8 +302,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         const $ withComplete $ preExecErr $
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
-              payload rsi opDef
+      resp <- runExceptT $ E.execRemoteGQ logger httpMgr userInfo reqHdrs
+              q payload rsi opDef
       either postExecErr sendSuccResp resp
       sendCompleted
 
