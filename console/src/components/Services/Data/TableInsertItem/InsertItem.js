@@ -4,8 +4,11 @@ import TableHeader from '../TableCommon/TableHeader';
 import { insertItem, I_RESET } from './InsertActions';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
+import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE } from '../utils';
+
+import { getParentNodeByClass } from '../../../../utils/domFunctions';
 
 class InsertItem extends Component {
   constructor() {
@@ -57,7 +60,12 @@ class InsertItem extends Component {
       refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
       const inputRef = node => (refs[colName].valueNode = node);
       const clicker = e => {
-        e.target.parentNode.click();
+        const checkboxLabel = getParentNodeByClass(e.target, 'radio-inline');
+        if (checkboxLabel) {
+          checkboxLabel.click();
+        } else {
+          e.target.parentNode.click();
+        }
         e.target.focus();
       };
       const colDefault = col.column_default;
@@ -74,22 +82,21 @@ class InsertItem extends Component {
         'data-test': `typed-input-${i}`,
         defaultValue: clone && colName in clone ? clone[colName] : '',
         onClick: clicker,
-        onChange: e => {
+        onChange: (e, val) => {
           if (isAutoIncrement) return;
           if (!isNullable && !hasDefault) return;
 
-          const textValue = e.target.value;
+          const textValue = typeof val === 'string' ? val : e.target.value;
+
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
-
           refs[colName].insertRadioNode.checked = !!textValue.length;
           radioToSelectWhenEmpty.checked = !textValue.length;
         },
         onFocus: e => {
           if (isAutoIncrement) return;
           if (!isNullable && !hasDefault) return;
-
           const textValue = e.target.value;
           if (
             textValue === undefined ||
@@ -110,7 +117,6 @@ class InsertItem extends Component {
       };
 
       const colType = col.data_type;
-
       const placeHolder = hasDefault
         ? col.column_default
         : getPlaceholder(colType);
@@ -128,12 +134,9 @@ class InsertItem extends Component {
       if (colType === JSONDTYPE || colType === JSONB) {
         // JSON/JSONB
         typedInput = (
-          <input
-            {...standardInputProps}
-            placeholder={placeHolder}
-            defaultValue={
-              clone && colName in clone ? JSON.stringify(clone[colName]) : ''
-            }
+          <JsonInput
+            standardProps={standardInputProps}
+            placeholderProp={getPlaceholder(colType)}
           />
         );
       }
@@ -262,7 +265,10 @@ class InsertItem extends Component {
                       // default
                       return;
                     } else {
-                      inputValues[colName] = refs[colName].valueNode.value;
+                      inputValues[colName] =
+                        refs[colName].valueNode.props !== undefined
+                          ? refs[colName].valueNode.props.value
+                          : refs[colName].valueNode.value;
                     }
                   });
                   dispatch(insertItem(tableName, inputValues)).then(() => {

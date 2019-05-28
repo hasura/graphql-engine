@@ -37,7 +37,7 @@ const ColumnEditor = ({
 
   useEffect(() => {
     if (columnComment) {
-      dispatch(editColumn(colName, 'comment', columnComment[0] || ''));
+      dispatch(editColumn(colName, 'comment', columnComment || ''));
     }
   }, [columnComment]);
 

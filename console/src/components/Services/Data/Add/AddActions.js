@@ -1,7 +1,7 @@
 import defaultState from './AddState';
 
 import _push from '../push';
-import { loadSchema, makeMigrationCall } from '../DataActions';
+import { loadUntrackedRelations, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -134,8 +134,6 @@ const createTableSql = () => {
     // add primary key
     if (pKeys.length > 0) {
       tableColumns += ', PRIMARY KEY (';
-      // tableColumns += '"' + pKeys.map((col) => (col)) + '"';
-      // tableColumns += pKeys.join(', ');
       pKeys.map(col => {
         tableColumns += '"' + col + '"' + ',';
       });
@@ -164,7 +162,7 @@ const createTableSql = () => {
         if (lCols.length === 0) return;
         tableColumns = `${tableColumns}, FOREIGN KEY (${lCols.join(
           ', '
-        )}) REFERENCES "${currentSchema}"."${refTableName}"(${rCols.join(
+        )}) REFERENCES "${fk.refSchemaName}"."${refTableName}"(${rCols.join(
           ', '
         )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
       });
@@ -270,7 +268,7 @@ const createTableSql = () => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });
       dispatch(setTable(state.tableName.trim()));
-      dispatch(loadSchema()).then(() =>
+      dispatch(loadUntrackedRelations()).then(() =>
         dispatch(
           _push(
             '/schema/' +
@@ -299,7 +297,8 @@ const createTableSql = () => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
