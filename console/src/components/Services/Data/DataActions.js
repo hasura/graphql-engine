@@ -708,4 +708,5 @@ export {
   setConsistentFunctions,
   fetchColumnTypes,
   RESET_COLUMN_TYPE_LIST,
+  setUntrackedRelations,
 };

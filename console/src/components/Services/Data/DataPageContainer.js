@@ -11,6 +11,7 @@ import {
   loadUntrackedRelations,
   UPDATE_CURRENT_SCHEMA,
   fetchFunctionInit,
+  setUntrackedRelations,
 } from './DataActions';
 
 const sectionPrefix = '/data';
@@ -48,6 +49,7 @@ const DataPageContainer = ({
     dispatch(_push(`/schema/${updatedSchema}`));
     Promise.all([
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
+      dispatch(setUntrackedRelations()),
       dispatch(loadUntrackedRelations()),
       dispatch(fetchFunctionInit()),
     ]);

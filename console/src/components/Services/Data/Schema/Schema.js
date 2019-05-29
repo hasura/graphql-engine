@@ -25,6 +25,7 @@ import {
   loadUntrackedRelations,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
+  setUntrackedRelations,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -73,8 +74,9 @@ class Schema extends Component {
 
       Promise.all([
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
+        dispatch(setUntrackedRelations()),
         dispatch(fetchFunctionInit()),
-        dispatch(loadUntrackedRelations({ schemas: [schemaName] })),
+        dispatch(loadUntrackedRelations()),
       ]);
     };
 
