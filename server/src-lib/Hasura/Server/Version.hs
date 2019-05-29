@@ -6,6 +6,7 @@ module Hasura.Server.Version
 where
 
 import           Control.Lens        ((^.), (^?))
+import           Data.Either         (isLeft)
 
 import qualified Data.SemVer         as V
 import qualified Data.Text           as T
@@ -24,9 +25,7 @@ currentVersion :: T.Text
 currentVersion = version
 
 isDevVersion :: Bool
-isDevVersion = case parsedVersion of
-  Left _  -> False
-  Right _ -> True
+isDevVersion = isLeft parsedVersion
 
 rawVersion :: T.Text
 rawVersion = "versioned/" <> version
