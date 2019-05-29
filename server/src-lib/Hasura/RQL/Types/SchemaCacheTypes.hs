@@ -47,7 +47,7 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualObjectToText tn <> "." <> unNEText (getRoleTxt rn)
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualObjectToText tn <> "." <> trn
+  "event-trigger " <> qualObjectToText tn <> "." <> unNEText (unTriggerName trn)
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

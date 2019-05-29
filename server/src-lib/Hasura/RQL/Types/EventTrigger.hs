@@ -2,7 +2,7 @@ module Hasura.RQL.Types.EventTrigger
   ( CreateEventTriggerQuery(..)
   , SubscribeOpSpec(..)
   , SubscribeColumns(..)
-  , TriggerName
+  , TriggerName(..)
   , Ops(..)
   , EventId
   , TriggerOpsDef(..)
@@ -27,15 +27,19 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types.Common    (NEText (..))
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.ByteString.Lazy       as LBS
 import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
-type TriggerName = T.Text
-type EventId     = T.Text
+newtype TriggerName = TriggerName { unTriggerName :: NEText }
+  deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg)
+
+type EventId = T.Text
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
@@ -106,7 +110,7 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
-  { cetqName           :: !T.Text
+  { cetqName           :: !TriggerName
   , cetqTable          :: !QualifiedTable
   , cetqInsert         :: !(Maybe SubscribeOpSpec)
   , cetqUpdate         :: !(Maybe SubscribeOpSpec)
@@ -134,7 +138,7 @@ instance FromJSON CreateEventTriggerQuery where
     replace        <- o .:? "replace" .!= False
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
-        isMatch = TDFA.match compiledRegex (T.unpack name)
+        isMatch = TDFA.match compiledRegex . T.unpack . unNEText $ unTriggerName name
     if isMatch then return ()
       else fail "only alphanumeric and underscore and hyphens allowed for name"
     if any isJust [insert, update, delete] || enableManual then
@@ -170,7 +174,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery
   = DeleteEventTriggerQuery
-  { detqName :: !T.Text
+  { detqName :: !TriggerName
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
@@ -187,16 +191,16 @@ data EventTriggerConf
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
-data RedeliverEventQuery
+newtype RedeliverEventQuery
   = RedeliverEventQuery
-  { rdeqEventId :: !EventId
+  { rdeqEventId :: EventId
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
 
 data InvokeEventTriggerQuery
   = InvokeEventTriggerQuery
-  { ietqName    :: !T.Text
+  { ietqName    :: !TriggerName
   , ietqPayload :: !Value
   } deriving (Show, Eq, Lift)
 

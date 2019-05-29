@@ -48,8 +48,7 @@ data PGColInfo
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
 newtype NEText = NEText {unNEText :: T.Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg
-          , DQuote)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
 
 mkNEText :: T.Text -> Maybe NEText
 mkNEText ""   = Nothing
@@ -65,7 +64,7 @@ instance FromJSONKey NEText
 
 instance Q.FromCol NEText where
   fromCol bs = mkNEText <$> Q.fromCol bs
-    >>= maybe (throwError "empty string not allowed") return
+    >>= maybe (Left "empty string not allowed") Right
 
 adminText :: NEText
 adminText = NEText "admin"
