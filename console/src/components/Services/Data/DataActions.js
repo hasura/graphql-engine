@@ -21,7 +21,13 @@ import {
 } from '../Metadata/Actions';
 import globals from '../../../Globals';
 
-import { getSchemaQuery } from './utils';
+import {
+  fetchTrackedTableReferencedFkQuery,
+  fetchTrackedTableFkQuery,
+  fetchTableListQuery,
+  fetchTrackedTableListQuery,
+  mergeLoadSchemaData,
+} from './utils';
 import { fetchColumnTypesQuery } from './utils';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
@@ -209,7 +215,11 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 const loadSchema = configOptions => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   let allSchemas = getState().tables.allSchemas;
-  if (!configOptions || (!configOptions.schemas && !configOptions.tables)) {
+  if (
+    !configOptions ||
+    ((!configOptions.schemas || configOptions.schemas.length === 0) &&
+      !configOptions.tables)
+  ) {
     configOptions = {
       schemas: [getState().tables.currentSchema],
     };
@@ -233,7 +243,16 @@ const loadSchema = configOptions => (dispatch, getState) => {
       );
     }
   }
-  const body = getSchemaQuery(configOptions);
+
+  const body = {
+    type: 'bulk',
+    args: [
+      fetchTableListQuery(configOptions),
+      fetchTrackedTableListQuery(configOptions), // v1/query
+      fetchTrackedTableFkQuery(configOptions),
+      fetchTrackedTableReferencedFkQuery(configOptions),
+    ],
+  };
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -243,9 +262,13 @@ const loadSchema = configOptions => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      const maybeInconsistentSchemas = allSchemas.concat(
-        JSON.parse(data.result[1])
+      const mergedData = mergeLoadSchemaData(
+        JSON.parse(data[0].result[1]),
+        data[1],
+        JSON.parse(data[2].result[1]),
+        JSON.parse(data[3].result[1])
       );
+      const maybeInconsistentSchemas = allSchemas.concat(mergedData);
       let consistentSchemas;
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {

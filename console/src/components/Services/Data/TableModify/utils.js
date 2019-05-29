@@ -59,4 +59,15 @@ ORDER BY 1, 2;
 
 `;
 
-export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
+const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, constraintName }) => {
+  return `alter table "${schemaName}"."${tableName}"
+    add constraint "${constraintName}" primary key ( ${selectedPkColumns
+  .map(pkc => `"${pkc}"`)
+  .join(', ')} );`;
+};
+
+const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
+  return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
+};
+
+export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery, getCreatePkSql, getDropPkSql };

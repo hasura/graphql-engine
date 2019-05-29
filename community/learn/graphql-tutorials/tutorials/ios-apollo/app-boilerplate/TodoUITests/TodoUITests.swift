@@ -1,11 +1,3 @@
-//
-//  TodoUITests.swift
-//  TodoUITests
-//
-//  Created by Manish Kumar on 03/05/19.
-//  Copyright © 2019 Manish Kumar. All rights reserved.
-//
-
 import XCTest
 
 class TodoUITests: XCTestCase {

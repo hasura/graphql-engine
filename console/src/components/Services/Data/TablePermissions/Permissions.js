@@ -231,27 +231,22 @@ class Permissions extends Component {
       const getViewPermissionNote = () => {
         let note;
 
-        let showNote = false;
+        let hasPermissions = true;
         if (
           tableType === 'view' &&
           !(
             tableSchema.view_info &&
-            'is_insertable_into' in tableSchema.view_info &&
-            tableSchema.view_info.is_insertable_into === 'YES'
-          ) &&
-          !(
-            tableSchema.view_info &&
-            'is_updatable' in tableSchema.view_info &&
+            tableSchema.view_info.is_insertable_into === 'YES' &&
             tableSchema.view_info.is_updatable === 'YES'
           )
         ) {
-          showNote = true;
+          hasPermissions = false;
         }
 
-        if (showNote) {
+        if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
+              <i className="fa fa-info-circle" aria-hidden="true" />
               &nbsp; You cannot insert/update into this view
             </div>
           );
@@ -1766,24 +1761,19 @@ class Permissions extends Component {
       qTypes = ['insert', 'select', 'update', 'delete'];
     } else if (tableType === 'view') {
       qTypes = [];
-      // Add insert/update permission if it is insertable/updatable as returned by pg
-      if (
-        tSchema.view_info &&
-        'is_insertable_into' in tSchema.view_info &&
-        tSchema.view_info.is_insertable_into === 'YES'
-      ) {
-        qTypes.push('insert');
-      }
 
       qTypes.push('select');
 
-      if (
-        tSchema.view_info &&
-        'is_updatable' in tSchema.view_info &&
-        tSchema.view_info.is_updatable === 'YES'
-      ) {
-        qTypes.push('update');
-        qTypes.push('delete');
+      // Add insert/update permission if it is insertable/updatable as returned by pg
+      if (tSchema.view_info) {
+        if (tSchema.view_info.is_insertable_into === 'YES') {
+          qTypes.push('insert');
+        }
+
+        if (tSchema.view_info.is_updatable === 'YES') {
+          qTypes.push('update');
+          qTypes.push('delete');
+        }
       }
     }
 
