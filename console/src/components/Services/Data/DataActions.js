@@ -171,19 +171,24 @@ const initQueries = {
 const fetchTrackedFunctions = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
+
     const currentSchema = getState().tables.currentSchema;
+
     const body = initQueries.loadTrackedFunctions;
     body.args.where.function_schema = currentSchema;
+
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
       body: JSON.stringify(body),
     };
+
     return dispatch(requestAction(url, options)).then(
       data => {
         let consistentFunctions = data;
         const { inconsistentObjects } = getState().metadata;
+
         if (inconsistentObjects.length > 0) {
           consistentFunctions = filterInconsistentMetadata(
             data,
@@ -191,6 +196,7 @@ const fetchTrackedFunctions = () => {
             'functions'
           );
         }
+
         dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
       },
       error => {
@@ -211,82 +217,95 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
-const loadSchema = configOptions => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  let allSchemas = getState().tables.allSchemas;
-  if (
-    !configOptions ||
-    ((!configOptions.schemas || configOptions.schemas.length === 0) &&
-      !configOptions.tables)
-  ) {
-    configOptions = {
-      schemas: [getState().tables.currentSchema],
-    };
-  }
-  if (configOptions) {
-    if (configOptions.schemas) {
-      allSchemas = allSchemas.filter(
-        schemaInfo =>
-          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
-      );
+const loadSchema = configOptions => {
+  return (dispatch, getState) => {
+    const url = Endpoints.getSchema;
+
+    let allSchemas = getState().tables.allSchemas;
+
+    if (
+      !configOptions ||
+      ((!configOptions.schemas || configOptions.schemas.length === 0) &&
+        (!configOptions.tables || configOptions.tables.length === 0))
+    ) {
+      configOptions = {
+        schemas: [getState().tables.currentSchema],
+      };
     }
 
-    if (configOptions.tables) {
-      allSchemas = allSchemas.filter(
-        schemaInfo =>
-          !configOptions.tables.some(
-            item =>
-              item.table_schema === schemaInfo.table_schema &&
-              item.table_name === schemaInfo.table_name
-          )
-      );
-    }
-  }
-
-  const body = {
-    type: 'bulk',
-    args: [
-      fetchTableListQuery(configOptions),
-      fetchTrackedTableListQuery(configOptions), // v1/query
-      fetchTrackedTableFkQuery(configOptions),
-      fetchTrackedTableReferencedFkQuery(configOptions),
-    ],
-  };
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      const mergedData = mergeLoadSchemaData(
-        JSON.parse(data[0].result[1]),
-        data[1],
-        JSON.parse(data[2].result[1]),
-        JSON.parse(data[3].result[1])
-      );
-      const maybeInconsistentSchemas = allSchemas.concat(mergedData);
-      let consistentSchemas;
-      const { inconsistentObjects } = getState().metadata;
-      if (inconsistentObjects.length > 0) {
-        consistentSchemas = filterInconsistentMetadata(
-          maybeInconsistentSchemas,
-          inconsistentObjects,
-          'tables'
+    if (configOptions) {
+      if (configOptions.schemas) {
+        allSchemas = allSchemas.filter(
+          schemaInfo =>
+            !configOptions.schemas.some(
+              item => item === schemaInfo.table_schema
+            )
         );
       }
-      dispatch({
-        type: LOAD_SCHEMA,
-        allSchemas: consistentSchemas || maybeInconsistentSchemas,
-      });
-      dispatch(loadInconsistentObjects());
-    },
-    error => {
-      console.error('Failed to load schema ' + JSON.stringify(error));
+
+      if (configOptions.tables) {
+        allSchemas = allSchemas.filter(
+          schemaInfo =>
+            !configOptions.tables.some(
+              item =>
+                item.table_schema === schemaInfo.table_schema &&
+                item.table_name === schemaInfo.table_name
+            )
+        );
+      }
     }
-  );
+
+    const body = {
+      type: 'bulk',
+      args: [
+        fetchTableListQuery(configOptions),
+        fetchTrackedTableListQuery(configOptions), // v1/query
+        fetchTrackedTableFkQuery(configOptions),
+        fetchTrackedTableReferencedFkQuery(configOptions),
+      ],
+    };
+
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(body),
+    };
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        const mergedData = mergeLoadSchemaData(
+          JSON.parse(data[0].result[1]),
+          data[1],
+          JSON.parse(data[2].result[1]),
+          JSON.parse(data[3].result[1])
+        );
+
+        const { inconsistentObjects } = getState().metadata;
+
+        const maybeInconsistentSchemas = allSchemas.concat(mergedData);
+
+        let consistentSchemas;
+        if (inconsistentObjects.length > 0) {
+          consistentSchemas = filterInconsistentMetadata(
+            maybeInconsistentSchemas,
+            inconsistentObjects,
+            'tables'
+          );
+        }
+
+        dispatch({
+          type: LOAD_SCHEMA,
+          allSchemas: consistentSchemas || maybeInconsistentSchemas,
+        });
+
+        dispatch(loadInconsistentObjects());
+      },
+      error => {
+        console.error('Failed to load schema ' + JSON.stringify(error));
+      }
+    );
+  };
 };
 
 const loadUntrackedRelations = options => dispatch => {
@@ -307,6 +326,7 @@ const setConsistentFunctions = data => ({
 
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+
   const body = {
     type: 'bulk',
     args: [initQueries.schemaList],
@@ -318,6 +338,7 @@ const fetchDataInit = () => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(body),
   };
+
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
