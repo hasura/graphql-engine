@@ -14,7 +14,7 @@ import {
 import {
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
   RESET_MANUAL_REL_TABLE_LIST,
-  loadSchema,
+  updateSchemaInfo,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 
@@ -37,11 +37,9 @@ class AddManualRelationship extends Component {
       data: this.props.currentSchema,
     });
     this.props.dispatch(
-      loadSchema(
-        {
-          schemas: [this.props.currentSchema],
-        }
-      )
+      updateSchemaInfo({
+        schemas: [this.props.currentSchema],
+      })
     );
   }
   componentWillUnmount() {
@@ -60,11 +58,9 @@ class AddManualRelationship extends Component {
       data: [],
     });
     this.props.dispatch(
-      loadSchema(
-        {
-          schemas: [e.target.value],
-        }
-      )
+      updateSchemaInfo({
+        schemas: [e.target.value],
+      })
     );
   }
   onRelNameChange(e) {
@@ -102,7 +98,9 @@ class AddManualRelationship extends Component {
       currentSchema,
     } = this.props;
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName && t.table_schema === currentSchema);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
     return (
       <div>
         <div className={styles.subheading_text}> {titleInfo} </div>

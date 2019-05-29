@@ -1,7 +1,7 @@
 import requestAction from '../../../../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   handleMigrationErrors,
   makeMigrationCall,
   LOAD_SCHEMA,
@@ -544,7 +544,7 @@ const deleteTableSql = tableName => {
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
-      dispatch(loadUntrackedRelations()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         dispatch(_push('/'));
       });
     };
@@ -625,7 +625,7 @@ const untrackTableSql = tableName => {
         table_name: tableName,
       });
       dispatch(
-        loadUntrackedRelations({
+        updateSchemaInfo({
           tables: tableData,
         })
       ).then(() => {
