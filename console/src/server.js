@@ -15,7 +15,7 @@ const server = new http.Server(app);
 
 /* Constants */
 /* Routes and middleware */
-// app.use(favicon(path.join(__dirname, '..', 'static', 'favicon_green.svg')));
+// app.use(favicon(path.join(__dirname, '..', 'static', 'favicon_green.png')));
 app.use('/rstatic', Express.static(path.join(__dirname, '..', 'static')));
 
 app.use((req, res) => {

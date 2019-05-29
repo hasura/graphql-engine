@@ -128,7 +128,7 @@ export default (serverEndpoint, headers, config) => {
         finalQuery = cloneQuery(deleteQuery);
         finalQuery.args.table = {'name': tableName, 'schema': schema};
         finalQuery.args.where = {};
-        finalQuery.args.where[primaryKey] = { '$in': params.id };
+        finalQuery.args.where[primaryKey] = { '$in': params.ids };
         finalQuery.args.returning = [primaryKey];
         break;
       case 'GET_MANY':

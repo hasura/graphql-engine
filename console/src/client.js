@@ -34,7 +34,7 @@ if (telemetryEnabled) {
 }
 
 const onError = error => {
-  console.log('WebSocket Error for Events' + error);
+  console.error('WebSocket Error for Events' + error);
 };
 
 const onClose = () => {
