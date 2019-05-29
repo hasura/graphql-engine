@@ -42,7 +42,7 @@ const config = {
 	"siteMetadata": {
 		"title": "2 hour GraphQL course for Android Developers | Hasura",
 		"description": "A concise and powerful tutorial that covers fundamental concepts of both GraphQL and using GraphQL in Android",
-		"ogImage": "https://storage.googleapis.com/graphql-engine-cdn.hasura.io/learn-hasura/assets/twitter-card-android.png",
+		"ogImage": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/social-media/twitter-card-android.png",
 		"docsLocation": "https://github.com/hasura/graphql-engine/tree/master/community/learn/graphql-tutorials/tutorials/android-apollo/tutorial-site/content",
 		"favicon": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/android-favicon.png"
 	},

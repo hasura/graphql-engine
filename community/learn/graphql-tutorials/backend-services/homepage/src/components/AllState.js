@@ -69,7 +69,7 @@ const mobileTutorial = [
   {
     name: 'Android',
     url: 'https://learn.hasura.io/graphql/android',
-    comingSoon: true,
+    comingSoon: false,
     bgClassName: 'androidBg',
     disableBgClassName: 'androidDisableBg',
   },

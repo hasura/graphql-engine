@@ -14,7 +14,7 @@ function (user, context, callback) {
   const nickname = user.nickname;
   
   const admin_secret = "xxxx";
-  const url = "https://learn-hasura-backend.herokuapp.com/v1alpha1/graphql";
+  const url = "https://learn-hasura-backend.herokuapp.com/v1/graphql";
 
   request.post({
       headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': admin_secret},
