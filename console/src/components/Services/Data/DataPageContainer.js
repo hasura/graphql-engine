@@ -39,7 +39,7 @@ const DataPageContainer = ({
   }
 
   const handleSchemaChange = e => {
-    updateCurrentSchema(e.target.value);
+    dispatch(updateCurrentSchema(e.target.value));
   };
 
   const sidebarContent = (

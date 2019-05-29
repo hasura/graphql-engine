@@ -19,9 +19,11 @@ class DataSubSidebar extends React.Component {
 
   static getDerivedStateFromProps(props) {
     const { currentSchema, schema } = props;
+
     const trackedTables = schema.filter(
       table => table.is_table_tracked && table.table_schema === currentSchema
     );
+
     return {
       trackedTables: trackedTables,
     };
@@ -36,6 +38,7 @@ class DataSubSidebar extends React.Component {
 
   tableSearch(e) {
     const searchTerm = e.target.value;
+
     this.setState({
       searchInput: searchTerm,
     });
@@ -58,12 +61,12 @@ class DataSubSidebar extends React.Component {
 
     const trackedTablesLength = trackedTables.length;
 
-    const tableList = trackedTables.filter(
-      t => t.table_name.indexOf(searchInput) !== -1
+    const tableList = trackedTables.filter(t =>
+      t.table_name.includes(searchInput)
     );
 
-    const listedFunctions = functionsList.filter(
-      f => f.function_name.indexOf(searchInput) !== -1
+    const listedFunctions = functionsList.filter(f =>
+      f.function_name.includes(searchInput)
     );
 
     const getSearchInput = () => {

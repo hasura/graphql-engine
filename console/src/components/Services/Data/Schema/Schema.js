@@ -66,7 +66,7 @@ class Schema extends Component {
     const styles = require('../../../Common/Common.scss');
 
     const handleSchemaChange = e => {
-      updateCurrentSchema(e.target.value);
+      dispatch(updateCurrentSchema(e.target.value));
     };
 
     /***********/
@@ -155,7 +155,7 @@ class Schema extends Component {
             const schemaName = schemaNameEdit.trim();
 
             const successCb = () => {
-              updateCurrentSchema(schemaName);
+              dispatch(updateCurrentSchema(schemaName));
 
               this.setState({
                 schemaNameEdit: '',
@@ -227,7 +227,7 @@ class Schema extends Component {
         if (migrationMode) {
           const handleDelete = () => {
             const successCb = () => {
-              updateCurrentSchema('public');
+              dispatch(updateCurrentSchema('public'));
             };
 
             dispatch(deleteCurrentSchema(successCb));
