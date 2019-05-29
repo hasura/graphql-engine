@@ -1,11 +1,3 @@
-//
-//  LoginVC.swift
-//  Todo
-//
-//  Created by Manish Kumar on 03/05/19.
-//  Copyright © 2019 Manish Kumar. All rights reserved.
-//
-
 import UIKit
 import Auth0
 import SimpleKeychain
