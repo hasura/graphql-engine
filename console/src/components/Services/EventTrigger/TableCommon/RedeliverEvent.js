@@ -93,7 +93,9 @@ class RedeliverEvent extends Component {
           r.status === 200 ? (
             <i
               className={
-                styles.invocationSuccess + ' fa fa-check invocationsSuccess ' + styles.tabletdCenter
+                styles.invocationSuccess +
+                ' fa fa-check invocationsSuccess ' +
+                styles.tabletdCenter
               }
             />
           ) : (
@@ -212,7 +214,13 @@ class RedeliverEvent extends Component {
           <Modal.Body>
             <div className="content-fluid">
               <div>
-                <div className={styles.padd_left_remove + ' col-md-12 ' + styles.padd_right_remove} >
+                <div
+                  className={
+                    styles.padd_left_remove +
+                    ' col-md-12 ' +
+                    styles.padd_right_remove
+                  }
+                >
                   <div className={styles.add_mar_bottom}>
                     Event ID - {log.redeliverEventId}
                     <Button

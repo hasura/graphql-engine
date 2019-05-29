@@ -6,7 +6,11 @@ import globals from '../../Globals';
 import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
-import { loadServerVersion, checkServerUpdates, semverInit } from './Actions';
+import {
+  loadServerVersion,
+  loadLatestServerVersion,
+  featureCompatibilityInit,
+} from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
 import {
@@ -14,21 +18,22 @@ import {
   redirectToMetadataStatus,
 } from '../Services/Metadata/Actions';
 
-const semver = require('semver');
-
 import {
   getLoveConsentState,
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
+import { versionGT } from '../../helpers/versionUtils';
+
 class Main extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      showBannerNotification: false,
+      showUpdateNotification: false,
+      loveConsentState: getLoveConsentState(),
     };
 
-    this.state.loveConsentState = getLoveConsentState();
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
 
@@ -40,7 +45,7 @@ class Main extends React.Component {
       .addEventListener('click', this.handleBodyClick);
 
     dispatch(loadServerVersion()).then(() => {
-      dispatch(semverInit());
+      dispatch(featureCompatibilityInit());
 
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
@@ -48,23 +53,23 @@ class Main extends React.Component {
 
       dispatch(loadConsoleOpts());
 
-      dispatch(checkServerUpdates()).then(() => {
-        let isUpdateAvailable = false;
+      dispatch(loadLatestServerVersion()).then(() => {
         try {
-          isUpdateAvailable = semver.gt(
-            this.props.latestServerVersion,
-            this.props.serverVersion
-          );
           const isClosedBefore = window.localStorage.getItem(
             this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
           );
-          if (isClosedBefore === 'true') {
-            isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
-          } else {
-            this.setState({
-              showBannerNotification: isUpdateAvailable,
-            });
+
+          if (isClosedBefore !== 'true') {
+            const isUpdateAvailable = versionGT(
+              this.props.latestServerVersion,
+              this.props.serverVersion
+            );
+
+            if (isUpdateAvailable) {
+              this.setState({
+                showUpdateNotification: true,
+              });
+            }
           }
         } catch (e) {
           console.error(e);
@@ -111,7 +116,7 @@ class Main extends React.Component {
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ showBannerNotification: false });
+    this.setState({ showUpdateNotification: false });
   }
 
   render() {
@@ -207,11 +212,11 @@ class Main extends React.Component {
       return adminSecretHtml;
     };
 
-    const getBannerNotification = () => {
-      let bannerNotificationHtml = null;
+    const getUpdateNotification = () => {
+      let updateNotificationHtml = null;
 
-      if (this.state.showBannerNotification) {
-        bannerNotificationHtml = (
+      if (this.state.showUpdateNotification) {
+        updateNotificationHtml = (
           <div>
             <div className={styles.phantom} />{' '}
             {/* phantom div to prevent overlapping of banner with content. */}
@@ -254,7 +259,7 @@ class Main extends React.Component {
           </div>
         );
       }
-      return bannerNotificationHtml;
+      return updateNotificationHtml;
     };
 
     const getLoveSection = () => {
@@ -323,9 +328,7 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={`${
-                          globals.assetsPath
-                        }/common/img/githubicon.png`}
+                        src={`${globals.assetsPath}/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
                     </div>
@@ -356,9 +359,7 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={`${
-                          globals.assetsPath
-                        }/common/img/twittericon.png`}
+                        src={`${globals.assetsPath}/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
@@ -591,7 +592,7 @@ class Main extends React.Component {
             {getMainContent()}
           </div>
 
-          {getBannerNotification()}
+          {getUpdateNotification()}
         </div>
       </div>
     );

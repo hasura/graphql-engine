@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
 
 const TableHeader = ({
@@ -45,30 +46,37 @@ const TableHeader = ({
     );
   };
 
+  const getBreadCrumbs = () => {
+    return [
+      {
+        title: 'Data',
+        url: '/data',
+      },
+      {
+        title: 'Schema',
+        url: '/data/schema/',
+      },
+      {
+        title: currentSchema,
+        url: '/data/schema/' + currentSchema,
+      },
+      {
+        title: tableName,
+        url:
+          '/data/schema/' + currentSchema + '/tables/' + tableName + '/browse',
+      },
+      {
+        title: activeTab,
+        url: null,
+      },
+    ];
+  };
+
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
       <div className={styles.subHeader}>
-        <div className={styles.dataBreadCrumb}>
-          You are here: <Link to={'/data/schema/' + currentSchema}>Data</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>Schema</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>{currentSchema}</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link
-            to={
-              '/data/schema/' +
-              currentSchema +
-              '/tables/' +
-              tableName +
-              '/browse'
-            }
-          >
-            {tableName}
-          </Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
-        </div>
+        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
           currentValue={tableName}
           save={saveTableNameChange}

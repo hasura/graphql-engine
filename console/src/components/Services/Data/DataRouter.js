@@ -32,6 +32,7 @@ import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
+  loadUntrackedRelations,
   // UPDATE_DATA_HEADERS,
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
@@ -161,6 +162,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         currentSchema: currentSchema,
       }),
       store.dispatch(fetchDataInit()),
+      store.dispatch(loadUntrackedRelations()),
       store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {

@@ -3,7 +3,6 @@ import inflection from 'inflection';
 import {
   makeMigrationCall,
   loadUntrackedRelations,
-  loadSchema,
   RESET_MANUAL_REL_TABLE_LIST,
 } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -20,8 +19,6 @@ export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
 export const REL_SET_MANUAL_COLUMNS = 'ModifyTable/REL_SET_MANUAL_COLUMNS';
 export const REL_ADD_MANUAL_CLICKED = 'ModifyTable/REL_ADD_MANUAL_CLICKED';
-export const UPDATE_MANUAL_REL_TABLE_LIST =
-  'ModifyTable/UPDATE_MANUAL_REL_TABLE_LIST';
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
@@ -81,6 +78,7 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
     };
     const customOnError = () => {};
 
+    // Rename relationship should fetch entire schema info.
     makeMigrationCall(
       dispatch,
       getState,
@@ -96,34 +94,26 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   };
 };
 
-const generateRelationshipsQuery = (
-  tableName,
-  relName,
-  lcol,
-  rTable,
-  rcol,
-  isObjRel,
-  currentSchema
-) => {
-  if (isObjRel) {
+const generateRelationshipsQuery = relMeta => {
+  if (relMeta.isObjRel) {
     const upQuery = {
       type: 'create_object_relationship',
       args: {
-        name: relName,
+        name: relMeta.relName,
         table: {
-          name: tableName,
-          schema: currentSchema,
+          name: relMeta.lTable,
+          schema: relMeta.lSchema,
         },
         using: {},
       },
     };
-    const columnMaps = lcol.map((column, index) => ({
+    const columnMaps = relMeta.lcol.map((column, index) => ({
       lcol: column,
-      rcol: rcol[index],
+      rcol: relMeta.rcol[index],
     }));
     if (columnMaps.length === 1) {
       upQuery.args.using = {
-        foreign_key_constraint_on: lcol[0],
+        foreign_key_constraint_on: relMeta.lcol[0],
       };
     } else {
       const columnReducer = (accumulator, val) => ({
@@ -133,8 +123,8 @@ const generateRelationshipsQuery = (
       upQuery.args.using = {
         manual_configuration: {
           remote_table: {
-            name: rTable,
-            schema: currentSchema,
+            name: relMeta.rTable,
+            schema: relMeta.rSchema,
           },
           column_mapping: columnMaps.reduce(columnReducer, {}),
         },
@@ -143,8 +133,8 @@ const generateRelationshipsQuery = (
     const downQuery = {
       type: 'drop_relationship',
       args: {
-        table: { name: tableName, schema: currentSchema },
-        relationship: relName,
+        table: { name: relMeta.lTable, schema: relMeta.lSchema },
+        relationship: relMeta.relName,
       },
     };
     return { upQuery, downQuery };
@@ -152,26 +142,26 @@ const generateRelationshipsQuery = (
   const upQuery = {
     type: 'create_array_relationship',
     args: {
-      name: relName,
+      name: relMeta.relName,
       table: {
-        name: tableName,
-        schema: currentSchema,
+        name: relMeta.lTable,
+        schema: relMeta.lSchema,
       },
       using: {},
     },
   };
-  const columnMaps = rcol.map((column, index) => ({
+  const columnMaps = relMeta.rcol.map((column, index) => ({
     rcol: column,
-    lcol: lcol[index],
+    lcol: relMeta.lcol[index],
   }));
   if (columnMaps.length === 1) {
     upQuery.args.using = {
       foreign_key_constraint_on: {
         table: {
-          name: rTable,
-          schema: currentSchema,
+          name: relMeta.rTable,
+          schema: relMeta.rSchema,
         },
-        column: rcol[0],
+        column: relMeta.rcol[0],
       },
     };
   } else {
@@ -182,8 +172,8 @@ const generateRelationshipsQuery = (
     upQuery.args.using = {
       manual_configuration: {
         remote_table: {
-          name: rTable,
-          schema: currentSchema,
+          name: relMeta.rTable,
+          schema: relMeta.rSchema,
         },
         column_mapping: columnMaps.reduce(columnReducer, {}),
       },
@@ -192,40 +182,33 @@ const generateRelationshipsQuery = (
   const downQuery = {
     type: 'drop_relationship',
     args: {
-      table: { name: tableName, schema: currentSchema },
-      relationship: relName,
+      table: { name: relMeta.lTable, schema: relMeta.lSchema },
+      relationship: relMeta.relName,
     },
   };
   return { upQuery, downQuery };
 };
 
-const deleteRelMigrate = (tableName, relName, lcol, rtable, rcol, isObjRel) => (
-  dispatch,
-  getState
-) => {
-  const currentSchema = getState().tables.currentSchema;
-  const { upQuery, downQuery } = generateRelationshipsQuery(
-    tableName,
-    relName,
-    lcol,
-    rtable,
-    rcol,
-    isObjRel,
-    currentSchema
-  );
+const deleteRelMigrate = relMeta => (dispatch, getState) => {
+  const { upQuery, downQuery } = generateRelationshipsQuery(relMeta);
   const relChangesUp = [downQuery];
   const relChangesDown = [upQuery];
 
   // Apply migrations
-  const migrationName = `drop_relationship_${relName}_${currentSchema}_table_${tableName}`;
+  const migrationName = `drop_relationship_${relMeta.relName}_${
+    relMeta.lSchema
+  }_table_${relMeta.lTable}`;
 
   const requestMsg = 'Deleting Relationship...';
   const successMsg = 'Relationship deleted';
   const errorMsg = 'Deleting relationship failed';
 
-  const customOnSuccess = () => {};
+  const customOnSuccess = () => {
+    dispatch(loadUntrackedRelations());
+  };
   const customOnError = () => {};
 
+  // Delete relationship should fetch entire schema info.
   makeMigrationCall(
     dispatch,
     getState,
@@ -236,39 +219,52 @@ const deleteRelMigrate = (tableName, relName, lcol, rtable, rcol, isObjRel) => (
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
+    errorMsg,
+    true
   );
 };
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const state = getState().tables.modify.relAdd;
-  const currentSchema = getState().tables.currentSchema;
-  const { upQuery, downQuery } = generateRelationshipsQuery(
-    state.tableName,
-    state.name,
-    state.lcol,
-    state.rTable,
-    state.rcol,
-    state.isObjRel,
-    currentSchema
-  );
+  const { upQuery, downQuery } = generateRelationshipsQuery({
+    lTable: state.lTable,
+    lSchema: state.lSchema,
+    isObjRel: state.isObjRel,
+    relName: state.relName,
+    lcol: state.lcol,
+    rcol: state.rcol,
+    rTable: state.rTable,
+    rSchema: state.rSchema,
+  });
   const relChangesUp = [upQuery];
   const relChangesDown = [downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${
-    state.name
-  }_table_${currentSchema}_${state.tableName}`;
+  const migrationName = `add_relationship_${state.name}_table_${
+    state.lSchema
+  }_${state.lTable}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    dispatch(resetRelationshipForm());
+    dispatch(
+      loadUntrackedRelations({
+        tables: [
+          {
+            table_schema: state.lSchema,
+            table_name: state.lTable,
+          },
+        ],
+      })
+    ).then(() => {
+      dispatch(resetRelationshipForm());
+    });
   };
   const customOnError = () => {};
 
+  // Rename relationship should fetch only current table schema info.
   makeMigrationCall(
     dispatch,
     getState,
@@ -279,7 +275,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
+    errorMsg,
+    true
   );
 };
 
@@ -287,8 +284,9 @@ const relTableChange = tableName => (dispatch, getState) => {
   // set table name state
   dispatch({ type: REL_SET_RTABLE, rTable: tableName });
   // fetch columns of the selected table
-  const tableSchema = getState().tables.modify.relAdd.manualRelInfo.tables.find(
-    t => t.table_name === tableName
+  const schemaName = getState().tables.modify.relAdd.manualRelInfo.remoteSchema;
+  const tableSchema = getState().tables.allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === schemaName
   );
   if (tableSchema) {
     const tableColumns = tableSchema.columns;
@@ -305,7 +303,7 @@ const addRelViewMigrate = tableName => (dispatch, getState) => {
   const remoteSchema = getState().tables.modify.relAdd.manualRelInfo
     .remoteSchema;
   const isObjRel = state.isObjRel;
-  const name = state.name;
+  const name = state.relName;
   const lcol = state.lcol;
   const rcol = state.rcol;
   const columnMapping = {};
@@ -448,10 +446,17 @@ const getExistingFieldsMap = tableSchema => {
 };
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
-  const tableRelMapping = allSchemas.map(table => ({
+  const trackedTables = allSchemas.filter(
+    table => table.is_table_tracked && table.table_schema === currentSchema
+  );
+  const tableRelMapping = trackedTables.map(table => ({
     table_name: table.table_name,
     existingFields: getExistingFieldsMap(table),
-    relations: suggestedRelationshipsRaw(table.table_name, allSchemas),
+    relations: suggestedRelationshipsRaw(
+      table.table_name,
+      allSchemas,
+      currentSchema
+    ),
   }));
 
   const bulkRelTrack = [];
@@ -461,20 +466,14 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
       table.relations.objectRel.forEach(indivObjectRel => {
-        const suggestedRelName = formRelName(
+        indivObjectRel.relName = formRelName(
           indivObjectRel,
           table.existingFields
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
-        table.existingFields[suggestedRelName] = true;
+        table.existingFields[indivObjectRel.relName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
-          indivObjectRel.tableName,
-          suggestedRelName,
-          indivObjectRel.lcol,
-          indivObjectRel.rTable,
-          indivObjectRel.rcol,
-          true,
-          currentSchema
+          indivObjectRel
         );
 
         const objTrack = {
@@ -489,20 +488,14 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
 
     if (table.relations.arrayRel.length) {
       table.relations.arrayRel.forEach(indivArrayRel => {
-        const suggestedRelName = formRelName(
+        indivArrayRel.relName = formRelName(
           indivArrayRel,
           table.existingFields
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
-        table.existingFields[suggestedRelName] = true;
+        table.existingFields[indivArrayRel.relName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
-          indivArrayRel.tableName,
-          suggestedRelName,
-          indivArrayRel.lcol,
-          indivArrayRel.rTable,
-          indivArrayRel.rcol,
-          false,
-          currentSchema
+          indivArrayRel
         );
 
         const arrTrack = {
@@ -543,7 +536,8 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
+    errorMsg,
+    true
   );
 };
 
@@ -564,7 +558,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const errorMsg = 'Creating relationship failed';
 
   const customOnSuccess = () => {
-    Promise.all([dispatch(loadSchema()), dispatch(loadUntrackedRelations())]);
+    Promise.all([dispatch(loadUntrackedRelations())]);
   };
   const customOnError = () => {};
 
