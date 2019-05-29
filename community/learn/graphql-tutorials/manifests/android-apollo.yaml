@@ -30,7 +30,7 @@ spec:
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /graphql/ios/introduction
+            path: /graphql/android/introduction
             port: 8080
 ---
 apiVersion: v1
