@@ -133,14 +133,13 @@ checkPermOnCol pt allowedCols pgCol = do
   unless (HS.member pgCol allowedCols) $
     throw400 PermissionDenied $ permErrMsg roleName
   where
-    permErrMsg (RoleName "admin") =
-      "no such column exists : " <>> pgCol
-    permErrMsg roleName =
-      mconcat
-      [ "role " <>> roleName
-      , " does not have permission to "
-      , permTypeToCode pt <> " column " <>> pgCol
-      ]
+    permErrMsg roleName
+      | roleName == adminRole = "no such column exists : " <>> pgCol
+      | otherwise = mconcat
+        [ "role " <>> roleName
+        , " does not have permission to "
+        , permTypeToCode pt <> " column " <>> pgCol
+        ]
 
 binRHSBuilder
   :: PGColType -> Value -> DMLP1 S.SQLExp

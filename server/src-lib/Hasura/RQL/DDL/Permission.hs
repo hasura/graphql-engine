@@ -84,7 +84,7 @@ type CreateInsPerm = CreatePerm InsPerm
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
 buildViewName (QualifiedObject sn tn) (RoleName rTxt) pt =
   QualifiedObject hdbViewsSchema $ TableName
-  (rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+  (unNEText rTxt <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
   where
     snTxt = getSchemaTxt sn
     tnTxt = getTableTxt tn

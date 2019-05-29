@@ -2,6 +2,7 @@ module Hasura.RQL.Types.Common
        ( PGColInfo(..)
        , RelName(..)
        , RelType(..)
+       , rootRelName
        , relTypeToTxt
        , RelInfo(..)
 
@@ -16,6 +17,12 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColVals
        , MutateResp(..)
+
+       , NEText
+       , mkNEText
+       , unNEText
+       , adminText
+       , rootText
        ) where
 
 import           Hasura.Prelude
@@ -40,15 +47,44 @@ data PGColInfo
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''PGColInfo)
 
+newtype NEText = NEText {unNEText :: T.Text}
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg
+          , DQuote)
+
+mkNEText :: T.Text -> Maybe NEText
+mkNEText ""   = Nothing
+mkNEText text = Just $ NEText text
+
+instance FromJSON NEText where
+  parseJSON = withText "String"
+    $ \text -> case mkNEText text of
+      Nothing     -> fail "empty string not allowed"
+      Just neText -> return neText
+
+instance FromJSONKey NEText
+
+instance Q.FromCol NEText where
+  fromCol bs = mkNEText <$> Q.fromCol bs
+    >>= maybe (throwError "empty string not allowed") return
+
+adminText :: NEText
+adminText = NEText "admin"
+
+rootText :: NEText
+rootText = NEText "root"
+
 newtype RelName
-  = RelName {getRelTxt :: T.Text}
+  = RelName {getRelTxt :: NEText}
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
 
 instance IsIden RelName where
-  toIden (RelName r) = Iden r
+  toIden (RelName r) = Iden $ unNEText r
 
 instance DQuote RelName where
-  dquoteTxt (RelName r) = r
+  dquoteTxt (RelName r) = unNEText r
+
+rootRelName :: RelName
+rootRelName = RelName rootText
 
 relTypeToTxt :: RelType -> T.Text
 relTypeToTxt ObjRel = "object"
@@ -100,18 +136,18 @@ fromPGCol :: PGCol -> FieldName
 fromPGCol (PGCol c) = FieldName c
 
 fromRel :: RelName -> FieldName
-fromRel (RelName r) = FieldName r
+fromRel (RelName r) = FieldName $ unNEText r
 
 newtype TQueryName
-  = TQueryName { getTQueryName :: T.Text }
+  = TQueryName { getTQueryName :: NEText }
   deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey
            , FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
 
 instance IsIden TQueryName where
-  toIden (TQueryName r) = Iden r
+  toIden (TQueryName r) = Iden $ unNEText r
 
 instance DQuote TQueryName where
-  dquoteTxt (TQueryName r) = r
+  dquoteTxt (TQueryName r) = unNEText r
 
 newtype TemplateParam
   = TemplateParam { getTemplateParam :: T.Text }

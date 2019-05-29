@@ -519,18 +519,23 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         expQuery <- parseBody
         gqlExplainHandler expQuery
 
+    mkTmpltName tmpltText =
+      onNothing (mkNEText tmpltText) $ throw400 NotSupported "template name is empty string"
+
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
-    tmpltGetOrDeleteH tmpltName = do
+    tmpltGetOrDeleteH tmpltText = do
       tmpltArgs <- tmpltArgsFromQueryParams
-      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $
+      mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
+        tmpltName <- mkTmpltName tmpltText
         mkQTemplateAction tmpltName tmpltArgs
 
-    tmpltPutOrPostH tmpltName = do
+    tmpltPutOrPostH tmpltText = do
       tmpltArgs <- tmpltArgsFromQueryParams
       mkSpockAction encodeQErr id serverCtx $ mkAPIRespHandler $ do
         bodyTmpltArgs <- parseBody
+        tmpltName <- mkTmpltName tmpltText
         mkQTemplateAction tmpltName $ M.union bodyTmpltArgs tmpltArgs
 
     tmpltArgsFromQueryParams = do

@@ -23,6 +23,8 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Common    (NEText, adminText, mkNEText,
+                                             unNEText)
 import           Hasura.Server.Utils        (adminSecretHeader,
                                              deprecatedAccessKeyHeader,
                                              userRoleHeader)
@@ -40,15 +42,15 @@ import qualified Data.Text                  as T
 import qualified PostgreSQL.Binary.Decoding as PD
 
 newtype RoleName
-  = RoleName {getRoleTxt :: T.Text}
+  = RoleName {getRoleTxt :: NEText}
   deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
 
 instance DQuote RoleName where
-  dquoteTxt (RoleName r) = r
+  dquoteTxt (RoleName r) = unNEText r
 
 adminRole :: RoleName
-adminRole = RoleName "admin"
+adminRole = RoleName adminText
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRole ==)
@@ -64,8 +66,8 @@ isUserVar :: T.Text -> Bool
 isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
 roleFromVars :: UserVars -> Maybe RoleName
-roleFromVars =
-  fmap RoleName . getVarVal userRoleHeader
+roleFromVars uv =
+  getVarVal userRoleHeader uv >>= fmap RoleName . mkNEText
 
 getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =
@@ -90,7 +92,7 @@ data UserInfo
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
+  UserInfo rn $ UserVars $ Map.insert userRoleHeader (unNEText $ getRoleTxt rn) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 instance Hashable UserInfo
@@ -102,7 +104,7 @@ instance Hashable UserInfo
 userInfoToList :: UserInfo -> [(Text, Text)]
 userInfoToList userInfo =
   let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = getRoleTxt . userRole $ userInfo
+      rn = unNEText . getRoleTxt . userRole $ userInfo
   in (userRoleHeader, rn) : vars
 
 adminUserInfo :: UserInfo
@@ -162,7 +164,7 @@ instance Show PermId where
     show $ mconcat
     [ getTableTxt tn
     , "."
-    , getRoleTxt rn
+    , unNEText $ getRoleTxt rn
     , "."
     , T.pack $ show pType
     ]

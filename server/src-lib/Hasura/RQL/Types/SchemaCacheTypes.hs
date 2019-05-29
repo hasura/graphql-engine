@@ -36,15 +36,15 @@ reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj (SOTable tn) = "table " <> qualObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualObjectToText fn
 reportSchemaObj (SOQTemplate qtn) =
-  "query-template " <> getTQueryName qtn
+  "query-template " <> unNEText (getTQueryName qtn)
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualObjectToText tn <> "." <> getRelTxt cn
+  "relationship " <> qualObjectToText tn <> "." <> unNEText (getRelTxt cn)
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualObjectToText tn <> "." <> getRoleTxt rn
+  "permission " <> qualObjectToText tn <> "." <> unNEText (getRoleTxt rn)
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> trn

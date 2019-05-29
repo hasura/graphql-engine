@@ -77,7 +77,7 @@ isValidCol :: PGCol -> Bool
 isValidCol = isValidName . G.Name . getPGColTxt
 
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
-isValidRel rn rt = isValidName (G.Name $ getRelTxt rn)
+isValidRel rn rt = isValidName (G.Name . unNEText $ getRelTxt rn)
                           && isValidObjectName rt
 
 isValidField :: FieldInfo -> Bool
@@ -128,10 +128,10 @@ mkColName :: PGCol -> G.Name
 mkColName (PGCol n) = G.Name n
 
 mkRelName :: RelName -> G.Name
-mkRelName (RelName r) = G.Name r
+mkRelName (RelName r) = G.Name $ unNEText r
 
 mkAggRelName :: RelName -> G.Name
-mkAggRelName (RelName r) = G.Name $ r <> "_aggregate"
+mkAggRelName (RelName r) = G.Name $ unNEText r <> "_aggregate"
 
 mkBoolExpName :: QualifiedTable -> G.Name
 mkBoolExpName tn =
@@ -239,13 +239,13 @@ mkRelFld allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
-      (G.Name $ getRelTxt rn) Map.empty objRelTy
+      (G.Name . unNEText $ getRelTxt rn) Map.empty objRelTy
     objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
     isObjRelNullable = isManual || isNullable
     relTabTy = mkTableTy remTab
 
     arrRelFld =
-      mkHsraObjFldInfo (Just "An array relationship") (G.Name $ getRelTxt rn)
+      mkHsraObjFldInfo (Just "An array relationship") (G.Name . unNEText $ getRelTxt rn)
       (fromInpValL $ mkSelArgs remTab) arrRelTy
     arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
@@ -547,7 +547,7 @@ mkBoolExpInp tn fields =
       Left (PGColInfo colName colTy _) ->
         mk (mkColName colName) (mkCompExpTy colTy)
       Right (RelInfo relName _ _ remTab _, _, _, _, _) ->
-        mk (G.Name $ getRelTxt relName) (mkBoolExpTy remTab)
+        mk (G.Name . unNEText $ getRelTxt relName) (mkBoolExpTy remTab)
 
 mkPGColInp :: PGColInfo -> InpValInfo
 mkPGColInp (PGColInfo colName colTy _) =
@@ -954,9 +954,9 @@ mkInsInp tn insCols relInfoMap =
          let rty = riType relInfo
              remoteQT = riRTable relInfo
          in case rty of
-            ObjRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
+            ObjRel -> InpValInfo Nothing (G.Name . unNEText $ getRelTxt relName) Nothing $
                       G.toGT $ mkObjInsInpTy remoteQT
-            ArrRel -> InpValInfo Nothing (G.Name $ getRelTxt relName) Nothing $
+            ArrRel -> InpValInfo Nothing (G.Name . unNEText $ getRelTxt relName) Nothing $
                       G.toGT $ mkArrInsInpTy remoteQT
 
 {-
@@ -1333,7 +1333,7 @@ mkGCtxRole' tn insPermM selPermM updColsM
     mkFld ty = \case
       Left ci -> [((ty, mkColName $ pgiName ci), Left ci)]
       Right (ri, allowAgg, perm, lim, _) ->
-        let relFld = ( (ty, G.Name $ getRelTxt $ riName ri)
+        let relFld = ( (ty, G.Name . unNEText . getRelTxt $ riName ri)
                      , Right (ri, False, perm, lim)
                      )
             aggRelFld = ( (ty, mkAggRelName $ riName ri)
