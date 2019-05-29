@@ -232,7 +232,6 @@ const mapStateToProps = state => {
     currentTable: state.tables.currentTable,
     migrationMode: state.main.migrationMode,
     functionsList: state.tables.trackedFunctions,
-    listedFunctions: state.tables.listedFunctions,
     currentFunction: state.functions.functionName,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     metadata: state.metadata,
