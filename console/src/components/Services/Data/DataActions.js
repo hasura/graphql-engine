@@ -1,4 +1,5 @@
 import sanitize from 'sanitize-filename';
+import { push } from 'react-router-redux';
 
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
@@ -211,6 +212,7 @@ const setUntrackedRelations = () => (dispatch, getState) => {
     getState().tables.allSchemas,
     getState().tables.currentSchema
   ).bulkRelTrack;
+
   dispatch({
     type: LOAD_UNTRACKED_RELATIONS,
     untrackedRelations,
@@ -392,6 +394,17 @@ const fetchFunctionInit = () => (dispatch, getState) => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
     }
   );
+};
+
+const updateCurrentSchema = schemaName => dispatch => {
+  dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+
+  Promise.all([
+    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
+    dispatch(setUntrackedRelations()),
+    dispatch(fetchFunctionInit()),
+    dispatch(updateSchemaInfo()),
+  ]);
 };
 
 /* ************ action creators *********************** */
@@ -717,6 +730,7 @@ export {
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,
+  updateCurrentSchema,
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,

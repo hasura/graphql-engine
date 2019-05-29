@@ -1,6 +1,3 @@
-/* eslint-disable space-infix-ops */
-/* eslint-disable no-loop-func  */
-
 import PropTypes from 'prop-types';
 
 import React, { Component } from 'react';
@@ -24,8 +21,7 @@ import {
 import {
   updateSchemaInfo,
   fetchFunctionInit,
-  UPDATE_CURRENT_SCHEMA,
-  setUntrackedRelations,
+  updateCurrentSchema,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -67,18 +63,7 @@ class Schema extends Component {
       trackedFunctions,
     } = this.props;
 
-    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
-
-    const updateCurrentSchema = schemaName => {
-      dispatch(push(`${appPrefix}/schema/${schemaName}`));
-
-      Promise.all([
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
-        dispatch(setUntrackedRelations()),
-        dispatch(fetchFunctionInit()),
-        dispatch(updateSchemaInfo()),
-      ]);
-    };
+    const styles = require('../../../Common/Common.scss');
 
     const handleSchemaChange = e => {
       updateCurrentSchema(e.target.value);
@@ -167,14 +152,18 @@ class Schema extends Component {
           };
 
           const handleCreateClick = () => {
+            const schemaName = schemaNameEdit.trim();
+
             const successCb = () => {
-              updateCurrentSchema(schemaNameEdit.trim());
+              updateCurrentSchema(schemaName);
+
               this.setState({
                 schemaNameEdit: '',
                 createSchemaOpen: false,
               });
             };
-            dispatch(createNewSchema(schemaNameEdit.trim(), successCb));
+
+            dispatch(createNewSchema(schemaName, successCb));
           };
 
           const handleCancelCreateNewSchema = () => {
@@ -240,6 +229,7 @@ class Schema extends Component {
             const successCb = () => {
               updateCurrentSchema('public');
             };
+
             dispatch(deleteCurrentSchema(successCb));
           };
 
@@ -264,7 +254,12 @@ class Schema extends Component {
           <div className={styles.display_inline}>
             <select
               onChange={handleSchemaChange}
-              className={styles.changeSchema + ' form-control'}
+              className={
+                styles.add_mar_left_mid +
+                ' ' +
+                styles.width_auto +
+                ' form-control'
+              }
               value={currentSchema}
             >
               {schemaOptions}
@@ -351,7 +346,11 @@ class Schema extends Component {
 
       const heading = (
         <div>
-          <h4 className={`${styles.subheading_text} ${styles.heading_tooltip}`}>
+          <h4
+            className={`${styles.subheading_text} ${styles.display_inline} ${
+              styles.add_mar_right_mid
+            }`}
+          >
             Untracked tables or views
           </h4>
           <OverlayTrigger placement="right" overlay={untrackedTip}>
@@ -457,7 +456,11 @@ class Schema extends Component {
 
       const heading = (
         <div>
-          <h4 className={`${styles.subheading_text} ${styles.heading_tooltip}`}>
+          <h4
+            className={`${styles.subheading_text} ${styles.display_inline} ${
+              styles.add_mar_right_mid
+            }`}
+          >
             Untracked foreign-key relations
           </h4>
           <OverlayTrigger placement="right" overlay={untrackedRelTip}>
@@ -486,7 +489,9 @@ class Schema extends Component {
         const heading = (
           <div>
             <h4
-              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
+              className={`${styles.subheading_text} ${styles.display_inline} ${
+                styles.add_mar_right_mid
+              }`}
             >
               Untracked custom functions
             </h4>
@@ -546,7 +551,9 @@ class Schema extends Component {
         const heading = (
           <div>
             <h4
-              className={`${styles.subheading_text} ${styles.heading_tooltip}`}
+              className={`${styles.subheading_text} ${styles.display_inline} ${
+                styles.add_mar_right_mid
+              }`}
             >
               Non trackable custom functions
             </h4>
