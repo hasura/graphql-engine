@@ -8,8 +8,7 @@ import dataHeaders from './src/components/Services/Data/Common/Headers';
 import { handleMigrationErrors } from './src/components/Services/Data/TableModify/ModifyActions';
 import {
   fetchSchemaList,
-  loadSchema,
-  loadUntrackedSchema,
+  updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   UPDATE_DATA_HEADERS,
   ACCESS_KEY_ERROR,
@@ -39,7 +38,7 @@ export { GraphiQLWrapper };
 
 // export Data Tab parts
 export { dataRouter, dataReducer };
-export { fetchSchemaList, loadSchema, loadUntrackedSchema };
+export { fetchSchemaList, updateSchemaInfo };
 export { UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS, ACCESS_KEY_ERROR };
 export { dataHeaders };
 

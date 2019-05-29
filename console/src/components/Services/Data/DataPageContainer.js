@@ -8,7 +8,7 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   fetchFunctionInit,
   setUntrackedRelations,
@@ -50,7 +50,7 @@ const DataPageContainer = ({
     Promise.all([
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
       dispatch(setUntrackedRelations()),
-      dispatch(loadUntrackedRelations()),
+      dispatch(updateSchemaInfo()),
       dispatch(fetchFunctionInit()),
     ]);
   };

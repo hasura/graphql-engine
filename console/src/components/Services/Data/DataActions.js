@@ -308,7 +308,7 @@ const loadSchema = configOptions => {
   };
 };
 
-const loadUntrackedRelations = options => dispatch => {
+const updateSchemaInfo = options => dispatch => {
   return dispatch(loadSchema(options)).then(() => {
     dispatch(setUntrackedRelations());
   });
@@ -342,7 +342,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      dispatch(loadUntrackedRelations());
+      dispatch(updateSchemaInfo());
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -500,7 +500,7 @@ const makeMigrationCall = (
       if (globals.consoleMode === 'cli') {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
-      dispatch(loadSchema());
+      dispatch(updateSchemaInfo());
     }
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
@@ -709,12 +709,11 @@ export {
   REQUEST_SUCCESS,
   REQUEST_ERROR,
   setTable,
-  loadSchema,
+  updateSchemaInfo,
   handleMigrationErrors,
   makeMigrationCall,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
-  loadUntrackedRelations,
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,

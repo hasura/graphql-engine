@@ -22,7 +22,7 @@ import {
   addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   setUntrackedRelations,
@@ -50,7 +50,7 @@ class Schema extends Component {
 
     this.props.dispatch(fetchFunctionInit());
     this.props.dispatch(
-      loadUntrackedRelations({ schemas: [this.props.currentSchema] })
+      updateSchemaInfo({ schemas: [this.props.currentSchema] })
     );
   }
 
@@ -76,7 +76,7 @@ class Schema extends Component {
         dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
         dispatch(setUntrackedRelations()),
         dispatch(fetchFunctionInit()),
-        dispatch(loadUntrackedRelations()),
+        dispatch(updateSchemaInfo()),
       ]);
     };
 
