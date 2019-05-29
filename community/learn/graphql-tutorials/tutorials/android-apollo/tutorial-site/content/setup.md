@@ -17,10 +17,10 @@ Our task will be to convert the "static" UI into a working realtime app.
 
 This is what you should see after the steps above:
 
-![Boilerplate login](assets/graphql-android/boilerplate-login.png)
-![Boilerplate after login](assets/graphql-android/boilerplate-private-todo.png)
-![Boilerplate feed](assets/graphql-android/boilerplate-public-feed.png)
-![Boilerplate online](assets/graphql-android/boilerplate-online-users.png)
+![Boilerplate login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/boilerplate-login.png)
+![Boilerplate after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/boilerplate-private-todo.png)
+![Boilerplate feed](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/boilerplate-public-feed.png)
+![Boilerplate online](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/boilerplate-online-users.png)
 
 ### Load GraphiQL to play with your GraphQL APIs
 
@@ -29,4 +29,4 @@ This is what you should see after the steps above:
 
 This is what you should see after the steps above:
 
-![GraphiQL after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-react/graphiql-after-login.png)
+![GraphiQL after login](https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/graphiql-after-login.png)
