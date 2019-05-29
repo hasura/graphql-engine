@@ -5,7 +5,7 @@ const config = {
 		"gaTrackingId": "UA-59768903-1"
 	},
 	"header": {
-		"logo": "https://graphql-engine-cdn.hasura.io/learn-hasura/assets/graphql-android/android-favicon.png",
+		"logo": "https://graphql-engine-cdn.hasura.io/img/hasura_icon_white.svg",
 		"title": "/ graphql / android",
 		"githubUrl": "https://github.com/hasura/graphql-engine",
 		"helpUrl": "https://discordapp.com/invite/vBPpJkS",
