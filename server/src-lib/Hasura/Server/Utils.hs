@@ -51,14 +51,6 @@ userIdHeader = "x-hasura-user-id"
 bsToTxt :: B.ByteString -> T.Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
-commonClientHeadersIgnored :: (IsString a) => [a]
-commonClientHeadersIgnored =
-  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-  , "Origin", "Referer" , "Accept", "Accept-Encoding"
-  , "Accept-Language", "Accept-Datetime"
-  , "Cache-Control", "Connection", "DNT", "Content-Type"
-  ]
-
 txtToBs :: T.Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
@@ -175,28 +167,33 @@ diffTimeToMicro diff =
     aSecond = 1000 * 1000
 
 -- ignore the following request headers from the client
-filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
-filterRequestHeaders = filterHeaders reqHeaders
-  where
-    reqHeaders = Set.fromList
-                 [ "Content-Length", "Content-MD5", "User-Agent", "Host"
-                 , "Origin", "Referer" , "Accept", "Accept-Encoding"
-                 , "Accept-Language", "Accept-Datetime"
-                 , "Cache-Control", "Connection", "DNT"
-                 ]
 
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length", "Content-MD5", "User-Agent", "Host"
+  , "Origin", "Referer" , "Accept", "Accept-Encoding"
+  , "Accept-Language", "Accept-Datetime"
+  , "Cache-Control", "Connection", "DNT", "Content-Type"
+  ]
+
+commonResponseHeadersIgnored :: (IsString a) => [a]
+commonResponseHeadersIgnored =
+  [ "Server", "Transfer-Encoding", "Cache-Control"
+  , "Access-Control-Allow-Credentials"
+  , "Access-Control-Allow-Methods"
+  , "Access-Control-Allow-Origin"
+  , "Content-Type"
+  ]
+
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
 
 -- ignore the following response headers from remote
 filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
-filterResponseHeaders = filterHeaders respHeaders
-  where
-    respHeaders = Set.fromList
-                  [ "Server", "Transfer-Encoding", "Cache-Control"
-                  , "Access-Control-Allow-Credentials"
-                  , "Access-Control-Allow-Methods"
-                  , "Access-Control-Allow-Origin"
-                  , "Content-Type"
-                  ]
+filterResponseHeaders =
+  filterHeaders $ Set.fromList commonResponseHeadersIgnored
 
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)

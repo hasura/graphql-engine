@@ -133,17 +133,16 @@ data HandlerCtx
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
-  = JSONResp ![(Text, Text)] !EncJSON
-  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
+  = JSONResp !(HttpResponse EncJSON)
+  | RawResp !(HttpResponse BL.ByteString) -- headers, body
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
-  JSONResp _ j -> encJToLBS j
-  RawResp _ b  -> b
+  JSONResp (HttpResponse j _) -> encJToLBS j
+  RawResp (HttpResponse b _)  -> b
 
 mkAPIRespHandler :: Handler (HttpResponse EncJSON) -> Handler APIResp
-mkAPIRespHandler = fmap (\x -> JSONResp (mkHdrs x) (_hrBody x))
-  where mkHdrs hdrs = maybe [] (fmap unHeader) $ _hrHeaders hdrs
+mkAPIRespHandler = fmap JSONResp
 
 isMetadataEnabled :: ServerCtx -> Bool
 isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
@@ -222,13 +221,9 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
+  logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $
+    Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
--- =======
---   logResult (Just userInfo) req reqBody serverCtx (_hrBody <$> result) $
---     Just (t1, t2)
---   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
--- >>>>>>> fix-1654-fwd-resp-hdrs
 
   where
     logger = scLogger serverCtx
@@ -243,12 +238,12 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       qErrToResp includeInternal qErr
 
     resToResp = \case
-      JSONResp h j -> do
+      JSONResp (HttpResponse j h) -> do
         uncurry setHeader jsonHeader
-        mapM_ (uncurry setHeader) h
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes $ encJToLBS j
-      RawResp h b -> do
-        mapM_ (uncurry setHeader) h
+      RawResp (HttpResponse b h) -> do
+        mapM_ (mapM_ (uncurry setHeader . unHeader)) h
         lazyBytes b
 
 v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
@@ -312,7 +307,7 @@ v1Alpha1PGDumpHandler b = do
   onlyAdmin
   ci <- scConnInfo . hcServerCtx <$> ask
   output <- PGD.execPGDump b ci
-  return $ RawResp [sqlHeader] output
+  return $ RawResp $ HttpResponse output (Just [Header sqlHeader])
 
 consoleAssetsHandler :: L.Logger -> Text -> FilePath -> ActionT IO ()
 consoleAssetsHandler logger dir path = do

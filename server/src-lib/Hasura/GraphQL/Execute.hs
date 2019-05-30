@@ -42,7 +42,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (bsToTxt, commonClientHeadersIgnored,
+import           Hasura.Server.Utils                    (bsToTxt,
+                                                         filterRequestHeaders,
                                                          filterResponseHeaders)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
@@ -364,8 +365,7 @@ execRemoteGQ manager userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-    filteredHeaders = filterUserVars $ flip filter reqHdrs $ \(n, _) ->
-      n `notElem` commonClientHeadersIgnored
+    filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
 
     filterUserVars hdrs =
       let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
