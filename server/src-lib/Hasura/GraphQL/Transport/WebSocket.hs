@@ -11,6 +11,7 @@ import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString                             as B
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
@@ -26,8 +27,6 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
-import qualified Data.IORef                                  as IORef
-import           Hasura.Server.Context
 
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E
@@ -40,6 +39,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, getUserInfoWithExpTime)
+import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (bsToTxt,
                                                               diffTimeToMicro)
@@ -188,7 +188,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
 
-    enforceCors :: ByteString -> [H.Header] -> ExceptT QErr IO [H.Header]
+    enforceCors :: B.ByteString -> [H.Header] -> ExceptT QErr IO [H.Header]
     enforceCors origin reqHdrs = case cpConfig corsPolicy of
       CCAllowAll -> return reqHdrs
       CCDisabled readCookie ->
@@ -286,7 +286,7 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
               payload rsi opDef
-      either postExecErr sendRemoteResp resp
+      either postExecErr (sendRemoteResp . _hrBody) resp
       sendCompleted
 
     sendRemoteResp resp =

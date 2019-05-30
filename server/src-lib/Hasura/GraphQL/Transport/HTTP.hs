@@ -11,9 +11,6 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (bsToTxt,
-                                                         filterRequestHeaders,
-                                                         filterResponseHeaders)
 
 import qualified Hasura.GraphQL.Execute                 as E
 
@@ -30,14 +27,14 @@ runGQ
   -> [N.Header]
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
-  -> m EncJSON
+  -> m (HttpResponse EncJSON)
 runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache sc scVer
   manager reqHdrs req rawReq = do
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pgExecCtx userInfo resolvedOp
+      flip HttpResponse Nothing <$> runHasuraGQ pgExecCtx userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ manager userInfo reqHdrs rawReq rsi opDef
 

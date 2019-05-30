@@ -1,5 +1,5 @@
 module Hasura.Server.Context
-  ( HResponse(..)
+  ( HttpResponse(..)
   , Header (..)
   , Headers
   )
@@ -7,16 +7,14 @@ module Hasura.Server.Context
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy as BL
-
 newtype Header
   = Header { unHeader :: (Text, Text) }
   deriving (Show, Eq)
 
 type Headers = [Header]
 
-data HResponse
-  = HResponse
-  { _hrBody    :: !BL.ByteString
+data HttpResponse a
+  = HttpResponse
+  { _hrBody    :: !a
   , _hrHeaders :: !(Maybe Headers)
-  } deriving (Show, Eq)
+  }

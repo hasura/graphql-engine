@@ -141,8 +141,9 @@ apiRespToLBS = \case
   JSONResp _ j -> encJToLBS j
   RawResp _ b  -> b
 
-mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
-mkAPIRespHandler = fmap JSONResp
+mkAPIRespHandler :: Handler (HttpResponse EncJSON) -> Handler APIResp
+mkAPIRespHandler = fmap (\x -> JSONResp (mkHdrs x) (_hrBody x))
+  where mkHdrs hdrs = maybe [] (fmap unHeader) $ _hrHeaders hdrs
 
 isMetadataEnabled :: ServerCtx -> Bool
 isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
@@ -250,13 +251,13 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
         mapM_ (uncurry setHeader) h
         lazyBytes b
 
-v1QueryHandler :: RQLQuery -> Handler EncJSON
+v1QueryHandler :: RQLQuery -> Handler (HttpResponse EncJSON)
 v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
-  bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
-    queryNeedsReload query
-  return $ HResponse res Nothing
+  res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
+         queryNeedsReload query
+  return $ HttpResponse res Nothing
   where
     -- Hit postgres
     dbAction = do
@@ -277,7 +278,7 @@ v1QueryHandler query = do
       newSc' <- GS.updateSCWithGCtx newSc >>= flip resolveRemoteSchemas httpMgr
       return (resp, newSc')
 
-v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1Alpha1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqBody <- asks hcReqBody
@@ -292,10 +293,10 @@ v1Alpha1GQHandler query = do
   GH.runGQ pgExecCtx userInfo sqlGenCtx enableAL planCache
     sc scVer manager reqHeaders query reqBody
 
-v1GQHandler :: GH.GQLReqUnparsed -> Handler EncJSON
+v1GQHandler :: GH.GQLReqUnparsed -> Handler (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
-gqlExplainHandler :: GE.GQLExplain -> Handler EncJSON
+gqlExplainHandler :: GE.GQLExplain -> Handler (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -303,7 +304,8 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  return $ HttpResponse res Nothing
 
 v1Alpha1PGDumpHandler :: PGD.PGDumpReqBody -> Handler APIResp
 v1Alpha1PGDumpHandler b = do
@@ -370,7 +372,7 @@ queryParsers =
       q <- decodeValue val
       return $ f q
 
-legacyQueryHandler :: TableName -> T.Text -> Handler EncJSON
+legacyQueryHandler :: TableName -> T.Text -> Handler (HttpResponse EncJSON)
 legacyQueryHandler tn queryType =
   case M.lookup queryType queryParsers of
     Just queryParser -> getQueryParser queryParser qt >>= v1QueryHandler
@@ -502,17 +504,17 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
       get "dev/subscriptions" $ mkSpockAction encodeQErr id serverCtx $
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
       get "dev/subscriptions/extended" $ mkSpockAction encodeQErr id serverCtx $
         mkAPIRespHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
-          return $ encJFromJValue respJ
+          return $ HttpResponse (encJFromJValue respJ) Nothing
 
     forM_ [GET,POST] $ \m -> hookAny m $ \_ -> do
       let qErr = err404 NotFound "resource does not exist"
