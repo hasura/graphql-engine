@@ -49,6 +49,7 @@ import           Hasura.RQL.DML.QueryTemplate
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                     (AuthMode (..),
                                                          getUserInfo)
+import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
@@ -132,13 +133,13 @@ data HandlerCtx
 type Handler = ExceptT QErr (ReaderT HandlerCtx IO)
 
 data APIResp
-  = JSONResp !EncJSON
+  = JSONResp ![(Text, Text)] !EncJSON
   | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
 
 apiRespToLBS :: APIResp -> BL.ByteString
 apiRespToLBS = \case
-  JSONResp j  -> encJToLBS j
-  RawResp _ b -> b
+  JSONResp _ j -> encJToLBS j
+  RawResp _ b  -> b
 
 mkAPIRespHandler :: Handler EncJSON -> Handler APIResp
 mkAPIRespHandler = fmap JSONResp
@@ -192,6 +193,7 @@ logError
 logError userInfoM req reqBody logger qErr =
   logResult userInfoM req reqBody logger (Left qErr) Nothing
 
+
 mkSpockAction
   :: (MonadIO m)
   => (Bool -> QErr -> Value)
@@ -221,6 +223,11 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   -- log result
   logResult (Just userInfo) req reqBody logger (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
+-- =======
+--   logResult (Just userInfo) req reqBody serverCtx (_hrBody <$> result) $
+--     Just (t1, t2)
+--   either (qErrToResp $ userRole userInfo == adminRole) resToResp result
+-- >>>>>>> fix-1654-fwd-resp-hdrs
 
   where
     logger = scLogger serverCtx
@@ -235,8 +242,9 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       qErrToResp includeInternal qErr
 
     resToResp = \case
-      JSONResp j -> do
+      JSONResp h j -> do
         uncurry setHeader jsonHeader
+        mapM_ (uncurry setHeader) h
         lazyBytes $ encJToLBS j
       RawResp h b -> do
         mapM_ (uncurry setHeader) h
@@ -248,6 +256,7 @@ v1QueryHandler query = do
   logger <- scLogger . hcServerCtx <$> ask
   bool (fst <$> dbAction) (withSCUpdate scRef logger dbActionReload) $
     queryNeedsReload query
+  return $ HResponse res Nothing
   where
     -- Hit postgres
     dbAction = do

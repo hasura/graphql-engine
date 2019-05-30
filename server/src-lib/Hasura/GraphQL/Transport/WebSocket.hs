@@ -26,7 +26,8 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent                          (threadDelay)
-import           Data.ByteString                             (ByteString)
+import qualified Data.IORef                                  as IORef
+import           Hasura.Server.Context
 
 import           Hasura.EncJSON
 import qualified Hasura.GraphQL.Execute                      as E

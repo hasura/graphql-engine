@@ -169,6 +169,13 @@ will selected.
    ``x-hasura-admin-secret`` is sent, then all ``x-hasura-*`` values from the
    client are respected, otherwise they are ignored.
 
+Response headers from your remote GraphQL servers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Response headers from your remote schema servers are sent back to the client
+over HTTP transport. **Over websocket transport, the response headers are not
+sent.** If you require the response headers from remote servers, use the HTTP
+transport.
+
 
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------
