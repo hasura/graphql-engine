@@ -11,9 +11,7 @@ import           System.Environment
 import           System.Exit
 import           System.Process
 
-import qualified Crypto.Random                as Crypto
 import qualified Data.ByteString              as B
-import qualified Data.ByteString.Base16       as B16
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.CaseInsensitive         as CI
 import qualified Data.Text                    as T
@@ -207,14 +205,6 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
-
--- genRandomString function only works with even numbers
--- On odd numbers it returns random string of one less size
-genRandomString :: (MonadIO m) => Int -> m B.ByteString
-genRandomString size = do
-  drg <- liftIO Crypto.getSystemDRG
-  let (bytes, _) = Crypto.randomBytesGenerate (div size 2) drg
-  return $ B16.encode bytes
 
 generateFingerprint :: IO Text
 generateFingerprint = UUID.toText <$> UUID.nextRandom

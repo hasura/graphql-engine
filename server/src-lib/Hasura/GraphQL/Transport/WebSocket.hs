@@ -18,7 +18,6 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
-import           Debug.Trace
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
@@ -309,8 +308,16 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let payload = J.encode $ _wpPayload sockPayload
       resp <- runExceptT $ E.execRemoteGQ logger verboseLog httpMgr reqId
               userInfo reqHdrs q payload rsi opDef
-      either (postExecErr reqId) sendSuccResp resp
+      either (postExecErr reqId) (sendRemoteResp reqId) resp
       sendCompleted
+
+    sendRemoteResp reqId resp =
+      case J.eitherDecodeStrict (encJToBS resp) of
+        Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
+        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
+
+    invalidGqlErr err = err500 Unexpected $
+      "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ enableAL verboseLog = serverEnv
@@ -342,13 +349,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ errFn False qErr
+        GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
-      traceM "=========> CAUGHT PREEXEC ERR ========>"
-      traceM "===========> ReQUEST ID ========>"
-      traceShowM reqId
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
       let err = case errRespTy of
@@ -357,7 +361,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
+      sendMsg wsConn $ SMData $ DataMsg opId $
+        GRHasura $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -367,7 +372,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $ DataMsg opId resp
+      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
+        DataMsg opId (GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

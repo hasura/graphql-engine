@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import           Migrate                    (migrateCatalog)
@@ -39,6 +38,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Query        (peelRun)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
+import           Hasura.Server.Utils
 import           Hasura.Server.Version      (currentVersion)
 
 import qualified Database.PG.Query          as Q

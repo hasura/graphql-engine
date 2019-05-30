@@ -466,13 +466,14 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Number of conns that need to be opened to Postgres (default: 50)"
+  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of conns that need to be opened to Postgres (default: 1)")
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
+  )
 
 pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =

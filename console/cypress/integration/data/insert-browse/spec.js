@@ -128,6 +128,7 @@ export const passSearchTables = () => {
   validateCT(getTableName(0, testName), 'success');
   cy.get(getElementFromAlias('search-tables')).type('0');
   cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
+  cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
 };
 
 export const checkInsertRoute = () => {

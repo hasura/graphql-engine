@@ -71,10 +71,8 @@ library
                      , network
                      , byteorder
 
-                     -- for generating random strings
+                     -- for parsing RSA keys
                      , cryptonite
-                     -- for encoding random bytestring
-                     , base16-bytestring
 
                      -- for jwt verification
                      , jose

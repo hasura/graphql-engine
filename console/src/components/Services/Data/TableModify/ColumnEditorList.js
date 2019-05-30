@@ -9,8 +9,8 @@ import {
   resetColumnEdit,
   editColumn,
 } from '../TableModify/ModifyActions';
-import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
+import { defaultDataTypeToCast } from '../constants';
 
 import styles from './ModifyTable.scss';
 
@@ -19,14 +19,16 @@ const ColumnEditorList = ({
   currentSchema,
   columnEdit,
   dispatch,
-  columnComments,
-  //
   validTypeCasts,
+  dataTypeIndexMap,
 }) => {
   const tableName = tableSchema.table_name;
 
+  let pkLength = 0;
   const columnPKConstraints = {};
   if (tableSchema.primary_key) {
+    pkLength = tableSchema.primary_key.columns.length;
+
     tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;
     });
@@ -56,7 +58,11 @@ const ColumnEditorList = ({
       type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      isUnique: columnUniqueConstraints[colName] ? true : false,
+      isUnique:
+        (columnPKConstraints[colName] && pkLength === 1) ||
+        columnUniqueConstraints[colName]
+          ? true
+          : false,
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
     };
@@ -125,17 +131,28 @@ const ColumnEditorList = ({
       );
     };
 
+    const getValidTypeCasts = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      if (lowerUdtName in validTypeCasts) {
+        return validTypeCasts[lowerUdtName];
+      }
+      return [
+        ...dataTypeIndexMap[lowerUdtName],
+        ...dataTypeIndexMap[defaultDataTypeToCast],
+      ];
+    };
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={validTypeCasts[col.udt_name]}
+          alterTypeOptions={getValidTypeCasts(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={columnComments[col.column_name]}
+          columnComment={col.comment}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
@@ -145,7 +162,6 @@ const ColumnEditorList = ({
 
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
-      dispatch(fetchColumnComment(tableName, colName));
     };
 
     const editorCollapseCallback = () => {

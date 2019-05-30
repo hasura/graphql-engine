@@ -34,7 +34,6 @@ class Modify extends React.Component {
       triggerList,
       migrationMode,
       dispatch,
-      tableSchemas,
     } = this.props;
 
     const currentTrigger = triggerList.find(
@@ -54,12 +53,6 @@ class Modify extends React.Component {
       retry_conf,
     } = currentTrigger.configuration;
 
-    const currentTableSchema = tableSchemas.find(
-      tableSchema =>
-        tableSchema.table_name === currentTrigger.table_name &&
-        tableSchema.table_schema === currentTrigger.schema_name
-    );
-
     return (
       <div className={styles.containerWhole + ' container-fluid'}>
         <TableHeader
@@ -73,7 +66,7 @@ class Modify extends React.Component {
           <Info
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
-            schemaName={currentTrigger.schema_name}
+            schemaName={currentTrigger.table_schema}
             styles={styles}
           />
           <WebhookEditor
@@ -87,7 +80,7 @@ class Modify extends React.Component {
           />
           <OperationEditor
             definition={definition}
-            allTableColumns={getTableColumns(currentTableSchema)}
+            allTableColumns={getTableColumns(currentTrigger)}
             dispatch={dispatch}
             modifyTrigger={modifyTrigger}
             newDefinition={null}

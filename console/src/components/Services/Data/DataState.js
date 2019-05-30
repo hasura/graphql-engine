@@ -95,6 +95,7 @@ const defaultModifyState = {
   pkModify: [''],
   fkModify: [
     {
+      refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
       onDelete: 'restrict',
@@ -105,16 +106,17 @@ const defaultModifyState = {
   relAdd: {
     isActive: true,
     name: '',
-    tableName: '',
+    lTable: null,
+    lSchema: null,
     isObjRel: null,
     lcol: [],
     rTable: null,
+    rSchema: null,
     rcol: [],
     manualColumns: [],
     isManualExpanded: false,
     manualRelInfo: {
       remoteSchema: '',
-      tables: [],
     },
   },
   permissionsState: { ...defaultPermissionsState },
@@ -153,13 +155,7 @@ const defaultState = {
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
-  listedFunctions: [],
-
   listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
-  tableComment: null,
-  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',

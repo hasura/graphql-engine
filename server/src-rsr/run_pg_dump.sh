@@ -19,6 +19,7 @@ if [ "$CLEAN" = "True" ]; then
 
   # delete front matter
   cat > $template_file << EOF
+SET xmloption = content;
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
