@@ -1,7 +1,7 @@
 import defaultState from './AddState';
 
 import _push from '../push';
-import { loadUntrackedRelations, makeMigrationCall } from '../DataActions';
+import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -268,7 +268,7 @@ const createTableSql = () => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: SET_DEFAULTS });
       dispatch(setTable(state.tableName.trim()));
-      dispatch(loadUntrackedRelations()).then(() =>
+      dispatch(updateSchemaInfo()).then(() =>
         dispatch(
           _push(
             '/schema/' +
