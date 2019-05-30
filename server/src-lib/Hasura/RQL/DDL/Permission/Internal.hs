@@ -16,15 +16,14 @@ import           Language.Haskell.TH.Syntax (Lift)
 import qualified Data.HashMap.Strict        as M
 import qualified Data.Text.Extended         as T
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value           (withGeoVal)
 
 import qualified Database.PG.Query          as Q
-import qualified Hasura.SQL.DML             as S
 
 data PermColSpec
   = PCStar
@@ -175,7 +174,7 @@ data CreatePermP1Res a
 procBoolExp
   :: (QErrM m, CacheRM m)
   => QualifiedTable -> FieldInfoMap -> BoolExp
-  -> m (AnnBoolExpSQL, [SchemaDependency])
+  -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap be
   let deps = getBoolExpDeps tn abe
@@ -202,20 +201,17 @@ getDependentHeaders :: BoolExp -> [T.Text]
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
-valueParser :: (MonadError QErr m) => PGColType -> Value -> m S.SQLExp
+valueParser
+  :: (MonadError QErr m)
+  => PGColType -> Value -> m PartialSQLExp
 valueParser columnType = \case
   -- When it is a special variable
   val@(String t)
-    | isUserVar t -> return $ fromCurSess t
-    | isReqUserId t  -> return $ fromCurSess userIdHeader
-    | otherwise      -> txtRHSBuilder columnType val
+    | isUserVar t   -> return $ PSESessVar columnType t
+    | isReqUserId t -> return $ PSESessVar columnType userIdHeader
+    | otherwise     -> PSESQLExp <$> txtRHSBuilder columnType val
   -- Typical value as Aeson's value
-  val -> txtRHSBuilder columnType val
-  where
-    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
-    fromCurSess hdr = withAnnTy $ withGeoVal columnType $
-      S.SEOpApp (S.SQLOp "->>") [curSess, S.SELit $ T.toLower hdr]
-    withAnnTy v = S.SETyAnn v $ S.AnnType $ T.pack $ show columnType
+  val -> PSESQLExp <$> txtRHSBuilder columnType val
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
@@ -322,7 +318,7 @@ runCreatePerm
   :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
      )
-  => CreatePerm a -> m RespBody
+  => CreatePerm a -> m EncJSON
 runCreatePerm defn@(WithTable tn pd) = do
   permInfo <- createPermP1 defn
   addPermP2 tn pd permInfo
@@ -349,18 +345,8 @@ dropPermP2 dp@(DropPerm tn rn) p1Res = do
 
 runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
-  => DropPerm a -> m RespBody
+  => DropPerm a -> m EncJSON
 runDropPerm defn = do
   permInfo <- buildDropPermP1Res defn
   dropPermP2 defn permInfo
   return successMsg
-
--- instance (IsPerm a) => HDBQuery (DropPerm a) where
-
---   type Phase1Res (DropPerm a) = DropPermP1Res a
-
---   phaseOne = buildDropPermP1Res
-
---   phaseTwo dp p1Res = dropPermP2 dp p1Res >> return successMsg
-
---   schemaCachePolicy = SCPReload

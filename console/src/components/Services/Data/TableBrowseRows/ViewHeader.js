@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import globals from '../../../../Globals';
 import { changeTableOrViewName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
 
 const ViewHeader = ({
@@ -12,7 +13,6 @@ const ViewHeader = ({
   currentSchema,
   migrationMode,
   dispatch,
-  allowRename,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
   let capitalised = tabName;
@@ -39,33 +39,43 @@ const ViewHeader = ({
       )
     );
   };
+
+  const getBreadCrumbs = () => {
+    return [
+      {
+        title: 'Data',
+        url: '/data',
+      },
+      {
+        title: 'Schema',
+        url: '/data/schema/',
+      },
+      {
+        title: currentSchema,
+        url: '/data/schema/' + currentSchema,
+      },
+      {
+        title: tableName,
+        url:
+          '/data/schema/' + currentSchema + '/views/' + tableName + '/browse',
+      },
+      {
+        title: activeTab,
+        url: null,
+      },
+    ];
+  };
+
   return (
     <div>
       <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
       <div className={styles.subHeader}>
-        <div className={styles.dataBreadCrumb}>
-          You are here: <Link to={'/data/schema/' + currentSchema}>Data</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/data/schema/' + currentSchema}>Schema</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link
-            to={
-              '/data/schema/' +
-              currentSchema +
-              '/views/' +
-              tableName +
-              '/browse'
-            }
-          >
-            {tableName}
-          </Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
-        </div>
+        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
           currentValue={tableName}
           save={saveViewNameChange}
           loading={false}
-          editable={tabName === 'modify' && allowRename}
+          editable={tabName === 'modify'}
           dispatch={dispatch}
           property="view"
         />
@@ -73,7 +83,7 @@ const ViewHeader = ({
           <ul className="nav nav-pills">
             <li
               role="presentation"
-              className={tabName === 'view' ? styles.active : ''}
+              className={tabName === 'browse' ? styles.active : ''}
             >
               <Link
                 to={

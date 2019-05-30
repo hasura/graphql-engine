@@ -4,6 +4,8 @@ module Hasura.RQL.DDL.Schema.Diff
   , ConstraintMeta(..)
   , fetchTableMeta
 
+  , getDifference
+
   , TableDiff(..)
   , getTableDiff
   , getTableChangeDeps
@@ -153,7 +155,7 @@ getTableDiff oldtm newtm =
     newCols = tmColumns newtm
 
     uniqueOrPrimaryCons =
-      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary $ cmType cm]
+      [cmName cm | cm <- tmConstraints newtm, isUniqueOrPrimary (cmType cm)]
 
     droppedCols =
       map pcmColumnName $ getDifference pcmOrdinalPosition oldCols newCols
@@ -241,7 +243,7 @@ funcFromMeta :: FunctionMeta -> QualifiedFunction
 funcFromMeta fm = QualifiedObject (fmSchema fm) (fmName fm)
 
 fetchFunctionMeta :: Q.Tx [FunctionMeta]
-fetchFunctionMeta = do
+fetchFunctionMeta =
   map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
     SELECT
       json_build_object(

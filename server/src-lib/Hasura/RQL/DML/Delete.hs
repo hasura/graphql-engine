@@ -1,7 +1,9 @@
 module Hasura.RQL.DML.Delete
   ( validateDeleteQWith
   , validateDeleteQ
-  , DeleteQueryP1(..)
+  , AnnDelG(..)
+  , traverseAnnDel
+  , AnnDel
   , deleteQueryToTx
   , getDeleteDeps
   , runDelete
@@ -12,8 +14,10 @@ import           Instances.TH.Lift        ()
 
 import qualified Data.Sequence            as DS
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -22,37 +26,56 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
 
-data DeleteQueryP1
-  = DeleteQueryP1
+data AnnDelG v
+  = AnnDel
   { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(AnnBoolExpSQL, AnnBoolExpSQL)
-  , dqp1MutFlds :: !MutFlds
+  , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
+  , dqp1MutFlds :: !(MutFldsG v)
+  , dqp1AllCols :: ![PGColInfo]
   } deriving (Show, Eq)
 
-mkSQLDelete
-  :: Bool -> DeleteQueryP1 -> S.SelectWith
-mkSQLDelete strfyNum (DeleteQueryP1 tn (fltr, wc) mutFlds) =
-  mkSelWith tn (S.CTEDelete delete) mutFlds False strfyNum
+traverseAnnDel
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnDelG a
+  -> f (AnnDelG b)
+traverseAnnDel f annUpd =
+  AnnDel tn
+  <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
+  <*> traverseMutFlds f mutFlds
+  <*> pure allCols
+  where
+    AnnDel tn (whr, fltr) mutFlds allCols = annUpd
+
+type AnnDel = AnnDelG S.SQLExp
+
+mkDeleteCTE
+  :: AnnDel -> S.CTE
+mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
+  S.CTEDelete delete
   where
     delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
     tableFltr = Just $ S.WhereFrag $
                 toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
 
 getDeleteDeps
-  :: DeleteQueryP1 -> [SchemaDependency]
-getDeleteDeps (DeleteQueryP1 tn (_, wc) mutFlds) =
-  mkParentDep tn : whereDeps <> retDeps
+  :: AnnDel -> [SchemaDependency]
+getDeleteDeps (AnnDel tn (_, wc) mutFlds allCols) =
+  mkParentDep tn : allColDeps <> whereDeps <> retDeps
   where
     whereDeps = getBoolExpDeps tn wc
+    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
     retDeps   = map (mkColDep "untyped" tn . fst) $
                 pgColsFromMutFlds mutFlds
 
 validateDeleteQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => SessVarBldr m
+  -> (PGColType -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m DeleteQueryP1
-validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
+  -> m AnnDel
+validateDeleteQWith sessVarBldr prepValBldr
+  (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
 
   -- If table is view then check if it deletable
@@ -70,6 +93,7 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
              askSelPermInfo tableInfo
 
   let fieldInfoMap = tiFieldInfoMap tableInfo
+      allCols = getCols fieldInfoMap
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
@@ -77,11 +101,14 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp' fieldInfoMap selPerm rqlBE prepValBuilder
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
 
-  return $ DeleteQueryP1 tableName
-    (dpiFilter delPerm, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
+  resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
+                     dpiFilter delPerm
+
+  return $ AnnDel tableName
+    (resolvedDelFltr, annSQLBoolExp)
+    (mkDefaultMutFlds mAnnRetCols) allCols
 
   where
     selNecessaryMsg =
@@ -91,20 +118,20 @@ validateDeleteQWith prepValBuilder (DeleteQuery tableName rqlBE mRetCols) = do
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => DeleteQuery -> m (DeleteQueryP1, DS.Seq Q.PrepArg)
+  => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
 validateDeleteQ =
-  liftDMLP1 . validateDeleteQWith binRHSBuilder
+  liftDMLP1 . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
 
-deleteQueryToTx :: Bool -> (DeleteQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr RespBody
+deleteQueryToTx :: Bool -> (AnnDel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx strfyNum (u, p) =
-  runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder deleteSQL) (toList p) True
+  runMutation $ Mutation (dqp1Table u) (deleteCTE, p)
+                (dqp1MutFlds u) (dqp1AllCols u) strfyNum
   where
-    deleteSQL = toSQL $ mkSQLDelete strfyNum u
+    deleteCTE = mkDeleteCTE u
 
 runDelete
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
-  => DeleteQuery -> m RespBody
+  => DeleteQuery -> m EncJSON
 runDelete q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateDeleteQ q >>= liftTx . deleteQueryToTx strfyNum

@@ -6,82 +6,78 @@ import globals from '../../Globals';
 import * as tooltip from './Tooltips';
 import 'react-toggle/style.css';
 import Spinner from '../Common/Spinner/Spinner';
-import { loadServerVersion, checkServerUpdates } from './Actions';
+import {
+  loadServerVersion,
+  loadLatestServerVersion,
+  featureCompatibilityInit,
+} from './Actions';
 import { loadConsoleOpts } from '../../telemetry/Actions.js';
 import './NotificationOverrides.css';
-import semverCheck from '../../helpers/semver';
-
-const semver = require('semver');
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Metadata/Actions';
 
 import {
   getLoveConsentState,
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
+import { versionGT } from '../../helpers/versionUtils';
+
 class Main extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      showBannerNotification: false,
-      showEvents: false,
-      showSchemaStitch: false,
+      showUpdateNotification: false,
+      loveConsentState: getLoveConsentState(),
     };
 
-    this.state.loveConsentState = getLoveConsentState();
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
+
   componentDidMount() {
     const { dispatch } = this.props;
+
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
+
     dispatch(loadServerVersion()).then(() => {
+      dispatch(featureCompatibilityInit());
+
+      dispatch(loadInconsistentObjects()).then(() => {
+        this.handleMetadataRedirect();
+      });
+
       dispatch(loadConsoleOpts());
-      dispatch(checkServerUpdates()).then(() => {
-        let isUpdateAvailable = false;
+
+      dispatch(loadLatestServerVersion()).then(() => {
         try {
-          isUpdateAvailable = semver.gt(
-            this.props.latestServerVersion,
-            this.props.serverVersion
-          );
           const isClosedBefore = window.localStorage.getItem(
             this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
           );
-          if (isClosedBefore === 'true') {
-            isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
-          } else {
-            this.setState({
-              showBannerNotification: isUpdateAvailable,
-            });
+
+          if (isClosedBefore !== 'true') {
+            const isUpdateAvailable = versionGT(
+              this.props.latestServerVersion,
+              this.props.serverVersion
+            );
+
+            if (isUpdateAvailable) {
+              this.setState({
+                showUpdateNotification: true,
+              });
+            }
           }
         } catch (e) {
           console.error(e);
         }
       });
-      this.checkEventsTab().then(() => {
-        this.checkSchemaStitch();
-      });
     });
   }
 
-  checkSchemaStitch() {
-    const showSchemaStitch = semverCheck(
-      'schemaStitching',
-      this.props.serverVersion
-    );
-    if (showSchemaStitch) {
-      this.setState({ showSchemaStitch: true });
-    }
-    return Promise.resolve();
-  }
-  checkEventsTab() {
-    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-    if (showEvents) {
-      this.setState({ showEvents: true });
-    }
-    return Promise.resolve();
-  }
   handleBodyClick(e) {
     const heartDropDownOpen = document.querySelectorAll(
       '#dropdown_wrapper.open'
@@ -93,9 +89,17 @@ class Main extends React.Component {
       document.getElementById('dropdown_wrapper').classList.remove('open');
     }
   }
+
   handleDropdownToggle() {
     document.getElementById('dropdown_wrapper').classList.toggle('open');
   }
+
+  handleMetadataRedirect() {
+    if (this.props.metadata.inconsistentObjects.length > 0) {
+      this.props.dispatch(redirectToMetadataStatus());
+    }
+  }
+
   closeLoveIcon() {
     const s = {
       isDismissed: true,
@@ -105,13 +109,14 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
     window.localStorage.setItem(
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ showBannerNotification: false });
+    this.setState({ showUpdateNotification: false });
   }
 
   render() {
@@ -122,18 +127,19 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       latestServerVersion,
+      metadata,
     } = this.props;
 
     const styles = require('./Main.scss');
 
     const appPrefix = '';
 
-    const logo = require('./white-logo.svg');
-    const github = require('./Github.svg');
-    const discord = require('./Discord.svg');
-    const mail = require('./mail.svg');
-    const docs = require('./logo.svg');
-    const pixHeart = require('./pix-heart.svg');
+    const logo = require('./images/white-logo.svg');
+    const github = require('./images/Github.svg');
+    const discord = require('./images/Discord.svg');
+    const mail = require('./images/mail.svg');
+    const docs = require('./images/logo.svg');
+    const pixHeart = require('./images/pix-heart.svg');
 
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -151,7 +157,6 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return mainContent;
     };
 
@@ -163,6 +168,23 @@ class Main extends React.Component {
       }
 
       return metadataSelectedMarker;
+    };
+
+    const getMetadataIcon = () => {
+      if (metadata.inconsistentObjects.length === 0) {
+        return <i className={styles.question + ' fa fa-cog'} />;
+      }
+      return (
+        <div className={styles.question}>
+          <i className={'fa fa-cog'} />
+          <div className={styles.overlappingExclamation}>
+            <div className={styles.iconWhiteBackground} />
+            <div>
+              <i className={'fa fa-exclamation-circle'} />
+            </div>
+          </div>
+        </div>
+      );
     };
 
     const getAdminSecretSection = () => {
@@ -187,15 +209,14 @@ class Main extends React.Component {
           </div>
         );
       }
-
       return adminSecretHtml;
     };
 
-    const getBannerNotification = () => {
-      let bannerNotificationHtml = null;
+    const getUpdateNotification = () => {
+      let updateNotificationHtml = null;
 
-      if (this.state.showBannerNotification) {
-        bannerNotificationHtml = (
+      if (this.state.showUpdateNotification) {
+        updateNotificationHtml = (
           <div>
             <div className={styles.phantom} />{' '}
             {/* phantom div to prevent overlapping of banner with content. */}
@@ -238,8 +259,7 @@ class Main extends React.Component {
           </div>
         );
       }
-
-      return bannerNotificationHtml;
+      return updateNotificationHtml;
     };
 
     const getLoveSection = () => {
@@ -295,7 +315,7 @@ class Main extends React.Component {
                   Roses are red, <br />
                   Violets are blue;
                   <br />
-                  Star us on Github,
+                  Star us on GitHub,
                   <br />
                   To make our <i className={'fa fa-heart'} /> go wooooo!
                 </li>
@@ -308,10 +328,8 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
-                        }
-                        alt={'Github'}
+                        src={`${globals.assetsPath}/common/img/githubicon.png`}
+                        alt={'GitHub'}
                       />
                     </div>
                     <div className={styles.pixelText}>
@@ -341,9 +359,7 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/twittericon.png'
-                        }
+                        src={`${globals.assetsPath}/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
@@ -370,68 +386,6 @@ class Main extends React.Component {
       }
 
       return helpDropdownPosStyle;
-    };
-
-    const getRemoteSchemaLink = () => {
-      let remoteSchemaLink = null;
-
-      if (this.state.showSchemaStitch) {
-        remoteSchemaLink = (
-          <OverlayTrigger placement="right" overlay={tooltip.customresolver}>
-            <li>
-              <Link
-                className={
-                  currentActiveBlock === 'remote-schemas'
-                    ? styles.navSideBarActive
-                    : ''
-                }
-                to={appPrefix + '/remote-schemas/manage/schemas'}
-              >
-                <div className={styles.iconCenter}>
-                  <i
-                    title="Remote Schemas"
-                    className="fa fa-plug"
-                    aria-hidden="true"
-                  />
-                </div>
-                <p>Remote Schemas</p>
-              </Link>
-            </li>
-          </OverlayTrigger>
-        );
-      }
-
-      return remoteSchemaLink;
-    };
-
-    const getEventsLink = () => {
-      let eventsLink = null;
-
-      if (this.state.showEvents) {
-        eventsLink = (
-          <OverlayTrigger placement="right" overlay={tooltip.events}>
-            <li>
-              <Link
-                className={
-                  currentActiveBlock === 'events' ? styles.navSideBarActive : ''
-                }
-                to={appPrefix + '/events/manage/triggers'}
-              >
-                <div className={styles.iconCenter}>
-                  <i
-                    title="Events"
-                    className="fa fa-cloud"
-                    aria-hidden="true"
-                  />
-                </div>
-                <p>Events</p>
-              </Link>
-            </li>
-          </OverlayTrigger>
-        );
-      }
-
-      return eventsLink;
     };
 
     return (
@@ -498,10 +452,51 @@ class Main extends React.Component {
                     </Link>
                   </li>
                 </OverlayTrigger>
-
-                {getRemoteSchemaLink()}
-
-                {getEventsLink()}
+                <OverlayTrigger
+                  placement="right"
+                  overlay={tooltip.customresolver}
+                >
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'remote-schemas'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/remote-schemas/manage/schemas'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Remote Schemas"
+                          className="fa fa-plug"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Remote Schemas</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
+                <OverlayTrigger placement="right" overlay={tooltip.events}>
+                  <li>
+                    <Link
+                      className={
+                        currentActiveBlock === 'events'
+                          ? styles.navSideBarActive
+                          : ''
+                      }
+                      to={appPrefix + '/events/manage/triggers'}
+                    >
+                      <div className={styles.iconCenter}>
+                        <i
+                          title="Events"
+                          className="fa fa-cloud"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p>Events</p>
+                    </Link>
+                  </li>
+                </OverlayTrigger>
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
@@ -509,7 +504,7 @@ class Main extends React.Component {
 
               <Link to="/metadata">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  <i className={styles.question + ' fa fa-cog'} />
+                  {getMetadataIcon()}
                   {getMetadataSelectedMarker()}
                 </div>
               </Link>
@@ -597,7 +592,7 @@ class Main extends React.Component {
             {getMainContent()}
           </div>
 
-          {getBannerNotification()}
+          {getUpdateNotification()}
         </div>
       </div>
     );
@@ -610,6 +605,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    metadata: state.metadata,
   };
 };
 

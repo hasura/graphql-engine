@@ -5,6 +5,7 @@ import {
   dataTypes,
   getElementFromAlias,
   typeDefaults,
+  tableColumnTypeSelector,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -24,7 +25,12 @@ const setColumns = () => {
     // Type column name
     cy.get(getElementFromAlias(`column-${i}`)).type(getColName(i));
     // Select column type
-    cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
+    tableColumnTypeSelector(`col-type-${i}`);
+    // cy.get(getElementFromAlias(`col-type-${i}`)).click();
+    cy.get(getElementFromAlias(`data_test_column_type_value_${dataTypes[i]}`))
+      .first()
+      .click();
+    // cy.get(getElementFromAlias(`col-type-${i}`)).select(dataTypes[i]);
 
     if (i === dataTypes.indexOf('text')) {
       cy.get(getElementFromAlias(`unique-${i}`)).check();
@@ -109,7 +115,11 @@ export const passSearchTables = () => {
   // Type column name
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   // Select column type
-  cy.get(getElementFromAlias('col-type-0')).select('integer');
+  // cy.get(getElementFromAlias('col-type-0')).select('integer');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create
@@ -118,6 +128,7 @@ export const passSearchTables = () => {
   validateCT(getTableName(0, testName), 'success');
   cy.get(getElementFromAlias('search-tables')).type('0');
   cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
+  cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
 };
 
 export const checkInsertRoute = () => {
@@ -168,22 +179,24 @@ export const passBIInsert20Rows = () => {
         'filter-text'
       );
       cy.get(getElementFromAlias('insert-save-button')).click();
-      continue; // eslint-disable-line
-    }
-    cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
-      '{selectall}{del}'
-    );
-    cy.get(getElementFromAlias(`typed-input-${textIndex}`))
-      .type('{selectall}{del}')
-      .type(
-        Math.random()
-          .toString(36)
-          .substring(7)
+    } else {
+      cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
+        '{selectall}{del}'
       );
-    cy.get(getElementFromAlias(`typed-input-default-${textIndex + 1}`)).check();
-    cy.get(getElementFromAlias('insert-save-button')).click();
-    cy.wait(300);
-    validateInsert(getTableName(0, testName), i + 1);
+      cy.get(getElementFromAlias(`typed-input-${textIndex}`))
+        .type('{selectall}{del}')
+        .type(
+          Math.random()
+            .toString(36)
+            .substring(7)
+        );
+      cy.get(
+        getElementFromAlias(`typed-input-default-${textIndex + 1}`)
+      ).check();
+      cy.get(getElementFromAlias('insert-save-button')).click();
+      cy.wait(300);
+      validateInsert(getTableName(0, testName), i + 1);
+    }
   }
   // Wait for insert notifications to disappear
   cy.wait(7000);
@@ -423,9 +436,18 @@ export const checkViewRelationship = () => {
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
-  cy.get(getElementFromAlias('col-type-0')).select('serial');
+  tableColumnTypeSelector('col-type-0');
+  // cy.get(getElementFromAlias('col-type-0')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
+    .first()
+    .click();
   cy.get(getElementFromAlias('column-1')).type('someID');
-  cy.get(getElementFromAlias('col-type-1')).select('integer');
+  tableColumnTypeSelector('col-type-1');
+  // cy.get(getElementFromAlias('col-type-1')).click();
+  cy.get(getElementFromAlias('data_test_column_type_value_integer'))
+    .first()
+    .click();
+  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Click on create
@@ -433,14 +455,16 @@ export const checkViewRelationship = () => {
   cy.wait(7000);
   validateCT(getTableName(0, testName), 'success');
   // Add foreign key
-  cy.get(getElementFromAlias('edit-someID')).click();
-  cy.get(getElementFromAlias('foreign-key-checkbox')).check();
-  cy.get(getElementFromAlias('ref-table')).select(getTableName(0, testName));
-  cy.get(getElementFromAlias('ref-col')).select(getColName(0));
-  cy.get(getElementFromAlias('save-button')).click();
-  cy.wait(1000);
+  cy.get(getElementFromAlias('modify-table-edit-fk-0')).click();
+  cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(
+    getTableName(0, testName)
+  );
+  cy.get(getElementFromAlias('foreign-key-0-lcol-0')).select('0');
+  cy.get(getElementFromAlias('foreign-key-0-rcol-0')).select(getColName(0));
+  cy.get(getElementFromAlias('modify-table-fk-0-save')).click();
+  cy.wait(5000);
   // Add relationship
-  cy.get(getElementFromAlias('add-rel-mod')).click();
+  cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
   cy.get(getElementFromAlias('suggested-rel-name'))
     .clear()

@@ -2,12 +2,19 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
+import Button from '../../../Common/Button/Button';
+import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import ForeignKeyWrapper from './ForeignKeyWrapper';
+import UniqueKeyWrapper from './UniqueKeyWrapper';
+
+import { showErrorNotification } from '../../Common/Notification';
+
+import TableName from './TableName';
+import TableColumns from './TableColumns';
+import TableComment from './TableComment';
+
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Button from '../../../Common/Button/Button';
-
-import dataTypes from '../Common/DataTypes';
-import { showErrorNotification } from '../Notification';
 
 import {
   setTableName,
@@ -17,24 +24,20 @@ import {
   setColType,
   setColNullable,
   setColDefault,
-  setColUnique,
-  removeColDefault,
+  setForeignKeys,
   addCol,
+  setUniqueKeys,
 } from './AddActions';
-import {
-  setDefaults,
-  setPk,
-  addPk,
-  removePk,
-  createTableSql,
-} from './AddActions';
+
+import { fetchColumnTypes, RESET_COLUMN_TYPE_LIST } from '../DataActions';
+import { setDefaults, setPk, createTableSql } from './AddActions';
 import { validationError, resetValidation } from './AddActions';
 
 import {
   ATLEAST_ONE_PRIMARY_KEY_MSG,
   ATLEAST_ONE_COLUMN_MSG,
+  fieldRepeatedMsg,
 } from './AddWarning';
-import { primaryKeyAlreadyPresentMsg, fieldRepeatedMsg } from './AddWarning';
 
 import {
   listDuplicate,
@@ -45,33 +48,86 @@ import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
 } from '../Common/GraphQLValidation';
-/*
-const typeDescriptionDict = convertListToDictUsingKV(
-  'value',
-  'description',
-  dataTypes
-);
-*/
+
+/* AddTable is a wrapper which wraps
+ *  1) Table Name input
+ *  2) Columns inputs
+ *  3) Primary Key input
+ *  4) Comment Input
+ *  5) Add Table button
+ * */
+
 class AddTable extends Component {
   constructor(props) {
     super(props);
     this.props.dispatch(setDefaults());
-    const { columns, dispatch } = this.props;
-    columns.map((column, i) => {
-      //eslint-disable-line
-      let defValue = '';
-      if ('default' in column) {
-        defValue = column.default.value;
-      }
-      if (defValue === '') {
-        dispatch(removeColDefault(i));
-      }
-    });
+    this.onTableNameChange = this.onTableNameChange.bind(this);
+    this.onTableCommentChange = this.onTableCommentChange.bind(this);
+    this.onRemoveColumn = this.onRemoveColumn.bind(this);
+    this.onColumnChange = this.onColumnNameChange.bind(this);
+    this.onColTypeChange = this.onColTypeChange.bind(this);
+    this.onColNullableChange = this.onColNullableChange.bind(this);
+    this.onColUniqueChange = this.onColUniqueChange.bind(this);
+    this.setColDefaultValue = this.setColDefaultValue.bind(this);
   }
-
+  componentDidMount() {
+    this.props.dispatch(fetchColumnTypes());
+  }
   componentWillUnmount() {
     this.props.dispatch(setDefaults());
+    this.props.dispatch({
+      type: RESET_COLUMN_TYPE_LIST,
+    });
   }
+  onTableNameChange = e => {
+    const { dispatch } = this.props;
+    dispatch(setTableName(e.target.value));
+  };
+  onTableCommentChange = e => {
+    const { dispatch } = this.props;
+    dispatch(setTableComment(e.target.value));
+  };
+  onRemoveColumn = i => {
+    const { dispatch } = this.props;
+    dispatch(removeColumn(i));
+  };
+  onColumnNameChange = (i, isNullableChecked, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColName(e.target.value, i, isNullableChecked));
+  };
+  onColTypeChange = (i, value) => {
+    const { dispatch, columns } = this.props;
+    dispatch(setColType(value, i));
+    if (i + 1 === columns.length) {
+      dispatch(addCol());
+    }
+  };
+  onColNullableChange = (i, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColNullable(e.target.checked, i));
+  };
+
+  onColUniqueChange = (i, numUniqueKeys, isColumnUnique, _uindex) => {
+    const { dispatch, uniqueKeys } = this.props;
+    if (isColumnUnique) {
+      dispatch(
+        setUniqueKeys([
+          ...uniqueKeys.slice(0, _uindex),
+          ...uniqueKeys.slice(_uindex + 1),
+        ])
+      );
+    } else {
+      const newUniqueKeys = JSON.parse(JSON.stringify(uniqueKeys));
+      newUniqueKeys[numUniqueKeys - 1] = [i];
+      dispatch(setUniqueKeys([...newUniqueKeys, []]));
+    }
+  };
+
+  setColDefaultValue = (i, isNullableChecked, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColDefault(e.target.value, i, isNullableChecked));
+  };
+
   columnValidation() {
     if (this.props.columns.length <= 0) {
       // this.props.dispatch(validationError(ATLEAST_ONE_COLUMN_MSG));
@@ -128,19 +184,21 @@ class AddTable extends Component {
       }
       // check for column value being valid graphql
       let isValid = true;
-      this.props.columns.filter(c => c.name !== '').map(c => {
-        if (!gqlPattern.test(c.name)) {
-          this.props.dispatch(
-            showErrorNotification(
-              gqlColumnErrorNotif[0],
-              gqlColumnErrorNotif[1],
-              gqlColumnErrorNotif[2],
-              gqlColumnErrorNotif[3]
-            )
-          );
-          isValid = false;
-        }
-      });
+      this.props.columns
+        .filter(c => c.name !== '')
+        .map(c => {
+          if (!gqlPattern.test(c.name)) {
+            this.props.dispatch(
+              showErrorNotification(
+                gqlColumnErrorNotif[0],
+                gqlColumnErrorNotif[1],
+                gqlColumnErrorNotif[2],
+                gqlColumnErrorNotif[3]
+              )
+            );
+            isValid = false;
+          }
+        });
       if (!isValid) {
         return false;
       }
@@ -196,25 +254,6 @@ class AddTable extends Component {
     return true;
   }
 
-  primaryKeyValidation(i, e) {
-    const value = parseInt(e.target.value, 10);
-    this.props.dispatch(resetValidation());
-    if (this.props.primaryKeys.filter(key => value === key).length > 0) {
-      this.props.dispatch(
-        validationError(
-          primaryKeyAlreadyPresentMsg(this.props.columns[value].name)
-        )
-      );
-      return false;
-    }
-
-    this.props.dispatch(setPk(value, i));
-    if (i + 1 === this.props.primaryKeys.length) {
-      this.props.dispatch(addPk());
-    }
-    return true;
-  }
-
   submitValidation() {
     this.props.dispatch(resetValidation());
     // table name validation
@@ -233,192 +272,34 @@ class AddTable extends Component {
     const {
       columns,
       primaryKeys,
+      allSchemas,
+      foreignKeys,
+      uniqueKeys,
+      fkToggled,
+      tableName,
+      currentSchema,
       dispatch,
       ongoingRequest,
       lastError,
       lastSuccess,
       internalError,
+      dataTypes,
+      schemaList,
     } = this.props;
     const styles = require('../../../Common/TableCommon/Table.scss');
-    const cols = columns.map((column, i) => {
-      let removeIcon;
-      if (i + 1 === columns.length) {
-        removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
-      } else {
-        removeIcon = (
-          <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-            onClick={() => {
-              dispatch(removeColumn(i));
-            }}
-          />
-        );
+    const getCreateBtnText = () => {
+      let createBtnText = 'Add Table';
+      if (ongoingRequest) {
+        createBtnText = 'Creating...';
+      } else if (lastError) {
+        createBtnText = 'Creating Failed. Try again';
+      } else if (internalError) {
+        createBtnText = 'Creating Failed. Try again';
+      } else if (lastSuccess) {
+        createBtnText = 'Created! Redirecting...';
       }
-      let defValue = '';
-      if ('default' in column) {
-        defValue = column.default.value;
-      }
-      let defPlaceholder = 'default_value';
-      if (column.type === 'timestamptz') {
-        defPlaceholder = 'example: now()';
-      } else if (column.type === 'date') {
-        defPlaceholder = '';
-      } else if (column.type === 'uuid') {
-        defPlaceholder = 'example: gen_random_uuid()';
-      }
-      return (
-        <div key={i} className={`${styles.display_flex} form-group`}>
-          <input
-            type="text"
-            className={`${styles.input} form-control ${styles.add_mar_right}`}
-            value={column.name}
-            placeholder="column_name"
-            onChange={e => {
-              dispatch(
-                setColName(e.target.value, i, this.refs[`nullable${i}`].checked)
-              );
-            }}
-            data-test={`column-${i}`}
-          />
-          <select
-            value={column.type}
-            className={`${styles.select} ${styles.select200} form-control ${
-              styles.add_pad_left
-            }`}
-            onChange={e => {
-              dispatch(
-                setColType(e.target.value, i, this.refs[`nullable${i}`].checked)
-              );
-              if (i + 1 === columns.length) {
-                dispatch(addCol());
-              }
-            }}
-            data-test={`col-type-${i}`}
-          >
-            {column.type === '' ? (
-              <option disabled value="">
-                -- type --
-              </option>
-            ) : null}
-            {/* The below makes a set of options based of the available datatype. Refer Common/Datatypes.js for more info. */}
-            {dataTypes.map((datatype, index) => (
-              <option
-                value={datatype.value}
-                key={index}
-                title={datatype.description}
-              >
-                {datatype.name}
-              </option>
-            ))}
-          </select>
-          {/*
-          {typeDescriptionDict && typeDescriptionDict[column.type] ? (
-            <span>
-              &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.dataTypeDescription(
-                  typeDescriptionDict[column.type]
-                )}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
-            </span>
-          ) : null}
-          */}
-          <input
-            placeholder={defPlaceholder}
-            type="text"
-            value={defValue}
-            className={`${styles.inputDefault} ${
-              styles.defaultWidth
-            } form-control ${styles.add_pad_left}`}
-            onChange={e => {
-              dispatch(
-                setColDefault(
-                  e.target.value,
-                  i,
-                  this.refs[`nullable${i}`].checked
-                )
-              );
-            }}
-            data-test={`col-default-${i}`}
-          />{' '}
-          <input
-            className={`${styles.inputCheckbox} form-control `}
-            checked={columns[i].nullable}
-            type="checkbox"
-            ref={`nullable${i}`}
-            onChange={e => {
-              dispatch(setColNullable(e.target.checked, i));
-            }}
-            data-test={`nullable-${i}`}
-          />{' '}
-          <label>Nullable</label>
-          <input
-            className={`${styles.inputCheckbox} form-control `}
-            checked={columns[i].unique}
-            type="checkbox"
-            ref={`unique${i}`}
-            onChange={e => {
-              dispatch(setColUnique(e.target.checked, i));
-            }}
-            data-test={`unique-${i.toString()}`}
-          />{' '}
-          <label>Unique</label>
-          {removeIcon}
-        </div>
-      );
-    });
-    const pks = primaryKeys.map((pk, i) => {
-      let removeIcon;
-      if (i + 1 === primaryKeys.length) {
-        removeIcon = null;
-      } else {
-        removeIcon = (
-          <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-            onClick={() => {
-              dispatch(removePk(i));
-            }}
-          />
-        );
-      }
-      return (
-        <div key={i} className="form-group">
-          <select
-            value={pk || ''}
-            className={`${styles.select} form-control ${styles.add_pad_left}`}
-            onChange={this.primaryKeyValidation.bind(this, i)}
-            data-test={`primary-key-select-${i}`}
-            data-test={`primary-key-select-${i.toString()}`}
-          >
-            {pk === '' ? (
-              <option disabled value="">
-                -- select --
-              </option>
-            ) : null}
-            {columns.map(({ name }, j) => (
-              <option key={j} value={j}>
-                {name}
-              </option>
-            ))}
-          </select>
-          {removeIcon}
-        </div>
-      );
-    });
-    let createBtnText = 'Create';
-    if (ongoingRequest) {
-      createBtnText = 'Creating...';
-    } else if (lastError) {
-      createBtnText = 'Creating Failed. Try again';
-    } else if (internalError) {
-      createBtnText = 'Creating Failed. Try again';
-    } else if (lastSuccess) {
-      createBtnText = 'Created! Redirecting...';
-    }
+      return createBtnText;
+    };
 
     return (
       <div
@@ -436,19 +317,19 @@ class AddTable extends Component {
           <div
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
-            <h4 className={styles.subheading_text}>Table Name &nbsp; &nbsp;</h4>
-            <input
-              type="text"
-              data-test="tableName"
-              placeholder="table_name"
-              className={`${styles.tableNameInput} form-control`}
-              onChange={e => {
-                dispatch(setTableName(e.target.value));
-              }}
-            />
+            <TableName onChange={this.onTableNameChange.bind(this)} />
             <hr />
-            <h4 className={styles.subheading_text}>Columns</h4>
-            {cols}
+            <TableColumns
+              uniqueKeys={uniqueKeys}
+              dataTypes={dataTypes}
+              columns={columns}
+              onRemoveColumn={this.onRemoveColumn}
+              onColumnChange={this.onColumnNameChange}
+              onColTypeChange={this.onColTypeChange}
+              onColNullableChange={this.onColNullableChange}
+              onColUniqueChange={this.onColUniqueChange}
+              setColDefaultValue={this.setColDefaultValue}
+            />
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
@@ -456,22 +337,69 @@ class AddTable extends Component {
                 placement="right"
                 overlay={tooltip.primaryKeyDescription}
               >
-                <i className="fa fa-question-circle" aria-hidden="true" />
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
               </OverlayTrigger>{' '}
               &nbsp; &nbsp;
             </h4>
-            {pks}
-            <hr />
-            <h4 className={styles.subheading_text}>Comment &nbsp; &nbsp;</h4>
-            <input
-              type="text"
-              data-test="tableComment"
-              placeholder="comment"
-              className={`${styles.tableNameInput} form-control`}
-              onChange={e => {
-                dispatch(setTableComment(e.target.value));
-              }}
+            <PrimaryKeySelector
+              primaryKeys={primaryKeys}
+              columns={columns}
+              setPk={setPk}
+              dispatch={dispatch}
             />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Foreign Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.foreignKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <ForeignKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              foreignKeys={foreignKeys}
+              dispatch={dispatch}
+              setForeignKeys={setForeignKeys}
+              fkToggled={fkToggled}
+              schemaList={schemaList}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Unique Keys &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.uniqueKeyDescription}
+              >
+                <i
+                  className={`fa fa-question-circle ${styles.iClickable}`}
+                  aria-hidden="true"
+                />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
+            <UniqueKeyWrapper
+              allSchemas={allSchemas}
+              columns={columns}
+              currentSchema={currentSchema}
+              tableName={tableName}
+              uniqueKeys={uniqueKeys}
+              dispatch={dispatch}
+              setUniqueKeys={setUniqueKeys}
+            />
+            <hr />
+            <TableComment onChange={this.onTableCommentChange} />
             <hr />
             <Button
               type="submit"
@@ -480,7 +408,7 @@ class AddTable extends Component {
               color="yellow"
               size="sm"
             >
-              {createBtnText}
+              {getCreateBtnText()}
             </Button>
           </div>
         </div>
@@ -492,7 +420,9 @@ class AddTable extends Component {
 AddTable.propTypes = {
   columns: PropTypes.array.isRequired,
   tableName: PropTypes.string,
+  allSchemas: PropTypes.array.isRequired,
   primaryKeys: PropTypes.array.isRequired,
+  foreignKeys: PropTypes.array.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   internalError: PropTypes.string,
@@ -500,7 +430,14 @@ AddTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({ ...state.addTable.table });
+const mapStateToProps = state => ({
+  ...state.addTable.table,
+  allSchemas: state.tables.allSchemas,
+  currentSchema: state.tables.currentSchema,
+  dataTypes: state.tables.columnDataTypes,
+  columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
+  schemaList: state.tables.schemaList,
+});
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);
 

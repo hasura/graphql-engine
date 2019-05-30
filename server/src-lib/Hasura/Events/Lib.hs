@@ -48,7 +48,8 @@ invocationVersion = "2"
 
 type LogEnvHeaders = Bool
 
-type CacheRef = IORef SchemaCache
+newtype CacheRef
+  = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -58,10 +59,8 @@ instance L.ToEngineLog EventInternalErr where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, "event-trigger", toJSON qerr )
 
 data TriggerMeta
-  = TriggerMeta
-  { tmId   :: TriggerId
-  , tmName :: TriggerName
-  } deriving (Show, Eq)
+  = TriggerMeta { tmName :: TriggerName }
+  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
 
@@ -172,14 +171,16 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool -> CacheRef -> EventEngineCtx
+  :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
   -> IO ()
 processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
-  threads <- mapM async [fetchThread , consumeThread]
+  threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
   where
     fetchThread = pushEvents (mkHLogger logctx) pool eectx
-    consumeThread = consumeEvents (mkHLogger logctx) logenv httpMgr pool cacheRef eectx
+    consumeThread = consumeEvents (mkHLogger logctx)
+                    logenv httpMgr pool (CacheRef cacheRef) eectx
 
 pushEvents
   :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
@@ -211,7 +212,7 @@ processEvent
   => LogEnvHeaders -> Q.PGPool -> Event -> m ()
 processEvent logenv pool e = do
   cacheRef <- asks getter
-  cache <- liftIO $ readIORef cacheRef
+  cache <- fmap fst $ liftIO $ readIORef $ unCacheRef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> do
@@ -447,17 +448,18 @@ fetchEvents =
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
                     JOIN hdb_catalog.event_triggers e
-                    ON (l.trigger_id = e.id)
+                    ON (l.trigger_name = e.name)
                     WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
+                    FOR UPDATE SKIP LOCKED
                     LIMIT 100 )
-      RETURNING id, schema_name, table_name, trigger_id, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |] () True
-  where uncurryEvent (id', sn, tn, trid, trn, Q.AltJ payload, tries, created) =
+  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
           Event
           { eId        = id'
           , eTable     = QualifiedObject sn tn
-          , eTrigger   = TriggerMeta trid trn
+          , eTrigger   = TriggerMeta trn
           , eEvent     = payload
           , eTries     = tries
           , eCreatedAt = created

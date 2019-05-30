@@ -38,7 +38,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 - Edit `HASURA_GRAPHQL_URL` in `src/constants.js` and set it to the
   Heroku app URL:
   ```js
-  export const HASURA_GRAPHQL_URL = 'realtime-backend2.herokuapp.com/v1alpha1/graphql';
+  export const HASURA_GRAPHQL_URL = 'realtime-backend2.herokuapp.com/v1/graphql';
   ```
 - Run the app (go to the root of the repo):
   ```bash

@@ -1,105 +1,137 @@
 module Hasura.GraphQL.Resolve
-  ( resolveSelSet
+  ( mutFldToTx
+  , queryFldToPGAST
+  , RS.traverseQueryRootFldAST
+  , RS.toPGQuery
+  , UnresolvedVal(..)
+  , AnnPGVal(..)
+  , RS.QueryRootFldUnresolved
+  , resolveValPrep
+  , queryFldToSQL
+  , schemaR
+  , typeR
   ) where
 
-import           Hasura.Prelude
+import           Data.Has
 
-import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as Map
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
-
+import qualified Data.HashMap.Strict               as Map
+import qualified Database.PG.Query                 as Q
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.Introspect
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Field
+import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal           (sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Resolve.Insert          as RI
-import qualified Hasura.GraphQL.Resolve.Mutation        as RM
-import qualified Hasura.GraphQL.Resolve.Select          as RS
+import qualified Hasura.GraphQL.Resolve.Insert     as RI
+import qualified Hasura.GraphQL.Resolve.Mutation   as RM
+import qualified Hasura.GraphQL.Resolve.Select     as RS
 
--- {-# SCC buildTx #-}
-buildTx :: UserInfo -> GCtx -> SQLGenCtx -> Field -> Q.TxE QErr BL.ByteString
-buildTx userInfo gCtx sqlCtx fld = do
-  opCxt <- getOpCtx $ _fName fld
-  join $ fmap fst $ runConvert ( fldMap
-                               , orderByCtx
-                               , insCtxMap
-                               , sqlCtx
-                               ) $ case opCxt of
+validateHdrs
+  :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
+validateHdrs userInfo hdrs = do
+  let receivedVars = userVars userInfo
+  forM_ hdrs $ \hdr ->
+    unless (isJust $ getVarVal hdr receivedVars) $
+    throw400 NotFound $ hdr <<> " header is expected but not found"
 
-    OCSelect ctx ->
-      validateHdrs (_socHeaders ctx) >> RS.convertSelect ctx fld
+queryFldToPGAST
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has OpCtxMap r
+     )
+  => Field
+  -> m RS.QueryRootFldUnresolved
+queryFldToPGAST fld = do
+  opCtx <- getOpCtx $ _fName fld
+  userInfo <- asks getter
+  case opCtx of
+    OCSelect ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
+      RS.convertSelect ctx fld
+    OCSelectPkey ctx -> do
+      validateHdrs userInfo (_spocHeaders ctx)
+      RS.convertSelectByPKey ctx fld
+    OCSelectAgg ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
+      RS.convertAggSelect ctx fld
+    OCFuncQuery ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
+      RS.convertFuncQuerySimple ctx fld
+    OCFuncAggQuery ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
+      RS.convertFuncQueryAgg ctx fld
+    OCInsert _ ->
+      throw500 "unexpected OCInsert for query field context"
+    OCUpdate _ ->
+      throw500 "unexpected OCUpdate for query field context"
+    OCDelete _ ->
+      throw500 "unexpected OCDelete for query field context"
 
-    OCSelectPkey ctx ->
-      validateHdrs (_spocHeaders ctx) >> RS.convertSelectByPKey ctx fld
-
-    OCSelectAgg ctx ->
-      validateHdrs (_socHeaders ctx) >> RS.convertAggSelect ctx fld
-
-    OCFuncQuery ctx ->
-      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx False fld
-
-    OCFuncAggQuery ctx ->
-      validateHdrs (_fqocHeaders ctx) >> RS.convertFuncQuery ctx True fld
-
-    OCInsert ctx    ->
-      validateHdrs (_iocHeaders ctx) >> RI.convertInsert roleName (_iocTable ctx) fld
-
-    OCUpdate ctx ->
-      validateHdrs (_uocHeaders ctx) >> RM.convertUpdate ctx fld
-
-    OCDelete ctx ->
-      validateHdrs (_docHeaders ctx) >> RM.convertDelete ctx fld
-  where
-    roleName = userRole userInfo
-    opCtxMap = _gOpCtxMap gCtx
-    fldMap = _gFields gCtx
-    orderByCtx = _gOrdByCtx gCtx
-    insCtxMap = _gInsCtxMap gCtx
-
-    getOpCtx f =
-      onNothing (Map.lookup f opCtxMap) $ throw500 $
-      "lookup failed: opctx: " <> showName f
-
-    validateHdrs hdrs = do
-      let receivedVars = userVars userInfo
-      forM_ hdrs $ \hdr ->
-        unless (isJust $ getVarVal hdr receivedVars) $
-        throw400 NotFound $ hdr <<> " header is expected but not found"
-
--- {-# SCC resolveFld #-}
-resolveFld
-  :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx
-  -> G.OperationType
+queryFldToSQL
+  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has OpCtxMap r
+     )
+  => PrepFn m
   -> Field
-  -> m BL.ByteString
-resolveFld userInfo gCtx sqlGenCtx opTy fld =
-  case _fName fld of
-    "__type"     -> J.encode <$> runReaderT (typeR fld) gCtx
-    "__schema"   -> J.encode <$> runReaderT (schemaR fld) gCtx
-    "__typename" -> return $ J.encode $ mkRootTypeName opTy
-    _            -> liftTx $ buildTx userInfo gCtx sqlGenCtx fld
-  where
-    mkRootTypeName :: G.OperationType -> Text
-    mkRootTypeName = \case
-      G.OperationTypeQuery        -> "query_root"
-      G.OperationTypeMutation     -> "mutation_root"
-      G.OperationTypeSubscription -> "subscription_root"
+  -> m Q.Query
+queryFldToSQL fn fld = do
+  pgAST <- queryFldToPGAST fld
+  resolvedAST <- flip RS.traverseQueryRootFldAST pgAST $ \case
+    UVPG annPGVal -> fn annPGVal
+    UVSQL sqlExp  -> return sqlExp
+    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  return $ RS.toPGQuery resolvedAST
 
-resolveSelSet
-  :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx
-  -> G.OperationType
-  -> SelSet
-  -> m BL.ByteString
-resolveSelSet userInfo gCtx sqlGenCtx opTy fields =
-  fmap mkJSONObj $ forM (toList fields) $ \fld -> do
-    fldResp <- resolveFld userInfo gCtx sqlGenCtx opTy fld
-    return (G.unName $ G.unAlias $ _fAlias fld, fldResp)
+mutFldToTx
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has UserInfo r
+     , Has OpCtxMap r
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has InsCtxMap r
+     )
+  => Field
+  -> m RespTx
+mutFldToTx fld = do
+  userInfo <- asks getter
+  opCtx <- getOpCtx $ _fName fld
+  case opCtx of
+    OCInsert ctx -> do
+      let roleName = userRole userInfo
+      validateHdrs userInfo (_iocHeaders ctx)
+      RI.convertInsert roleName (_iocTable ctx) fld
+    OCUpdate ctx -> do
+      validateHdrs userInfo (_uocHeaders ctx)
+      RM.convertUpdate ctx fld
+    OCDelete ctx -> do
+      validateHdrs userInfo (_docHeaders ctx)
+      RM.convertDelete ctx fld
+    OCSelect _ ->
+      throw500 "unexpected query field context for a mutation field"
+    OCSelectPkey _ ->
+      throw500 "unexpected query field context for a mutation field"
+    OCSelectAgg _ ->
+      throw500 "unexpected query field context for a mutation field"
+    OCFuncQuery _ ->
+      throw500 "unexpected query field context for a mutation field"
+    OCFuncAggQuery _ ->
+      throw500 "unexpected query field context for a mutation field"
+
+getOpCtx
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has OpCtxMap r
+     )
+  => G.Name -> m OpCtx
+getOpCtx f = do
+  opCtxMap <- asks getter
+  onNothing (Map.lookup f opCtxMap) $ throw500 $
+    "lookup failed: opctx: " <> showName f

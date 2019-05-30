@@ -56,6 +56,9 @@ ADMIN_SECRET=xyz
 IS_ADMIN_SECRET_SET=true
 CONSOLE_MODE=server
 URL_PREFIX=/
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+CDN_ASSETS=true
 ```
 
 Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).
@@ -69,7 +72,7 @@ Environment variables accepted in `server` mode:
 5. `CONSOLE_MODE`: `server`
 6. `URL_PREFIX`: `/` (forward slash)
 
-> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`. 
+> The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
 #### Run Development Server:
 

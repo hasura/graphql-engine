@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -33,7 +36,7 @@ const defaultPermissionsState = {
   tableSchemas: [],
 };
 
-const defaultSetState = {
+const defaultPresetsState = {
   insert: {
     key: '',
     value: '',
@@ -49,12 +52,11 @@ const defaultQueryPermissions = {
     allow_upsert: true,
     set: {},
     columns: [],
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.insert,
+        ...defaultPresetsState.insert,
       },
     ],
-    isSetConfigChecked: false,
   },
   select: {
     columns: [],
@@ -66,12 +68,11 @@ const defaultQueryPermissions = {
     columns: [],
     filter: {},
     set: {},
-    localSet: [
+    localPresets: [
       {
-        ...defaultSetState.update,
+        ...defaultPresetsState.update,
       },
     ],
-    isSetConfigChecked: false,
   },
   delete: {
     filter: {},
@@ -89,26 +90,33 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
-  fkAdd: {
-    refTable: '',
-    pairs: [],
-    lcol: '',
-    rcol: '',
-    fkCheckBox: false,
-  },
+  columnEdit: {},
+  pkEdit: [''],
+  pkModify: [''],
+  fkModify: [
+    {
+      refSchemaName: '',
+      refTableName: '',
+      colMappings: [{ '': '' }],
+      onDelete: 'restrict',
+      onUpdate: 'restrict',
+    },
+  ],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',
-    tableName: '',
+    lTable: null,
+    lSchema: null,
     isObjRel: null,
     lcol: [],
     rTable: null,
+    rSchema: null,
     rcol: [],
     manualColumns: [],
     isManualExpanded: false,
     manualRelInfo: {
       remoteSchema: '',
-      tables: [],
     },
   },
   permissionsState: { ...defaultPermissionsState },
@@ -119,9 +127,13 @@ const defaultModifyState = {
   viewDefinition: null,
   viewDefinitionError: null,
   tableCommentEdit: { enabled: false, editedValue: null },
+  alterColumnOptions: [], // Store supported implicit column -> column casts
+  alterColumnOptionsFetchErr: null,
 };
 
 const defaultState = {
+  columnDataTypes: [], // To store list of column types supported by postgres
+  columnDataTypeFetchErr: null,
   currentTable: null,
   view: { ...defaultViewState },
   modify: { ...defaultModifyState },
@@ -143,13 +155,7 @@ const defaultState = {
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
-  listedFunctions: [],
-
   listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
-  tableComment: null,
-  columnComment: null,
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
@@ -166,5 +172,5 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultSetState,
+  defaultPresetsState,
 };

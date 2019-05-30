@@ -49,11 +49,11 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
     export default function(context){
       return {
             httpLinkOptions: {
-                uri: 'https://my-app.herokuapp.com/v1alpha1/graphql',
+                uri: 'https://my-app.herokuapp.com/v1/graphql',
                 credentials: 'same-origin'
             },
             cache: new InMemoryCache(),
-            wsEndpoint: 'ws://my-app.herokuapp.com/v1alpha1/graphql',
+            wsEndpoint: 'ws://my-app.herokuapp.com/v1/graphql',
       }
     }
   ```

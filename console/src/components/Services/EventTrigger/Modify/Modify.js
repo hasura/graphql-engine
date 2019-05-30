@@ -12,12 +12,21 @@ import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import ActionButtons from './ActionButtons';
 
-import { save, setDefaults } from './Actions';
+import { save, setDefaults, RESET_MODIFY_STATE } from './Actions';
 
 class Modify extends React.Component {
   componentDidMount() {
-    this.props.dispatch(setDefaults());
+    const { dispatch } = this.props;
+    dispatch(setDefaults());
   }
+
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: RESET_MODIFY_STATE,
+    });
+  }
+
   render() {
     const {
       modifyTriggerName,
@@ -25,7 +34,6 @@ class Modify extends React.Component {
       triggerList,
       migrationMode,
       dispatch,
-      tableSchemas,
     } = this.props;
 
     const currentTrigger = triggerList.find(
@@ -45,12 +53,6 @@ class Modify extends React.Component {
       retry_conf,
     } = currentTrigger.configuration;
 
-    const currentTableSchema = tableSchemas.find(
-      tableSchema =>
-        tableSchema.table_name === currentTrigger.table_name &&
-        tableSchema.table_schema === currentTrigger.schema_name
-    );
-
     return (
       <div className={styles.containerWhole + ' container-fluid'}>
         <TableHeader
@@ -64,8 +66,7 @@ class Modify extends React.Component {
           <Info
             triggerName={currentTrigger.name}
             tableName={currentTrigger.table_name}
-            schemaName={currentTrigger.schema_name}
-            triggerId={currentTrigger.id}
+            schemaName={currentTrigger.table_schema}
             styles={styles}
           />
           <WebhookEditor
@@ -79,7 +80,7 @@ class Modify extends React.Component {
           />
           <OperationEditor
             definition={definition}
-            allTableColumns={getTableColumns(currentTableSchema)}
+            allTableColumns={getTableColumns(currentTrigger)}
             dispatch={dispatch}
             modifyTrigger={modifyTrigger}
             newDefinition={null}

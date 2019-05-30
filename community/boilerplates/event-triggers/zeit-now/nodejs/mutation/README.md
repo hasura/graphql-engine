@@ -37,7 +37,7 @@ Execute `now` in this directory with an env var required for the code to execute
 a mutation:
 
 ```bash
-now -e HGE_ENDPOINT=https://my-app.herokuapp.com/v1alpha1/graphql
+now -e HGE_ENDPOINT=https://my-app.herokuapp.com/v1/graphql
 ```
 
 `HGE_ENDPOINT` is the Hasura GraphQL Engine endpoint.

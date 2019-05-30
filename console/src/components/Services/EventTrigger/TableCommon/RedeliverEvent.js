@@ -93,7 +93,9 @@ class RedeliverEvent extends Component {
           r.status === 200 ? (
             <i
               className={
-                styles.invocationSuccess + ' fa fa-check invocationsSuccess'
+                styles.invocationSuccess +
+                ' fa fa-check invocationsSuccess ' +
+                styles.tabletdCenter
               }
             />
           ) : (
@@ -131,6 +133,7 @@ class RedeliverEvent extends Component {
       });
       return (
         <ReactTable
+          className="invocationClass"
           data={invocationRowsData}
           columns={invocationGridHeadings}
           minRows={0}
@@ -203,6 +206,7 @@ class RedeliverEvent extends Component {
           show={log.isModalOpen}
           onHide={this.onModalClose}
           dialogClassName={styles.redeliverModal}
+          id="redeliverModal"
         >
           <Modal.Header closeButton>
             <Modal.Title>Redeliver Event</Modal.Title>
@@ -210,7 +214,13 @@ class RedeliverEvent extends Component {
           <Modal.Body>
             <div className="content-fluid">
               <div>
-                <div className="col-md-12">
+                <div
+                  className={
+                    styles.padd_left_remove +
+                    ' col-md-12 ' +
+                    styles.padd_right_remove
+                  }
+                >
                   <div className={styles.add_mar_bottom}>
                     Event ID - {log.redeliverEventId}
                     <Button
@@ -222,7 +232,7 @@ class RedeliverEvent extends Component {
                       Deliver again
                     </Button>
                   </div>
-                  <div className={styles.padd_left_remove + ' col-md-5'}>
+                  <div className={styles.padd_left_remove + ' col-md-6'}>
                     <div> Request </div>
                     <AceEditor
                       mode="json"
@@ -231,13 +241,13 @@ class RedeliverEvent extends Component {
                       value={
                         log.eventInvocations[0]
                           ? JSON.stringify(
-                              log.eventInvocations[0].request,
-                              null,
-                              4
-                            )
+                            log.eventInvocations[0].request,
+                            null,
+                            4
+                          )
                           : ''
                       }
-                      minLines={8}
+                      minLines={10}
                       maxLines={10}
                       width="100%"
                       showPrintMargin={false}
@@ -245,7 +255,7 @@ class RedeliverEvent extends Component {
                       style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
                     />
                   </div>
-                  <div className={styles.padd_left_remove + ' col-md-5'}>
+                  <div className={styles.padd_right_remove + ' col-md-6'}>
                     <div> Latest Invocation Response {isLoading}</div>
                     {log.redeliverEventFailure === null ? (
                       <AceEditor
@@ -253,7 +263,7 @@ class RedeliverEvent extends Component {
                         theme="github"
                         name="event_payload"
                         value={latestResponse}
-                        minLines={8}
+                        minLines={10}
                         maxLines={10}
                         width="100%"
                         showPrintMargin={false}
@@ -288,7 +298,6 @@ class RedeliverEvent extends Component {
                 </div>
                 <div
                   className={
-                    'container-fluid ' +
                     styles.redeliverEventSection +
                     ' ' +
                     styles.padd_top +

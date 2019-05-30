@@ -16,7 +16,7 @@ type in the GraphQL query.
 .. note::
   Also see :doc:`aggregation-queries` to fetch aggregation data without creating a view.
 
-For example, let’s see how to fetch the average article rating for each author in our author/article schema:
+**For example**, let’s see how to fetch the average article rating for each author in our author/article schema:
 
 Step 1: Create a view
 ---------------------
@@ -27,10 +27,10 @@ A view that averages the rating of articles for each author can be created using
 .. code-block:: SQL
 
   CREATE VIEW author_average_rating AS
-  SELECT author.id, avg(article.rating)
-  From author, article
-  WHERE author.id = article.author_id
-  GROUP BY author.id
+    SELECT author.id, avg(article.rating)
+      FROM author, article
+      WHERE author.id = article.author_id
+      GROUP BY author.id
 
 Step 2: Add a relationship
 --------------------------

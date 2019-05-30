@@ -4,13 +4,16 @@ import PropTypes from 'prop-types';
 
 class TextAreaWithCopy extends React.Component {
   copyToClip(type, id) {
+    const { copyText, textLanguage } = this.props;
+
     let text = '';
     if (this.props.copyText.length > 0) {
-      text = window.sqlFormatter
-        ? window.sqlFormatter.format(this.props.copyText, {
-          language: this.props.textLanguage,
-        })
-        : this.props.copyText;
+      text =
+        window.sqlFormatter &&
+        textLanguage &&
+        textLanguage.toLowerCase() === 'sql'
+          ? window.sqlFormatter.format(copyText, { language: textLanguage })
+          : copyText;
     }
 
     const textArea = document.createElement('textarea');
@@ -41,13 +44,49 @@ class TextAreaWithCopy extends React.Component {
   render() {
     const style = require('./TextAreaWithCopy.scss');
 
-    const { copyText } = this.props;
+    const { copyText, toolTipClass } = this.props;
+
+    const renderSimpleValue = () => {
+      return (
+        <pre className={style.schemaPreWrapper}>
+          <code className={style.formattedCode}>{copyText}</code>
+        </pre>
+      );
+    };
+
+    const renderSQLValue = () => {
+      return (
+        <pre>
+          <code
+            className={style.formattedCode}
+            dangerouslySetInnerHTML={{
+              __html: window.hljs.highlight(
+                'sql',
+                window.sqlFormatter.format(copyText, {
+                  language: this.props.textLanguage,
+                })
+              ).value,
+            }}
+          />
+        </pre>
+      );
+    };
+
+    const useSQLValue =
+      window &&
+      window.sqlFormatter &&
+      window.hljs &&
+      this.props.textLanguage &&
+      this.props.textLanguage.toLowerCase() === 'sql';
 
     return (
       <div className={`${style.codeBlockCustom}`}>
         <div className={`${style.copyGenerated}`}>
           <div className={`${style.copyTooltip}`}>
-            <span className={style.tooltiptext} id="copyCustomFunctionSQL">
+            <span
+              className={toolTipClass ? toolTipClass : style.tooltiptext}
+              id="copyCustomFunctionSQL"
+            >
               Copy
             </span>
             <i
@@ -66,25 +105,7 @@ class TextAreaWithCopy extends React.Component {
           </div>
         </div>
 
-        {window && window.sqlFormatter && window.hljs ? (
-          <pre>
-            <code
-              className={style.formattedCode}
-              dangerouslySetInnerHTML={{
-                __html: window.hljs.highlight(
-                  'sql',
-                  window.sqlFormatter.format(copyText, {
-                    language: this.props.textLanguage,
-                  })
-                ).value,
-              }}
-            />
-          </pre>
-        ) : (
-          <pre>
-            <code className={style.formattedCode}>{copyText}</code>
-          </pre>
-        )}
+        {useSQLValue ? renderSQLValue() : renderSimpleValue()}
       </div>
     );
   }

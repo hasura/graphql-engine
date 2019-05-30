@@ -22,8 +22,8 @@ flag developer
   default: False
   manual: True
 
-flag local-console
-  description: embeds resources needed by console and serves them at /static/
+flag profile
+  description: compile with profile options set
   default: False
   manual: True
 
@@ -138,7 +138,20 @@ library
                      -- pretty printer
                      , ansi-wl-pprint
 
-  exposed-modules:     Hasura.Server.App
+                     -- metrics in multiplexed subs
+                     , ekg-core
+
+                     -- serve static files
+                     , filepath >= 1.4
+                     , mime-types >= 0.1
+
+  exposed-modules:     Hasura.Prelude
+                     , Hasura.Logging
+                     , Hasura.EncJSON
+                     , Hasura.Db
+                     , Hasura.Cache
+
+                     , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
@@ -150,17 +163,23 @@ library
                      , Hasura.Server.Version
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
+                     , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.PGDump
+
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.DML
-                     , Hasura.RQL.Types.Subscribe
+                     , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.Metadata
+                     , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -175,12 +194,14 @@ library
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
-                     , Hasura.RQL.DDL.Subscribe
+                     , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Mutation
                      , Hasura.RQL.DML.Returning
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
@@ -202,9 +223,15 @@ library
                      , Hasura.GraphQL.Validate.Context
                      , Hasura.GraphQL.Validate.Field
                      , Hasura.GraphQL.Validate.InputValue
-                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Explain
-                     , Hasura.GraphQL.Resolve.LiveQuery
+                     , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.LiveQuery
+                     , Hasura.GraphQL.Execute.LiveQuery.Types
+                     , Hasura.GraphQL.Execute.LiveQuery.Multiplexed
+                     , Hasura.GraphQL.Execute.LiveQuery.Fallback
+                     , Hasura.GraphQL.Resolve
                      , Hasura.GraphQL.Resolve.BoolExp
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.InputValue
@@ -222,9 +249,11 @@ library
                      , Hasura.HTTP
 
                      , Data.Text.Extended
+                     , Data.Aeson.Extended
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.Parser.JSONPath
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Types
@@ -232,8 +261,6 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Rewrite
-                     , Hasura.Prelude
-                     , Hasura.Logging
                      , Network.URI.Extended
                      , Ops
                      , Migrate
@@ -264,10 +291,10 @@ library
                       NoImplicitPrelude
 
 
-  if flag(developer)
+  if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
-  if flag(local-console)
-    cpp-options: -DLocalConsole
+  if flag(developer)
+    cpp-options: -DDeveloperAPIs
 
   ghc-options: -O2
                -Wall
@@ -321,6 +348,7 @@ executable graphql-engine
                      , wreq
                      , connection
                      , string-conversions
+                     , uuid
 
   other-modules:       Ops
                      , Migrate
@@ -328,7 +356,13 @@ executable graphql-engine
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  ghc-options: -O2 -Wall -threaded
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
+               -threaded -rtsopts
 
 test-suite graphql-engine-test
   type:               exitcode-stdio-1.0

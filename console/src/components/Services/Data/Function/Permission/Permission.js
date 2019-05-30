@@ -9,11 +9,16 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../../Common/Button/Button';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
 import { fetchCustomFunction } from '../customFunctionReducer';
+import {
+  updateSchemaInfo,
+  UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
+  setTable,
+} from '../../DataActions';
 
 class Permission extends React.Component {
   componentDidMount() {
@@ -34,8 +39,10 @@ class Permission extends React.Component {
       setOffTableSchema,
     } = this.props.functions;
 
+    const { dispatch } = this.props;
+
     const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${prefixUrl}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
+    const permissionTableUrl = `${appPrefix}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
 
     const breadCrumbs = [
       {
@@ -51,6 +58,20 @@ class Permission extends React.Component {
         url: appPrefix + '/schema/' + schema,
       },
     ];
+
+    const onClickPerm = () => {
+      if (schema !== setOffTableSchema) {
+        Promise.all([
+          dispatch({
+            type: UPDATE_CURRENT_SCHEMA,
+            currentSchema: setOffTableSchema,
+          }),
+          dispatch(updateSchemaInfo()),
+          dispatch(fetchFunctionInit()),
+          dispatch(setTable(setOffTable)),
+        ]);
+      }
+    };
 
     if (functionName) {
       breadCrumbs.push({
@@ -79,16 +100,20 @@ class Permission extends React.Component {
         />
         <br />
         <p>
-          Note: Permission defined for the setof table, {`${setOffTable}`}, are
-          applicable to the data returned by this function
-        </p>
-        <div className={styles.commonBtn}>
-          <Link to={permissionTableUrl}>
-            <Button color="yellow" data-test={'custom-function-permission-btn'}>
-              {`${setOffTable} Permissions`}
-            </Button>
+          Permissions defined for the SETOF table, <b>{setOffTable}</b>, are
+          applicable to the data returned by this function.
+          <br />
+          <br />
+          See <b>{setOffTable}</b> permissions{' '}
+          <Link
+            to={permissionTableUrl}
+            data-test="custom-function-permission-link"
+            onClick={onClickPerm}
+          >
+            here
           </Link>
-        </div>
+          .
+        </p>
       </div>
     );
   }

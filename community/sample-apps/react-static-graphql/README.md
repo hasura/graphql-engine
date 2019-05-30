@@ -56,7 +56,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 
     const client = new ApolloClient({
       link: new HttpLink({
-        uri: 'https://myapp.herokuapp.com/v1alpha1/graphql',
+        uri: 'https://myapp.herokuapp.com/v1/graphql',
         fetch
       }),
       cache: new InMemoryCache(),

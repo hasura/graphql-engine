@@ -1,13 +1,11 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
-  loadSchema,
-  LOAD_UNTRACKED_RELATIONS,
+  updateSchemaInfo,
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
+import { showSuccessNotification } from '../../Common/Notification';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -60,11 +58,13 @@ const addExistingTableSql = () => {
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         const newTable = getState().tables.allSchemas.find(
-          t => t.table_name === state.tableName.trim()
+          t =>
+            t.table_name === state.tableName.trim() &&
+            t.table_schema === currentSchema
         );
-        const isTable = newTable.detail.table_type === 'BASE TABLE';
+        const isTable = newTable.table_type === 'BASE TABLE';
         if (isTable) {
           dispatch(
             _push(
@@ -213,16 +213,7 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnSuccess = () => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
-        const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(
-          allSchemas,
-          currentSchema
-        ).bulkRelTrack;
-        dispatch({
-          type: LOAD_UNTRACKED_RELATIONS,
-          untrackedRelations: untrackedRelations,
-        });
+      dispatch(updateSchemaInfo()).then(() => {
         dispatch(_push('/schema/' + currentSchema));
       });
       return;
@@ -241,7 +232,8 @@ const addAllUntrackedTablesSql = tableList => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };

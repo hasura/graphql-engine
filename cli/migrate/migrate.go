@@ -91,6 +91,8 @@ type Migrate struct {
 	isCMD bool
 
 	status *Status
+
+	SkipExecution bool
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
@@ -318,6 +320,10 @@ func (m *Migrate) ReloadMetadata() error {
 
 func (m *Migrate) ApplyMetadata(data interface{}) error {
 	return m.databaseDrv.ApplyMetadata(data)
+}
+
+func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
 func (m *Migrate) Query(data []interface{}) error {
@@ -801,8 +807,10 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 		case *Migration:
 			migr := r.(*Migration)
 			if migr.Body != nil {
-				if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
-					return err
+				if !m.SkipExecution {
+					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
+						return err
+					}
 				}
 
 				version := int64(migr.Version)

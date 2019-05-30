@@ -8,6 +8,7 @@ import           Data.Time.Clock              (UTCTime)
 import           Language.Haskell.TH.Syntax   (Q, TExp, unTypeQ)
 import           Migrate                      (curCatalogVer)
 
+import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types
@@ -139,9 +140,8 @@ execQuery queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
-  buildSchemaCache
-  runQueryM query
-
+  buildSchemaCacheStrict
+  encJToLBS <$> runQueryM query
 
 -- error messages
 pgcryptoReqdMsg :: T.Text

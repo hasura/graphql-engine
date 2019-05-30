@@ -6,15 +6,17 @@
 .codeBlockCustom {
   /* position: relative;
   padding: 10px 20px; */
-  background-color: white;
+  /* background-color: white; */
+  background-color: rgb(253, 249, 237);
   /* margin: 20px;
   width: 100%; */
   width: auto;
   border-radius: 5px;
   // max-height: calc(100% - 60px);
-  overflow: auto;
+  // overflow: auto;
   margin-top: 0px;
   // min-height: calc(100% - 60px);
+  position: relative;
 }
 
 .codeBlockCustom pre {
@@ -42,11 +44,17 @@
   padding: 0px 0px !important;
 }
 
+.schemaPreWrapper {
+  position: relative;
+  min-height: 40px;
+}
+
 .copyGenerated {
   position: absolute;
-  bottom: 15px;
+  bottom: 10px;
   right: 30px;
   cursor: pointer;
+  z-index: 100;
 }
 
 .copyGenerated img, .copyExecution img {
@@ -65,6 +73,10 @@
 .copyTooltip {
     position: relative;
     display: inline-block;
+}
+
+.copyTooltip i {
+  color: #505050;
 }
 
 .copyTooltip .tooltiptext {
@@ -88,7 +100,7 @@
 .copyTooltip .tooltiptext::after {
 	content: "";
 	position: absolute;
-	top: 24px;
+	top: 26px;
 	right: 22px;
 	margin-left: -5px;
 	border-width: 5px;

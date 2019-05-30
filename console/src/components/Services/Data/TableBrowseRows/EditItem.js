@@ -4,6 +4,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import { editItem, E_ONGOING_REQ } from './EditActions';
 import globals from '../../../../Globals';
 import { modalClose } from './EditActions';
+import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
 import Button from '../../../Common/Button/Button';
 
 import {
@@ -14,11 +15,9 @@ import {
   DATE,
   BOOLEAN,
   UUID,
-  JSONDTYPE,
-  JSONB,
   TIMESTAMP,
   TIMETZ,
-} from '../../../../constants';
+} from '../utils';
 // import RichTextEditor from 'react-rte';
 import { replace } from 'react-router-redux';
 
@@ -167,16 +166,19 @@ class EditItem extends Component {
             data-test={`typed-input-${i}`}
           />
         );
-      } else if (colType === JSONDTYPE || colType === JSONB) {
+      } else if (colType === 'json' || colType === 'jsonb') {
+        const standardEditProps = {
+          className: `form-control ${styles.insertBox}`,
+          onClick: clicker,
+          ref: inputRef,
+          defaultValue: JSON.stringify(oldItem[colName]),
+          'data-test': `typed-input-${i}`,
+          type: 'text',
+        };
         typedInput = (
-          <input
-            placeholder={getPlaceholder(colType)}
-            type="text"
-            className={'form-control ' + styles.insertBox}
-            onClick={clicker}
-            ref={inputRef}
-            defaultValue={JSON.stringify(oldItem[colName])}
-            data-test={`typed-input-${i}`}
+          <JsonInput
+            standardProps={standardEditProps}
+            placeholderProp={'{"name": "foo"} or [12, "asdf"]'}
           />
         );
       } else if (colType === BOOLEAN) {
@@ -350,7 +352,10 @@ class EditItem extends Component {
                       // default
                       return;
                     } else {
-                      inputValues[colName] = refs[colName].valueNode.value; // TypedInput is an input inside a div
+                      inputValues[colName] =
+                        refs[colName].valueNode.props !== undefined
+                          ? refs[colName].valueNode.props.value
+                          : refs[colName].valueNode.value;
                     }
                   });
                   dispatch(editItem(tableName, inputValues));

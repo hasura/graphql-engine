@@ -6,6 +6,8 @@ const {
   isRandomList,
   isList,
   isObjectList,
+  makeFirebaseListFromObj,
+  makeFirebaseListFromArr,
 } = require('./utils');
 const throwError = require('../error');
 
@@ -13,16 +15,18 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
   const rowArray = [];
   const flattenObject = (object, row, parent) => {
     if (isObjectList(object)) {
+      const firebaseList = makeFirebaseListFromObj(object);
       const dummyRow = {...row};
-      for (var objListKey in object) {
+      for (var objListKey in firebaseList) {
         row[getPrimaryKeyName(dummyRow)] = objListKey;
-        const newRow = {...flattenObject(object[objListKey], row)};
+        const newRow = {...flattenObject(firebaseList[objListKey], row)};
         if (newRow && Object.keys(newRow).length > 0) {
           rowArray.push(newRow);
         }
       }
     } else if (isList(object)) {
-      for (var listKey in object) {
+      const firebaseObject = makeFirebaseListFromArr(object);
+      for (var listKey in firebaseObject) {
         const dummyRow = {...row};
         dummyRow[getPrimaryKeyName(dummyRow, null, 'self')] = uuid();
         dummyRow._value = listKey;
@@ -33,28 +37,30 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
     } else {
       for (var objectKey in object) {
         const value = object[objectKey];
-        if (value === null || value.constructor.name !== 'Object') {
+        if (value === null || !['Object', 'Array'].includes(value.constructor.name)) {
           row[objectKey] = value;
-        } else if (value.constructor.name === 'Object') {
+        } else if (['Object', 'Array'].includes(value.constructor.name)) {
           const pkeyMap = getParentPrimaryKeyMap(row);
           if (isList(value)) {
+            const firebaseList = makeFirebaseListFromArr(value);
             tableDetectedCallback(
               null,
               {
                 tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
-                data: Object.keys(value).map(item => ({_value: item})),
+                data: Object.keys(firebaseList).map(item => ({_value: item})),
               }
             );
           } else if (isObjectList(value)) {
+            const firebaseList = makeFirebaseListFromObj(value);
             tableDetectedCallback(
               null,
               {
                 tableName: parent || tableName,
                 name: objectKey,
                 pkeys: pkeyMap,
-                data: handleTableCandidate(value, `${parent || tableName}_${objectKey}`, tableDetectedCallback, false),
+                data: handleTableCandidate(firebaseList, `${parent || tableName}_${objectKey}`, tableDetectedCallback, false),
               }
             );
           } else if (Object.keys(value).length !== 0) {
@@ -75,7 +81,8 @@ const handleTableCandidate = (obj, tableName, tableDetectedCallback, isRootLevel
   };
   if (!isObjectList(obj)) {
     if (isList(obj)) {
-      for (var listKey in obj) {
+      const firebaseObject = makeFirebaseListFromArr(obj);
+      for (var listKey in firebaseObject) {
         rowArray.push({
           _value: listKey,
           _id: uuid(),
