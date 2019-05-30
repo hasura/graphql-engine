@@ -54,7 +54,9 @@ class ErrorBoundary extends React.Component {
                 <h1>Error</h1>
                 <br />
                 <div>
-                  Something went wrong. Head back <Link to="/">Home</Link>.
+                  Something went wrong. Head back{' '}
+                  <Link onClick={() => window.location.replace('/')}>Home</Link>
+                  .
                 </div>
                 <br />
                 <div>
