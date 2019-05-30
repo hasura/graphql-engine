@@ -138,12 +138,12 @@ mkCurPlanTx usrVars (QueryPlan _ fldPlans) =
 
 
 type GeneratedSql =
-  [(G.Alias, Either (Q.Query, [Q.PrepArg]) B.ByteString)]
+  [(G.Alias, Maybe (Q.Query, [Q.PrepArg]))]
 
 encodeSql :: GeneratedSql -> J.Value
 encodeSql sql =
   jValFromAssocList $
-    map (\(a, q) -> (alName a, either encP (J.String . bsToTxt) q)) sql
+    map (\(a, q) -> (alName a, fmap encP q)) sql
   where
     alName = G.unName . G.unAlias
     encP (q, prepArgs) =
@@ -159,8 +159,8 @@ mkRootFldPlanToSql :: UserVars -> [(G.Alias, RootFieldPlan)] -> GeneratedSql
 mkRootFldPlanToSql usrVars fldPlans =
  flip map fldPlans $ \(alias, fldPlan) ->
     (,) alias $ case fldPlan of
-          RFPRaw resp                      -> Right resp
-          RFPPostgres (PGPlan q _ prepMap) -> Left (q, prepArgs prepMap)
+          RFPRaw _                         -> Nothing
+          RFPPostgres (PGPlan q _ prepMap) -> Just (q, prepArgs prepMap)
   where
     prepArgs argMap = withUserVars usrVars $ IntMap.elems argMap
 
