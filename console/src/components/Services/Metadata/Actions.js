@@ -46,6 +46,16 @@ const updateReloadRemoteCacheQuery = remoteSchemaName => {
   };
 };
 
+const reloadRemoteCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
+  return {
+    type: 'bulk',
+    args: [
+      updateReloadRemoteCacheQuery(remoteSchemaName),
+      getInconsistentObjectsQuery,
+    ],
+  };
+};
+
 const reloadCacheAndGetInconsistentObjectsQuery = {
   type: 'bulk',
   args: [reloadCacheQuery, getInconsistentObjectsQuery],
@@ -140,11 +150,11 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
       featuresCompatibility[reloadMetadataVersionSym]
     ) {
       reloadQuery = {
-        ...updateReloadRemoteCacheQuery(remoteSchemaName),
+        ...reloadRemoteCacheAndGetInconsistentObjectsQuery(remoteSchemaName),
       };
     } else {
       reloadQuery = {
-        ...reloadCacheQuery,
+        ...reloadCacheAndGetInconsistentObjectsQuery,
       };
     }
     dispatch({ type: LOADING_METADATA });
@@ -155,7 +165,28 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
         body: JSON.stringify(reloadQuery),
       })
     ).then(
-      () => {
+      data => {
+        const allSchemas = getState().tables.allSchemas;
+        const functions = getState().tables.trackedFunctions;
+        const inconsistentObjects = data[1].inconsistent_objects;
+        dispatch({
+          type: LOAD_INCONSISTENT_OBJECTS,
+          data: inconsistentObjects,
+        });
+        if (inconsistentObjects.length > 0) {
+          const filteredSchema = filterInconsistentMetadata(
+            allSchemas,
+            inconsistentObjects,
+            'tables'
+          );
+          const filteredFunctions = filterInconsistentMetadata(
+            functions,
+            inconsistentObjects,
+            'functions'
+          );
+          dispatch(setConsistentSchema(filteredSchema));
+          dispatch(setConsistentFunctions(filteredFunctions));
+        }
         if (successCb) {
           successCb();
         }
@@ -522,7 +553,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
