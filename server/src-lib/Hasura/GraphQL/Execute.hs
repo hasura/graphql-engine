@@ -13,6 +13,8 @@ module Hasura.GraphQL.Execute
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
+
+  , ExecutionCtx(..)
   ) where
 
 import           Control.Exception                      (try)
@@ -61,6 +63,20 @@ data GQExecPlan a
   = GExPHasura !a
   | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
   deriving (Functor, Foldable, Traversable)
+
+-- | Execution context
+data ExecutionCtx
+  = ExecutionCtx
+  { _ecxLogger          :: !L.Logger
+  , _ecxVerboseLogging  :: !L.VerboseLogging
+  , _ecxSqlGenCtx       :: !SQLGenCtx
+  , _ecxPgExecCtx       :: !PGExecCtx
+  , _ecxPlanCache       :: !EP.PlanCache
+  , _ecxSchemaCache     :: !SchemaCache
+  , _ecxSchemaCacheVer  :: !SchemaCacheVer
+  , _ecxHttpManager     :: !HTTP.Manager
+  , _ecxEnableAllowList :: !Bool
+  }
 
 -- Enforces the current limitation
 assertSameLocationNodes
@@ -328,11 +344,11 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo req varDefs fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx req varDefs fld
 
 execRemoteGQ
-  :: (MonadIO m, MonadError QErr m)
-  => L.Logger
-  -> L.VerboseLogging
-  -> HTTP.Manager
-  -> RequestId
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader ExecutionCtx m
+     )
+  => RequestId
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
@@ -341,7 +357,8 @@ execRemoteGQ
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
-execRemoteGQ logger verbose manager reqId userInfo reqHdrs q req rsi opDef = do
+execRemoteGQ reqId userInfo reqHdrs q req rsi opDef = do
+  ExecutionCtx logger verbose _ _ _ _ _ manager _ <- ask
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"

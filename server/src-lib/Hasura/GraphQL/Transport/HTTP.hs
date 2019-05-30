@@ -3,7 +3,6 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import qualified Data.ByteString.Lazy                   as BL
-import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
@@ -14,47 +13,40 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.Logging                         as L
 
 runGQ
-  :: (MonadIO m, MonadError QErr m)
-  => PGExecCtx
-  -> L.Logger
-  -> L.VerboseLogging
-  -> RequestId
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
   -> UserInfo
-  -> SQLGenCtx
-  -> Bool
-  -> E.PlanCache
-  -> SchemaCache
-  -> SchemaCacheVer
-  -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pgExecCtx logger verbose reqId userInfo sqlGenCtx enableAL planCache
-  sc scVer manager reqHdrs req rawReq = do
+runGQ reqId userInfo reqHdrs req rawReq = do
+  E.ExecutionCtx _ _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pgExecCtx logger verbose reqId req userInfo resolvedOp
+      runHasuraGQ reqId req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ logger verbose manager reqId userInfo reqHdrs req rawReq
-      rsi opDef
+      E.execRemoteGQ reqId userInfo reqHdrs req rawReq rsi opDef
 
 runHasuraGQ
-  :: (MonadIO m, MonadError QErr m)
-  => PGExecCtx
-  -> L.Logger
-  -> L.VerboseLogging
-  -> RequestId
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pgExecCtx logger verbose reqId query userInfo resolvedOp = do
+runHasuraGQ reqId query userInfo resolvedOp = do
+  E.ExecutionCtx logger verbose _ pgExecCtx _ _ _ _ _ <- ask
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query

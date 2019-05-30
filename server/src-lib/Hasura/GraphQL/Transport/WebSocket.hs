@@ -258,11 +258,14 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
+  let execCtx = E.ExecutionCtx logger verboseLog sqlGenCtx pgExecCtx
+                planCache sc scVer httpMgr enableAL
+
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ requestId q userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      runRemoteGQ requestId userInfo reqHdrs opDef rsi
+      runRemoteGQ execCtx requestId userInfo reqHdrs opDef rsi
   where
     runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
@@ -290,10 +293,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       either (postExecErr reqId) sendSuccResp resp
       sendCompleted
 
-    runRemoteGQ :: RequestId -> UserInfo -> [H.Header]
+    runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
                 -> ExceptT () IO ()
-    runRemoteGQ reqId userInfo reqHdrs opDef rsi = do
+    runRemoteGQ execCtx reqId userInfo reqHdrs opDef rsi = do
       when (G._todType opDef == G.OperationTypeSubscription) $
         withComplete $ preExecErr reqId $
         err400 NotSupported "subscription to remote server is not supported"
@@ -306,8 +309,8 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
         const $ withComplete $ preExecErr reqId $
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ logger verboseLog httpMgr reqId
-              userInfo reqHdrs q payload rsi opDef
+      resp <- runExceptT $ flip runReaderT execCtx $
+              E.execRemoteGQ reqId userInfo reqHdrs q payload rsi opDef
       either (postExecErr reqId) (sendRemoteResp reqId) resp
       sendCompleted
 

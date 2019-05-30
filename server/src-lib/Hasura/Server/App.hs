@@ -311,8 +311,9 @@ v1Alpha1GQHandler query = do
   logger    <- scLogger . hcServerCtx <$> ask
   verbose   <- scVerboseLogging . hcServerCtx <$> ask
   requestId <- asks hcRequestId
-  GH.runGQ pgExecCtx logger verbose requestId userInfo sqlGenCtx enableAL
-    planCache sc scVer manager reqHeaders query reqBody
+  let execCtx = E.ExecutionCtx logger verbose sqlGenCtx pgExecCtx planCache
+                sc scVer manager enableAL
+  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler GH.GQLReqUnparsed EncJSON
 v1GQHandler = v1Alpha1GQHandler
