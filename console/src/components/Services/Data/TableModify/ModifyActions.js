@@ -1,7 +1,7 @@
 import requestAction from '../../../../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  loadUntrackedRelations,
+  updateSchemaInfo,
   handleMigrationErrors,
   makeMigrationCall,
   LOAD_SCHEMA,
@@ -25,7 +25,12 @@ import {
   getUniqueConstraintName,
 } from '../Common/ReusableComponents/utils';
 
-import { fetchColumnCastsQuery, convertArrayToJson } from './utils';
+import {
+  fetchColumnCastsQuery,
+  convertArrayToJson,
+  getCreatePkSql,
+  getDropPkSql,
+} from './utils';
 
 const DELETE_PK_WARNING =
   'Without a Primary key there is no way to uniquely identify a row of a table. Are you sure?';
@@ -151,9 +156,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `
-          alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";
-        `,
+          sql: getDropPkSql({ schemaName, tableName, constraintName }),
         },
       });
     }
@@ -162,12 +165,12 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       migrationUp.push({
         type: 'run_sql',
         args: {
-          sql: `
-            alter table "${schemaName}"."${tableName}"
-            add constraint "${tableName}_pkey" primary key ( ${selectedPkColumns.join(
-  ', '
-)} );
-          `,
+          sql: getCreatePkSql({
+            schemaName,
+            tableName,
+            selectedPkColumns,
+            constraintName: `${tableName}_pkey`,
+          }),
         },
       });
     }
@@ -178,30 +181,33 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       migrationDown.push({
         type: 'run_sql',
         args: {
-          sql: `
-          alter table "${schemaName}"."${tableName}" drop constraint "${tableName}_pkey";
-        `,
+          sql: getDropPkSql({
+            schemaName,
+            tableName,
+            constraintName: `${tableName}_pkey`,
+          }),
         },
       });
     }
+
     // skip creating in down migration if no constraint was dropped in up migration
     if (constraintName) {
       migrationDown.push({
         type: 'run_sql',
-        sql: `
-          alter table "${schemaName}"."${tableName}"
-          add constraint "${constraintName}" primary key ( ${tableSchema.primary_key.columns.join(
-  ', '
-)} );
-        `,
+        sql: getCreatePkSql({
+          schemaName,
+          tableName,
+          selectedPkColumns: tableSchema.primary_key.columns,
+          constraintName,
+        }),
       });
     }
+
     const pkAction = numSelectedPkColumns ? 'Updating' : 'Deleting';
     const migrationName = `modify_primarykey_${schemaName}_${tableName}`;
     const requestMsg = `${pkAction} primary key constraint...`;
     const successMsg = `${pkAction} primary key constraint successful`;
     const errorMsg = `${pkAction} primary key constraint failed`;
-
     const customOnSuccess = () => {};
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -538,7 +544,7 @@ const deleteTableSql = tableName => {
     const errorMsg = 'Deleting table failed';
 
     const customOnSuccess = () => {
-      dispatch(loadUntrackedRelations()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         dispatch(_push('/'));
       });
     };
@@ -619,7 +625,7 @@ const untrackTableSql = tableName => {
         table_name: tableName,
       });
       dispatch(
-        loadUntrackedRelations({
+        updateSchemaInfo({
           tables: tableData,
         })
       ).then(() => {
