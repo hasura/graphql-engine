@@ -134,6 +134,15 @@ data HandlerCtx
 type Handler query result =
   ExceptT QErr (ReaderT HandlerCtx (StateT (Maybe query) IO)) result
 
+data APIResp
+  = JSONResp !EncJSON
+  | RawResp ![(Text,Text)] !BL.ByteString -- headers, body
+
+apiRespToLBS :: APIResp -> BL.ByteString
+apiRespToLBS = \case
+  JSONResp j  -> encJToLBS j
+  RawResp _ b -> b
+
 mkApiMetrics :: Maybe a -> Maybe (ApiMetrics a)
 mkApiMetrics = fmap (flip ApiMetrics Nothing)
 
@@ -182,7 +191,7 @@ logResult
   -> RequestId
   -> Wai.Request
   -> Maybe a
-  -> Either QErr APIResp
+  -> Either QErr BL.ByteString
   -> Maybe (UTCTime, UTCTime)
   -> m ()
 logResult logger verbose userInfoM reqId httpReq req res qTime =
@@ -199,8 +208,7 @@ logError
   -> Maybe a
   -> QErr -> m ()
 logError logger verbose userInfoM reqId httpReq req qErr =
-  let err = (Left qErr :: Either QErr APIResp)
-  in logResult logger verbose userInfoM reqId httpReq req err Nothing
+  logResult logger verbose userInfoM reqId httpReq req (Left qErr) Nothing
 
 mkSpockAction
   :: (MonadIO m, ToJSON s)
@@ -231,7 +239,8 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult logger verboseLog (Just userInfo) requestId req (Just q) modResult $ Just (t1, t2)
+  logResult logger verboseLog (Just userInfo) requestId req (Just q)
+    (apiRespToLBS <$> modResult) $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where

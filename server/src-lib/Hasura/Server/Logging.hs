@@ -22,7 +22,6 @@ import           Data.List             (find)
 import           Data.Time.Clock
 import           Data.Word             (Word32)
 import           Network.Socket        (SockAddr (..))
-import           Network.Wai           (Request (..))
 import           System.ByteOrder      (ByteOrder (..), byteOrder)
 import           Text.Printf           (printf)
 
@@ -30,6 +29,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy  as BL
 import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as N
+import qualified Network.Wai           as Wai
 
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -161,18 +161,18 @@ mkAccessLog
   => L.VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
   -> RequestId
-  -> Request
-  -> Either QErr APIResp
+  -> Wai.Request
+  -> Either QErr BL.ByteString
   -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
-mkAccessLog verLog userInfoM reqId req res extraInfo mTimeT =
+mkAccessLog _ userInfoM reqId req res extraInfo mTimeT =
   let http = HttpLog
              { hlStatus       = status
-             , hlMethod       = bsToTxt $ requestMethod req
+             , hlMethod       = bsToTxt $ Wai.requestMethod req
              , hlSource       = bsToTxt $ getSourceFromFallback req
-             , hlPath         = bsToTxt $ rawPathInfo req
-             , hlHttpVersion  = httpVersion req
+             , hlPath         = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion  = Wai.httpVersion req
              }
       op = OperationLog
            { olRequestId    = reqId
@@ -184,40 +184,35 @@ mkAccessLog verLog userInfoM reqId req res extraInfo mTimeT =
            }
   in AccessLog http op
   where
-    (query, status, err, respTime, respSize) =
-      ravenLogGen verLog res extraInfo mTimeT
+    (query, status, err, respTime, respSize) = ravenLogGen res extraInfo mTimeT
 
 ravenLogGen
-  :: L.VerboseLogging
-  -> Either QErr APIResp
+  :: Either QErr BL.ByteString
   -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime , UTCTime)
   -> (Maybe a, N.Status, Maybe QErr, Maybe Double, Maybe Int64)
-ravenLogGen verLog res extraInfo mTimeT =
+ravenLogGen res extraInfo mTimeT =
   (query, status, err, diffTime, Just size)
   where
     status = either qeStatus (const N.status200) res
-    size = BL.length $ either encode apiRespToLBS res
+    size = BL.length $ either encode id res
     err = either Just (const Nothing) res
     diffTime = fmap (realToFrac . uncurry (flip diffUTCTime)) mTimeT
     q = amQuery <$> extraInfo
-    query = case res of
-      Left _  -> q
-      Right _ -> bool Nothing q (L.unVerboseLogging verLog)
+    query = either (const q) (const Nothing) res
 
+getSourceFromSocket :: Wai.Request -> ByteString
+getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost
 
-getSourceFromSocket :: Request -> ByteString
-getSourceFromSocket = BS.pack . showSockAddr . remoteHost
-
-getSourceFromFallback :: Request -> ByteString
+getSourceFromFallback :: Wai.Request -> ByteString
 getSourceFromFallback req = fromMaybe (getSourceFromSocket req) $ getSource req
 
-getSource :: Request -> Maybe ByteString
+getSource :: Wai.Request -> Maybe ByteString
 getSource req = addr
   where
     maddr = find (\x -> fst x `elem` ["x-real-ip", "x-forwarded-for"]) hdrs
     addr = fmap snd maddr
-    hdrs = requestHeaders req
+    hdrs = Wai.requestHeaders req
 
 -- |  A type for IP address in numeric string representation.
 type NumericAddress = String
