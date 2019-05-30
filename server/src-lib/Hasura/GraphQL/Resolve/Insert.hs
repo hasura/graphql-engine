@@ -280,7 +280,7 @@ validateInsert insCols objRels addCols = do
   forM_ objRels $ \relInfo -> do
     let lCols = map fst $ riMapping relInfo
         relName = riName relInfo
-        relNameTxt = unNEText $ getRelTxt relName
+        relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
     withPathK relNameTxt $ unless (null lColConflicts) $ throwVE $
       "cannot insert object relation ship " <> relName
@@ -311,7 +311,7 @@ insertObjRel strfyNum role objRelIns =
     RelIns singleObjIns relInfo = objRelIns
     multiObjIns = singleToMulti singleObjIns
     relName = riName relInfo
-    relNameTxt = unNEText $ getRelTxt relName
+    relNameTxt = relNameToTxt relName
     mapCols = riMapping relInfo
     tn = riRTable relInfo
     allCols = _aiTableCols singleObjIns
@@ -352,7 +352,7 @@ insertArrRel strfyNum role resCols arrRelIns =
     RelIns multiObjIns relInfo = arrRelIns
     colMapping = riMapping relInfo
     tn = riRTable relInfo
-    relNameTxt = unNEText . getRelTxt $ riName relInfo
+    relNameTxt = relNameToTxt $ riName relInfo
     mutFlds = [("affected_rows", RR.MCount)]
 
 -- | insert an object with object and array relationships

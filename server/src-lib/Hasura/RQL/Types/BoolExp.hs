@@ -287,7 +287,7 @@ instance ToJSON AnnBoolExpPartialSQL where
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->
-          ( unNEText . getRelTxt $ riName ri
+          ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
       opExpSToJSON :: OpExpG PartialSQLExp -> Value

@@ -40,7 +40,7 @@ reportSchemaObj (SOQTemplate qtn) =
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualObjectToText tn <> "." <> unNEText (getRelTxt cn)
+  "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
 reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =

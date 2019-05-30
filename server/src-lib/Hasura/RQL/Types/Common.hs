@@ -1,6 +1,7 @@
 module Hasura.RQL.Types.Common
        ( PGColInfo(..)
        , RelName(..)
+       , relNameToTxt
        , RelType(..)
        , rootRelName
        , relTypeToTxt
@@ -81,13 +82,16 @@ newtype RelName
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
 
 instance IsIden RelName where
-  toIden (RelName r) = Iden $ unNEText r
+  toIden rn = Iden $ relNameToTxt rn
 
 instance DQuote RelName where
-  dquoteTxt (RelName r) = unNEText r
+  dquoteTxt = relNameToTxt
 
 rootRelName :: RelName
 rootRelName = RelName rootText
+
+relNameToTxt :: RelName -> T.Text
+relNameToTxt = unNEText . getRelTxt
 
 relTypeToTxt :: RelType -> T.Text
 relTypeToTxt ObjRel = "object"
@@ -139,7 +143,7 @@ fromPGCol :: PGCol -> FieldName
 fromPGCol (PGCol c) = FieldName c
 
 fromRel :: RelName -> FieldName
-fromRel (RelName r) = FieldName $ unNEText r
+fromRel rn = FieldName $ relNameToTxt rn
 
 newtype TQueryName
   = TQueryName { getTQueryName :: NEText }
