@@ -11,6 +11,7 @@ import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.Logging                         as L
@@ -20,6 +21,7 @@ runGQ
   => PGExecCtx
   -> L.Logger
   -> L.VerboseLogging
+  -> RequestId
   -> UserInfo
   -> SQLGenCtx
   -> Bool
@@ -31,34 +33,36 @@ runGQ
   -> GQLReqUnparsed
   -> BL.ByteString -- this can be removed when we have a pretty-printer
   -> m EncJSON
-runGQ pgExecCtx logger verbose userInfo sqlGenCtx enableAL planCache sc scVer
-  manager reqHdrs req rawReq = do
+runGQ pgExecCtx logger verbose reqId userInfo sqlGenCtx enableAL planCache
+  sc scVer manager reqHdrs req rawReq = do
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
               userInfo sqlGenCtx enableAL sc scVer req
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ pgExecCtx logger verbose req userInfo resolvedOp
+      runHasuraGQ pgExecCtx logger verbose reqId req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      E.execRemoteGQ logger verbose manager userInfo reqHdrs req rawReq rsi opDef
+      E.execRemoteGQ logger verbose manager reqId userInfo reqHdrs req rawReq
+      rsi opDef
 
 runHasuraGQ
   :: (MonadIO m, MonadError QErr m)
   => PGExecCtx
   -> L.Logger
   -> L.VerboseLogging
+  -> RequestId
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
   -> m EncJSON
-runHasuraGQ pgExecCtx logger verbose query userInfo resolvedOp = do
+runHasuraGQ pgExecCtx logger verbose reqId query userInfo resolvedOp = do
   respE <- liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog query genSql
+      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId query genSql
       runLazyTx' pgExecCtx tx
     E.ExOpMutation tx -> do
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog query Nothing
+      liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId query Nothing
       runLazyTx pgExecCtx $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

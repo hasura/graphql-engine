@@ -128,6 +128,7 @@ data HandlerCtx
   , hcReqBody    :: !BL.ByteString
   , hcUser       :: !UserInfo
   , hcReqHeaders :: ![N.Header]
+  , hcRequestId  :: !RequestId
   }
 
 type Handler query result =
@@ -178,27 +179,28 @@ logResult
   => L.Logger
   -> L.VerboseLogging
   -> Maybe UserInfo
+  -> RequestId
   -> Wai.Request
   -> Maybe a
   -> Either QErr APIResp
   -> Maybe (UTCTime, UTCTime)
   -> m ()
-logResult logger verbose userInfoM httpReq req res qTime =
+logResult logger verbose userInfoM reqId httpReq req res qTime =
   liftIO $ L.unLogger logger $
-    mkAccessLog verbose userInfoM httpReq res (mkApiMetrics req) qTime
+    mkAccessLog verbose userInfoM reqId httpReq res (mkApiMetrics req) qTime
 
 logError
   :: (MonadIO m, ToJSON a)
   => L.Logger
   -> L.VerboseLogging
   -> Maybe UserInfo
+  -> RequestId
   -> Wai.Request
   -> Maybe a
   -> QErr -> m ()
-logError logger verbose userInfoM httpReq req qErr =
+logError logger verbose userInfoM reqId httpReq req qErr =
   let err = (Left qErr :: Either QErr APIResp)
-  in logResult logger verbose userInfoM httpReq req err Nothing
-
+  in logResult logger verbose userInfoM reqId httpReq req err Nothing
 
 mkSpockAction
   :: (MonadIO m, ToJSON s)
@@ -210,14 +212,15 @@ mkSpockAction
 mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
-  let headers  = requestHeaders req
+  let headers = requestHeaders req
       authMode = scAuthMode serverCtx
       manager = scManager serverCtx
 
+  requestId <- getRequestId headers
   userInfoE <- liftIO $ runExceptT $ getUserInfo logger manager headers authMode
-  userInfo <- either (logAndThrow req reqBody False . qErrModifier) return userInfoE
+  userInfo <- either (logAndThrow requestId req reqBody False . qErrModifier) return userInfoE
 
-  let handlerState = HandlerCtx serverCtx reqBody userInfo headers
+  let handlerState = HandlerCtx serverCtx reqBody userInfo headers requestId
 
   t1 <- liftIO getCurrentTime -- for measuring response time purposes
   (result, q) <- liftIO $ flip runStateT Nothing $
@@ -228,7 +231,7 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
   let modResult = fmapL qErrModifier result
 
   -- log result
-  logResult logger verboseLog (Just userInfo) req (Just q) modResult $ Just (t1, t2)
+  logResult logger verboseLog (Just userInfo) requestId req (Just q) modResult $ Just (t1, t2)
   either (qErrToResp $ userRole userInfo == adminRole) resToResp modResult
 
   where
@@ -241,9 +244,9 @@ mkSpockAction qErrEncoder qErrModifier serverCtx handler = do
       setStatus $ qeStatus qErr
       json $ qErrEncoder includeInternal qErr
 
-    logAndThrow req reqBody includeInternal qErr = do
+    logAndThrow reqId req reqBody includeInternal qErr = do
       let reqTxt = bsToTxt $ BL.toStrict reqBody
-      logError logger verboseLog Nothing req (Just reqTxt) qErr
+      logError logger verboseLog Nothing reqId req (Just reqTxt) qErr
       qErrToResp includeInternal qErr
 
     resToResp = \case
@@ -295,11 +298,12 @@ v1Alpha1GQHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   planCache <- scPlanCache . hcServerCtx <$> ask
-  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  logger   <- scLogger . hcServerCtx <$> ask
-  verbose  <- scVerboseLogging . hcServerCtx <$> ask
-  GH.runGQ pgExecCtx logger verbose userInfo sqlGenCtx enableAL planCache
-    sc scVer manager reqHeaders query reqBody
+  enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
+  logger    <- scLogger . hcServerCtx <$> ask
+  verbose   <- scVerboseLogging . hcServerCtx <$> ask
+  requestId <- asks hcRequestId
+  GH.runGQ pgExecCtx logger verbose requestId userInfo sqlGenCtx enableAL
+    planCache sc scVer manager reqHeaders query reqBody
 
 v1GQHandler :: GH.GQLReqUnparsed -> Handler GH.GQLReqUnparsed EncJSON
 v1GQHandler = v1Alpha1GQHandler
@@ -584,7 +588,8 @@ raiseGenericApiError logger verbose qErr = do
   req <- request
   reqBody <- liftIO $ strictRequestBody req
   let reqTxt = bsToTxt $ BL.toStrict reqBody
-  logError logger verbose Nothing req (Just reqTxt) qErr
+  reqId <- getRequestId $ requestHeaders req
+  logError logger verbose Nothing reqId req (Just reqTxt) qErr
   uncurry setHeader jsonHeader
   setStatus $ qeStatus qErr
   lazyBytes $ encode qErr

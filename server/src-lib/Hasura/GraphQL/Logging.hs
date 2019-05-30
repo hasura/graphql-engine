@@ -9,6 +9,7 @@ import qualified Data.Aeson.TH                          as J
 
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
+import           Hasura.Server.Utils                    (RequestId)
 
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
@@ -22,13 +23,15 @@ logGraphqlQuery
 logGraphqlQuery logger verbose =
   when (L.unVerboseLogging verbose) . liftIO . L.unLogger logger
 
-mkQueryLog :: GQLReqUnparsed -> Maybe EQ.GeneratedSql -> QueryLog
-mkQueryLog req sql = QueryLog (Just req) (EQ.encodeSql <$> sql)
+mkQueryLog :: RequestId -> GQLReqUnparsed -> Maybe EQ.GeneratedSql
+           -> QueryLog
+mkQueryLog reqId req sql = QueryLog (Just req) (EQ.encodeSql <$> sql) reqId
 
 data QueryLog
   = QueryLog
   { _qlQuery        :: !(Maybe GQLReqUnparsed)
   , _qlGeneratedSql :: !(Maybe J.Value)
+  , _qlRequestId    :: !RequestId
   }
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''QueryLog)
 

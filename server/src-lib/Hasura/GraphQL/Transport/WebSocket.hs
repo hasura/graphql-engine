@@ -18,6 +18,7 @@ import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
+import           Debug.Trace
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
 import qualified Network.HTTP.Client                         as H
@@ -37,8 +38,9 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, getUserInfoWithExpTime)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (bsToTxt,
-                                                              diffTimeToMicro)
+import           Hasura.Server.Utils                         (RequestId,
+                                                              diffTimeToMicro,
+                                                              getRequestId)
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -100,6 +102,7 @@ $(J.deriveToJSON
 data OperationDetails
   = OperationDetails
   { _odOperationId   :: !OperationId
+  , _odRequestId     :: !(Maybe RequestId)
   , _odOperationName :: !(Maybe OperationName)
   , _odOperationType :: !OpDetail
   , _odQuery         :: !(Maybe GQLReqUnparsed)
@@ -251,45 +254,49 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let e = "start received before the connection is initialised"
       withComplete $ sendStartErr e
 
+  requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
-  execPlan <- either (withComplete . preExecErr) return execPlanE
+  execPlan <- either (withComplete . preExecErr requestId) return execPlanE
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ q userInfo resolvedOp
+      runHasuraGQ requestId q userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
-      runRemoteGQ userInfo reqHdrs opDef rsi
+      runRemoteGQ requestId userInfo reqHdrs opDef rsi
   where
-    runHasuraGQ :: GQLReqUnparsed -> UserInfo -> E.ExecOp -> ExceptT () IO ()
-    runHasuraGQ query userInfo = \case
+    runHasuraGQ :: RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
+                -> ExceptT () IO ()
+    runHasuraGQ reqId query userInfo = \case
       E.ExOpQuery opTx genSql ->
-        execQueryOrMut query genSql $ runLazyTx' pgExecCtx opTx
+        execQueryOrMut reqId query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
-        execQueryOrMut query Nothing $
+        execQueryOrMut reqId query Nothing $
           runLazyTx pgExecCtx $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        liftIO $ logGraphqlQuery logger verboseLog $ mkQueryLog query Nothing
+        liftIO $ logGraphqlQuery logger verboseLog $
+          mkQueryLog reqId query Nothing
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
-        logOpEv ODStarted
+        logOpEv ODStarted (Just reqId)
 
-    execQueryOrMut query genSql action = do
-      logOpEv ODStarted
+    execQueryOrMut reqId query genSql action = do
+      logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
-      liftIO $ logGraphqlQuery logger verboseLog $ mkQueryLog query genSql
+      liftIO $ logGraphqlQuery logger verboseLog $
+        mkQueryLog reqId query genSql
       resp <- liftIO $ runExceptT action
-      either postExecErr sendSuccResp resp
+      either (postExecErr reqId) sendSuccResp resp
       sendCompleted
 
-    runRemoteGQ :: UserInfo -> [H.Header]
+    runRemoteGQ :: RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
                 -> ExceptT () IO ()
-    runRemoteGQ userInfo reqHdrs opDef rsi = do
+    runRemoteGQ reqId userInfo reqHdrs opDef rsi = do
       when (G._todType opDef == G.OperationTypeSubscription) $
-        withComplete $ preExecErr $
+        withComplete $ preExecErr reqId $
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
@@ -297,12 +304,12 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       -- try to parse the (apollo protocol) websocket frame and get only the
       -- payload
       sockPayload <- onLeft (J.eitherDecode msgRaw) $
-        const $ withComplete $ preExecErr $
+        const $ withComplete $ preExecErr reqId $
         err500 Unexpected "invalid websocket payload"
       let payload = J.encode $ _wpPayload sockPayload
-      resp <- runExceptT $ E.execRemoteGQ logger verboseLog httpMgr userInfo
-              reqHdrs q payload rsi opDef
-      either postExecErr sendSuccResp resp
+      resp <- runExceptT $ E.execRemoteGQ logger verboseLog httpMgr reqId
+              userInfo reqHdrs q payload rsi opDef
+      either (postExecErr reqId) sendSuccResp resp
       sendCompleted
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
@@ -310,10 +317,10 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
-    logOpEv opTy =
+    logOpEv opTy reqId =
       logWSEvent logger wsConn $ EOperation opDet
       where
-        opDet = OperationDetails opId (_grOperationName q) opTy gq
+        opDet = OperationDetails opId reqId (_grOperationName q) opTy gq
         gq = bool Nothing (Just q) $ L.unVerboseLogging verboseLog
 
     getErrFn errTy =
@@ -325,22 +332,25 @@ onStart serverEnv wsConn (StartMsg opId q) msgRaw = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False $
         err400 StartFailed e
-      logOpEv $ ODProtoErr e
+      logOpEv (ODProtoErr e) Nothing
 
     sendCompleted = do
       sendMsg wsConn $ SMComplete $ CompletionMsg opId
-      logOpEv ODCompleted
+      logOpEv ODCompleted Nothing
 
-    postExecErr qErr = do
+    postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
-      logOpEv $ ODQueryErr qErr
+      logOpEv (ODQueryErr qErr) (Just reqId)
       sendMsg wsConn $ SMData $ DataMsg opId $
         GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
-    preExecErr qErr = do
+    preExecErr reqId qErr = do
+      traceM "=========> CAUGHT PREEXEC ERR ========>"
+      traceM "===========> ReQUEST ID ========>"
+      traceShowM reqId
       let errFn = getErrFn errRespTy
-      logOpEv $ ODQueryErr qErr
+      logOpEv (ODQueryErr qErr) (Just reqId)
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
@@ -397,7 +407,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     opMap  = _wscOpMap $ WS.getData wsConn
-    opDet n = OperationDetails opId n ODStopped Nothing
+    opDet n = OperationDetails opId Nothing n ODStopped Nothing
 
 logWSEvent
   :: (MonadIO m)

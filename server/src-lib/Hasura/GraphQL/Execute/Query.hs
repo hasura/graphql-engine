@@ -32,7 +32,6 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (bsToTxt)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 

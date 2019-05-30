@@ -71,8 +71,11 @@ library
                      , network
                      , byteorder
 
-                     -- hashing for logging
+                     -- for generating random strings
                      , cryptonite
+                     -- for encoding random bytestring
+                     , base16-bytestring
+
                      -- for jwt verification
                      , jose
                      , pem

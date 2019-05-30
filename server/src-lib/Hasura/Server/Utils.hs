@@ -3,6 +3,7 @@ module Hasura.Server.Utils where
 import qualified Database.PG.Query.Connection as Q
 
 import           Data.Aeson
+import           Data.List                    (find)
 import           Data.List.Split
 import           Data.Time.Clock
 import           Network.URI
@@ -10,19 +11,28 @@ import           System.Environment
 import           System.Exit
 import           System.Process
 
+import qualified Crypto.Random                as Crypto
 import qualified Data.ByteString              as B
+import qualified Data.ByteString.Base16       as B16
 import qualified Data.ByteString.Lazy         as BL
+import qualified Data.CaseInsensitive         as CI
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
-import qualified Data.Text.Encoding.Error     as TE
 import qualified Data.Text.IO                 as TI
+import qualified Data.UUID                    as UUID
+import qualified Data.UUID.V4                 as UUID
 import qualified Language.Haskell.TH.Syntax   as TH
+import qualified Network.HTTP.Types           as HTTP
 import qualified Text.Ginger                  as TG
 import qualified Text.Regex.TDFA              as TDFA
 import qualified Text.Regex.TDFA.ByteString   as TDFA
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+
+newtype RequestId
+  = RequestId { unRequestId :: Text }
+  deriving (Show, Eq, ToJSON, FromJSON)
 
 data APIResp
   = JSONResp !EncJSON
@@ -63,8 +73,20 @@ adminSecretHeader = "x-hasura-admin-secret"
 userIdHeader :: T.Text
 userIdHeader = "x-hasura-user-id"
 
-bsToTxt :: B.ByteString -> T.Text
-bsToTxt = TE.decodeUtf8With TE.lenientDecode
+requestIdHeader :: T.Text
+requestIdHeader = "x-request-id"
+
+getRequestHeader :: B.ByteString -> [HTTP.Header] -> Maybe B.ByteString
+getRequestHeader hdrName hdrs = snd <$> mHeader
+  where
+    mHeader = find (\h -> fst h == CI.mk hdrName) hdrs
+
+getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
+getRequestId headers =
+  -- generate a request id for every request if the client has not sent it
+  case getRequestHeader (txtToBs requestIdHeader) headers  of
+    Nothing    -> RequestId <$> liftIO generateFingerprint
+    Just reqId -> return $ RequestId $ bsToTxt reqId
 
 commonClientHeadersIgnored :: (IsString a) => [a]
 commonClientHeadersIgnored =
@@ -73,9 +95,6 @@ commonClientHeadersIgnored =
   , "Accept-Language", "Accept-Datetime"
   , "Cache-Control", "Connection", "DNT", "Content-Type"
   ]
-
-txtToBs :: T.Text -> B.ByteString
-txtToBs = TE.encodeUtf8
 
 -- Parsing postgres database url
 -- from: https://github.com/futurice/postgresql-simple-url/
@@ -188,3 +207,14 @@ diffTimeToMicro diff =
   (floor (realToFrac diff :: Double) - 10) * aSecond
   where
     aSecond = 1000 * 1000
+
+-- genRandomString function only works with even numbers
+-- On odd numbers it returns random string of one less size
+genRandomString :: (MonadIO m) => Int -> m B.ByteString
+genRandomString size = do
+  drg <- liftIO Crypto.getSystemDRG
+  let (bytes, _) = Crypto.randomBytesGenerate (div size 2) drg
+  return $ B16.encode bytes
+
+generateFingerprint :: IO Text
+generateFingerprint = UUID.toText <$> UUID.nextRandom

@@ -6,7 +6,6 @@ module Hasura.Server.Logging
   , PGLog(..)
   , mkInconsMetadataLog
   , mkAccessLog
-  , getRequestHeader
   , WebHookLog(..)
   , WebHookLogger
   , HttpException
@@ -29,7 +28,6 @@ import           Text.Printf           (printf)
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy  as BL
-import qualified Data.CaseInsensitive  as CI
 import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as N
 
@@ -138,7 +136,7 @@ instance ToJSON HttpLog where
 
 data OperationLog
   = OperationLog
-  {  olRequestId         :: !(Maybe T.Text)
+  { olRequestId          :: !RequestId
   , olUserVars           :: !(Maybe UserVars)
   , olResponseSize       :: !(Maybe Int64)
   , olQueryExecutionTime :: !(Maybe Double)
@@ -162,12 +160,13 @@ mkAccessLog
   :: (ToJSON a)
   => L.VerboseLogging
   -> Maybe UserInfo -- may not have been resolved
+  -> RequestId
   -> Request
   -> Either QErr APIResp
   -> Maybe (ApiMetrics a)
   -> Maybe (UTCTime, UTCTime)
   -> AccessLog
-mkAccessLog verLog userInfoM req res extraInfo mTimeT =
+mkAccessLog verLog userInfoM reqId req res extraInfo mTimeT =
   let http = HttpLog
              { hlStatus       = status
              , hlMethod       = bsToTxt $ requestMethod req
@@ -176,7 +175,7 @@ mkAccessLog verLog userInfoM req res extraInfo mTimeT =
              , hlHttpVersion  = httpVersion req
              }
       op = OperationLog
-           { olRequestId    = bsToTxt <$> getRequestId req
+           { olRequestId    = reqId
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
            , olQueryExecutionTime = respTime
@@ -218,18 +217,6 @@ getSource req = addr
   where
     maddr = find (\x -> fst x `elem` ["x-real-ip", "x-forwarded-for"]) hdrs
     addr = fmap snd maddr
-    hdrs = requestHeaders req
-
-requestIdHeader :: T.Text
-requestIdHeader = "x-request-id"
-
-getRequestId :: Request -> Maybe ByteString
-getRequestId = getRequestHeader $ txtToBs requestIdHeader
-
-getRequestHeader :: ByteString -> Request -> Maybe ByteString
-getRequestHeader hdrName req = snd <$> mHeader
-  where
-    mHeader = find (\h -> fst h == CI.mk hdrName) hdrs
     hdrs = requestHeaders req
 
 -- |  A type for IP address in numeric string representation.

@@ -28,7 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (bsToTxt, diffTimeToMicro,
+import           Hasura.Server.Utils             (diffTimeToMicro,
                                                   userRoleHeader)
 
 import qualified Control.Concurrent              as C

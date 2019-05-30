@@ -42,7 +42,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (bsToTxt, commonClientHeadersIgnored)
+import           Hasura.Server.Utils                    (RequestId, commonClientHeadersIgnored)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -332,6 +332,7 @@ execRemoteGQ
   => L.Logger
   -> L.VerboseLogging
   -> HTTP.Manager
+  -> RequestId
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
@@ -340,7 +341,7 @@ execRemoteGQ
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
   -> m EncJSON
-execRemoteGQ logger verbose manager userInfo reqHdrs q req rsi opDef = do
+execRemoteGQ logger verbose manager reqId userInfo reqHdrs q req rsi opDef = do
   let opTy = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
@@ -357,7 +358,7 @@ execRemoteGQ logger verbose manager userInfo reqHdrs q req rsi opDef = do
       options    = wreqOptions manager (Map.toList finalHdrs)
 
   -- log the graphql query
-  liftIO $ logGraphqlQuery logger verbose $ mkQueryLog q Nothing
+  liftIO $ logGraphqlQuery logger verbose $ mkQueryLog reqId q Nothing
   res  <- liftIO $ try $ Wreq.postWith options (show url) req
   resp <- either httpThrow return res
   return $ encJFromLBS $ resp ^. Wreq.responseBody
