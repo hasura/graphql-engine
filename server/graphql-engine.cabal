@@ -27,11 +27,6 @@ flag profile
   default: False
   manual: True
 
-flag local-console
-  description: embeds resources needed by console and serves them at /static/
-  default: False
-  manual: True
-
 library
   hs-source-dirs:      src-lib
                      , src-exec
@@ -146,6 +141,10 @@ library
                      -- metrics in multiplexed subs
                      , ekg-core
 
+                     -- serve static files
+                     , filepath >= 1.4
+                     , mime-types >= 0.1
+
   exposed-modules:     Hasura.Prelude
                      , Hasura.Logging
                      , Hasura.EncJSON
@@ -166,7 +165,10 @@ library
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.PGDump
+<<<<<<< HEAD
                      , Hasura.Server.Config
+=======
+>>>>>>> main/master
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Instances
@@ -181,6 +183,7 @@ library
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.Metadata
+                     , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -198,6 +201,7 @@ library
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -294,9 +298,7 @@ library
   if flag(profile)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
   if flag(developer)
-    cpp-options: -DDeveloperAPIs -DLocalConsole
-  if flag(local-console)
-    cpp-options: -DLocalConsole
+    cpp-options: -DDeveloperAPIs
 
   ghc-options: -O2
                -Wall
@@ -358,7 +360,13 @@ executable graphql-engine
   if flag(developer)
     ghc-prof-options: -rtsopts -fprof-auto -fno-prof-count-entries
 
-  ghc-options: -O2 -Wall -threaded
+  ghc-options: -O2
+               -Wall
+               -Wcompat
+               -Wincomplete-record-updates
+               -Wincomplete-uni-patterns
+               -Wredundant-constraints
+               -threaded -rtsopts
 
 test-suite graphql-engine-test
   type:               exitcode-stdio-1.0

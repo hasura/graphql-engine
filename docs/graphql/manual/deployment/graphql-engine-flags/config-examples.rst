@@ -129,3 +129,37 @@ Examples:
 You can tell Hasura to disable handling CORS entirely via the ``--disable-cors``
 flag. Hasura will not respond with CORS headers. You can use this option if
 you're already handling CORS on a reverse proxy etc.
+
+.. _console-assets-on-server:
+
+Load console assets from server instead of CDN
+----------------------------------------------
+
+Starting with ``v1.0.0-beta.1``, the static assets (js, css, fonts, img etc.)
+required by the console are bundled with the Docker image published by Hasura.
+These files can be found at ``/srv/console-assets``.
+
+If you're working in an environment with Hasura running locally and have no
+access to internet, you can configure server/console to load assets from the
+docker image itself, instead of the CDN.
+
+Set the following env var or flag on the server:
+
+.. code-block:: bash
+
+   # env var
+   HASURA_GRAPHQL_CONSOLE_ASSETS_DIR=/srv/console-assets
+
+   # flag
+   --console-assets-dir=/srv/console-assets
+
+Once the flag is set, all files in ``/srv/console-assets`` directory of the
+Docker image will be served at ``/console/assets`` endpoint on the server with
+the right content-type headers.
+
+.. note::
+
+   Hasura follows a rolling update pattern for console release where assets for
+   a ``major.minor`` version is updated continuously across all patches. If
+   you're using the assets on server Docker image, it might not be that latest
+   version of console.

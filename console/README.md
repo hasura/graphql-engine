@@ -56,6 +56,9 @@ ADMIN_SECRET=xyz
 IS_ADMIN_SECRET_SET=true
 CONSOLE_MODE=server
 URL_PREFIX=/
+ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
+ASSETS_VERSION=channel/beta/v1.0
+CDN_ASSETS=true
 ```
 
 Note that `CONSOLE_MODE` is set to `server`. In this mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden. If you are looking to add/tweak functionality related to migrations, check out [Development with Hasura CLI](#development-with-hasura-cli-cli-mode).

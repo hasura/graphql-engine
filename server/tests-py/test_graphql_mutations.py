@@ -4,7 +4,7 @@ from validate import check_query_f
 from super_classes import DefaultTestQueries, DefaultTestMutations
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLInsert(DefaultTestMutations):
 
     def test_inserts_author_article(self, hge_ctx, transport):
@@ -37,7 +37,7 @@ class TestGraphQLInsert(DefaultTestMutations):
         return "queries/graphql_mutation/insert/basic"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlInsertOnConflict(DefaultTestMutations):
 
     def test_on_conflict_update(self, hge_ctx, transport):
@@ -63,7 +63,7 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
         return "queries/graphql_mutation/insert/onconflict"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlInsertPermission(DefaultTestMutations):
 
     def test_user_role_on_conflict_update(self, hge_ctx, transport):
@@ -128,7 +128,7 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
         return "queries/graphql_mutation/insert/permissions"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlInsertConstraints(DefaultTestQueries):
 
     def test_address_not_null_constraint_err(self, hge_ctx, transport):
@@ -142,7 +142,7 @@ class TestGraphqlInsertConstraints(DefaultTestQueries):
         return "queries/graphql_mutation/insert/constraints"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlInsertGeoJson(DefaultTestMutations):
 
     def test_insert_point_landmark(self, hge_ctx, transport):
@@ -188,7 +188,7 @@ class TestGraphqlInsertGeoJson(DefaultTestMutations):
         return "queries/graphql_mutation/insert/geojson"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlNestedInserts(DefaultTestMutations):
 
     def test_author_with_articles(self, hge_ctx, transport):
@@ -223,7 +223,7 @@ class TestGraphqlNestedInserts(DefaultTestMutations):
         return "queries/graphql_mutation/insert/nested"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlInsertViews(DefaultTestMutations):
 
     def test_insert_view_author_simple(self, hge_ctx, transport):
@@ -243,7 +243,7 @@ class TestGraphqlInsertViews(DefaultTestMutations):
         return "queries/graphql_mutation/insert/views"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlUpdateBasic(DefaultTestMutations):
 
     def test_set_author_name(self, hge_ctx, transport):
@@ -267,7 +267,7 @@ class TestGraphqlUpdateBasic(DefaultTestMutations):
         return "queries/graphql_mutation/update/basic"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlUpdateJsonB(DefaultTestMutations):
 
     def test_jsonb_append_object(self, hge_ctx, transport):
@@ -293,7 +293,7 @@ class TestGraphqlUpdateJsonB(DefaultTestMutations):
         return "queries/graphql_mutation/update/jsonb"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlUpdatePermissions(DefaultTestMutations):
 
     def test_user_can_update_unpublished_article(self, hge_ctx, transport):
@@ -319,7 +319,7 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
         return "queries/graphql_mutation/update/permissions"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlDeleteBasic(DefaultTestMutations):
 
     def test_article_delete(self, hge_ctx, transport):
@@ -335,7 +335,7 @@ class TestGraphqlDeleteBasic(DefaultTestMutations):
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlDeleteConstraints(DefaultTestMutations):
 
     def test_author_delete_foreign_key_violation(self, hge_ctx, transport):
@@ -346,7 +346,7 @@ class TestGraphqlDeleteConstraints(DefaultTestMutations):
         return "queries/graphql_mutation/delete/constraints"
 
 
-@pytest.mark.parametrize("transport", ['http','websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlDeletePermissions(DefaultTestMutations):
 
     def test_author_can_delete_his_articles(self, hge_ctx, transport):

@@ -1,7 +1,7 @@
 import defaultState from './state';
-import requestAction from '../../utils/requestAction.js';
+import requestAction from '../../../utils/requestAction';
 
-import Endpoints from '../../Endpoints';
+import Endpoints from '../../../Endpoints';
 // import fetch from 'isomorphic-fetch';
 
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -47,6 +47,40 @@ const clearHistory = () => {
   return {
     type: CLEAR_HISTORY,
   };
+};
+
+// This method adds a new empty header if no empty header is present
+const getChangedHeaders = (headers, changedHeaderDetails) => {
+  const newHeaders = Object.assign([], headers);
+  if (newHeaders[changedHeaderDetails.index].isNewHeader) {
+    newHeaders[changedHeaderDetails.index].isNewHeader = false;
+    newHeaders[changedHeaderDetails.index].isActive = true;
+    newHeaders[changedHeaderDetails.index].isDisabled = false;
+  }
+  if (changedHeaderDetails.keyName === 'isActive') {
+    newHeaders[changedHeaderDetails.index].isActive = !newHeaders[
+      changedHeaderDetails.index
+    ].isActive;
+  } else {
+    newHeaders[changedHeaderDetails.index][changedHeaderDetails.keyName] =
+      changedHeaderDetails.newValue;
+  }
+  if (changedHeaderDetails.isDisabled === true) {
+    newHeaders[changedHeaderDetails.index].isDisabled = true;
+  } else {
+    newHeaders[changedHeaderDetails.index].isDisabled = false;
+  }
+  const nonEmptyHeaders = newHeaders.filter(header => {
+    return !header.isNewHeader;
+  });
+  nonEmptyHeaders.push({
+    key: '',
+    value: '',
+    isActive: false,
+    isNewHeader: true,
+    isDisabled: false,
+  });
+  return nonEmptyHeaders;
 };
 
 const verifyJWTToken = token => dispatch => {
@@ -164,21 +198,17 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
 };
 
 /* Analyse Fetcher */
-const analyzeFetcher = (url, headers, analyzeApiChange) => {
+const analyzeFetcher = (url, headers) => {
   return query => {
     const editedQuery = {
       query,
     };
-    let user = {};
+
+    const user = {
+      'x-hasura-role': 'admin',
+    };
+
     const reqHeaders = getHeadersAsJSON(headers);
-    if (!analyzeApiChange) {
-      user.role = 'admin';
-      user.headers = reqHeaders;
-    } else {
-      user = {
-        'x-hasura-role': 'admin',
-      };
-    }
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
@@ -196,6 +226,7 @@ const analyzeFetcher = (url, headers, analyzeApiChange) => {
     });
 
     editedQuery.user = user;
+
     return fetch(`${url}/explain`, {
       method: 'post',
       headers: reqHeaders,
@@ -215,31 +246,39 @@ const setInitialHeaderState = headerObj => {
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
+    const currentState = getState().apiexplorer;
+    const updatedHeader = {
+      index: index,
+      keyName: key,
+      newValue: newValue,
+      isDisabled: isDisabled,
+    };
+    const updatedHeaders = getChangedHeaders(
+      currentState.displayedApi.request.headers,
+      updatedHeader
+    );
     dispatch({
       type: REQUEST_HEADER_CHANGED,
-      data: {
-        index: index,
-        keyName: key,
-        newValue: newValue,
-        isDisabled: isDisabled,
-      },
+      data: updatedHeaders,
     });
-    // TODO:
-    // May go out of sync
-    //  dispatch -> Event -> State gets updated -> getState() below gets called. Too many events and very less time.
-    const { headers } = getState().apiexplorer.displayedApi.request;
-    return Promise.resolve(headers);
+    return Promise.resolve(updatedHeaders);
   };
 };
 
 const removeRequestHeader = index => {
   return (dispatch, getState) => {
+    const currentState = getState().apiexplorer;
+    const updatedHeaders = currentState.displayedApi.request.headers.filter(
+      (header, i) => {
+        return !(i === index);
+      }
+    );
     dispatch({
       type: REQUEST_HEADER_REMOVED,
-      data: index,
+      data: updatedHeaders,
     });
-    const { headers } = getState().apiexplorer.displayedApi.request;
-    return Promise.resolve(headers);
+    // const { headers } = getState().apiexplorer.displayedApi.request;
+    return Promise.resolve(updatedHeaders);
   };
 };
 
@@ -317,40 +356,6 @@ const getHeadersAfterAddingNewHeader = (headers, newHeader) => {
   return nonEmptyHeaders;
 };
 
-// This method adds a new empty header if no empty header is present
-const getChangedHeaders = (headers, changedHeaderDetails) => {
-  const newHeaders = Object.assign([], headers);
-  if (newHeaders[changedHeaderDetails.index].isNewHeader) {
-    newHeaders[changedHeaderDetails.index].isNewHeader = false;
-    newHeaders[changedHeaderDetails.index].isActive = true;
-    newHeaders[changedHeaderDetails.index].isDisabled = false;
-  }
-  if (changedHeaderDetails.keyName === 'isActive') {
-    newHeaders[changedHeaderDetails.index].isActive = !newHeaders[
-      changedHeaderDetails.index
-    ].isActive;
-  } else {
-    newHeaders[changedHeaderDetails.index][changedHeaderDetails.keyName] =
-      changedHeaderDetails.newValue;
-  }
-  if (changedHeaderDetails.isDisabled === true) {
-    newHeaders[changedHeaderDetails.index].isDisabled = true;
-  } else {
-    newHeaders[changedHeaderDetails.index].isDisabled = false;
-  }
-  const nonEmptyHeaders = newHeaders.filter(header => {
-    return !header.isNewHeader;
-  });
-  nonEmptyHeaders.push({
-    key: '',
-    value: '',
-    isActive: false,
-    isNewHeader: true,
-    isDisabled: false,
-  });
-  return nonEmptyHeaders;
-};
-
 const getStateAfterAddingRequestToHistory = oldState => {
   const newState = Object.assign({}, oldState);
   // Check if history is present
@@ -401,7 +406,7 @@ const getStateAfterClearingHistory = state => {
 const getRemoteQueries = (queryUrl, cb) => {
   fetch(queryUrl)
     .then(resp => resp.text().then(cb))
-    .catch(e => console.log('Invalid query file URL: ', e));
+    .catch(e => console.error('Invalid query file URL: ', e));
 };
 
 const apiExplorerReducer = (state = defaultState, action) => {
@@ -497,10 +502,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
           ...state.displayedApi,
           request: {
             ...state.displayedApi.request,
-            headers: getChangedHeaders(
-              state.displayedApi.request.headers,
-              action.data
-            ),
+            headers: [...action.data],
           },
         },
       };
@@ -574,9 +576,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
           ...state.displayedApi,
           request: {
             ...state.displayedApi.request,
-            headers: state.displayedApi.request.headers.filter((header, i) => {
-              return !(i === action.data);
-            }),
+            headers: [...action.data],
           },
         },
       };

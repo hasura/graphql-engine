@@ -18,8 +18,8 @@ import           Crypto.JWT
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
-import           Data.Time.Clock                 (NominalDiffTime, diffUTCTime,
-                                                  getCurrentTime)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime,
+                                                  diffUTCTime, getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
@@ -29,7 +29,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (bsToTxt, userRoleHeader)
+import           Hasura.Server.Utils             (bsToTxt, diffTimeToMicro,
+                                                  userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Data.Aeson                      as A
@@ -107,13 +108,12 @@ jwkRefreshCtrl
   -> m ()
 jwkRefreshCtrl lggr mngr url ref time =
   void $ liftIO $ C.forkIO $ do
-    C.threadDelay $ delay time
+    C.threadDelay $ diffTimeToMicro time
     forever $ do
       res <- runExceptT $ updateJwkRef lggr mngr url ref
       mTime <- either (const $ return Nothing) return res
-      C.threadDelay $ maybe (60 * aSecond) delay mTime
+      C.threadDelay $ maybe (60 * aSecond) diffTimeToMicro mTime
   where
-    delay t = (floor (realToFrac t :: Double) - 10) * aSecond
     aSecond = 1000 * 1000
 
 
@@ -173,7 +173,7 @@ processJwt
   => JWTCtx
   -> HTTP.RequestHeaders
   -> Maybe RoleName
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processJwt jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
   where
@@ -184,7 +184,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+      return $ (, Nothing) $
+        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -195,7 +196,7 @@ processAuthZHeader
   => JWTCtx
   -> HTTP.RequestHeaders
   -> BLC.ByteString
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 processAuthZHeader jwtCtx headers authzHeader = do
   -- try to parse JWT token from Authorization header
   jwt <- parseAuthzHeader
@@ -205,6 +206,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
   let claimsNs  = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
       claimsFmt = jcxClaimsFormat jwtCtx
+      expTimeM = fmap (\(NumericDate t) -> t) $ claims ^. claimExp
 
   -- see if the hasura claims key exist in the claims map
   let mHasuraClaims = Map.lookup claimsNs $ claims ^. unregisteredClaims
@@ -228,7 +230,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ A.Object finalClaims
 
-  return $ mkUserInfo role $ mkUserVars $ Map.toList metadata
+  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList metadata
 
   where
     parseAuthzHeader = do

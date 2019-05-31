@@ -44,7 +44,7 @@ class Common extends React.Component {
 
     const graphqlurl = (
       <Tooltip id="tooltip-cascade">
-        Remote GraphQL server’s URL. E.g. https://my-domain/v1alpha1/graphql
+        Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
       </Tooltip>
     );
 
@@ -100,12 +100,6 @@ class Common extends React.Component {
           <OverlayTrigger placement="right" overlay={graphqlurl}>
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
-          <br />
-          <br />
-          <small>
-            Note: Specifying the server URL via an environmental variable is
-            recommended if you have different URLs for multiple environments.
-          </small>
         </h4>
         <div className={styles.wd_300}>
           <DropdownButton
@@ -137,6 +131,11 @@ class Common extends React.Component {
             testId="remote-schema-graphql-url"
           />
         </div>
+        <br />
+        <small>
+          Note: Specifying the server URL via an environmental variable is
+          recommended if you have different URLs for multiple environments.
+        </small>
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
           Headers for the remote GraphQL server
         </div>

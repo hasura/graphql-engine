@@ -1,5 +1,5 @@
 description: Fetch articles with order by author's contact phone (DESC)
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:

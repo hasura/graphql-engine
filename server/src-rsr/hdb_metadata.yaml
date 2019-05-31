@@ -279,3 +279,13 @@ args:
         column_mapping:
           return_type_schema: table_schema
           return_type_name: table_name
+
+- type: track_table
+  args:
+    name: hdb_query_collection
+    schema: hdb_catalog
+
+- type: track_table
+  args:
+    name: hdb_allowlist
+    schema: hdb_catalog

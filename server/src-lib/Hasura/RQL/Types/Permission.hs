@@ -11,9 +11,7 @@ module Hasura.RQL.Types.Permission
        , getVarVal
        , roleFromVars
 
-       , UserInfo
-       , userRole
-       , userVars
+       , UserInfo(..)
        , mkUserInfo
        , userInfoToList
        , adminUserInfo
@@ -25,7 +23,9 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader, userRoleHeader)
+import           Hasura.Server.Utils        (adminSecretHeader,
+                                             deprecatedAccessKeyHeader,
+                                             userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q

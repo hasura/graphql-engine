@@ -7,9 +7,11 @@ import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
 const ForeignKeyWrapper = ({
   foreignKeys,
   allSchemas,
+  currentSchema,
   columns,
   dispatch,
   fkToggled,
+  schemaList,
 }) => {
   // columns in the right order with their indices
   const orderedColumns = columns
@@ -20,14 +22,6 @@ const ForeignKeyWrapper = ({
       index: i,
     }));
 
-  // Generate a list of reference tables and their columns
-  const refTables = {};
-  allSchemas.forEach(tableSchema => {
-    refTables[tableSchema.table_name] = tableSchema.columns.map(
-      c => c.column_name
-    );
-  });
-
   const numFks = foreignKeys.length;
 
   // TODO check out match full
@@ -36,6 +30,20 @@ const ForeignKeyWrapper = ({
   return foreignKeys.map((fk, i) => {
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
     const isLast = i + 1 === numFks;
+
+    fk.refSchemaName = fk.refSchemaName || currentSchema;
+
+    // Generate a list of reference tables and their columns
+    const refTables = {};
+    allSchemas.forEach(tableSchema => {
+      if (fk.refSchemaName === tableSchema.table_schema) {
+        refTables[tableSchema.table_name] = tableSchema.columns.map(
+          c => c.column_name
+        );
+      }
+    });
+
+    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -48,6 +56,7 @@ const ForeignKeyWrapper = ({
         orderedColumns={orderedColumns}
         dispatch={dispatch}
         setForeignKeys={setForeignKeys}
+        schemaList={orderedSchemaList}
       />
     );
     // TODO handle ongoing request
@@ -102,7 +111,7 @@ const ForeignKeyWrapper = ({
 
     // Wrap the collapsed and expanded content in the reusable editor
     return (
-      <div key={`${i}`}>
+      <div key={`foreign-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
