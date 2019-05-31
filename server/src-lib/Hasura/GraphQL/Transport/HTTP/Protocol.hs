@@ -11,6 +11,9 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , encodeGQResp
   , GQResp(..)
   , isExecError
+  , RemoteGqlResp(..)
+  , GraphqlResponse(..)
+  , encodeGraphqlResponse
   ) where
 
 import           Hasura.EncJSON
@@ -96,3 +99,30 @@ encodeGQResp gqResp =
     GQSuccess r      -> [("data", encJFromLBS r)]
     GQPreExecError e -> [("errors", encJFromJValue e)]
     GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
+
+-- | Represents GraphQL response from a remote server
+data RemoteGqlResp
+  = RemoteGqlResp
+  { _rgqrData       :: !(Maybe J.Value)
+  , _rgqrErrors     :: !(Maybe [J.Value])
+  , _rgqrExtensions :: !(Maybe J.Value)
+  } deriving (Show, Eq)
+$(J.deriveFromJSON (J.aesonDrop 5 J.camelCase) ''RemoteGqlResp)
+
+encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
+encodeRemoteGqlResp (RemoteGqlResp d e ex) =
+  encJFromAssocList [ ("data", encJFromJValue d)
+                    , ("errors", encJFromJValue e)
+                    , ("extensions", encJFromJValue ex)
+                    ]
+
+-- | Represents a proper GraphQL response
+data GraphqlResponse
+  = GRHasura !GQResp
+  | GRRemote !RemoteGqlResp
+  deriving (Show)
+
+encodeGraphqlResponse :: GraphqlResponse -> EncJSON
+encodeGraphqlResponse = \case
+  GRHasura resp -> encodeGQResp resp
+  GRRemote resp -> encodeRemoteGqlResp resp

@@ -1,10 +1,5 @@
 import defaultState from './State';
-import {
-  loadTriggers,
-  makeMigrationCall,
-  setTrigger,
-  loadProcessedEvents,
-} from '../EventActions';
+import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { showErrorNotification } from '../Notification';
 
@@ -93,7 +88,7 @@ export const save = (property, triggerName) => {
       name: oldTrigger.name,
       table: {
         name: oldTrigger.table_name,
-        schema: oldTrigger.schema_name,
+        schema: oldTrigger.table_schema,
       },
       retry_conf: { ...oldTrigger.configuration.retry_conf },
       ...oldTrigger.configuration.definition,
@@ -183,9 +178,7 @@ export const save = (property, triggerName) => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_COMPLETE });
       dispatch(setTrigger(triggerName.trim()));
-      dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents());
-      });
+      dispatch(loadTriggers([triggerName]));
       return;
     };
     const customOnError = err => {
@@ -204,7 +197,8 @@ export const save = (property, triggerName) => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };

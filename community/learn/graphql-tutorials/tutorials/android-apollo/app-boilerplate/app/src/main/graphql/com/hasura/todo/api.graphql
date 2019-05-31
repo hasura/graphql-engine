@@ -1,0 +1,101 @@
+query AllTodos {
+    todos{
+        title
+    }
+}
+
+query getMyTodos {
+    todos(where: { is_public: { _eq: false} }, order_by: { created_at: desc }) {
+        id
+        title
+        created_at
+        is_completed
+    }
+}
+
+query getNewPublicTodos ($latestVisibleId: Int) {
+    todos(where: { is_public: { _eq: true}, id: {_gt: $latestVisibleId}}, order_by: { created_at: desc }) {
+        id
+        title
+        created_at
+        user {
+            name
+        }
+    }
+}
+
+query getInitialPublicTodos ($latestVisibleId: Int) {
+    todos(where: { is_public: { _eq: true}, id: {_gt: $latestVisibleId}}, order_by: { created_at: desc }, limit: 12) {
+        id
+        title
+        created_at
+        user {
+            name
+        }
+    }
+}
+
+query getOldPublicTodos ($oldestTodoId: Int!) {
+    todos (where: { is_public: { _eq: true}, id: {_lt: $oldestTodoId}}, limit: 7, order_by: { created_at: desc }) {
+        id
+        title
+        created_at
+        user {
+            name
+        }
+    }
+}
+
+mutation removeTodo ($id: Int!) {
+    delete_todos(where: {id: {_eq: $id}}) {
+        affected_rows
+    }
+}
+
+mutation toggleTodo ($id: Int!, $isCompleted: Boolean!) {
+    update_todos(where: {id: {_eq: $id}}, _set: {is_completed: $isCompleted}) {
+        affected_rows
+    }
+}
+
+mutation clearCompleted {
+    delete_todos(where: {is_completed: {_eq: true}, is_public: {_eq: false}}) {
+        affected_rows
+    }
+}
+
+mutation addTodo($todo: String!, $isPublic: Boolean!) {
+    insert_todos(objects: {title: $todo, is_public: $isPublic}) {
+        affected_rows
+        returning {
+            id
+            title
+            created_at
+            is_completed
+        }
+    }
+}
+
+mutation updateLastSeen ($now: timestamptz!) {
+    update_users(where: {}, _set: {last_seen: $now}) {
+        affected_rows
+    }
+}
+
+
+subscription NotifyNewPublicTodos {
+    todos (where: { is_public: { _eq: true}}, limit: 1, order_by: {created_at: desc }) {
+        id
+        created_at
+    }
+}
+
+subscription GetOnlineUsers {
+    online_users(order_by: {user: {name: asc }}) {
+        id
+        user {
+            name
+        }
+    }
+}
+

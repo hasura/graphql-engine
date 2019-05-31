@@ -8,22 +8,22 @@ export const convertListToDict = list => {
   const newList = list instanceof Array ? list : [].concat(list);
   return newList.length > 1
     ? newList.reduce((prev, next) => {
-        const accumulator =
+      const accumulator =
           prev instanceof Object
             ? prev
             : {
-                [prev]: 1,
-              };
-        return {
-          ...accumulator,
-          ...{
-            [next]: accumulator[next] ? accumulator[next] + 1 : 1,
-          },
-        };
-      })
-    : {
-        [newList[0]]: 1,
+              [prev]: 1,
+            };
+      return {
+        ...accumulator,
+        ...{
+          [next]: accumulator[next] ? accumulator[next] + 1 : 1,
+        },
       };
+    })
+    : {
+      [newList[0]]: 1,
+    };
 };
 
 /**
@@ -37,26 +37,26 @@ export const convertListToDictUsingKV = (keyName, keyValue, list) => {
   // if the list has more than one object then reduce it.
   return list.length > 1
     ? list.reduce((prev, next, index) => {
-        // Initial object for the list.
-        if (index === 1) {
-          const newObj = {};
-          newObj[prev[keyName]] = prev[keyValue];
-          newObj[next[keyName]] = next[keyValue];
-          return newObj;
-        }
-        // Other objects for the list.
-        prev[next[keyName]] = next[keyValue];
-        return prev;
-      })
+      // Initial object for the list.
+      if (index === 1) {
+        const newObj = {};
+        newObj[prev[keyName]] = prev[keyValue];
+        newObj[next[keyName]] = next[keyValue];
+        return newObj;
+      }
+      // Other objects for the list.
+      prev[next[keyName]] = next[keyValue];
+      return prev;
+    })
     : (() => {
-        return list.length <= 0
-          ? {}
-          : (() => {
-              const newObj = {};
-              newObj[list[0][keyName]] = list[0][keyValue];
-              return newObj;
-            })();
-      })();
+      return list.length <= 0
+        ? {}
+        : (() => {
+          const newObj = {};
+          newObj[list[0][keyName]] = list[0][keyValue];
+          return newObj;
+        })();
+    })();
 };
 
 /**

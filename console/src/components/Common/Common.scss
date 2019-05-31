@@ -280,6 +280,11 @@ button {
   outline: none;
 }
 
+button > i {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
 .no_border {
   border: 0 !important;
   border-radius: 0 !important;

@@ -1,19 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router';
-import _push from './push';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  loadUntrackedRelations,
-  UPDATE_CURRENT_SCHEMA,
-  fetchFunctionInit,
-} from './DataActions';
+import { updateCurrentSchema } from './DataActions';
 
 const sectionPrefix = '/data';
 
@@ -46,15 +39,7 @@ const DataPageContainer = ({
   }
 
   const handleSchemaChange = e => {
-    const updatedSchema = e.target.value;
-    dispatch(_push(`/schema/${updatedSchema}`));
-    Promise.all([
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-      dispatch(loadSchema()),
-      dispatch(loadUntrackedSchema()),
-      dispatch(loadUntrackedRelations()),
-      dispatch(fetchFunctionInit()),
-    ]);
+    dispatch(updateCurrentSchema(e.target.value));
   };
 
   const sidebarContent = (

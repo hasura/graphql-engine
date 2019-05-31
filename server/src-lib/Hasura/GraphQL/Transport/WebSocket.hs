@@ -251,8 +251,38 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
           let payload = J.encode q
           resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs payload
                   rsi opDef
-          either postExecErr sendSuccResp resp
+          either postExecErr sendRemoteResp resp
           sendCompleted
+-- =======
+--     runRemoteGQ :: UserInfo -> [H.Header]
+--                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
+--                 -> ExceptT () IO ()
+--     runRemoteGQ userInfo reqHdrs opDef rsi = do
+--       when (G._todType opDef == G.OperationTypeSubscription) $
+--         withComplete $ preExecErr $
+--         err400 NotSupported "subscription to remote server is not supported"
+
+--       -- if it's not a subscription, use HTTP to execute the query on the remote
+--       -- server
+--       -- try to parse the (apollo protocol) websocket frame and get only the
+--       -- payload
+--       sockPayload <- onLeft (J.eitherDecode msgRaw) $
+--         const $ withComplete $ preExecErr $
+--         err500 Unexpected "invalid websocket payload"
+--       let payload = J.encode $ _wpPayload sockPayload
+--       resp <- runExceptT $ E.execRemoteGQ httpMgr userInfo reqHdrs
+--               payload rsi opDef
+--       either postExecErr sendRemoteResp resp
+--       sendCompleted
+-- >>>>>>> 17b5dc0e9c54a639b6a7391c4c6e0f614c6c156d
+
+    sendRemoteResp resp =
+      case J.eitherDecodeStrict (encJToBS resp) of
+        Left e    -> postExecErr $ invalidGqlErr $ T.pack e
+        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
+
+    invalidGqlErr err = err500 Unexpected $
+      "Failed parsing GraphQL response from remote: " <> err
 
     WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr  _
       sqlGenCtx planCache _ enableAL = serverEnv
@@ -281,7 +311,7 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       logOpEv $ ODQueryErr qErr
       sendMsg wsConn $ SMData $ DataMsg opId $
-        GQExecError $ pure $ errFn False qErr
+        GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr qErr = do
@@ -293,7 +323,8 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
       sendMsg wsConn $ SMErr $ ErrorMsg opId err
 
     sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $ GQSuccess $ encJToLBS encJson
+      sendMsg wsConn $ SMData $ DataMsg opId $
+        GRHasura $ GQSuccess $ encJToLBS encJson
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -303,7 +334,8 @@ onStart serverEnv wsConn msg@(StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $ DataMsg opId resp
+      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
+        DataMsg opId (GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

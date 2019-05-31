@@ -638,9 +638,9 @@ class PermissionBuilder extends React.Component {
 
       const columnOptions = tableColumns.concat(tableRelationships);
 
-      const operatorOptions = columnOptions
+      const operatorOptions = boolOperators
         .concat(['---'])
-        .concat(boolOperators);
+        .concat(columnOptions);
 
       const _boolExpKey = renderSelect(
         dispatchOperationSelect,

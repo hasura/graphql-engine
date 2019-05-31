@@ -40,7 +40,9 @@ class RelationshipsView extends Component {
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -91,15 +93,12 @@ class RelationshipsView extends Component {
                 const column1 = rel.objRel ? (
                   <RelationshipEditor
                     dispatch={dispatch}
-                    tableName={tableName}
                     key={rel.objRel.rel_name}
-                    relName={rel.objRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.objRel
                     )}
-                    isObjRel
                   />
                 ) : (
                   <td />
@@ -108,14 +107,11 @@ class RelationshipsView extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
-                    tableName={tableName}
-                    relName={rel.arrRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.arrRel
                     )}
-                    isObjRel={false}
                   />
                 ) : (
                   <td />

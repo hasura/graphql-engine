@@ -1,11 +1,3 @@
-//
-//  Utils.swift
-//  Todo
-//
-//  Created by Manish Kumar on 05/05/19.
-//  Copyright © 2019 Manish Kumar. All rights reserved.
-//
-
 import Foundation
 import UIKit
 
