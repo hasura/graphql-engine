@@ -348,15 +348,19 @@ const addTableReducer = (state = defaultState, action) => {
             return (pkiValue - 1).toString();
           }
         })
-        .filter(pki => Boolean(pki));
+        .filter(pki => pki !== undefined);
 
-      const uniqueKeys = state.uniqueKeys.map(uk => {
-        const newUniqueKey = uk.map(c => {
-          if (c > action.index) return c - 1;
-          if (c < action.index) return c;
-        });
-        return [...newUniqueKey];
-      });
+      const uniqueKeys = state.uniqueKeys
+        .map(uk => {
+          const newUniqueKey = uk
+            .map(c => {
+              if (c > action.index) return c - 1;
+              if (c < action.index) return c;
+            })
+            .filter(c => c !== undefined);
+          return [...newUniqueKey];
+        })
+        .filter(uk => uk.length !== 0);
 
       return {
         ...state,
@@ -365,7 +369,7 @@ const addTableReducer = (state = defaultState, action) => {
           ...state.columns.slice(action.index + 1),
         ],
         primaryKeys: [...primaryKeys, ''],
-        uniqueKeys: [...uniqueKeys],
+        uniqueKeys: [...uniqueKeys, []],
       };
     case SET_COLNAME:
       const i = action.index;

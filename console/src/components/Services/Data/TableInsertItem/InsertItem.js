@@ -48,7 +48,9 @@ class InsertItem extends Component {
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
-    const _columns = schemas.find(x => x.table_name === tableName).columns;
+    const _columns = schemas.find(
+      x => x.table_name === tableName && x.table_schema === currentSchema
+    ).columns;
     const refs = {};
     const columns = _columns.sort(ordinalColSort);
 
