@@ -69,13 +69,15 @@ const findFKConstraint = (curTable, column) => {
 };
 
 export const findTableFromRel = (schemas, curTable, rel) => {
-  let rtable = null;
+  let rTable = null;
+  let rSchema = 'public';
 
   // for view
   if (rel.rel_def.manual_configuration !== undefined) {
-    rtable = rel.rel_def.manual_configuration.remote_table;
-    if (rtable.schema) {
-      rtable = rtable.name;
+    rTable = rel.rel_def.manual_configuration.remote_table;
+    if (rTable.schema) {
+      rSchema = rTable.schema;
+      rTable = rTable.name;
     }
   }
 
@@ -86,19 +88,23 @@ export const findTableFromRel = (schemas, curTable, rel) => {
       const column = [rel.rel_def.foreign_key_constraint_on];
       const fkc = findFKConstraint(curTable, column);
       if (fkc) {
-        rtable = fkc.ref_table;
+        rTable = fkc.ref_table;
+        rSchema = fkc.ref_table_table_schema;
       }
     }
 
     // for array relationship
     if (rel.rel_type === 'array') {
-      rtable = rel.rel_def.foreign_key_constraint_on.table;
-      if (rtable.schema) {
-        rtable = rtable.name;
+      rTable = rel.rel_def.foreign_key_constraint_on.table;
+      if (rTable.schema) {
+        rSchema = rTable.schema;
+        rTable = rTable.name;
       }
     }
   }
-  return schemas.find(x => x.table_name === rtable);
+  return schemas.find(
+    x => x.table_name === rTable && x.table_schema === rSchema
+  );
 };
 
 export const findAllFromRel = (schemas, curTable, rel) => {
