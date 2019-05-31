@@ -275,11 +275,10 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       // foreign key already exists, alter the foreign key
       const migrationUpAlterFKeySql = `
              alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
-             add constraint "${constraintName}" foreign key (${lcols.join(
-               ', '
-             )}) references "${schemaName}"."${refTableName}"(${rcols.join(
-               ', '
-             )}) on update ${onUpdate} on delete ${onDelete};
+             add constraint "${constraintName}" 
+             foreign key (${lcols.join(', ')}) 
+             references "${refSchemaName}"."${refTableName}"
+             (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
 
       migrationUp.push({
@@ -292,12 +291,12 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       // foreign key not found, create a new one
       const migrationUpCreateFKeySql = `
            alter table "${schemaName}"."${tableName}"
-           add constraint "${generatedConstraintName}" foreign key (${lcols.join(
-             ', '
-           )}) references "${schemaName}"."${refTableName}"(${rcols.join(
-             ', '
-           )}) on update ${onUpdate} on delete ${onDelete};
+           add constraint "${generatedConstraintName}" 
+           foreign key (${lcols.join(', ')}) 
+           references "${refSchemaName}"."${refTableName}"
+           (${rcols.join(', ')}) on update ${onUpdate} on delete ${onDelete};
       `;
+
       migrationUp.push({
         type: 'run_sql',
         args: {
@@ -313,17 +312,18 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       const oldConstraint = tableSchema.foreign_key_constraints[index];
       const migrationDownAlterFKeySql = `
           alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}",
-            add constraint "${constraintName}" foreign key (${Object.keys(
-              oldConstraint.column_mapping
-            )
-              .map(lc => `"${lc}"`)
-              .join(', ')}) references "${
-              oldConstraint.ref_table
-            }"(${Object.values(oldConstraint.column_mapping)
-              .map(rc => `"${rc}"`)
-              .join(', ')}) on update ${
-              pgConfTypes[oldConstraint.on_update]
-            } on delete ${pgConfTypes[oldConstraint.on_delete]};
+          add constraint "${constraintName}" 
+          foreign key (${Object.keys(oldConstraint.column_mapping)
+            .map(lc => `"${lc}"`)
+            .join(', ')}) 
+          references "${oldConstraint.ref_table_table_schema}"."${
+        oldConstraint.ref_table
+      }"
+          (${Object.values(oldConstraint.column_mapping)
+            .map(rc => `"${rc}"`)
+            .join(', ')}) 
+          on update ${pgConfTypes[oldConstraint.on_update]}
+          on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
 
       migrationDown.push({
@@ -1205,24 +1205,24 @@ const saveColumnChangesSql = (colName, column) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column default up/down migration */
