@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
+  isMetadataStatusPage,
 } from '../Services/Metadata/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
@@ -12,16 +13,24 @@ import Helmet from 'react-helmet';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = { hasError: false, info: null, error: null };
   }
 
+  resetState = () => {
+    this.setState({ hasError: false, info: null, error: null });
+  };
+
   componentDidCatch(error, info) {
     this.setState({ hasError: true, info: info, error: error });
+
     // TODO logErrorToMyService(error, info);
+
     const { dispatch } = this.props;
+
     dispatch(loadInconsistentObjects(true)).then(() => {
       if (this.props.metadata.inconsistentObjects.length > 0) {
-        if (!window.location.pathname.includes('/metadata/status')) {
+        if (!isMetadataStatusPage()) {
           this.resetState();
           this.props.dispatch(redirectToMetadataStatus());
         }
@@ -30,13 +39,6 @@ class ErrorBoundary extends React.Component {
       }
     });
   }
-
-  resetState = () => {
-    console.log('inside resetState');
-    this.setState({ hasError: false, info: null, error: null }, () => {
-      console.log(this.state);
-    });
-  };
 
   render() {
     const errorImage = require('./error-logo.png');
