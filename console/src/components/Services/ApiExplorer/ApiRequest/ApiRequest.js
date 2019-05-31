@@ -59,6 +59,7 @@ class ApiRequest extends Component {
     };
     this.state = {
       isAnalyzingBearer: false,
+      analyzingHeaderRow: -1,
       tokenInfo: {
         ...this.defaultTokenVal,
       },
@@ -99,14 +100,20 @@ class ApiRequest extends Component {
   onAnalyzeBearerClose() {
     this.setState({
       isAnalyzingBearer: false,
+      analyzingHeaderRow: -1,
     });
   }
 
   analyzeBearerToken(e) {
     const { dispatch } = this.props;
     const token = e.target.getAttribute('token');
+    const analyzingHeaderRow = parseInt(
+      e.target.getAttribute('data-header-index'),
+      10
+    );
     this.setState({
       isAnalyzingBearer: true,
+      analyzingHeaderRow,
       tokenInfo: {
         ...this.state.tokenInfo,
         serverResp: {},
@@ -149,7 +156,7 @@ class ApiRequest extends Component {
   }
 
   render() {
-    const { isAnalyzingBearer, tokenInfo } = this.state;
+    const { isAnalyzingBearer, tokenInfo, analyzingHeaderRow } = this.state;
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
     const { error, serverResp } = tokenInfo;
     const getGraphQLEndpointBar = () => {
@@ -253,7 +260,7 @@ class ApiRequest extends Component {
 
           const inspectorIcon = () => {
             const getAnalyzeIcon = () => {
-              return isAnalyzingBearer ? (
+              return isAnalyzingBearer && analyzingHeaderRow === i ? (
                 <i
                   className={
                     styles.showInspectorLoading + ' fa fa-spinner fa-spin'
@@ -263,6 +270,7 @@ class ApiRequest extends Component {
                 <i
                   className={styles.showInspector + ' fa fa-plus-square-o'}
                   token={matches[2]}
+                  data-header-index={i}
                   onClick={this.analyzeBearerToken}
                 />
               );

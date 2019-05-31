@@ -24,7 +24,10 @@ import {
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
-import { versionGT } from '../../helpers/versionUtils';
+import {
+  versionGT,
+  JWT_ANALYZER_VERSION_CHECK,
+} from '../../helpers/versionUtils';
 
 class Main extends React.Component {
   constructor(props) {
@@ -77,8 +80,10 @@ class Main extends React.Component {
         }
       });
       // if (semverCheck('JWTAnalyzer', this.props.serverVersion)) {
-      const semverCheck = true;
-      if (semverCheck) {
+      if (
+        JWT_ANALYZER_VERSION_CHECK in this.props.featuresCompatibility &&
+        this.props.featuresCompatibility[JWT_ANALYZER_VERSION_CHECK]
+      ) {
         this.fetchServerConfig();
       }
     });
